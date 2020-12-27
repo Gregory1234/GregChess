@@ -1,0 +1,15 @@
+name: GregChess
+version: ${project.version}
+main: gregc.gregchess.GregChess
+api-version: 1.16
+authors: [ GregC ]
+description: Chess Plugin
+commands:
+  chess:
+    description: Main chess command
+    usage: /<command> [duel|leave|draw] [player]
+    aliases: [greg-chess]
+permissions:
+  greg-chess.debug:
+    description: Can use /chess [capture|move|skip|spawn]
+    default: op

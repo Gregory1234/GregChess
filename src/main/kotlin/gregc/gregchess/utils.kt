@@ -1,0 +1,182 @@
+package gregc.gregchess
+
+import org.bukkit.*
+import org.bukkit.block.Block
+import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
+import org.bukkit.generator.ChunkGenerator
+import org.bukkit.inventory.ItemStack
+import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.potion.PotionEffect
+import java.util.*
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
+
+data class PlayerData(
+        val location: Location? = null,
+        val inventory: List<ItemStack?> = List(41) { null },
+        val gameMode: GameMode = GameMode.SURVIVAL,
+        val health: Double = 20.0,
+        val foodLevel: Int = 20,
+        val saturation: Float = 20.0F,
+        val level: Int = 0,
+        val exp: Float = 0.0F,
+        val allowFlight: Boolean = false,
+        val isFlying: Boolean = false,
+        val effects: List<PotionEffect> = emptyList()
+)
+
+var Player.playerData: PlayerData
+    get() = PlayerData(location.clone(), inventory.contents.toList(), gameMode, health, foodLevel, saturation, level, exp, allowFlight, isFlying, activePotionEffects.toList())
+    set(d) {
+        inventory.contents = d.inventory.toTypedArray()
+        gameMode = d.gameMode
+        health = d.health
+        foodLevel = d.foodLevel
+        saturation = d.saturation
+        level = level
+        exp = d.exp
+        allowFlight = d.allowFlight
+        isFlying = d.isFlying
+        activePotionEffects.forEach { removePotionEffect(it.type) }
+        d.effects.forEach(::addPotionEffect)
+        d.location?.let(::teleport)
+    }
+
+
+abstract class Arena(private val name: String) {
+    abstract val defaultData: PlayerData
+    abstract val worldGen: ChunkGenerator
+    abstract val setSettings: World.() -> Unit
+
+    private val data: MutableMap<UUID, PlayerData> = mutableMapOf()
+
+    private var worldCreated: Boolean = false
+    val world by lazy {
+        worldCreated = true
+        if (GregChessInfo.server.getWorld(name) != null) {
+            Bukkit.getLogger().warning("World already exists!")
+            return@lazy GregChessInfo.server.getWorld(name)!!
+        }
+
+        GregChessInfo.server.createWorld(WorldCreator(name).generator(worldGen))
+
+        GregChessInfo.server.getWorld(name)!!.apply(setSettings)
+    }
+
+    fun teleport(p: Player) {
+        data[p.uniqueId] = p.playerData
+        p.playerData = defaultData
+        p.teleport(world.spawnLocation)
+        p.sendMessage(chatColor("&eTeleported to $name."))
+    }
+
+    fun exit(p: Player) {
+        p.playerData = data[p.uniqueId]!!
+        data.remove(p.uniqueId)
+    }
+
+    fun isEmpty() = world.players.isEmpty()
+    fun delete() {
+        if (!worldCreated)
+            return
+        val folder = world.worldFolder
+        Bukkit.unloadWorld(world, false)
+        folder.deleteRecursively()
+    }
+
+    override fun toString() = "Arena(name = ${world.name})"
+}
+
+fun JavaPlugin.addCommand(name: String, command: (CommandSender, Array<String>) -> Unit) {
+    getCommand(name)?.setExecutor { sender, _, _, args ->
+        try {
+            command(sender, args)
+        } catch (e: CommandException) {
+            sender.sendMessage(chatColor(e.playerMsg))
+        }
+        true
+    }
+}
+
+fun JavaPlugin.addCommandTab(name: String, tabCompleter: (CommandSender, Array<String>) -> List<String>?) {
+    getCommand(name)?.setTabCompleter { sender, _, _, args ->
+        tabCompleter(sender, args)?.toMutableList()
+    }
+}
+
+data class Loc(val x: Int, val y: Int, val z: Int) {
+    fun toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
+
+    companion object {
+        fun fromLocation(l: Location) = Loc(l.x.toInt(), l.y.toInt(), l.z.toInt())
+    }
+}
+
+fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
+val Block.loc: Loc
+    get() = Loc(x, y, z)
+
+class CommandException(val playerMsg: String) : Exception() {
+    override val message: String
+        get() = "Uncaught command error: $playerMsg"
+}
+
+@ExperimentalContracts
+fun <T> commandRequireNotNull(e: T?, msg: String) {
+    contract {
+        returns() implies (e != null)
+    }
+    if (e == null) throw CommandException(msg)
+}
+
+@ExperimentalContracts
+fun commandRequirePlayer(e: CommandSender, msg: String = GregChessInfo.NOT_A_PLAYER) {
+    contract {
+        returns() implies (e is Player)
+    }
+    if (e !is Player) throw CommandException(msg)
+}
+
+fun commandRequireArgumentsGeneral(e: Array<String>, lower: Int = 0, upper: Int = Int.MAX_VALUE, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) {
+    if (e.size !in lower..upper) throw CommandException(msg)
+}
+
+fun commandRequireArguments(e: Array<String>, num: Int, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) = commandRequireArgumentsGeneral(e, num, num, msg)
+fun commandRequireArgumentsMin(e: Array<String>, min: Int, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) = commandRequireArgumentsGeneral(e, min, msg = msg)
+
+fun commandRequirePermission(e: CommandSender, permission: String, msg: String = GregChessInfo.NO_PERMISSION) {
+    if (!e.hasPermission(permission)) throw CommandException(msg)
+}
+
+fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
+
+
+fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> = listOf(x to y, x to -y, -x to y, -x to -y, y to x, -y to x, y to -x, -y to -x).distinct()
+
+fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
+
+fun Int.towards(goal: Int, amount: Int) =
+        if (goal < this) this - amount
+        else this + amount
+
+fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> = flatMap { x -> other.map { y -> function(x, y) } }
+
+operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
+
+@Suppress("unused")
+fun info(vararg vs: Any) {
+    Bukkit.getLogger().info(vs.joinToString(" ") { it.toString() })
+}
+
+object GregChessInfo {
+    const val NOT_A_PLAYER = "You are not a player!"
+    const val WRONG_NUMBER_OF_ARGUMENTS = "&cWrong number of arguments!"
+    const val WRONG_ARGUMENT = "&cWrong argument!"
+    const val NO_PERMISSION = "&cYou do not have permission to do this!"
+    private const val NAME = "GregChess"
+
+    val server by lazy { Bukkit.getServer() }
+    val plugin
+        get() = Bukkit.getPluginManager().getPlugin(NAME)!!
+}
