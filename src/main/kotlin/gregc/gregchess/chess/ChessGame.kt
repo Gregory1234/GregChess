@@ -122,26 +122,6 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
         }
     }
 
-    class PawnPromotionScreen(private val pawn: ChessPiece, private val game: ChessGame) : InventoryHolder {
-        var finished: Boolean = false
-        private val inv = Bukkit.createInventory(this, 9, "Pawn promotion")
-
-        init {
-            for (p in pawn.promotions) {
-                inv.addItem(p.getItem(pawn.side))
-            }
-        }
-
-        override fun getInventory() = inv
-
-        fun applyEvent(choice: Material?) {
-            val mat = choice ?: ChessPiece.Type.QUEEN.getMaterial(pawn.side)
-            pawn.promote(ChessPiece(pawn.promotions.find { it.getMaterial(pawn.side) == mat }!!, pawn.side, pawn.pos, game))
-            game.nextTurn()
-            finished = true
-        }
-    }
-
     operator fun get(player: Player): ChessPlayer? =
             if (white.player == black.player && white.player == player)
                 currentPlayer

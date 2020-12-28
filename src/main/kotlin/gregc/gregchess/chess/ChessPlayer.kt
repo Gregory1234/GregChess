@@ -2,8 +2,10 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.Loc
 import gregc.gregchess.chatColor
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.inventory.InventoryHolder
 
 class ChessPlayer(val player: Player, val side: ChessSide, private val game: ChessGame, private val silent: Boolean) {
     var held: ChessPiece? = null
@@ -80,8 +82,28 @@ class ChessPlayer(val player: Player, val side: ChessSide, private val game: Che
 
     fun hasTurn(): Boolean = game.currentTurn == side
 
+    class PawnPromotionScreen(private val pawn: ChessPiece, private val game: ChessGame) : InventoryHolder {
+        var finished: Boolean = false
+        private val inv = Bukkit.createInventory(this, 9, "Pawn promotion")
+
+        init {
+            for (p in pawn.promotions) {
+                inv.addItem(p.getItem(pawn.side))
+            }
+        }
+
+        override fun getInventory() = inv
+
+        fun applyEvent(choice: Material?) {
+            val mat = choice ?: ChessPiece.Type.QUEEN.getMaterial(pawn.side)
+            pawn.promote(ChessPiece(pawn.promotions.find { it.getMaterial(pawn.side) == mat }!!, pawn.side, pawn.pos, game))
+            game.nextTurn()
+            finished = true
+        }
+    }
+
     fun promote(pawn: ChessPiece) {
-        player.openInventory(ChessGame.PawnPromotionScreen(pawn, game).inventory)
+        player.openInventory(PawnPromotionScreen(pawn, game).inventory)
     }
 
     fun startTurn() {

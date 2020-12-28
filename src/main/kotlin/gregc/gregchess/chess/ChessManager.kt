@@ -208,7 +208,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
         if (uuid in games) {
             e.isCancelled = true
             val holder = e.inventory.holder
-            if (holder is ChessGame.PawnPromotionScreen) {
+            if (holder is ChessPlayer.PawnPromotionScreen) {
                 e.currentItem?.let { holder.applyEvent(it.type); e.whoClicked.closeInventory() }
             }
         }
@@ -219,7 +219,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
         val uuid = e.player.uniqueId
         if (uuid in games) {
             val holder = e.inventory.holder
-            if (holder is ChessGame.PawnPromotionScreen) {
+            if (holder is ChessPlayer.PawnPromotionScreen) {
                 if (!holder.finished)
                     holder.applyEvent(null)
             }

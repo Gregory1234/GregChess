@@ -1,11 +1,10 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.ChessManager
-import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import kotlin.contracts.ExperimentalContracts
 @Suppress("unused")
-class GregChess : JavaPlugin(), Listener {
+class GregChess : JavaPlugin() {
 
     private val chess = ChessManager(this)
 
