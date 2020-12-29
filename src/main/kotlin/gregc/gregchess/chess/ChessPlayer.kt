@@ -7,7 +7,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
 
-class ChessPlayer(val player: Player, val side: ChessSide, private val game: ChessGame, private val silent: Boolean) {
+class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, private val silent: Boolean) {
     var held: ChessPiece? = null
     private var heldMoves: List<ChessMoveScheme.Move>? = null
     var lastMove: ChessMoveScheme.Move? = null

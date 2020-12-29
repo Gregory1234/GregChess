@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import org.bukkit.block.BlockFace
+import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -21,7 +22,30 @@ import java.util.*
 import kotlin.contracts.ExperimentalContracts
 
 class ChessManager(private val plugin: JavaPlugin) : Listener {
-    private val games = mutableMapOf<UUID, ChessGame>()
+    private class PlayerMap {
+        private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
+        private val gameList: MutableList<ChessGame> = mutableListOf()
+
+        operator fun get(player: Player) = games[player.uniqueId]?.get(player)
+        operator fun plusAssign(game: ChessGame) {
+            game.realPlayers.forEach { games[it.uniqueId] = game }
+            gameList += game
+        }
+        fun remove(player: Player) {
+            val game = games[player.uniqueId] ?: return
+            remove(game)
+        }
+        fun remove(game: ChessGame) {
+            game.realPlayers.forEach{ games.remove(it.uniqueId) }
+            gameList.remove(game)
+        }
+        operator fun contains(player: HumanEntity) = player.uniqueId in games
+        fun forEachGame(f: (ChessGame) -> Unit) {
+            gameList.forEach(f)
+        }
+    }
+
+    private val players = PlayerMap()
     private val arenas = mutableListOf<ChessArena>()
 
     private fun nextArena(): ChessArena? = arenas.firstOrNull { it.isEmpty() }
@@ -37,44 +61,43 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                 "duel" -> {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 2)
-                    if (player.uniqueId in games)
+                    if (player in players)
                         throw CommandException("&cYou are in a game already!")
                     val opponent = GregChessInfo.server.getPlayer(args[1])
                     commandRequireNotNull(opponent, "&cPlayer doesn't exist!")
-                    if (opponent.uniqueId in games)
+                    if (opponent in players)
                         throw CommandException("&cYour opponent is in a game already!")
                     val arena = nextArena()
                     commandRequireNotNull(arena, "&cThere are no free arenas!")
                     val game = ChessGame(player, opponent, arena)
                     game.start()
-                    games[player.uniqueId] = game
-                    games[opponent.uniqueId] = game
+                    players += game
                 }
                 "leave" -> {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
-                    val game = games[player.uniqueId]
-                    commandRequireNotNull(game, "&cYou are not in a game!")
-                    game.stop(ChessGame.EndReason.Resignation(!game[player]!!.side), listOf(player))
+                    val p = players[player]
+                    commandRequireNotNull(p, "&cYou are not in a game!")
+                    p.game.stop(ChessGame.EndReason.Resignation(!p.side), listOf(player))
                 }
                 "draw" -> {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
-                    val game = games[player.uniqueId]
-                    commandRequireNotNull(game, "&cYou are not in a game!")
-                    game[player]!!.let { it.wantsDraw = !it.wantsDraw }
+                    val p = players[player]
+                    commandRequireNotNull(p, "&cYou are not in a game!")
+                    p.wantsDraw = !p.wantsDraw
                 }
                 "capture" -> {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArgumentsGeneral(args, 1, 2)
-                    val game = games[player.uniqueId]
-                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    val p = players[player]
+                    commandRequireNotNull(p, "&cYou are not in a game!")
                     if (args.size == 1) {
-                        game.board[Loc.fromLocation(player.location)]?.capture()
+                        p.game.board[Loc.fromLocation(player.location)]?.capture()
                     } else {
                         try {
-                            game.board[ChessPosition.parseFromString(args[1])]?.capture()
+                            p.game.board[ChessPosition.parseFromString(args[1])]?.capture()
                         } catch (e: IllegalArgumentException) {
                             throw CommandException(e.toString())
                         }
@@ -84,7 +107,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArgumentsGeneral(args, 3, 4)
-                    val game = games[player.uniqueId]
+                    val game = players[player]?.game
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
                         if (args.size == 3) {
@@ -104,7 +127,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 3)
-                    val game = games[player.uniqueId]
+                    val game = players[player]?.game
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
                         game.board[ChessPosition.parseFromString(args[2])]?.capture()
@@ -117,7 +140,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 1)
-                    val game = games[player.uniqueId]
+                    val game = players[player]?.game
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     game.nextTurn()
                 }
@@ -149,23 +172,23 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     }
 
     fun stop() {
-        games.values.forEach { it.stop(ChessGame.EndReason.PluginRestart(), it.realPlayers) }
+        players.forEachGame { it.stop(ChessGame.EndReason.PluginRestart(), it.realPlayers) }
         arenas.forEach { it.delete() }
     }
 
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
-        if (e.player.uniqueId in games) {
-            val game = games[e.player.uniqueId]!!
-            game.stop(ChessGame.EndReason.Resignation(!game[e.player]!!.side), listOf(e.player))
+        if (e.player in players) {
+            val player = players[e.player]!!
+            player.game.stop(ChessGame.EndReason.Resignation(!player.side), listOf(e.player))
         }
     }
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.entity
-        if (ent is Player && ent.uniqueId in games) {
-            val game = games[ent.uniqueId]!!
+        if (ent is Player && ent in players) {
+            val game = players[ent]!!.game
             ent.health = 20.0
             ent.foodLevel = 20
             ent.teleport(game.arena.world.spawnLocation)
@@ -175,9 +198,9 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        if (e.player.uniqueId in games) {
+        if (e.player in players) {
             e.isCancelled = true
-            val player = games[e.player.uniqueId]!![e.player]!!
+            val player = players[e.player]!!
             val block = e.clickedBlock ?: return
 
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
@@ -190,22 +213,21 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (e.player.uniqueId in games) {
+        if (e.player in players) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.whoClicked.uniqueId in games) {
+        if (e.whoClicked in players) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        val uuid = e.whoClicked.uniqueId
-        if (uuid in games) {
+        if (e.whoClicked in players) {
             e.isCancelled = true
             val holder = e.inventory.holder
             if (holder is ChessPlayer.PawnPromotionScreen) {
@@ -216,8 +238,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
 
     @EventHandler
     fun onInventoryClose(e: InventoryCloseEvent) {
-        val uuid = e.player.uniqueId
-        if (uuid in games) {
+        if (e.player in players) {
             val holder = e.inventory.holder
             if (holder is ChessPlayer.PawnPromotionScreen) {
                 if (!holder.finished)
@@ -229,7 +250,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     @EventHandler
     fun onWeatherChange(e: WeatherChangeEvent) {
         if (e.toWeatherState()) {
-            if (e.world.name in arenas.map { it.world.name }) {
+            if (e.world.name in arenas.map { it.name }) {
                 e.isCancelled = true
             }
         }
@@ -237,13 +258,13 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (e.player.uniqueId in games) {
+        if (e.player in players) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onChessGameEnd(e: ChessGame.EndEvent) {
-        e.game.realPlayers.forEach { games.remove(it.uniqueId) }
+        players.remove(e.game)
     }
 }

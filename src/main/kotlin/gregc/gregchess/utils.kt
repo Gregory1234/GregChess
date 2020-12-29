@@ -44,7 +44,7 @@ var Player.playerData: PlayerData
     }
 
 
-abstract class Arena(private val name: String) {
+abstract class Arena(val name: String) {
     abstract val defaultData: PlayerData
     abstract val worldGen: ChunkGenerator
     abstract val setSettings: World.() -> Unit
