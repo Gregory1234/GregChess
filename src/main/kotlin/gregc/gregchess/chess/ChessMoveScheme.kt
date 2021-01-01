@@ -52,7 +52,7 @@ sealed class ChessMoveScheme {
     protected infix fun ChessPosition.by(target: Pair<Int, Int>) = Move.Element(this, this + target)
 
     object King : ChessMoveScheme() {
-        private val schemes = listOf(Generator.Neighbours, Generator.Castle(0), Generator.Castle(7))
+        private val schemes = listOf(Generator.Neighbours, Generator.Castle(0, ChessPiece.Type.ROOK), Generator.Castle(7, ChessPiece.Type.ROOK))
 
         override fun genMoves(game: ChessGame, origin: ChessPosition) = schemes.flatMap { it.genMoves(game, origin) }
     }
@@ -172,13 +172,13 @@ sealed class ChessMoveScheme {
             }
         }
 
-        data class Castle(val file: Int) : Generator(false) {
+        data class Castle(val file: Int, val partner: ChessPiece.Type) : Generator(false) {
 
             override fun genMoves(game: ChessGame, origin: ChessPosition): List<Move> {
                 val piece = game.board[origin]!!
                 if (piece.hasMoved) return emptyList()
                 val rook = game.board[origin.copy(file = file)]
-                if (rook == null || rook.hasMoved || rook.type != ChessPiece.Type.ROOK) return emptyList()
+                if (rook == null || rook.hasMoved || rook.type != partner || rook.side != piece.side) return emptyList()
                 for (c in between(file, origin.file))
                     if (!game.board.empty(origin.copy(file = c)))
                         return emptyList()
