@@ -71,6 +71,9 @@ data class ChessPosition(val file: Int, val rank: Int) {
 
 
     fun toLoc() = Loc(4 * 8 - 2 - file * 3, 102, rank * 3 + 8 + 1)
+    fun clear(world: World) {
+        fillFloor(world, if ((file + rank) % 2 == 0) Material.BIRCH_PLANKS else Material.SPRUCE_PLANKS)
+    }
 
     companion object {
         fun fromLoc(l: Loc) = ChessPosition((4 * 8 - 1 - l.x).div(3), (l.z - 8).div(3))

@@ -191,7 +191,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
             val game = players[ent]!!.game
             ent.health = 20.0
             ent.foodLevel = 20
-            ent.teleport(game.arena.world.spawnLocation)
+            ent.teleport(game.world.spawnLocation)
             e.isCancelled = true
         }
     }

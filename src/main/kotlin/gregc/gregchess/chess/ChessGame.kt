@@ -22,7 +22,7 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
     val currentPlayer
         get() = this[currentTurn]
 
-    private val world
+    val world
         get() = arena.world
 
 
@@ -43,7 +43,7 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
 
     fun start() {
         realPlayers.forEach(arena::teleport)
-        clear()
+        render()
         black.player.sendTitle("", chatColor("You are playing with the black pieces"), 10, 70, 20)
         white.player.sendTitle(chatColor("&eIt is your turn"), chatColor("You are playing with the white pieces"), 10, 70, 20)
         white.sendMessage(chatColor("&eYou are playing with the white pieces"))
@@ -149,16 +149,7 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
         ChessSide.BLACK -> black
     }
 
-    fun clearMarkings() {
-        for (i in 0 until 8 * 3) {
-            for (j in 0 until 8 * 3) {
-                val b = (i.div(3) + j.div(3)) % 2 == 1
-                world.getBlockAt(i + 8, 101, j + 8).type = if (b) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
-            }
-        }
-    }
-
-    fun clear() {
+    private fun render() {
         for (i in 0 until 8 * 5) {
             for (j in 0 until 8 * 5) {
                 world.getBlockAt(i, 100, j).type = Material.DARK_OAK_PLANKS
@@ -167,11 +158,9 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
                 }
             }
         }
-        for (i in 0 until 8 * 3) {
-            for (j in 0 until 8 * 3) {
-                val b = (i.div(3) + j.div(3)) % 2 == 1
-                world.getBlockAt(i + 8, 101, j + 8).type = if (b) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
-                world.getBlockAt(i + 8, 102, j + 8).type = Material.AIR
+        for (i in 0 until 8) {
+            for (j in 0 until 8) {
+                ChessPosition(i, j).clear(world)
             }
         }
         pieces.forEach { it.render() }

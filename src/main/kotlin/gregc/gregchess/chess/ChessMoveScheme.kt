@@ -26,7 +26,7 @@ sealed class ChessMoveScheme {
         }
 
         fun display() {
-            target.fillFloor(game.arena.world, color)
+            target.fillFloor(game.world, color)
         }
 
         data class Element(val origin: ChessPosition, val target: ChessPosition?) {

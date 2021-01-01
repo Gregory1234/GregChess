@@ -52,7 +52,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
         if (!ChessPosition.fromLoc(loc).isValid()) return
         val piece = game[loc] ?: return
         if (piece.side != side) return
-        piece.pos.fillFloor(game.arena.world, Material.YELLOW_CONCRETE)
+        piece.pos.fillFloor(game.world, Material.YELLOW_CONCRETE)
         heldMoves = getAllowedMoves(piece)
         heldMoves?.forEach { it.display() }
         held = piece
@@ -66,7 +66,8 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
         val piece = held ?: return
         val moves = heldMoves ?: return
         if (newPos != piece.pos && newPos !in moves.map { it.target }) return
-        game.clearMarkings()
+        piece.pos.clear(game.world)
+        moves.forEach { it.target.clear(game.world) }
         held = null
         player.inventory.setItem(0, null)
         if (newPos == piece.pos) {

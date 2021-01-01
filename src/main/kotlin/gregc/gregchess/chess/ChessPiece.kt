@@ -8,18 +8,21 @@ import java.lang.IllegalArgumentException
 
 class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, private val game: ChessGame) {
 
-    enum class Type(private val prettyName: String, private val matWhite: Material, private val matBlack: Material, val pickUpSound: Sound, val moveSound: Sound, val captureSound: Sound, val moveScheme: ChessMoveScheme, val minor: Boolean) {
-        KING("King", Material.WHITE_CONCRETE, Material.BLACK_CONCRETE, Sound.BLOCK_METAL_HIT, Sound.BLOCK_METAL_STEP, Sound.ENTITY_ENDER_DRAGON_DEATH, ChessMoveScheme.King, false),
-        QUEEN( "Queen", Material.DIAMOND_BLOCK, Material.NETHERITE_BLOCK, Sound.ENTITY_WITCH_CELEBRATE, Sound.BLOCK_GLASS_STEP, Sound.ENTITY_WITCH_DEATH, ChessMoveScheme.Queen, false),
-        ROOK("Rook", Material.IRON_BLOCK, Material.GOLD_BLOCK, Sound.ENTITY_IRON_GOLEM_STEP, Sound.ENTITY_IRON_GOLEM_STEP, Sound.ENTITY_IRON_GOLEM_DEATH, ChessMoveScheme.Rook, false),
-        BISHOP("Bishop", Material.POLISHED_DIORITE, Material.POLISHED_BLACKSTONE, Sound.ENTITY_SPIDER_AMBIENT, Sound.ENTITY_SPIDER_STEP, Sound.ENTITY_SPIDER_DEATH, ChessMoveScheme.Bishop, true),
-        KNIGHT("Knight", Material.END_STONE, Material.BLACKSTONE, Sound.ENTITY_HORSE_JUMP, Sound.ENTITY_HORSE_STEP, Sound.ENTITY_HORSE_DEATH, ChessMoveScheme.Knight, true),
-        PAWN("Pawn", Material.WHITE_CARPET, Material.BLACK_CARPET, Sound.BLOCK_STONE_HIT, Sound.BLOCK_STONE_STEP, Sound.BLOCK_STONE_BREAK, ChessMoveScheme.Pawn, false);
+    enum class Type(private val prettyName: String, private val matWhite: Material, private val matBlack: Material, val pickUpSound: Sound, val moveSound: Sound, val captureSound: Sound, val minor: Boolean) {
+        KING("King", Material.WHITE_CONCRETE, Material.BLACK_CONCRETE, Sound.BLOCK_METAL_HIT, Sound.BLOCK_METAL_STEP, Sound.ENTITY_ENDER_DRAGON_DEATH, false),
+        QUEEN("Queen", Material.DIAMOND_BLOCK, Material.NETHERITE_BLOCK, Sound.ENTITY_WITCH_CELEBRATE, Sound.BLOCK_GLASS_STEP, Sound.ENTITY_WITCH_DEATH, false),
+        ROOK("Rook", Material.IRON_BLOCK, Material.GOLD_BLOCK, Sound.ENTITY_IRON_GOLEM_STEP, Sound.ENTITY_IRON_GOLEM_STEP, Sound.ENTITY_IRON_GOLEM_DEATH, false),
+        BISHOP("Bishop", Material.POLISHED_DIORITE, Material.POLISHED_BLACKSTONE, Sound.ENTITY_SPIDER_AMBIENT, Sound.ENTITY_SPIDER_STEP, Sound.ENTITY_SPIDER_DEATH, true),
+        KNIGHT("Knight", Material.END_STONE, Material.BLACKSTONE, Sound.ENTITY_HORSE_JUMP, Sound.ENTITY_HORSE_STEP, Sound.ENTITY_HORSE_DEATH, true),
+        PAWN("Pawn", Material.WHITE_CARPET, Material.BLACK_CARPET, Sound.BLOCK_STONE_HIT, Sound.BLOCK_STONE_STEP, Sound.BLOCK_STONE_BREAK, false);
 
         fun getMaterial(side: ChessSide) = when (side) {
             ChessSide.WHITE -> matWhite
             ChessSide.BLACK -> matBlack
         }
+
+        val moveScheme
+            get() = moveSchemeOf(this)
 
         companion object {
             fun parseFromChar(c: Char) = when (c.toLowerCase()) {
@@ -30,6 +33,15 @@ class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, pr
                 'n' -> KNIGHT
                 'p' -> PAWN
                 else -> throw IllegalArgumentException(c.toString())
+            }
+
+            private fun moveSchemeOf(type: Type) = when (type) {
+                KING -> ChessMoveScheme.King
+                QUEEN -> ChessMoveScheme.Queen
+                ROOK -> ChessMoveScheme.Rook
+                BISHOP -> ChessMoveScheme.Bishop
+                KNIGHT -> ChessMoveScheme.Knight
+                PAWN -> ChessMoveScheme.Pawn
             }
         }
 
@@ -49,7 +61,7 @@ class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, pr
     private val material = type.getMaterial(side)
     val moveScheme = type.moveScheme
     private val block
-        get() = pos.getBlock(game.arena.world)
+        get() = pos.getBlock(game.world)
 
     var pos: ChessPosition = initPos
         set(newPos) {
@@ -60,7 +72,7 @@ class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, pr
             hasMoved = true
         }
 
-    fun pickUp(){
+    fun pickUp() {
         playSound(type.pickUpSound)
         hide()
     }
