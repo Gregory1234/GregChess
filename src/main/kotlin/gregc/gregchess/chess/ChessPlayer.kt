@@ -27,7 +27,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
     private fun sendTitle(title: String, subtitle: String = "") = player.sendTitle(title, subtitle, 10, 70, 20)
 
     val pieces
-        get() = game.board[side]
+        get() = game.piecesOf(side)
     private val king
         get() = pieces.find { it.type == ChessPiece.Type.KING }!!
 
@@ -37,7 +37,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
     private fun getAllowedMoves(piece: ChessPiece) = piece.getMoves().let { moves ->
         when (piece.type) {
             ChessPiece.Type.KING ->
-                moves.filter { it.target !in game.board.getAttackedPositions(!side, listOf(piece.pos)) }
+                moves.filter { it.target !in game.getAttackedPositions(!side, listOf(piece.pos)) }
             else -> moves.filter { m -> checkingMoves.all { m.target in it.blocks + it.origin } }.filter { m ->
                 val pin = pinnedPieces[piece]
                 if (pin == null)
@@ -50,7 +50,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
 
     fun pickUp(loc: Loc) {
         if (!ChessPosition.fromLoc(loc).isValid()) return
-        val piece = game.board[loc] ?: return
+        val piece = game[loc] ?: return
         if (piece.side != side) return
         piece.pos.fillFloor(game.arena.world, Material.YELLOW_CONCRETE)
         heldMoves = getAllowedMoves(piece)
@@ -66,7 +66,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
         val piece = held ?: return
         val moves = heldMoves ?: return
         if (newPos != piece.pos && newPos !in moves.map { it.target }) return
-        game.board.clearMarkings()
+        game.clearMarkings()
         held = null
         player.inventory.setItem(0, null)
         if (newPos == piece.pos) {
@@ -107,8 +107,8 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
     }
 
     fun startTurn() {
-        checkingMoves = game.board.allCheckMoves(king.pos, !side)
-        pinnedPieces = game.board.allPinnedPieces(king.pos, !side)
+        checkingMoves = game.allCheckMoves(king.pos, !side)
+        pinnedPieces = game.allPinnedPieces(king.pos, !side)
         if (checkingMoves.isNotEmpty()) {
             var inMate = true
             for (p in pieces) {

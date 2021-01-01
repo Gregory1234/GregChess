@@ -94,10 +94,10 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     val p = players[player]
                     commandRequireNotNull(p, "&cYou are not in a game!")
                     if (args.size == 1) {
-                        p.game.board[Loc.fromLocation(player.location)]?.capture()
+                        p.game[Loc.fromLocation(player.location)]?.capture()
                     } else {
                         try {
-                            p.game.board[ChessPosition.parseFromString(args[1])]?.capture()
+                            p.game[ChessPosition.parseFromString(args[1])]?.capture()
                         } catch (e: IllegalArgumentException) {
                             throw CommandException(e.toString())
                         }
@@ -111,13 +111,13 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
                         if (args.size == 3) {
-                            game.board[Loc.fromLocation(player.location)]?.capture()
-                            game.board += ChessPiece(ChessPiece.Type.valueOf(args[2]), ChessSide.valueOf(args[1]), ChessPosition.fromLoc(Loc.fromLocation(player.location)), game)
-                            game.board[Loc.fromLocation(player.location)]?.render()
+                            game[Loc.fromLocation(player.location)]?.capture()
+                            game += ChessPiece(ChessPiece.Type.valueOf(args[2]), ChessSide.valueOf(args[1]), ChessPosition.fromLoc(Loc.fromLocation(player.location)), game)
+                            game[Loc.fromLocation(player.location)]?.render()
                         } else {
-                            game.board[ChessPosition.parseFromString(args[3])]?.capture()
-                            game.board += ChessPiece(ChessPiece.Type.valueOf(args[2]), ChessSide.valueOf(args[1]), ChessPosition.parseFromString(args[3]), game)
-                            game.board[ChessPosition.parseFromString(args[3])]!!.render()
+                            game[ChessPosition.parseFromString(args[3])]?.capture()
+                            game += ChessPiece(ChessPiece.Type.valueOf(args[2]), ChessSide.valueOf(args[1]), ChessPosition.parseFromString(args[3]), game)
+                            game[ChessPosition.parseFromString(args[3])]!!.render()
                         }
                     } catch (e: Exception) {
                         throw CommandException(e.toString())
@@ -130,8 +130,8 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     val game = players[player]?.game
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
-                        game.board[ChessPosition.parseFromString(args[2])]?.capture()
-                        game.board[ChessPosition.parseFromString(args[1])]?.pos = ChessPosition.parseFromString(args[2])
+                        game[ChessPosition.parseFromString(args[2])]?.capture()
+                        game[ChessPosition.parseFromString(args[1])]?.pos = ChessPosition.parseFromString(args[2])
                     } catch (e: IllegalArgumentException) {
                         throw CommandException(e.toString())
                     }

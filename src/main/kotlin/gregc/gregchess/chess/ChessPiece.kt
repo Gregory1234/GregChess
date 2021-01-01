@@ -67,7 +67,7 @@ class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, pr
 
     fun capture() {
         playSound(type.captureSound)
-        game.board.remove(this)
+        game.remove(this)
         hide()
     }
 
@@ -90,7 +90,7 @@ class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, pr
         if (piece.type !in promotions)
             throw IllegalArgumentException(piece.type.toString())
         capture()
-        game.board += piece
+        game += piece
         piece.render()
     }
 
