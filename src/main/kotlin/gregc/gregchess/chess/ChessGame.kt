@@ -1,10 +1,8 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.GregChessInfo
-import gregc.gregchess.Loc
 import gregc.gregchess.chatColor
 import org.bukkit.Bukkit
-import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
@@ -12,6 +10,8 @@ import org.bukkit.event.HandlerList
 class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena) {
 
     override fun toString() = "ChessGame(arena = $arena)"
+
+    val board = Chessboard(this)
 
     private val white = ChessPlayer(whitePlayer, ChessSide.WHITE, this, whitePlayer == blackPlayer)
     private val black = ChessPlayer(blackPlayer, ChessSide.BLACK, this, whitePlayer == blackPlayer)
@@ -25,17 +25,6 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
     val world
         get() = arena.world
 
-
-
-    private val pieces =
-            (listOf("wKe1", "bKe8", "wQd1", "bQd8", "wRa1", "wRh1", "bRa8", "bRh8", "wBc1", "wBf1", "bBc8", "bBf8", "wNb1", "wNg1", "bNb8", "bNg8")
-                    .map { ChessPiece.parseFromString(this, it) } +
-                    (0..7).flatMap {
-                        listOf(
-                                ChessPiece(ChessPiece.Type.PAWN, ChessSide.WHITE, ChessPosition(it, 1), this),
-                                ChessPiece(ChessPiece.Type.PAWN, ChessSide.BLACK, ChessPosition(it, 6), this))
-                    }).toMutableList()
-
     fun nextTurn() {
         currentTurn++
         startTurn()
@@ -43,7 +32,7 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
 
     fun start() {
         realPlayers.forEach(arena::teleport)
-        render()
+        board.render()
         black.player.sendTitle("", chatColor("You are playing with the black pieces"), 10, 70, 20)
         white.player.sendTitle(chatColor("&eIt is your turn"), chatColor("You are playing with the white pieces"), 10, 70, 20)
         white.sendMessage(chatColor("&eYou are playing with the white pieces"))
@@ -76,7 +65,7 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
     }
 
     private fun addBoardHash(): Int {
-        val hash = getPositionHash()
+        val hash = board.getPositionHash()
         boardHashes[hash] = (boardHashes[hash] ?: 0).plus(1)
         return boardHashes[hash]!!
     }
@@ -147,58 +136,6 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
     operator fun get(side: ChessSide): ChessPlayer = when (side) {
         ChessSide.WHITE -> white
         ChessSide.BLACK -> black
-    }
-
-    private fun render() {
-        for (i in 0 until 8 * 5) {
-            for (j in 0 until 8 * 5) {
-                world.getBlockAt(i, 100, j).type = Material.DARK_OAK_PLANKS
-                if (i in 8 - 1..8 * 4 && j in 8 - 1..8 * 4) {
-                    world.getBlockAt(i, 101, j).type = Material.DARK_OAK_PLANKS
-                }
-            }
-        }
-        for (i in 0 until 8) {
-            for (j in 0 until 8) {
-                ChessPosition(i, j).clear(world)
-            }
-        }
-        pieces.forEach { it.render() }
-    }
-
-    fun empty(pos: ChessPosition) = pos.isValid() && this[pos] == null
-    fun sided(pos: ChessPosition, side: ChessSide) = pos.isValid() && this[pos]?.side == side
-    fun sideOf(pos: ChessPosition) = this[pos]?.side
-
-    fun remove(piece: ChessPiece) = pieces.remove(piece)
-    private fun find(predicate: (ChessPiece) -> Boolean): ChessPiece? = pieces.find(predicate)
-    operator fun plusAssign(piece: ChessPiece) {
-        pieces += piece
-    }
-
-    operator fun get(pos: ChessPosition): ChessPiece? = find { it.pos == pos }
-    operator fun get(c: Int, r: Int) = get(ChessPosition(c, r))
-    operator fun get(l: Loc) = get(ChessPosition.fromLoc(l))
-    fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
-
-    fun allCheckMoves(pos: ChessPosition, by: ChessSide) = pieces.filter { it.side == by }.flatMap { it.getMoves() }.filter { it.target == pos }
-
-    fun getAttackedPositions(by: ChessSide, without : List<ChessPosition> = emptyList()) =
-            pieces
-                    .filter { it.side == by }
-                    .flatMap { it.moveScheme.genMoves(this, it.pos) }
-                    .filter { it.scheme.canCapture }
-                    .flatMap { if (it.target in without) it.cont + it.target else listOf(it.target) }
-
-    fun allPinnedPieces(pos: ChessPosition, by: ChessSide) = pieces.filter { it.side == by }.flatMap { it.getMoves() }.filter { pos in it.cont }.map { this[it.target]!! to it }.toMap()
-
-    private fun getPositionHash(): Long {
-        val board : Array<Array<ChessPiece?>> = Array(8){Array(8){null} }
-        var possum = 0
-        pieces.forEach { board[it.pos.file][it.pos.rank] = it; possum += it.pos.file*256 + it.pos.rank}
-        val content = StringBuilder()
-        board.forEach {l -> l.forEach { content.append("${it?.type}${it?.side}")}}
-        return content.toString().hashCode().toLong()*65536+ possum
     }
 
 

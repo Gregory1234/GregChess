@@ -3,26 +3,24 @@ package gregc.gregchess.chess
 import gregc.gregchess.chatColor
 import org.bukkit.Material
 import org.bukkit.Sound
+import org.bukkit.World
 import org.bukkit.inventory.ItemStack
 import java.lang.IllegalArgumentException
 
-class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, private val game: ChessGame) {
+data class ChessPiece(val type: Type, val side: ChessSide, val pos: ChessPosition, val hasMoved: Boolean) {
 
-    enum class Type(private val prettyName: String, private val matWhite: Material, private val matBlack: Material, val pickUpSound: Sound, val moveSound: Sound, val captureSound: Sound, val minor: Boolean) {
-        KING("King", Material.WHITE_CONCRETE, Material.BLACK_CONCRETE, Sound.BLOCK_METAL_HIT, Sound.BLOCK_METAL_STEP, Sound.ENTITY_ENDER_DRAGON_DEATH, false),
-        QUEEN("Queen", Material.DIAMOND_BLOCK, Material.NETHERITE_BLOCK, Sound.ENTITY_WITCH_CELEBRATE, Sound.BLOCK_GLASS_STEP, Sound.ENTITY_WITCH_DEATH, false),
-        ROOK("Rook", Material.IRON_BLOCK, Material.GOLD_BLOCK, Sound.ENTITY_IRON_GOLEM_STEP, Sound.ENTITY_IRON_GOLEM_STEP, Sound.ENTITY_IRON_GOLEM_DEATH, false),
-        BISHOP("Bishop", Material.POLISHED_DIORITE, Material.POLISHED_BLACKSTONE, Sound.ENTITY_SPIDER_AMBIENT, Sound.ENTITY_SPIDER_STEP, Sound.ENTITY_SPIDER_DEATH, true),
-        KNIGHT("Knight", Material.END_STONE, Material.BLACKSTONE, Sound.ENTITY_HORSE_JUMP, Sound.ENTITY_HORSE_STEP, Sound.ENTITY_HORSE_DEATH, true),
-        PAWN("Pawn", Material.WHITE_CARPET, Material.BLACK_CARPET, Sound.BLOCK_STONE_HIT, Sound.BLOCK_STONE_STEP, Sound.BLOCK_STONE_BREAK, false);
+    enum class Type(private val prettyName: String, private val matWhite: Material, private val matBlack: Material, val pickUpSound: Sound, val moveSound: Sound, val captureSound: Sound, val moveScheme: (ChessPosition, Chessboard) -> List<ChessMove>, val minor: Boolean) {
+        KING("King", Material.WHITE_CONCRETE, Material.BLACK_CONCRETE, Sound.BLOCK_METAL_HIT, Sound.BLOCK_METAL_STEP, Sound.ENTITY_ENDER_DRAGON_DEATH, ::kingMovement, false),
+        QUEEN("Queen", Material.DIAMOND_BLOCK, Material.NETHERITE_BLOCK, Sound.ENTITY_WITCH_CELEBRATE, Sound.BLOCK_GLASS_STEP, Sound.ENTITY_WITCH_DEATH, ::queenMovement, false),
+        ROOK("Rook", Material.IRON_BLOCK, Material.GOLD_BLOCK, Sound.ENTITY_IRON_GOLEM_STEP, Sound.ENTITY_IRON_GOLEM_STEP, Sound.ENTITY_IRON_GOLEM_DEATH, ::rookMovement, false),
+        BISHOP("Bishop", Material.POLISHED_DIORITE, Material.POLISHED_BLACKSTONE, Sound.ENTITY_SPIDER_AMBIENT, Sound.ENTITY_SPIDER_STEP, Sound.ENTITY_SPIDER_DEATH, ::bishopMovement, true),
+        KNIGHT("Knight", Material.END_STONE, Material.BLACKSTONE, Sound.ENTITY_HORSE_JUMP, Sound.ENTITY_HORSE_STEP, Sound.ENTITY_HORSE_DEATH, ::knightMovement, true),
+        PAWN("Pawn", Material.WHITE_CARPET, Material.BLACK_CARPET, Sound.BLOCK_STONE_HIT, Sound.BLOCK_STONE_STEP, Sound.BLOCK_STONE_BREAK, ::pawnMovement, false);
 
         fun getMaterial(side: ChessSide) = when (side) {
             ChessSide.WHITE -> matWhite
             ChessSide.BLACK -> matBlack
         }
-
-        val moveScheme
-            get() = moveSchemeOf(this)
 
         companion object {
             fun parseFromChar(c: Char) = when (c.toLowerCase()) {
@@ -33,15 +31,6 @@ class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, pr
                 'n' -> KNIGHT
                 'p' -> PAWN
                 else -> throw IllegalArgumentException(c.toString())
-            }
-
-            private fun moveSchemeOf(type: Type) = when (type) {
-                KING -> ChessMoveScheme.King
-                QUEEN -> ChessMoveScheme.Queen
-                ROOK -> ChessMoveScheme.Rook
-                BISHOP -> ChessMoveScheme.Bishop
-                KNIGHT -> ChessMoveScheme.Knight
-                PAWN -> ChessMoveScheme.Pawn
             }
         }
 
@@ -57,64 +46,27 @@ class ChessPiece(val type: Type, val side: ChessSide, initPos: ChessPosition, pr
     }
 
     override fun toString() = "ChessPiece(type = $type, side = $side, pos = $pos, hasMoved = $hasMoved)"
-    var hasMoved = false
     private val material = type.getMaterial(side)
-    val moveScheme = type.moveScheme
-    private val block
-        get() = pos.getBlock(game.world)
 
-    var pos: ChessPosition = initPos
-        set(newPos) {
-            playSound(type.moveSound)
-            hide()
-            field = newPos
-            render()
-            hasMoved = true
-        }
-
-    fun pickUp() {
-        playSound(type.pickUpSound)
-        hide()
+    fun render(world: World) {
+        pos.getBlock(world).type = material
     }
 
-    fun capture() {
-        playSound(type.captureSound)
-        game.remove(this)
-        hide()
-    }
-
-    fun placeBackDown() {
-        playSound(type.moveSound)
-        render()
-    }
-
-    fun render() {
-        block.type = material
-    }
-
-    private fun hide() {
-        block.type = Material.AIR
+    fun hide(world: World) {
+        pos.getBlock(world).type = Material.AIR
     }
 
     val promotions = if (type == Type.PAWN) listOf(Type.QUEEN, Type.ROOK, Type.BISHOP, Type.KNIGHT) else emptyList()
 
-    fun promote(piece: ChessPiece) {
-        if (piece.type !in promotions)
-            throw IllegalArgumentException(piece.type.toString())
-        capture()
-        game += piece
-        piece.render()
-    }
+    fun getMoves(board: Chessboard): List<ChessMove> = type.moveScheme(pos, board)
 
-    fun getMoves() = moveScheme.genMoves(game, pos).filter { it.finish != ChessMoveScheme.Move.Finish.DEFEND }
-
-    private fun playSound(s: Sound, volume: Float = 3.0f, pitch: Float = 1.0f) = game.arena.world.playSound(pos.toLoc().toLocation(game.arena.world), s, volume, pitch)
+    fun playSound(world: World, s: Sound, volume: Float = 3.0f, pitch: Float = 1.0f) = world.playSound(pos.toLoc().toLocation(world), s, volume, pitch)
 
     companion object {
 
-        fun parseFromString(chessGame: ChessGame, s: String): ChessPiece = ChessPiece(
+        fun parseFromString(s: String): ChessPiece = ChessPiece(
                 Type.parseFromChar(s[1]),
                 ChessSide.parseFromChar(s[0]),
-                ChessPosition.parseFromString(s.substring(2..3)), chessGame)
+                ChessPosition.parseFromString(s.substring(2..3)), false)
     }
 }

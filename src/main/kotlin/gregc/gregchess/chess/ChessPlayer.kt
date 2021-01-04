@@ -9,14 +9,17 @@ import org.bukkit.inventory.InventoryHolder
 
 class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, private val silent: Boolean) {
     var held: ChessPiece? = null
-    private var heldMoves: List<ChessMoveScheme.Move>? = null
-    var lastMove: ChessMoveScheme.Move? = null
+    private var heldMoves: List<ChessMove>? = null
+    var lastMove: ChessMove? = null
 
     var wantsDraw = false
         set(n) {
             when {
                 game[!side].wantsDraw -> game.stop(ChessGame.EndReason.DrawAgreement())
-                n -> game[!side].sendTitle(chatColor("&eYour opponent wants a draw."), chatColor("&eType /chess draw to accept"))
+                n -> game[!side].sendTitle(
+                    chatColor("&eYour opponent wants a draw."),
+                    chatColor("&eType /chess draw to accept")
+                )
                 else -> game[!side].sendTitle(chatColor("&eYour opponent no longer wants a draw."))
             }
             field = n
@@ -27,36 +30,29 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
     private fun sendTitle(title: String, subtitle: String = "") = player.sendTitle(title, subtitle, 10, 70, 20)
 
     val pieces
-        get() = game.piecesOf(side)
+        get() = game.board.piecesOf(side)
     private val king
         get() = pieces.find { it.type == ChessPiece.Type.KING }!!
 
-    private var checkingMoves = emptyList<ChessMoveScheme.Move>()
-    private var pinnedPieces = emptyMap<ChessPiece, ChessMoveScheme.Move>()
+    private var checkingMoves = emptyList<ChessMove.Attack>()
+    private var pinningMoves = emptyList<ChessMove.XRayAttack>()
 
-    private fun getAllowedMoves(piece: ChessPiece) = piece.getMoves().let { moves ->
-        when (piece.type) {
-            ChessPiece.Type.KING ->
-                moves.filter { it.target !in game.getAttackedPositions(!side, listOf(piece.pos)) }
-            else -> moves.filter { m -> checkingMoves.all { m.target in it.blocks + it.origin } }.filter { m ->
-                val pin = pinnedPieces[piece]
-                if (pin == null)
-                    true
-                else
-                    m.target in (pin.blocks + pin.cont + pin.origin)
-            }
+    private fun getAllowedMoves(piece: ChessPiece): List<ChessMove> =
+        piece.getMoves(game.board).filter { it.executable }.filter { m ->
+            if (piece.type == ChessPiece.Type.KING) m.target !in game.board.attackedPositions(!piece.side)
+            else checkingMoves.all { m.target == it.origin || m.target in it.blocks } &&
+                    pinningMoves.filter { it.pinned == m.origin }.all { m.target == it.origin || m.target in it.blocks }
         }
-    }
 
     fun pickUp(loc: Loc) {
         if (!ChessPosition.fromLoc(loc).isValid()) return
-        val piece = game[loc] ?: return
+        val piece = game.board[loc] ?: return
         if (piece.side != side) return
         piece.pos.fillFloor(game.world, Material.YELLOW_CONCRETE)
         heldMoves = getAllowedMoves(piece)
-        heldMoves?.forEach { it.display() }
+        heldMoves?.forEach { it.display(game) }
         held = piece
-        piece.pickUp()
+        game.board.pickUp(piece)
         player.inventory.setItem(0, piece.type.getItem(piece.side))
     }
 
@@ -71,24 +67,40 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
         held = null
         player.inventory.setItem(0, null)
         if (newPos == piece.pos) {
-            piece.placeBackDown()
+            game.board.placeDown(piece)
             return
         }
-        val move = (moves.find { it.target == newPos } ?: return)
-        if (piece.type == ChessPiece.Type.PAWN || null in move.elements.map { it.target })
+        val chosenMoves = moves.filter { it.target == newPos }
+        if (chosenMoves.size != 1) {
+            promote(piece, chosenMoves.mapNotNull {
+                when (it) {
+                    is ChessMove.Normal -> if (it.promotion == null) null else it.promotion to it
+                    is ChessMove.Attack -> if (it.promotion == null) null else it.promotion to it
+                    else -> null
+                }
+            })
+        } else {
+            finishMove(chosenMoves.first())
+        }
+    }
+
+    fun finishMove(move: ChessMove) {
+        if (game.board[move.origin]?.type == ChessPiece.Type.PAWN || move is ChessMove.Attack)
             game.resetMovesSinceLastCapture()
-        move.execute()
+        move.execute(game.board)
         lastMove = move
+        game.board.lastMove = move
+        game.nextTurn()
     }
 
     fun hasTurn(): Boolean = game.currentTurn == side
 
-    class PawnPromotionScreen(private val pawn: ChessPiece, private val game: ChessGame) : InventoryHolder {
+    class PawnPromotionScreen(private val pawn: ChessPiece, private val player: ChessPlayer, private val moves: List<Pair<ChessPiece.Type, ChessMove>>) : InventoryHolder {
         var finished: Boolean = false
         private val inv = Bukkit.createInventory(this, 9, "Pawn promotion")
 
         init {
-            for (p in pawn.promotions) {
+            for ((p, _) in moves) {
                 inv.addItem(p.getItem(pawn.side))
             }
         }
@@ -96,20 +108,19 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
         override fun getInventory() = inv
 
         fun applyEvent(choice: Material?) {
-            val mat = choice ?: ChessPiece.Type.QUEEN.getMaterial(pawn.side)
-            pawn.promote(ChessPiece(pawn.promotions.find { it.getMaterial(pawn.side) == mat }!!, pawn.side, pawn.pos, game))
-            game.nextTurn()
+            val m = moves.find { it.first.getMaterial(pawn.side) == choice }?.second ?: moves.first().second
+            player.finishMove(m)
             finished = true
         }
     }
 
-    fun promote(pawn: ChessPiece) {
-        player.openInventory(PawnPromotionScreen(pawn, game).inventory)
+    fun promote(pawn: ChessPiece, types: List<Pair<ChessPiece.Type, ChessMove>>) {
+        player.openInventory(PawnPromotionScreen(pawn, this, types).inventory)
     }
 
     fun startTurn() {
-        checkingMoves = game.allCheckMoves(king.pos, !side)
-        pinnedPieces = game.allPinnedPieces(king.pos, !side)
+        checkingMoves = game.board.attackingMoves(!side, king.pos)
+        pinningMoves = game.board.pinningMoves(!side, king.pos)
         if (checkingMoves.isNotEmpty()) {
             var inMate = true
             for (p in pieces) {
@@ -131,7 +142,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
         } else {
             var inStalemate = true
             for (p in pieces) {
-                if (p.getMoves().isNotEmpty()) {
+                if (getAllowedMoves(p).isNotEmpty()) {
                     inStalemate = false
                     break
                 }
