@@ -33,10 +33,6 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
             game.realPlayers.forEach { games[it.uniqueId] = game }
             gameList += game
         }
-        fun remove(player: Player) {
-            val game = games[player.uniqueId] ?: return
-            remove(game)
-        }
         fun remove(game: ChessGame) {
             game.realPlayers.forEach{ games.remove(it.uniqueId) }
             gameList.remove(game)

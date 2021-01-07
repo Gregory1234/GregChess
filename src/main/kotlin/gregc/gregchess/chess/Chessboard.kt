@@ -5,31 +5,7 @@ import org.bukkit.Material
 import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame) {
-    private val boardState: MutableMap<ChessPosition, ChessPiece> = (listOf(
-        "wKe1",
-        "bKe8",
-        "wQd1",
-        "bQd8",
-        "wRa1",
-        "wRh1",
-        "bRa8",
-        "bRh8",
-        "wBc1",
-        "wBf1",
-        "bBc8",
-        "bBf8",
-        "wNb1",
-        "wNg1",
-        "bNb8",
-        "bNg8"
-    )
-        .map { ChessPiece.parseFromString(it) } +
-            (0..7).flatMap {
-                listOf(
-                    ChessPiece(ChessPiece.Type.PAWN, ChessSide.WHITE, ChessPosition(it, 1), false),
-                    ChessPiece(ChessPiece.Type.PAWN, ChessSide.BLACK, ChessPosition(it, 6), false)
-                )
-            }).map { Pair(it.pos, it) }.toMap().toMutableMap()
+    private val boardState: MutableMap<ChessPosition, ChessPiece> = mutableMapOf()
 
     private val bakedMoves: MutableMap<ChessPosition, List<ChessMove>> = mutableMapOf()
 
@@ -91,8 +67,6 @@ class Chessboard(private val game: ChessGame) {
 
     fun capture(pos: ChessPosition) = boardState[pos]?.let { capture(it) }
 
-    fun capture(loc: Loc) = this[loc]?.let { capture(it) }
-
     fun promote(piece: ChessPiece, promotion: ChessPiece.Type) {
         if (promotion !in piece.promotions)
             return
@@ -122,7 +96,17 @@ class Chessboard(private val game: ChessGame) {
         pieces.forEach { it.render(game.world) }
     }
 
-    fun getPositionHash(): Long {
+    fun clear() {
+        pieces.forEach { it.hide(game.world) }
+        for (i in 0 until 8 * 5) {
+            for (j in 0 until 8 * 5) {
+                game.world.getBlockAt(i, 100, j).type = Material.AIR
+                game.world.getBlockAt(i, 101, j).type = Material.AIR
+            }
+        }
+    }
+
+    private fun getPositionHash(): Long {
         val board: Array<Array<ChessPiece?>> = Array(8) { Array(8) { null } }
         var possum = 0
         boardState.values.forEach {
@@ -180,7 +164,8 @@ class Chessboard(private val game: ChessGame) {
 
 
     fun setFromFEN(fen: String) {
-        pieces.forEach { capture(it) }
+        pieces.forEach { it.hide(game.world) }
+        boardState.clear()
         var x = 0
         var y = 7
         val parts = fen.split(" ")

@@ -7,7 +7,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 
-class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena) {
+class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: ChessArena) {
 
     override fun toString() = "ChessGame(arena = $arena)"
 
@@ -17,8 +17,6 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
     private val black = ChessPlayer(blackPlayer, ChessSide.BLACK, this, whitePlayer == blackPlayer)
     val realPlayers = listOf(whitePlayer, blackPlayer).distinctBy { it.uniqueId }
     var currentTurn = ChessSide.WHITE
-    val currentPlayer
-        get() = this[currentTurn]
 
     val world
         get() = arena.world
@@ -35,15 +33,15 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
         white.player.sendTitle(chatColor("&eIt is your turn"), chatColor("You are playing with the white pieces"), 10, 70, 20)
         white.sendMessage(chatColor("&eYou are playing with the white pieces"))
         black.sendMessage(chatColor("&eYou are playing with the black pieces"))
-        Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable { startTurn() }, 70)
-
+        board.setFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        startTurn()
     }
 
     private fun startTurn() {
         board.updateMoves()
         board.checkForGameEnd()
         if (!stopping)
-            currentPlayer.startTurn()
+            this[currentTurn].startTurn()
     }
 
     sealed class EndReason(val prettyName: String, val winner: ChessSide?) {
@@ -77,6 +75,8 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
     fun stop(reason: EndReason, quick: List<Player> = emptyList()) {
         if (stopping) return
         stopping = true
+        board.clear()
+        var anyLong = false
         realPlayers.forEach {
             if (reason.winner != null) {
                 it.sendTitle(chatColor(if (reason.winner == this[it]!!.side) "&aYou won" else "&cYou lost"), chatColor(reason.prettyName), 10, 70, 20)
@@ -85,19 +85,33 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
             it.sendMessage(reason.message)
             if (it in quick) {
                 arena.exit(it)
-                Bukkit.getPluginManager().callEvent(EndEvent(this))
             } else {
+                anyLong = true
                 Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
                     arena.exit(it)
-                    Bukkit.getPluginManager().callEvent(EndEvent(this))
                 }, 3 * 20L)
             }
+        }
+        if (anyLong) {
+            Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+                board.clear()
+            }, 3 * 20L + 1)
+            Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+                Bukkit.getPluginManager().callEvent(EndEvent(this))
+            }, 3 * 20L + 2)
+        } else {
+            Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+                board.clear()
+            }, 1)
+            Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+                Bukkit.getPluginManager().callEvent(EndEvent(this))
+            }, 2)
         }
     }
 
     operator fun get(player: Player): ChessPlayer? =
             if (white.player == black.player && white.player == player)
-                currentPlayer
+                this[currentTurn]
             else if (white.player == player)
                 white
             else if (black.player == player)

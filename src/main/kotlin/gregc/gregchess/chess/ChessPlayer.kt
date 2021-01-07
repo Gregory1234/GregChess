@@ -10,7 +10,6 @@ import org.bukkit.inventory.InventoryHolder
 class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, private val silent: Boolean) {
     var held: ChessPiece? = null
     private var heldMoves: List<ChessMove>? = null
-    var lastMove: ChessMove? = null
 
     var wantsDraw = false
         set(n) {
@@ -29,7 +28,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
 
     private fun sendTitle(title: String, subtitle: String = "") = player.sendTitle(title, subtitle, 10, 70, 20)
 
-    val pieces
+    private val pieces
         get() = game.board.piecesOf(side)
     private val king
         get() = pieces.find { it.type == ChessPiece.Type.KING }!!
@@ -65,13 +64,13 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
         }
         val chosenMoves = moves.filter { it.target == newPos }
         if (chosenMoves.size != 1) {
-            promote(piece, chosenMoves.mapNotNull {
-                when (it) {
-                    is ChessMove.Normal -> if (it.promotion == null) null else it.promotion to it
-                    is ChessMove.Attack -> if (it.promotion == null) null else it.promotion to it
-                    else -> null
-                }
-            })
+            player.openInventory(PawnPromotionScreen(piece, this, chosenMoves.mapNotNull {
+                val p = (it as? ChessMove.Promoting)?.promotion
+                if (p != null)
+                    p to it
+                else
+                    null
+            }).inventory)
         } else {
             finishMove(chosenMoves.first())
         }
@@ -81,7 +80,6 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
         if (game.board[move.origin]?.type == ChessPiece.Type.PAWN || move is ChessMove.Attack)
             game.board.resetMovesSinceLastCapture()
         move.execute(game.board)
-        lastMove = move
         game.board.lastMove = move
         game.nextTurn()
     }
@@ -109,10 +107,6 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
             player.finishMove(m)
             finished = true
         }
-    }
-
-    fun promote(pawn: ChessPiece, types: List<Pair<ChessPiece.Type, ChessMove>>) {
-        player.openInventory(PawnPromotionScreen(pawn, this, types).inventory)
     }
 
     fun startTurn() {
