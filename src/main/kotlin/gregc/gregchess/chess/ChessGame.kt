@@ -92,6 +92,8 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: Che
                 }, 3 * 20L)
             }
         }
+        if (reason is EndReason.PluginRestart)
+            return
         if (anyLong) {
             Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
                 board.clear()
