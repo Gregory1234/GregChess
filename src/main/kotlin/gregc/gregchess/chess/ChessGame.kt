@@ -75,7 +75,6 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: Che
     fun stop(reason: EndReason, quick: List<Player> = emptyList()) {
         if (stopping) return
         stopping = true
-        board.clear()
         var anyLong = false
         realPlayers.forEach {
             if (reason.winner != null) {
@@ -94,21 +93,12 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: Che
         }
         if (reason is EndReason.PluginRestart)
             return
-        if (anyLong) {
-            Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
-                board.clear()
-            }, 3 * 20L + 1)
+        Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+            board.clear()
             Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
-            }, 3 * 20L + 2)
-        } else {
-            Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
-                board.clear()
-            }, 1)
-            Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
-                Bukkit.getPluginManager().callEvent(EndEvent(this))
-            }, 2)
-        }
+            }, 1L)
+        }, (if (anyLong) (3 * 20L) else 0) + 1)
     }
 
     operator fun get(player: Player): ChessPlayer? =
