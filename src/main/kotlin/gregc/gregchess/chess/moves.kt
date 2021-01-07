@@ -1,37 +1,43 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.between
-import gregc.gregchess.rotationsOf
-import gregc.gregchess.times
-import gregc.gregchess.towards
+import gregc.gregchess.*
 import org.bukkit.Material
 import kotlin.math.abs
 
-sealed class ChessMove(
-    val origin: ChessPosition,
-    val target: ChessPosition,
-    private val floor: Material,
-    val executable: Boolean = true,
-    val couldAttack: Boolean = true
-) {
+sealed class ChessMove(val origin: ChessPosition, val target: ChessPosition) {
     fun display(game: ChessGame) {
         target.fillFloor(game.world, floor)
     }
 
+    abstract val isValid: Boolean
+
+    abstract val floor: Material
+
+    abstract val canAttack: Boolean
+
     abstract fun execute(board: Chessboard)
+
+    interface Promoting {
+        val promotion: ChessPiece.Type?
+    }
 
     class Normal(
         origin: ChessPosition,
         target: ChessPosition,
-        val promotion: ChessPiece.Type? = null,
-        couldAttack: Boolean = true
-    ) : ChessMove(
-        origin,
-        target,
-        if (promotion == null) Material.GREEN_CONCRETE else Material.BLUE_CONCRETE,
-        couldAttack = couldAttack
-    ) {
+        val defensive: Boolean = true,
+        override val promotion: ChessPiece.Type? = null
+    ) : ChessMove(origin, target), Promoting {
+        override val isValid: Boolean
+            get() = true
+
+        override val floor
+            get() = if (promotion == null) Material.GREEN_CONCRETE else Material.BLUE_CONCRETE
+
+        override val canAttack
+            get() = defensive
+
         override fun execute(board: Chessboard) {
+            if (!isValid) throw IllegalArgumentException()
             board.move(origin, target)
             if (promotion != null)
                 board.promote(target, promotion)
@@ -41,71 +47,82 @@ sealed class ChessMove(
     class Attack(
         origin: ChessPosition,
         target: ChessPosition,
-        val blocks: List<ChessPosition>,
-        val promotion: ChessPiece.Type? = null
-    ) : ChessMove(
-        origin,
-        target,
-        if (promotion == null) Material.RED_CONCRETE else Material.BLUE_CONCRETE
-    ) {
+        val capture: ChessPosition = target,
+        val defensive: Boolean = false,
+        val potentialBlocks: List<ChessPosition> = emptyList(),
+        val actualBlocks: List<ChessPosition> = emptyList(),
+        override val promotion: ChessPiece.Type? = null
+    ) : ChessMove(origin, target), Promoting {
+        override val isValid: Boolean
+            get() = actualBlocks.isEmpty() && !defensive
+
+        override val canAttack
+            get() = actualBlocks.isEmpty()
+
+        override val floor
+            get() = if (promotion == null) Material.RED_CONCRETE else Material.BLUE_CONCRETE
+
         override fun execute(board: Chessboard) {
-            board.capture(target)
+            if (!isValid) throw IllegalArgumentException()
+            board.capture(capture)
             board.move(origin, target)
             if (promotion != null)
                 board.promote(target, promotion)
         }
     }
 
-    class Defence(origin: ChessPosition, target: ChessPosition) :
-        ChessMove(origin, target, Material.GRAY_CONCRETE, false) {
-        override fun execute(board: Chessboard) {}
+    abstract class Special(origin: ChessPosition, target: ChessPosition) : ChessMove(origin, target) {
+        override val floor
+            get() = Material.BLUE_CONCRETE
     }
 
-    class XRayAttack(origin: ChessPosition, val pinned: ChessPosition, target: ChessPosition, val blocks: List<ChessPosition>) :
-        ChessMove(origin, target, Material.GRAY_CONCRETE, false, false) {
-        override fun execute(board: Chessboard) {}
-    }
-
-    abstract class Special(
-        origin: ChessPosition,
-        target: ChessPosition,
-        couldAttack: Boolean = true
-    ) :
-        ChessMove(origin, target, Material.BLUE_CONCRETE, couldAttack = couldAttack)
 }
 
-fun jumpTo(origin: ChessPosition, board: Chessboard, target: ChessPosition) = when {
+fun jumpTo(origin: ChessPosition, board: Chessboard, target: ChessPosition): List<ChessMove> = when {
     board[target] == null -> listOf(ChessMove.Normal(origin, target))
-    board[origin]?.side == board[target]?.side -> listOf(ChessMove.Defence(origin, target))
-    else -> listOf(ChessMove.Attack(origin, target, emptyList()))
+    else -> listOf(ChessMove.Attack(origin, target, defensive = board[origin]?.side == board[target]?.side))
 }
 
 fun directionRay(origin: ChessPosition, board: Chessboard, dir: Pair<Int, Int>): List<ChessMove> {
     var p = origin + dir
     val side = board[origin]?.side ?: return emptyList()
     val ret = mutableListOf<ChessMove>()
-    val blocks = mutableListOf<ChessPosition>()
+    val actualBlocks = mutableListOf<ChessPosition>()
+    val potentialBlocks = mutableListOf<ChessPosition>()
     ret.apply {
-        while (p.isValid() && board[p] == null) {
-            add(ChessMove.Normal(origin, p))
-            blocks += p
-            p += dir
-        }
-        if (p.isValid()) {
-            if (board[p]?.side == side) add(ChessMove.Defence(origin, p))
-            else {
-                add(ChessMove.Attack(origin, p, blocks))
-                val blocksRest = mutableListOf<ChessPosition>()
-                val pinned = p
+        while (p.isValid()) {
+            while (p.isValid() && board[p] == null) {
+                potentialBlocks += p
+                add(ChessMove.Normal(origin, p))
                 p += dir
-                while (p.isValid() && board[p] == null) {
-                    p += dir
-                    blocksRest += p
-                }
-                if (p.isValid() && board[p]?.side != side) {
-                    add(ChessMove.XRayAttack(origin, pinned, p, blocks + blocksRest))
-                }
             }
+            //TODO: ChessPiece.Type.KING shouldn't be mentioned here.
+            if (board[p]?.type == ChessPiece.Type.KING && board[p]?.side != side) {
+                add(
+                    ChessMove.Attack(origin, p, potentialBlocks = potentialBlocks)
+                )
+                potentialBlocks += p
+                p += dir
+            }
+            else {
+                break
+            }
+        }
+        while (p.isValid()) {
+            add(
+                ChessMove.Attack(
+                    origin,
+                    p,
+                    defensive = board[p]?.side == side,
+                    actualBlocks = actualBlocks.toList(),
+                    potentialBlocks = potentialBlocks.toList()
+                )
+            )
+            actualBlocks += p
+            do {
+                potentialBlocks += p
+                p += dir
+            } while (p.isValid() && board[p] == null)
         }
     }
     return ret
@@ -132,8 +149,8 @@ fun kingMovement(origin: ChessPosition, board: Chessboard): List<ChessMove> {
         for (rook in board.pieces.filter { it.type == ChessPiece.Type.ROOK }) {
             if (!rook.hasMoved && rook.side == piece.side && rook.pos.rank == origin.rank) {
                 val between = between(origin.file, rook.pos.file).map { origin.copy(file = it) }
-                val attacked = board.checkedPositions(!piece.side)
-                if (!between.all { board[it] == null && it !in attacked }) continue
+
+                if (!between.all { board[it] == null }) continue
 
                 val dist = abs(origin.file - rook.pos.file)
 
@@ -148,8 +165,21 @@ fun kingMovement(origin: ChessPosition, board: Chessboard): List<ChessMove> {
                 } else
                     continue
 
-                castles.add(object : ChessMove.Special(origin, origin.copy(file = newFile), false) {
+                castles.add(object : ChessMove.Special(origin, origin.copy(file = newFile)) {
+                    override val isValid: Boolean
+                        get() {
+                            return listOf(
+                                piece.pos,
+                                origin.copy(file = newRookFile),
+                                origin.copy(file = newFile)
+                            ).all { board.checkingPotentialMoves(!piece.side, it).isEmpty() }
+                        }
+
+                    override val canAttack
+                        get() = false
+
                     override fun execute(board: Chessboard) {
+                        if (!isValid) throw IllegalArgumentException()
                         if (dist == 1) {
                             board.swap(origin, target)
                         } else {
@@ -170,40 +200,33 @@ fun pawnMovement(origin: ChessPosition, board: Chessboard): List<ChessMove> {
     val dir = Pair(0, piece.side.direction)
     if (board[origin + dir] == null) {
         if ((origin + dir).rank !in listOf(0, 7))
-            ret.add(ChessMove.Normal(origin, origin + dir, couldAttack = false))
+            ret.add(ChessMove.Normal(origin, origin + dir, defensive = false))
         else
             for (p in piece.promotions)
-                ret.add(ChessMove.Normal(origin, origin + dir, p, couldAttack = false))
+                ret.add(ChessMove.Normal(origin, origin + dir, promotion = p, defensive = false))
         if (board[origin + dir * 2] == null && !piece.hasMoved) {
-            ret.add(ChessMove.Normal(origin, origin + dir * 2, couldAttack = false))
+            ret.add(ChessMove.Normal(origin, origin + dir * 2, defensive = false))
         }
     }
     for (s in listOf(-1, 1)) {
         val sd = Pair(s, piece.side.direction)
-        if (board[origin + sd] != null) {
-            when {
-                board[origin + sd]?.side == piece.side ->
-                    ret.add(ChessMove.Defence(origin, origin + sd))
-                (origin + sd).rank !in listOf(0, 7) ->
-                    ret.add(ChessMove.Attack(origin, origin + sd, emptyList()))
-                else ->
-                    for (p in piece.promotions)
-                        ret.add(ChessMove.Attack(origin, origin + sd, emptyList(), p))
-            }
+        when {
+            board[origin + sd]?.side == piece.side || board[origin + sd] == null ->
+                ret.add(ChessMove.Attack(origin, origin + sd, defensive = true))
+            (origin + sd).rank !in listOf(0, 7) ->
+                ret.add(ChessMove.Attack(origin, origin + sd))
+            else ->
+                for (p in piece.promotions)
+                    ret.add(ChessMove.Attack(origin, origin + sd, promotion = p))
         }
-        if (board[origin + sd] == null && board[origin + Pair(s, 0)]?.side == !piece.side) {
-            val captured = board[origin + Pair(s, 0)] ?: continue
+        if (board[origin + sd] == null && board[origin.plusF(s)]?.side == !piece.side) {
+            val captured = board[origin.plusF(s)] ?: continue
             val lastMove = board.lastMove ?: continue
             if (captured.type == ChessPiece.Type.PAWN &&
-                lastMove.target == origin + Pair(s, 0) &&
-                lastMove.origin == origin + Pair(s, piece.side.direction * 2)
+                lastMove.target == origin.plusF(s) &&
+                lastMove.origin == origin.plus(s, piece.side.direction * 2)
             ) {
-                ret.add(object: ChessMove.Special(origin, origin+sd){
-                    override fun execute(board: Chessboard) {
-                        board.move(origin, target)
-                        board.capture(origin + Pair(s, 0))
-                    }
-                })
+                ret.add(ChessMove.Attack(origin, origin.plus(s, piece.side.direction), origin.plusF(s)))
             }
         }
     }

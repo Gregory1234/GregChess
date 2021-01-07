@@ -19,6 +19,9 @@ import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.TextComponent
+
 
 class ChessManager(private val plugin: JavaPlugin) : Listener {
     private class PlayerMap {
@@ -102,6 +105,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                         }
                     }
                     p.game.board.capture(pos)
+                    p.game.board.updateMoves()
                 }
                 "spawn" -> {
                     commandRequirePlayer(player)
@@ -115,6 +119,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
 
                         game.board.capture(pos)
                         game.board += ChessPiece(piece, ChessSide.valueOf(args[1]), pos, false)
+                        game.board.updateMoves()
                     } catch (e: Exception) {
                         throw CommandException(e.toString())
                     }
@@ -128,6 +133,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     try {
                         game.board.capture(ChessPosition.parseFromString(args[2]))
                         game.board.move(ChessPosition.parseFromString(args[1]), ChessPosition.parseFromString(args[2]))
+                        game.board.updateMoves()
                     } catch (e: IllegalArgumentException) {
                         throw CommandException(e.toString())
                     }
@@ -140,12 +146,27 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     game.nextTurn()
                 }
+                "load" -> {
+                    commandRequirePlayer(player)
+                    commandRequirePermission(player, "greg-chess.debug")
+                    val game = players[player]?.game
+                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    game.board.setFromFEN(args.drop(1).joinToString(separator = " "))
+                }
+                "save" -> {
+                    commandRequirePlayer(player)
+                    val game = players[player]?.game
+                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    val message = TextComponent("Copy FEN")
+                    message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN())
+                    player.spigot().sendMessage(message)
+                }
                 else -> throw CommandException(GregChessInfo.WRONG_ARGUMENT)
             }
         }
         plugin.addCommandTab("chess") { s, args ->
             when (args.size) {
-                1 -> (listOf("duel", "leave", "draw") + if (s.hasPermission("greg-chess.debug")) listOf("capture", "spawn", "move", "skip") else listOf()).filter { it.startsWith(args[0]) }
+                1 -> (listOf("duel", "leave", "draw", "save") + if (s.hasPermission("greg-chess.debug")) listOf("capture", "spawn", "move", "skip", "load") else listOf()).filter { it.startsWith(args[0]) }
                 2 -> when (args[0]) {
                     "duel" -> null
                     "leave" -> listOf()
@@ -154,6 +175,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     "spawn" -> if (s.hasPermission("greg-chess.debug")) ChessSide.values().map { it.toString() }.filter { it.startsWith(args[1]) } else listOf()
                     "move" -> listOf()
                     "skip" -> listOf()
+                    "load" -> listOf()
                     else -> listOf()
                 }
                 3 -> when (args[0]) {

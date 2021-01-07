@@ -32,8 +32,8 @@ class ChessArena(name: String) : Arena(name) {
     }
 }
 
-enum class ChessSide(val prettyName: String, val direction: Int) {
-    WHITE("White", 1), BLACK("Black", -1);
+enum class ChessSide(val prettyName: String, val character: Char, val direction: Int) {
+    WHITE("White", 'w', 1), BLACK("Black", 'b', -1);
 
     operator fun not(): ChessSide = if (this == WHITE) BLACK else WHITE
     operator fun inc(): ChessSide = not()
@@ -53,6 +53,7 @@ data class ChessPosition(val file: Int, val rank: Int) {
     operator fun plus(diff: Pair<Int, Int>) = plus(diff.first, diff.second)
     fun plus(df: Int, dr: Int) = ChessPosition(file + df, rank + dr)
     fun plusF(df: Int) = plus(df, 0)
+    fun plusR(dr: Int) = plus(0, dr)
     private val fileStr = "${'a'+file}"
     private val rankStr = (rank + 1).toString()
 
@@ -72,7 +73,7 @@ data class ChessPosition(val file: Int, val rank: Int) {
 
     fun toLoc() = Loc(4 * 8 - 2 - file * 3, 102, rank * 3 + 8 + 1)
     fun clear(world: World) {
-        fillFloor(world, if ((file + rank) % 2 == 0) Material.BIRCH_PLANKS else Material.SPRUCE_PLANKS)
+        fillFloor(world, if ((file + rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS)
     }
 
     companion object {

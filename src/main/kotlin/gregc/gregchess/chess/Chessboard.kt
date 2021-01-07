@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.Loc
 import org.bukkit.Material
+import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame) {
     private val boardState: MutableMap<ChessPosition, ChessPiece> = (listOf(
@@ -29,6 +30,11 @@ class Chessboard(private val game: ChessGame) {
                     ChessPiece(ChessPiece.Type.PAWN, ChessSide.BLACK, ChessPosition(it, 6), false)
                 )
             }).map { Pair(it.pos, it) }.toMap().toMutableMap()
+
+    private val bakedMoves: MutableMap<ChessPosition, List<ChessMove>> = mutableMapOf()
+
+    private var movesSinceLastCapture = 0
+    private val boardHashes = mutableMapOf<Long, Int>()
 
     val pieces: List<ChessPiece>
         get() = boardState.values.toList()
@@ -63,8 +69,8 @@ class Chessboard(private val game: ChessGame) {
             boardState[origin] = a2.copy(pos = origin, hasMoved = true)
             boardState.remove(target)
         }
-        boardState[origin]?.let {it.playSound(game.world, it.type.moveSound)}
-        boardState[target]?.let {it.playSound(game.world, it.type.moveSound)}
+        boardState[origin]?.let { it.playSound(game.world, it.type.moveSound) }
+        boardState[target]?.let { it.playSound(game.world, it.type.moveSound) }
     }
 
     fun pickUp(piece: ChessPiece) {
@@ -134,20 +140,216 @@ class Chessboard(private val game: ChessGame) {
         piece.render(game.world)
     }
 
-    //TODO: Pinned pieces shouldn't be able to attack(?).
+    fun getMoves(pos: ChessPosition) = bakedMoves[pos].orEmpty()
 
-    fun attackedPositions(by: ChessSide) =
-        piecesOf(by).flatMap { it.getMoves(this) }.filter { it.couldAttack }.map { it.target }
+    fun updateMoves() {
+        bakedMoves.clear()
+        boardState.forEach { (pos, piece) ->
+            bakedMoves[pos] = piece.type.moveScheme(pos, this)
+        }
+    }
 
-    fun attackingMoves(by: ChessSide, pos: ChessPosition) =
-        piecesOf(by).flatMap { it.getMoves(this) }.filter { it.target == pos }.mapNotNull { it as? ChessMove.Attack }
+    val ChessMove.isLegal: Boolean
+        get() {
+            if (!isValid) return false
+            val piece = this@Chessboard[origin] ?: return false
+            if (piece.type == ChessPiece.Type.KING) {
+                val checks = checkingPotentialMoves(!piece.side, target)
+                return checks.isEmpty()
+            }
+            val myKing = piecesOf(piece.side).find { it.type == ChessPiece.Type.KING } ?: return false
+            val checks = checkingMoves(!piece.side, myKing.pos)
+            if (checks.any { target !in it.potentialBlocks && target != it.origin })
+                return false
+            val pins = pinningMoves(!piece.side, myKing.pos).filter { it.actualBlocks[0] == origin }
+            if (pins.any { target !in it.potentialBlocks && target != it.origin })
+                return false
+            return true
+        }
 
     fun pinningMoves(by: ChessSide, pos: ChessPosition) =
-        piecesOf(by).flatMap { it.getMoves(this) }.mapNotNull { it as? ChessMove.XRayAttack }
-            .filter { it.target == pos }
+        piecesOf(by).flatMap { getMoves(it.pos) }.mapNotNull { it as? ChessMove.Attack }
+            .filter { it.target == pos && !it.defensive && it.actualBlocks.size == 1 }
 
-    fun checkedPositions(by: ChessSide) =
-        piecesOf(by).filter { it.type != ChessPiece.Type.KING }.flatMap { it.getMoves(this) }
-            .filter { it.couldAttack }.map { it.target }
+    fun checkingPotentialMoves(by: ChessSide, pos: ChessPosition) =
+        piecesOf(by).flatMap { getMoves(it.pos) }.filter { it.target == pos }.filter { it.canAttack }
 
+    fun checkingMoves(by: ChessSide, pos: ChessPosition) =
+        piecesOf(by).flatMap { getMoves(it.pos) }.mapNotNull { it as? ChessMove.Attack }
+            .filter { it.target == pos && it.isValid }
+
+
+    fun setFromFEN(fen: String) {
+        pieces.forEach { capture(it) }
+        var x = 0
+        var y = 7
+        val parts = fen.split(" ")
+        parts[0].split("/").forEach { rank ->
+            rank.forEach {
+                if (it in ('0'..'9')) {
+                    x += it - '0'
+                } else {
+                    this += ChessPiece(
+                        ChessPiece.Type.parseFromChar(it),
+                        if (it.isUpperCase()) ChessSide.WHITE else ChessSide.BLACK,
+                        ChessPosition(x, y),
+                        when (it) {
+                            'p' -> y != 6
+                            'P' -> y != 1
+                            else -> true
+                        }
+                    )
+                    x++
+                }
+            }
+            y--
+            x = 0
+        }
+        parts[2].forEach { c ->
+            when (c) {
+                'k' -> {
+                    val king = piecesOf(ChessSide.BLACK).find { it.type == ChessPiece.Type.KING }
+                    val rook =
+                        piecesOf(ChessSide.BLACK).findLast { it.type == ChessPiece.Type.ROOK && it.pos.file > king?.pos?.file ?: 0 }
+                    if (king != null)
+                        boardState[king.pos] = king.copy(hasMoved = false)
+                    if (rook != null)
+                        boardState[rook.pos] = rook.copy(hasMoved = false)
+                }
+                'K' -> {
+                    val king = piecesOf(ChessSide.WHITE).find { it.type == ChessPiece.Type.KING }
+                    val rook =
+                        piecesOf(ChessSide.WHITE).findLast { it.type == ChessPiece.Type.ROOK && it.pos.file > king?.pos?.file ?: 0 }
+                    if (king != null)
+                        boardState[king.pos] = king.copy(hasMoved = false)
+                    if (rook != null)
+                        boardState[rook.pos] = rook.copy(hasMoved = false)
+                }
+                'q' -> {
+                    val king = piecesOf(ChessSide.BLACK).find { it.type == ChessPiece.Type.KING }
+                    val rook =
+                        piecesOf(ChessSide.BLACK).find { it.type == ChessPiece.Type.ROOK && it.pos.file < king?.pos?.file ?: 0 }
+                    if (king != null)
+                        boardState[king.pos] = king.copy(hasMoved = false)
+                    if (rook != null)
+                        boardState[rook.pos] = rook.copy(hasMoved = false)
+                }
+                'Q' -> {
+                    val king = piecesOf(ChessSide.WHITE).find { it.type == ChessPiece.Type.KING }
+                    val rook =
+                        piecesOf(ChessSide.WHITE).find { it.type == ChessPiece.Type.ROOK && it.pos.file < king?.pos?.file ?: 0 }
+                    if (king != null)
+                        boardState[king.pos] = king.copy(hasMoved = false)
+                    if (rook != null)
+                        boardState[rook.pos] = rook.copy(hasMoved = false)
+                }
+            }
+        }
+
+        if (parts[3] != "-") {
+            val pos = ChessPosition.parseFromString(parts[2])
+            val side = if (boardState[pos.plusR(1)] != null) ChessSide.WHITE else ChessSide.BLACK
+            lastMove = ChessMove.Normal(pos.plusR(-side.direction), pos.plusR(side.direction))
+        }
+
+        movesSinceLastCapture = parts[4].toInt()+1
+
+        boardHashes.clear() // Nothing better to do here
+
+        if (ChessSide.parseFromChar(parts[1][0]) != game.currentTurn) {
+            game.nextTurn()
+        } else
+            updateMoves()
+    }
+
+    fun getFEN(): String = buildString {
+        for (y in (0..7).reversed()) {
+            var empty = 0
+            for (x in (0..7)) {
+                val piece = boardState[ChessPosition(x, y)]
+                if (piece == null) {
+                    empty++
+                    continue
+                }
+                if (empty > 0) {
+                    append(empty)
+                }
+                empty = 0
+                val ch = piece.type.character
+                append(if (piece.side == ChessSide.WHITE) ch.toUpperCase() else ch)
+            }
+            if (empty > 0) {
+                append(empty)
+            }
+            if (y != 0)
+                append("/")
+        }
+        append(" ")
+        append(game.currentTurn.character)
+        append(" ")
+        val whiteKing = piecesOf(ChessSide.WHITE).find { it.type == ChessPiece.Type.KING }
+        if (whiteKing != null && !whiteKing.hasMoved){
+            val whiteKingRook =
+                piecesOf(ChessSide.WHITE).findLast { it.type == ChessPiece.Type.ROOK && it.pos.file > whiteKing.pos.file }
+            if (whiteKingRook != null && !whiteKingRook.hasMoved)
+                append("K")
+            val whiteQueenRook =
+                piecesOf(ChessSide.WHITE).findLast { it.type == ChessPiece.Type.ROOK && it.pos.file < whiteKing.pos.file }
+            if (whiteQueenRook != null && !whiteQueenRook.hasMoved)
+                append("Q")
+        }
+        val blackKing = piecesOf(ChessSide.BLACK).find { it.type == ChessPiece.Type.KING }
+        if (blackKing != null && !blackKing.hasMoved){
+            val blackKingRook =
+                piecesOf(ChessSide.BLACK).findLast { it.type == ChessPiece.Type.ROOK && it.pos.file > blackKing.pos.file }
+            if (blackKingRook != null && !blackKingRook.hasMoved)
+                append("k")
+            val blackQueenRook =
+                piecesOf(ChessSide.BLACK).findLast { it.type == ChessPiece.Type.ROOK && it.pos.file < blackKing.pos.file }
+            if (blackQueenRook != null && !blackQueenRook.hasMoved)
+                append("q")
+        }
+        append(" ")
+        lastMove.also {
+            if (it != null && it is ChessMove.Normal && boardState[it.target]?.type == ChessPiece.Type.PAWN && abs(it.origin.rank - it.target.rank) == 2) {
+                append (it.origin.copy(rank = (it.origin.rank + it.target.rank) / 2))
+            }else
+                append ("-")
+        }
+        append(" ")
+        append(if (movesSinceLastCapture == 0) 0 else (movesSinceLastCapture-1))
+        append(" ")
+        append(1)
+    }
+
+    fun checkForGameEnd() {
+        if (addBoardHash() == 3)
+            game.stop(ChessGame.EndReason.Repetition())
+        if (++movesSinceLastCapture > 50)
+            game.stop(ChessGame.EndReason.FiftyMoves())
+        val whitePieces = piecesOf(ChessSide.WHITE)
+        val blackPieces = piecesOf(ChessSide.BLACK)
+        if (whitePieces.size == 1 && blackPieces.size == 1)
+            game.stop(ChessGame.EndReason.InsufficientMaterial())
+        if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
+            game.stop(ChessGame.EndReason.InsufficientMaterial())
+        if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
+            game.stop(ChessGame.EndReason.InsufficientMaterial())
+        if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 2 && blackPieces.any { it.type.minor })
+            game.stop(ChessGame.EndReason.InsufficientMaterial())
+        if (whitePieces.size == 3 && whitePieces.count { it.type == ChessPiece.Type.KNIGHT } == 2 && blackPieces.size == 1)
+            game.stop(ChessGame.EndReason.InsufficientMaterial())
+        if (blackPieces.size == 3 && blackPieces.count { it.type == ChessPiece.Type.KNIGHT } == 2 && whitePieces.size == 1)
+            game.stop(ChessGame.EndReason.InsufficientMaterial())
+    }
+
+    private fun addBoardHash(): Int {
+        val hash = getPositionHash()
+        boardHashes[hash] = (boardHashes[hash] ?: 0).plus(1)
+        return boardHashes[hash]!!
+    }
+
+    fun resetMovesSinceLastCapture() {
+        movesSinceLastCapture = 0
+    }
 }

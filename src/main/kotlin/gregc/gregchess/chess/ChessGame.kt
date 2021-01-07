@@ -15,8 +15,6 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
 
     private val white = ChessPlayer(whitePlayer, ChessSide.WHITE, this, whitePlayer == blackPlayer)
     private val black = ChessPlayer(blackPlayer, ChessSide.BLACK, this, whitePlayer == blackPlayer)
-    private var movesSinceLastCapture = 0
-    private val boardHashes = mutableMapOf<Long, Int>()
     val realPlayers = listOf(whitePlayer, blackPlayer).distinctBy { it.uniqueId }
     var currentTurn = ChessSide.WHITE
     val currentPlayer
@@ -42,36 +40,10 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, val arena: ChessArena)
     }
 
     private fun startTurn() {
-        if (addBoardHash() == 3)
-            stop(EndReason.Repetition())
-        if (++movesSinceLastCapture > 50)
-            stop(EndReason.FiftyMoves())
-        val whitePieces = white.pieces
-        val blackPieces = black.pieces
-        if (whitePieces.size == 1 && blackPieces.size == 1)
-            stop(EndReason.InsufficientMaterial())
-        if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
-            stop(EndReason.InsufficientMaterial())
-        if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
-            stop(EndReason.InsufficientMaterial())
-        if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 2 && blackPieces.any { it.type.minor })
-            stop(EndReason.InsufficientMaterial())
-        if (whitePieces.size == 3 && whitePieces.count { it.type == ChessPiece.Type.KNIGHT } == 2 && blackPieces.size == 1)
-            stop(EndReason.InsufficientMaterial())
-        if (blackPieces.size == 3 && blackPieces.count { it.type == ChessPiece.Type.KNIGHT } == 2 && whitePieces.size == 1)
-            stop(EndReason.InsufficientMaterial())
+        board.updateMoves()
+        board.checkForGameEnd()
         if (!stopping)
             currentPlayer.startTurn()
-    }
-
-    private fun addBoardHash(): Int {
-        val hash = board.getPositionHash()
-        boardHashes[hash] = (boardHashes[hash] ?: 0).plus(1)
-        return boardHashes[hash]!!
-    }
-
-    fun resetMovesSinceLastCapture() {
-        movesSinceLastCapture = 0
     }
 
     sealed class EndReason(val prettyName: String, val winner: ChessSide?) {

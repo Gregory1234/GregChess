@@ -34,15 +34,8 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
     private val king
         get() = pieces.find { it.type == ChessPiece.Type.KING }!!
 
-    private var checkingMoves = emptyList<ChessMove.Attack>()
-    private var pinningMoves = emptyList<ChessMove.XRayAttack>()
-
     private fun getAllowedMoves(piece: ChessPiece): List<ChessMove> =
-        piece.getMoves(game.board).filter { it.executable }.filter { m ->
-            if (piece.type == ChessPiece.Type.KING) m.target !in game.board.attackedPositions(!piece.side)
-            else checkingMoves.all { m.target == it.origin || m.target in it.blocks } &&
-                    pinningMoves.filter { it.pinned == m.origin }.all { m.target == it.origin || m.target in it.blocks }
-        }
+        game.board.getMoves(piece.pos).filter { game.board.run { it.isLegal } }
 
     fun pickUp(loc: Loc) {
         if (!ChessPosition.fromLoc(loc).isValid()) return
@@ -86,7 +79,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
 
     fun finishMove(move: ChessMove) {
         if (game.board[move.origin]?.type == ChessPiece.Type.PAWN || move is ChessMove.Attack)
-            game.resetMovesSinceLastCapture()
+            game.board.resetMovesSinceLastCapture()
         move.execute(game.board)
         lastMove = move
         game.board.lastMove = move
@@ -95,7 +88,11 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
 
     fun hasTurn(): Boolean = game.currentTurn == side
 
-    class PawnPromotionScreen(private val pawn: ChessPiece, private val player: ChessPlayer, private val moves: List<Pair<ChessPiece.Type, ChessMove>>) : InventoryHolder {
+    class PawnPromotionScreen(
+        private val pawn: ChessPiece,
+        private val player: ChessPlayer,
+        private val moves: List<Pair<ChessPiece.Type, ChessMove>>
+    ) : InventoryHolder {
         var finished: Boolean = false
         private val inv = Bukkit.createInventory(this, 9, "Pawn promotion")
 
@@ -119,8 +116,7 @@ class ChessPlayer(val player: Player, val side: ChessSide, val game: ChessGame, 
     }
 
     fun startTurn() {
-        checkingMoves = game.board.attackingMoves(!side, king.pos)
-        pinningMoves = game.board.pinningMoves(!side, king.pos)
+        val checkingMoves = game.board.checkingMoves(!side, king.pos)
         if (checkingMoves.isNotEmpty()) {
             var inMate = true
             for (p in pieces) {
