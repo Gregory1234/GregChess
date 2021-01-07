@@ -21,6 +21,8 @@ import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
+import org.bukkit.entity.WanderingTrader
+import org.bukkit.event.entity.CreatureSpawnEvent
 
 
 class ChessManager(private val plugin: JavaPlugin) : Listener {
@@ -280,5 +282,12 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     @EventHandler
     fun onChessGameEnd(e: ChessGame.EndEvent) {
         players.remove(e.game)
+    }
+
+    @EventHandler
+    fun onCreatureSpawn(e: CreatureSpawnEvent) {
+        if (e.location.world?.name in arenas.map { it.name }) {
+            e.isCancelled = true
+        }
     }
 }
