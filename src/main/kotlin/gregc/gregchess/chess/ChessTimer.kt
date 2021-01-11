@@ -27,7 +27,9 @@ class ChessTimer(private val game: ChessGame, initialTime: Long, private val inc
     private fun timeout(side: ChessSide) {
         if (game.board.piecesOf(!side).size == 1)
             game.stop(ChessGame.EndReason.DrawTimeout())
-        else if (game.board.piecesOf(!side).size == 2 && game.board.piecesOf(!side).any { it.type.minor })
+        else if (game.config.relaxedInsufficientMaterial
+            && game.board.piecesOf(!side).size == 2 && game.board.piecesOf(!side).any { it.type.minor }
+        )
             game.stop(ChessGame.EndReason.DrawTimeout())
         else
             game.stop(ChessGame.EndReason.Timeout(!side))
