@@ -9,7 +9,12 @@ import org.bukkit.event.HandlerList
 import org.bukkit.scoreboard.DisplaySlot
 import java.util.concurrent.TimeUnit
 
-class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: ChessArena, gameConfig: GameConfiguration) {
+class ChessGame(
+    whitePlayer: Player,
+    blackPlayer: Player,
+    private val arena: ChessArena,
+    gameConfig: GameConfiguration
+) {
 
     override fun toString() = "ChessGame(arena = $arena)"
 
@@ -67,6 +72,7 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: Che
         class Repetition : EndReason("repetition", null)
         class DrawAgreement : EndReason("agreement", null)
         class Timeout(winner: ChessSide) : ChessGame.EndReason("timeout", winner)
+        class DrawTimeout : ChessGame.EndReason("timeout vs insufficient material", null)
 
         val message
             get() = "The game has finished. ${winner?.prettyName?.plus(" won") ?: "It was a draw"} by ${prettyName}."
@@ -100,6 +106,14 @@ class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: Che
                     20
                 )
                 //it.spigot().sendMessage(ChatMessageType.ACTION_BAR, *TextComponent.fromLegacyText(chatColor("${if (reason.winner == this[it]!!.side) "&aYou won" else "&cYou lost"} by ${reason.prettyName}!")))
+            } else {
+                it.sendTitle(
+                    chatColor("&eYou drew"),
+                    chatColor(reason.prettyName),
+                    10,
+                    70,
+                    20
+                )
             }
             it.sendMessage(reason.message)
             if (it in quick) {

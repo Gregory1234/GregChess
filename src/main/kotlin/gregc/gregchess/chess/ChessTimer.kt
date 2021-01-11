@@ -3,6 +3,7 @@ package gregc.gregchess.chess
 import gregc.gregchess.GregChessInfo
 import gregc.gregchess.info
 import org.bukkit.scheduler.BukkitRunnable
+import kotlin.math.max
 
 class ChessTimer(private val game: ChessGame, initialTime: Long, private val increment: Long) {
     private var stopping = false
@@ -23,12 +24,21 @@ class ChessTimer(private val game: ChessGame, initialTime: Long, private val inc
         ChessSide.BLACK -> blackEndTime - System.currentTimeMillis()
     }
 
+    private fun timeout(side: ChessSide) {
+        if (game.board.piecesOf(!side).size == 1)
+            game.stop(ChessGame.EndReason.DrawTimeout())
+        else if (game.board.piecesOf(!side).size == 2 && game.board.piecesOf(!side).any { it.type.minor })
+            game.stop(ChessGame.EndReason.DrawTimeout())
+        else
+            game.stop(ChessGame.EndReason.Timeout(!side))
+    }
+
     fun refreshClock() {
         val whiteTime = getWhiteTime()
         val blackTime = getBlackTime()
-        if (whiteTime < 0) game.stop(ChessGame.EndReason.Timeout(ChessSide.BLACK))
-        if (blackTime < 0) game.stop(ChessGame.EndReason.Timeout(ChessSide.WHITE))
-        game.displayClock(whiteTime, blackTime)
+        if (whiteTime < 0) timeout(ChessSide.WHITE)
+        if (blackTime < 0) timeout(ChessSide.BLACK)
+        game.displayClock(max(whiteTime, 0), max(blackTime, 0))
     }
 
     fun start() {
