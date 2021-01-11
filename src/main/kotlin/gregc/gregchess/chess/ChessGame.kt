@@ -14,20 +14,39 @@ import org.bukkit.scoreboard.DisplaySlot
 import java.util.concurrent.TimeUnit
 
 class ChessGame(
-    whitePlayer: Player,
-    blackPlayer: Player,
+    private val white: ChessPlayer,
+    private val black: ChessPlayer,
     private val arena: ChessArena,
     val settings: Settings
 ) {
+
+
     override fun toString() = "ChessGame(arena = $arena)"
 
     val board = Chessboard(this)
 
     val timer = ChessTimer(this, settings.timerSettings)
 
-    private val white = ChessPlayer(whitePlayer, ChessSide.WHITE, this, whitePlayer == blackPlayer)
-    private val black = ChessPlayer(blackPlayer, ChessSide.BLACK, this, whitePlayer == blackPlayer)
-    val realPlayers = listOf(whitePlayer, blackPlayer).distinctBy { it.uniqueId }
+    constructor(
+        whitePlayer: Player,
+        blackPlayer: Player,
+        arena: ChessArena,
+        settings: Settings
+    ) : this(
+        ChessPlayer.Human(whitePlayer, ChessSide.WHITE, whitePlayer == blackPlayer),
+        ChessPlayer.Human(blackPlayer, ChessSide.BLACK, whitePlayer == blackPlayer),
+        arena,
+        settings
+    )
+
+    init {
+        white.game = this
+        black.game = this
+    }
+
+    val realPlayers: List<Player> =
+        listOf(white, black).mapNotNull { (it as? ChessPlayer.Human)?.player }.distinctBy { it.uniqueId }
+
     var currentTurn = ChessSide.WHITE
 
     val world
@@ -43,14 +62,8 @@ class ChessGame(
         addScoreboard("calculating", "calculating")
         realPlayers.forEach(arena::teleport)
         board.render()
-        black.player.sendTitle("", chatColor("You are playing with the black pieces"), 10, 70, 20)
-        white.player.sendTitle(
-            chatColor("&eIt is your turn"),
-            chatColor("You are playing with the white pieces"),
-            10,
-            70,
-            20
-        )
+        black.sendTitle("", chatColor("You are playing with the black pieces"))
+        white.sendTitle(chatColor("&eIt is your turn"), chatColor("You are playing with the white pieces"))
         white.sendMessage(chatColor("&eYou are playing with the white pieces"))
         black.sendMessage(chatColor("&eYou are playing with the black pieces"))
         board.setFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
@@ -101,22 +114,12 @@ class ChessGame(
         var anyLong = false
         realPlayers.forEach {
             if (reason.winner != null) {
-                it.sendTitle(
+                this[it]?.sendTitle(
                     chatColor(if (reason.winner == this[it]!!.side) "&aYou won" else "&cYou lost"),
-                    chatColor(reason.prettyName),
-                    10,
-                    70,
-                    20
+                    chatColor(reason.prettyName)
                 )
-                //it.spigot().sendMessage(ChatMessageType.ACTION_BAR, *TextComponent.fromLegacyText(chatColor("${if (reason.winner == this[it]!!.side) "&aYou won" else "&cYou lost"} by ${reason.prettyName}!")))
             } else {
-                it.sendTitle(
-                    chatColor("&eYou drew"),
-                    chatColor(reason.prettyName),
-                    10,
-                    70,
-                    20
-                )
+                this[it]?.sendTitle(chatColor("&eYou drew"), chatColor(reason.prettyName))
             }
             it.sendMessage(reason.message)
             if (it in quick) {
@@ -134,17 +137,18 @@ class ChessGame(
             arena.clearScoreboard()
             board.clear()
             Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+                listOf(white,black).forEach(ChessPlayer::stop)
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
             }, 1L)
         }, (if (anyLong) (3 * 20L) else 0) + 1)
     }
 
-    operator fun get(player: Player): ChessPlayer? =
-        if (white.player == black.player && white.player == player)
-            this[currentTurn]
-        else if (white.player == player)
+    operator fun get(player: Player): ChessPlayer.Human? =
+        if (white is ChessPlayer.Human && black is ChessPlayer.Human && white.player == black.player && white.player == player)
+            this[currentTurn] as? ChessPlayer.Human
+        else if (white is ChessPlayer.Human && white.player == player )
             white
-        else if (black.player == player)
+        else if (black is ChessPlayer.Human && black.player == player )
             black
         else
             null
@@ -165,17 +169,17 @@ class ChessGame(
         val objective = arena.scoreboard.registerNewObjective("GregChess", "", "GregChess game")
         objective.displaySlot = DisplaySlot.SIDEBAR
         objective.getScore("White player:").score = 9
-        objective.getScore(chatColor("&b${white.player.name} ")).score = 8
+        objective.getScore(chatColor("&b${white.name} ")).score = 8
         objective.getScore("White timer:").score = 7
         objective.getScore("$whiteTime ").score = 6
         objective.getScore("").score = 5
         objective.getScore("Black player:").score = 4
-        objective.getScore(chatColor("&b${black.player.name}")).score = 3
+        objective.getScore(chatColor("&b${black.name}")).score = 3
         objective.getScore("Black timer:").score = 2
         objective.getScore(blackTine).score = 1
     }
 
-    class SettingsMenu(private inline val callback: (Settings) -> Unit): InventoryHolder {
+    class SettingsMenu(private inline val callback: (Settings) -> Unit) : InventoryHolder {
         var finished: Boolean = false
         private val inv = Bukkit.createInventory(this, 9, "Choose settings")
 

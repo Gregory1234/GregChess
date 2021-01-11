@@ -77,6 +77,21 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                         players += game
                     }.inventory)
                 }
+                "stockfish" -> {
+                    commandRequirePlayer(player)
+                    commandRequireArguments(args, 1)
+                    if (player in players)
+                        throw CommandException("&cYou are in a game already!")
+                    player.openInventory(ChessGame.SettingsMenu {
+                        val arena = nextArena()
+                        commandRequireNotNull(arena, "&cThere are no free arenas!")
+                        val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
+                        val black = ChessPlayer.Engine("stockfish", ChessSide.BLACK)
+                        val game = ChessGame(white, black, arena, it)
+                        game.start()
+                        players += game
+                    }.inventory)
+                }
                 "leave" -> {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
