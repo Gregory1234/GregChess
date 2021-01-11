@@ -63,14 +63,9 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
 
         private val process: Process = ProcessBuilder("stockfish").start()
 
-        private val executor = Executors.newCachedThreadPool()
+        private val reader = process.inputStream.bufferedReader()
 
-        init {
-            val reader = process.inputStream.bufferedReader()
-            executor.submit(Callable {
-                reader.readLine()
-            })[5, TimeUnit.SECONDS]
-        }
+        private val executor = Executors.newCachedThreadPool()
 
         override fun stop() = process.destroy()
 
@@ -78,29 +73,40 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
 
         override fun sendTitle(title: String, subtitle: String) {}
 
+        private fun setOption(name: String, value: String) {
+            process.outputStream.write(("setoption name $name value $value\n").toByteArray())
+            process.outputStream.flush()
+            info(name, value)
+        }
+
+        private fun sendCommand(command: String) {
+            process.outputStream.write("isready\n".toByteArray())
+            process.outputStream.flush()
+            executor.submit(Callable {
+                reader.readLine()
+            })[5, TimeUnit.SECONDS]
+            process.outputStream.write(("$command\n").toByteArray())
+            process.outputStream.flush()
+            info(command)
+        }
+
+        private fun readLine() = executor.submit(Callable {
+            reader.readLine()
+        })[5, TimeUnit.SECONDS]
+
+        init {
+            readLine()
+        }
+
         override fun startTurn() {
             super.startTurn()
             val fen = game.board.getFEN()
-            val reader = process.inputStream.bufferedReader()
-            process.outputStream.write("isready\n".toByteArray())
-            process.outputStream.flush()
-            executor.submit(Callable {
-                reader.readLine()
-            })[5, TimeUnit.SECONDS]
-            process.outputStream.write("position fen $fen\n".toByteArray())
-            process.outputStream.flush()
-            process.outputStream.write("isready\n".toByteArray())
-            process.outputStream.flush()
-            executor.submit(Callable {
-                reader.readLine()
-            })[5, TimeUnit.SECONDS]
-            process.outputStream.write("go depth 15\n".toByteArray())
-            process.outputStream.flush()
+
+            sendCommand("position fen $fen")
+            sendCommand("go movetime 200")
 
             while (true) {
-                val line = executor.submit(Callable {
-                    reader.readLine().split(" ")
-                })[5, TimeUnit.SECONDS]
+                val line = readLine().split(" ")
                 info(line)
                 if (line[0] == "bestmove") {
                     val origin = ChessPosition.parseFromString(line[1].take(2))
