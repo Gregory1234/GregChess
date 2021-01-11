@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.Loc
 import gregc.gregchess.chatColor
+import gregc.gregchess.getBlockAt
 import gregc.gregchess.info
 import org.bukkit.Material
 import org.bukkit.Sound
@@ -116,6 +118,23 @@ data class ChessPiece(val type: Type, val side: ChessSide, val pos: ChessPositio
 
     }
 
+    data class Captured(val type: Type, val side: ChessSide, val by: ChessSide, val pos: Pair<Int, Int>) {
+        private val material = type.getMaterial(side)
+
+        private val loc: Loc = when(by){
+            ChessSide.WHITE -> Loc(4*8-1-2*pos.first, 101, 8-3-2*pos.second)
+            ChessSide.BLACK -> Loc(8+2*pos.first, 101, 8*4+2+2*pos.second)
+        }
+
+        fun render(world: World) {
+            world.getBlockAt(loc).type = material
+        }
+
+        fun hide(world: World) {
+            world.getBlockAt(loc).type = Material.AIR
+        }
+    }
+
     override fun toString() = "ChessPiece(type = $type, side = $side, pos = $pos, hasMoved = $hasMoved)"
     private val material = type.getMaterial(side)
 
@@ -126,6 +145,8 @@ data class ChessPiece(val type: Type, val side: ChessSide, val pos: ChessPositio
     fun hide(world: World) {
         pos.getBlock(world).type = Material.AIR
     }
+
+    fun toCaptured(pos: Pair<Int, Int>) = Captured(type, side, !side, pos)
 
     val promotions = if (type == Type.PAWN) listOf(Type.QUEEN, Type.ROOK, Type.BISHOP, Type.KNIGHT) else emptyList()
 
