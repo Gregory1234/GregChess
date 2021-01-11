@@ -24,6 +24,10 @@ class ChessTimer(private val game: ChessGame, initialTime: Long, private val inc
     }
 
     fun start() {
+        whiteStartTime = System.currentTimeMillis()
+        blackStartTime = System.currentTimeMillis()
+        whiteEndTime = System.currentTimeMillis()+whiteTimeDiff
+        blackEndTime = System.currentTimeMillis()+blackTimeDiff
         object: BukkitRunnable() {
             override fun run() {
                 if (stopping)

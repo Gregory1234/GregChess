@@ -69,7 +69,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                         throw CommandException("&cYour opponent is in a game already!")
                     val arena = nextArena()
                     commandRequireNotNull(arena, "&cThere are no free arenas!")
-                    val game = ChessGame(player, opponent, arena)
+                    val game = ChessGame(player, opponent, arena, GameConfiguration.rapid10)
                     game.start()
                     players += game
                 }

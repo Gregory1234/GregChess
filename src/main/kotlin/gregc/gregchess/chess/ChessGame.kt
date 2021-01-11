@@ -9,13 +9,13 @@ import org.bukkit.event.HandlerList
 import org.bukkit.scoreboard.DisplaySlot
 import java.util.concurrent.TimeUnit
 
-class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: ChessArena) {
+class ChessGame(whitePlayer: Player, blackPlayer: Player, private val arena: ChessArena, gameConfig: GameConfiguration) {
 
     override fun toString() = "ChessGame(arena = $arena)"
 
     val board = Chessboard(this)
 
-    val timer = ChessTimer(this, TimeUnit.MINUTES.toMillis(10), TimeUnit.SECONDS.toMillis(10))
+    val timer = ChessTimer(this, gameConfig.initialTime, gameConfig.increment)
 
     private val white = ChessPlayer(whitePlayer, ChessSide.WHITE, this, whitePlayer == blackPlayer)
     private val black = ChessPlayer(blackPlayer, ChessSide.BLACK, this, whitePlayer == blackPlayer)
