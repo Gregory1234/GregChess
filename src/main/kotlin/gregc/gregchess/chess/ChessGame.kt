@@ -13,14 +13,19 @@ class ChessGame(
     whitePlayer: Player,
     blackPlayer: Player,
     private val arena: ChessArena,
-    val settings: GameSettings
+    val settings: Settings
 ) {
+    data class Settings(val timerSettings: ChessTimer.Settings, val relaxedInsufficientMaterial: Boolean) {
+        companion object {
+            val rapid10 = Settings(ChessTimer.Settings.rapid10, true)
+        }
+    }
 
     override fun toString() = "ChessGame(arena = $arena)"
 
     val board = Chessboard(this)
 
-    val timer = ChessTimer(this, settings.initialTime, settings.increment)
+    val timer = ChessTimer(this, settings.timerSettings)
 
     private val white = ChessPlayer(whitePlayer, ChessSide.WHITE, this, whitePlayer == blackPlayer)
     private val black = ChessPlayer(blackPlayer, ChessSide.BLACK, this, whitePlayer == blackPlayer)

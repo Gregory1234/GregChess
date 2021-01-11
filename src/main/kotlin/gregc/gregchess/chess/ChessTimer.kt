@@ -2,14 +2,25 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.GregChessInfo
 import org.bukkit.scheduler.BukkitRunnable
+import java.util.concurrent.TimeUnit
 import kotlin.math.max
 
-class ChessTimer(private val game: ChessGame, initialTime: Long, private val increment: Long) {
+class ChessTimer(private val game: ChessGame, val settings: Settings) {
+
+    data class Settings(val initialTime: Long, val increment: Long) {
+        companion object {
+            val rapid10 = fromMinutesAndSeconds(10,10)
+
+            private fun fromMinutesAndSeconds(minutes: Long, increment: Long) =
+                Settings(TimeUnit.MINUTES.toMillis(minutes), TimeUnit.SECONDS.toMillis(increment))
+        }
+    }
+
     private var stopping = false
     private var whiteStartTime: Long = System.currentTimeMillis()
     private var blackStartTime: Long = System.currentTimeMillis()
-    private var whiteTimeDiff: Long = initialTime
-    private var blackTimeDiff: Long = initialTime
+    private var whiteTimeDiff: Long = settings.initialTime
+    private var blackTimeDiff: Long = settings.initialTime
     private var whiteEndTime: Long = System.currentTimeMillis() + whiteTimeDiff
     private var blackEndTime: Long = System.currentTimeMillis() + blackTimeDiff
 
@@ -62,13 +73,13 @@ class ChessTimer(private val game: ChessGame, initialTime: Long, private val inc
                 val time = System.currentTimeMillis()
                 blackStartTime = time
                 blackEndTime = time + blackTimeDiff
-                whiteTimeDiff = whiteEndTime - time + increment
+                whiteTimeDiff = whiteEndTime - time + settings.increment
             }
             ChessSide.BLACK -> {
                 val time = System.currentTimeMillis()
                 whiteStartTime = time
                 whiteEndTime = time + whiteTimeDiff
-                blackTimeDiff = blackEndTime - time + increment
+                blackTimeDiff = blackEndTime - time + settings.increment
             }
         }
         refreshClock()
