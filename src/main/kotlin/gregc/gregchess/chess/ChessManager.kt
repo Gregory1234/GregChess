@@ -69,11 +69,13 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequireNotNull(opponent, "&cPlayer doesn't exist!")
                     if (opponent in players)
                         throw CommandException("&cYour opponent is in a game already!")
-                    val arena = nextArena()
-                    commandRequireNotNull(arena, "&cThere are no free arenas!")
-                    val game = ChessGame(player, opponent, arena, ChessGame.Settings.rapid10)
-                    game.start()
-                    players += game
+                    player.openInventory(ChessGame.SettingsMenu {
+                        val arena = nextArena()
+                        commandRequireNotNull(arena, "&cThere are no free arenas!")
+                        val game = ChessGame(player, opponent, arena, it)
+                        game.start()
+                        players += game
+                    }.inventory)
                 }
                 "leave" -> {
                     commandRequirePlayer(player)
@@ -171,7 +173,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     val game = players[player]?.game
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
-                        game.timer.addTime(ChessSide.valueOf(args[1]),TimeUnit.SECONDS.toMillis(args[2].toLong()))
+                        game.timer.addTime(ChessSide.valueOf(args[1]), TimeUnit.SECONDS.toMillis(args[2].toLong()))
                     } catch (e: IllegalArgumentException) {
                         throw CommandException(e.toString())
                     }
@@ -267,11 +269,16 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
+        val holder = e.inventory.holder
         if (e.whoClicked in players) {
             e.isCancelled = true
-            val holder = e.inventory.holder
             if (holder is ChessPlayer.PawnPromotionScreen) {
                 e.currentItem?.let { holder.applyEvent(it.type); e.whoClicked.closeInventory() }
+            }
+        } else {
+            if (holder is ChessGame.SettingsMenu) {
+                e.currentItem?.itemMeta?.displayName?.let { holder.applyEvent(it); e.whoClicked.closeInventory() }
+                e.isCancelled = true
             }
         }
     }

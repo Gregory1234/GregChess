@@ -9,6 +9,7 @@ class ChessTimer(private val game: ChessGame, val settings: Settings) {
 
     data class Settings(val initialTime: Long, val increment: Long) {
         companion object {
+            val blitz3 = fromMinutesAndSeconds(5,3)
             val rapid10 = fromMinutesAndSeconds(10,10)
 
             private fun fromMinutesAndSeconds(minutes: Long, increment: Long) =

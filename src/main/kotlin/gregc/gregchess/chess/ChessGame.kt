@@ -3,9 +3,13 @@ package gregc.gregchess.chess
 import gregc.gregchess.GregChessInfo
 import gregc.gregchess.chatColor
 import org.bukkit.Bukkit
+import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
+import org.bukkit.inventory.Inventory
+import org.bukkit.inventory.InventoryHolder
+import org.bukkit.inventory.ItemStack
 import org.bukkit.scoreboard.DisplaySlot
 import java.util.concurrent.TimeUnit
 
@@ -15,12 +19,6 @@ class ChessGame(
     private val arena: ChessArena,
     val settings: Settings
 ) {
-    data class Settings(val timerSettings: ChessTimer.Settings, val relaxedInsufficientMaterial: Boolean) {
-        companion object {
-            val rapid10 = Settings(ChessTimer.Settings.rapid10, true)
-        }
-    }
-
     override fun toString() = "ChessGame(arena = $arena)"
 
     val board = Chessboard(this)
@@ -175,6 +173,36 @@ class ChessGame(
         objective.getScore(chatColor("&b${black.player.name}")).score = 3
         objective.getScore("Black timer:").score = 2
         objective.getScore(blackTine).score = 1
+    }
+
+    class SettingsMenu(private inline val callback: (Settings) -> Unit): InventoryHolder {
+        var finished: Boolean = false
+        private val inv = Bukkit.createInventory(this, 9, "Choose settings")
+
+        init {
+            for ((p, _) in Settings.settingsChoice) {
+                val item = ItemStack(Material.IRON_BLOCK)
+                val meta = item.itemMeta
+                meta?.setDisplayName(p)
+                item.itemMeta = meta
+                inv.addItem(item)
+            }
+        }
+
+        override fun getInventory() = inv
+
+        fun applyEvent(choice: String) {
+            Settings.settingsChoice[choice]?.let(callback)
+        }
+    }
+
+    data class Settings(val timerSettings: ChessTimer.Settings, val relaxedInsufficientMaterial: Boolean) {
+        companion object {
+            private val rapid10 = Settings(ChessTimer.Settings.rapid10, true)
+            private val blitz3 = Settings(ChessTimer.Settings.blitz3, true)
+
+            val settingsChoice = mutableMapOf("Rapid 10+10" to rapid10, "Blitz 5+3" to blitz3)
+        }
     }
 
 
