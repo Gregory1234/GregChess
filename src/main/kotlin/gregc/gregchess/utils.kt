@@ -8,26 +8,41 @@ import org.bukkit.generator.ChunkGenerator
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
+import org.bukkit.scoreboard.Scoreboard
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
 data class PlayerData(
-        val location: Location? = null,
-        val inventory: List<ItemStack?> = List(41) { null },
-        val gameMode: GameMode = GameMode.SURVIVAL,
-        val health: Double = 20.0,
-        val foodLevel: Int = 20,
-        val saturation: Float = 20.0F,
-        val level: Int = 0,
-        val exp: Float = 0.0F,
-        val allowFlight: Boolean = false,
-        val isFlying: Boolean = false,
-        val effects: List<PotionEffect> = emptyList()
+    val location: Location? = null,
+    val inventory: List<ItemStack?> = List(41) { null },
+    val gameMode: GameMode = GameMode.SURVIVAL,
+    val health: Double = 20.0,
+    val foodLevel: Int = 20,
+    val saturation: Float = 20.0F,
+    val level: Int = 0,
+    val exp: Float = 0.0F,
+    val allowFlight: Boolean = false,
+    val isFlying: Boolean = false,
+    val effects: List<PotionEffect> = emptyList(),
+    val scoreboard: Scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
 )
 
 var Player.playerData: PlayerData
-    get() = PlayerData(location.clone(), inventory.contents.toList(), gameMode, health, foodLevel, saturation, level, exp, allowFlight, isFlying, activePotionEffects.toList())
+    get() = PlayerData(
+        location.clone(),
+        inventory.contents.toList(),
+        gameMode,
+        health,
+        foodLevel,
+        saturation,
+        level,
+        exp,
+        allowFlight,
+        isFlying,
+        activePotionEffects.toList(),
+        scoreboard
+    )
     set(d) {
         inventory.contents = d.inventory.toTypedArray()
         gameMode = d.gameMode
@@ -41,6 +56,7 @@ var Player.playerData: PlayerData
         activePotionEffects.forEach { removePotionEffect(it.type) }
         d.effects.forEach(::addPotionEffect)
         d.location?.let(::teleport)
+        scoreboard = d.scoreboard
     }
 
 
@@ -48,6 +64,10 @@ abstract class Arena(val name: String) {
     abstract val defaultData: PlayerData
     abstract val worldGen: ChunkGenerator
     abstract val setSettings: World.() -> Unit
+
+    val scoreboard by lazy {
+        Bukkit.getScoreboardManager()!!.newScoreboard
+    }
 
     private val data: MutableMap<UUID, PlayerData> = mutableMapOf()
 
@@ -68,6 +88,7 @@ abstract class Arena(val name: String) {
         data[p.uniqueId] = p.playerData
         p.playerData = defaultData
         p.teleport(world.spawnLocation)
+        p.scoreboard = scoreboard
         p.sendMessage(chatColor("&eTeleported to $name."))
     }
 
@@ -86,6 +107,9 @@ abstract class Arena(val name: String) {
     }
 
     override fun toString() = "Arena(name = ${world.name})"
+    fun clearScoreboard() {
+        scoreboard.objectives.forEach { it.unregister() }
+    }
 }
 
 fun JavaPlugin.addCommand(name: String, command: (CommandSender, Array<String>) -> Unit) {
@@ -138,12 +162,20 @@ fun commandRequirePlayer(e: CommandSender, msg: String = GregChessInfo.NOT_A_PLA
     if (e !is Player) throw CommandException(msg)
 }
 
-fun commandRequireArgumentsGeneral(e: Array<String>, lower: Int = 0, upper: Int = Int.MAX_VALUE, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) {
+fun commandRequireArgumentsGeneral(
+    e: Array<String>,
+    lower: Int = 0,
+    upper: Int = Int.MAX_VALUE,
+    msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS
+) {
     if (e.size !in lower..upper) throw CommandException(msg)
 }
 
-fun commandRequireArguments(e: Array<String>, num: Int, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) = commandRequireArgumentsGeneral(e, num, num, msg)
-fun commandRequireArgumentsMin(e: Array<String>, min: Int, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) = commandRequireArgumentsGeneral(e, min, msg = msg)
+fun commandRequireArguments(e: Array<String>, num: Int, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) =
+    commandRequireArgumentsGeneral(e, num, num, msg)
+
+fun commandRequireArgumentsMin(e: Array<String>, min: Int, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) =
+    commandRequireArgumentsGeneral(e, min, msg = msg)
 
 fun commandRequirePermission(e: CommandSender, permission: String, msg: String = GregChessInfo.NO_PERMISSION) {
     if (!e.hasPermission(permission)) throw CommandException(msg)
@@ -152,15 +184,17 @@ fun commandRequirePermission(e: CommandSender, permission: String, msg: String =
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 
 
-fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> = listOf(x to y, x to -y, -x to y, -x to -y, y to x, -y to x, y to -x, -y to -x).distinct()
+fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
+    listOf(x to y, x to -y, -x to y, -x to -y, y to x, -y to x, y to -x, -y to -x).distinct()
 
 fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
 
 fun Int.towards(goal: Int, amount: Int) =
-        if (goal < this) this - amount
-        else this + amount
+    if (goal < this) this - amount
+    else this + amount
 
-fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> = flatMap { x -> other.map { y -> function(x, y) } }
+fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> =
+    flatMap { x -> other.map { y -> function(x, y) } }
 
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 
