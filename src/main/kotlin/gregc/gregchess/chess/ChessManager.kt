@@ -21,7 +21,6 @@ import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.entity.WanderingTrader
 import org.bukkit.event.entity.CreatureSpawnEvent
 import java.util.concurrent.TimeUnit
 
@@ -72,7 +71,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                         throw CommandException("&cYour opponent is in a game already!")
                     val arena = nextArena()
                     commandRequireNotNull(arena, "&cThere are no free arenas!")
-                    val game = ChessGame(player, opponent, arena, GameConfiguration.rapid10)
+                    val game = ChessGame(player, opponent, arena, GameSettings.rapid10)
                     game.start()
                     players += game
                 }

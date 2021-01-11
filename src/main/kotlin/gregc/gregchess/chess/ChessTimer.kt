@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.GregChessInfo
-import gregc.gregchess.info
 import org.bukkit.scheduler.BukkitRunnable
 import kotlin.math.max
 
@@ -27,7 +26,7 @@ class ChessTimer(private val game: ChessGame, initialTime: Long, private val inc
     private fun timeout(side: ChessSide) {
         if (game.board.piecesOf(!side).size == 1)
             game.stop(ChessGame.EndReason.DrawTimeout())
-        else if (game.config.relaxedInsufficientMaterial
+        else if (game.settings.relaxedInsufficientMaterial
             && game.board.piecesOf(!side).size == 2 && game.board.piecesOf(!side).any { it.type.minor }
         )
             game.stop(ChessGame.EndReason.DrawTimeout())

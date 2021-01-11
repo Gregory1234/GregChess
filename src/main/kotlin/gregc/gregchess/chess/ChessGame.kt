@@ -13,14 +13,14 @@ class ChessGame(
     whitePlayer: Player,
     blackPlayer: Player,
     private val arena: ChessArena,
-    val config: GameConfiguration
+    val settings: GameSettings
 ) {
 
     override fun toString() = "ChessGame(arena = $arena)"
 
     val board = Chessboard(this)
 
-    val timer = ChessTimer(this, config.initialTime, config.increment)
+    val timer = ChessTimer(this, settings.initialTime, settings.increment)
 
     private val white = ChessPlayer(whitePlayer, ChessSide.WHITE, this, whitePlayer == blackPlayer)
     private val black = ChessPlayer(blackPlayer, ChessSide.BLACK, this, whitePlayer == blackPlayer)

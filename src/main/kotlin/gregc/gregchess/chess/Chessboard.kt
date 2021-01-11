@@ -362,7 +362,7 @@ class Chessboard(private val game: ChessGame) {
             game.stop(ChessGame.EndReason.InsufficientMaterial())
         if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
             game.stop(ChessGame.EndReason.InsufficientMaterial())
-        if (game.config.relaxedInsufficientMaterial) {
+        if (game.settings.relaxedInsufficientMaterial) {
             if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 2 && blackPieces.any { it.type.minor })
                 game.stop(ChessGame.EndReason.InsufficientMaterial())
             if (whitePieces.size == 3 && whitePieces.count { it.type == ChessPiece.Type.KNIGHT } == 2 && blackPieces.size == 1)
