@@ -83,7 +83,8 @@ class ChessGame(
 
     sealed class EndReason(val prettyName: String, val winner: ChessSide?) {
         class Checkmate(winner: ChessSide) : EndReason("checkmate", winner)
-        class Resignation(winner: ChessSide) : EndReason("walkover", winner)
+        class Resignation(winner: ChessSide) : EndReason("resignation", winner)
+        class Walkover(winner: ChessSide) : EndReason("walkover", winner)
         class PluginRestart : EndReason("plugin restarting", null)
         class Stalemate : EndReason("stalemate", null)
         class InsufficientMaterial : EndReason("insufficient material", null)

@@ -92,12 +92,19 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                         players += game
                     }.inventory)
                 }
+                "resign" -> {
+                    commandRequirePlayer(player)
+                    commandRequireArguments(args, 1)
+                    val p = players[player]
+                    commandRequireNotNull(p, "&cYou are not in a game!")
+                    p.game.stop(ChessGame.EndReason.Resignation(!p.side))
+                }
                 "leave" -> {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
                     val p = players[player]
                     commandRequireNotNull(p, "&cYou are not in a game!")
-                    p.game.stop(ChessGame.EndReason.Resignation(!p.side), listOf(player))
+                    p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
                 }
                 "draw" -> {
                     commandRequirePlayer(player)
@@ -228,7 +235,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                 if (s.hasPermission("greg-chess.debug")) list.map { it.toString() } else emptyList()
 
             when (args.size) {
-                1 -> listOf("duel", "leave", "draw", "save", "stockfish") +
+                1 -> listOf("duel", "resign", "leave", "draw", "save", "stockfish") +
                         ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci")
                 2 -> when (args[0]) {
                     "duel" -> null

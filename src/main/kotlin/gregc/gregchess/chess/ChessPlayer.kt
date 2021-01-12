@@ -109,6 +109,8 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
                 val line = readLine().split(" ")
                 info(line)
                 if (line[0] == "bestmove") {
+                    if (line[1] == "(none)")
+                        break
                     val origin = ChessPosition.parseFromString(line[1].take(2))
                     val target = ChessPosition.parseFromString(line[1].drop(2).take(2))
                     val promotion = line[1].drop(4).firstOrNull()?.let { ChessPiece.Type.parseFromChar(it) }
