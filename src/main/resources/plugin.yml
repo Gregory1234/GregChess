@@ -8,9 +8,9 @@ depend: [ GregCore ]
 commands:
   chess:
     description: Main chess command
-    usage: /<command> [duel|leave|draw] [player]
+    usage: /<command> [duel|stockfish|resign|leave|draw|save|spectate] [player]
     aliases: [greg-chess]
 permissions:
   greg-chess.debug:
-    description: Can use /chess [capture|move|skip|spawn]
+    description: Can use more /chess subcommands
     default: op
