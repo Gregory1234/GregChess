@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit
 class ChessManager(private val plugin: JavaPlugin) : Listener {
     private class PlayerMap {
         private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
+        private val spectators: MutableMap<UUID, ChessGame> = mutableMapOf()
         private val gameList: MutableList<ChessGame> = mutableListOf()
 
         operator fun get(player: Player) = games[player.uniqueId]?.get(player)
@@ -35,15 +36,27 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
             game.realPlayers.forEach { games[it.uniqueId] = game }
             gameList += game
         }
+        fun getGame(player: Player) = games[player.uniqueId]
 
         fun remove(game: ChessGame) {
             game.realPlayers.forEach { games.remove(it.uniqueId) }
+            game.spectators.forEach { spectators.remove(it.uniqueId) }
             gameList.remove(game)
         }
 
-        operator fun contains(player: HumanEntity) = player.uniqueId in games
+        operator fun contains(player: HumanEntity) = player.uniqueId in games || player.uniqueId in spectators
         fun forEachGame(f: (ChessGame) -> Unit) {
             gameList.forEach(f)
+        }
+
+        fun stopSpectating(player: Player) {
+            spectators[player.uniqueId]?.spectators?.remove(player)
+            spectators.remove(player.uniqueId)
+        }
+
+        fun spectate(player: Player, game: ChessGame) {
+            game.spectators += player
+            spectators[player.uniqueId] = game
         }
     }
 
@@ -103,8 +116,14 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
                     val p = players[player]
-                    commandRequireNotNull(p, "&cYou are not in a game!")
-                    p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
+                    if (p != null) {
+                        p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
+                    } else {
+                        if (player !in players)
+                            throw CommandException("&cYou are not in a game!")
+                        players.stopSpectating(player)
+                    }
+
                 }
                 "draw" -> {
                     commandRequirePlayer(player)
@@ -135,7 +154,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArgumentsGeneral(args, 3, 4)
-                    val game = players[player]?.game
+                    val game = players.getGame(player)
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
                         val pos = if (args.size == 3)
@@ -155,7 +174,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 3)
-                    val game = players[player]?.game
+                    val game = players.getGame(player)
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
                         game.board.capture(ChessPosition.parseFromString(args[2]))
@@ -169,20 +188,20 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 1)
-                    val game = players[player]?.game
+                    val game = players.getGame(player)
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     game.nextTurn()
                 }
                 "load" -> {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
-                    val game = players[player]?.game
+                    val game = players.getGame(player)
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     game.board.setFromFEN(args.drop(1).joinToString(separator = " "))
                 }
                 "save" -> {
                     commandRequirePlayer(player)
-                    val game = players[player]?.game
+                    val game = players.getGame(player)
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     val message = TextComponent("Copy FEN")
                     message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN())
@@ -192,7 +211,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 4)
-                    val game = players[player]?.game
+                    val game = players.getGame(player)
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
                         val side = ChessSide.valueOf(args[1])
@@ -210,7 +229,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArgumentsMin(args, 2)
-                    val game = players[player]?.game
+                    val game = players.getGame(player)
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     val engine = game.players.mapNotNull { it as? ChessPlayer.Engine }.firstOrNull()
                     commandRequireNotNull(engine, "&cThere are no engines in this game!")
@@ -227,6 +246,21 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                         throw CommandException(e.toString())
                     }
                 }
+                "spectate" -> {
+                    commandRequirePlayer(player)
+                    commandRequireArgumentsMin(args, 2)
+                    val toSpectate = GregChessInfo.server.getPlayer(args[1])
+                    commandRequireNotNull(toSpectate, "&cPlayer doesn't exist!")
+                    val spec = players[toSpectate]
+                    commandRequireNotNull(spec, "&cThe player isn't in a game!")
+                    val game = players.getGame(player)
+                    if (game != null) {
+                        if (player in game.realPlayers)
+                            throw CommandException("&cYou are in a game already!")
+                        players.stopSpectating(player)
+                    }
+                    players.spectate(player, spec.game)
+                }
                 else -> throw CommandException(GregChessInfo.WRONG_ARGUMENT)
             }
         }
@@ -235,13 +269,14 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                 if (s.hasPermission("greg-chess.debug")) list.map { it.toString() } else emptyList()
 
             when (args.size) {
-                1 -> listOf("duel", "resign", "leave", "draw", "save", "stockfish") +
+                1 -> listOf("duel", "stockfish", "resign", "leave", "draw", "save", "spectate") +
                         ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci")
                 2 -> when (args[0]) {
                     "duel" -> null
                     "spawn" -> ifPermission(*ChessSide.values())
                     "time" -> ifPermission(*ChessSide.values())
                     "uci" -> ifPermission("set", "send")
+                    "spectate" -> null
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
@@ -262,35 +297,34 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
         if (e.player in players) {
-            val player = players[e.player]!!
-            player.game.stop(ChessGame.EndReason.Resignation(!player.side), listOf(e.player))
+            val player = players[e.player]
+            if (player != null)
+                player.game.stop(ChessGame.EndReason.Resignation(!player.side), listOf(e.player))
+            else
+                players.stopSpectating(e.player)
         }
     }
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
-        val ent = e.entity
-        if (ent is Player && ent in players) {
-            val game = players[ent]!!.game
-            ent.health = 20.0
-            ent.foodLevel = 20
-            ent.teleport(game.world.spawnLocation)
-            e.isCancelled = true
-        }
+        val ent = e.entity as? Player ?: return
+        val game = players.getGame(ent) ?: return
+        ent.health = 20.0
+        ent.foodLevel = 20
+        ent.teleport(game.world.spawnLocation)
+        e.isCancelled = true
     }
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        if (e.player in players) {
-            e.isCancelled = true
-            val player = players[e.player]!!
-            val block = e.clickedBlock ?: return
+        val player = players[e.player] ?: return
+        e.isCancelled = true
+        val block = e.clickedBlock ?: return
 
-            if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
-                player.pickUp(block.loc)
-            } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
-                player.makeMove(block.loc)
-            }
+        if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
+            player.pickUp(block.loc)
+        } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
+            player.makeMove(block.loc)
         }
     }
 

@@ -1,10 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.Difficulty
-import org.bukkit.GameRule
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.generator.ChunkGenerator
 import java.lang.IllegalArgumentException
 import java.util.*
@@ -23,6 +20,7 @@ class ChessArena(name: String) : Arena(name) {
     }
 
     override val defaultData = PlayerData(allowFlight = true, isFlying = true)
+    override val spectatorData = PlayerData(allowFlight = true, isFlying = true, gameMode = GameMode.SPECTATOR)
     override val worldGen: ChunkGenerator = WorldGen()
     override val setSettings: World.() -> Unit = {
         setSpawnLocation(4, 101, 4)

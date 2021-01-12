@@ -19,8 +19,6 @@ class ChessGame(
     private val arena: ChessArena,
     val settings: Settings
 ) {
-
-
     override fun toString() = "ChessGame(arena = $arena)"
 
     val board = Chessboard(this)
@@ -46,6 +44,7 @@ class ChessGame(
 
     val players: List<ChessPlayer> = listOf(white, black)
 
+    val spectators = mutableListOf<Player>()
 
     val realPlayers: List<Player> =
         players.mapNotNull { (it as? ChessPlayer.Human)?.player }.distinctBy { it.uniqueId }
@@ -72,6 +71,11 @@ class ChessGame(
         board.setFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         startTurn()
         timer.start()
+    }
+
+    fun spectate(p: Player) {
+        spectators += p
+        arena.teleportSpectator(p)
     }
 
     private fun startTurn() {
@@ -130,6 +134,24 @@ class ChessGame(
                 arena.exit(it)
             } else {
                 anyLong = true
+                Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+                    arena.exit(it)
+                }, 3 * 20L)
+            }
+        }
+        spectators.forEach {
+            if (reason.winner != null) {
+                this[it]?.sendTitle(
+                    chatColor(if (reason.winner == ChessSide.WHITE) "&eWhite won" else "&eBlack lost"),
+                    chatColor(reason.prettyName)
+                )
+            } else {
+                this[it]?.sendTitle(chatColor("&eDraw"), chatColor(reason.prettyName))
+            }
+            it.sendMessage(reason.message)
+            if (anyLong) {
+                arena.exit(it)
+            } else {
                 Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
                     arena.exit(it)
                 }, 3 * 20L)

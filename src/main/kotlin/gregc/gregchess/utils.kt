@@ -62,6 +62,7 @@ var Player.playerData: PlayerData
 
 abstract class Arena(val name: String) {
     abstract val defaultData: PlayerData
+    abstract val spectatorData: PlayerData
     abstract val worldGen: ChunkGenerator
     abstract val setSettings: World.() -> Unit
 
@@ -87,6 +88,13 @@ abstract class Arena(val name: String) {
     fun teleport(p: Player) {
         data[p.uniqueId] = p.playerData
         p.playerData = defaultData
+        p.teleport(world.spawnLocation)
+        p.scoreboard = scoreboard
+        p.sendMessage(chatColor("&eTeleported to $name."))
+    }
+    fun teleportSpectator(p: Player) {
+        data[p.uniqueId] = p.playerData
+        p.playerData = spectatorData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
         p.sendMessage(chatColor("&eTeleported to $name."))
