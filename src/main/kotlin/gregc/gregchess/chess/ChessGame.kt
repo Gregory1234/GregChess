@@ -7,7 +7,6 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
-import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import org.bukkit.scoreboard.DisplaySlot
@@ -76,6 +75,11 @@ class ChessGame(
     fun spectate(p: Player) {
         spectators += p
         arena.teleportSpectator(p)
+    }
+
+    fun spectatorLeave(p: Player) {
+        spectators -= p
+        arena.exit(p)
     }
 
     private fun startTurn() {

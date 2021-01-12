@@ -36,7 +36,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
             game.realPlayers.forEach { games[it.uniqueId] = game }
             gameList += game
         }
-        fun getGame(player: Player) = games[player.uniqueId]
+        fun getGame(player: Player) = games[player.uniqueId] ?: spectators[player.uniqueId]
 
         fun remove(game: ChessGame) {
             game.realPlayers.forEach { games.remove(it.uniqueId) }
@@ -50,12 +50,12 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
         }
 
         fun stopSpectating(player: Player) {
-            spectators[player.uniqueId]?.spectators?.remove(player)
+            spectators[player.uniqueId]?.spectatorLeave(player)
             spectators.remove(player.uniqueId)
         }
 
         fun spectate(player: Player, game: ChessGame) {
-            game.spectators += player
+            game.spectate(player)
             spectators[player.uniqueId] = game
         }
     }
