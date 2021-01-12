@@ -103,4 +103,20 @@ class ChessTimer(private val game: ChessGame, val settings: Settings) {
         }
         refreshClock()
     }
+
+    fun setTime(side: ChessSide, seconds: Long) {
+        when (side) {
+            ChessSide.WHITE -> {
+                whiteStartTime = System.currentTimeMillis()
+                whiteEndTime = whiteStartTime + seconds
+                whiteTimeDiff = seconds
+            }
+            ChessSide.BLACK -> {
+                blackStartTime = System.currentTimeMillis()
+                blackEndTime = blackStartTime + seconds
+                blackTimeDiff += seconds
+            }
+        }
+        refreshClock()
+    }
 }

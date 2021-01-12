@@ -73,13 +73,13 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
 
         override fun sendTitle(title: String, subtitle: String) {}
 
-        private fun setOption(name: String, value: String) {
+        fun setOption(name: String, value: String) {
             process.outputStream.write(("setoption name $name value $value\n").toByteArray())
             process.outputStream.flush()
             info(name, value)
         }
 
-        private fun sendCommand(command: String) {
+        fun sendCommand(command: String) {
             process.outputStream.write("isready\n".toByteArray())
             process.outputStream.flush()
             executor.submit(Callable {

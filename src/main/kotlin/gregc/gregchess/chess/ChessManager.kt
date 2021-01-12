@@ -181,14 +181,41 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN())
                     player.spigot().sendMessage(message)
                 }
-                "timeadd" -> {
+                "time" -> {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
-                    commandRequireArguments(args, 3)
+                    commandRequireArguments(args, 4)
                     val game = players[player]?.game
                     commandRequireNotNull(game, "&cYou are not in a game!")
                     try {
-                        game.timer.addTime(ChessSide.valueOf(args[1]), TimeUnit.SECONDS.toMillis(args[2].toLong()))
+                        val side = ChessSide.valueOf(args[1])
+                        val time = TimeUnit.SECONDS.toMillis(args[3].toLong())
+                        when (args[2].toLowerCase()) {
+                            "add" -> game.timer.addTime(side, time)
+                            "set" -> game.timer.setTime(side, time)
+                            else -> throw CommandException(GregChessInfo.WRONG_ARGUMENT)
+                        }
+                    } catch (e: IllegalArgumentException) {
+                        throw CommandException(e.toString())
+                    }
+                }
+                "uci" -> {
+                    commandRequirePlayer(player)
+                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequireArgumentsMin(args, 2)
+                    val game = players[player]?.game
+                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    val engine = game.players.mapNotNull { it as? ChessPlayer.Engine }.firstOrNull()
+                    commandRequireNotNull(engine, "&cThere are no engines in this game!")
+                    try {
+                        when (args[1].toLowerCase()) {
+                            "set" -> {
+                                commandRequireArgumentsMin(args, 3)
+                                engine.setOption(args[2], args.drop(3).joinToString(" "))
+                            }
+                            "send" -> engine.sendCommand(args.drop(2).joinToString(" "))
+                            else -> throw CommandException(GregChessInfo.WRONG_ARGUMENT)
+                        }
                     } catch (e: IllegalArgumentException) {
                         throw CommandException(e.toString())
                     }
@@ -197,34 +224,26 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
             }
         }
         plugin.addCommandTab("chess") { s, args ->
+            fun <T> ifPermission(vararg list: T) =
+                if (s.hasPermission("greg-chess.debug")) list.map { it.toString() } else emptyList()
+
             when (args.size) {
-                1 -> (listOf("duel", "leave", "draw", "save") +
-                        if (s.hasPermission("greg-chess.debug"))
-                            listOf("capture", "spawn", "move", "skip", "load", "timeadd")
-                        else
-                            listOf()
-                        ).filter { it.startsWith(args[0]) }
+                1 -> listOf("duel", "leave", "draw", "save", "stockfish") +
+                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci")
                 2 -> when (args[0]) {
                     "duel" -> null
-                    "spawn" -> if (s.hasPermission("greg-chess.debug"))
-                        ChessSide.values().map { it.toString() }.filter { it.startsWith(args[1]) }
-                    else
-                        listOf()
-                    "timeadd" -> if (s.hasPermission("greg-chess.debug"))
-                        ChessSide.values().map { it.toString() }.filter { it.startsWith(args[1]) }
-                    else
-                        listOf()
+                    "spawn" -> ifPermission(*ChessSide.values())
+                    "time" -> ifPermission(*ChessSide.values())
+                    "uci" -> ifPermission("set", "send")
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> if (s.hasPermission("greg-chess.debug"))
-                        ChessPiece.Type.values().map { it.toString() }.filter { it.startsWith(args[2]) }
-                    else
-                        listOf()
+                    "spawn" -> ifPermission(*ChessPiece.Type.values())
+                    "time" -> ifPermission("add", "set")
                     else -> listOf()
                 }
                 else -> listOf()
-            }
+            }?.filter { it.startsWith(args.last()) }
         }
     }
 

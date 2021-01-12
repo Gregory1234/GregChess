@@ -44,8 +44,11 @@ class ChessGame(
         black.game = this
     }
 
+    val players: List<ChessPlayer> = listOf(white, black)
+
+
     val realPlayers: List<Player> =
-        listOf(white, black).mapNotNull { (it as? ChessPlayer.Human)?.player }.distinctBy { it.uniqueId }
+        players.mapNotNull { (it as? ChessPlayer.Human)?.player }.distinctBy { it.uniqueId }
 
     var currentTurn = ChessSide.WHITE
 
@@ -137,7 +140,7 @@ class ChessGame(
             arena.clearScoreboard()
             board.clear()
             Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
-                listOf(white,black).forEach(ChessPlayer::stop)
+                players.forEach(ChessPlayer::stop)
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
             }, 1L)
         }, (if (anyLong) (3 * 20L) else 0) + 1)
