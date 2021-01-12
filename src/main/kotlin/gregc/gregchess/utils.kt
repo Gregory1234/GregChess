@@ -12,6 +12,7 @@ import org.bukkit.scoreboard.Scoreboard
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import gregc.gregchess.GregChessInfo.string
 
 data class PlayerData(
     val location: Location? = null,
@@ -92,6 +93,7 @@ abstract class Arena(val name: String) {
         p.scoreboard = scoreboard
         p.sendMessage(chatColor("&eTeleported to $name."))
     }
+
     fun teleportSpectator(p: Player) {
         data[p.uniqueId] = p.playerData
         p.playerData = spectatorData
@@ -163,7 +165,7 @@ fun <T> commandRequireNotNull(e: T?, msg: String) {
 }
 
 @ExperimentalContracts
-fun commandRequirePlayer(e: CommandSender, msg: String = GregChessInfo.NOT_A_PLAYER) {
+fun commandRequirePlayer(e: CommandSender, msg: String = string("Message.Error.NotPlayer")) {
     contract {
         returns() implies (e is Player)
     }
@@ -174,18 +176,18 @@ fun commandRequireArgumentsGeneral(
     e: Array<String>,
     lower: Int = 0,
     upper: Int = Int.MAX_VALUE,
-    msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS
+    msg: String = string("Message.Error.WrongArgumentsNumber")
 ) {
     if (e.size !in lower..upper) throw CommandException(msg)
 }
 
-fun commandRequireArguments(e: Array<String>, num: Int, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) =
+fun commandRequireArguments(e: Array<String>, num: Int, msg: String = string("Message.Error.WrongArgumentsNumber")) =
     commandRequireArgumentsGeneral(e, num, num, msg)
 
-fun commandRequireArgumentsMin(e: Array<String>, min: Int, msg: String = GregChessInfo.WRONG_NUMBER_OF_ARGUMENTS) =
+fun commandRequireArgumentsMin(e: Array<String>, min: Int, msg: String = string("Message.Error.WrongArgumentsNumber")) =
     commandRequireArgumentsGeneral(e, min, msg = msg)
 
-fun commandRequirePermission(e: CommandSender, permission: String, msg: String = GregChessInfo.NO_PERMISSION) {
+fun commandRequirePermission(e: CommandSender, permission: String, msg: String = string("Message.Error.NoPerms")) {
     if (!e.hasPermission(permission)) throw CommandException(msg)
 }
 
@@ -212,13 +214,11 @@ fun info(vararg vs: Any) {
 }
 
 object GregChessInfo {
-    const val NOT_A_PLAYER = "You are not a player!"
-    const val WRONG_NUMBER_OF_ARGUMENTS = "&cWrong number of arguments!"
-    const val WRONG_ARGUMENT = "&cWrong argument!"
-    const val NO_PERMISSION = "&cYou do not have permission to do this!"
     private const val NAME = "GregChess"
 
     val server by lazy { Bukkit.getServer() }
     val plugin
         get() = Bukkit.getPluginManager().getPlugin(NAME)!!
+
+    fun string(s: String) = chatColor(plugin.config.getString(s) ?: s)
 }

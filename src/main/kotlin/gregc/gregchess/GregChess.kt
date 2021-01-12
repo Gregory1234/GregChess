@@ -10,6 +10,7 @@ class GregChess : JavaPlugin() {
 
     @ExperimentalContracts
     override fun onEnable() {
+        saveDefaultConfig()
         chess.start()
     }
 

@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.GregChessInfo.string
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
@@ -68,7 +69,9 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     @ExperimentalContracts
     fun start() {
         plugin.server.pluginManager.registerEvents(this, plugin)
-        arenas += ChessArena("arena1")
+        plugin.config.getStringList("ChessArenas").forEach {
+            arenas += ChessArena(it)
+        }
 
         plugin.addCommand("chess") { player, args ->
             commandRequireArgumentsMin(args, 1)
@@ -77,14 +80,16 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 2)
                     if (player in players)
-                        throw CommandException("&cYou are in a game already!")
+                        throw CommandException(string("Message.Error.InGame.You"))
                     val opponent = GregChessInfo.server.getPlayer(args[1])
-                    commandRequireNotNull(opponent, "&cPlayer doesn't exist!")
+                    commandRequireNotNull(opponent, string("Message.Error.PlayerNotFound"))
                     if (opponent in players)
-                        throw CommandException("&cYour opponent is in a game already!")
+                        throw CommandException(string("Message.Error.InGame.Opponent"))
+                    val arena = nextArena()
+                    commandRequireNotNull(arena, string("Message.Error.NoArenas"))
                     player.openInventory(ChessGame.SettingsMenu {
-                        val arena = nextArena()
-                        commandRequireNotNull(arena, "&cThere are no free arenas!")
+                        if (!arena.isEmpty())
+                            return@SettingsMenu
                         val game = ChessGame(player, opponent, arena, it)
                         game.start()
                         players += game
@@ -94,10 +99,12 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
                     if (player in players)
-                        throw CommandException("&cYou are in a game already!")
+                        throw CommandException(string("Message.Error.InGame.You"))
+                    val arena = nextArena()
+                    commandRequireNotNull(arena, string("Message.Error.NoArenas"))
                     player.openInventory(ChessGame.SettingsMenu {
-                        val arena = nextArena()
-                        commandRequireNotNull(arena, "&cThere are no free arenas!")
+                        if (!arena.isEmpty())
+                            return@SettingsMenu
                         val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
                         val black = ChessPlayer.Engine("stockfish", ChessSide.BLACK)
                         val game = ChessGame(white, black, arena, it)
@@ -109,7 +116,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
                     val p = players[player]
-                    commandRequireNotNull(p, "&cYou are not in a game!")
+                    commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
                     p.game.stop(ChessGame.EndReason.Resignation(!p.side))
                 }
                 "leave" -> {
@@ -120,7 +127,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                         p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
                     } else {
                         if (player !in players)
-                            throw CommandException("&cYou are not in a game!")
+                            throw CommandException(string("Message.Error.NotInGame.You"))
                         players.stopSpectating(player)
                     }
 
@@ -129,7 +136,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
                     val p = players[player]
-                    commandRequireNotNull(p, "&cYou are not in a game!")
+                    commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
                     p.wantsDraw = !p.wantsDraw
                 }
                 "capture" -> {
@@ -137,7 +144,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArgumentsGeneral(args, 1, 2)
                     val p = players[player]
-                    commandRequireNotNull(p, "&cYou are not in a game!")
+                    commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
                     val pos = if (args.size == 1) {
                         ChessPosition.fromLoc(Loc.fromLocation(player.location))
                     } else {
@@ -155,7 +162,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArgumentsGeneral(args, 3, 4)
                     val game = players.getGame(player)
-                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     try {
                         val pos = if (args.size == 3)
                             ChessPosition.fromLoc(Loc.fromLocation(player.location))
@@ -175,7 +182,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 3)
                     val game = players.getGame(player)
-                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     try {
                         game.board.capture(ChessPosition.parseFromString(args[2]))
                         game.board.move(ChessPosition.parseFromString(args[1]), ChessPosition.parseFromString(args[2]))
@@ -189,21 +196,21 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 1)
                     val game = players.getGame(player)
-                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     game.nextTurn()
                 }
                 "load" -> {
                     commandRequirePlayer(player)
                     commandRequirePermission(player, "greg-chess.debug")
                     val game = players.getGame(player)
-                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     game.board.setFromFEN(args.drop(1).joinToString(separator = " "))
                 }
                 "save" -> {
                     commandRequirePlayer(player)
                     val game = players.getGame(player)
-                    commandRequireNotNull(game, "&cYou are not in a game!")
-                    val message = TextComponent("Copy FEN")
+                    commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
+                    val message = TextComponent(string("Message.CopyFEN"))
                     message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN())
                     player.spigot().sendMessage(message)
                 }
@@ -212,14 +219,14 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 4)
                     val game = players.getGame(player)
-                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     try {
                         val side = ChessSide.valueOf(args[1])
                         val time = TimeUnit.SECONDS.toMillis(args[3].toLong())
                         when (args[2].toLowerCase()) {
                             "add" -> game.timer.addTime(side, time)
                             "set" -> game.timer.setTime(side, time)
-                            else -> throw CommandException(GregChessInfo.WRONG_ARGUMENT)
+                            else -> throw CommandException(string("wrong_argument"))
                         }
                     } catch (e: IllegalArgumentException) {
                         throw CommandException(e.toString())
@@ -230,9 +237,9 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArgumentsMin(args, 2)
                     val game = players.getGame(player)
-                    commandRequireNotNull(game, "&cYou are not in a game!")
+                    commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     val engine = game.players.mapNotNull { it as? ChessPlayer.Engine }.firstOrNull()
-                    commandRequireNotNull(engine, "&cThere are no engines in this game!")
+                    commandRequireNotNull(engine, string("Message.Error.EngineNotFound"))
                     try {
                         when (args[1].toLowerCase()) {
                             "set" -> {
@@ -240,7 +247,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                                 engine.setOption(args[2], args.drop(3).joinToString(" "))
                             }
                             "send" -> engine.sendCommand(args.drop(2).joinToString(" "))
-                            else -> throw CommandException(GregChessInfo.WRONG_ARGUMENT)
+                            else -> throw CommandException(string("Message.Error.WrongArgument"))
                         }
                     } catch (e: IllegalArgumentException) {
                         throw CommandException(e.toString())
@@ -250,18 +257,24 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequirePlayer(player)
                     commandRequireArgumentsMin(args, 2)
                     val toSpectate = GregChessInfo.server.getPlayer(args[1])
-                    commandRequireNotNull(toSpectate, "&cPlayer doesn't exist!")
+                    commandRequireNotNull(toSpectate, string("Message.Error.PlayerNotFound"))
                     val spec = players[toSpectate]
-                    commandRequireNotNull(spec, "&cThe player isn't in a game!")
+                    commandRequireNotNull(spec, string("Message.Error.NotInGame.Player"))
                     val game = players.getGame(player)
                     if (game != null) {
                         if (player in game.realPlayers)
-                            throw CommandException("&cYou are in a game already!")
+                            throw CommandException(string("Message.Error.InGame.You"))
                         players.stopSpectating(player)
                     }
                     players.spectate(player, spec.game)
                 }
-                else -> throw CommandException(GregChessInfo.WRONG_ARGUMENT)
+                "reload" -> {
+                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequireArgumentsMin(args, 1)
+                    plugin.reloadConfig()
+                    reloadArenas()
+                }
+                else -> throw CommandException(string("Message.Error.WrongArgument"))
             }
         }
         plugin.addCommandTab("chess") { s, args ->
@@ -292,6 +305,10 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     fun stop() {
         players.forEachGame { it.stop(ChessGame.EndReason.PluginRestart(), it.realPlayers) }
         arenas.forEach { it.delete() }
+    }
+
+    fun reloadArenas(){
+
     }
 
     @EventHandler

@@ -1,0 +1,20 @@
+
+ChessArenas:
+  arena1
+
+Message:
+  CopyFEN: "Copy FEN"
+  Error:
+    NotPlayer: "&cYou are not a player!"
+    WrongArgumentsNumber: "&cWrong number of arguments!"
+    WrongArgument: "&cWrong argument!"
+    NoPermission: "&cYou do not have permission to do this!"
+    PlayerNotFound: "&cPlayer doesn't exist!"
+    NoArenas: "&cThere are no free arenas!"
+    EngineNotFound: "&cThere are no engines in this game!"
+    InGame:
+      You: "&cYou are already in a game!"
+      Opponent: "&cYour opponent is in a game already!"
+    NotInGame:
+      You: "&cYou are not in a game!"
+      Player: "&cThe player isn't in a game!"
