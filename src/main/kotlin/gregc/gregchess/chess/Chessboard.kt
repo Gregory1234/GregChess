@@ -24,7 +24,7 @@ class Chessboard(private val game: ChessGame) {
         boardState[pos]?.piece = piece
     }
 
-    operator fun get(loc: Loc) = this[ChessPosition.fromLoc(loc)]
+    operator fun get(loc: Loc) = this[getPos(loc)]
 
     var lastMove: ChessMove? = null
 
@@ -400,4 +400,6 @@ class Chessboard(private val game: ChessGame) {
             it.render()
         }
     }
+
+    fun getPos(loc: Loc): ChessPosition = ChessPosition((4 * 8 - 1 - loc.x).div(3), (loc.z - 8).div(3))
 }

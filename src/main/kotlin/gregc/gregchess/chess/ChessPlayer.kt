@@ -19,7 +19,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         override fun sendMessage(msg: String) = player.sendMessage(msg)
         override fun sendTitle(title: String, subtitle: String) = player.sendTitle(title, subtitle, 10, 70, 20)
         fun pickUp(loc: Loc) {
-            if (!ChessPosition.fromLoc(loc).isValid()) return
+            if (!game.board.getPos(loc).isValid()) return
             val piece = game.board[loc] ?: return
             if (piece.side != side) return
             game.board.moveMarker(piece.pos, Material.YELLOW_CONCRETE)
@@ -31,7 +31,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         }
 
         fun makeMove(loc: Loc) {
-            val newPos = ChessPosition.fromLoc(loc)
+            val newPos = game.board.getPos(loc)
             if (!newPos.isValid()) return
             val piece = held ?: return
             val moves = heldMoves ?: return

@@ -61,7 +61,6 @@ data class ChessPosition(val file: Int, val rank: Int) {
     fun isValid() = file in (0..7) && rank in (0..7)
 
     companion object {
-        fun fromLoc(l: Loc) = ChessPosition((4 * 8 - 1 - l.x).div(3), (l.z - 8).div(3))
         fun parseFromString(s: String) = ChessPosition(s[0].toLowerCase() - 'a', s[1] - '1')
     }
 }
