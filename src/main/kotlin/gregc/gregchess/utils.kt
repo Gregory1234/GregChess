@@ -12,7 +12,6 @@ import org.bukkit.scoreboard.Scoreboard
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import gregc.gregchess.GregChessInfo.string
 
 data class PlayerData(
     val location: Location? = null,
@@ -213,6 +212,8 @@ fun info(vararg vs: Any) {
     Bukkit.getLogger().info(vs.joinToString(" ") { it.toString() })
 }
 
+fun string(s: String) = chatColor(GregChessInfo.plugin.config.getString(s) ?: s)
+
 object GregChessInfo {
     private const val NAME = "GregChess"
 
@@ -220,5 +221,4 @@ object GregChessInfo {
     val plugin
         get() = Bukkit.getPluginManager().getPlugin(NAME)!!
 
-    fun string(s: String) = chatColor(plugin.config.getString(s) ?: s)
 }

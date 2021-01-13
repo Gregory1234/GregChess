@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.Loc
 import gregc.gregchess.chatColor
 import gregc.gregchess.getBlockAt
-import gregc.gregchess.info
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World

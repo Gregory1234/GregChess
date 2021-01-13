@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.GregChessInfo.string
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
