@@ -22,7 +22,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             if (!ChessPosition.fromLoc(loc).isValid()) return
             val piece = game.board[loc] ?: return
             if (piece.side != side) return
-            piece.pos.fillFloor(game.world, Material.YELLOW_CONCRETE)
+            game.board.moveMarker(piece.pos, Material.YELLOW_CONCRETE)
             heldMoves = getAllowedMoves(piece)
             heldMoves?.forEach { it.display(game) }
             held = piece
@@ -36,8 +36,8 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             val piece = held ?: return
             val moves = heldMoves ?: return
             if (newPos != piece.pos && newPos !in moves.map { it.target }) return
-            piece.pos.clear(game.world)
-            moves.forEach { it.target.clear(game.world) }
+            game.board.clearMoveMarker(piece.pos)
+            moves.forEach { game.board.clearMoveMarker(it.target) }
             held = null
             player.inventory.setItem(0, null)
             if (newPos == piece.pos) {
@@ -161,6 +161,9 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         move.execute(game.board)
         game.board.lastMove = move
         game.nextTurn()
+        game.board.clearPreviousMoveMarkings()
+        game.board.previousMoveMarker(move.origin, Material.BROWN_CONCRETE)
+        game.board.previousMoveMarker(move.target, Material.ORANGE_CONCRETE)
     }
 
     fun hasTurn(): Boolean = game.currentTurn == side

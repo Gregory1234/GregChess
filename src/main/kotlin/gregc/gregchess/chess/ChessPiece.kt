@@ -3,9 +3,11 @@ package gregc.gregchess.chess
 import gregc.gregchess.Loc
 import gregc.gregchess.chatColor
 import gregc.gregchess.getBlockAt
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
+import org.bukkit.block.Block
 import org.bukkit.inventory.ItemStack
 import java.lang.IllegalArgumentException
 
@@ -135,20 +137,17 @@ data class ChessPiece(val type: Type, val side: ChessSide, val pos: ChessPositio
     }
 
     override fun toString() = "ChessPiece(type = $type, side = $side, pos = $pos, hasMoved = $hasMoved)"
-    private val material = type.getMaterial(side)
+    val material = type.getMaterial(side)
 
-    fun render(world: World) {
-        pos.getBlock(world).type = material
+    fun render(block: Block) {
+        block.type = material
     }
 
-    fun hide(world: World) {
-        pos.getBlock(world).type = Material.AIR
+    fun hide(block: Block) {
+        block.type = Material.AIR
     }
 
     fun toCaptured(pos: Pair<Int, Int>) = Captured(type, side, !side, pos)
 
     val promotions = if (type == Type.PAWN) listOf(Type.QUEEN, Type.ROOK, Type.BISHOP, Type.KNIGHT) else emptyList()
-
-    fun playSound(world: World, s: Sound, volume: Float = 3.0f, pitch: Float = 1.0f) =
-        world.playSound(pos.toLoc().toLocation(world), s, volume, pitch)
 }

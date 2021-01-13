@@ -6,7 +6,7 @@ import kotlin.math.abs
 
 sealed class ChessMove(val origin: ChessPosition, val target: ChessPosition) {
     fun display(game: ChessGame) {
-        target.fillFloor(game.world, floor)
+        game.board.moveMarker(target, floor)
     }
 
     abstract val isValid: Boolean

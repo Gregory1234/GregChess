@@ -60,20 +60,6 @@ data class ChessPosition(val file: Int, val rank: Int) {
 
     fun isValid() = file in (0..7) && rank in (0..7)
 
-    fun getBlock(world: World) = world.getBlockAt(toLoc())
-    fun fillFloor(world: World, type: Material) {
-        (-1..1).star(-1..1) { i, j ->
-            val (x, y, z) = toLoc()
-            world.getBlockAt(x + i, y - 1, z + j).type = type
-        }
-    }
-
-
-    fun toLoc() = Loc(4 * 8 - 2 - file * 3, 102, rank * 3 + 8 + 1)
-    fun clear(world: World) {
-        fillFloor(world, if ((file + rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS)
-    }
-
     companion object {
         fun fromLoc(l: Loc) = ChessPosition((4 * 8 - 1 - l.x).div(3), (l.z - 8).div(3))
         fun parseFromString(s: String) = ChessPosition(s[0].toLowerCase() - 'a', s[1] - '1')

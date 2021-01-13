@@ -1,13 +1,15 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Loc
+import gregc.gregchess.star
 import org.bukkit.Material
 import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame) {
-    private val boardState: MutableMap<ChessPosition, ChessPiece> = mutableMapOf()
-
-    private val bakedMoves: MutableMap<ChessPosition, List<ChessMove>> = mutableMapOf()
+    private val boardState = (0..7).star(0..7) { i, j ->
+        val pos = ChessPosition(i, j)
+        Pair(pos, ChessSquare(pos, game.world))
+    }.toMap()
 
     private var movesSinceLastCapture = 0
     private val boardHashes = mutableMapOf<Int, Int>()
@@ -15,56 +17,57 @@ class Chessboard(private val game: ChessGame) {
     private val capturedPieces = mutableListOf<ChessPiece.Captured>()
 
     val pieces: List<ChessPiece>
-        get() = boardState.values.toList()
+        get() = boardState.values.mapNotNull { it.piece }
 
-    operator fun get(pos: ChessPosition) = boardState[pos]
-    operator fun get(loc: Loc) = boardState[ChessPosition.fromLoc(loc)]
+    operator fun get(pos: ChessPosition) = boardState[pos]?.piece
+    private operator fun set(pos: ChessPosition, piece: ChessPiece?) {
+        boardState[pos]?.piece = piece
+    }
+
+    operator fun get(loc: Loc) = this[ChessPosition.fromLoc(loc)]
 
     var lastMove: ChessMove? = null
 
     fun move(piece: ChessPiece, target: ChessPosition) {
-        boardState.remove(piece.pos)
-        piece.hide(game.world)
+        this[piece.pos] = null
         val newPiece = piece.copy(pos = target, hasMoved = true)
-        boardState[target] = newPiece
-        newPiece.playSound(game.world, piece.type.moveSound)
-        newPiece.render(game.world)
+        this[target] = newPiece
+        boardState[piece.pos]?.playSound(piece.type.moveSound)
     }
 
     fun move(origin: ChessPosition, target: ChessPosition) =
-        boardState[origin]?.let { move(it, target) }
+        boardState[origin]?.piece?.let { move(it, target) }
 
     fun swap(origin: ChessPosition, target: ChessPosition) {
-        val a1 = boardState[origin]
-        val a2 = boardState[target]
+        val a1 = this[origin]
+        val a2 = this[target]
         if (a1 != null && a2 != null) {
-            boardState[target] = a1.copy(pos = target, hasMoved = true)
-            boardState[origin] = a2.copy(pos = origin, hasMoved = true)
+            this[target] = a1.copy(pos = target, hasMoved = true)
+            this[origin] = a2.copy(pos = origin, hasMoved = true)
         } else if (a1 != null && a2 == null) {
-            boardState[target] = a1.copy(pos = target, hasMoved = true)
-            boardState.remove(origin)
+            this[target] = a1.copy(pos = target, hasMoved = true)
+            this[origin] = null
         } else if (a1 == null && a2 != null) {
-            boardState[origin] = a2.copy(pos = origin, hasMoved = true)
-            boardState.remove(target)
+            this[origin] = a2.copy(pos = origin, hasMoved = true)
+            this[target] = null
         }
-        boardState[origin]?.let { it.playSound(game.world, it.type.moveSound) }
-        boardState[target]?.let { it.playSound(game.world, it.type.moveSound) }
+        this[origin]?.let {boardState[origin]?.playSound(it.type.moveSound)}
+        this[target]?.let {boardState[target]?.playSound(it.type.moveSound)}
     }
 
     fun pickUp(piece: ChessPiece) {
-        piece.playSound(game.world, piece.type.pickUpSound)
-        piece.hide(game.world)
+        boardState[piece.pos]?.playSound(piece.type.pickUpSound)
+        boardState[piece.pos]?.hide()
     }
 
     fun placeDown(piece: ChessPiece) {
-        piece.playSound(game.world, piece.type.moveSound)
-        piece.render(game.world)
+        boardState[piece.pos]?.playSound(piece.type.moveSound)
+        boardState[piece.pos]?.render()
     }
 
     fun capture(piece: ChessPiece) {
-        piece.playSound(game.world, piece.type.captureSound)
-        piece.hide(game.world)
-        boardState.remove(piece.pos)
+        boardState[piece.pos]?.playSound(piece.type.captureSound)
+        this[piece.pos] = null
         val p = if (piece.type == ChessPiece.Type.PAWN)
             Pair(capturedPieces.count { it.side == piece.side && it.type == ChessPiece.Type.PAWN }, 1)
         else
@@ -74,19 +77,17 @@ class Chessboard(private val game: ChessGame) {
         captured.render(game.world)
     }
 
-    fun capture(pos: ChessPosition) = boardState[pos]?.let { capture(it) }
+    fun capture(pos: ChessPosition) = this[pos]?.let { capture(it) }
 
     fun promote(piece: ChessPiece, promotion: ChessPiece.Type) {
         if (promotion !in piece.promotions)
             return
-        piece.hide(game.world)
         val newPiece = piece.copy(type = promotion, hasMoved = false)
-        boardState[piece.pos] = newPiece
-        newPiece.render(game.world)
+        this[piece.pos] = newPiece
     }
 
     fun promote(pos: ChessPosition, promotion: ChessPiece.Type) =
-        boardState[pos]?.let { promote(it, promotion) }
+        this[pos]?.let { promote(it, promotion) }
 
     fun render() {
         for (i in 0 until 8 * 5) {
@@ -97,16 +98,11 @@ class Chessboard(private val game: ChessGame) {
                 }
             }
         }
-        for (i in 0 until 8) {
-            for (j in 0 until 8) {
-                ChessPosition(i, j).clear(game.world)
-            }
-        }
-        pieces.forEach { it.render(game.world) }
+        boardState.values.forEach { it.render() }
     }
 
     fun clear() {
-        pieces.forEach { it.hide(game.world) }
+        boardState.values.forEach { it.clear() }
         for (i in 0 until 8 * 5) {
             for (j in 0 until 8 * 5) {
                 game.world.getBlockAt(i, 100, j).type = Material.AIR
@@ -115,19 +111,17 @@ class Chessboard(private val game: ChessGame) {
         }
     }
 
-    fun piecesOf(side: ChessSide) = boardState.values.filter { it.side == side }
+    fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
 
     operator fun plusAssign(piece: ChessPiece) {
-        boardState[piece.pos] = piece
-        piece.render(game.world)
+        this[piece.pos] = piece
     }
 
-    fun getMoves(pos: ChessPosition) = bakedMoves[pos].orEmpty()
+    fun getMoves(pos: ChessPosition) = boardState[pos]?.bakedMoves.orEmpty()
 
     fun updateMoves() {
-        bakedMoves.clear()
-        boardState.forEach { (pos, piece) ->
-            bakedMoves[pos] = piece.type.moveScheme(pos, this)
+        boardState.forEach { (pos, square) ->
+            square.bakedMoves = square.piece?.let { it.type.moveScheme(pos, this) }
         }
     }
 
@@ -164,8 +158,7 @@ class Chessboard(private val game: ChessGame) {
     fun setFromFEN(fen: String) {
         capturedPieces.forEach { it.hide(game.world) }
         capturedPieces.clear()
-        pieces.forEach { it.hide(game.world) }
-        boardState.clear()
+        boardState.values.forEach { it.clear() }
         var x = 0
         var y = 7
         val parts = fen.split(" ")
@@ -197,36 +190,36 @@ class Chessboard(private val game: ChessGame) {
                     val rook =
                         piecesOf(ChessSide.BLACK).findLast { it.type == ChessPiece.Type.ROOK && it.pos.file > king?.pos?.file ?: 0 }
                     if (king != null)
-                        boardState[king.pos] = king.copy(hasMoved = false)
+                        this[king.pos] = king.copy(hasMoved = false)
                     if (rook != null)
-                        boardState[rook.pos] = rook.copy(hasMoved = false)
+                        this[rook.pos] = rook.copy(hasMoved = false)
                 }
                 'K' -> {
                     val king = piecesOf(ChessSide.WHITE).find { it.type == ChessPiece.Type.KING }
                     val rook =
                         piecesOf(ChessSide.WHITE).findLast { it.type == ChessPiece.Type.ROOK && it.pos.file > king?.pos?.file ?: 0 }
                     if (king != null)
-                        boardState[king.pos] = king.copy(hasMoved = false)
+                        this[king.pos] = king.copy(hasMoved = false)
                     if (rook != null)
-                        boardState[rook.pos] = rook.copy(hasMoved = false)
+                        this[rook.pos] = rook.copy(hasMoved = false)
                 }
                 'q' -> {
                     val king = piecesOf(ChessSide.BLACK).find { it.type == ChessPiece.Type.KING }
                     val rook =
                         piecesOf(ChessSide.BLACK).find { it.type == ChessPiece.Type.ROOK && it.pos.file < king?.pos?.file ?: 0 }
                     if (king != null)
-                        boardState[king.pos] = king.copy(hasMoved = false)
+                        this[king.pos] = king.copy(hasMoved = false)
                     if (rook != null)
-                        boardState[rook.pos] = rook.copy(hasMoved = false)
+                        this[rook.pos] = rook.copy(hasMoved = false)
                 }
                 'Q' -> {
                     val king = piecesOf(ChessSide.WHITE).find { it.type == ChessPiece.Type.KING }
                     val rook =
                         piecesOf(ChessSide.WHITE).find { it.type == ChessPiece.Type.ROOK && it.pos.file < king?.pos?.file ?: 0 }
                     if (king != null)
-                        boardState[king.pos] = king.copy(hasMoved = false)
+                        this[king.pos] = king.copy(hasMoved = false)
                     if (rook != null)
-                        boardState[rook.pos] = rook.copy(hasMoved = false)
+                        this[rook.pos] = rook.copy(hasMoved = false)
                 }
             }
         }
@@ -251,7 +244,7 @@ class Chessboard(private val game: ChessGame) {
         for (y in (0..7).reversed()) {
             var empty = 0
             for (x in (0..7)) {
-                val piece = boardState[ChessPosition(x, y)]
+                val piece = this@Chessboard[ChessPosition(x, y)]
                 if (piece == null) {
                     empty++
                     continue
@@ -296,7 +289,9 @@ class Chessboard(private val game: ChessGame) {
         }
         append(" ")
         lastMove.also {
-            if (it != null && it is ChessMove.Normal && boardState[it.target]?.type == ChessPiece.Type.PAWN && abs(it.origin.rank - it.target.rank) == 2) {
+            if (it != null && it is ChessMove.Normal && this@Chessboard[it.target]?.type == ChessPiece.Type.PAWN
+                && abs(it.origin.rank - it.target.rank) == 2
+            ) {
                 append(it.origin.copy(rank = (it.origin.rank + it.target.rank) / 2))
             } else
                 append("-")
@@ -310,7 +305,7 @@ class Chessboard(private val game: ChessGame) {
     private fun getBoardHash() = buildString {
         for (y in (0..7).reversed()) {
             for (x in (0..7)) {
-                val piece = boardState[ChessPosition(x, y)]
+                val piece = this@Chessboard[ChessPosition(x, y)]
                 if (piece == null) {
                     append(" ")
                 } else {
@@ -343,7 +338,9 @@ class Chessboard(private val game: ChessGame) {
                 append("q")
         }
         lastMove.also {
-            if (it != null && it is ChessMove.Normal && boardState[it.target]?.type == ChessPiece.Type.PAWN && abs(it.origin.rank - it.target.rank) == 2) {
+            if (it != null && it is ChessMove.Normal && this@Chessboard[it.target]?.type == ChessPiece.Type.PAWN
+                && abs(it.origin.rank - it.target.rank) == 2
+            ) {
                 append(it.origin.copy(rank = (it.origin.rank + it.target.rank) / 2))
             }
         }
@@ -380,5 +377,27 @@ class Chessboard(private val game: ChessGame) {
 
     fun resetMovesSinceLastCapture() {
         movesSinceLastCapture = 0
+    }
+
+    fun moveMarker(pos: ChessPosition, floor: Material) {
+        boardState[pos]?.moveMarker = floor
+        boardState[pos]?.render()
+    }
+
+    fun previousMoveMarker(pos: ChessPosition, floor: Material) {
+        boardState[pos]?.previousMoveMarker = floor
+        boardState[pos]?.render()
+    }
+
+    fun clearMoveMarker(pos: ChessPosition) {
+        boardState[pos]?.moveMarker = null
+        boardState[pos]?.render()
+    }
+
+    fun clearPreviousMoveMarkings() {
+        boardState.values.forEach {
+            it.previousMoveMarker = null
+            it.render()
+        }
     }
 }

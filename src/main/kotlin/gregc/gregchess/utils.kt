@@ -59,6 +59,9 @@ var Player.playerData: PlayerData
         scoreboard = d.scoreboard
     }
 
+fun Location.playSound(s: Sound, volume: Float = 3.0f, pitch: Float = 1.0f) =
+    world?.playSound(this, s, volume, pitch)
+
 
 abstract class Arena(val name: String) {
     abstract val defaultData: PlayerData
