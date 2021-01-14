@@ -219,12 +219,14 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequireArguments(args, 4)
                     val game = players.getGame(player)
                     commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
+                    val timer = game.getComponent(ChessTimer::class)
+                    commandRequireNotNull(timer, string("Message.Error.TimerNotFound"))
                     try {
                         val side = ChessSide.valueOf(args[1])
                         val time = TimeUnit.SECONDS.toMillis(args[3].toLong())
                         when (args[2].toLowerCase()) {
-                            "add" -> game.timer.addTime(side, time)
-                            "set" -> game.timer.setTime(side, time)
+                            "add" -> timer.addTime(side, time)
+                            "set" -> timer.setTime(side, time)
                             else -> throw CommandException(string("wrong_argument"))
                         }
                     } catch (e: IllegalArgumentException) {

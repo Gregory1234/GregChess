@@ -11,6 +11,8 @@ import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import org.bukkit.scoreboard.DisplaySlot
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
+import kotlin.reflect.safeCast
 
 class ChessGame(
     private val white: ChessPlayer,
@@ -18,11 +20,12 @@ class ChessGame(
     private val arena: ChessArena,
     val settings: Settings
 ) {
+
     override fun toString() = "ChessGame(arena = $arena)"
 
-    val board = Chessboard(this)
+    private val components = settings.components.map { it.getComponent(this) }
 
-    val timer = ChessTimer(this, settings.timerSettings)
+    val board: Chessboard = getComponent(Chessboard::class)!!
 
     constructor(
         whitePlayer: Player,
@@ -53,8 +56,10 @@ class ChessGame(
     val world
         get() = arena.world
 
+    fun <T : Component> getComponent(cl: KClass<T>): T? = components.mapNotNull { cl.safeCast(it) }.firstOrNull()
+
     fun nextTurn() {
-        timer.switchPlayer()
+        components.forEach { it.endTurn() }
         currentTurn++
         startTurn()
     }
@@ -62,29 +67,28 @@ class ChessGame(
     fun start() {
         addScoreboard("calculating", "calculating")
         realPlayers.forEach(arena::teleport)
-        board.render()
         black.sendTitle("", chatColor("You are playing with the black pieces"))
         white.sendTitle(chatColor("&eIt is your turn"), chatColor("You are playing with the white pieces"))
         white.sendMessage(chatColor("&eYou are playing with the white pieces"))
         black.sendMessage(chatColor("&eYou are playing with the black pieces"))
-        board.setFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        components.forEach { it.start() }
         startTurn()
-        timer.start()
     }
 
     fun spectate(p: Player) {
         spectators += p
         arena.teleportSpectator(p)
+        components.forEach { it.spectatorJoin(p) }
     }
 
     fun spectatorLeave(p: Player) {
+        components.forEach { it.spectatorLeave(p) }
         spectators -= p
         arena.exit(p)
     }
 
     private fun startTurn() {
-        board.updateMoves()
-        board.checkForGameEnd()
+        components.forEach { it.startTurn() }
         if (!stopping)
             this[currentTurn].startTurn()
     }
@@ -122,7 +126,7 @@ class ChessGame(
     fun stop(reason: EndReason, quick: List<Player> = emptyList()) {
         if (stopping) return
         stopping = true
-        timer.stop()
+        components.forEach { it.stop() }
         var anyLong = false
         realPlayers.forEach {
             if (reason.winner != null) {
@@ -165,7 +169,7 @@ class ChessGame(
             return
         Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
             arena.clearScoreboard()
-            board.clear()
+            components.forEach { it.clear() }
             Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
                 players.forEach(ChessPlayer::stop)
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
@@ -176,9 +180,9 @@ class ChessGame(
     operator fun get(player: Player): ChessPlayer.Human? =
         if (white is ChessPlayer.Human && black is ChessPlayer.Human && white.player == black.player && white.player == player)
             this[currentTurn] as? ChessPlayer.Human
-        else if (white is ChessPlayer.Human && white.player == player )
+        else if (white is ChessPlayer.Human && white.player == player)
             white
-        else if (black is ChessPlayer.Human && black.player == player )
+        else if (black is ChessPlayer.Human && black.player == player)
             black
         else
             null
@@ -230,12 +234,32 @@ class ChessGame(
         }
     }
 
-    data class Settings(val timerSettings: ChessTimer.Settings, val relaxedInsufficientMaterial: Boolean) {
-        companion object {
-            private val rapid10 = Settings(ChessTimer.Settings.rapid10, true)
-            private val blitz3 = Settings(ChessTimer.Settings.blitz3, true)
+    interface Component {
+        val game: ChessGame
+        fun start()
+        fun stop()
+        fun clear()
+        fun spectatorJoin(p: Player)
+        fun spectatorLeave(p: Player)
+        fun startTurn()
+        fun endTurn()
+    }
 
-            val settingsChoice = mutableMapOf("Rapid 10+10" to rapid10, "Blitz 5+3" to blitz3)
+    interface ComponentSettings {
+        fun getComponent(game: ChessGame): Component
+    }
+
+    data class Settings(val relaxedInsufficientMaterial: Boolean, val components: Collection<ComponentSettings>) {
+
+        constructor(relaxedInsufficientMaterial: Boolean, vararg components: ComponentSettings) :
+                this(relaxedInsufficientMaterial, components.toList())
+
+        companion object {
+            private val rapid10 = Settings(true, Chessboard.Settings.normal, ChessTimer.Settings.rapid10)
+            private val blitz3 = Settings(true, Chessboard.Settings.normal, ChessTimer.Settings.blitz3)
+            private val untimed = Settings(true, Chessboard.Settings.normal)
+
+            val settingsChoice = mutableMapOf("Rapid 10+10" to rapid10, "Blitz 5+3" to blitz3, "Untimed" to untimed)
         }
     }
 

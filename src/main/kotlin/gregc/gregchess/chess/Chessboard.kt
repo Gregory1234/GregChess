@@ -3,9 +3,18 @@ package gregc.gregchess.chess
 import gregc.gregchess.Loc
 import gregc.gregchess.star
 import org.bukkit.Material
+import org.bukkit.entity.Player
 import kotlin.math.abs
 
-class Chessboard(private val game: ChessGame) {
+class Chessboard(override val game: ChessGame, private val settings: Settings): ChessGame.Component {
+    data class Settings(val initialFEN: String): ChessGame.ComponentSettings {
+        override fun getComponent(game: ChessGame) = Chessboard(game, this)
+
+        companion object {
+            val normal = Settings("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        }
+    }
+
     private val boardState = (0..7).star(0..7) { i, j ->
         val pos = ChessPosition(i, j)
         Pair(pos, ChessSquare(pos, game.world))
@@ -27,6 +36,19 @@ class Chessboard(private val game: ChessGame) {
     operator fun get(loc: Loc) = this[getPos(loc)]
 
     var lastMove: ChessMove? = null
+
+    override fun start(){
+        render()
+        setFromFEN(settings.initialFEN)
+    }
+    override fun stop(){}
+    override fun spectatorJoin(p: Player) {}
+    override fun spectatorLeave(p: Player) {}
+    override fun startTurn() {
+        updateMoves()
+        checkForGameEnd()
+    }
+    override fun endTurn() {}
 
     fun move(piece: ChessPiece, target: ChessPosition) {
         this[piece.pos] = null
@@ -101,7 +123,7 @@ class Chessboard(private val game: ChessGame) {
         boardState.values.forEach { it.render() }
     }
 
-    fun clear() {
+    override fun clear() {
         boardState.values.forEach { it.clear() }
         for (i in 0 until 8 * 5) {
             for (j in 0 until 8 * 5) {

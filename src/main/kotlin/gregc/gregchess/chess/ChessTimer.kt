@@ -1,13 +1,16 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.GregChessInfo
+import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 
-class ChessTimer(private val game: ChessGame, val settings: Settings) {
+class ChessTimer(override val game: ChessGame, private val settings: Settings): ChessGame.Component {
 
-    data class Settings(val initialTime: Long, val increment: Long) {
+    data class Settings(val initialTime: Long, val increment: Long): ChessGame.ComponentSettings {
+        override fun getComponent(game: ChessGame) = ChessTimer(game, this)
+
         companion object {
             val blitz3 = fromMinutesAndSeconds(5,3)
             val rapid10 = fromMinutesAndSeconds(10,10)
@@ -54,7 +57,7 @@ class ChessTimer(private val game: ChessGame, val settings: Settings) {
         game.displayClock(max(whiteTime, 0), max(blackTime, 0))
     }
 
-    fun start() {
+    override fun start() {
         whiteStartTime = System.currentTimeMillis()
         blackStartTime = System.currentTimeMillis()
         whiteEndTime = System.currentTimeMillis() + whiteTimeDiff
@@ -68,7 +71,7 @@ class ChessTimer(private val game: ChessGame, val settings: Settings) {
         }.runTaskTimer(GregChessInfo.plugin, 0L, 20L)
     }
 
-    fun switchPlayer() {
+    override fun endTurn() {
         when (game.currentTurn) {
             ChessSide.WHITE -> {
                 val time = System.currentTimeMillis()
@@ -86,9 +89,15 @@ class ChessTimer(private val game: ChessGame, val settings: Settings) {
         refreshClock()
     }
 
-    fun stop() {
+    override fun stop() {
         stopping = true
     }
+
+    override fun spectatorJoin(p: Player) {}
+    override fun spectatorLeave(p: Player) {}
+
+    override fun startTurn() {}
+    override fun clear() {}
 
     fun addTime(side: ChessSide, addition: Long) {
         when (side) {
