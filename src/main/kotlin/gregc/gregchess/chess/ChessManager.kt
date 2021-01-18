@@ -276,6 +276,8 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
                     commandRequireArgumentsMin(args, 1)
                     plugin.reloadConfig()
                     reloadArenas()
+                    Chessboard.Settings.init()
+                    ChessTimer.Settings.init()
                 }
                 else -> throw CommandException(string("Message.Error.WrongArgument"))
             }
@@ -286,7 +288,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
 
             when (args.size) {
                 1 -> listOf("duel", "stockfish", "resign", "leave", "draw", "save", "spectate") +
-                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci")
+                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci", "reload")
                 2 -> when (args[0]) {
                     "duel" -> null
                     "spawn" -> ifPermission(*ChessSide.values())
@@ -310,8 +312,24 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
         arenas.forEach { it.delete() }
     }
 
-    fun reloadArenas(){
-
+    private fun reloadArenas(){
+        val oldArenas = arenas.map {it.name}
+        val newArenas = plugin.config.getStringList("ChessArenas")
+        val removedArenas = oldArenas - newArenas
+        val addedArenas = newArenas - oldArenas
+        removedArenas.forEach { name ->
+            val arena = arenas.first { it.name == name }
+            players.forEachGame {
+                if (it.arena == arena) {
+                    it.stop(ChessGame.EndReason.ArenaRemoved(), it.realPlayers)
+                }
+            }
+            arena.delete()
+            arenas.remove(arena)
+        }
+        addedArenas.forEach { name ->
+            arenas += ChessArena(name)
+        }
     }
 
     @EventHandler

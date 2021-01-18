@@ -19,7 +19,7 @@ import kotlin.reflect.safeCast
 class ChessGame(
     private val white: ChessPlayer,
     private val black: ChessPlayer,
-    private val arena: ChessArena,
+    val arena: ChessArena,
     val settings: Settings
 ) {
 
@@ -100,6 +100,7 @@ class ChessGame(
         class Resignation(winner: ChessSide) : EndReason("resignation", winner)
         class Walkover(winner: ChessSide) : EndReason("walkover", winner)
         class PluginRestart : EndReason("plugin restarting", null)
+        class ArenaRemoved : EndReason("arena deleted", null)
         class Stalemate : EndReason("stalemate", null)
         class InsufficientMaterial : EndReason("insufficient material", null)
         class FiftyMoves : EndReason("50-move rule", null)
