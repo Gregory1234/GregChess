@@ -12,11 +12,15 @@ class ChessTimer(override val game: ChessGame, private val settings: Settings): 
         override fun getComponent(game: ChessGame) = ChessTimer(game, this)
 
         companion object {
-            val blitz3 = fromMinutesAndSeconds(5,3)
-            val rapid10 = fromMinutesAndSeconds(10,10)
 
             private fun fromMinutesAndSeconds(minutes: Long, increment: Long) =
                 Settings(TimeUnit.MINUTES.toMillis(minutes), TimeUnit.SECONDS.toMillis(increment))
+
+            fun init() {
+                ChessGame.Settings.registerComponent("Timer", "Settings.Timer") {
+                    fromMinutesAndSeconds(it.getLong("Initial"), it.getLong("Increment"))
+                }
+            }
         }
     }
 

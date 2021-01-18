@@ -12,6 +12,10 @@ class Chessboard(override val game: ChessGame, private val settings: Settings): 
 
         companion object {
             val normal = Settings("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+
+            fun init() {
+                ChessGame.Settings.registerComponent("Board", mapOf("normal" to normal))
+            }
         }
     }
 

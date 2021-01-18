@@ -4,12 +4,14 @@ import gregc.gregchess.GregChessInfo
 import gregc.gregchess.chatColor
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import org.bukkit.scoreboard.DisplaySlot
+import java.lang.module.Configuration
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
@@ -255,11 +257,36 @@ class ChessGame(
                 this(relaxedInsufficientMaterial, components.toList())
 
         companion object {
-            private val rapid10 = Settings(true, Chessboard.Settings.normal, ChessTimer.Settings.rapid10)
-            private val blitz3 = Settings(true, Chessboard.Settings.normal, ChessTimer.Settings.blitz3)
-            private val untimed = Settings(true, Chessboard.Settings.normal)
+            private val componentChoice: MutableMap<String, Map<String, ComponentSettings>> = mutableMapOf()
 
-            val settingsChoice = mutableMapOf("Rapid 10+10" to rapid10, "Blitz 5+3" to blitz3, "Untimed" to untimed)
+            fun <T : ComponentSettings> registerComponent(name: String, presets: Map<String, T>) {
+                componentChoice[name] = presets
+            }
+
+            inline fun <T : ComponentSettings> registerComponent(
+                name: String,
+                path: String,
+                parser: (ConfigurationSection) -> T
+            ) {
+                val section = GregChessInfo.plugin.config.getConfigurationSection(path) ?: return
+                registerComponent(name, section.getValues(false).mapNotNull { (key, value) ->
+                    if (value !is ConfigurationSection) return@mapNotNull null
+                    Pair(key, parser(value))
+                }.toMap())
+            }
+
+            val settingsChoice: Map<String, Settings>
+                get() {
+                    val presets =
+                        GregChessInfo.plugin.config.getConfigurationSection("Settings.Presets") ?: return emptyMap()
+                    return presets.getValues(false).mapNotNull { (key, value) ->
+                        if (value !is ConfigurationSection) return@mapNotNull null
+                        val relaxedInsufficientMaterial = value.getBoolean("Relaxed")
+                        val components = value.getValues(false)
+                            .mapNotNull { (k, v) -> componentChoice[k]?.get(v.toString()) }
+                        Pair(key, Settings(relaxedInsufficientMaterial, components))
+                    }.toMap()
+                }
         }
     }
 

@@ -71,6 +71,8 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
         plugin.config.getStringList("ChessArenas").forEach {
             arenas += ChessArena(it)
         }
+        Chessboard.Settings.init()
+        ChessTimer.Settings.init()
 
         plugin.addCommand("chess") { player, args ->
             commandRequireArgumentsMin(args, 1)
