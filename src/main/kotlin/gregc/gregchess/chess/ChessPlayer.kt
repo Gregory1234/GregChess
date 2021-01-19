@@ -160,10 +160,10 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             game.board.resetMovesSinceLastCapture()
         move.execute(game.board)
         game.board.lastMove = move
-        game.nextTurn()
         game.board.clearPreviousMoveMarkings()
         game.board.previousMoveMarker(move.origin, Material.BROWN_CONCRETE)
         game.board.previousMoveMarker(move.target, Material.ORANGE_CONCRETE)
+        game.nextTurn()
     }
 
     fun hasTurn(): Boolean = game.currentTurn == side
