@@ -99,7 +99,7 @@ fun directionRay(origin: ChessPosition, board: Chessboard, dir: Pair<Int, Int>):
             //TODO: ChessPiece.Type.KING shouldn't be mentioned here.
             if (board[p]?.type == ChessPiece.Type.KING && board[p]?.side != side) {
                 add(
-                    ChessMove.Attack(origin, p, potentialBlocks = potentialBlocks)
+                    ChessMove.Attack(origin, p, potentialBlocks = potentialBlocks.toList())
                 )
                 potentialBlocks += p
                 p += dir
