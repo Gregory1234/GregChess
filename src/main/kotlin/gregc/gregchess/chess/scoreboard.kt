@@ -4,10 +4,14 @@ import gregc.gregchess.GregChessInfo
 import gregc.gregchess.chatColor
 import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scoreboard.DisplaySlot
+import org.bukkit.scoreboard.Team
+import java.lang.Integer.max
 
 class ScoreboardManager(val game: ChessGame) {
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
+
+    private val objective = game.arena.scoreboard.registerNewObjective("GregChess", "", "GregChess game")
 
     private var stopping = false
 
@@ -20,6 +24,30 @@ class ScoreboardManager(val game: ChessGame) {
     }
 
     fun start() {
+        objective.displaySlot = DisplaySlot.SIDEBAR
+        val l = gameProperties.size * 2 + 1 + playerProperties.size * 4 + 1
+        var i = l
+        gameProperties.forEach {
+            it.team = objective.scoreboard?.registerNewTeam(it.name)
+            objective.getScore("${it.name}:").score = i--
+            it.team?.addEntry(chatColor("&r").repeat(i))
+            objective.getScore(chatColor("&r").repeat(i)).score = i--
+        }
+        objective.getScore(chatColor("&r").repeat(i)).score = i--
+        playerProperties.forEach {
+            it.teamWhite = objective.scoreboard?.registerNewTeam(it.name + "White")
+            objective.getScore("White ${it.name}:").score = i--
+            it.teamWhite?.addEntry(chatColor("&r").repeat(i))
+            objective.getScore(chatColor("&r").repeat(i)).score = i--
+        }
+        objective.getScore(chatColor("&r").repeat(i)).score = i--
+        playerProperties.forEach {
+            it.teamBlack = objective.scoreboard?.registerNewTeam(it.name + "Black")
+            objective.getScore("Black ${it.name}:").score = i--
+            it.teamBlack?.addEntry(chatColor("&r").repeat(i))
+            objective.getScore(chatColor("&r").repeat(i)).score = i--
+        }
+
         object : BukkitRunnable() {
             override fun run() {
                 if (stopping)
@@ -31,44 +59,32 @@ class ScoreboardManager(val game: ChessGame) {
     }
 
     private fun update() {
-        game.arena.clearScoreboard()
-        val objective = game.arena.scoreboard.registerNewObjective("GregChess", "", "GregChess game")
-        objective.displaySlot = DisplaySlot.SIDEBAR
-        val lines = mutableListOf<String>()
-
         gameProperties.forEach {
-            lines += "${it.name}:"
-            lines += it()
+            it.team?.prefix = it()
         }
-        lines += ""
         playerProperties.forEach {
-            lines += "White ${it.name}:"
-            lines += it(ChessSide.WHITE)
+            it.teamWhite?.prefix = it(ChessSide.WHITE)
+            it.teamBlack?.prefix = it(ChessSide.BLACK)
         }
-        lines += ""
-        playerProperties.forEach {
-            lines += "Black ${it.name}:"
-            lines += it(ChessSide.BLACK)
-        }
-        val counts = mutableMapOf<String, Int>()
-        val l = lines.size
-        lines.forEachIndexed { i, line ->
-            val postfix = " ".repeat(counts[line] ?: 0)
-            counts[line] = (counts[line] ?: 0) + 1
-            objective.getScore(line + postfix).score = l - i
-        }
-
     }
 
     fun stop() {
+        if (stopping)
+            return
         stopping = true
+        game.arena.clearScoreboard()
     }
 }
 
 abstract class PlayerProperty(val name: String) {
+    var teamWhite: Team? = null
+    var teamBlack: Team? = null
+
     abstract operator fun invoke(s: ChessSide): String
 }
 
 abstract class GameProperty(val name: String) {
+    var team: Team? = null
+
     abstract operator fun invoke(): String
 }

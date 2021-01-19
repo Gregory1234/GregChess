@@ -10,9 +10,6 @@ import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import org.bukkit.scoreboard.DisplaySlot
-import java.lang.module.Configuration
-import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
@@ -68,7 +65,6 @@ class ChessGame(
     }
 
     fun start() {
-        scoreboard.start()
         scoreboard += object : GameProperty("Preset") {
             override fun invoke() = settings.name
         }
@@ -81,6 +77,7 @@ class ChessGame(
         white.sendMessage(chatColor("&eYou are playing with the white pieces"))
         black.sendMessage(chatColor("&eYou are playing with the black pieces"))
         components.forEach { it.start() }
+        scoreboard.start()
         startTurn()
     }
 
@@ -179,7 +176,6 @@ class ChessGame(
             return
         Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
             scoreboard.stop()
-            arena.clearScoreboard()
             components.forEach { it.clear() }
             Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
                 players.forEach(ChessPlayer::stop)
