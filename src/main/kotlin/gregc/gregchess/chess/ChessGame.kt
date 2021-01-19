@@ -24,7 +24,6 @@ class ChessGame(
 ) {
 
     override fun toString() = "ChessGame(arena = $arena)"
-
     private val components = settings.components.map { it.getComponent(this) }
 
     val board: Chessboard = getComponent(Chessboard::class)!!
@@ -58,6 +57,8 @@ class ChessGame(
     val world
         get() = arena.world
 
+    val scoreboard = ScoreboardManager(this)
+
     fun <T : Component> getComponent(cl: KClass<T>): T? = components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
     fun nextTurn() {
@@ -67,7 +68,10 @@ class ChessGame(
     }
 
     fun start() {
-        addScoreboard("calculating", "calculating")
+        scoreboard.start()
+        scoreboard += object : PlayerProperty("player") {
+            override fun invoke(s: ChessSide) = chatColor("&b${this@ChessGame[s].name}")
+        }
         realPlayers.forEach(arena::teleport)
         black.sendTitle("", chatColor("You are playing with the black pieces"))
         white.sendTitle(chatColor("&eIt is your turn"), chatColor("You are playing with the white pieces"))
@@ -171,6 +175,7 @@ class ChessGame(
         if (reason is EndReason.PluginRestart)
             return
         Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+            scoreboard.stop()
             arena.clearScoreboard()
             components.forEach { it.clear() }
             Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
@@ -195,25 +200,8 @@ class ChessGame(
         ChessSide.BLACK -> black
     }
 
-    fun displayClock(whiteTime: Long, blackTime: Long) {
-        fun format(time: Long) =
-            "%02d:%02d".format(TimeUnit.MILLISECONDS.toMinutes(time), TimeUnit.MILLISECONDS.toSeconds(time) % 60)
-        addScoreboard(format(whiteTime), format(blackTime))
-    }
-
-    private fun addScoreboard(whiteTime: String, blackTine: String) {
-        arena.clearScoreboard()
-        val objective = arena.scoreboard.registerNewObjective("GregChess", "", "GregChess game")
-        objective.displaySlot = DisplaySlot.SIDEBAR
-        objective.getScore("White player:").score = 9
-        objective.getScore(chatColor("&b${white.name} ")).score = 8
-        objective.getScore("White timer:").score = 7
-        objective.getScore("$whiteTime ").score = 6
-        objective.getScore("").score = 5
-        objective.getScore("Black player:").score = 4
-        objective.getScore(chatColor("&b${black.name}")).score = 3
-        objective.getScore("Black timer:").score = 2
-        objective.getScore(blackTine).score = 1
+    fun update() {
+        components.forEach { it.update() }
     }
 
     class SettingsMenu(private inline val callback: (Settings) -> Unit) : InventoryHolder {
@@ -240,6 +228,7 @@ class ChessGame(
     interface Component {
         val game: ChessGame
         fun start()
+        fun update()
         fun stop()
         fun clear()
         fun spectatorJoin(p: Player)

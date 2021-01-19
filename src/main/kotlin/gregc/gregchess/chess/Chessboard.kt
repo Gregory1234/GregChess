@@ -45,6 +45,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings): 
         render()
         setFromFEN(settings.initialFEN)
     }
+    override fun update(){}
     override fun stop(){}
     override fun spectatorJoin(p: Player) {}
     override fun spectatorLeave(p: Player) {}

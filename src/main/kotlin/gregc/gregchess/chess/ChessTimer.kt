@@ -24,7 +24,6 @@ class ChessTimer(override val game: ChessGame, private val settings: Settings): 
         }
     }
 
-    private var stopping = false
     private var whiteStartTime: Long = System.currentTimeMillis()
     private var blackStartTime: Long = System.currentTimeMillis()
     private var whiteTimeDiff: Long = settings.initialTime
@@ -53,26 +52,28 @@ class ChessTimer(override val game: ChessGame, private val settings: Settings): 
             game.stop(ChessGame.EndReason.Timeout(!side))
     }
 
-    fun refreshClock() {
-        val whiteTime = getWhiteTime()
-        val blackTime = getBlackTime()
-        if (whiteTime < 0) timeout(ChessSide.WHITE)
-        if (blackTime < 0) timeout(ChessSide.BLACK)
-        game.displayClock(max(whiteTime, 0), max(blackTime, 0))
-    }
-
     override fun start() {
         whiteStartTime = System.currentTimeMillis()
         blackStartTime = System.currentTimeMillis()
         whiteEndTime = System.currentTimeMillis() + whiteTimeDiff
         blackEndTime = System.currentTimeMillis() + blackTimeDiff
-        object : BukkitRunnable() {
-            override fun run() {
-                if (stopping)
-                    this.cancel()
-                refreshClock()
+        game.scoreboard += object : PlayerProperty("time") {
+
+            override fun invoke(s: ChessSide) = when (s) {
+                ChessSide.WHITE -> format(getWhiteTime())
+                ChessSide.BLACK -> format(getBlackTime())
             }
-        }.runTaskTimer(GregChessInfo.plugin, 0L, 20L)
+
+            private fun format(time: Long) =
+                "%02d:%02d.%d".format(TimeUnit.MILLISECONDS.toMinutes(time), TimeUnit.MILLISECONDS.toSeconds(time) % 60, (time/100)%10)
+        }
+    }
+
+    override fun update() {
+        val whiteTime = getWhiteTime()
+        val blackTime = getBlackTime()
+        if (whiteTime < 0) timeout(ChessSide.WHITE)
+        if (blackTime < 0) timeout(ChessSide.BLACK)
     }
 
     override fun endTurn() {
@@ -90,12 +91,9 @@ class ChessTimer(override val game: ChessGame, private val settings: Settings): 
                 blackTimeDiff = blackEndTime - time + settings.increment
             }
         }
-        refreshClock()
     }
 
-    override fun stop() {
-        stopping = true
-    }
+    override fun stop() {}
 
     override fun spectatorJoin(p: Player) {}
     override fun spectatorLeave(p: Player) {}
@@ -114,7 +112,6 @@ class ChessTimer(override val game: ChessGame, private val settings: Settings): 
                 blackTimeDiff += addition
             }
         }
-        refreshClock()
     }
 
     fun setTime(side: ChessSide, seconds: Long) {
@@ -130,6 +127,5 @@ class ChessTimer(override val game: ChessGame, private val settings: Settings): 
                 blackTimeDiff += seconds
             }
         }
-        refreshClock()
     }
 }
