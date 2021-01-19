@@ -69,6 +69,9 @@ class ChessGame(
 
     fun start() {
         scoreboard.start()
+        scoreboard += object : GameProperty("Preset") {
+            override fun invoke() = settings.name
+        }
         scoreboard += object : PlayerProperty("player") {
             override fun invoke(s: ChessSide) = chatColor("&b${this@ChessGame[s].name}")
         }
@@ -241,10 +244,14 @@ class ChessGame(
         fun getComponent(game: ChessGame): Component
     }
 
-    data class Settings(val relaxedInsufficientMaterial: Boolean, val components: Collection<ComponentSettings>) {
+    data class Settings(
+        val name: String,
+        val relaxedInsufficientMaterial: Boolean,
+        val components: Collection<ComponentSettings>
+    ) {
 
-        constructor(relaxedInsufficientMaterial: Boolean, vararg components: ComponentSettings) :
-                this(relaxedInsufficientMaterial, components.toList())
+        constructor(name: String, relaxedInsufficientMaterial: Boolean, vararg components: ComponentSettings) :
+                this(name, relaxedInsufficientMaterial, components.toList())
 
         companion object {
             private val componentChoice: MutableMap<String, Map<String, ComponentSettings>> = mutableMapOf()
@@ -274,7 +281,7 @@ class ChessGame(
                         val relaxedInsufficientMaterial = value.getBoolean("Relaxed")
                         val components = value.getValues(false)
                             .mapNotNull { (k, v) -> componentChoice[k]?.get(v.toString()) }
-                        Pair(key, Settings(relaxedInsufficientMaterial, components))
+                        Pair(key, Settings(key, relaxedInsufficientMaterial, components))
                     }.toMap()
                 }
         }
