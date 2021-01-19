@@ -1,10 +1,10 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.component
 
-import gregc.gregchess.GregChessInfo
+import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.ChessSide
+import gregc.gregchess.chess.PlayerProperty
 import org.bukkit.entity.Player
-import org.bukkit.scheduler.BukkitRunnable
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 
 class ChessTimer(override val game: ChessGame, private val settings: Settings): ChessGame.Component {
 

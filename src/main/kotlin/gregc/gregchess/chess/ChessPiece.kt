@@ -2,8 +2,8 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.Loc
 import gregc.gregchess.chatColor
+import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.getBlockAt
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World

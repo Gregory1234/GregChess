@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.GregChessInfo
 import gregc.gregchess.chatColor
+import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
@@ -204,7 +205,6 @@ class ChessGame(
     }
 
     class SettingsMenu(private inline val callback: (Settings) -> Unit) : InventoryHolder {
-        var finished: Boolean = false
         private val inv = Bukkit.createInventory(this, 9, "Choose settings")
 
         init {
@@ -245,9 +245,6 @@ class ChessGame(
         val relaxedInsufficientMaterial: Boolean,
         val components: Collection<ComponentSettings>
     ) {
-
-        constructor(name: String, relaxedInsufficientMaterial: Boolean, vararg components: ComponentSettings) :
-                this(name, relaxedInsufficientMaterial, components.toList())
 
         companion object {
             private val componentChoice: MutableMap<String, Map<String, ComponentSettings>> = mutableMapOf()

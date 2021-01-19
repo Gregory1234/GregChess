@@ -1,6 +1,7 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.component
 
 import gregc.gregchess.Loc
+import gregc.gregchess.chess.*
 import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.entity.Player

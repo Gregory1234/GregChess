@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Material
 import kotlin.math.abs
 

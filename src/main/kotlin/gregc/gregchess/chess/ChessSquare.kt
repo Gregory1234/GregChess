@@ -7,7 +7,6 @@ import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
-import java.util.*
 
 data class ChessSquare(val pos: ChessPosition, private val world: World) {
     var piece: ChessPiece? = null
