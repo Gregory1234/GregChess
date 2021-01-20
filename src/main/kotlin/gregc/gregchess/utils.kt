@@ -120,6 +120,7 @@ abstract class Arena(val name: String) {
 
     override fun toString() = "Arena(name = ${world.name})"
     fun clearScoreboard() {
+        scoreboard.teams.forEach { it.unregister() }
         scoreboard.objectives.forEach { it.unregister() }
     }
 }

@@ -59,6 +59,8 @@ class ScoreboardManager(val game: ChessGame) {
     }
 
     private fun update() {
+        if (stopping)
+            return
         gameProperties.forEach {
             it.team?.prefix = it()
         }
