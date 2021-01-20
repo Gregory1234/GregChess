@@ -6,10 +6,10 @@ import gregc.gregchess.chess.PlayerProperty
 import org.bukkit.entity.Player
 import java.util.concurrent.TimeUnit
 
-class ChessTimer(override val game: ChessGame, private val settings: Settings): ChessGame.Component {
+class ChessClock(override val game: ChessGame, private val settings: Settings): ChessGame.Component {
 
     data class Settings(val initialTime: Long, val increment: Long): ChessGame.ComponentSettings {
-        override fun getComponent(game: ChessGame) = ChessTimer(game, this)
+        override fun getComponent(game: ChessGame) = ChessClock(game, this)
 
         companion object {
 
@@ -17,7 +17,7 @@ class ChessTimer(override val game: ChessGame, private val settings: Settings): 
                 Settings(TimeUnit.MINUTES.toMillis(minutes), TimeUnit.SECONDS.toMillis(increment))
 
             fun init() {
-                ChessGame.Settings.registerComponent("Timer", "Settings.Timer") {
+                ChessGame.Settings.registerComponent("Clock", "Settings.Clock") {
                     fromMinutesAndSeconds(it.getLong("Initial"), it.getLong("Increment"))
                 }
             }

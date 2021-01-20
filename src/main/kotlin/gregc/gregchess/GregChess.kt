@@ -1,7 +1,7 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.ChessTimer
+import gregc.gregchess.chess.component.ChessClock
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.plugin.java.JavaPlugin
@@ -132,14 +132,14 @@ class GregChess : JavaPlugin() {
                     commandRequireArguments(args, 4)
                     val game = chess.getGame(player)
                     commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
-                    val timer = game.getComponent(ChessTimer::class)
-                    commandRequireNotNull(timer, string("Message.Error.TimerNotFound"))
+                    val clock = game.getComponent(ChessClock::class)
+                    commandRequireNotNull(clock, string("Message.Error.ClockNotFound"))
                     try {
                         val side = ChessSide.valueOf(args[1])
                         val time = TimeUnit.SECONDS.toMillis(args[3].toLong())
                         when (args[2].toLowerCase()) {
-                            "add" -> timer.addTime(side, time)
-                            "set" -> timer.setTime(side, time)
+                            "add" -> clock.addTime(side, time)
+                            "set" -> clock.setTime(side, time)
                             else -> throw CommandException(string("wrong_argument"))
                         }
                     } catch (e: IllegalArgumentException) {

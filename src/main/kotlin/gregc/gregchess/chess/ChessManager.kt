@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.ChessTimer
+import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.HumanEntity
@@ -70,7 +70,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
             arenas += ChessArena(it)
         }
         Chessboard.Settings.init()
-        ChessTimer.Settings.init()
+        ChessClock.Settings.init()
     }
 
     fun stop() {
@@ -163,7 +163,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     fun reload() {
         reloadArenas()
         Chessboard.Settings.init()
-        ChessTimer.Settings.init()
+        ChessClock.Settings.init()
     }
 
     @EventHandler

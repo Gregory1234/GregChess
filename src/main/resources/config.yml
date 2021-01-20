@@ -13,7 +13,7 @@ Message:
     NoArenas: "&cThere are no free arenas!"
     EngineNotFound: "&cThere are no engines in this game!"
     BoardNotFound: "&cYour game has no chessboard!"
-    TimerNotFound: "&cYour game has no timer!"
+    ClockNotFound: "&cYour game has no clock!"
     InGame:
       You: "&cYou are already in a game!"
       Opponent: "&cYour opponent is in a game already!"
