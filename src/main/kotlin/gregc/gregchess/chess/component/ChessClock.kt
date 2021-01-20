@@ -4,42 +4,71 @@ import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.ChessSide
 import gregc.gregchess.chess.PlayerProperty
 import org.bukkit.entity.Player
+import java.lang.Long.max
+import java.lang.Long.min
 import java.util.concurrent.TimeUnit
 
-class ChessClock(override val game: ChessGame, private val settings: Settings): ChessGame.Component {
+class ChessClock(override val game: ChessGame, private val settings: Settings) : ChessGame.Component {
 
-    data class Settings(val initialTime: Long, val increment: Long): ChessGame.ComponentSettings {
+    enum class Type(val usesIncrement: Boolean = true) {
+        FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
+    }
+
+    data class Settings(val type: Type, val initialTime: Long, val increment: Long = 0) : ChessGame.ComponentSettings {
         override fun getComponent(game: ChessGame) = ChessClock(game, this)
 
         companion object {
 
-            private fun fromMinutesAndSeconds(minutes: Long, increment: Long) =
-                Settings(TimeUnit.MINUTES.toMillis(minutes), TimeUnit.SECONDS.toMillis(increment))
-
             fun init() {
                 ChessGame.Settings.registerComponent("Clock", "Settings.Clock") {
-                    fromMinutesAndSeconds(it.getLong("Initial"), it.getLong("Increment"))
+                    val t = Type.valueOf(it.getString("Type")?.toUpperCase() ?: "INCREMENT")
+                    Settings(
+                        t,
+                        TimeUnit.MINUTES.toMillis(it.getLong("Initial")),
+                        if (t.usesIncrement) TimeUnit.SECONDS.toMillis(it.getLong("Increment")) else 0
+                    )
                 }
             }
         }
     }
 
-    private var whiteStartTime: Long = System.currentTimeMillis()
-    private var blackStartTime: Long = System.currentTimeMillis()
-    private var whiteTimeDiff: Long = settings.initialTime
-    private var blackTimeDiff: Long = settings.initialTime
-    private var whiteEndTime: Long = System.currentTimeMillis() + whiteTimeDiff
-    private var blackEndTime: Long = System.currentTimeMillis() + blackTimeDiff
+    data class Time(
+        var diff: Long,
+        var start: Long = System.currentTimeMillis(),
+        var end: Long = System.currentTimeMillis() + diff,
+        var begin: Long? = null
+    ) {
+        fun reset() {
+            start = System.currentTimeMillis()
+            end = System.currentTimeMillis() + diff
+        }
 
-    fun getWhiteTime() = when (game.currentTurn) {
-        ChessSide.WHITE -> whiteEndTime - System.currentTimeMillis()
-        ChessSide.BLACK -> whiteTimeDiff
+        operator fun plusAssign(addition: Long) {
+            diff += addition
+            end += addition
+        }
+
+        fun set(time: Long) {
+            diff = time
+            end = System.currentTimeMillis() + time
+        }
+
+        fun getRemaining(isActive: Boolean) = if (isActive) {
+            end - max(System.currentTimeMillis(), begin ?: 0)
+        } else {
+            diff
+        }
     }
 
-    fun getBlackTime() = when (game.currentTurn) {
-        ChessSide.WHITE -> blackTimeDiff
-        ChessSide.BLACK -> blackEndTime - System.currentTimeMillis()
+    private var whiteTime = Time(settings.initialTime)
+    private var blackTime = Time(settings.initialTime)
+
+    private fun getTime(s: ChessSide) = when (s) {
+        ChessSide.WHITE -> whiteTime
+        ChessSide.BLACK -> blackTime
     }
+
+    fun getTimeRemaining(s: ChessSide) = getTime(s).getRemaining(s == game.currentTurn)
 
     private fun timeout(side: ChessSide) {
         if (game.board.piecesOf(!side).size == 1)
@@ -53,42 +82,47 @@ class ChessClock(override val game: ChessGame, private val settings: Settings): 
     }
 
     override fun start() {
-        whiteStartTime = System.currentTimeMillis()
-        blackStartTime = System.currentTimeMillis()
-        whiteEndTime = System.currentTimeMillis() + whiteTimeDiff
-        blackEndTime = System.currentTimeMillis() + blackTimeDiff
+        ChessSide.values().forEach { getTime(it).reset() }
+        if (settings.type == Type.SIMPLE) {
+            getTime(game.currentTurn).begin = System.currentTimeMillis() + settings.increment
+            getTime(game.currentTurn) += settings.increment
+        }
         game.scoreboard += object : PlayerProperty("time") {
 
-            override fun invoke(s: ChessSide) = when (s) {
-                ChessSide.WHITE -> format(getWhiteTime())
-                ChessSide.BLACK -> format(getBlackTime())
-            }
+            override fun invoke(s: ChessSide) = format(getTimeRemaining(s))
 
             private fun format(time: Long) =
-                "%02d:%02d.%d".format(TimeUnit.MILLISECONDS.toMinutes(time), TimeUnit.MILLISECONDS.toSeconds(time) % 60, (time/100)%10)
+                "%02d:%02d.%d".format(
+                    TimeUnit.MILLISECONDS.toMinutes(time),
+                    TimeUnit.MILLISECONDS.toSeconds(time) % 60,
+                    (time / 100) % 10
+                )
         }
     }
 
     override fun update() {
-        val whiteTime = getWhiteTime()
-        val blackTime = getBlackTime()
-        if (whiteTime < 0) timeout(ChessSide.WHITE)
-        if (blackTime < 0) timeout(ChessSide.BLACK)
+        ChessSide.values().forEach { if (getTimeRemaining(it) < 0) timeout(it) }
     }
 
     override fun endTurn() {
-        when (game.currentTurn) {
-            ChessSide.WHITE -> {
-                val time = System.currentTimeMillis()
-                blackStartTime = time
-                blackEndTime = time + blackTimeDiff
-                whiteTimeDiff = whiteEndTime - time + settings.increment
+        val time = System.currentTimeMillis()
+        val turn = game.currentTurn
+        getTime(!turn).start = time
+        getTime(!turn).end = time + getTime(!turn).diff
+        when (settings.type) {
+            Type.FIXED -> {
+                getTime(turn).diff = settings.initialTime
             }
-            ChessSide.BLACK -> {
-                val time = System.currentTimeMillis()
-                whiteStartTime = time
-                whiteEndTime = time + whiteTimeDiff
-                blackTimeDiff = blackEndTime - time + settings.increment
+            Type.INCREMENT -> {
+                getTime(turn).diff = getTime(turn).end - time + settings.increment
+            }
+            Type.BRONSTEIN -> {
+                getTime(turn).diff = getTime(turn).end - time + min(settings.increment, time - getTime(turn).start)
+            }
+            Type.SIMPLE -> {
+                getTime(!turn) += settings.increment
+                getTime(!turn).begin = time + settings.increment
+                getTime(turn).diff = getTime(turn).end - max(time, getTime(turn).begin ?: 0)
             }
         }
     }
@@ -102,30 +136,10 @@ class ChessClock(override val game: ChessGame, private val settings: Settings): 
     override fun clear() {}
 
     fun addTime(side: ChessSide, addition: Long) {
-        when (side) {
-            ChessSide.WHITE -> {
-                whiteEndTime += addition
-                whiteTimeDiff += addition
-            }
-            ChessSide.BLACK -> {
-                blackEndTime += addition
-                blackTimeDiff += addition
-            }
-        }
+        getTime(side) += addition
     }
 
     fun setTime(side: ChessSide, seconds: Long) {
-        when (side) {
-            ChessSide.WHITE -> {
-                whiteStartTime = System.currentTimeMillis()
-                whiteEndTime = whiteStartTime + seconds
-                whiteTimeDiff = seconds
-            }
-            ChessSide.BLACK -> {
-                blackStartTime = System.currentTimeMillis()
-                blackEndTime = blackStartTime + seconds
-                blackTimeDiff += seconds
-            }
-        }
+        getTime(side).set(seconds)
     }
 }
