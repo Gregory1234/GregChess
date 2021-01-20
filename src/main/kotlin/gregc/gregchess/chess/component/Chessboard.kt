@@ -6,16 +6,42 @@ import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import kotlin.math.abs
+import kotlin.random.Random
+import kotlin.random.nextInt
 
-class Chessboard(override val game: ChessGame, private val settings: Settings): ChessGame.Component {
-    data class Settings(val initialFEN: String): ChessGame.ComponentSettings {
+class Chessboard(override val game: ChessGame, private val settings: Settings) : ChessGame.Component {
+    data class Settings(private val initialFEN: String?, val chess960: Boolean = false) : ChessGame.ComponentSettings {
         override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
+        fun genFEN(): String {
+            if (initialFEN != null)
+                return initialFEN
+            else if (!chess960)
+                return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+            else {
+                val types = MutableList<ChessPiece.Type?>(8) { null }
+                types[(0..7).filter { it % 2 == 0 }.random()] = ChessPiece.Type.BISHOP
+                types[(0..7).filter { it % 2 == 1 }.random()] = ChessPiece.Type.BISHOP
+                types[(0..7).filter { types[it] == null }.random()] = ChessPiece.Type.KNIGHT
+                types[(0..7).filter { types[it] == null }.random()] = ChessPiece.Type.KNIGHT
+                types[(0..7).filter { types[it] == null }.random()] = ChessPiece.Type.QUEEN
+                types[types.indexOf(null)] = ChessPiece.Type.ROOK
+                types[types.indexOf(null)] = ChessPiece.Type.KING
+                types[types.indexOf(null)] = ChessPiece.Type.ROOK
+                val row = String(types.mapNotNull { it?.character }.toCharArray())
+                return "${row}/pppppppp/8/8/8/8/PPPPPPPP/${row.toUpperCase()} w KQkq - 0 1"
+            }
+        }
+
         companion object {
-            val normal = Settings("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
             fun init() {
-                ChessGame.Settings.registerComponent("Board", mapOf("normal" to normal))
+                ChessGame.Settings.registerComponent(
+                    "Board", mapOf(
+                        "normal" to Settings(null),
+                        "chess960" to Settings(null, true)
+                    )
+                )
             }
         }
     }
@@ -42,18 +68,20 @@ class Chessboard(override val game: ChessGame, private val settings: Settings): 
 
     var lastMove: ChessMove? = null
 
-    override fun start(){
+    override fun start() {
         render()
-        setFromFEN(settings.initialFEN)
+        setFromFEN(settings.genFEN())
     }
-    override fun update(){}
-    override fun stop(){}
+
+    override fun update() {}
+    override fun stop() {}
     override fun spectatorJoin(p: Player) {}
     override fun spectatorLeave(p: Player) {}
     override fun startTurn() {
         updateMoves()
         checkForGameEnd()
     }
+
     override fun endTurn() {}
 
     fun move(piece: ChessPiece, target: ChessPosition) {
@@ -79,8 +107,8 @@ class Chessboard(override val game: ChessGame, private val settings: Settings): 
             this[origin] = a2.copy(pos = origin, hasMoved = true)
             this[target] = null
         }
-        this[origin]?.let {boardState[origin]?.playSound(it.type.moveSound)}
-        this[target]?.let {boardState[target]?.playSound(it.type.moveSound)}
+        this[origin]?.let { boardState[origin]?.playSound(it.type.moveSound) }
+        this[target]?.let { boardState[target]?.playSound(it.type.moveSound) }
     }
 
     fun pickUp(piece: ChessPiece) {
