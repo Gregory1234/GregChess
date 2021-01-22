@@ -1,14 +1,14 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Loc
+import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.getBlockAt
 import gregc.gregchess.playSound
 import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.Sound
-import org.bukkit.World
 
-data class ChessSquare(val pos: ChessPosition, private val world: World) {
+data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
     var piece: ChessPiece? = null
         set(v) {
             hide()
@@ -26,9 +26,9 @@ data class ChessSquare(val pos: ChessPosition, private val world: World) {
     fun render() {
         val (x,y,z) = loc
         (-1..1).star(-1..1) { i, j ->
-            world.getBlockAt(x + i, y - 1, z + j).type = floor
+            board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
         }
-        piece?.render(world.getBlockAt(loc))
+        piece?.render(board.game.world.getBlockAt(loc))
     }
     fun clear() {
         hide()
@@ -39,11 +39,11 @@ data class ChessSquare(val pos: ChessPosition, private val world: World) {
     }
 
     fun hide() {
-        piece?.hide(world.getBlockAt(loc))
+        piece?.hide(board.game.world.getBlockAt(loc))
     }
 
     private fun playSound(s: Sound) {
-        loc.toLocation(world).playSound(s)
+        loc.toLocation(board.game.world).playSound(s)
     }
 
     fun playPickUpSound() = piece?.let {playSound(it.type.pickUpSound)}

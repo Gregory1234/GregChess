@@ -47,7 +47,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
     private val boardState = (0..7).star(0..7) { i, j ->
         val pos = ChessPosition(i, j)
-        Pair(pos, ChessSquare(pos, game.world))
+        Pair(pos, ChessSquare(pos, this))
     }.toMap()
 
     private var movesSinceLastCapture = 0
