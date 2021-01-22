@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import org.bukkit.*
+import org.bukkit.block.Block
 import org.bukkit.generator.ChunkGenerator
 import java.lang.IllegalArgumentException
 import java.util.*
@@ -65,3 +66,27 @@ data class ChessPosition(val file: Int, val rank: Int) {
     }
 }
 
+data class ChessPiece(val type: ChessType, val side: ChessSide, val pos: ChessPosition, val hasMoved: Boolean) {
+
+    data class Captured(val type: ChessType, val side: ChessSide, val by: ChessSide) {
+        private val material = type.getMaterial(side)
+
+        fun render(block: Block) {
+            block.type = material
+        }
+
+        fun hide(block: Block) {
+            block.type = Material.AIR
+        }
+    }
+
+    fun render(block: Block) {
+        block.type = type.getMaterial(side)
+    }
+
+    fun hide(block: Block) {
+        block.type = Material.AIR
+    }
+
+    fun toCaptured() = Captured(type, side, !side)
+}

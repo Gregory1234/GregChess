@@ -110,5 +110,7 @@ enum class ChessType(
         return item
     }
 
-
+    val promotions
+        get() = if (this == PAWN) listOf(QUEEN, ROOK, BISHOP, KNIGHT)
+                else emptyList()
 }

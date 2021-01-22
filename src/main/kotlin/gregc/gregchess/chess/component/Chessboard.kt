@@ -131,7 +131,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     fun capture(pos: ChessPosition) = this[pos]?.let { capture(it) }
 
     fun promote(piece: ChessPiece, promotion: ChessType) {
-        if (promotion !in piece.promotions)
+        if (promotion !in piece.type.promotions)
             return
         val newPiece = piece.copy(type = promotion, hasMoved = false)
         this[piece.pos] = newPiece

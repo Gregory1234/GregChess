@@ -203,7 +203,7 @@ fun pawnMovement(origin: ChessPosition, board: Chessboard): List<ChessMove> {
         if ((origin + dir).rank !in listOf(0, 7))
             ret.add(ChessMove.Normal(origin, origin + dir, defensive = false))
         else
-            for (p in piece.promotions)
+            for (p in piece.type.promotions)
                 ret.add(ChessMove.Normal(origin, origin + dir, promotion = p, defensive = false))
         if (board[origin + dir * 2] == null && !piece.hasMoved) {
             ret.add(ChessMove.Normal(origin, origin + dir * 2, defensive = false))
@@ -217,7 +217,7 @@ fun pawnMovement(origin: ChessPosition, board: Chessboard): List<ChessMove> {
             (origin + sd).rank !in listOf(0, 7) ->
                 ret.add(ChessMove.Attack(origin, origin + sd))
             else ->
-                for (p in piece.promotions)
+                for (p in piece.type.promotions)
                     ret.add(ChessMove.Attack(origin, origin + sd, promotion = p))
         }
         if (board[origin + sd] == null && board[origin.plusF(s)]?.side == !piece.side) {
