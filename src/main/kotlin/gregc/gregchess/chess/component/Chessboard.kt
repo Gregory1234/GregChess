@@ -6,8 +6,6 @@ import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import kotlin.math.abs
-import kotlin.random.Random
-import kotlin.random.nextInt
 
 class Chessboard(override val game: ChessGame, private val settings: Settings) : ChessGame.Component {
     data class Settings(private val initialFEN: String?, val chess960: Boolean = false) : ChessGame.ComponentSettings {
@@ -88,7 +86,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         this[piece.pos] = null
         val newPiece = piece.copy(pos = target, hasMoved = true)
         this[target] = newPiece
-        boardState[piece.pos]?.playSound(piece.type.moveSound)
+        boardState[piece.pos]?.playMoveSound()
     }
 
     fun move(origin: ChessPosition, target: ChessPosition) =
@@ -107,22 +105,22 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             this[origin] = a2.copy(pos = origin, hasMoved = true)
             this[target] = null
         }
-        this[origin]?.let { boardState[origin]?.playSound(it.type.moveSound) }
-        this[target]?.let { boardState[target]?.playSound(it.type.moveSound) }
+        boardState[origin]?.playMoveSound()
+        boardState[target]?.playMoveSound()
     }
 
     fun pickUp(piece: ChessPiece) {
-        boardState[piece.pos]?.playSound(piece.type.pickUpSound)
+        boardState[piece.pos]?.playPickUpSound()
         boardState[piece.pos]?.hide()
     }
 
     fun placeDown(piece: ChessPiece) {
-        boardState[piece.pos]?.playSound(piece.type.moveSound)
+        boardState[piece.pos]?.playMoveSound()
         boardState[piece.pos]?.render()
     }
 
     fun capture(piece: ChessPiece) {
-        boardState[piece.pos]?.playSound(piece.type.captureSound)
+        boardState[piece.pos]?.playCaptureSound()
         this[piece.pos] = null
         val p = if (piece.type == ChessPiece.Type.PAWN)
             Pair(capturedPieces.count { it.side == piece.side && it.type == ChessPiece.Type.PAWN }, 1)

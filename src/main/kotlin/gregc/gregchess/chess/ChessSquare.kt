@@ -42,7 +42,11 @@ data class ChessSquare(val pos: ChessPosition, private val world: World) {
         piece?.hide(world.getBlockAt(loc))
     }
 
-    fun playSound(s: Sound) {
+    private fun playSound(s: Sound) {
         loc.toLocation(world).playSound(s)
     }
+
+    fun playPickUpSound() = piece?.let {playSound(it.type.pickUpSound)}
+    fun playMoveSound() = piece?.let {playSound(it.type.moveSound)}
+    fun playCaptureSound() = piece?.let {playSound(it.type.captureSound)}
 }
