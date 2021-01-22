@@ -2,6 +2,7 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
+import gregc.gregchess.getBlockAt
 import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -86,7 +87,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         this[piece.pos] = null
         val newPiece = piece.copy(pos = target, hasMoved = true)
         this[target] = newPiece
-        boardState[piece.pos]?.playMoveSound()
+        boardState[target]?.playMoveSound()
     }
 
     fun move(origin: ChessPosition, target: ChessPosition) =
@@ -122,13 +123,9 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     fun capture(piece: ChessPiece) {
         boardState[piece.pos]?.playCaptureSound()
         this[piece.pos] = null
-        val p = if (piece.type == ChessType.PAWN)
-            Pair(capturedPieces.count { it.side == piece.side && it.type == ChessType.PAWN }, 1)
-        else
-            Pair(capturedPieces.count { it.side == piece.side && it.type != ChessType.PAWN }, 0)
-        val captured = piece.toCaptured(p)
+        val captured = piece.toCaptured()
         capturedPieces.add(captured)
-        captured.render(game.world)
+        captured.render(game.world.getBlockAt(getCapturedLoc(captured)))
     }
 
     fun capture(pos: ChessPosition) = this[pos]?.let { capture(it) }
@@ -210,7 +207,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
 
     fun setFromFEN(fen: String) {
-        capturedPieces.forEach { it.hide(game.world) }
+        capturedPieces.forEach { it.hide(game.world.getBlockAt(getCapturedLoc(it))) }
         capturedPieces.clear()
         boardState.values.forEach { it.clear() }
         var x = 0
@@ -456,4 +453,15 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     }
 
     fun getPos(loc: Loc): ChessPosition = ChessPosition((4 * 8 - 1 - loc.x).div(3), (loc.z - 8).div(3))
+
+    fun getCapturedLoc(piece: ChessPiece.Captured): Loc {
+        val pos = if (piece.type == ChessType.PAWN)
+            Pair(capturedPieces.count { it.side == piece.side && it.type == ChessType.PAWN }, 1)
+        else
+            Pair(capturedPieces.count { it.side == piece.side && it.type != ChessType.PAWN }, 0)
+        return when (!piece.side) {
+            ChessSide.WHITE -> Loc(4 * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
+            ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * 4 + 2 + 2 * pos.second)
+        }
+    }
 }

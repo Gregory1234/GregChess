@@ -8,20 +8,15 @@ import org.bukkit.block.Block
 
 data class ChessPiece(val type: ChessType, val side: ChessSide, val pos: ChessPosition, val hasMoved: Boolean) {
 
-    data class Captured(val type: ChessType, val side: ChessSide, val by: ChessSide, val pos: Pair<Int, Int>) {
+    data class Captured(val type: ChessType, val side: ChessSide, val by: ChessSide) {
         private val material = type.getMaterial(side)
 
-        private val loc: Loc = when (by) {
-            ChessSide.WHITE -> Loc(4 * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
-            ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * 4 + 2 + 2 * pos.second)
+        fun render(block: Block) {
+            block.type = material
         }
 
-        fun render(world: World) {
-            world.getBlockAt(loc).type = material
-        }
-
-        fun hide(world: World) {
-            world.getBlockAt(loc).type = Material.AIR
+        fun hide(block: Block) {
+            block.type = Material.AIR
         }
     }
 
@@ -36,7 +31,7 @@ data class ChessPiece(val type: ChessType, val side: ChessSide, val pos: ChessPo
         block.type = Material.AIR
     }
 
-    fun toCaptured(pos: Pair<Int, Int>) = Captured(type, side, !side, pos)
+    fun toCaptured() = Captured(type, side, !side)
 
     val promotions =
         if (type == ChessType.PAWN) listOf(ChessType.QUEEN, ChessType.ROOK, ChessType.BISHOP, ChessType.KNIGHT)
