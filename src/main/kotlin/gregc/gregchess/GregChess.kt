@@ -80,7 +80,7 @@ class GregChess : JavaPlugin() {
                             game.board.getPos(Loc.fromLocation(player.location))
                         else
                             ChessPosition.parseFromString(args[3])
-                        val piece = ChessPiece.Type.valueOf(args[2])
+                        val piece = ChessType.valueOf(args[2])
 
                         game.board.capture(pos)
                         game.board += ChessPiece(piece, ChessSide.valueOf(args[1]), pos, false)
@@ -199,7 +199,7 @@ class GregChess : JavaPlugin() {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission(*ChessPiece.Type.values())
+                    "spawn" -> ifPermission(*ChessType.values())
                     "time" -> ifPermission("add", "set")
                     else -> listOf()
                 }

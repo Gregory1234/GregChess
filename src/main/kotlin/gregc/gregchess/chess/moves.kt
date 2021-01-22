@@ -19,14 +19,14 @@ sealed class ChessMove(val origin: ChessPosition, val target: ChessPosition) {
     abstract fun execute(board: Chessboard)
 
     interface Promoting {
-        val promotion: ChessPiece.Type?
+        val promotion: ChessType?
     }
 
     class Normal(
         origin: ChessPosition,
         target: ChessPosition,
         val defensive: Boolean = true,
-        override val promotion: ChessPiece.Type? = null
+        override val promotion: ChessType? = null
     ) : ChessMove(origin, target), Promoting {
         override val isValid: Boolean
             get() = true
@@ -52,7 +52,7 @@ sealed class ChessMove(val origin: ChessPosition, val target: ChessPosition) {
         val defensive: Boolean = false,
         val potentialBlocks: List<ChessPosition> = emptyList(),
         val actualBlocks: List<ChessPosition> = emptyList(),
-        override val promotion: ChessPiece.Type? = null
+        override val promotion: ChessType? = null
     ) : ChessMove(origin, target), Promoting {
         override val isValid: Boolean
             get() = actualBlocks.isEmpty() && !defensive
@@ -98,7 +98,7 @@ fun directionRay(origin: ChessPosition, board: Chessboard, dir: Pair<Int, Int>):
                 p += dir
             }
             //TODO: ChessPiece.Type.KING shouldn't be mentioned here.
-            if (board[p]?.type == ChessPiece.Type.KING && board[p]?.side != side) {
+            if (board[p]?.type == ChessType.KING && board[p]?.side != side) {
                 add(
                     ChessMove.Attack(origin, p, potentialBlocks = potentialBlocks.toList())
                 )
@@ -147,7 +147,7 @@ fun kingMovement(origin: ChessPosition, board: Chessboard): List<ChessMove> {
     val castles = mutableListOf<ChessMove>()
     val piece = board[origin] ?: return neighbours
     if (!piece.hasMoved) {
-        for (rook in board.pieces.filter { it.type == ChessPiece.Type.ROOK }) {
+        for (rook in board.pieces.filter { it.type == ChessType.ROOK }) {
             if (!rook.hasMoved && rook.side == piece.side && rook.pos.rank == origin.rank) {
                 val between = between(origin.file, rook.pos.file).map { origin.copy(file = it) }
 
@@ -223,7 +223,7 @@ fun pawnMovement(origin: ChessPosition, board: Chessboard): List<ChessMove> {
         if (board[origin + sd] == null && board[origin.plusF(s)]?.side == !piece.side) {
             val captured = board[origin.plusF(s)] ?: continue
             val lastMove = board.lastMove ?: continue
-            if (captured.type == ChessPiece.Type.PAWN &&
+            if (captured.type == ChessType.PAWN &&
                 lastMove.target == origin.plusF(s) &&
                 lastMove.origin == origin.plus(s, piece.side.direction * 2)
             ) {

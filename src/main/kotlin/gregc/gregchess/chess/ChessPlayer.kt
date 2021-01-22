@@ -113,7 +113,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
                         break
                     val origin = ChessPosition.parseFromString(line[1].take(2))
                     val target = ChessPosition.parseFromString(line[1].drop(2).take(2))
-                    val promotion = line[1].drop(4).firstOrNull()?.let { ChessPiece.Type.parseFromChar(it) }
+                    val promotion = line[1].drop(4).firstOrNull()?.let { ChessType.parseFromChar(it) }
                     val move = game.board.getMoves(origin)
                         .first { it.target == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
                     finishMove(move)
@@ -150,13 +150,13 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
     private val pieces
         get() = game.board.piecesOf(side)
     private val king
-        get() = pieces.find { it.type == ChessPiece.Type.KING }!!
+        get() = pieces.find { it.type == ChessType.KING }!!
 
     protected fun getAllowedMoves(piece: ChessPiece): List<ChessMove> =
         game.board.getMoves(piece.pos).filter { game.board.run { it.isLegal } }
 
     fun finishMove(move: ChessMove) {
-        if (game.board[move.origin]?.type == ChessPiece.Type.PAWN || move is ChessMove.Attack)
+        if (game.board[move.origin]?.type == ChessType.PAWN || move is ChessMove.Attack)
             game.board.resetMovesSinceLastCapture()
         move.execute(game.board)
         game.board.lastMove = move
@@ -171,7 +171,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
     class PawnPromotionScreen(
         private val pawn: ChessPiece,
         private val player: ChessPlayer,
-        private val moves: List<Pair<ChessPiece.Type, ChessMove>>
+        private val moves: List<Pair<ChessType, ChessMove>>
     ) : InventoryHolder {
         var finished: Boolean = false
         private val inv = Bukkit.createInventory(this, 9, "Pawn promotion")
