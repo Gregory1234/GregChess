@@ -45,6 +45,32 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         }
     }
 
+    class Renderer(private val board: Chessboard){
+        fun getPos(loc: Loc) = ChessPosition((4 * 8 - 1 - loc.x).div(3), (loc.z - 8).div(3))
+
+        fun getPieceLoc(pos: ChessPosition) = Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
+
+        fun getCapturedLoc(piece: ChessPiece.Captured): Loc {
+            val pos = if (piece.type == ChessType.PAWN)
+                Pair(board.capturedPieces.count { it.side == piece.side && it.type == ChessType.PAWN }, 1)
+            else
+                Pair(board.capturedPieces.count { it.side == piece.side && it.type != ChessType.PAWN }, 0)
+            return when (!piece.side) {
+                ChessSide.WHITE -> Loc(4 * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
+                ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * 4 + 2 + 2 * pos.second)
+            }
+        }
+
+        fun fillFloor(pos: ChessPosition, floor: Material) {
+            val (x,y,z) = getPieceLoc(pos)
+            (-1..1).star(-1..1) { i, j ->
+                board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
+            }
+        }
+    }
+
+    val renderer = Renderer(this)
+
     private val boardState = (0..7).star(0..7) { i, j ->
         val pos = ChessPosition(i, j)
         Pair(pos, ChessSquare(pos, this))
@@ -63,7 +89,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         boardState[pos]?.piece = piece
     }
 
-    operator fun get(loc: Loc) = this[getPos(loc)]
+    operator fun get(loc: Loc) = this[renderer.getPos(loc)]
 
     var lastMove: ChessMove? = null
 
@@ -125,7 +151,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         this[piece.pos] = null
         val captured = piece.toCaptured()
         capturedPieces.add(captured)
-        captured.render(game.world.getBlockAt(getCapturedLoc(captured)))
+        captured.render(game.world.getBlockAt(renderer.getCapturedLoc(captured)))
     }
 
     fun capture(pos: ChessPosition) = this[pos]?.let { capture(it) }
@@ -207,7 +233,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
 
     fun setFromFEN(fen: String) {
-        capturedPieces.forEach { it.hide(game.world.getBlockAt(getCapturedLoc(it))) }
+        capturedPieces.forEach { it.hide(game.world.getBlockAt(renderer.getCapturedLoc(it))) }
         capturedPieces.clear()
         boardState.values.forEach { it.clear() }
         var x = 0
@@ -449,19 +475,6 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         boardState.values.forEach {
             it.previousMoveMarker = null
             it.render()
-        }
-    }
-
-    fun getPos(loc: Loc): ChessPosition = ChessPosition((4 * 8 - 1 - loc.x).div(3), (loc.z - 8).div(3))
-
-    fun getCapturedLoc(piece: ChessPiece.Captured): Loc {
-        val pos = if (piece.type == ChessType.PAWN)
-            Pair(capturedPieces.count { it.side == piece.side && it.type == ChessType.PAWN }, 1)
-        else
-            Pair(capturedPieces.count { it.side == piece.side && it.type != ChessType.PAWN }, 0)
-        return when (!piece.side) {
-            ChessSide.WHITE -> Loc(4 * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
-            ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * 4 + 2 + 2 * pos.second)
         }
     }
 }

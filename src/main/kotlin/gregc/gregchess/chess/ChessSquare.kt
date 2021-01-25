@@ -22,12 +22,9 @@ data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
     var moveMarker: Material? = null
     val floor
         get() = moveMarker ?: previousMoveMarker ?: baseFloor
-    private val loc = Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
+    private val loc = board.renderer.getPieceLoc(pos)
     fun render() {
-        val (x,y,z) = loc
-        (-1..1).star(-1..1) { i, j ->
-            board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
-        }
+        board.renderer.fillFloor(pos, floor)
         piece?.render(board.game.world.getBlockAt(loc))
     }
     fun clear() {
@@ -36,6 +33,7 @@ data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
         bakedMoves = null
         previousMoveMarker = null
         moveMarker = null
+        board.renderer.fillFloor(pos, floor)
     }
 
     fun hide() {

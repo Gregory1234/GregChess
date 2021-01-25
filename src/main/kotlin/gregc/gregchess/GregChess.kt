@@ -58,7 +58,7 @@ class GregChess : JavaPlugin() {
                     val p = chess[player]
                     commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
                     val pos = if (args.size == 1) {
-                        p.game.board.getPos(Loc.fromLocation(player.location))
+                        p.game.board.renderer.getPos(Loc.fromLocation(player.location))
                     } else {
                         try {
                             ChessPosition.parseFromString(args[1])
@@ -77,7 +77,7 @@ class GregChess : JavaPlugin() {
                     commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     try {
                         val pos = if (args.size == 3)
-                            game.board.getPos(Loc.fromLocation(player.location))
+                            game.board.renderer.getPos(Loc.fromLocation(player.location))
                         else
                             ChessPosition.parseFromString(args[3])
                         val piece = ChessType.valueOf(args[2])
