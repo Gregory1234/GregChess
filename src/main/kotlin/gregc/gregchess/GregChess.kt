@@ -83,7 +83,7 @@ class GregChess : JavaPlugin() {
                         val piece = ChessType.valueOf(args[2])
 
                         game.board.capture(pos)
-                        game.board += ChessPiece(piece, ChessSide.valueOf(args[1]), pos, false)
+                        game.board += ChessPiece(piece, ChessSide.valueOf(args[1]), pos, game.board)
                         game.board.updateMoves()
                     } catch (e: Exception) {
                         throw CommandException(e.toString())
