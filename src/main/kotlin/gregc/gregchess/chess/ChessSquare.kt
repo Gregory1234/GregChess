@@ -22,5 +22,6 @@ data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
         previousMoveMarker = null
         moveMarker = null
         board.renderer.fillFloor(pos, floor)
+        board.renderer.clearPiece(pos)
     }
 }

@@ -67,6 +67,10 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
             }
         }
+
+        fun clearPiece(pos: ChessPosition) {
+            board.game.world.getBlockAt(getPieceLoc(pos)).type = Material.AIR
+        }
     }
 
     val renderer = Renderer(this)
