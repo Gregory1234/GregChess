@@ -66,7 +66,7 @@ class GregChess : JavaPlugin() {
                             throw CommandException(e.toString())
                         }
                     }
-                    p.game.board.capture(pos)
+                    p.game.board[pos]?.capture()
                     p.game.board.updateMoves()
                 }
                 "spawn" -> {
@@ -76,14 +76,13 @@ class GregChess : JavaPlugin() {
                     val game = chess.getGame(player)
                     commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     try {
-                        val pos = if (args.size == 3)
-                            game.board.renderer.getPos(Loc.fromLocation(player.location))
+                        val square = if (args.size == 3)
+                            game.board.getSquare(Loc.fromLocation(player.location))!!
                         else
-                            ChessPosition.parseFromString(args[3])
+                            game.board.getSquare(ChessPosition.parseFromString(args[3]))!!
                         val piece = ChessType.valueOf(args[2])
-
-                        game.board.capture(pos)
-                        game.board += ChessPiece(piece, ChessSide.valueOf(args[1]), pos, game.board)
+                        square.piece?.capture()
+                        square.piece = ChessPiece(piece, ChessSide.valueOf(args[1]), square)
                         game.board.updateMoves()
                     } catch (e: Exception) {
                         throw CommandException(e.toString())
@@ -96,8 +95,9 @@ class GregChess : JavaPlugin() {
                     val game = chess.getGame(player)
                     commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
                     try {
-                        game.board.capture(ChessPosition.parseFromString(args[2]))
-                        game.board.move(ChessPosition.parseFromString(args[1]), ChessPosition.parseFromString(args[2]))
+                        game.board[ChessPosition.parseFromString(args[2])]?.capture()
+                        game.board[ChessPosition.parseFromString(args[1])]
+                            ?.move(game.board.getSquare(ChessPosition.parseFromString(args[2]))!!)
                         game.board.updateMoves()
                     } catch (e: IllegalArgumentException) {
                         throw CommandException(e.toString())

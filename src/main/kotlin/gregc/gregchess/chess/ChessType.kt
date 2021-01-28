@@ -15,7 +15,7 @@ enum class ChessType(
     val pickUpSound: Sound,
     val moveSound: Sound,
     val captureSound: Sound,
-    val moveScheme: (ChessPosition, Chessboard) -> List<ChessMove>,
+    val moveScheme: (ChessPiece) -> List<ChessMove>,
     val minor: Boolean
 ) {
     KING(

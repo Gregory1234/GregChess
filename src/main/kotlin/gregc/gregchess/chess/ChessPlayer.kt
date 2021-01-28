@@ -24,27 +24,26 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             if (piece.side != side) return
             game.board.moveMarker(piece.pos, Material.YELLOW_CONCRETE)
             heldMoves = getAllowedMoves(piece)
-            heldMoves?.forEach { it.display(game) }
+            heldMoves?.forEach { it.display() }
             held = piece
-            game.board.pickUp(piece)
+            piece.pickUp()
             player.inventory.setItem(0, piece.type.getItem(piece.side))
         }
 
         fun makeMove(loc: Loc) {
-            val newPos = game.board.renderer.getPos(loc)
-            if (!newPos.isValid()) return
+            val newSquare = game.board.getSquare(loc) ?: return
             val piece = held ?: return
             val moves = heldMoves ?: return
-            if (newPos != piece.pos && newPos !in moves.map { it.target }) return
+            if (newSquare != piece.square && newSquare !in moves.map { it.target }) return
             game.board.clearMoveMarker(piece.pos)
-            moves.forEach { game.board.clearMoveMarker(it.target) }
+            moves.forEach { game.board.clearMoveMarker(it.target.pos) }
             held = null
             player.inventory.setItem(0, null)
-            if (newPos == piece.pos) {
-                game.board.placeDown(piece)
+            if (newSquare == piece.square) {
+                piece.placeDown()
                 return
             }
-            val chosenMoves = moves.filter { it.target == newPos }
+            val chosenMoves = moves.filter { it.target == newSquare }
             if (chosenMoves.size != 1) {
                 player.openInventory(PawnPromotionScreen(piece, this, chosenMoves.mapNotNull {
                     val p = (it as? ChessMove.Promoting)?.promotion
@@ -115,7 +114,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
                     val target = ChessPosition.parseFromString(line[1].drop(2).take(2))
                     val promotion = line[1].drop(4).firstOrNull()?.let { ChessType.parseFromChar(it) }
                     val move = game.board.getMoves(origin)
-                        .first { it.target == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
+                        .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
                     finishMove(move)
                     break
                 }
@@ -156,13 +155,13 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         game.board.getMoves(piece.pos).filter { game.board.run { it.isLegal } }
 
     fun finishMove(move: ChessMove) {
-        if (game.board[move.origin]?.type == ChessType.PAWN || move is ChessMove.Attack)
+        if (move.piece.type == ChessType.PAWN || move is ChessMove.Attack)
             game.board.resetMovesSinceLastCapture()
-        move.execute(game.board)
+        move.execute()
         game.board.lastMove = move
         game.board.clearPreviousMoveMarkings()
-        game.board.previousMoveMarker(move.origin, Material.BROWN_CONCRETE)
-        game.board.previousMoveMarker(move.target, Material.ORANGE_CONCRETE)
+        game.board.previousMoveMarker(move.origin.pos, Material.BROWN_CONCRETE)
+        game.board.previousMoveMarker(move.target.pos, Material.ORANGE_CONCRETE)
         game.nextTurn()
     }
 
@@ -194,7 +193,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
     open fun stop() {}
 
     open fun startTurn() {
-        val checkingMoves = game.board.checkingMoves(!side, king.pos)
+        val checkingMoves = game.board.checkingMoves(!side, king.square)
         if (checkingMoves.isNotEmpty()) {
             var inMate = true
             for (p in pieces) {

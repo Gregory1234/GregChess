@@ -1,12 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Loc
 import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.getBlockAt
-import gregc.gregchess.playSound
-import gregc.gregchess.star
 import org.bukkit.Material
-import org.bukkit.Sound
 
 data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
     var piece: ChessPiece? = null
@@ -28,12 +23,4 @@ data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
         moveMarker = null
         board.renderer.fillFloor(pos, floor)
     }
-
-    private fun playSound(s: Sound) {
-        loc.toLocation(board.game.world).playSound(s)
-    }
-
-    fun playPickUpSound() = piece?.let {playSound(it.type.pickUpSound)}
-    fun playMoveSound() = piece?.let {playSound(it.type.moveSound)}
-    fun playCaptureSound() = piece?.let {playSound(it.type.captureSound)}
 }

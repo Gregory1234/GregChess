@@ -84,12 +84,17 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     val pieces: List<ChessPiece>
         get() = boardState.values.mapNotNull { it.piece }
 
-    operator fun get(pos: ChessPosition) = boardState[pos]?.piece
-    private operator fun set(pos: ChessPosition, piece: ChessPiece?) {
-        boardState[pos]?.piece = piece
+    operator fun get(pos: ChessPosition) = getSquare(pos)?.piece
+
+    operator fun plusAssign(piece: ChessPiece) {
+        piece.square.piece = piece
     }
 
     operator fun get(loc: Loc) = this[renderer.getPos(loc)]
+
+    fun getSquare(pos: ChessPosition) = boardState[pos]
+
+    fun getSquare(loc: Loc) = getSquare(renderer.getPos(loc))
 
     var lastMove: ChessMove? = null
 
@@ -108,69 +113,6 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     }
 
     override fun endTurn() {}
-
-    fun move(piece: ChessPiece, target: ChessPosition) {
-        this[piece.pos] = null
-        this[target] = piece
-        piece.pos = target
-        piece.hasMoved = true
-        boardState[target]?.playMoveSound()
-    }
-
-    fun move(origin: ChessPosition, target: ChessPosition) =
-        boardState[origin]?.piece?.let { move(it, target) }
-
-    fun swap(piece1: ChessPiece, piece2: ChessPiece) {
-        val tmpPos = piece2.pos
-        this[piece1.pos] = piece2
-        piece2.pos = piece1.pos
-        piece2.hasMoved = true
-        this[tmpPos] = piece1
-        piece1.pos = tmpPos
-        piece1.hasMoved = true
-        boardState[piece1.pos]?.playMoveSound()
-        boardState[piece2.pos]?.playMoveSound()
-    }
-
-    fun swap(origin: ChessPosition, target: ChessPosition){
-        val piece1 = this[origin]
-        val piece2 = this[target]
-        if (piece1 != null && piece2 != null)
-            swap(piece1, piece2)
-        else if (piece1 != null)
-            move(piece1, target)
-        else if (piece2 != null)
-            move(piece2, origin)
-    }
-
-    fun pickUp(piece: ChessPiece) {
-        boardState[piece.pos]?.playPickUpSound()
-        this[piece.pos]?.hide()
-    }
-
-    fun placeDown(piece: ChessPiece) {
-        boardState[piece.pos]?.playMoveSound()
-        boardState[piece.pos]?.render()
-    }
-
-    fun capture(piece: ChessPiece) {
-        boardState[piece.pos]?.playCaptureSound()
-        this[piece.pos] = null
-        val captured = piece.toCaptured()
-        capturedPieces.add(captured)
-        captured.render(game.world.getBlockAt(renderer.getCapturedLoc(captured)))
-    }
-
-    fun capture(pos: ChessPosition) = this[pos]?.let { capture(it) }
-
-    fun promote(piece: ChessPiece, promotion: ChessType) {
-        if (promotion !in piece.type.promotions)
-            return
-        this[piece.pos] = ChessPiece(promotion, piece.side, piece.pos, this)
-    }
-
-    fun promote(pos: ChessPosition, promotion: ChessType) =
-        this[pos]?.let { promote(it, promotion) }
 
     fun render() {
         for (i in 0 until 8 * 5) {
@@ -196,44 +138,44 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
     fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
 
-    operator fun plusAssign(piece: ChessPiece) {
-        this[piece.pos] = piece
+    operator fun plusAssign(captured: ChessPiece.Captured) {
+        captured.render(game.world.getBlockAt(renderer.getCapturedLoc(captured)))
+        capturedPieces += captured
     }
 
     fun getMoves(pos: ChessPosition) = boardState[pos]?.bakedMoves.orEmpty()
 
     fun updateMoves() {
-        boardState.forEach { (pos, square) ->
-            square.bakedMoves = square.piece?.let { it.type.moveScheme(pos, this) }
+        boardState.forEach { (_, square) ->
+            square.bakedMoves = square.piece?.let { it.type.moveScheme(it) }
         }
     }
 
     val ChessMove.isLegal: Boolean
         get() {
             if (!isValid) return false
-            val piece = this@Chessboard[origin] ?: return false
             if (piece.type == ChessType.KING) {
                 val checks = checkingPotentialMoves(!piece.side, target)
                 return checks.isEmpty()
             }
             val myKing = piecesOf(piece.side).find { it.type == ChessType.KING } ?: return false
-            val checks = checkingMoves(!piece.side, myKing.pos)
-            if (checks.any { target !in it.potentialBlocks && target != it.origin })
+            val checks = checkingMoves(!piece.side, myKing.square)
+            if (checks.any { target.pos !in it.potentialBlocks && target != it.origin })
                 return false
-            val pins = pinningMoves(!piece.side, myKing.pos).filter { it.actualBlocks[0] == origin }
-            if (pins.any { target !in it.potentialBlocks && target != it.origin })
+            val pins = pinningMoves(!piece.side, myKing.square).filter { it.actualBlocks[0] == origin.pos }
+            if (pins.any { target.pos !in it.potentialBlocks && target != it.origin })
                 return false
             return true
         }
 
-    fun pinningMoves(by: ChessSide, pos: ChessPosition) =
+    fun pinningMoves(by: ChessSide, pos: ChessSquare) =
         piecesOf(by).flatMap { getMoves(it.pos) }.mapNotNull { it as? ChessMove.Attack }
             .filter { it.target == pos && !it.defensive && it.actualBlocks.size == 1 }
 
-    fun checkingPotentialMoves(by: ChessSide, pos: ChessPosition) =
+    fun checkingPotentialMoves(by: ChessSide, pos: ChessSquare) =
         piecesOf(by).flatMap { getMoves(it.pos) }.filter { it.target == pos }.filter { it.canAttack }
 
-    fun checkingMoves(by: ChessSide, pos: ChessPosition) =
+    fun checkingMoves(by: ChessSide, pos: ChessSquare) =
         piecesOf(by).flatMap { getMoves(it.pos) }.mapNotNull { it as? ChessMove.Attack }
             .filter { it.target == pos && it.isValid }
 
@@ -253,14 +195,13 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                     val newPiece = ChessPiece(
                         ChessType.parseFromChar(it),
                         if (it.isUpperCase()) ChessSide.WHITE else ChessSide.BLACK,
-                        ChessPosition(x, y),
-                        this
-                    )
-                    if (when (it) {
+                        getSquare(ChessPosition(x,y))!!,
+                        when (it) {
                             'p' -> y != 6
                             'P' -> y != 1
                             else -> true
-                        }) newPiece.hasMoved = true
+                        }
+                    )
                     this += newPiece
                     x++
                 }
@@ -274,37 +215,41 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                     val king = piecesOf(ChessSide.BLACK).find { it.type == ChessType.KING }
                     val rook =
                         piecesOf(ChessSide.BLACK).findLast { it.type == ChessType.ROOK && it.pos.file > king?.pos?.file ?: 0 }
-                    king?.hasMoved = false
-                    rook?.hasMoved = false
+                    king?.force(hasMoved = false)
+                    rook?.force(hasMoved = false)
                 }
                 'K' -> {
                     val king = piecesOf(ChessSide.WHITE).find { it.type == ChessType.KING }
                     val rook =
                         piecesOf(ChessSide.WHITE).findLast { it.type == ChessType.ROOK && it.pos.file > king?.pos?.file ?: 0 }
-                    king?.hasMoved = false
-                    rook?.hasMoved = false
+                    king?.force(hasMoved = false)
+                    rook?.force(hasMoved = false)
                 }
                 'q' -> {
                     val king = piecesOf(ChessSide.BLACK).find { it.type == ChessType.KING }
                     val rook =
                         piecesOf(ChessSide.BLACK).find { it.type == ChessType.ROOK && it.pos.file < king?.pos?.file ?: 0 }
-                    king?.hasMoved = false
-                    rook?.hasMoved = false
+                    king?.force(hasMoved = false)
+                    rook?.force(hasMoved = false)
                 }
                 'Q' -> {
                     val king = piecesOf(ChessSide.WHITE).find { it.type == ChessType.KING }
                     val rook =
                         piecesOf(ChessSide.WHITE).find { it.type == ChessType.ROOK && it.pos.file < king?.pos?.file ?: 0 }
-                    king?.hasMoved = false
-                    rook?.hasMoved = false
+                    king?.force(hasMoved = false)
+                    rook?.force(hasMoved = false)
                 }
             }
         }
 
         if (parts[3] != "-") {
             val pos = ChessPosition.parseFromString(parts[2])
-            val side = if (boardState[pos.plusR(1)] != null) ChessSide.WHITE else ChessSide.BLACK
-            lastMove = ChessMove.Normal(pos.plusR(-side.direction), pos.plusR(side.direction))
+            val piece = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
+            val origin = getSquare(piece.pos.plusR(-2 * piece.side.direction))!!
+            val target = piece.square
+            piece.move(origin)
+            lastMove = ChessMove.Normal(piece,target)
+            piece.move(target)
         }
 
         movesSinceLastCapture = parts[4].toInt() + 1
@@ -366,10 +311,10 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         }
         append(" ")
         lastMove.also {
-            if (it != null && it is ChessMove.Normal && this@Chessboard[it.target]?.type == ChessType.PAWN
-                && abs(it.origin.rank - it.target.rank) == 2
+            if (it != null && it is ChessMove.Normal && it.target.piece?.type == ChessType.PAWN
+                && abs(it.origin.pos.rank - it.target.pos.rank) == 2
             ) {
-                append(it.origin.copy(rank = (it.origin.rank + it.target.rank) / 2))
+                append(it.origin.pos.copy(rank = (it.origin.pos.rank + it.target.pos.rank) / 2))
             } else
                 append("-")
         }
@@ -415,10 +360,10 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 append("q")
         }
         lastMove.also {
-            if (it != null && it is ChessMove.Normal && this@Chessboard[it.target]?.type == ChessType.PAWN
-                && abs(it.origin.rank - it.target.rank) == 2
+            if (it != null && it is ChessMove.Normal && it.target.piece?.type == ChessType.PAWN
+                && abs(it.origin.pos.rank - it.target.pos.rank) == 2
             ) {
-                append(it.origin.copy(rank = (it.origin.rank + it.target.rank) / 2))
+                append(it.origin.pos.copy(rank = (it.origin.pos.rank + it.target.pos.rank) / 2))
             }
         }
     }
