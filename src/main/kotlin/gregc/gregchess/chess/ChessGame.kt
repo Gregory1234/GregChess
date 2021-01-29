@@ -65,6 +65,12 @@ class ChessGame(
         startTurn()
     }
 
+    fun previousTurn() {
+        components.forEach { it.previousTurn() }
+        currentTurn++
+        startPreviousTurn()
+    }
+
     fun start() {
         scoreboard += object : GameProperty("Preset") {
             override fun invoke() = settings.name
@@ -96,6 +102,12 @@ class ChessGame(
 
     private fun startTurn() {
         components.forEach { it.startTurn() }
+        if (!stopping)
+            this[currentTurn].startTurn()
+    }
+
+    private fun startPreviousTurn() {
+        components.forEach { it.startPreviousTurn() }
         if (!stopping)
             this[currentTurn].startTurn()
     }
@@ -234,6 +246,8 @@ class ChessGame(
         fun spectatorLeave(p: Player)
         fun startTurn()
         fun endTurn()
+        fun startPreviousTurn()
+        fun previousTurn()
     }
 
     interface ComponentSettings {

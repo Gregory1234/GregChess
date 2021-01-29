@@ -157,8 +157,6 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         game.board.getMoves(piece.pos).filter { game.board.run { it.isLegal } }
 
     fun finishMove(move: ChessMove) {
-        if (move.piece.type == ChessType.PAWN || move is ChessMove.Attack)
-            game.board.resetMovesSinceLastCapture()
         val data = move.execute()
         game.board.lastMove?.clear()
         game.board.lastMove = data

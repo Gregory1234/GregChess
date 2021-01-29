@@ -121,8 +121,13 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     override fun stop() {}
     override fun spectatorJoin(p: Player) {}
     override fun spectatorLeave(p: Player) {}
+    override fun startPreviousTurn() {}
     override fun startTurn() {
         checkForGameEnd()
+    }
+
+    override fun previousTurn() {
+        updateMoves()
     }
 
     override fun endTurn() {
@@ -166,6 +171,11 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     operator fun plusAssign(captured: ChessPiece.Captured) {
         captured.render(game.world.getBlockAt(renderer.getCapturedLoc(captured)))
         capturedPieces += captured
+    }
+
+    operator fun minusAssign(captured: ChessPiece.Captured) {
+        capturedPieces -= captured
+        captured.hide(game.world.getBlockAt(renderer.getCapturedLoc(captured)))
     }
 
     fun getMoves(pos: ChessPosition) = boardState[pos]?.bakedMoves.orEmpty()
@@ -277,7 +287,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             piece.move(target)
         }
 
-        movesSinceLastCapture = parts[4].toInt() + 1
+        movesSinceLastCapture = parts[4].toInt()
 
         boardHashes.clear()
         lastMove = null
@@ -348,7 +358,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         append(" ")
         append(if (movesSinceLastCapture == 0) 0 else (movesSinceLastCapture - 1))
         append(" ")
-        append(1)
+        append(fullMoveCounter + 1)
     }
 
     private fun getBoardHash() = buildString {
@@ -424,7 +434,29 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         return boardHashes[hash.hashCode()]!!
     }
 
-    fun resetMovesSinceLastCapture() {
+    fun resetMovesSinceLastCapture(): () -> Unit {
+        val m = movesSinceLastCapture
         movesSinceLastCapture = 0
+        return {
+            movesSinceLastCapture = m
+        }
+    }
+
+    fun undoMove() {
+        movesSinceLastCapture--
+    }
+
+    fun undoLastMove() {
+        lastMove?.let {
+            it.clear()
+            val hash = getBoardHash()
+            boardHashes[hash.hashCode()] = boardHashes[hash.hashCode()]!!-1
+            it.undo()
+            if (game.currentTurn == ChessSide.WHITE)
+                fullMoveCounter--
+            moves.removeLast()
+            lastMove?.render()
+            game.previousTurn()
+        }
     }
 }

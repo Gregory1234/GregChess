@@ -180,6 +180,14 @@ class GregChess : JavaPlugin() {
                     reloadConfig()
                     chess.reload()
                 }
+                "undo" -> {
+                    commandRequirePlayer(player)
+                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequireArguments(args, 1)
+                    val game = chess.getGame(player)
+                    commandRequireNotNull(game, string("Message.Error.NotInGame.You"))
+                    game.board.undoLastMove()
+                }
                 else -> throw CommandException(string("Message.Error.WrongArgument"))
             }
         }
@@ -189,7 +197,7 @@ class GregChess : JavaPlugin() {
 
             when (args.size) {
                 1 -> listOf("duel", "stockfish", "resign", "leave", "draw", "save", "spectate") +
-                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci", "reload")
+                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci", "reload", "undo")
                 2 -> when (args[0]) {
                     "duel" -> null
                     "spawn" -> ifPermission(*ChessSide.values())

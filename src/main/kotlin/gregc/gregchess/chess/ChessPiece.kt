@@ -78,11 +78,13 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
         playMoveSound()
     }
 
-    fun capture() {
+    fun capture(): Captured {
         hide()
         square.piece = null
-        board += Captured(type, side, !side)
+        val captured = Captured(type, side, !side)
+        board += captured
         playCaptureSound()
+        return captured
     }
 
     fun promote(promotion: ChessType) {
@@ -100,5 +102,18 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved
+    }
+
+    fun demote(piece: ChessPiece) {
+        piece.render()
+        hide()
+        square.piece = piece
+    }
+
+    fun resurrect(captured: Captured){
+        board -= captured
+        render()
+        square.piece = this
+        playMoveSound()
     }
 }

@@ -127,6 +127,9 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
         }
     }
 
+    override fun startPreviousTurn() {}
+    override fun previousTurn() {}
+
     override fun stop() {}
 
     override fun spectatorJoin(p: Player) {}

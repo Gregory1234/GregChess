@@ -63,6 +63,7 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
             get() = defensive
 
         override fun execute(): MoveData {
+            val pieceHasMoved = piece.hasMoved
             var name = ""
             if (piece.type != ChessType.PAWN)
                 name += piece.type.character.toUpperCase()
@@ -74,9 +75,16 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
                 name += promotion.character.toUpperCase()
             }
             name += checkForChecks(piece.side, piece.square.board)
+            val undoReset = if (piece.type == ChessType.PAWN)
+                piece.square.board.resetMovesSinceLastCapture()
+            else
+                piece.square.board::undoMove
             val undo = {
+                if (promotion != null)
+                    piece.square.piece?.demote(piece)
                 piece.move(origin)
-                //TODO: reverse promotion
+                undoReset()
+                piece.force(pieceHasMoved)
             }
             return MoveData(piece, origin, target, name, undo)
         }
@@ -102,6 +110,7 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
             get() = if (promotion == null) Material.RED_CONCRETE else Material.BLUE_CONCRETE
 
         override fun execute(): MoveData {
+            val pieceHasMoved = piece.hasMoved
             var name = ""
             name += if (piece.type == ChessType.PAWN)
                 piece.pos.fileStr
@@ -110,7 +119,8 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
             name += getUniquenessCoordinate(piece, target)
             name += "x"
             name += target.pos.toString()
-            capture.piece?.capture()
+            val capturedPiece = capture.piece
+            val c = capturedPiece?.capture()
             piece.move(target)
             if (promotion != null) {
                 piece.promote(promotion)
@@ -119,10 +129,14 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
             name += checkForChecks(piece.side, piece.square.board)
             if (target != capture)
                 name += " e.p."
+            val undoReset = piece.square.board.resetMovesSinceLastCapture()
             val undo = {
+                if (promotion != null)
+                    piece.square.piece?.demote(piece)
                 piece.move(origin)
-                //TODO: reverse capture
-                //TODO: reverse promotion
+                capturedPiece?.resurrect(c!!)
+                undoReset()
+                piece.force(pieceHasMoved)
             }
             return MoveData(piece, origin, target, name, undo)
         }
@@ -274,6 +288,9 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
                                 this.piece.move(this.origin)
                                 rook.move(rookOrigin)
                             }
+                            this.piece.square.board.undoMove()
+                            this.piece.force(false)
+                            rook.force(false)
                         }
                         return MoveData(this.piece, this.origin, this.target, name, undo)
                     }
