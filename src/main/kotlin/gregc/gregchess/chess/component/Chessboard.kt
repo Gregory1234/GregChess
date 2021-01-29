@@ -404,26 +404,4 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     fun resetMovesSinceLastCapture() {
         movesSinceLastCapture = 0
     }
-
-    fun moveMarker(pos: ChessPosition, floor: Material) {
-        boardState[pos]?.moveMarker = floor
-        boardState[pos]?.render()
-    }
-
-    fun previousMoveMarker(pos: ChessPosition, floor: Material) {
-        boardState[pos]?.previousMoveMarker = floor
-        boardState[pos]?.render()
-    }
-
-    fun clearMoveMarker(pos: ChessPosition) {
-        boardState[pos]?.moveMarker = null
-        boardState[pos]?.render()
-    }
-
-    fun clearPreviousMoveMarkings() {
-        boardState.values.forEach {
-            it.previousMoveMarker = null
-            it.render()
-        }
-    }
 }

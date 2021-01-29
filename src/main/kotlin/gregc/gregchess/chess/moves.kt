@@ -7,8 +7,27 @@ import kotlin.math.abs
 sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
     val origin = piece.square
 
-    fun display() {
+    fun render() {
         target.moveMarker = floor
+        target.render()
+    }
+
+    fun clear() {
+        target.moveMarker = null
+        target.render()
+    }
+
+    fun renderDone() {
+        origin.previousMoveMarker = Material.BROWN_CONCRETE
+        origin.render()
+        target.previousMoveMarker = Material.ORANGE_CONCRETE
+        target.render()
+    }
+
+    fun clearDone() {
+        origin.previousMoveMarker = null
+        origin.render()
+        target.previousMoveMarker = null
         target.render()
     }
 

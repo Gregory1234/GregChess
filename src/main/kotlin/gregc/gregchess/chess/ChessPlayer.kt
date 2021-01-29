@@ -22,9 +22,10 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             if (!game.board.renderer.getPos(loc).isValid()) return
             val piece = game.board[loc] ?: return
             if (piece.side != side) return
-            game.board.moveMarker(piece.pos, Material.YELLOW_CONCRETE)
+            piece.square.moveMarker = Material.YELLOW_CONCRETE
+            piece.square.render()
             heldMoves = getAllowedMoves(piece)
-            heldMoves?.forEach { it.display() }
+            heldMoves?.forEach { it.render() }
             held = piece
             piece.pickUp()
             player.inventory.setItem(0, piece.type.getItem(piece.side))
@@ -35,8 +36,9 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             val piece = held ?: return
             val moves = heldMoves ?: return
             if (newSquare != piece.square && newSquare !in moves.map { it.target }) return
-            game.board.clearMoveMarker(piece.pos)
-            moves.forEach { game.board.clearMoveMarker(it.target.pos) }
+            piece.square.moveMarker = null
+            piece.square.render()
+            moves.forEach { it.clear() }
             held = null
             player.inventory.setItem(0, null)
             if (newSquare == piece.square) {
@@ -158,10 +160,9 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         if (move.piece.type == ChessType.PAWN || move is ChessMove.Attack)
             game.board.resetMovesSinceLastCapture()
         move.execute()
+        game.board.lastMove?.clearDone()
         game.board.lastMove = move
-        game.board.clearPreviousMoveMarkings()
-        game.board.previousMoveMarker(move.origin.pos, Material.BROWN_CONCRETE)
-        game.board.previousMoveMarker(move.target.pos, Material.ORANGE_CONCRETE)
+        game.board.lastMove?.renderDone()
         game.nextTurn()
     }
 
