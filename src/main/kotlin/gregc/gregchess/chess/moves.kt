@@ -1,8 +1,11 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Material
 import kotlin.math.abs
+
+data class CompletedMove(inline val execute: () -> String, inline val undo: () -> Unit)
 
 sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
     val origin = piece.square
@@ -37,7 +40,7 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
 
     abstract val canAttack: Boolean
 
-    abstract fun execute()
+    abstract val run: CompletedMove
 
     interface Promoting {
         val promotion: ChessType?
@@ -58,12 +61,26 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         override val canAttack
             get() = defensive
 
-        override fun execute() {
-            if (!isValid) throw IllegalArgumentException()
-            piece.move(target)
-            if (promotion != null)
-                piece.promote(promotion)
-        }
+        override val run: CompletedMove
+            get() {
+                val exec = {
+                    var name = ""
+                    if (piece.type != ChessType.PAWN)
+                        name += piece.type.character.toUpperCase().toString()
+                    name += getUniquenessCoordinate(piece, target)
+                    name += target.pos.toString()
+                    piece.move(target)
+                    if (promotion != null)
+                        piece.promote(promotion)
+                    name += checkForChecks(piece.side, piece.square.board)
+                    name
+                }
+                val undo = {
+                    piece.move(origin)
+                    //TODO: reverse promotion
+                }
+                return CompletedMove(exec, undo)
+            }
     }
 
     class Attack(
@@ -85,13 +102,33 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         override val floor
             get() = if (promotion == null) Material.RED_CONCRETE else Material.BLUE_CONCRETE
 
-        override fun execute() {
-            if (!isValid) throw IllegalArgumentException()
-            capture.piece?.capture()
-            piece.move(target)
-            if (promotion != null)
-                piece.promote(promotion)
-        }
+        override val run: CompletedMove
+            get() {
+                val exec = {
+                    var name = ""
+                    name += if (piece.type == ChessType.PAWN)
+                        piece.pos.fileStr
+                    else
+                        piece.type.character.toUpperCase().toString()
+                    name += getUniquenessCoordinate(piece, target)
+                    name += "x"
+                    name += target.pos.toString()
+                    if (target != capture)
+                        name += " e.p."
+                    capture.piece?.capture()
+                    piece.move(target)
+                    if (promotion != null)
+                        piece.promote(promotion)
+                    name += checkForChecks(piece.side, piece.square.board)
+                    name
+                }
+                val undo = {
+                    piece.move(origin)
+                    //TODO: reverse capture
+                    //TODO: reverse promotion
+                }
+                return CompletedMove(exec, undo)
+            }
     }
 
     abstract class Special(piece: ChessPiece, target: ChessSquare) : ChessMove(piece, target) {
@@ -99,6 +136,28 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
             get() = Material.BLUE_CONCRETE
     }
 
+}
+
+fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
+    val board = target.board
+    val pieces = board.pieces.filter { it.side == piece.side && it.type == piece.type }
+    val consideredPieces =
+        pieces.filter { it.square.bakedMoves.orEmpty().any { it.target == target && board.run { it.isLegal } } }
+    return when {
+        consideredPieces.size == 1 -> ""
+        consideredPieces.count { it.pos.file == piece.pos.file } == 1 -> piece.pos.fileStr
+        consideredPieces.count { it.pos.rank == piece.pos.rank } == 1 -> piece.pos.rankStr
+        else -> piece.pos.toString()
+    }
+}
+
+fun checkForChecks(side: ChessSide, board: Chessboard): String {
+    board.updateMoves()
+    return when {
+        board.piecesOf(!side).flatMap { board.run {getMoves(it.pos).filter {it.isLegal}} }.isEmpty() -> "#"
+        board.checkingMoves(side, board.piecesOf(!side).first { it.type == ChessType.KING }.square).isNotEmpty() -> "+"
+        else -> ""
+    }
 }
 
 fun jumpTo(piece: ChessPiece, target: ChessSquare): List<ChessMove> =
@@ -201,15 +260,30 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
                     override val canAttack
                         get() = false
 
-                    override fun execute() {
-                        if (!isValid) throw IllegalArgumentException()
-                        if (dist == 1) {
-                            piece.swap(rook)
-                        } else {
-                            piece.move(targetSquare)
-                            rook.move(targetRookSquare)
+                    override val run: CompletedMove
+                        get() {
+                            val exec = {
+                                var name = if (newFile < piece.pos.file) "O-O-O" else "O-O"
+                                if (dist == 1) {
+                                    piece.swap(rook)
+                                } else {
+                                    piece.move(targetSquare)
+                                    rook.move(targetRookSquare)
+                                }
+                                name += checkForChecks(piece.side, piece.square.board)
+                                name
+                            }
+                            val rookOrigin = rook.square
+                            val undo = {
+                                if (dist == 1) {
+                                    piece.swap(rook)
+                                } else {
+                                    piece.move(this.origin)
+                                    rook.move(rookOrigin)
+                                }
+                            }
+                            return CompletedMove(exec, undo)
                         }
-                    }
                 })
             }
         }

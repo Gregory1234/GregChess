@@ -56,8 +56,8 @@ data class ChessPosition(val file: Int, val rank: Int) {
     fun plus(df: Int, dr: Int) = ChessPosition(file + df, rank + dr)
     fun plusF(df: Int) = plus(df, 0)
     fun plusR(dr: Int) = plus(0, dr)
-    private val fileStr = "${'a'+file}"
-    private val rankStr = (rank + 1).toString()
+    val fileStr = "${'a'+file}"
+    val rankStr = (rank + 1).toString()
 
     fun neighbours(): List<ChessPosition> =
             (-1..1).star(-1..1) { a, b -> this.plus(a, b) }.filter { it.isValid() } - this
