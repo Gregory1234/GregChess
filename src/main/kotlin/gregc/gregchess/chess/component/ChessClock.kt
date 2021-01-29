@@ -53,8 +53,8 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
             end = System.currentTimeMillis() + time
         }
 
-        fun getRemaining(isActive: Boolean) = if (isActive) {
-            end - max(System.currentTimeMillis(), begin ?: 0)
+        fun getRemaining(isActive: Boolean, time: Long) = if (isActive) {
+            end - max(time, begin ?: 0)
         } else {
             diff
         }
@@ -68,7 +68,11 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
         ChessSide.BLACK -> blackTime
     }
 
-    fun getTimeRemaining(s: ChessSide) = getTime(s).getRemaining(s == game.currentTurn)
+    private var started = false
+    private var stopTime: Long? = null
+
+    fun getTimeRemaining(s: ChessSide) =
+        getTime(s).getRemaining(s == game.currentTurn && started, stopTime ?: System.currentTimeMillis())
 
     private fun timeout(side: ChessSide) {
         if (game.board.piecesOf(!side).size == 1)
@@ -82,14 +86,9 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
     }
 
     override fun start() {
-        ChessSide.values().forEach { getTime(it).reset() }
-        if (settings.type == Type.SIMPLE) {
-            getTime(game.currentTurn).begin = System.currentTimeMillis() + settings.increment
-            getTime(game.currentTurn) += settings.increment
-        }
         game.scoreboard += object : PlayerProperty("time") {
 
-            override fun invoke(s: ChessSide) = format(getTimeRemaining(s))
+            override fun invoke(s: ChessSide) = format(max(getTimeRemaining(s), 0))
 
             private fun format(time: Long) =
                 "%02d:%02d.%d".format(
@@ -98,6 +97,17 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
                     (time / 100) % 10
                 )
         }
+        if (settings.type == Type.SIMPLE)
+            startTimer()
+    }
+
+    private fun startTimer() {
+        ChessSide.values().forEach { getTime(it).reset() }
+        if (settings.type == Type.SIMPLE) {
+            getTime(game.currentTurn).begin = System.currentTimeMillis() + settings.increment
+            getTime(game.currentTurn) += settings.increment
+        }
+        started = true
     }
 
     override fun update() {
@@ -105,6 +115,9 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
     }
 
     override fun endTurn() {
+        val increment = if (started) settings.increment else 0
+        if (!started)
+            startTimer()
         val time = System.currentTimeMillis()
         val turn = game.currentTurn
         getTime(!turn).start = time
@@ -114,14 +127,14 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
                 getTime(turn).diff = settings.initialTime
             }
             Type.INCREMENT -> {
-                getTime(turn).diff = getTime(turn).end - time + settings.increment
+                getTime(turn).diff = getTime(turn).end - time + increment
             }
             Type.BRONSTEIN -> {
-                getTime(turn).diff = getTime(turn).end - time + min(settings.increment, time - getTime(turn).start)
+                getTime(turn).diff = getTime(turn).end - time + min(increment, time - getTime(turn).start)
             }
             Type.SIMPLE -> {
-                getTime(!turn) += settings.increment
-                getTime(!turn).begin = time + settings.increment
+                getTime(!turn) += increment
+                getTime(!turn).begin = time + increment
                 getTime(turn).diff = getTime(turn).end - max(time, getTime(turn).begin ?: 0)
             }
         }
@@ -130,7 +143,9 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
     override fun startPreviousTurn() {}
     override fun previousTurn() {}
 
-    override fun stop() {}
+    override fun stop() {
+        stopTime = System.currentTimeMillis()
+    }
 
     override fun spectatorJoin(p: Player) {}
     override fun spectatorLeave(p: Player) {}
