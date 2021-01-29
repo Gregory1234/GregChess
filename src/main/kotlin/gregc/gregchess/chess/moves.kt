@@ -66,12 +66,14 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
                 val exec = {
                     var name = ""
                     if (piece.type != ChessType.PAWN)
-                        name += piece.type.character.toUpperCase().toString()
+                        name += piece.type.character.toUpperCase()
                     name += getUniquenessCoordinate(piece, target)
                     name += target.pos.toString()
                     piece.move(target)
-                    if (promotion != null)
+                    if (promotion != null) {
                         piece.promote(promotion)
+                        name += promotion.character.toUpperCase()
+                    }
                     name += checkForChecks(piece.side, piece.square.board)
                     name
                 }
@@ -109,17 +111,19 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
                     name += if (piece.type == ChessType.PAWN)
                         piece.pos.fileStr
                     else
-                        piece.type.character.toUpperCase().toString()
+                        piece.type.character.toUpperCase()
                     name += getUniquenessCoordinate(piece, target)
                     name += "x"
                     name += target.pos.toString()
-                    if (target != capture)
-                        name += " e.p."
                     capture.piece?.capture()
                     piece.move(target)
-                    if (promotion != null)
+                    if (promotion != null) {
                         piece.promote(promotion)
+                        name += promotion.character.toUpperCase()
+                    }
                     name += checkForChecks(piece.side, piece.square.board)
+                    if (target != capture)
+                        name += " e.p."
                     name
                 }
                 val undo = {
