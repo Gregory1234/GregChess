@@ -45,7 +45,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         }
     }
 
-    class Renderer(private val board: Chessboard){
+    class Renderer(private val board: Chessboard) {
         fun getPos(loc: Loc) = ChessPosition((4 * 8 - 1 - loc.x).div(3), (loc.z - 8).div(3))
 
         fun getPieceLoc(pos: ChessPosition) = Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
@@ -62,7 +62,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         }
 
         fun fillFloor(pos: ChessPosition, floor: Material) {
-            val (x,y,z) = getPieceLoc(pos)
+            val (x, y, z) = getPieceLoc(pos)
             (-1..1).star(-1..1) { i, j ->
                 board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
             }
@@ -81,6 +81,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     }.toMap()
 
     private var movesSinceLastCapture = 0
+    private var fullMoveCounter = 0
     private val boardHashes = mutableMapOf<Int, Int>()
 
     private val capturedPieces = mutableListOf<ChessPiece.Captured>()
@@ -100,7 +101,16 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
     fun getSquare(loc: Loc) = getSquare(renderer.getPos(loc))
 
-    var lastMove: MoveData? = null
+    private val moves: MutableList<MoveData> = mutableListOf()
+
+    var lastMove
+        get() = moves.lastOrNull()
+        set(v) {
+            if (v != null)
+                moves += v
+            else
+                moves.clear()
+        }
 
     override fun start() {
         render()
@@ -112,11 +122,22 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     override fun spectatorJoin(p: Player) {}
     override fun spectatorLeave(p: Player) {}
     override fun startTurn() {
-        updateMoves()
         checkForGameEnd()
     }
 
-    override fun endTurn() {}
+    override fun endTurn() {
+        updateMoves()
+        val num = "${fullMoveCounter+1}."
+        if (game.currentTurn == ChessSide.BLACK) {
+            val wLast = (if (moves.size <= 1) "" else moves[moves.size-2].name)
+            val bLast = (lastMove?.name ?: "")
+            game.realPlayers.forEach { p -> p.sendMessage("$num $wLast  | $bLast") }
+            fullMoveCounter++
+        } else if (piecesOf(!game.currentTurn).flatMap { p -> getMoves(p.pos).filter { it.isLegal } }.isEmpty()) {
+            val wLast = (lastMove?.name ?: "")
+            game.realPlayers.forEach { p -> p.sendMessage("$num $wLast  |") }
+        }
+    }
 
     fun render() {
         for (i in 0 until 8 * 5) {
@@ -199,7 +220,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                     val newPiece = ChessPiece(
                         ChessType.parseFromChar(it),
                         if (it.isUpperCase()) ChessSide.WHITE else ChessSide.BLACK,
-                        getSquare(ChessPosition(x,y))!!,
+                        getSquare(ChessPosition(x, y))!!,
                         when (it) {
                             'p' -> y != 6
                             'P' -> y != 1
@@ -252,13 +273,15 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             val origin = getSquare(piece.pos.plusR(-2 * piece.side.direction))!!
             val target = piece.square
             piece.move(origin)
-            lastMove = MoveData(piece,origin, target, ""){}
+            lastMove = MoveData(piece, origin, target, "") {}
             piece.move(target)
         }
 
         movesSinceLastCapture = parts[4].toInt() + 1
 
-        boardHashes.clear() // Nothing better to do here
+        boardHashes.clear()
+        lastMove = null
+        fullMoveCounter = parts[5].toInt().div(2)
 
         if (ChessSide.parseFromChar(parts[1][0]) != game.currentTurn) {
             game.nextTurn()
