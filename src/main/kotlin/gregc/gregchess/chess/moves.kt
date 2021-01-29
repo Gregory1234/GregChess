@@ -5,7 +5,22 @@ import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Material
 import kotlin.math.abs
 
-data class CompletedMove(inline val execute: () -> String, inline val undo: () -> Unit)
+data class MoveData(val piece: ChessPiece, val origin: ChessSquare, val target: ChessSquare, val name: String, inline val undo: () -> Unit){
+
+    fun render() {
+        origin.previousMoveMarker = Material.BROWN_CONCRETE
+        origin.render()
+        target.previousMoveMarker = Material.ORANGE_CONCRETE
+        target.render()
+    }
+
+    fun clear() {
+        origin.previousMoveMarker = null
+        origin.render()
+        target.previousMoveMarker = null
+        target.render()
+    }
+}
 
 sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
     val origin = piece.square
@@ -20,27 +35,13 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         target.render()
     }
 
-    fun renderDone() {
-        origin.previousMoveMarker = Material.BROWN_CONCRETE
-        origin.render()
-        target.previousMoveMarker = Material.ORANGE_CONCRETE
-        target.render()
-    }
-
-    fun clearDone() {
-        origin.previousMoveMarker = null
-        origin.render()
-        target.previousMoveMarker = null
-        target.render()
-    }
-
     abstract val isValid: Boolean
 
     abstract val floor: Material
 
     abstract val canAttack: Boolean
 
-    abstract val run: CompletedMove
+    abstract fun execute(): MoveData
 
     interface Promoting {
         val promotion: ChessType?
@@ -61,28 +62,24 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         override val canAttack
             get() = defensive
 
-        override val run: CompletedMove
-            get() {
-                val exec = {
-                    var name = ""
-                    if (piece.type != ChessType.PAWN)
-                        name += piece.type.character.toUpperCase()
-                    name += getUniquenessCoordinate(piece, target)
-                    name += target.pos.toString()
-                    piece.move(target)
-                    if (promotion != null) {
-                        piece.promote(promotion)
-                        name += promotion.character.toUpperCase()
-                    }
-                    name += checkForChecks(piece.side, piece.square.board)
-                    name
-                }
-                val undo = {
-                    piece.move(origin)
-                    //TODO: reverse promotion
-                }
-                return CompletedMove(exec, undo)
+        override fun execute(): MoveData {
+            var name = ""
+            if (piece.type != ChessType.PAWN)
+                name += piece.type.character.toUpperCase()
+            name += getUniquenessCoordinate(piece, target)
+            name += target.pos.toString()
+            piece.move(target)
+            if (promotion != null) {
+                piece.promote(promotion)
+                name += promotion.character.toUpperCase()
             }
+            name += checkForChecks(piece.side, piece.square.board)
+            val undo = {
+                piece.move(origin)
+                //TODO: reverse promotion
+            }
+            return MoveData(piece, origin, target, name, undo)
+        }
     }
 
     class Attack(
@@ -104,35 +101,31 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         override val floor
             get() = if (promotion == null) Material.RED_CONCRETE else Material.BLUE_CONCRETE
 
-        override val run: CompletedMove
-            get() {
-                val exec = {
-                    var name = ""
-                    name += if (piece.type == ChessType.PAWN)
-                        piece.pos.fileStr
-                    else
-                        piece.type.character.toUpperCase()
-                    name += getUniquenessCoordinate(piece, target)
-                    name += "x"
-                    name += target.pos.toString()
-                    capture.piece?.capture()
-                    piece.move(target)
-                    if (promotion != null) {
-                        piece.promote(promotion)
-                        name += promotion.character.toUpperCase()
-                    }
-                    name += checkForChecks(piece.side, piece.square.board)
-                    if (target != capture)
-                        name += " e.p."
-                    name
-                }
-                val undo = {
-                    piece.move(origin)
-                    //TODO: reverse capture
-                    //TODO: reverse promotion
-                }
-                return CompletedMove(exec, undo)
+        override fun execute(): MoveData {
+            var name = ""
+            name += if (piece.type == ChessType.PAWN)
+                piece.pos.fileStr
+            else
+                piece.type.character.toUpperCase()
+            name += getUniquenessCoordinate(piece, target)
+            name += "x"
+            name += target.pos.toString()
+            capture.piece?.capture()
+            piece.move(target)
+            if (promotion != null) {
+                piece.promote(promotion)
+                name += promotion.character.toUpperCase()
             }
+            name += checkForChecks(piece.side, piece.square.board)
+            if (target != capture)
+                name += " e.p."
+            val undo = {
+                piece.move(origin)
+                //TODO: reverse capture
+                //TODO: reverse promotion
+            }
+            return MoveData(piece, origin, target, name, undo)
+        }
     }
 
     abstract class Special(piece: ChessPiece, target: ChessSquare) : ChessMove(piece, target) {
@@ -264,30 +257,26 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
                     override val canAttack
                         get() = false
 
-                    override val run: CompletedMove
-                        get() {
-                            val exec = {
-                                var name = if (newFile < piece.pos.file) "O-O-O" else "O-O"
-                                if (dist == 1) {
-                                    piece.swap(rook)
-                                } else {
-                                    piece.move(targetSquare)
-                                    rook.move(targetRookSquare)
-                                }
-                                name += checkForChecks(piece.side, piece.square.board)
-                                name
-                            }
-                            val rookOrigin = rook.square
-                            val undo = {
-                                if (dist == 1) {
-                                    piece.swap(rook)
-                                } else {
-                                    piece.move(this.origin)
-                                    rook.move(rookOrigin)
-                                }
-                            }
-                            return CompletedMove(exec, undo)
+                    override fun execute(): MoveData {
+                        var name = if (newFile < this.piece.pos.file) "O-O-O" else "O-O"
+                        if (dist == 1) {
+                            this.piece.swap(rook)
+                        } else {
+                            this.piece.move(targetSquare)
+                            rook.move(targetRookSquare)
                         }
+                        name += checkForChecks(this.piece.side, this.piece.square.board)
+                        val rookOrigin = rook.square
+                        val undo = {
+                            if (dist == 1) {
+                                this.piece.swap(rook)
+                            } else {
+                                this.piece.move(this.origin)
+                                rook.move(rookOrigin)
+                            }
+                        }
+                        return MoveData(this.piece, this.origin, this.target, name, undo)
+                    }
                 })
             }
         }

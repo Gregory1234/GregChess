@@ -100,7 +100,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
     fun getSquare(loc: Loc) = getSquare(renderer.getPos(loc))
 
-    var lastMove: ChessMove? = null
+    var lastMove: MoveData? = null
 
     override fun start() {
         render()
@@ -252,7 +252,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             val origin = getSquare(piece.pos.plusR(-2 * piece.side.direction))!!
             val target = piece.square
             piece.move(origin)
-            lastMove = ChessMove.Normal(piece,target)
+            lastMove = MoveData(piece,origin, target, ""){}
             piece.move(target)
         }
 
@@ -315,7 +315,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         }
         append(" ")
         lastMove.also {
-            if (it != null && it is ChessMove.Normal && it.target.piece?.type == ChessType.PAWN
+            if (it != null && it.target.piece?.type == ChessType.PAWN
                 && abs(it.origin.pos.rank - it.target.pos.rank) == 2
             ) {
                 append(it.origin.pos.copy(rank = (it.origin.pos.rank + it.target.pos.rank) / 2))
@@ -364,7 +364,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 append("q")
         }
         lastMove.also {
-            if (it != null && it is ChessMove.Normal && it.target.piece?.type == ChessType.PAWN
+            if (it != null && it.target.piece?.type == ChessType.PAWN
                 && abs(it.origin.pos.rank - it.target.pos.rank) == 2
             ) {
                 append(it.origin.pos.copy(rank = (it.origin.pos.rank + it.target.pos.rank) / 2))

@@ -159,11 +159,10 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
     fun finishMove(move: ChessMove) {
         if (move.piece.type == ChessType.PAWN || move is ChessMove.Attack)
             game.board.resetMovesSinceLastCapture()
-        val run = move.run
-        info(run.execute())
-        game.board.lastMove?.clearDone()
-        game.board.lastMove = move
-        game.board.lastMove?.renderDone()
+        val data = move.execute()
+        game.board.lastMove?.clear()
+        game.board.lastMove = data
+        game.board.lastMove?.render()
         game.nextTurn()
     }
 
