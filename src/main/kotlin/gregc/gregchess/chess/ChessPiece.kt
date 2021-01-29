@@ -42,11 +42,11 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
         render()
     }
 
-    fun render() {
+    private fun render() {
         block.type = type.getMaterial(side)
     }
 
-    fun hide() {
+    private fun hide() {
         block.type = Material.AIR
     }
 
@@ -96,9 +96,9 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
         loc.toLocation(board.game.world).playSound(s)
     }
 
-    fun playPickUpSound() = playSound(type.pickUpSound)
-    fun playMoveSound() = playSound(type.moveSound)
-    fun playCaptureSound() = playSound(type.captureSound)
+    private fun playPickUpSound() = playSound(type.pickUpSound)
+    private fun playMoveSound() = playSound(type.moveSound)
+    private fun playCaptureSound() = playSound(type.captureSound)
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved

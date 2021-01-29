@@ -5,7 +5,6 @@ import gregc.gregchess.chatColor
 import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
-import java.lang.Integer.max
 
 class ScoreboardManager(val game: ChessGame) {
     private val gameProperties = mutableListOf<GameProperty>()

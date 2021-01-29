@@ -144,7 +144,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         }
     }
 
-    fun render() {
+    private fun render() {
         for (i in 0 until 8 * 5) {
             for (j in 0 until 8 * 5) {
                 game.world.getBlockAt(i, 100, j).type = Material.DARK_OAK_PLANKS
@@ -405,7 +405,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         }
     }
 
-    fun checkForGameEnd() {
+    private fun checkForGameEnd() {
         if (addBoardHash() == 3)
             game.stop(ChessGame.EndReason.Repetition())
         if (++movesSinceLastCapture > 50)

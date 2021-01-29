@@ -158,9 +158,9 @@ class GregChess : JavaPlugin() {
                         when (args[1].toLowerCase()) {
                             "set" -> {
                                 commandRequireArgumentsMin(args, 3)
-                                engine.setOption(args[2], args.drop(3).joinToString(" "))
+                                engine.engine.setOption(args[2], args.drop(3).joinToString(" "))
                             }
-                            "send" -> engine.sendCommand(args.drop(2).joinToString(" "))
+                            "send" -> engine.engine.sendCommand(args.drop(2).joinToString(" "))
                             else -> throw CommandException(string("Message.Error.WrongArgument"))
                         }
                     } catch (e: IllegalArgumentException) {

@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.Arena
 import gregc.gregchess.PlayerData
+import gregc.gregchess.info
 import gregc.gregchess.star
 import org.bukkit.Difficulty
 import org.bukkit.GameMode
@@ -9,6 +10,9 @@ import org.bukkit.GameRule
 import org.bukkit.World
 import org.bukkit.generator.ChunkGenerator
 import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 
 class ChessArena(name: String) : Arena(name) {
@@ -69,3 +73,53 @@ data class ChessPosition(val file: Int, val rank: Int) {
     }
 }
 
+class ChessEngine(val name: String) {
+    private val process: Process = ProcessBuilder("stockfish").start()
+
+    private val reader = process.inputStream.bufferedReader()
+
+    private val executor = Executors.newCachedThreadPool()
+
+    fun stop() = process.destroy()
+
+    fun setOption(name: String, value: String) {
+        process.outputStream.write(("setoption name $name value $value\n").toByteArray())
+        process.outputStream.flush()
+        info(name, value)
+    }
+
+    fun sendCommand(command: String) {
+        process.outputStream.write("isready\n".toByteArray())
+        process.outputStream.flush()
+        executor.submit(Callable {
+            reader.readLine()
+        })[5, TimeUnit.SECONDS]
+        process.outputStream.write(("$command\n").toByteArray())
+        process.outputStream.flush()
+        info(command)
+    }
+
+    private fun readLine() = executor.submit(Callable {
+        reader.readLine()
+    })[5, TimeUnit.SECONDS]
+
+    init {
+        readLine()
+    }
+
+    fun getMove(fen: String): String {
+
+        sendCommand("position fen $fen")
+        sendCommand("go movetime 200")
+
+        while (true) {
+            val line = readLine().split(" ")
+            info(line)
+            if (line[0] == "bestmove") {
+                if (line[1] == "(none)")
+                    return ""
+                return line[1]
+            }
+        }
+    }
+}

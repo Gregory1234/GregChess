@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.chatColor
-import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack

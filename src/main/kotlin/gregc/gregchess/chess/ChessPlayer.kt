@@ -2,12 +2,10 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.Loc
 import gregc.gregchess.chatColor
-import gregc.gregchess.info
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
-import java.util.concurrent.*
 
 
 sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
@@ -60,67 +58,25 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         }
     }
 
-    class Engine(override val name: String, side: ChessSide) : ChessPlayer(side, true) {
+    class Engine(val engine: ChessEngine, side: ChessSide) : ChessPlayer(side, true) {
 
-        private val process: Process = ProcessBuilder("stockfish").start()
+        override val name = engine.name
 
-        private val reader = process.inputStream.bufferedReader()
-
-        private val executor = Executors.newCachedThreadPool()
-
-        override fun stop() = process.destroy()
+        override fun stop() = engine.stop()
 
         override fun sendMessage(msg: String) {}
 
         override fun sendTitle(title: String, subtitle: String) {}
 
-        fun setOption(name: String, value: String) {
-            process.outputStream.write(("setoption name $name value $value\n").toByteArray())
-            process.outputStream.flush()
-            info(name, value)
-        }
-
-        fun sendCommand(command: String) {
-            process.outputStream.write("isready\n".toByteArray())
-            process.outputStream.flush()
-            executor.submit(Callable {
-                reader.readLine()
-            })[5, TimeUnit.SECONDS]
-            process.outputStream.write(("$command\n").toByteArray())
-            process.outputStream.flush()
-            info(command)
-        }
-
-        private fun readLine() = executor.submit(Callable {
-            reader.readLine()
-        })[5, TimeUnit.SECONDS]
-
-        init {
-            readLine()
-        }
-
         override fun startTurn() {
             super.startTurn()
-            val fen = game.board.getFEN()
-
-            sendCommand("position fen $fen")
-            sendCommand("go movetime 200")
-
-            while (true) {
-                val line = readLine().split(" ")
-                info(line)
-                if (line[0] == "bestmove") {
-                    if (line[1] == "(none)")
-                        break
-                    val origin = ChessPosition.parseFromString(line[1].take(2))
-                    val target = ChessPosition.parseFromString(line[1].drop(2).take(2))
-                    val promotion = line[1].drop(4).firstOrNull()?.let { ChessType.parseFromChar(it) }
-                    val move = game.board.getMoves(origin)
-                        .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
-                    finishMove(move)
-                    break
-                }
-            }
+            val str = engine.getMove(game.board.getFEN())
+            val origin = ChessPosition.parseFromString(str.take(2))
+            val target = ChessPosition.parseFromString(str.drop(2).take(2))
+            val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromChar(it) }
+            val move = game.board.getMoves(origin)
+                .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
+            finishMove(move)
         }
     }
 
