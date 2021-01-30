@@ -99,7 +99,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     }
 
     @ExperimentalContracts
-    fun duel(player: Player, opponent: Player) {
+    fun duelMenu(player: Player, opponent: Player, callback: (ChessArena, ChessGame.Settings) -> Unit) {
         if (player in players)
             throw CommandException(string("Message.Error.InGame.You"))
         if (opponent in players)
@@ -107,12 +107,16 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
         val arena = nextArena()
         commandRequireNotNull(arena, string("Message.Error.NoArenas"))
         player.openInventory(ChessGame.SettingsMenu {
-            if (!arena.isEmpty())
-                return@SettingsMenu
-            val game = ChessGame(player, opponent, arena, it)
-            game.start()
-            players += game
+            callback(arena, it)
         }.inventory)
+    }
+
+    fun startDuel(player: Player, opponent: Player, arena: ChessArena, settings: ChessGame.Settings) {
+        if (!arena.isEmpty())
+            return
+        val game = ChessGame(player, opponent, arena, settings)
+        game.start()
+        players += game
     }
 
     @ExperimentalContracts

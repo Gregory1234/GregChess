@@ -6,6 +6,7 @@ import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
@@ -15,9 +16,10 @@ class GregChess : JavaPlugin(), Listener {
 
     private val chess = ChessManager(this)
 
-    private val drawRequest = RequestType<Unit>(
-        RequestMessages(
+    private val drawRequest = SimpleRequestType<Unit>(
+        SimpleRequestMessages(
             "Message.Request.Draw.Sent",
+            "Message.Request.Draw.Received",
             "Message.Request.Draw.Cancelled",
             "Message.Request.Draw.Accepted",
             "/chess draw"
@@ -26,15 +28,32 @@ class GregChess : JavaPlugin(), Listener {
         chess.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())
     }
 
-    private val takebackRequest = RequestType<Unit>(
-        RequestMessages(
+    private val takebackRequest = SimpleRequestType<Unit>(
+        SimpleRequestMessages(
             "Message.Request.Takeback.Sent",
+            "Message.Request.Takeback.Received",
             "Message.Request.Takeback.Cancelled",
             "Message.Request.Takeback.Accepted",
             "/chess undo"
         )
     ) { (sender, _, _) ->
         chess.getGame(sender)?.board?.undoLastMove()
+    }
+
+    private val duelRequest = RequestType<Pair<ChessArena, ChessGame.Settings>>(
+        RequestMessages(
+            "Message.Request.Duel.Sent",
+            "Message.Request.Duel.Received",
+            "Message.Request.Duel.Cancelled",
+            "Message.Request.Duel.Accepted",
+            "Message.Request.Duel.NotFound",
+            "Message.Request.Duel.AlreadySent",
+            "/chess duel accept",
+            "/chess duel cancel"
+        ),
+        {(_, settings) -> settings.name}
+    ) { (sender, receiver, t) ->
+        chess.startDuel(sender, receiver, t.first, t.second)
     }
 
     @ExperimentalContracts
@@ -48,9 +67,17 @@ class GregChess : JavaPlugin(), Listener {
                 "duel" -> {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 2)
-                    val opponent = GregChessInfo.server.getPlayer(args[1])
-                    commandRequireNotNull(opponent, string("Message.Error.PlayerNotFound"))
-                    chess.duel(player, opponent)
+                    when(args[1].toLowerCase()) {
+                        "accept" -> duelRequest.accept(player)
+                        "cancel" -> duelRequest.cancel(player)
+                        else -> {
+                            val opponent = GregChessInfo.server.getPlayer(args[1])
+                            commandRequireNotNull(opponent, string("Message.Error.PlayerNotFound"))
+                            chess.duelMenu(player, opponent) { arena, settings ->
+                                duelRequest += Request(player, opponent, Pair(arena, settings))
+                            }
+                        }
+                    }
                 }
                 "stockfish" -> {
                     commandRequirePlayer(player)
@@ -261,6 +288,7 @@ class GregChess : JavaPlugin(), Listener {
         if (e.player is ChessPlayer.Human) {
             drawRequest.quietRemove(e.player.player)
             takebackRequest.quietRemove(e.player.player)
+            duelRequest.quietRemove(e.player.player)
         }
     }
 
@@ -269,6 +297,14 @@ class GregChess : JavaPlugin(), Listener {
         e.game.realPlayers.forEach {
             drawRequest.quietRemove(it)
             takebackRequest.quietRemove(it)
+            duelRequest.quietRemove(it)
         }
+    }
+
+    @EventHandler
+    fun onPlayerQuit(e: PlayerQuitEvent) {
+        drawRequest.quietRemove(e.player)
+        takebackRequest.quietRemove(e.player)
+        duelRequest.quietRemove(e.player)
     }
 }
