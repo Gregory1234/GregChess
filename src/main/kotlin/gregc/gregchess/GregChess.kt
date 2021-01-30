@@ -20,10 +20,7 @@ class GregChess : JavaPlugin(), Listener {
             "Message.Request.Draw.Sent",
             "Message.Request.Draw.Cancelled",
             "Message.Request.Draw.Accepted",
-            "Message.Request.Draw.NotFound",
-            "Message.Request.Draw.AlreadySent",
-            "/chess draw accept",
-            "/chess draw cancel"
+            "/chess draw"
         )
     ) { (sender, _, _) ->
         chess.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())
@@ -34,10 +31,7 @@ class GregChess : JavaPlugin(), Listener {
             "Message.Request.Takeback.Sent",
             "Message.Request.Takeback.Cancelled",
             "Message.Request.Takeback.Accepted",
-            "Message.Request.Takeback.NotFound",
-            "Message.Request.Takeback.AlreadySent",
-            "/chess undo accept",
-            "/chess undo cancel"
+            "/chess undo"
         )
     ) { (sender, _, _) ->
         chess.getGame(sender)?.board?.undoLastMove()
@@ -77,22 +71,15 @@ class GregChess : JavaPlugin(), Listener {
                 }
                 "draw" -> {
                     commandRequirePlayer(player)
-                    commandRequireArguments(args, 2)
-                    when (args[1].toLowerCase()) {
-                        "offer" -> {
-                            val p = chess[player]
-                            commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
-                            if (!p.hasTurn())
-                                throw CommandException(string("Message.Error.HasTurn.Opponent"))
-                            val opponent = p.game[!p.side]
-                            if (opponent !is ChessPlayer.Human)
-                                throw CommandException(string("Message.Error.NotHuman.Opponent"))
-                            drawRequest += Request(player, opponent.player, Unit)
-                        }
-                        "accept" -> drawRequest += player
-                        "cancel" -> drawRequest -= player
-                        else -> throw CommandException(string("Message.Error.WrongArgument"))
-                    }
+                    commandRequireArguments(args, 1)
+                    val p = chess[player]
+                    commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
+                    if (!p.hasTurn())
+                        throw CommandException(string("Message.Error.HasTurn.Opponent"))
+                    val opponent = p.game[!p.side]
+                    if (opponent !is ChessPlayer.Human)
+                        throw CommandException(string("Message.Error.NotHuman.Opponent"))
+                    drawRequest += Request(player, opponent.player, Unit)
                 }
                 "capture" -> {
                     commandRequirePlayer(player)
@@ -225,24 +212,17 @@ class GregChess : JavaPlugin(), Listener {
                 }
                 "undo" -> {
                     commandRequirePlayer(player)
-                    commandRequireArguments(args, 2)
-                    when (args[1].toLowerCase()) {
-                        "request" -> {
-                            val p = chess[player]
-                            commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
-                            if (p.game.board.lastMove == null)
-                                throw CommandException(string("Message.Error.NothingToTakeback"))
-                            val opponent = p.game[!p.side]
-                            if (opponent !is ChessPlayer.Human)
-                                throw CommandException(string("Message.Error.NotHuman.Opponent"))
-                            if (p.hasTurn() && p.player != opponent.player)
-                                throw CommandException(string("Message.Error.HasTurn.You"))
-                            takebackRequest += Request(player, opponent.player, Unit)
-                        }
-                        "accept" -> takebackRequest += player
-                        "cancel" -> takebackRequest -= player
-                        else -> throw CommandException(string("Message.Error.WrongArgument"))
-                    }
+                    commandRequireArguments(args, 1)
+                    val p = chess[player]
+                    commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
+                    if (p.game.board.lastMove == null)
+                        throw CommandException(string("Message.Error.NothingToTakeback"))
+                    val opponent = p.game[!p.side]
+                    if (opponent !is ChessPlayer.Human)
+                        throw CommandException(string("Message.Error.NotHuman.Opponent"))
+                    if (p.hasTurn() && p.player != opponent.player)
+                        throw CommandException(string("Message.Error.HasTurn.You"))
+                    takebackRequest += Request(player, opponent.player, Unit)
                 }
                 else -> throw CommandException(string("Message.Error.WrongArgument"))
             }
@@ -260,8 +240,6 @@ class GregChess : JavaPlugin(), Listener {
                     "time" -> ifPermission(*ChessSide.values())
                     "uci" -> ifPermission("set", "send")
                     "spectate" -> null
-                    "draw" -> listOf("offer", "accept", "cancel")
-                    "undo" -> listOf("request", "accept", "cancel")
                     else -> listOf()
                 }
                 3 -> when (args[0]) {

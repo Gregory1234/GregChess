@@ -11,14 +11,10 @@ Message:
       Sent: "&eYour opponent wants a draw."
       Cancelled: "&eYour opponent no longer wants a draw."
       Accepted: "&aDraw offer accepted."
-      NotFound: "&cNo draw offer found."
-      AlreadySent: "&cDraw offer already sent."
     Takeback:
       Sent: "&eYour opponent wants a takeback."
       Cancelled: "&eYour opponent no longer wants a takeback."
       Accepted: "&aTakeback request accepted."
-      NotFound: "&cNo takeback request found."
-      AlreadySent: "&cTakeback request already sent."
   Error:
     NotPlayer: "&cYou are not a player!"
     WrongArgumentsNumber: "&cWrong number of arguments!"
