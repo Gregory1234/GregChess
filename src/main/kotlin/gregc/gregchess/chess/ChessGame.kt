@@ -59,8 +59,20 @@ class ChessGame(
 
     fun <T : Component> getComponent(cl: KClass<T>): T? = components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
+    class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
+        override fun getHandlers() = handlerList
+
+        companion object {
+            @Suppress("unused")
+            @JvmStatic
+            fun getHandlerList(): HandlerList = handlerList
+            private val handlerList = HandlerList()
+        }
+    }
+
     fun nextTurn() {
         components.forEach { it.endTurn() }
+        Bukkit.getPluginManager().callEvent(TurnEndEvent(this, this[currentTurn]))
         currentTurn++
         startTurn()
     }

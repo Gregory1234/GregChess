@@ -85,19 +85,6 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
 
     lateinit var game: ChessGame
 
-    var wantsDraw = false
-        set(n) {
-            when {
-                game[!side].wantsDraw -> game.stop(ChessGame.EndReason.DrawAgreement())
-                n -> game[!side].sendTitle(
-                    chatColor("&eYour opponent wants a draw."),
-                    chatColor("&eType /chess draw to accept")
-                )
-                else -> game[!side].sendTitle(chatColor("&eYour opponent no longer wants a draw."))
-            }
-            field = n
-        }
-
     abstract val name: String
 
     abstract fun sendMessage(msg: String)
