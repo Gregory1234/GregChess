@@ -16,45 +16,34 @@ class GregChess : JavaPlugin(), Listener {
 
     private val chess = ChessManager(this)
 
-    private val drawRequest = SimpleRequestType<Unit>(
-        SimpleRequestMessages(
-            "Message.Request.Draw.Sent",
-            "Message.Request.Draw.Received",
-            "Message.Request.Draw.Cancelled",
-            "Message.Request.Draw.Accepted",
-            "/chess draw"
-        )
-    ) { (sender, _, _) ->
+    private val requests = RequestManager(this)
+
+    private val drawRequest = RequestTypeBuilder<Unit>().messagesSimple(
+        "Message.Request.Draw",
+        "/chess draw",
+        "/chess draw"
+    ).validate { chess[it]?.hasTurn() ?: false }.onAccept { (sender, _, _) ->
         chess.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())
-    }
+    }.register(requests)
 
-    private val takebackRequest = SimpleRequestType<Unit>(
-        SimpleRequestMessages(
-            "Message.Request.Takeback.Sent",
-            "Message.Request.Takeback.Received",
-            "Message.Request.Takeback.Cancelled",
-            "Message.Request.Takeback.Accepted",
-            "/chess undo"
-        )
-    ) { (sender, _, _) ->
+    private val takebackRequest = RequestTypeBuilder<Unit>().messagesSimple(
+        "Message.Request.Takeback",
+        "/chess undo",
+        "/chess undo"
+    ).validate {
+        val game = chess.getGame(it) ?: return@validate false
+        (game[!game.currentTurn] as? ChessPlayer.Human)?.player == it
+    }.onAccept { (sender, _, _) ->
         chess.getGame(sender)?.board?.undoLastMove()
-    }
+    }.register(requests)
 
-    private val duelRequest = RequestType<Pair<ChessArena, ChessGame.Settings>>(
-        RequestMessages(
-            "Message.Request.Duel.Sent",
-            "Message.Request.Duel.Received",
-            "Message.Request.Duel.Cancelled",
-            "Message.Request.Duel.Accepted",
-            "Message.Request.Duel.NotFound",
-            "Message.Request.Duel.AlreadySent",
-            "/chess duel accept",
-            "/chess duel cancel"
-        ),
-        {(_, settings) -> settings.name}
-    ) { (sender, receiver, t) ->
+    private val duelRequest = RequestTypeBuilder<Pair<ChessArena, ChessGame.Settings>>().messagesSimple(
+        "Message.Request.Duel",
+        "/chess duel accept",
+        "/chess duel cancel"
+    ).print { (_, settings) -> settings.name }.onAccept { (sender, receiver, t) ->
         chess.startDuel(sender, receiver, t.first, t.second)
-    }
+    }.register(requests)
 
     @ExperimentalContracts
     override fun onEnable() {
@@ -67,7 +56,7 @@ class GregChess : JavaPlugin(), Listener {
                 "duel" -> {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 2)
-                    when(args[1].toLowerCase()) {
+                    when (args[1].toLowerCase()) {
                         "accept" -> duelRequest.accept(player)
                         "cancel" -> duelRequest.cancel(player)
                         else -> {
@@ -101,12 +90,10 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequireArguments(args, 1)
                     val p = chess[player]
                     commandRequireNotNull(p, string("Message.Error.NotInGame.You"))
-                    if (!p.hasTurn())
-                        throw CommandException(string("Message.Error.HasTurn.Opponent"))
                     val opponent = p.game[!p.side]
                     if (opponent !is ChessPlayer.Human)
                         throw CommandException(string("Message.Error.NotHuman.Opponent"))
-                    drawRequest += Request(player, opponent.player, Unit)
+                    drawRequest.simpleCall(Request(player, opponent.player, Unit))
                 }
                 "capture" -> {
                     commandRequirePlayer(player)
@@ -247,9 +234,7 @@ class GregChess : JavaPlugin(), Listener {
                     val opponent = p.game[!p.side]
                     if (opponent !is ChessPlayer.Human)
                         throw CommandException(string("Message.Error.NotHuman.Opponent"))
-                    if (p.hasTurn() && p.player != opponent.player)
-                        throw CommandException(string("Message.Error.HasTurn.You"))
-                    takebackRequest += Request(player, opponent.player, Unit)
+                    takebackRequest.simpleCall(Request(player, opponent.player, Unit))
                 }
                 else -> throw CommandException(string("Message.Error.WrongArgument"))
             }
@@ -288,7 +273,6 @@ class GregChess : JavaPlugin(), Listener {
         if (e.player is ChessPlayer.Human) {
             drawRequest.quietRemove(e.player.player)
             takebackRequest.quietRemove(e.player.player)
-            duelRequest.quietRemove(e.player.player)
         }
     }
 
@@ -297,14 +281,6 @@ class GregChess : JavaPlugin(), Listener {
         e.game.realPlayers.forEach {
             drawRequest.quietRemove(it)
             takebackRequest.quietRemove(it)
-            duelRequest.quietRemove(it)
         }
-    }
-
-    @EventHandler
-    fun onPlayerQuit(e: PlayerQuitEvent) {
-        drawRequest.quietRemove(e.player)
-        takebackRequest.quietRemove(e.player)
-        duelRequest.quietRemove(e.player)
     }
 }

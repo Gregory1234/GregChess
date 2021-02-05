@@ -8,22 +8,36 @@ Message:
     Accept: "&a[Accept]"
     Cancel: "&c[Cancel]"
     Duel:
-      Sent: "&eDuel request sent."
-      Received: "&e$1 challenges you to a chess game: $2."
-      Cancelled: "&eDuel with $1 cancelled."
-      Accepted: "&aDuel request accepted."
+      Sent:
+        Request: "&eDuel request sent."
+        Cancel: "&eYou cancelled the duel with $1."
+        Accepted: "&aYou accepted the duel request."
+      Received:
+        Request: "&e$1 challenges you to a chess game: $2."
+        Cancel: "&eDuel with $1 has been cancelled."
+        Accepted: "&aYour duel request has been accepted."
       NotFound: "&cDuel request not found."
       AlreadySent: "&cDuel request already sent."
     Draw:
-      Sent: "&eDraw offer sent."
-      Received: "&eYour opponent wants a draw."
-      Cancelled: "&eDraw offer cancelled."
-      Accepted: "&aDraw offer accepted."
+      Sent:
+        Request: "&eDraw offer sent."
+        Cancel: "&eYou cancelled the draw offer."
+        Accepted: "&aYou accepted the draw offer."
+      Received:
+        Request: "&eYour opponent wants a draw."
+        Cancel: "&eThe draw offer has been cancelled."
+        Accepted: "&aThe draw offer has been accepted."
+      CannotSend: "&cIt is your opponent's turn!"
     Takeback:
-      Sent: "&eTakeback request sent."
-      Received: "&eYour opponent wants a takeback."
-      Cancelled: "&eYour opponent no longer wants a takeback."
-      Accepted: "&aTakeback request accepted."
+      Sent:
+        Request: "&eTakeback request sent."
+        Cancel: "&eYou cancelled the takeback request."
+        Accepted: "&aYou accepted the takeback request."
+      Received:
+        Request: "&eYour opponent wants a takeback."
+        Cancel: "&eThe takeback request has been cancelled."
+        Accepted: "&aThe takeback request has been accepted."
+      CannotSend: "&cIt is your turn!"
   Error:
     NotPlayer: "&cYou are not a player!"
     WrongArgumentsNumber: "&cWrong number of arguments!"
@@ -35,9 +49,6 @@ Message:
     BoardNotFound: "&cYour game has no chessboard!"
     ClockNotFound: "&cYour game has no clock!"
     NothingToTakeback: "&cThere are no moves to takeback!"
-    HasTurn:
-      You: "&cIt is your turn!"
-      Opponent: "&cIt is your opponent's turn!"
     NotHuman:
       Opponent: "&cYour opponent is not a human!"
     InGame:
