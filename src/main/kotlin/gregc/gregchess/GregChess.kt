@@ -7,6 +7,7 @@ import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
 
@@ -51,6 +52,7 @@ class GregChess : JavaPlugin(), Listener {
         server.pluginManager.registerEvents(this, this)
         saveDefaultConfig()
         chess.start()
+        requests.start()
         addCommand("chess") { player, args ->
             commandRequireArgumentsMin(args, 1)
             when (args[0].toLowerCase()) {
@@ -181,10 +183,9 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequireNotNull(clock, string("Message.Error.ClockNotFound"))
                     try {
                         val side = ChessSide.valueOf(args[1])
-                        val time = TimeUnit.SECONDS.toMillis(args[3].toLong())
                         when (args[2].toLowerCase()) {
-                            "add" -> clock.addTime(side, time)
-                            "set" -> clock.setTime(side, time)
+                            "add" -> clock.addTime(side, Duration.ofSeconds(args[3].toLong()))
+                            "set" -> clock.setTime(side, Duration.ofSeconds(args[3].toLong()))
                             else -> throw CommandException(string("Message.Error.WrongArgument"))
                         }
                     } catch (e: IllegalArgumentException) {
