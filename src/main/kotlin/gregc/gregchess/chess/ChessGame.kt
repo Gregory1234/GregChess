@@ -1,11 +1,9 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.GregChessInfo
 import gregc.gregchess.chatColor
 import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Bukkit
 import org.bukkit.Material
-import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
@@ -18,7 +16,8 @@ class ChessGame(
     private val white: ChessPlayer,
     private val black: ChessPlayer,
     val arena: ChessArena,
-    val settings: Settings
+    val settings: Settings,
+    private val chessManager: ChessManager
 ) {
 
     override fun toString() = "ChessGame(arena = $arena)"
@@ -30,12 +29,14 @@ class ChessGame(
         whitePlayer: Player,
         blackPlayer: Player,
         arena: ChessArena,
-        settings: Settings
+        settings: Settings,
+        chessManager: ChessManager
     ) : this(
         ChessPlayer.Human(whitePlayer, ChessSide.WHITE, whitePlayer == blackPlayer),
         ChessPlayer.Human(blackPlayer, ChessSide.BLACK, whitePlayer == blackPlayer),
         arena,
-        settings
+        settings,
+        chessManager
     )
 
     init {
@@ -55,7 +56,7 @@ class ChessGame(
     val world
         get() = arena.world
 
-    val scoreboard = ScoreboardManager(this)
+    val scoreboard = ScoreboardManager(this, chessManager.timeManager)
 
     fun <T : Component> getComponent(cl: KClass<T>): T? = components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
@@ -174,9 +175,9 @@ class ChessGame(
                 arena.exit(it)
             } else {
                 anyLong = true
-                Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+                chessManager.timeManager.runTaskLater(3 * 20L) {
                     arena.exit(it)
-                }, 3 * 20L)
+                }
             }
         }
         spectators.forEach {
@@ -192,21 +193,21 @@ class ChessGame(
             if (anyLong) {
                 arena.exit(it)
             } else {
-                Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+                chessManager.timeManager.runTaskLater(3 * 20L) {
                     arena.exit(it)
-                }, 3 * 20L)
+                }
             }
         }
         if (reason is EndReason.PluginRestart)
             return
-        Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+        chessManager.timeManager.runTaskLater((if (anyLong) (3 * 20L) else 0) + 1) {
             scoreboard.stop()
             components.forEach { it.clear() }
-            Bukkit.getScheduler().runTaskLater(GregChessInfo.plugin, Runnable {
+            chessManager.timeManager.runTaskLater(1L) {
                 players.forEach(ChessPlayer::stop)
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
-            }, 1L)
-        }, (if (anyLong) (3 * 20L) else 0) + 1)
+            }
+        }
     }
 
     operator fun get(player: Player): ChessPlayer.Human? =
@@ -228,11 +229,11 @@ class ChessGame(
         components.forEach { it.update() }
     }
 
-    class SettingsMenu(private inline val callback: (Settings) -> Unit) : InventoryHolder {
+    class SettingsMenu(private val settingsManager: SettingsManager, private inline val callback: (Settings) -> Unit) : InventoryHolder {
         private val inv = Bukkit.createInventory(this, 9, "Choose settings")
 
         init {
-            for ((p, _) in Settings.settingsChoice) {
+            for ((p, _) in settingsManager.settingsChoice) {
                 val item = ItemStack(Material.IRON_BLOCK)
                 val meta = item.itemMeta
                 meta?.setDisplayName(p)
@@ -244,7 +245,7 @@ class ChessGame(
         override fun getInventory() = inv
 
         fun applyEvent(choice: String) {
-            Settings.settingsChoice[choice]?.let(callback)
+            settingsManager.settingsChoice[choice]?.let(callback)
         }
     }
 
@@ -270,41 +271,7 @@ class ChessGame(
         val name: String,
         val relaxedInsufficientMaterial: Boolean,
         val components: Collection<ComponentSettings>
-    ) {
-
-        companion object {
-            private val componentChoice: MutableMap<String, Map<String, ComponentSettings>> = mutableMapOf()
-
-            fun <T : ComponentSettings> registerComponent(name: String, presets: Map<String, T>) {
-                componentChoice[name] = presets
-            }
-
-            inline fun <T : ComponentSettings> registerComponent(
-                name: String,
-                path: String,
-                parser: (ConfigurationSection) -> T
-            ) {
-                val section = GregChessInfo.plugin.config.getConfigurationSection(path) ?: return
-                registerComponent(name, section.getValues(false).mapNotNull { (key, value) ->
-                    if (value !is ConfigurationSection) return@mapNotNull null
-                    Pair(key, parser(value))
-                }.toMap())
-            }
-
-            val settingsChoice: Map<String, Settings>
-                get() {
-                    val presets =
-                        GregChessInfo.plugin.config.getConfigurationSection("Settings.Presets") ?: return emptyMap()
-                    return presets.getValues(false).mapNotNull { (key, value) ->
-                        if (value !is ConfigurationSection) return@mapNotNull null
-                        val relaxedInsufficientMaterial = value.getBoolean("Relaxed")
-                        val components = value.getValues(false)
-                            .mapNotNull { (k, v) -> componentChoice[k]?.get(v.toString()) }
-                        Pair(key, Settings(key, relaxedInsufficientMaterial, components))
-                    }.toMap()
-                }
-        }
-    }
+    )
 
 
 }

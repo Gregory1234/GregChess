@@ -216,13 +216,11 @@ fun info(vararg vs: Any) {
     Bukkit.getLogger().info(vs.joinToString(" ") { it.toString() })
 }
 
-fun string(s: String) = chatColor(GregChessInfo.plugin.config.getString(s) ?: s)
+fun string(s: String) = chatColor(Bukkit.getPluginManager().getPlugin(GregChessInfo.NAME)!!.config.getString(s) ?: s)
 
 object GregChessInfo {
-    private const val NAME = "GregChess"
+    const val NAME = "GregChess"
 
     val server by lazy { Bukkit.getServer() }
-    val plugin
-        get() = Bukkit.getPluginManager().getPlugin(NAME)!!
 
 }

@@ -24,7 +24,7 @@ import kotlin.contracts.ExperimentalContracts
 import org.bukkit.event.entity.CreatureSpawnEvent
 
 
-class ChessManager(private val plugin: JavaPlugin) : Listener {
+class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager) : Listener {
     private class PlayerMap {
         private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
         private val spectators: MutableMap<UUID, ChessGame> = mutableMapOf()
@@ -59,6 +59,8 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
         }
     }
 
+    val settingsManager = SettingsManager(plugin)
+
     private val players = PlayerMap()
     private val arenas = mutableListOf<ChessArena>()
 
@@ -69,8 +71,8 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
         plugin.config.getStringList("ChessArenas").forEach {
             arenas += ChessArena(it)
         }
-        Chessboard.Settings.init()
-        ChessClock.Settings.init()
+        Chessboard.Settings.init(settingsManager)
+        ChessClock.Settings.init(settingsManager)
     }
 
     fun stop() {
@@ -106,7 +108,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
             throw CommandException(string("Message.Error.InGame.Opponent"))
         val arena = nextArena()
         commandRequireNotNull(arena, string("Message.Error.NoArenas"))
-        player.openInventory(ChessGame.SettingsMenu {
+        player.openInventory(ChessGame.SettingsMenu(settingsManager) {
             callback(arena, it)
         }.inventory)
     }
@@ -114,7 +116,7 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
     fun startDuel(player: Player, opponent: Player, arena: ChessArena, settings: ChessGame.Settings) {
         if (!arena.isEmpty())
             return
-        val game = ChessGame(player, opponent, arena, settings)
+        val game = ChessGame(player, opponent, arena, settings, this)
         game.start()
         players += game
     }
@@ -125,12 +127,12 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
             throw CommandException(string("Message.Error.InGame.You"))
         val arena = nextArena()
         commandRequireNotNull(arena, string("Message.Error.NoArenas"))
-        player.openInventory(ChessGame.SettingsMenu {
+        player.openInventory(ChessGame.SettingsMenu(settingsManager) {
             if (!arena.isEmpty())
                 return@SettingsMenu
             val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
             val black = ChessPlayer.Engine(ChessEngine("stockfish"), ChessSide.BLACK)
-            val game = ChessGame(white, black, arena, it)
+            val game = ChessGame(white, black, arena, it, this)
             game.start()
             players += game
         }.inventory)
@@ -166,8 +168,8 @@ class ChessManager(private val plugin: JavaPlugin) : Listener {
 
     fun reload() {
         reloadArenas()
-        Chessboard.Settings.init()
-        ChessClock.Settings.init()
+        Chessboard.Settings.init(settingsManager)
+        ChessClock.Settings.init(settingsManager)
     }
 
     @EventHandler

@@ -1,12 +1,11 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.GregChessInfo
+import gregc.gregchess.TimeManager
 import gregc.gregchess.chatColor
-import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
-class ScoreboardManager(val game: ChessGame) {
+class ScoreboardManager(private val game: ChessGame, private val timeManager: TimeManager) {
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 
@@ -47,14 +46,12 @@ class ScoreboardManager(val game: ChessGame) {
             objective.getScore(chatColor("&r").repeat(i)).score = i--
         }
 
-        object : BukkitRunnable() {
-            override fun run() {
-                if (stopping)
-                    cancel()
-                game.update()
-                update()
-            }
-        }.runTaskTimer(GregChessInfo.plugin, 0L, 2L)
+        timeManager.runTaskTimer(0L, 2L) {
+            if (stopping)
+                cancel()
+            game.update()
+            update()
+        }
     }
 
     private fun update() {

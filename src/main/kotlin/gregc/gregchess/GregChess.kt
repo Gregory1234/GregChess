@@ -6,7 +6,6 @@ import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
@@ -14,7 +13,9 @@ import kotlin.contracts.ExperimentalContracts
 @Suppress("unused")
 class GregChess : JavaPlugin(), Listener {
 
-    private val chess = ChessManager(this)
+    private val time = TimeManager(this)
+
+    private val chess = ChessManager(this, time)
 
     private val requests = RequestManager(this)
 

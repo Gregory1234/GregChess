@@ -34,8 +34,8 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
         companion object {
 
-            fun init() {
-                ChessGame.Settings.registerComponent(
+            fun init(settingsManager: SettingsManager) {
+                settingsManager.registerComponent(
                     "Board", mapOf(
                         "normal" to Settings(null),
                         "chess960" to Settings(null, true)

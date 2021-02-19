@@ -3,6 +3,7 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.ChessSide
 import gregc.gregchess.chess.PlayerProperty
+import gregc.gregchess.chess.SettingsManager
 import org.bukkit.entity.Player
 import java.lang.Long.max
 import java.lang.Long.min
@@ -19,8 +20,8 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
 
         companion object {
 
-            fun init() {
-                ChessGame.Settings.registerComponent("Clock", "Settings.Clock") {
+            fun init(settingsManager: SettingsManager) {
+                settingsManager.registerComponent("Clock", "Settings.Clock") {
                     val t = Type.valueOf(it.getString("Type")?.toUpperCase() ?: "INCREMENT")
                     Settings(
                         t,
