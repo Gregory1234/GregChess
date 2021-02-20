@@ -5,7 +5,6 @@ import gregc.gregchess.chatColor
 import gregc.gregchess.seconds
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
-import java.time.Duration
 
 class ScoreboardManager(private val game: ChessGame, private val timeManager: TimeManager) {
     private val gameProperties = mutableListOf<GameProperty>()

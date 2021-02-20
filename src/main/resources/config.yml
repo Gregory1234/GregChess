@@ -11,32 +11,32 @@ Message:
       Sent:
         Request: "&eDuel request sent."
         Cancel: "&eYou cancelled the duel with $1."
-        Accepted: "&aYou accepted the duel request."
+        Accept: "&aYou accepted the duel request."
       Received:
         Request: "&e$1 challenges you to a chess game: $2."
         Cancel: "&eDuel with $1 has been cancelled."
-        Accepted: "&aYour duel request has been accepted."
+        Accept: "&aYour duel request has been accepted."
       NotFound: "&cDuel request not found."
       AlreadySent: "&cDuel request already sent."
     Draw:
       Sent:
         Request: "&eDraw offer sent."
         Cancel: "&eYou cancelled the draw offer."
-        Accepted: "&aYou accepted the draw offer."
+        Accept: "&aYou accepted the draw offer."
       Received:
         Request: "&eYour opponent wants a draw."
         Cancel: "&eThe draw offer has been cancelled."
-        Accepted: "&aThe draw offer has been accepted."
+        Accept: "&aThe draw offer has been accepted."
       CannotSend: "&cIt is your opponent's turn!"
     Takeback:
       Sent:
         Request: "&eTakeback request sent."
         Cancel: "&eYou cancelled the takeback request."
-        Accepted: "&aYou accepted the takeback request."
+        Accept: "&aYou accepted the takeback request."
       Received:
         Request: "&eYour opponent wants a takeback."
         Cancel: "&eThe takeback request has been cancelled."
-        Accepted: "&aThe takeback request has been accepted."
+        Accept: "&aThe takeback request has been accepted."
       CannotSend: "&cIt is your turn!"
   Error:
     NotPlayer: "&cYou are not a player!"

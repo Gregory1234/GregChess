@@ -128,12 +128,12 @@ abstract class Arena(val name: String) {
     }
 }
 
-fun JavaPlugin.addCommand(name: String, command: (CommandSender, Array<String>) -> Unit) {
+fun JavaPlugin.addCommand(config: ConfigManager, name: String, command: (CommandSender, Array<String>) -> Unit) {
     getCommand(name)?.setExecutor { sender, _, _, args ->
         try {
             command(sender, args)
         } catch (e: CommandException) {
-            sender.sendMessage(chatColor(e.playerMsg))
+            sender.sendMessage(chatColor(config.getError(e.playerMsg)))
         }
         true
     }
@@ -171,7 +171,7 @@ fun <T> commandRequireNotNull(e: T?, msg: String) {
 }
 
 @ExperimentalContracts
-fun commandRequirePlayer(e: CommandSender, msg: String = string("Message.Error.NotPlayer")) {
+fun commandRequirePlayer(e: CommandSender, msg: String = "NotPlayer") {
     contract {
         returns() implies (e is Player)
     }
@@ -180,20 +180,19 @@ fun commandRequirePlayer(e: CommandSender, msg: String = string("Message.Error.N
 
 fun commandRequireArgumentsGeneral(
     e: Array<String>,
-    lower: Int = 0,
-    upper: Int = Int.MAX_VALUE,
-    msg: String = string("Message.Error.WrongArgumentsNumber")
+    lower: Int = 0, upper: Int = Int.MAX_VALUE,
+    msg: String = "WrongArgumentsNumber"
 ) {
     if (e.size !in lower..upper) throw CommandException(msg)
 }
 
-fun commandRequireArguments(e: Array<String>, num: Int, msg: String = string("Message.Error.WrongArgumentsNumber")) =
+fun commandRequireArguments(e: Array<String>, num: Int, msg: String = "WrongArgumentsNumber") =
     commandRequireArgumentsGeneral(e, num, num, msg)
 
-fun commandRequireArgumentsMin(e: Array<String>, min: Int, msg: String = string("Message.Error.WrongArgumentsNumber")) =
+fun commandRequireArgumentsMin(e: Array<String>, min: Int, msg: String = "WrongArgumentsNumber") =
     commandRequireArgumentsGeneral(e, min, msg = msg)
 
-fun commandRequirePermission(e: CommandSender, permission: String, msg: String = string("Message.Error.NoPerms")) {
+fun commandRequirePermission(e: CommandSender, permission: String, msg: String = "NoPerms") {
     if (!e.hasPermission(permission)) throw CommandException(msg)
 }
 
@@ -220,8 +219,6 @@ val Int.seconds: Duration
     get() = Duration.ofSeconds(toLong())
 val Int.ticks: Duration
     get() = Duration.ofMillis(toLong()*50)
-val Long.seconds: Duration
-    get() = Duration.ofSeconds(this)
 val Long.minutes: Duration
     get() = Duration.ofMinutes(this)
 val Long.ticks: Duration
@@ -260,10 +257,6 @@ fun info(vararg vs: Any) {
     Bukkit.getLogger().info(vs.joinToString(" ") { it.toString() })
 }
 
-fun string(s: String) = chatColor(Bukkit.getPluginManager().getPlugin(GregChessInfo.NAME)!!.config.getString(s) ?: s)
-
 object GregChessInfo {
-    const val NAME = "GregChess"
-
     val server by lazy { Bukkit.getServer() }
 }

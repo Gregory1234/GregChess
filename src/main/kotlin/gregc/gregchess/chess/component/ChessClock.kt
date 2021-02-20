@@ -1,7 +1,6 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.minutes
 import gregc.gregchess.parseDuration
 import gregc.gregchess.seconds
 import org.bukkit.entity.Player

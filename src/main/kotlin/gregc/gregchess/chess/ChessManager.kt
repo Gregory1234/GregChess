@@ -59,7 +59,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager)
         }
     }
 
-    val settingsManager = SettingsManager(plugin)
+    private val settingsManager = SettingsManager(plugin)
 
     private val players = PlayerMap()
     private val arenas = mutableListOf<ChessArena>()
@@ -103,11 +103,11 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager)
     @ExperimentalContracts
     fun duelMenu(player: Player, opponent: Player, callback: (ChessArena, ChessGame.Settings) -> Unit) {
         if (player in players)
-            throw CommandException(string("Message.Error.InGame.You"))
+            throw CommandException("InGame.You")
         if (opponent in players)
-            throw CommandException(string("Message.Error.InGame.Opponent"))
+            throw CommandException("InGame.Opponent")
         val arena = nextArena()
-        commandRequireNotNull(arena, string("Message.Error.NoArenas"))
+        commandRequireNotNull(arena, "NoArenas")
         player.openInventory(ChessGame.SettingsMenu(settingsManager) {
             callback(arena, it)
         }.inventory)
@@ -124,9 +124,9 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager)
     @ExperimentalContracts
     fun stockfish(player: Player) {
         if (player in players)
-            throw CommandException(string("Message.Error.InGame.You"))
+            throw CommandException("InGame.You")
         val arena = nextArena()
-        commandRequireNotNull(arena, string("Message.Error.NoArenas"))
+        commandRequireNotNull(arena, "NoArenas")
         player.openInventory(ChessGame.SettingsMenu(settingsManager) {
             if (!arena.isEmpty())
                 return@SettingsMenu
@@ -148,7 +148,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager)
             p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
         } else {
             if (player !in players)
-                throw CommandException(string("Message.Error.NotInGame.You"))
+                throw CommandException("NotInGame.You")
             players.stopSpectating(player)
         }
     }
@@ -156,11 +156,11 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager)
     @ExperimentalContracts
     fun spectate(player: Player, toSpectate: Player) {
         val spec = players[toSpectate]
-        commandRequireNotNull(spec, string("Message.Error.NotInGame.Player"))
+        commandRequireNotNull(spec, "NotInGame.Player")
         val game = players.getGame(player)
         if (game != null) {
             if (player in game.realPlayers)
-                throw CommandException(string("Message.Error.InGame.You"))
+                throw CommandException("InGame.You")
             players.stopSpectating(player)
         }
         players.spectate(player, spec.game)

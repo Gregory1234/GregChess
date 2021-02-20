@@ -29,28 +29,16 @@ class RequestManager(private val plugin: JavaPlugin) : Listener {
 
 }
 
-class RequestTypeBuilder<T> {
+class RequestTypeBuilder<T>(private val configManager: ConfigManager) {
     private lateinit var messages: RequestMessages
     private var validateSender: (Player) -> Boolean = { true }
     private var printT: (T) -> String = { it.toString() }
     private var onAccept: (Request<T>) -> Unit = {}
 
-    fun register(m: RequestManager) = m.register(RequestType(messages, validateSender, printT, onAccept))
+    fun register(m: RequestManager) = m.register(RequestType(configManager, messages, validateSender, printT, onAccept))
 
     fun messagesSimple(root: String, acceptCommand: String, cancelCommand: String): RequestTypeBuilder<T> {
-        messages = RequestMessages(
-            "$root.Sent.Request",
-            "$root.Received.Request",
-            "$root.Sent.Cancel",
-            "$root.Received.Cancel",
-            "$root.Sent.Accept",
-            "$root.Received.Accept",
-            "$root.CannotSend",
-            "$root.NotFound",
-            "$root.AlreadySent",
-            acceptCommand,
-            cancelCommand
-        )
+        messages = RequestMessages(root, acceptCommand, cancelCommand)
         return this
     }
 
@@ -72,16 +60,21 @@ class RequestTypeBuilder<T> {
 
 
 class RequestType<in T>(
+    private val config: ConfigManager,
     private val messages: RequestMessages,
     private inline val validateSender: (Player) -> Boolean = { true },
     private inline val printT: (T) -> String = { it.toString() },
     private inline val onAccept: (Request<T>) -> Unit
 ) {
     private val requests = mutableListOf<Request<T>>()
+    private val root = messages.name
+
+    private fun getError(name: String) = config.getError("$root.$name")
+    private fun getMessage(name: String) = config.getString("Message.Request.$root.$name")
 
     operator fun plusAssign(request: Request<T>) {
         if (!validateSender(request.sender)) {
-            request.sender.sendMessage(string(messages.cannotSend))
+            request.sender.sendMessage(getError("CannotSend"))
             return
         }
         if (request.sender == request.receiver) {
@@ -89,23 +82,23 @@ class RequestType<in T>(
             return
         }
         requests.firstOrNull { it.sender == request.sender }?.let {
-            request.sender.sendMessage(string(messages.alreadySentMessage))
+            request.sender.sendMessage(getError("AlreadySent"))
             return
         }
         requests.firstOrNull { it.receiver == request.receiver || it.sender == request.receiver }?.let {
-            request.sender.sendMessage(string(messages.alreadySentMessage))
+            request.sender.sendMessage(getError("AlreadySent"))
             return
         }
         requests += request
-        val messageCancel = TextComponent(string("Message.Request.Cancel"))
+        val messageCancel = TextComponent(config.getString("Message.Request.Cancel"))
         messageCancel.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, messages.cancelCommand)
-        val messageSender = TextComponent(string(messages.messageSent) + " ")
+        val messageSender = TextComponent(getMessage("Sent.Request") + " ")
         request.sender.spigot().sendMessage(messageSender, messageCancel)
 
-        val messageAccept = TextComponent(string("Message.Request.Accept"))
+        val messageAccept = TextComponent(config.getString("Message.Request.Cancel"))
         messageAccept.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, messages.acceptCommand)
         val messageReceiver = TextComponent(
-            string(messages.messageReceived).replace("$1", request.sender.name)
+            getMessage("Received.Request").replace("$1", request.sender.name)
                 .replace("$2", printT(request.value)) + " "
         )
         request.receiver.spigot().sendMessage(messageReceiver, messageAccept)
@@ -117,7 +110,7 @@ class RequestType<in T>(
             return
         }
         requests.firstOrNull { it.receiver == request.receiver }?.let {
-            request.sender.sendMessage(string(messages.alreadySentMessage))
+            request.sender.sendMessage(getError("AlreadySent"))
             return
         }
         requests.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }?.let {
@@ -128,8 +121,8 @@ class RequestType<in T>(
     }
 
     fun accept(request: Request<T>) {
-        request.sender.sendMessage(string(messages.acceptMessageReceived))
-        request.receiver.sendMessage(string(messages.acceptMessage))
+        request.sender.sendMessage(getMessage("Sent.Accept"))
+        request.receiver.sendMessage(getMessage("Received.Accept"))
         onAccept(request)
         requests -= request
     }
@@ -137,21 +130,21 @@ class RequestType<in T>(
     fun accept(p: Player) {
         val request = requests.firstOrNull { it.receiver == p }
         if (request == null)
-            p.sendMessage(string(messages.notFoundMessage))
+            p.sendMessage(getError("NotFound"))
         else
             accept(request)
     }
 
     fun cancel(request: Request<T>) {
-        request.sender.sendMessage(string(messages.cancelMessage).replace("$1", request.receiver.name))
-        request.receiver.sendMessage(string(messages.cancelMessageReceived).replace("$1", request.sender.name))
+        request.sender.sendMessage(getMessage("Sent.Cancel").replace("$1", request.receiver.name))
+        request.receiver.sendMessage(getMessage("Received.Cancel").replace("$1", request.sender.name))
         requests -= request
     }
 
     fun cancel(p: Player) {
         val request = requests.firstOrNull { it.sender == p }
         if (request == null)
-            p.sendMessage(string(messages.notFoundMessage))
+            p.sendMessage(getError("NotFound"))
         else
             cancel(request)
     }
@@ -160,18 +153,6 @@ class RequestType<in T>(
 
 }
 
-data class RequestMessages(
-    val messageSent: String,
-    val messageReceived: String,
-    val cancelMessage: String,
-    val cancelMessageReceived: String,
-    val acceptMessage: String,
-    val acceptMessageReceived: String,
-    val cannotSend: String,
-    val notFoundMessage: String,
-    val alreadySentMessage: String,
-    val acceptCommand: String,
-    val cancelCommand: String
-)
+data class RequestMessages(val name: String, val acceptCommand: String, val cancelCommand: String)
 
 data class Request<out T>(val sender: Player, val receiver: Player, val value: T)
