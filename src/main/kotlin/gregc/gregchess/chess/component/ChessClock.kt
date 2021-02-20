@@ -1,9 +1,6 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.ChessSide
-import gregc.gregchess.chess.PlayerProperty
-import gregc.gregchess.chess.SettingsManager
+import gregc.gregchess.chess.*
 import gregc.gregchess.minutes
 import gregc.gregchess.parseDuration
 import gregc.gregchess.seconds
@@ -93,24 +90,39 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
 
     override fun start() {
 
-        game.scoreboard += object : PlayerProperty("time") {
 
-            override fun invoke(s: ChessSide) = format(ceil(getTimeRemaining(s).toNanos()*0.000001).toLong())
+        if (settings.type == Type.FIXED) {
+            game.scoreboard += object : GameProperty("Time remaining") {
 
-            private fun format(time: Long) =
-                "%02d:%02d.%d".format(
-                    max((time / 1000 / 60), 0),
-                    max((time / 1000) % 60, 0),
-                    max((time / 100) % 10, 0)
-                )
-        }
-        if (settings.type == Type.SIMPLE)
+                override fun invoke() = format(ceil(getTimeRemaining(game.currentTurn).toNanos()*0.000001).toLong())
+
+                private fun format(time: Long) =
+                    "%02d:%02d.%d".format(
+                        max((time / 1000 / 60), 0),
+                        max((time / 1000) % 60, 0),
+                        max((time / 100) % 10, 0)
+                    )
+            }
             startTimer()
+        }
+        else {
+            game.scoreboard += object : PlayerProperty("time") {
+
+                override fun invoke(s: ChessSide) = format(ceil(getTimeRemaining(s).toNanos()*0.000001).toLong())
+
+                private fun format(time: Long) =
+                    "%02d:%02d.%d".format(
+                        max((time / 1000 / 60), 0),
+                        max((time / 1000) % 60, 0),
+                        max((time / 100) % 10, 0)
+                    )
+            }
+        }
     }
 
     private fun startTimer() {
         ChessSide.values().forEach { getTime(it).reset() }
-        if (settings.type == Type.SIMPLE) {
+        if (settings.type == Type.FIXED) {
             getTime(game.currentTurn).begin = LocalDateTime.now() + settings.increment
             getTime(game.currentTurn) += settings.increment
         }
