@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.floor
+import kotlin.math.roundToLong
 
 data class PlayerData(
     val location: Location? = null,
@@ -224,8 +225,35 @@ val Long.seconds: Duration
     get() = Duration.ofSeconds(this)
 val Long.minutes: Duration
     get() = Duration.ofMinutes(this)
+val Long.ticks: Duration
+    get() = Duration.ofMillis(this*50)
 val Double.seconds: Duration
-    get() = Duration.ofNanos(floor(this*1000000000).toLong())
+    get() = Duration.ofNanos(floor(this*1000000000L).toLong())
+val Double.milliseconds: Duration
+    get() = Duration.ofNanos(floor(this*1000000L).toLong())
+val Double.minutes: Duration
+    get() = Duration.ofNanos(floor(this*60000000000L).toLong())
+
+fun parseDuration(s: String): Duration? {
+    val match1 = Regex("""^(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(s)
+    if (match1 != null) {
+        val amount = match1.groupValues[1].toDoubleOrNull() ?: return null
+        return when (match1.groupValues[2]) {
+            "s" -> amount.seconds
+            "ms" -> amount.milliseconds
+            "t" -> amount.roundToLong().ticks
+            "m" -> amount.minutes
+            else -> null
+        }
+    }
+    val match2 = Regex("""^(\d+):(\d{2,}(?:\.\d)?)$""").find(s)
+    if (match2 != null) {
+        val minutes = match2.groupValues[1].toLongOrNull() ?: return null
+        val seconds = match2.groupValues[2].toDoubleOrNull() ?: return null
+        return minutes.minutes + seconds.seconds
+    }
+    return null
+}
 
 @Suppress("unused")
 fun info(vararg vs: Any) {

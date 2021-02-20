@@ -5,6 +5,7 @@ import gregc.gregchess.chess.ChessSide
 import gregc.gregchess.chess.PlayerProperty
 import gregc.gregchess.chess.SettingsManager
 import gregc.gregchess.minutes
+import gregc.gregchess.parseDuration
 import gregc.gregchess.seconds
 import org.bukkit.entity.Player
 import java.lang.Long.max
@@ -29,8 +30,8 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
                     val t = Type.valueOf(it.getString("Type")?.toUpperCase() ?: "INCREMENT")
                     Settings(
                         t,
-                        it.getLong("Initial").minutes,
-                        (if (t.usesIncrement) it.getLong("Increment") else 0).seconds
+                        parseDuration(it.getString("Initial").orEmpty()) ?: 0.seconds,
+                        parseDuration(it.getString("Increment") ?: "0") ?: 0.seconds
                     )
                 }
             }
