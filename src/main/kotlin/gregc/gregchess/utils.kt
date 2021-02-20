@@ -9,10 +9,12 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.math.floor
 
 data class PlayerData(
     val location: Location? = null,
@@ -211,6 +213,19 @@ fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<
     flatMap { x -> other.map { y -> function(x, y) } }
 
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
+
+fun Duration.toTicks(): Long = toMillis()/50
+
+val Int.seconds: Duration
+    get() = Duration.ofSeconds(toLong())
+val Int.ticks: Duration
+    get() = Duration.ofMillis(toLong()*50)
+val Long.seconds: Duration
+    get() = Duration.ofSeconds(this)
+val Long.minutes: Duration
+    get() = Duration.ofMinutes(this)
+val Double.seconds: Duration
+    get() = Duration.ofNanos(floor(this*1000000000).toLong())
 
 @Suppress("unused")
 fun info(vararg vs: Any) {

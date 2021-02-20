@@ -2,6 +2,8 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.chatColor
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.seconds
+import gregc.gregchess.ticks
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -175,7 +177,7 @@ class ChessGame(
                 arena.exit(it)
             } else {
                 anyLong = true
-                chessManager.timeManager.runTaskLater(3 * 20L) {
+                chessManager.timeManager.runTaskLater(3.seconds) {
                     arena.exit(it)
                 }
             }
@@ -193,17 +195,17 @@ class ChessGame(
             if (anyLong) {
                 arena.exit(it)
             } else {
-                chessManager.timeManager.runTaskLater(3 * 20L) {
+                chessManager.timeManager.runTaskLater(3.seconds) {
                     arena.exit(it)
                 }
             }
         }
         if (reason is EndReason.PluginRestart)
             return
-        chessManager.timeManager.runTaskLater((if (anyLong) (3 * 20L) else 0) + 1) {
+        chessManager.timeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
             scoreboard.stop()
             components.forEach { it.clear() }
-            chessManager.timeManager.runTaskLater(1L) {
+            chessManager.timeManager.runTaskLater(1.ticks) {
                 players.forEach(ChessPlayer::stop)
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
             }

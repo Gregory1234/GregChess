@@ -4,6 +4,8 @@ import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.ChessSide
 import gregc.gregchess.chess.PlayerProperty
 import gregc.gregchess.chess.SettingsManager
+import gregc.gregchess.minutes
+import gregc.gregchess.seconds
 import org.bukkit.entity.Player
 import java.lang.Long.max
 import java.time.Duration
@@ -16,7 +18,7 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
 
-    data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = Duration.ZERO) :
+    data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
         ChessGame.ComponentSettings {
         override fun getComponent(game: ChessGame) = ChessClock(game, this)
 
@@ -27,8 +29,8 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
                     val t = Type.valueOf(it.getString("Type")?.toUpperCase() ?: "INCREMENT")
                     Settings(
                         t,
-                        Duration.ofMinutes(it.getLong("Initial")),
-                        Duration.ofSeconds(if (t.usesIncrement) it.getLong("Increment") else 0)
+                        it.getLong("Initial").minutes,
+                        (if (t.usesIncrement) it.getLong("Increment") else 0).seconds
                     )
                 }
             }
@@ -119,7 +121,7 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
     }
 
     override fun endTurn() {
-        val increment = if (started) settings.increment else Duration.ZERO
+        val increment = if (started) settings.increment else 0.seconds
         if (!started)
             startTimer()
         val time = LocalDateTime.now()

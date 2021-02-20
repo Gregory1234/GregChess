@@ -2,8 +2,10 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.TimeManager
 import gregc.gregchess.chatColor
+import gregc.gregchess.seconds
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
+import java.time.Duration
 
 class ScoreboardManager(private val game: ChessGame, private val timeManager: TimeManager) {
     private val gameProperties = mutableListOf<GameProperty>()
@@ -46,7 +48,7 @@ class ScoreboardManager(private val game: ChessGame, private val timeManager: Ti
             objective.getScore(chatColor("&r").repeat(i)).score = i--
         }
 
-        timeManager.runTaskTimer(0L, 2L) {
+    timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
             if (stopping)
                 cancel()
             game.update()

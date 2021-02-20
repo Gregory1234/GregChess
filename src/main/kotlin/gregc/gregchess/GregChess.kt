@@ -184,8 +184,8 @@ class GregChess : JavaPlugin(), Listener {
                     try {
                         val side = ChessSide.valueOf(args[1])
                         when (args[2].toLowerCase()) {
-                            "add" -> clock.addTime(side, Duration.ofSeconds(args[3].toLong()))
-                            "set" -> clock.setTime(side, Duration.ofSeconds(args[3].toLong()))
+                            "add" -> clock.addTime(side, args[3].toLong().seconds)
+                            "set" -> clock.setTime(side, args[3].toLong().seconds)
                             else -> throw CommandException(string("Message.Error.WrongArgument"))
                         }
                     } catch (e: IllegalArgumentException) {
