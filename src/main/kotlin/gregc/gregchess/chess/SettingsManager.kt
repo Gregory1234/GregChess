@@ -1,9 +1,10 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.ConfigManager
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.java.JavaPlugin
 
-class SettingsManager(val plugin: JavaPlugin) {
+class SettingsManager(val plugin: JavaPlugin, val config: ConfigManager) {
 
     private val componentChoice: MutableMap<String, Map<String, ChessGame.ComponentSettings>> = mutableMapOf()
 
@@ -13,13 +14,12 @@ class SettingsManager(val plugin: JavaPlugin) {
 
     inline fun <T : ChessGame.ComponentSettings> registerComponent(
         name: String,
-        path: String,
-        parser: (ConfigurationSection) -> T
+        parser: (ConfigManager) -> T
     ) {
-        val section = plugin.config.getConfigurationSection(path) ?: return
+        val section = plugin.config.getConfigurationSection("Settings.$name") ?: return
         registerComponent(name, section.getValues(false).mapNotNull { (key, value) ->
             if (value !is ConfigurationSection) return@mapNotNull null
-            Pair(key, parser(value))
+            Pair(key, parser(config.getSection("Settings.$name.$key")!!))
         }.toMap())
     }
 

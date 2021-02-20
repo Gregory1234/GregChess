@@ -1,7 +1,6 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.parseDuration
 import gregc.gregchess.seconds
 import org.bukkit.entity.Player
 import java.lang.Long.max
@@ -22,12 +21,12 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
         companion object {
 
             fun init(settingsManager: SettingsManager) {
-                settingsManager.registerComponent("Clock", "Settings.Clock") {
-                    val t = Type.valueOf(it.getString("Type")?.toUpperCase() ?: "INCREMENT")
+                settingsManager.registerComponent("Clock") {
+                    val t = it.getEnum("Type", Type.INCREMENT, Type::class, false)
                     Settings(
                         t,
-                        parseDuration(it.getString("Initial").orEmpty()) ?: 0.seconds,
-                        parseDuration(it.getString("Increment") ?: "0") ?: 0.seconds
+                        it.getDuration("Initial"),
+                        if (t.usesIncrement) it.getDuration("Increment") else 0.seconds
                     )
                 }
             }

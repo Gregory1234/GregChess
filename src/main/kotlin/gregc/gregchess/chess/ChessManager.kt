@@ -24,7 +24,8 @@ import kotlin.contracts.ExperimentalContracts
 import org.bukkit.event.entity.CreatureSpawnEvent
 
 
-class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager) : Listener {
+class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager, config: ConfigManager) :
+    Listener {
     private class PlayerMap {
         private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
         private val spectators: MutableMap<UUID, ChessGame> = mutableMapOf()
@@ -35,6 +36,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager)
             game.realPlayers.forEach { games[it.uniqueId] = game }
             gameList += game
         }
+
         fun getGame(player: Player) = games[player.uniqueId] ?: spectators[player.uniqueId]
 
         fun remove(game: ChessGame) {
@@ -59,7 +61,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager)
         }
     }
 
-    private val settingsManager = SettingsManager(plugin)
+    private val settingsManager = SettingsManager(plugin, config)
 
     private val players = PlayerMap()
     private val arenas = mutableListOf<ChessArena>()
@@ -80,8 +82,8 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager)
         arenas.forEach { it.delete() }
     }
 
-    private fun reloadArenas(){
-        val oldArenas = arenas.map {it.name}
+    private fun reloadArenas() {
+        val oldArenas = arenas.map { it.name }
         val newArenas = plugin.config.getStringList("ChessArenas")
         val removedArenas = oldArenas - newArenas
         val addedArenas = newArenas - oldArenas

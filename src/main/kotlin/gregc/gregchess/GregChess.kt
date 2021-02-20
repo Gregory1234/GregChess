@@ -14,11 +14,11 @@ class GregChess : JavaPlugin(), Listener {
 
     private val time = TimeManager(this)
 
-    private val chess = ChessManager(this, time)
-
     private val requests = RequestManager(this)
 
     private val config = ConfigManager(this)
+
+    private val chess = ChessManager(this, time, config)
 
     private val drawRequest = RequestTypeBuilder<Unit>(config).messagesSimple(
         "Draw",
