@@ -183,9 +183,11 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequireNotNull(clock, string("Message.Error.ClockNotFound"))
                     try {
                         val side = ChessSide.valueOf(args[1])
+                        val time = parseDuration(args[3])
+                        commandRequireNotNull(time, string("Message.Error.WrongArgument"))
                         when (args[2].toLowerCase()) {
-                            "add" -> clock.addTime(side, args[3].toLong().seconds)
-                            "set" -> clock.setTime(side, args[3].toLong().seconds)
+                            "add" -> clock.addTime(side, time)
+                            "set" -> clock.setTime(side, time)
                             else -> throw CommandException(string("Message.Error.WrongArgument"))
                         }
                     } catch (e: IllegalArgumentException) {

@@ -11,7 +11,6 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
 import java.time.Duration
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.floor
@@ -235,10 +234,10 @@ val Double.minutes: Duration
     get() = Duration.ofNanos(floor(this*60000000000L).toLong())
 
 fun parseDuration(s: String): Duration? {
-    val match1 = Regex("""^(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(s)
+    val match1 = Regex("""^(-|\+|)(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(s)
     if (match1 != null) {
-        val amount = match1.groupValues[1].toDoubleOrNull() ?: return null
-        return when (match1.groupValues[2]) {
+        val amount = (match1.groupValues[2].toDoubleOrNull() ?: return null) * (if (match1.groupValues[1]=="-") -1 else 1)
+        return when (match1.groupValues[3]) {
             "s" -> amount.seconds
             "ms" -> amount.milliseconds
             "t" -> amount.roundToLong().ticks
@@ -246,10 +245,11 @@ fun parseDuration(s: String): Duration? {
             else -> null
         }
     }
-    val match2 = Regex("""^(\d+):(\d{2,}(?:\.\d)?)$""").find(s)
+    val match2 = Regex("""^(-)?(\d+):(\d{2,}(?:\.\d)?)$""").find(s)
     if (match2 != null) {
-        val minutes = match2.groupValues[1].toLongOrNull() ?: return null
-        val seconds = match2.groupValues[2].toDoubleOrNull() ?: return null
+        val sign = (if (match2.groupValues[1]=="-") -1 else 1)
+        val minutes = (match2.groupValues[2].toLongOrNull() ?: return null) * sign
+        val seconds = (match2.groupValues[3].toDoubleOrNull() ?: return null) * sign
         return minutes.minutes + seconds.seconds
     }
     return null
