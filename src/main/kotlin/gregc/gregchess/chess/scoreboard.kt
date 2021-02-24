@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.TimeManager
 import gregc.gregchess.chatColor
+import gregc.gregchess.info
 import gregc.gregchess.seconds
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
@@ -10,9 +11,13 @@ class ScoreboardManager(private val game: ChessGame, private val timeManager: Ti
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 
-    private val objective = game.arena.scoreboard.registerNewObjective("GregChess", "", "GregChess game")
+    private val objective =
+        game.arena.scoreboard.registerNewObjective("GregChess", "", game.config.getString("Component.Scoreboard.Title"))
 
     private var stopping = false
+
+    private fun getFormatString(path: String, vararg args: Any?) =
+        game.config.getFormatString("Component.Scoreboard.$path", *args)
 
     operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -28,26 +33,26 @@ class ScoreboardManager(private val game: ChessGame, private val timeManager: Ti
         var i = l
         gameProperties.forEach {
             it.team = objective.scoreboard?.registerNewTeam(it.name)
-            objective.getScore("${it.name}:").score = i--
+            objective.getScore(getFormatString("GeneralFormat", it.name)).score = i--
             it.team?.addEntry(chatColor("&r").repeat(i))
             objective.getScore(chatColor("&r").repeat(i)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
             it.teamWhite = objective.scoreboard?.registerNewTeam(it.name + "White")
-            objective.getScore("White ${it.name}:").score = i--
+            objective.getScore(getFormatString("WhiteFormat", it.name)).score = i--
             it.teamWhite?.addEntry(chatColor("&r").repeat(i))
             objective.getScore(chatColor("&r").repeat(i)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
             it.teamBlack = objective.scoreboard?.registerNewTeam(it.name + "Black")
-            objective.getScore("Black ${it.name}:").score = i--
+            objective.getScore(getFormatString("BlackFormat", it.name)).score = i--
             it.teamBlack?.addEntry(chatColor("&r").repeat(i))
             objective.getScore(chatColor("&r").repeat(i)).score = i--
         }
 
-    timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
+        timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
             if (stopping)
                 cancel()
             game.update()

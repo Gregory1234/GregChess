@@ -58,6 +58,8 @@ class ChessGame(
     val world
         get() = arena.world
 
+    val config = chessManager.config
+
     val scoreboard = ScoreboardManager(this, chessManager.timeManager)
 
     fun <T : Component> getComponent(cl: KClass<T>): T? = components.mapNotNull { cl.safeCast(it) }.firstOrNull()
@@ -87,17 +89,17 @@ class ChessGame(
     }
 
     fun start() {
-        scoreboard += object : GameProperty("Preset") {
+        scoreboard += object : GameProperty(config.getString("Component.Scoreboard.Preset")) {
             override fun invoke() = settings.name
         }
-        scoreboard += object : PlayerProperty("player") {
-            override fun invoke(s: ChessSide) = chatColor("&b${this@ChessGame[s].name}")
+        scoreboard += object : PlayerProperty(config.getString("Component.Scoreboard.Player")) {
+            override fun invoke(s: ChessSide) = config.getString("Component.Scoreboard.PlayerPrefix")+this@ChessGame[s].name
         }
         realPlayers.forEach(arena::teleport)
-        black.sendTitle("", chatColor("You are playing with the black pieces"))
-        white.sendTitle(chatColor("&eIt is your turn"), chatColor("You are playing with the white pieces"))
-        white.sendMessage(chatColor("&eYou are playing with the white pieces"))
-        black.sendMessage(chatColor("&eYou are playing with the black pieces"))
+        black.sendTitle("", config.getString("Message.YouArePlayingAs.Black"))
+        white.sendTitle(config.getString("Message.YourTurn"), config.getString("Message.YouArePlayingAs.White"))
+        white.sendMessage(config.getString("Message.YouArePlayingAs.White"))
+        black.sendMessage(config.getString("Message.YouArePlayingAs.Black"))
         components.forEach { it.start() }
         scoreboard.start()
         startTurn()
@@ -167,11 +169,11 @@ class ChessGame(
         realPlayers.forEach {
             if (reason.winner != null) {
                 this[it]?.sendTitle(
-                    chatColor(if (reason.winner == this[it]!!.side) "&aYou won" else "&cYou lost"),
+                    config.getString(if (reason.winner == this[it]!!.side) "Message.YouWon" else "Message.YouLost"),
                     chatColor(reason.prettyName)
                 )
             } else {
-                this[it]?.sendTitle(chatColor("&eYou drew"), chatColor(reason.prettyName))
+                this[it]?.sendTitle(config.getString("Message.YouDrew"), chatColor(reason.prettyName))
             }
             it.sendMessage(reason.message)
             if (it in quick) {
@@ -186,11 +188,11 @@ class ChessGame(
         spectators.forEach {
             if (reason.winner != null) {
                 this[it]?.sendTitle(
-                    chatColor(if (reason.winner == ChessSide.WHITE) "&eWhite won" else "&eBlack lost"),
+                    config.getString(if (reason.winner == ChessSide.WHITE) "Message.WhiteWon" else "Message.BlackWon"),
                     chatColor(reason.prettyName)
                 )
             } else {
-                this[it]?.sendTitle(chatColor("&eDraw"), chatColor(reason.prettyName))
+                this[it]?.sendTitle(config.getString("Message.ItWasADraw"), chatColor(reason.prettyName))
             }
             it.sendMessage(reason.message)
             if (anyLong) {
@@ -232,8 +234,9 @@ class ChessGame(
         components.forEach { it.update() }
     }
 
-    class SettingsMenu(private val settingsManager: SettingsManager, private inline val callback: (Settings) -> Unit) : InventoryHolder {
-        private val inv = Bukkit.createInventory(this, 9, "Choose settings")
+    class SettingsMenu(private val settingsManager: SettingsManager, private inline val callback: (Settings) -> Unit) :
+        InventoryHolder {
+        private val inv = Bukkit.createInventory(this, 9, settingsManager.config.getString("Message.ChooseSettings"))
 
         init {
             for ((p, _) in settingsManager.settingsChoice) {

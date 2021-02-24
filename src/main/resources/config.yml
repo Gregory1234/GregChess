@@ -4,6 +4,17 @@ ChessArenas:
 
 Message:
   CopyFEN: "Copy FEN"
+  ChooseSettings: "Choose settings"
+  YourTurn: "&eIt is your turn"
+  YouArePlayingAs:
+    White: "&eYou are playing with the white pieces"
+    Black: "&eYou are playing with the black pieces"
+  YouWon: "&aYou won"
+  YouLost: "&cYou lost"
+  YouDrew: "&eYou drew"
+  WhiteWon: "&eWhite won"
+  BlackWon: "&eBlack won"
+  ItWasADraw: "&eDraw"
   Request:
     Accept: "&a[Accept]"
     Cancel: "&c[Cancel]"
@@ -58,3 +69,16 @@ Message:
     NotInGame:
       You: "&cYou are not in a game!"
       Player: "&cThe player isn't in a game!"
+Component:
+  Scoreboard:
+    Title: "GregChess game"
+    Preset: "Preset"
+    Player: "player"
+    PlayerPrefix: "&b"
+    GeneralFormat: "%s:"
+    WhiteFormat: "White %s:"
+    BlackFormat: "Black %s:"
+  Clock:
+    TimeRemainingSimple: "Time remaining"
+    TimeRemaining: "time"
+    TimeFormat: "%02d:%02d.%d"

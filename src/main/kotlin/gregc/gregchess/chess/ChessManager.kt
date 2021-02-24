@@ -24,7 +24,7 @@ import kotlin.contracts.ExperimentalContracts
 import org.bukkit.event.entity.CreatureSpawnEvent
 
 
-class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager, config: ConfigManager) :
+class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager, val config: ConfigManager) :
     Listener {
     private class PlayerMap {
         private val games: MutableMap<UUID, ChessGame> = mutableMapOf()

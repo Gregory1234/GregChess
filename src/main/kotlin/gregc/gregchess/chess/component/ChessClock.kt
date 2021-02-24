@@ -33,6 +33,8 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
         }
     }
 
+    private fun getString(path: String) = game.config.getString("Component.Clock.$path")
+
     data class Time(
         var diff: Duration,
         var start: LocalDateTime = LocalDateTime.now(),
@@ -88,28 +90,26 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
 
     override fun start() {
 
-
         if (settings.type == Type.FIXED) {
-            game.scoreboard += object : GameProperty("Time remaining") {
+            game.scoreboard += object : GameProperty(getString("TimeRemainingSimple")) {
 
-                override fun invoke() = format(ceil(getTimeRemaining(game.currentTurn).toNanos()*0.000001).toLong())
+                override fun invoke() = format(ceil(getTimeRemaining(game.currentTurn).toNanos() * 0.000001).toLong())
 
                 private fun format(time: Long) =
-                    "%02d:%02d.%d".format(
+                    game.config.getFormatString("Component.Clock.TimeFormat",
                         max((time / 1000 / 60), 0),
                         max((time / 1000) % 60, 0),
                         max((time / 100) % 10, 0)
                     )
             }
             startTimer()
-        }
-        else {
-            game.scoreboard += object : PlayerProperty("time") {
+        } else {
+            game.scoreboard += object : PlayerProperty(getString("TimeRemaining")) {
 
-                override fun invoke(s: ChessSide) = format(ceil(getTimeRemaining(s).toNanos()*0.000001).toLong())
+                override fun invoke(s: ChessSide) = format(ceil(getTimeRemaining(s).toNanos() * 0.000001).toLong())
 
                 private fun format(time: Long) =
-                    "%02d:%02d.%d".format(
+                    game.config.getFormatString("Component.Clock.TimeFormat",
                         max((time / 1000 / 60), 0),
                         max((time / 1000) % 60, 0),
                         max((time / 100) % 10, 0)
