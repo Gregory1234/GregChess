@@ -70,13 +70,15 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
 
         override fun startTurn() {
             super.startTurn()
-            val str = engine.getMove(game.board.getFEN())
-            val origin = ChessPosition.parseFromString(str.take(2))
-            val target = ChessPosition.parseFromString(str.drop(2).take(2))
-            val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromChar(it) }
-            val move = game.board.getMoves(origin)
-                .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
-            finishMove(move)
+            engine.getMove(game.board.getFEN(), { str ->
+                val origin = ChessPosition.parseFromString(str.take(2))
+                val target = ChessPosition.parseFromString(str.drop(2).take(2))
+                val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromChar(it) }
+                val move = game.board.getMoves(origin)
+                    .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
+                finishMove(move)
+            }, { game.stop(ChessGame.EndReason.Error(it))})
+
         }
     }
 

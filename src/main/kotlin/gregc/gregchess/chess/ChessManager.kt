@@ -133,7 +133,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
             if (!arena.isEmpty())
                 return@SettingsMenu
             val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
-            val black = ChessPlayer.Engine(ChessEngine("stockfish"), ChessSide.BLACK)
+            val black = ChessPlayer.Engine(ChessEngine(plugin, "stockfish"), ChessSide.BLACK)
             val game = ChessGame(white, black, arena, it, this)
             game.start()
             players += game

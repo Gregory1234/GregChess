@@ -1,23 +1,27 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Arena
-import gregc.gregchess.PlayerData
-import gregc.gregchess.info
-import gregc.gregchess.star
-import org.bukkit.Difficulty
-import org.bukkit.GameMode
-import org.bukkit.GameRule
-import org.bukkit.World
+import gregc.gregchess.*
+import org.bukkit.*
 import org.bukkit.generator.ChunkGenerator
+import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.scheduler.BukkitRunnable
+import java.lang.Exception
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.logging.Level
 
 
 class ChessArena(name: String) : Arena(name) {
     class WorldGen : ChunkGenerator() {
-        override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid): ChunkData {
+        override fun generateChunkData(
+            world: World,
+            random: Random,
+            chunkX: Int,
+            chunkZ: Int,
+            biome: BiomeGrid
+        ): ChunkData {
             return createChunkData(world)
         }
 
@@ -60,11 +64,11 @@ data class ChessPosition(val file: Int, val rank: Int) {
     fun plus(df: Int, dr: Int) = ChessPosition(file + df, rank + dr)
     fun plusF(df: Int) = plus(df, 0)
     fun plusR(dr: Int) = plus(0, dr)
-    val fileStr = "${'a'+file}"
+    val fileStr = "${'a' + file}"
     val rankStr = (rank + 1).toString()
 
     fun neighbours(): List<ChessPosition> =
-            (-1..1).star(-1..1) { a, b -> this.plus(a, b) }.filter { it.isValid() } - this
+        (-1..1).star(-1..1) { a, b -> this.plus(a, b) }.filter { it.isValid() } - this
 
     fun isValid() = file in (0..7) && rank in (0..7)
 
@@ -73,19 +77,27 @@ data class ChessPosition(val file: Int, val rank: Int) {
     }
 }
 
-class ChessEngine(val name: String) {
+class ChessEngine(private val plugin: JavaPlugin, val name: String) {
     private val process: Process = ProcessBuilder("stockfish").start()
 
     private val reader = process.inputStream.bufferedReader()
 
     private val executor = Executors.newCachedThreadPool()
 
+    private var moveTime = 0.2.seconds
+
     fun stop() = process.destroy()
 
     fun setOption(name: String, value: String) {
-        process.outputStream.write(("setoption name $name value $value\n").toByteArray())
-        process.outputStream.flush()
-        info(name, value)
+        when (name) {
+            "time" -> {
+                moveTime = parseDuration(value) ?: throw CommandException("WrongDurationFormat")
+            }
+            else -> {
+                process.outputStream.write(("setoption name $name value $value\n").toByteArray())
+                process.outputStream.flush()
+            }
+        }
     }
 
     fun sendCommand(command: String) {
@@ -93,33 +105,50 @@ class ChessEngine(val name: String) {
         process.outputStream.flush()
         executor.submit(Callable {
             reader.readLine()
-        })[5, TimeUnit.SECONDS]
+        })[moveTime.toSeconds()/2+3, TimeUnit.SECONDS]
         process.outputStream.write(("$command\n").toByteArray())
         process.outputStream.flush()
-        info(command)
     }
 
     private fun readLine() = executor.submit(Callable {
         reader.readLine()
-    })[5, TimeUnit.SECONDS]
+    })[moveTime.toSeconds()/2+3, TimeUnit.SECONDS]
 
     init {
         readLine()
     }
 
-    fun getMove(fen: String): String {
-
-        sendCommand("position fen $fen")
-        sendCommand("go movetime 200")
-
-        while (true) {
-            val line = readLine().split(" ")
-            info(line)
-            if (line[0] == "bestmove") {
-                if (line[1] == "(none)")
-                    return ""
-                return line[1]
+    fun getMove(fen: String, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
+        var move = ""
+        var exc: Exception? = null
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+            try {
+                sendCommand("position fen $fen")
+                sendCommand("go movetime " + moveTime.toMillis())
+                while (true) {
+                    val line = readLine().split(" ")
+                    if (line[0] == "bestmove") {
+                        if (line[1] != "(none)")
+                            move = line[1]
+                        break
+                    }
+                }
+            } catch (e: Exception) {
+                exc = e
+                throw e
             }
-        }
+        })
+        //TODO: this is potentially dangerous!
+        object : BukkitRunnable() {
+            override fun run() {
+                if (move != "") {
+                    onSuccess(move)
+                    cancel()
+                } else if (exc != null) {
+                    onException(exc!!)
+                    cancel()
+                }
+            }
+        }.runTaskTimer(plugin, moveTime.toTicks() + 1, 1)
     }
 }

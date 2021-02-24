@@ -140,6 +140,7 @@ class ChessGame(
         class DrawAgreement : EndReason("agreement", null)
         class Timeout(winner: ChessSide) : ChessGame.EndReason("timeout", winner)
         class DrawTimeout : ChessGame.EndReason("timeout vs insufficient material", null)
+        class Error(val e: Exception) : ChessGame.EndReason("error", null)
 
         val message
             get() = "The game has finished. ${winner?.prettyName?.plus(" won") ?: "It was a draw"} by ${prettyName}."
