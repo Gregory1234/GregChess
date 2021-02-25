@@ -42,18 +42,19 @@ class ChessArena(name: String) : Arena(name) {
     }
 }
 
-enum class ChessSide(val prettyName: String, val character: Char, val direction: Int) {
-    WHITE("White", 'w', 1), BLACK("Black", 'b', -1);
+enum class ChessSide(val path: String, val debugName: String, val direction: Int) {
+    WHITE("Chess.Side.White", "White", 1), BLACK("Chess.Side.Black", "Black", -1);
 
     operator fun not(): ChessSide = if (this == WHITE) BLACK else WHITE
     operator fun inc(): ChessSide = not()
 
+    fun getName(config: ConfigManager) = config.getString("$path.Name")
+    fun getChar(config: ConfigManager) = config.getChar("$path.Char")
+    fun getPieceName(config: ConfigManager, name: String) = config.getFormatString("$path.Piece", name)
+
     companion object {
-        fun parseFromChar(c: Char) = when (c.toLowerCase()) {
-            'w' -> WHITE
-            'b' -> BLACK
-            else -> throw IllegalArgumentException(c.toString())
-        }
+        fun parseFromChar(config: ConfigManager, c: Char) =
+            values().firstOrNull { it.getChar(config) == c } ?: throw IllegalArgumentException(c.toString())
     }
 
 }
@@ -105,14 +106,14 @@ class ChessEngine(private val plugin: JavaPlugin, val name: String) {
         process.outputStream.flush()
         executor.submit(Callable {
             reader.readLine()
-        })[moveTime.toSeconds()/2+3, TimeUnit.SECONDS]
+        })[moveTime.toSeconds() / 2 + 3, TimeUnit.SECONDS]
         process.outputStream.write(("$command\n").toByteArray())
         process.outputStream.flush()
     }
 
     private fun readLine() = executor.submit(Callable {
         reader.readLine()
-    })[moveTime.toSeconds()/2+3, TimeUnit.SECONDS]
+    })[moveTime.toSeconds() / 2 + 3, TimeUnit.SECONDS]
 
     init {
         readLine()

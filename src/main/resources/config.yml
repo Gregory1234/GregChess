@@ -90,6 +90,15 @@ Chess:
     Castling:
       Kingside: 'k'
       Queenside: 'q'
+  Side:
+    White:
+      Name: "White"
+      Char: 'w'
+      Piece: "&bWhite %s"
+    Black:
+      Name: "Black"
+      Char: 'b'
+      Piece: "&bBlack %s"
   Piece:
     King:
       Name: "King"

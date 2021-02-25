@@ -14,10 +14,14 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN(config: ConfigManager): String {
+            val castling =
+                config.getChar("Chess.FEN.Castling.Kingside").toString() +
+                        config.getChar("Chess.FEN.Castling.Queenside").toString()
+
             if (initialFEN != null)
                 return initialFEN
             else if (!chess960)
-                return "${config.getString("Chess.FEN.InitialBoard")} w KQkq - 0 1"
+                return "${config.getString("Chess.FEN.InitialBoard")} ${ChessSide.WHITE.getChar(config)} ${castling.toUpperCase()}$castling - 0 1"
             else {
                 val gchr: (String) -> Char = { config.getChar("Chess.Piece.$it.Char") }
                 val types = MutableList<Char?>(8) { null }
@@ -31,10 +35,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 types[types.indexOf(null)] = gchr("Rook")
                 val row = String(types.mapNotNull { it }.toCharArray())
                 val pawns = gchr("Pawn").toString().repeat(8)
-                val castling =
-                    config.getChar("Chess.FEN.Castling.Kingside").toString() +
-                            config.getChar("Chess.FEN.Castling.Queenside").toString()
-                return "$row/$pawns/8/8/8/8/${pawns.toUpperCase()}/${row.toUpperCase()} w ${castling.toUpperCase()}$castling - 0 1"
+                return "$row/$pawns/8/8/8/8/${pawns.toUpperCase()}/${row.toUpperCase()} ${ChessSide.WHITE.getChar(config)} ${castling.toUpperCase()}$castling - 0 1"
             }
         }
 
@@ -286,9 +287,12 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 }
             }
         }
+        
+        boardHashes.clear()
+        lastMove = null
 
         if (parts[3] != "-") {
-            val pos = ChessPosition.parseFromString(parts[2])
+            val pos = ChessPosition.parseFromString(parts[3])
             val piece = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
             val origin = getSquare(piece.pos.plusR(-2 * piece.side.direction))!!
             val target = piece.square
@@ -299,11 +303,9 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
         movesSinceLastCapture = parts[4].toInt()
 
-        boardHashes.clear()
-        lastMove = null
         fullMoveCounter = parts[5].toInt().div(2)
 
-        if (ChessSide.parseFromChar(parts[1][0]) != game.currentTurn) {
+        if (ChessSide.parseFromChar(game.config, parts[1][0]) != game.currentTurn) {
             game.nextTurn()
         } else
             updateMoves()
@@ -335,7 +337,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 append("/")
         }
         append(" ")
-        append(game.currentTurn.character)
+        append(game.currentTurn.getChar(game.config))
         append(" ")
         val whiteKing = piecesOf(ChessSide.WHITE).find { it.type == ChessType.KING }
         if (whiteKing != null && !whiteKing.hasMoved) {

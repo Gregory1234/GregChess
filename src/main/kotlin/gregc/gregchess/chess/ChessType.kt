@@ -20,7 +20,7 @@ enum class ChessType(
     PAWN("Chess.Piece.Pawn", ::pawnMovement, false);
 
     fun getMaterial(config: ConfigManager, side: ChessSide): Material =
-        config.getEnum("$path.Material.${side.prettyName}", Material.AIR, Material::class)
+        config.getEnum("$path.Material.${side.debugName}", Material.AIR, Material::class)
 
     companion object {
         fun parseFromChar(config: ConfigManager, c: Char) =
@@ -31,7 +31,7 @@ enum class ChessType(
     fun getItem(config: ConfigManager, side: ChessSide): ItemStack {
         val item = ItemStack(getMaterial(config, side))
         val meta = item.itemMeta!!
-        meta.setDisplayName(chatColor("&b${side.prettyName} ${getName(config)}"))
+        meta.setDisplayName(chatColor(side.getPieceName(config, getName(config))))
         item.itemMeta = meta
         return item
     }
