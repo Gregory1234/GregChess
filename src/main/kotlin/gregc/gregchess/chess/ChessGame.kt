@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.ConfigManager
 import gregc.gregchess.chatColor
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.seconds
@@ -93,11 +94,12 @@ class ChessGame(
             override fun invoke() = settings.name
         }
         scoreboard += object : PlayerProperty(config.getString("Component.Scoreboard.Player")) {
-            override fun invoke(s: ChessSide) = config.getString("Component.Scoreboard.PlayerPrefix")+this@ChessGame[s].name
+            override fun invoke(s: ChessSide) =
+                config.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
         }
         realPlayers.forEach(arena::teleport)
-        black.sendTitle("", config.getString("Message.YouArePlayingAs.Black"))
-        white.sendTitle(config.getString("Message.YourTurn"), config.getString("Message.YouArePlayingAs.White"))
+        black.sendTitle("", config.getString("Title.YouArePlayingAs.Black"))
+        white.sendTitle(config.getString("Title.YourTurn"), config.getString("Title.YouArePlayingAs.White"))
         white.sendMessage(config.getString("Message.YouArePlayingAs.White"))
         black.sendMessage(config.getString("Message.YouArePlayingAs.Black"))
         components.forEach { it.start() }
@@ -129,23 +131,28 @@ class ChessGame(
             this[currentTurn].startTurn()
     }
 
-    sealed class EndReason(val prettyName: String, val winner: ChessSide?) {
-        class Checkmate(winner: ChessSide) : EndReason("checkmate", winner)
-        class Resignation(winner: ChessSide) : EndReason("resignation", winner)
-        class Walkover(winner: ChessSide) : EndReason("walkover", winner)
-        class PluginRestart : EndReason("plugin restarting", null)
-        class ArenaRemoved : EndReason("arena deleted", null)
-        class Stalemate : EndReason("stalemate", null)
-        class InsufficientMaterial : EndReason("insufficient material", null)
-        class FiftyMoves : EndReason("50-move rule", null)
-        class Repetition : EndReason("repetition", null)
-        class DrawAgreement : EndReason("agreement", null)
-        class Timeout(winner: ChessSide) : ChessGame.EndReason("timeout", winner)
-        class DrawTimeout : ChessGame.EndReason("timeout vs insufficient material", null)
-        class Error(val e: Exception) : ChessGame.EndReason("error", null)
+    sealed class EndReason(val namePath: String, val winner: ChessSide?) {
+        class Checkmate(winner: ChessSide) : EndReason("EndReason.Checkmate", winner)
+        class Resignation(winner: ChessSide) : EndReason("EndReason.Resignation", winner)
+        class Walkover(winner: ChessSide) : EndReason("EndReason.Walkover", winner)
+        class PluginRestart : EndReason("EndReason.PluginRestart", null)
+        class ArenaRemoved : EndReason("EndReason.ArenaRemoved", null)
+        class Stalemate : EndReason("EndReason.Stalemate", null)
+        class InsufficientMaterial : EndReason("EndReason.InsufficientMaterial", null)
+        class FiftyMoves : EndReason("EndReason.FiftyMoves", null)
+        class Repetition : EndReason("EndReason.Repetition", null)
+        class DrawAgreement : EndReason("EndReason.DrawAgreement", null)
+        class Timeout(winner: ChessSide) : ChessGame.EndReason("EndReason.Timeout", winner)
+        class DrawTimeout : ChessGame.EndReason("EndReason.DrawTimeout", null)
+        class Error(val e: Exception) : ChessGame.EndReason("EndReason.Error", null)
 
-        val message
-            get() = "The game has finished. ${winner?.prettyName?.plus(" won") ?: "It was a draw"} by ${prettyName}."
+        fun getMessage(config: ConfigManager) = config.getFormatString(
+            when (winner) {
+                ChessSide.WHITE -> "Message.GameFinished.WhiteWon"
+                ChessSide.BLACK -> "Message.GameFinished.BlackWon"
+                null -> "Message.GameFinished.ItWasADraw"
+            }, config.getString(namePath)
+        )
     }
 
     class EndEvent(val game: ChessGame) : Event() {
@@ -169,13 +176,13 @@ class ChessGame(
         realPlayers.forEach {
             if (reason.winner != null) {
                 this[it]?.sendTitle(
-                    config.getString(if (reason.winner == this[it]!!.side) "Message.YouWon" else "Message.YouLost"),
-                    chatColor(reason.prettyName)
+                    config.getString(if (reason.winner == this[it]!!.side) "Title.Player.YouWon" else "Title.Player.YouLost"),
+                    config.getString(reason.namePath)
                 )
             } else {
-                this[it]?.sendTitle(config.getString("Message.YouDrew"), chatColor(reason.prettyName))
+                this[it]?.sendTitle(config.getString("Title.Player.YouDrew"), config.getString(reason.namePath))
             }
-            it.sendMessage(reason.message)
+            it.sendMessage(reason.getMessage(config))
             if (it in quick) {
                 arena.exit(it)
             } else {
@@ -188,13 +195,13 @@ class ChessGame(
         spectators.forEach {
             if (reason.winner != null) {
                 this[it]?.sendTitle(
-                    config.getString(if (reason.winner == ChessSide.WHITE) "Message.WhiteWon" else "Message.BlackWon"),
-                    chatColor(reason.prettyName)
+                    config.getString(if (reason.winner == ChessSide.WHITE) "Title.Spectator.WhiteWon" else "Title.Spectator.BlackWon"),
+                    config.getString(reason.namePath)
                 )
             } else {
-                this[it]?.sendTitle(config.getString("Message.ItWasADraw"), chatColor(reason.prettyName))
+                this[it]?.sendTitle(config.getString("Title.Spectator.ItWasADraw"), config.getString(reason.namePath))
             }
-            it.sendMessage(reason.message)
+            it.sendMessage(reason.getMessage(config))
             if (anyLong) {
                 arena.exit(it)
             } else {

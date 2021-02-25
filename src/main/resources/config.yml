@@ -5,16 +5,15 @@ ChessArenas:
 Message:
   CopyFEN: "Copy FEN"
   ChooseSettings: "Choose settings"
-  YourTurn: "&eIt is your turn"
+  PawnPromotion: "Pawn promotion"
+  InCheck: "&cYou are in check!"
   YouArePlayingAs:
     White: "&eYou are playing with the white pieces"
     Black: "&eYou are playing with the black pieces"
-  YouWon: "&aYou won"
-  YouLost: "&cYou lost"
-  YouDrew: "&eYou drew"
-  WhiteWon: "&eWhite won"
-  BlackWon: "&eBlack won"
-  ItWasADraw: "&eDraw"
+  GameFinished:
+    WhiteWon: "The game has finished! White won by %s."
+    BlackWon: "The game has finished! Black won by %s."
+    ItWasADraw: "The game has finished! It was a draw by %s."
   Request:
     Accept: "&a[Accept]"
     Cancel: "&c[Cancel]"
@@ -69,6 +68,37 @@ Message:
     NotInGame:
       You: "&cYou are not in a game!"
       Player: "&cThe player isn't in a game!"
+
+Title:
+  YourTurn: "&eIt is your turn"
+  InCheck: "&cYou are in check!"
+  YouArePlayingAs:
+    White: "&eYou are playing with the white pieces"
+    Black: "&eYou are playing with the black pieces"
+  Player:
+    YouWon: "&aYou won"
+    YouLost: "&cYou lost"
+    YouDrew: "&eYou drew"
+  Spectator:
+    WhiteWon: "&eWhite won"
+    BlackWon: "&eBlack won"
+    ItWasADraw: "&eDraw"
+
+EndReason:
+  Checkmate: "checkmate"
+  Resignation: "resignation"
+  Walkover: "walkover"
+  PluginRestart: "the plugin restarting"
+  ArenaRemoved: "arena deleted"
+  Stalemate: "stalemate"
+  InsufficientMaterial: "insufficient material"
+  FiftyMoves: "the 50-move rule"
+  Repetition: "repetition"
+  DrawAgreement: "agreement"
+  Timeout: "timeout"
+  DrawTimeout: "timeout vs insufficient material"
+  Error: "error"
+
 Component:
   Scoreboard:
     Title: "GregChess game"

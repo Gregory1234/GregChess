@@ -77,10 +77,12 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
                 val move = game.board.getMoves(origin)
                     .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
                 finishMove(move)
-            }, { game.stop(ChessGame.EndReason.Error(it))})
+            }, { game.stop(ChessGame.EndReason.Error(it)) })
 
         }
     }
+
+    private fun getString(path: String) = game.config.getString(path)
 
     var held: ChessPiece? = null
     protected var heldMoves: List<ChessMove>? = null
@@ -117,7 +119,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         private val moves: List<Pair<ChessType, ChessMove>>
     ) : InventoryHolder {
         var finished: Boolean = false
-        private val inv = Bukkit.createInventory(this, 9, "Pawn promotion")
+        private val inv = Bukkit.createInventory(this, 9, player.game.config.getString("Message.PawnPromotion"))
 
         init {
             for ((p, _) in moves) {
@@ -150,11 +152,11 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
                 game.stop(ChessGame.EndReason.Checkmate(!side))
             } else if (!silent) {
                 //player.spigot().sendMessage(ChatMessageType.ACTION_BAR, *TextComponent.fromLegacyText(chatColor("&cYou are in check!")))
-                sendTitle(chatColor("&eIt is your turn"), chatColor("&cYou are in check!"))
-                sendMessage(chatColor("&cYou are in check!"))
+                sendTitle(getString("Title.YourTurn"), getString("Title.InCheck"))
+                sendMessage(getString("Message.InCheck"))
             } else {
-                sendTitle(chatColor("&cYou are in check!"))
-                sendMessage(chatColor("&cYou are in check!"))
+                sendTitle(getString("Title.InCheck"))
+                sendMessage(getString("Message.InCheck"))
             }
         } else {
             var inStalemate = true
@@ -167,7 +169,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             if (inStalemate) {
                 game.stop(ChessGame.EndReason.Stalemate())
             } else if (!silent) {
-                sendTitle(chatColor("&eIt is your turn"))
+                sendTitle(getString("Title.YourTurn"))
             }
         }
 
