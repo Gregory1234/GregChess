@@ -85,11 +85,6 @@ Title:
     ItWasADraw: "&eDraw"
 
 Chess:
-  FEN:
-    InitialBoard: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-    Castling:
-      Kingside: 'k'
-      Queenside: 'q'
   Side:
     White:
       Name: "White"

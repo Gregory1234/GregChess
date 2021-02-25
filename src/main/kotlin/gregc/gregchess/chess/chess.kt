@@ -10,7 +10,6 @@ import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.logging.Level
 
 
 class ChessArena(name: String) : Arena(name) {
@@ -42,19 +41,19 @@ class ChessArena(name: String) : Arena(name) {
     }
 }
 
-enum class ChessSide(val path: String, val debugName: String, val direction: Int) {
-    WHITE("Chess.Side.White", "White", 1), BLACK("Chess.Side.Black", "Black", -1);
+enum class ChessSide(private val path: String, val standardName: String, val standardChar: Char, val direction: Int) {
+    WHITE("Chess.Side.White", "White", 'w', 1),
+    BLACK("Chess.Side.Black", "Black", 'b', -1);
 
     operator fun not(): ChessSide = if (this == WHITE) BLACK else WHITE
     operator fun inc(): ChessSide = not()
 
-    fun getName(config: ConfigManager) = config.getString("$path.Name")
     fun getChar(config: ConfigManager) = config.getChar("$path.Char")
     fun getPieceName(config: ConfigManager, name: String) = config.getFormatString("$path.Piece", name)
 
     companion object {
-        fun parseFromChar(config: ConfigManager, c: Char) =
-            values().firstOrNull { it.getChar(config) == c } ?: throw IllegalArgumentException(c.toString())
+        fun parseFromStandardChar(c: Char) =
+            values().firstOrNull { it.standardChar == c } ?: throw IllegalArgumentException(c.toString())
     }
 
 }

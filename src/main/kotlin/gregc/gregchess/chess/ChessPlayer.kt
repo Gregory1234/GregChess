@@ -73,7 +73,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             engine.getMove(game.board.getFEN(), { str ->
                 val origin = ChessPosition.parseFromString(str.take(2))
                 val target = ChessPosition.parseFromString(str.drop(2).take(2))
-                val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromChar(game.config, it) }
+                val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromStandardChar(it) }
                 val move = game.board.getMoves(origin)
                     .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
                 finishMove(move)
