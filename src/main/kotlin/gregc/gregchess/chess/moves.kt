@@ -117,7 +117,7 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
             else
                 piece.type.getChar(config).toUpperCase()
             name += getUniquenessCoordinate(piece, target)
-            name += "x"
+            name += config.getString("Chess.Capture")
             name += target.pos.toString()
             val capturedPiece = capture.piece
             val c = capturedPiece?.capture()

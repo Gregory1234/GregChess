@@ -85,6 +85,7 @@ Title:
     ItWasADraw: "&eDraw"
 
 Chess:
+  Capture: "x"
   Side:
     White:
       Name: "White"
