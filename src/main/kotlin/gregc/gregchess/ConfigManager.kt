@@ -31,12 +31,13 @@ class ConfigManager(private val plugin: JavaPlugin, private val config: Configur
 
     fun getString(path: String) = get(path, "string", path) { chatColor(it) }
 
+    fun getChar(path: String) = get(path, "char", ' ') { if (it.length == 1) it[0] else null }
+
     fun getFormatString(path: String, vararg args: Any?) =
         get(path, "format string", path) {
             try {
                 chatColor(it.format(*args))
-            }
-            catch (e: Exception){
+            } catch (e: Exception) {
                 plugin.logger.warning(e.stackTraceToString())
                 null
             }

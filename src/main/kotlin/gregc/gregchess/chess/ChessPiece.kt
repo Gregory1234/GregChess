@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.ConfigManager
 import gregc.gregchess.getBlockAt
 import gregc.gregchess.playSound
 import org.bukkit.Material
@@ -21,11 +22,13 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     private val board
         get() = square.board
 
-    data class Captured(val type: ChessType, val side: ChessSide, val by: ChessSide) {
-        private val material = type.getMaterial(side)
+    private val config
+        get() = board.game.config
 
-        fun render(block: Block) {
-            block.type = material
+    data class Captured(val type: ChessType, val side: ChessSide, val by: ChessSide) {
+
+        fun render(config: ConfigManager, block: Block) {
+            block.type = type.getMaterial(config, side)
         }
 
         fun hide(block: Block) {
@@ -43,7 +46,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     }
 
     private fun render() {
-        block.type = type.getMaterial(side)
+        block.type = type.getMaterial(config, side)
     }
 
     private fun hide() {
@@ -96,9 +99,9 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
         loc.toLocation(board.game.world).playSound(s)
     }
 
-    private fun playPickUpSound() = playSound(type.pickUpSound)
-    private fun playMoveSound() = playSound(type.moveSound)
-    private fun playCaptureSound() = playSound(type.captureSound)
+    private fun playPickUpSound() = playSound(type.getSound(config, "PickUp"))
+    private fun playMoveSound() = playSound(type.getSound(config, "Move"))
+    private fun playCaptureSound() = playSound(type.getSound(config, "Capture"))
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved

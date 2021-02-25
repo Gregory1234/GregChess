@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.ConfigManager
 import gregc.gregchess.chatColor
 import org.bukkit.Material
 import org.bukkit.Sound
@@ -7,109 +8,41 @@ import org.bukkit.inventory.ItemStack
 import java.lang.IllegalArgumentException
 
 enum class ChessType(
-    private val prettyName: String,
-    val character: Char,
-    private val matWhite: Material,
-    private val matBlack: Material,
-    val pickUpSound: Sound,
-    val moveSound: Sound,
-    val captureSound: Sound,
+    val path: String,
     val moveScheme: (ChessPiece) -> List<ChessMove>,
     val minor: Boolean
 ) {
-    KING(
-        "King",
-        'k',
-        Material.WHITE_CONCRETE,
-        Material.BLACK_CONCRETE,
-        Sound.BLOCK_METAL_HIT,
-        Sound.BLOCK_METAL_STEP,
-        Sound.ENTITY_ENDER_DRAGON_DEATH,
-        ::kingMovement,
-        false
-    ),
-    QUEEN(
-        "Queen",
-        'q',
-        Material.DIAMOND_BLOCK,
-        Material.NETHERITE_BLOCK,
-        Sound.ENTITY_WITCH_CELEBRATE,
-        Sound.BLOCK_GLASS_STEP,
-        Sound.ENTITY_WITCH_DEATH,
-        ::queenMovement,
-        false
-    ),
-    ROOK(
-        "Rook",
-        'r',
-        Material.IRON_BLOCK,
-        Material.GOLD_BLOCK,
-        Sound.ENTITY_IRON_GOLEM_STEP,
-        Sound.ENTITY_IRON_GOLEM_STEP,
-        Sound.ENTITY_IRON_GOLEM_DEATH,
-        ::rookMovement,
-        false
-    ),
-    BISHOP(
-        "Bishop",
-        'b',
-        Material.POLISHED_DIORITE,
-        Material.POLISHED_BLACKSTONE,
-        Sound.ENTITY_SPIDER_AMBIENT,
-        Sound.ENTITY_SPIDER_STEP,
-        Sound.ENTITY_SPIDER_DEATH,
-        ::bishopMovement,
-        true
-    ),
-    KNIGHT(
-        "Knight",
-        'n',
-        Material.END_STONE,
-        Material.BLACKSTONE,
-        Sound.ENTITY_HORSE_JUMP,
-        Sound.ENTITY_HORSE_STEP,
-        Sound.ENTITY_HORSE_DEATH,
-        ::knightMovement,
-        true
-    ),
-    PAWN(
-        "Pawn",
-        'p',
-        Material.WHITE_CARPET,
-        Material.BLACK_CARPET,
-        Sound.BLOCK_STONE_HIT,
-        Sound.BLOCK_STONE_STEP,
-        Sound.BLOCK_STONE_BREAK,
-        ::pawnMovement,
-        false
-    );
+    KING("Chess.Piece.King", ::kingMovement, false),
+    QUEEN("Chess.Piece.Queen", ::queenMovement, false),
+    ROOK("Chess.Piece.Rook", ::rookMovement, false),
+    BISHOP("Chess.Piece.Bishop", ::bishopMovement, true),
+    KNIGHT("Chess.Piece.Knight", ::knightMovement, true),
+    PAWN("Chess.Piece.Pawn", ::pawnMovement, false);
 
-    fun getMaterial(side: ChessSide) = when (side) {
-        ChessSide.WHITE -> matWhite
-        ChessSide.BLACK -> matBlack
-    }
+    fun getMaterial(config: ConfigManager, side: ChessSide): Material =
+        config.getEnum("$path.Material.${side.prettyName}", Material.AIR, Material::class)
 
     companion object {
-        fun parseFromChar(c: Char) = when (c.toLowerCase()) {
-            'k' -> KING
-            'q' -> QUEEN
-            'r' -> ROOK
-            'b' -> BISHOP
-            'n' -> KNIGHT
-            'p' -> PAWN
-            else -> throw IllegalArgumentException(c.toString())
-        }
+        fun parseFromChar(config: ConfigManager, c: Char) =
+            values().firstOrNull { it.getChar(config) == c.toLowerCase() }
+                ?: throw IllegalArgumentException(c.toString())
     }
 
-    fun getItem(side: ChessSide): ItemStack {
-        val item = ItemStack(getMaterial(side))
+    fun getItem(config: ConfigManager, side: ChessSide): ItemStack {
+        val item = ItemStack(getMaterial(config, side))
         val meta = item.itemMeta!!
-        meta.setDisplayName(chatColor("&b${side.prettyName} $prettyName"))
+        meta.setDisplayName(chatColor("&b${side.prettyName} ${getName(config)}"))
         item.itemMeta = meta
         return item
     }
 
+    fun getSound(config: ConfigManager, name: String): Sound =
+        config.getEnum("$path.Sound.$name", Sound.BLOCK_STONE_HIT, Sound::class)
+
+    fun getName(config: ConfigManager) = config.getString("$path.Name")
+    fun getChar(config: ConfigManager) = config.getChar("$path.Char")
+
     val promotions
         get() = if (this == PAWN) listOf(QUEEN, ROOK, BISHOP, KNIGHT)
-                else emptyList()
+        else emptyList()
 }

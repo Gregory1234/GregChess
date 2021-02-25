@@ -132,19 +132,19 @@ class ChessGame(
     }
 
     sealed class EndReason(val namePath: String, val winner: ChessSide?) {
-        class Checkmate(winner: ChessSide) : EndReason("EndReason.Checkmate", winner)
-        class Resignation(winner: ChessSide) : EndReason("EndReason.Resignation", winner)
-        class Walkover(winner: ChessSide) : EndReason("EndReason.Walkover", winner)
-        class PluginRestart : EndReason("EndReason.PluginRestart", null)
-        class ArenaRemoved : EndReason("EndReason.ArenaRemoved", null)
-        class Stalemate : EndReason("EndReason.Stalemate", null)
-        class InsufficientMaterial : EndReason("EndReason.InsufficientMaterial", null)
-        class FiftyMoves : EndReason("EndReason.FiftyMoves", null)
-        class Repetition : EndReason("EndReason.Repetition", null)
-        class DrawAgreement : EndReason("EndReason.DrawAgreement", null)
-        class Timeout(winner: ChessSide) : ChessGame.EndReason("EndReason.Timeout", winner)
-        class DrawTimeout : ChessGame.EndReason("EndReason.DrawTimeout", null)
-        class Error(val e: Exception) : ChessGame.EndReason("EndReason.Error", null)
+        class Checkmate(winner: ChessSide) : EndReason("Chess.EndReason.Checkmate", winner)
+        class Resignation(winner: ChessSide) : EndReason("Chess.EndReason.Resignation", winner)
+        class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", winner)
+        class PluginRestart : EndReason("Chess.EndReason.PluginRestart", null)
+        class ArenaRemoved : EndReason("Chess.EndReason.ArenaRemoved", null)
+        class Stalemate : EndReason("Chess.EndReason.Stalemate", null)
+        class InsufficientMaterial : EndReason("Chess.EndReason.InsufficientMaterial", null)
+        class FiftyMoves : EndReason("Chess.EndReason.FiftyMoves", null)
+        class Repetition : EndReason("Chess.EndReason.Repetition", null)
+        class DrawAgreement : EndReason("Chess.EndReason.DrawAgreement", null)
+        class Timeout(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.Timeout", winner)
+        class DrawTimeout : ChessGame.EndReason("Chess.EndReason.DrawTimeout", null)
+        class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", null)
 
         fun getMessage(config: ConfigManager) = config.getFormatString(
             when (winner) {

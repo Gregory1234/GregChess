@@ -41,7 +41,7 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
 
     abstract val canAttack: Boolean
 
-    abstract fun execute(): MoveData
+    abstract fun execute(config: ConfigManager): MoveData
 
     interface Promoting {
         val promotion: ChessType?
@@ -62,17 +62,17 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         override val canAttack
             get() = defensive
 
-        override fun execute(): MoveData {
+        override fun execute(config: ConfigManager): MoveData {
             val pieceHasMoved = piece.hasMoved
             var name = ""
             if (piece.type != ChessType.PAWN)
-                name += piece.type.character.toUpperCase()
+                name += piece.type.getChar(config).toUpperCase()
             name += getUniquenessCoordinate(piece, target)
             name += target.pos.toString()
             piece.move(target)
             if (promotion != null) {
                 piece.promote(promotion)
-                name += promotion.character.toUpperCase()
+                name += promotion.getChar(config).toUpperCase()
             }
             name += checkForChecks(piece.side, piece.square.board)
             val undoReset = if (piece.type == ChessType.PAWN)
@@ -109,13 +109,13 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         override val floor
             get() = if (promotion == null) Material.RED_CONCRETE else Material.BLUE_CONCRETE
 
-        override fun execute(): MoveData {
+        override fun execute(config: ConfigManager): MoveData {
             val pieceHasMoved = piece.hasMoved
             var name = ""
             name += if (piece.type == ChessType.PAWN)
                 piece.pos.fileStr
             else
-                piece.type.character.toUpperCase()
+                piece.type.getChar(config).toUpperCase()
             name += getUniquenessCoordinate(piece, target)
             name += "x"
             name += target.pos.toString()
@@ -124,7 +124,7 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
             piece.move(target)
             if (promotion != null) {
                 piece.promote(promotion)
-                name += promotion.character.toUpperCase()
+                name += promotion.getChar(config).toUpperCase()
             }
             name += checkForChecks(piece.side, piece.square.board)
             if (target != capture)
@@ -271,7 +271,7 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
                     override val canAttack
                         get() = false
 
-                    override fun execute(): MoveData {
+                    override fun execute(config: ConfigManager): MoveData {
                         var name = if (newFile < this.piece.pos.file) "O-O-O" else "O-O"
                         if (dist == 1) {
                             this.piece.swap(rook)

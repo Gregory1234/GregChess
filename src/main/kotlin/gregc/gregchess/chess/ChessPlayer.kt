@@ -26,7 +26,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             heldMoves?.forEach { it.render() }
             held = piece
             piece.pickUp()
-            player.inventory.setItem(0, piece.type.getItem(piece.side))
+            player.inventory.setItem(0, piece.type.getItem(game.config, piece.side))
         }
 
         fun makeMove(loc: Loc) {
@@ -73,7 +73,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             engine.getMove(game.board.getFEN(), { str ->
                 val origin = ChessPosition.parseFromString(str.take(2))
                 val target = ChessPosition.parseFromString(str.drop(2).take(2))
-                val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromChar(it) }
+                val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromChar(game.config, it) }
                 val move = game.board.getMoves(origin)
                     .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
                 finishMove(move)
@@ -104,7 +104,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         game.board.getMoves(piece.pos).filter { game.board.run { it.isLegal } }
 
     fun finishMove(move: ChessMove) {
-        val data = move.execute()
+        val data = move.execute(game.config)
         game.board.lastMove?.clear()
         game.board.lastMove = data
         game.board.lastMove?.render()
@@ -114,23 +114,26 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
     fun hasTurn(): Boolean = game.currentTurn == side
 
     class PawnPromotionScreen(
-        private val pawn: ChessPiece,
+        pawn: ChessPiece,
         private val player: ChessPlayer,
         private val moves: List<Pair<ChessType, ChessMove>>
     ) : InventoryHolder {
         var finished: Boolean = false
         private val inv = Bukkit.createInventory(this, 9, player.game.config.getString("Message.PawnPromotion"))
 
+        private val typesTmp = mutableMapOf<Material, ChessType>()
+
         init {
             for ((p, _) in moves) {
-                inv.addItem(p.getItem(pawn.side))
+                inv.addItem(p.getItem(player.game.config, pawn.side))
+                typesTmp[p.getMaterial(player.game.config, pawn.side)] = p
             }
         }
 
         override fun getInventory() = inv
 
         fun applyEvent(choice: Material?) {
-            val m = moves.find { it.first.getMaterial(pawn.side) == choice }?.second ?: moves.first().second
+            val m = moves.find { it.first == typesTmp[choice] }?.second ?: moves.first().second
             player.finishMove(m)
             finished = true
         }
