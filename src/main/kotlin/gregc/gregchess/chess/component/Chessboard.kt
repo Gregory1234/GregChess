@@ -17,7 +17,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             if (initialFEN != null)
                 return initialFEN
             else if (!chess960)
-                return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR ${ChessSide.WHITE.standardChar} KQkq - 0 1"
+                return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
             else {
                 val types = MutableList<Char?>(8) { null }
                 types[(0..7).filter { it % 2 == 0 }.random()] = ChessType.BISHOP.standardChar
@@ -30,7 +30,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 types[types.indexOf(null)] = ChessType.ROOK.standardChar
                 val row = String(types.mapNotNull { it }.toCharArray())
                 val pawns = ChessType.PAWN.standardChar.toString().repeat(8)
-                return "$row/$pawns/8/8/8/8/${pawns.toUpperCase()}/${row.toUpperCase()} ${ChessSide.WHITE.standardChar} KQkq - 0 1"
+                return "$row/$pawns/8/8/8/8/${pawns.toUpperCase()}/${row.toUpperCase()} w KQkq - 0 1"
             }
         }
 

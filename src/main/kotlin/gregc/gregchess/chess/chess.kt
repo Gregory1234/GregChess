@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.*
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
@@ -48,7 +49,6 @@ enum class ChessSide(private val path: String, val standardName: String, val sta
     operator fun not(): ChessSide = if (this == WHITE) BLACK else WHITE
     operator fun inc(): ChessSide = not()
 
-    fun getChar(config: ConfigManager) = config.getChar("$path.Char")
     fun getPieceName(config: ConfigManager, name: String) = config.getFormatString("$path.Piece", name)
 
     companion object {
@@ -150,5 +150,27 @@ class ChessEngine(private val plugin: JavaPlugin, val name: String) {
                 }
             }
         }.runTaskTimer(plugin, moveTime.toTicks() + 1, 1)
+    }
+}
+
+data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
+    var piece: ChessPiece? = null
+    var bakedMoves: List<ChessMove>? = null
+
+    private val baseFloor = if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
+    var previousMoveMarker: Material? = null
+    var moveMarker: Material? = null
+    private val floor
+        get() = moveMarker ?: previousMoveMarker ?: baseFloor
+    fun render() {
+        board.renderer.fillFloor(pos, floor)
+    }
+    fun clear() {
+        piece = null
+        bakedMoves = null
+        previousMoveMarker = null
+        moveMarker = null
+        board.renderer.fillFloor(pos, floor)
+        board.renderer.clearPiece(pos)
     }
 }

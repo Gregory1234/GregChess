@@ -3,10 +3,12 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.chess.*
 import gregc.gregchess.seconds
 import org.bukkit.entity.Player
-import java.lang.Long.max
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
+
 
 class ChessClock(override val game: ChessGame, private val settings: Settings) : ChessGame.Component {
 
@@ -88,32 +90,21 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
             game.stop(ChessGame.EndReason.Timeout(!side))
     }
 
+    private fun format(time: Duration): String {
+        val formatter = DateTimeFormatter.ofPattern(getString("TimeFormat"))
+        return (LocalTime.ofNanoOfDay(ceil(time.toNanos().toDouble() / 1000000.0).toLong() * 1000000)).format(formatter)
+    }
+
     override fun start() {
 
         if (settings.type == Type.FIXED) {
             game.scoreboard += object : GameProperty(getString("TimeRemainingSimple")) {
-
-                override fun invoke() = format(ceil(getTimeRemaining(game.currentTurn).toNanos() * 0.000001).toLong())
-
-                private fun format(time: Long) =
-                    game.config.getFormatString("Component.Clock.TimeFormat",
-                        max((time / 1000 / 60), 0),
-                        max((time / 1000) % 60, 0),
-                        max((time / 100) % 10, 0)
-                    )
+                override fun invoke() = format(getTimeRemaining(game.currentTurn))
             }
             startTimer()
         } else {
             game.scoreboard += object : PlayerProperty(getString("TimeRemaining")) {
-
-                override fun invoke(s: ChessSide) = format(ceil(getTimeRemaining(s).toNanos() * 0.000001).toLong())
-
-                private fun format(time: Long) =
-                    game.config.getFormatString("Component.Clock.TimeFormat",
-                        max((time / 1000 / 60), 0),
-                        max((time / 1000) % 60, 0),
-                        max((time / 100) % 10, 0)
-                    )
+                override fun invoke(s: ChessSide) = format(getTimeRemaining(s))
             }
         }
     }

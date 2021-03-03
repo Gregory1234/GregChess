@@ -1,16 +1,18 @@
 package gregc.gregchess
 
-import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.java.JavaPlugin
 import java.lang.Exception
 import java.lang.IllegalArgumentException
 import kotlin.reflect.KClass
 
-class ConfigManager(private val plugin: JavaPlugin, private val config: ConfigurationSection = plugin.config) {
+class ConfigManager(private val plugin: JavaPlugin, private val rootPath : String = "") {
+
+    private val config
+        get() = plugin.config.getConfigurationSection(rootPath)!!
 
     fun getSection(path: String): ConfigManager? {
         val section = config.getConfigurationSection(path) ?: return null
-        return ConfigManager(plugin, section)
+        return ConfigManager(plugin, section.currentPath!!)
     }
 
     fun <T> get(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?): T {

@@ -183,4 +183,4 @@ Component:
   Clock:
     TimeRemainingSimple: "Time remaining"
     TimeRemaining: "time"
-    TimeFormat: "%02d:%02d.%d"
+    TimeFormat: "mm:ss.S"

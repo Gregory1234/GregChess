@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Loc
-import gregc.gregchess.chatColor
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
