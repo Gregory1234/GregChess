@@ -1,11 +1,12 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ConfigManager
+import gregc.gregchess.Loc
+import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.getBlockAt
 import gregc.gregchess.playSound
 import org.bukkit.Material
 import org.bukkit.Sound
-import org.bukkit.block.Block
 
 class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSquare, hasMoved: Boolean = false) {
     var square: ChessSquare = initSquare
@@ -25,32 +26,40 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     private val config
         get() = board.game.config
 
-    data class Captured(val type: ChessType, val side: ChessSide, val by: ChessSide) {
+    class Captured(val type: ChessType, val side: ChessSide, val by: ChessSide, val board: Chessboard) {
 
-        fun render(config: ConfigManager, block: Block) {
-            block.type = type.getMaterial(config, side)
+        private val config
+            get() = board.game.config
+
+        fun render(loc: Loc) {
+            type.getStructure(config, side).forEachIndexed { i, m ->
+                board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
+            }
         }
 
-        fun hide(block: Block) {
-            block.type = Material.AIR
+        fun hide(loc: Loc) {
+            type.getStructure(config, side).forEachIndexed { i, _ ->
+                board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
+            }
         }
     }
     private val loc
         get() = board.renderer.getPieceLoc(pos)
-
-    private val block
-        get() = board.game.world.getBlockAt(loc)
 
     init {
         render()
     }
 
     private fun render() {
-        block.type = type.getMaterial(config, side)
+        type.getStructure(config, side).forEachIndexed { i, m ->
+            board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
+        }
     }
 
     private fun hide() {
-        block.type = Material.AIR
+        type.getStructure(config, side).forEachIndexed { i, _ ->
+            board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
+        }
     }
 
     fun move(target: ChessSquare) {
@@ -84,7 +93,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     fun capture(): Captured {
         hide()
         square.piece = null
-        val captured = Captured(type, side, !side)
+        val captured = Captured(type, side, !side, square.board)
         board += captured
         playCaptureSound()
         return captured

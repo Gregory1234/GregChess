@@ -99,9 +99,14 @@ Chess:
     King:
       Name: "King"
       Char: 'k'
-      Material:
+      Item:
         White: WHITE_CONCRETE
         Black: BLACK_CONCRETE
+      Structure:
+        White:
+          - WHITE_CONCRETE
+        Black:
+          - BLACK_CONCRETE
       Sound:
         PickUp: BLOCK_METAL_HIT
         Move: BLOCK_METAL_STEP
@@ -109,9 +114,14 @@ Chess:
     Queen:
       Name: "Queen"
       Char: 'q'
-      Material:
+      Item:
         White: DIAMOND_BLOCK
         Black: NETHERITE_BLOCK
+      Structure:
+        White:
+          - DIAMOND_BLOCK
+        Black:
+          - NETHERITE_BLOCK
       Sound:
         PickUp: ENTITY_WITCH_CELEBRATE
         Move: BLOCK_GLASS_STEP
@@ -119,9 +129,14 @@ Chess:
     Rook:
       Name: "Rook"
       Char: 'r'
-      Material:
+      Item:
         White: IRON_BLOCK
         Black: GOLD_BLOCK
+      Structure:
+        White:
+          - IRON_BLOCK
+        Black:
+          - GOLD_BLOCK
       Sound:
         PickUp: ENTITY_IRON_GOLEM_STEP
         Move: ENTITY_IRON_GOLEM_STEP
@@ -129,9 +144,14 @@ Chess:
     Bishop:
       Name: "Bishop"
       Char: 'b'
-      Material:
+      Item:
         White: POLISHED_DIORITE
         Black: POLISHED_BLACKSTONE
+      Structure:
+        White:
+          - POLISHED_DIORITE
+        Black:
+          - POLISHED_BLACKSTONE
       Sound:
         PickUp: ENTITY_SPIDER_AMBIENT
         Move: ENTITY_SPIDER_STEP
@@ -139,9 +159,14 @@ Chess:
     Knight:
       Name: "Knight"
       Char: 'n'
-      Material:
+      Item:
         White: END_STONE
         Black: BLACKSTONE
+      Structure:
+        White:
+          - END_STONE
+        Black:
+          - BLACKSTONE
       Sound:
         PickUp: ENTITY_HORSE_JUMP
         Move: ENTITY_HORSE_STEP
@@ -149,9 +174,14 @@ Chess:
     Pawn:
       Name: "Pawn"
       Char: 'p'
-      Material:
+      Item:
         White: WHITE_CARPET
         Black: BLACK_CARPET
+      Structure:
+        White:
+          - WHITE_CARPET
+        Black:
+          - BLACK_CARPET
       Sound:
         PickUp: BLOCK_STONE_HIT
         Move: BLOCK_STONE_STEP

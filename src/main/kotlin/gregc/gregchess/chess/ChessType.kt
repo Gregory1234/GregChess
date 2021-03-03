@@ -21,7 +21,10 @@ enum class ChessType(
     PAWN("Chess.Piece.Pawn", 'p', ::pawnMovement, false);
 
     fun getMaterial(config: ConfigManager, side: ChessSide): Material =
-        config.getEnum("$path.Material.${side.standardName}", Material.AIR, Material::class)
+        config.getEnum("$path.Item.${side.standardName}", Material.AIR, Material::class)
+
+    fun getStructure(config: ConfigManager, side: ChessSide): List<Material> =
+        config.getEnumList("$path.Structure.${side.standardName}", Material::class)
 
     companion object {
         fun parseFromChar(config: ConfigManager, c: Char) =

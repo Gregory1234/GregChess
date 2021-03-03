@@ -31,6 +31,26 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath : Strin
         return ret
     }
 
+    fun <T> getList(path: String, type: String, warnMissing: Boolean = true, parser: (String) -> T?): List<T> {
+        val fullPath = (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
+        if (path !in config) {
+            if (warnMissing)
+                plugin.logger.warning("Not found list of $type $fullPath, defaulted to an empty list!")
+            return emptyList()
+        }
+        val str = config.getStringList(path)
+        return str.mapNotNull {
+            val ret = parser(it)
+            if (ret == null) {
+                plugin.logger.warning("${type.capitalize()} $fullPath is in a wrong format, ignored!")
+                null
+            }
+            else
+                ret
+        }
+
+    }
+
     fun getString(path: String) = get(path, "string", path) { chatColor(it) }
 
     fun getChar(path: String) = get(path, "char", ' ') { if (it.length == 1) it[0] else null }
@@ -53,6 +73,15 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath : Strin
         get(path, cl.simpleName?.decapitalize() ?: "enum", default, warnMissing) {
             try {
                 enumValueOf(it.toUpperCase())
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
+
+    inline fun <reified T : Enum<T>> getEnumList(path: String, cl: KClass<T>, warnMissing: Boolean = true) =
+        getList(path, cl.simpleName?.decapitalize() ?: "enum", warnMissing) {
+            try {
+                enumValueOf<T>(it.toUpperCase())
             } catch (e: IllegalArgumentException) {
                 null
             }
