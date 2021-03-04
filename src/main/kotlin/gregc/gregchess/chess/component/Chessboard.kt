@@ -2,7 +2,6 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
-import gregc.gregchess.getBlockAt
 import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -52,11 +51,13 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
         fun getPieceLoc(pos: ChessPosition) = Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
 
-        fun getCapturedLoc(piece: ChessPiece.Captured): Loc { //TODO: this doesn't really do what advertised
+        fun getCapturedLoc(piece: ChessPiece.Captured): Loc {
+            val cap =
+                if (piece in board.capturedPieces) board.capturedPieces.takeWhile { it != piece } else board.capturedPieces
             val pos = if (piece.type == ChessType.PAWN)
-                Pair(board.capturedPieces.count { it.side == piece.side && it.type == ChessType.PAWN }, 1)
+                Pair(cap.count { it.side == piece.side && it.type == ChessType.PAWN }, 1)
             else
-                Pair(board.capturedPieces.count { it.side == piece.side && it.type != ChessType.PAWN }, 0)
+                Pair(cap.count { it.side == piece.side && it.type != ChessType.PAWN }, 0)
             return when (!piece.side) {
                 ChessSide.WHITE -> Loc(4 * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
                 ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * 4 + 2 + 2 * pos.second)
@@ -68,10 +69,6 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             (-1..1).star(-1..1) { i, j ->
                 board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
             }
-        }
-
-        fun clearPiece(pos: ChessPosition) {
-            board.game.world.getBlockAt(getPieceLoc(pos)).type = Material.AIR
         }
     }
 

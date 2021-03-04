@@ -91,8 +91,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     }
 
     fun capture(): Captured {
-        hide()
-        square.piece = null
+        clear()
         val captured = Captured(type, side, !side, square.board)
         board += captured
         playCaptureSound()
@@ -127,5 +126,10 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
         render()
         square.piece = this
         playMoveSound()
+    }
+
+    fun clear() {
+        hide()
+        square.piece = null
     }
 }

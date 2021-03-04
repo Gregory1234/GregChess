@@ -95,7 +95,7 @@ class RequestType<in T>(
         val messageSender = TextComponent(getMessage("Sent.Request") + " ")
         request.sender.spigot().sendMessage(messageSender, messageCancel)
 
-        val messageAccept = TextComponent(config.getString("Message.Request.Cancel"))
+        val messageAccept = TextComponent(config.getString("Message.Request.Accept"))
         messageAccept.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, messages.acceptCommand)
         val messageReceiver = TextComponent(
             getMessage("Received.Request").replace("$1", request.sender.name)

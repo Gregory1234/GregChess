@@ -166,11 +166,10 @@ data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
         board.renderer.fillFloor(pos, floor)
     }
     fun clear() {
-        piece = null
+        piece?.clear()
         bakedMoves = null
         previousMoveMarker = null
         moveMarker = null
         board.renderer.fillFloor(pos, floor)
-        board.renderer.clearPiece(pos)
     }
 }
