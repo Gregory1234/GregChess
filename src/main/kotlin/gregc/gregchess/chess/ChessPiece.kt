@@ -1,10 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.Loc
+import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.getBlockAt
-import gregc.gregchess.playSound
 import org.bukkit.Material
 import org.bukkit.Sound
 
@@ -71,11 +68,14 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     }
 
     fun swap(target: ChessPiece) {
-        val tmp = target.square
-        target.square = square
-        target.hasMoved = true
-        square = tmp
+        target.square.piece = this
         hasMoved = true
+        square.piece = target
+        target.hasMoved = true
+        val tmp = square
+        square = target.square
+        target.square = tmp
+        render()
         playMoveSound()
         target.playMoveSound()
     }

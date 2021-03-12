@@ -276,8 +276,8 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
                         if (dist == 1) {
                             this.piece.swap(rook)
                         } else {
-                            this.piece.move(targetSquare)
                             rook.move(targetRookSquare)
+                            this.piece.move(targetSquare)
                         }
                         name += checkForChecks(this.piece.side, this.piece.square.board)
                         val rookOrigin = rook.square
