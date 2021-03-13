@@ -254,10 +254,7 @@ fun parseDuration(s: String): Duration? {
     return null
 }
 
-@Suppress("unused")
-fun info(vararg vs: Any?) {
-    GregChessInfo.logger.info(vs.joinToString(" ") { it.toString() })
-}
+val glog = GregLogger(GregChessInfo.logger)
 
 object GregChessInfo {
     val server by lazy { Bukkit.getServer() }

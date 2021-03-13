@@ -94,6 +94,7 @@ class ChessEngine(private val plugin: JavaPlugin, val name: String) {
                 moveTime = parseDuration(value) ?: throw CommandException("WrongDurationFormat")
             }
             else -> {
+                glog.io("setoption name $name value $value")
                 process.outputStream.write(("setoption name $name value $value\n").toByteArray())
                 process.outputStream.flush()
             }
@@ -101,17 +102,21 @@ class ChessEngine(private val plugin: JavaPlugin, val name: String) {
     }
 
     fun sendCommand(command: String) {
+        glog.io("isready")
         process.outputStream.write("isready\n".toByteArray())
         process.outputStream.flush()
         executor.submit(Callable {
-            reader.readLine()
+            glog.io(reader.readLine())
         })[moveTime.toSeconds() / 2 + 3, TimeUnit.SECONDS]
+        glog.io(command)
         process.outputStream.write(("$command\n").toByteArray())
         process.outputStream.flush()
     }
 
     private fun readLine() = executor.submit(Callable {
-        reader.readLine()
+        val a = reader.readLine()
+        glog.io(a)
+        a
     })[moveTime.toSeconds() / 2 + 3, TimeUnit.SECONDS]
 
     init {

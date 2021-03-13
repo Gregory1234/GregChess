@@ -21,17 +21,17 @@ class GregChess : JavaPlugin(), Listener {
     private val chess = ChessManager(this, time, config)
 
     private val drawRequest = RequestTypeBuilder<Unit>(config).messagesSimple(
-        "Draw",
-        "/chess draw",
-        "/chess draw"
+            "Draw",
+            "/chess draw",
+            "/chess draw"
     ).validate { chess[it]?.hasTurn() ?: false }.onAccept { (sender, _, _) ->
         chess.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())
     }.register(requests)
 
     private val takebackRequest = RequestTypeBuilder<Unit>(config).messagesSimple(
-        "Takeback",
-        "/chess undo",
-        "/chess undo"
+            "Takeback",
+            "/chess undo",
+            "/chess undo"
     ).validate {
         val game = chess.getGame(it) ?: return@validate false
         (game[!game.currentTurn] as? ChessPlayer.Human)?.player == it
@@ -40,9 +40,9 @@ class GregChess : JavaPlugin(), Listener {
     }.register(requests)
 
     private val duelRequest = RequestTypeBuilder<Pair<ChessArena, ChessGame.Settings>>(config).messagesSimple(
-        "Duel",
-        "/chess duel accept",
-        "/chess duel cancel"
+            "Duel",
+            "/chess duel accept",
+            "/chess duel cancel"
     ).print { (_, settings) -> settings.name }.onAccept { (sender, receiver, t) ->
         chess.startDuel(sender, receiver, t.first, t.second)
     }.register(requests)
@@ -53,7 +53,7 @@ class GregChess : JavaPlugin(), Listener {
         saveDefaultConfig()
         chess.start()
         requests.start()
-        addCommand(config,"chess") { player, args ->
+        addCommand(config, "chess") { player, args ->
             commandRequireArgumentsMin(args, 1)
             when (args[0].toLowerCase()) {
                 "duel" -> {
@@ -144,7 +144,7 @@ class GregChess : JavaPlugin(), Listener {
                     try {
                         game.board[ChessPosition.parseFromString(args[2])]?.capture()
                         game.board[ChessPosition.parseFromString(args[1])]
-                            ?.move(game.board.getSquare(ChessPosition.parseFromString(args[2]))!!)
+                                ?.move(game.board.getSquare(ChessPosition.parseFromString(args[2]))!!)
                         game.board.updateMoves()
                     } catch (e: IllegalArgumentException) {
                         throw CommandException(e.toString())
@@ -240,16 +240,25 @@ class GregChess : JavaPlugin(), Listener {
                         throw CommandException("NotHuman.Opponent")
                     takebackRequest.simpleCall(Request(player, opponent.player, Unit))
                 }
+                "debug" -> {
+                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequireArguments(args, 2)
+                    try {
+                        glog.level = GregLevel.valueOf(args[1])
+                    } catch (e: IllegalArgumentException) {
+                        throw CommandException(e.toString())
+                    }
+                }
                 else -> throw CommandException("WrongArgument")
             }
         }
         addCommandTab("chess") { s, args ->
             fun <T> ifPermission(vararg list: T) =
-                if (s.hasPermission("greg-chess.debug")) list.map { it.toString() } else emptyList()
+                    if (s.hasPermission("greg-chess.debug")) list.map { it.toString() } else emptyList()
 
             when (args.size) {
                 1 -> listOf("duel", "stockfish", "resign", "leave", "draw", "save", "spectate", "undo") +
-                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci", "reload")
+                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci", "reload", "debug")
                 2 -> when (args[0]) {
                     "duel" -> null
                     "spawn" -> ifPermission(*ChessSide.values())

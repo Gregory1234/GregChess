@@ -5,7 +5,12 @@ import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Material
 import org.bukkit.Sound
 
-class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSquare, hasMoved: Boolean = false) {
+class ChessPiece(
+    val type: ChessType,
+    val side: ChessSide,
+    initSquare: ChessSquare,
+    hasMoved: Boolean = false
+) {
     var square: ChessSquare = initSquare
         private set(v) {
             hide()
@@ -23,7 +28,12 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     private val config
         get() = board.game.config
 
-    class Captured(val type: ChessType, val side: ChessSide, val by: ChessSide, val board: Chessboard) {
+    class Captured(
+        val type: ChessType,
+        val side: ChessSide,
+        val by: ChessSide,
+        val board: Chessboard
+    ) {
 
         private val config
             get() = board.game.config
@@ -40,6 +50,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
             }
         }
     }
+
     private val loc
         get() = board.renderer.getPieceLoc(pos)
 
@@ -60,6 +71,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     }
 
     fun move(target: ChessSquare) {
+        glog.mid("Moved", type, "from", pos, "to", target.pos)
         target.piece = this
         square.piece = null
         square = target
@@ -68,6 +80,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     }
 
     fun swap(target: ChessPiece) {
+        glog.mid("Swapped", type, "at", pos, "with", target.type, "at", target.pos)
         target.square.piece = this
         hasMoved = true
         square.piece = target
@@ -91,6 +104,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     }
 
     fun capture(): Captured {
+        glog.mid("Captured", type, "at", pos)
         clear()
         val captured = Captured(type, side, !side, square.board)
         board += captured
@@ -99,6 +113,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
     }
 
     fun promote(promotion: ChessType) {
+        glog.mid("Promoted", type, "at", pos, "into", promotion)
         hide()
         square.piece = ChessPiece(promotion, side, square)
     }
@@ -121,7 +136,7 @@ class ChessPiece(val type: ChessType, val side: ChessSide, initSquare: ChessSqua
         square.piece = piece
     }
 
-    fun resurrect(captured: Captured){
+    fun resurrect(captured: Captured) {
         board -= captured
         render()
         square.piece = this

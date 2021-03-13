@@ -2,7 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.TimeManager
 import gregc.gregchess.chatColor
-import gregc.gregchess.info
 import gregc.gregchess.seconds
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
