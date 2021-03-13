@@ -38,13 +38,16 @@ class ChessPiece(
         private val config
             get() = board.game.config
 
-        fun render(loc: Loc) {
+        private val loc
+            get() = board.renderer.getCapturedLoc(this)
+
+        fun render() {
             type.getStructure(config, side).forEachIndexed { i, m ->
                 board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
             }
         }
 
-        fun hide(loc: Loc) {
+        fun hide() {
             type.getStructure(config, side).forEachIndexed { i, _ ->
                 board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
             }

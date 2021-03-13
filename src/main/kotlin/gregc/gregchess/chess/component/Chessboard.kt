@@ -157,6 +157,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
     override fun clear() {
         boardState.values.forEach { it.clear() }
+        capturedPieces.forEach { it.hide() }
         for (i in 0 until 8 * 5) {
             for (j in 0 until 8 * 5) {
                 game.world.getBlockAt(i, 100, j).type = Material.AIR
@@ -168,13 +169,13 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
 
     operator fun plusAssign(captured: ChessPiece.Captured) {
-        captured.render(renderer.getCapturedLoc(captured))
+        captured.render()
         capturedPieces += captured
     }
 
     operator fun minusAssign(captured: ChessPiece.Captured) {
         capturedPieces -= captured
-        captured.hide(renderer.getCapturedLoc(captured))
+        captured.hide()
     }
 
     fun getMoves(pos: ChessPosition) = boardState[pos]?.bakedMoves.orEmpty()
@@ -215,7 +216,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
 
     fun setFromFEN(fen: String) {
-        capturedPieces.forEach { it.hide(renderer.getCapturedLoc(it)) }
+        capturedPieces.forEach { it.hide() }
         capturedPieces.clear()
         boardState.values.forEach { it.clear() }
         var x = 0
