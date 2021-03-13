@@ -449,7 +449,8 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         lastMove?.let {
             it.clear()
             val hash = getBoardHash()
-            boardHashes[hash.hashCode()] = boardHashes[hash.hashCode()]!! - 1
+            if (boardHashes[hash.hashCode()] != null)
+                boardHashes[hash.hashCode()] = boardHashes[hash.hashCode()]!! - 1
             it.undo()
             if (game.currentTurn == ChessSide.WHITE)
                 fullMoveCounter--

@@ -3,9 +3,15 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Material
-import kotlin.math.abs
+import kotlin.math.*
 
-data class MoveData(val piece: ChessPiece, val origin: ChessSquare, val target: ChessSquare, val name: String, inline val undo: () -> Unit){
+data class MoveData(
+    val piece: ChessPiece,
+    val origin: ChessSquare,
+    val target: ChessSquare,
+    val name: String,
+    inline val undo: () -> Unit
+) {
 
     fun render() {
         origin.previousMoveMarker = Material.BROWN_CONCRETE
@@ -22,17 +28,21 @@ data class MoveData(val piece: ChessPiece, val origin: ChessSquare, val target: 
     }
 }
 
-sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
+sealed class ChessMove(
+    val piece: ChessPiece,
+    val target: ChessSquare,
+    val display: ChessSquare = target
+) {
     val origin = piece.square
 
     fun render() {
-        target.moveMarker = floor
-        target.render()
+        display.moveMarker = floor
+        display.render()
     }
 
     fun clear() {
-        target.moveMarker = null
-        target.render()
+        display.moveMarker = null
+        display.render()
     }
 
     abstract val isValid: Boolean
@@ -53,6 +63,7 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         val defensive: Boolean = true,
         override val promotion: ChessType? = null
     ) : ChessMove(piece, target), Promoting {
+
         override val isValid: Boolean
             get() = true
 
@@ -142,7 +153,8 @@ sealed class ChessMove(val piece: ChessPiece, val target: ChessSquare) {
         }
     }
 
-    abstract class Special(piece: ChessPiece, target: ChessSquare) : ChessMove(piece, target) {
+    abstract class Special(piece: ChessPiece, display: ChessSquare, target: ChessSquare) :
+        ChessMove(piece, display, target) {
         override val floor
             get() = Material.BLUE_CONCRETE
     }
@@ -153,7 +165,9 @@ fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
     val board = target.board
     val pieces = board.pieces.filter { it.side == piece.side && it.type == piece.type }
     val consideredPieces =
-        pieces.filter { it.square.bakedMoves.orEmpty().any { it.target == target && board.run { it.isLegal } } }
+        pieces.filter {
+            it.square.bakedMoves.orEmpty().any { it.target == target && board.run { it.isLegal } }
+        }
     return when {
         consideredPieces.size == 1 -> ""
         consideredPieces.count { it.pos.file == piece.pos.file } == 1 -> piece.pos.fileStr
@@ -165,8 +179,10 @@ fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
 fun checkForChecks(side: ChessSide, board: Chessboard): String {
     board.updateMoves()
     return when {
-        board.piecesOf(!side).flatMap { board.run {getMoves(it.pos).filter {it.isLegal}} }.isEmpty() -> "#"
-        board.checkingMoves(side, board.piecesOf(!side).first { it.type == ChessType.KING }.square).isNotEmpty() -> "+"
+        board.piecesOf(!side).flatMap { board.run { getMoves(it.pos).filter { it.isLegal } } }
+            .isEmpty() -> "#"
+        board.checkingMoves(side, board.piecesOf(!side).first { it.type == ChessType.KING }.square)
+            .isNotEmpty() -> "+"
         else -> ""
     }
 }
@@ -174,7 +190,13 @@ fun checkForChecks(side: ChessSide, board: Chessboard): String {
 fun jumpTo(piece: ChessPiece, target: ChessSquare): List<ChessMove> =
     when (target.piece) {
         null -> listOf(ChessMove.Normal(piece, target))
-        else -> listOf(ChessMove.Attack(piece, target, defensive = piece.side == target.piece?.side))
+        else -> listOf(
+            ChessMove.Attack(
+                piece,
+                target,
+                defensive = piece.side == target.piece?.side
+            )
+        )
     }
 
 fun directionRay(piece: ChessPiece, dir: Pair<Int, Int>): List<ChessMove> {
@@ -193,7 +215,13 @@ fun directionRay(piece: ChessPiece, dir: Pair<Int, Int>): List<ChessMove> {
             //TODO: ChessPiece.Type.KING shouldn't be mentioned here.
             val target = board[p]
             if (target?.type == ChessType.KING && target.side != piece.side) {
-                add(ChessMove.Attack(piece, target.square, potentialBlocks = potentialBlocks.toList()))
+                add(
+                    ChessMove.Attack(
+                        piece,
+                        target.square,
+                        potentialBlocks = potentialBlocks.toList()
+                    )
+                )
                 potentialBlocks += p
                 p += dir
             } else
@@ -234,67 +262,74 @@ fun queenMovement(piece: ChessPiece) =
     (rotationsOf(1, 0) + rotationsOf(1, 1)).flatMap { directionRay(piece, it) }
 
 fun kingMovement(piece: ChessPiece): List<ChessMove> {
+    class Castles(
+        piece: ChessPiece,
+        val rook: ChessPiece,
+        target: ChessSquare,
+        val rookTargetSquare: ChessSquare,
+        targetDisplay: Boolean
+    ) : ChessMove.Special(
+        piece,
+        target,
+        if (targetDisplay) target else rook.square
+    ) {
+        override val isValid: Boolean
+            get() {
+                return (between(piece.pos.file, target.pos.file) + listOf(piece.pos.file, target.pos.file))
+                    .mapNotNull { origin.board.getSquare(piece.pos.copy(file = it)) }
+                    .all { origin.board.checkingPotentialMoves(!piece.side, it).isEmpty() }
+            }
+
+        override val canAttack
+            get() = false
+
+        override fun execute(config: ConfigManager): MoveData {
+            var name = if (rook.pos.file < origin.pos.file) "O-O-O" else "O-O"
+            val rookOrigin = rook.square
+            ChessPiece.autoMove(mapOf(rook to rookTargetSquare, piece to target))
+            name += checkForChecks(piece.side, origin.board)
+            val undo = {
+                ChessPiece.autoMove(mapOf(rook to rookOrigin, piece to origin))
+                origin.board.undoMove()
+                piece.force(false)
+                rook.force(false)
+            }
+            return MoveData(piece, origin, target, name, undo)
+        }
+    }
+
     val board = piece.square.board
-    val origin = piece.pos
-    val neighbours = origin.neighbours().mapNotNull { board.getSquare(it) }.flatMap { jumpTo(piece, it) }
+    val neighbours =
+        piece.pos.neighbours().mapNotNull { board.getSquare(it) }.flatMap { jumpTo(piece, it) }
     val castles = mutableListOf<ChessMove>()
     if (!piece.hasMoved) {
         for (rook in board.pieces.filter { it.type == ChessType.ROOK }) {
-            if (!rook.hasMoved && rook.side == piece.side && rook.pos.rank == origin.rank) {
-                val between = between(origin.file, rook.pos.file).map { origin.copy(file = it) }
-
-                if (!between.all { board[it] == null }) continue
-
-                val dist = abs(origin.file - rook.pos.file)
-
-                val newFile: Int
-                val newRookFile: Int
-                if (dist == 1) {
-                    newFile = rook.pos.file
-                    newRookFile = origin.file
-                } else if (dist > 1) {
-                    newFile = origin.file.towards(rook.pos.file, 2)
-                    newRookFile = origin.file.towards(rook.pos.file, 1)
-                } else
-                    continue
-
-                val targetSquare = board.getSquare(origin.copy(file = newFile)) ?: continue
-                val targetRookSquare = board.getSquare(origin.copy(file = newRookFile)) ?: continue
-
-                castles.add(object : ChessMove.Special(piece, targetSquare) {
-                    override val isValid: Boolean
-                        get() {
-                            return listOf(piece.square, targetRookSquare, targetSquare)
-                                .all { piece.square.board.checkingPotentialMoves(!piece.side, it).isEmpty() }
-                        }
-
-                    override val canAttack
-                        get() = false
-
-                    override fun execute(config: ConfigManager): MoveData {
-                        var name = if (newFile < this.piece.pos.file) "O-O-O" else "O-O"
-                        if (dist == 1) {
-                            this.piece.swap(rook)
-                        } else {
-                            rook.move(targetRookSquare)
-                            this.piece.move(targetSquare)
-                        }
-                        name += checkForChecks(this.piece.side, this.piece.square.board)
-                        val rookOrigin = rook.square
-                        val undo = {
-                            if (dist == 1) {
-                                this.piece.swap(rook)
-                            } else {
-                                this.piece.move(this.origin)
-                                rook.move(rookOrigin)
-                            }
-                            this.piece.square.board.undoMove()
-                            this.piece.force(false)
-                            rook.force(false)
-                        }
-                        return MoveData(this.piece, this.origin, this.target, name, undo)
-                    }
-                })
+            if (!rook.hasMoved && rook.side == piece.side && rook.pos.rank == piece.pos.rank) {
+                if (rook.pos.file < piece.pos.file) { // Queenside
+                    val blocking = between(min(rook.pos.file, 1), max(4, piece.pos.file))
+                        .mapNotNull { board[piece.pos.copy(file = it)] }
+                    if (blocking.any { it !in listOf(rook, piece) }) continue
+                    val targetSquare = board.getSquare(piece.pos.copy(file = 2)) ?: continue
+                    val rookTargetSquare = board.getSquare(piece.pos.copy(file = 3)) ?: continue
+                    castles.add(
+                        Castles(
+                            piece, rook, targetSquare, rookTargetSquare,
+                            piece.pos.file == 4 && rook.pos.file == 0
+                        )
+                    )
+                } else { // Kingside
+                    val blocking = between(min(piece.pos.file, 4), max(7, rook.pos.file))
+                        .mapNotNull { board[piece.pos.copy(file = it)] }
+                    if (blocking.any { it !in listOf(rook, piece) }) continue
+                    val targetSquare = board.getSquare(piece.pos.copy(file = 6)) ?: continue
+                    val rookTargetSquare = board.getSquare(piece.pos.copy(file = 5)) ?: continue
+                    castles.add(
+                        Castles(
+                            piece, rook, targetSquare, rookTargetSquare,
+                            piece.pos.file == 4 && rook.pos.file == 7
+                        )
+                    )
+                }
             }
         }
     }

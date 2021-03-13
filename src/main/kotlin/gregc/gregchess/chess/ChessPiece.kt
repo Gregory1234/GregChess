@@ -79,20 +79,6 @@ class ChessPiece(
         playMoveSound()
     }
 
-    fun swap(target: ChessPiece) {
-        glog.mid("Swapped", type, "at", pos, "with", target.type, "at", target.pos)
-        target.square.piece = this
-        hasMoved = true
-        square.piece = target
-        target.hasMoved = true
-        val tmp = square
-        square = target.square
-        target.square = tmp
-        render()
-        playMoveSound()
-        target.playMoveSound()
-    }
-
     fun pickUp() {
         hide()
         playPickUpSound()
@@ -146,5 +132,21 @@ class ChessPiece(
     fun clear() {
         hide()
         square.piece = null
+    }
+
+    companion object {
+        fun autoMove(moves: Map<ChessPiece, ChessSquare>){
+            moves.forEach { (piece, target) ->
+                glog.mid("Auto-moved", piece.type, "from", piece.pos, "to", target.pos)
+                piece.hasMoved = true
+                piece.square.piece = null
+                piece.square = target
+            }
+            moves.forEach { (piece, target) ->
+                target.piece = piece
+                piece.render()
+                piece.playMoveSound()
+            }
+        }
     }
 }

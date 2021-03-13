@@ -32,7 +32,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             val newSquare = game.board.getSquare(loc) ?: return
             val piece = held ?: return
             val moves = heldMoves ?: return
-            if (newSquare != piece.square && newSquare !in moves.map { it.target }) return
+            if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
             piece.square.moveMarker = null
             piece.square.render()
             moves.forEach { it.clear() }
@@ -42,7 +42,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
                 piece.placeDown()
                 return
             }
-            val chosenMoves = moves.filter { it.target == newSquare }
+            val chosenMoves = moves.filter { it.display == newSquare }
             if (chosenMoves.size != 1) {
                 player.openInventory(PawnPromotionScreen(piece, this, chosenMoves.mapNotNull {
                     val p = (it as? ChessMove.Promoting)?.promotion
@@ -74,7 +74,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
                 val target = ChessPosition.parseFromString(str.drop(2).take(2))
                 val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromStandardChar(it) }
                 val move = game.board.getMoves(origin)
-                    .first { it.target.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
+                    .first { it.display.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
                 finishMove(move)
             }, { game.stop(ChessGame.EndReason.Error(it)) })
 
