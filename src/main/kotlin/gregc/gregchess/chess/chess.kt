@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-class ChessArena(name: String) : Arena(name) {
+class ChessArena(config: ConfigManager, name: String) : Arena(config, name, "Chess.ResourcePack") {
     class WorldGen : ChunkGenerator() {
         override fun generateChunkData(
             world: World,

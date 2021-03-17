@@ -3,17 +3,16 @@ package gregc.gregchess
 import java.util.logging.Logger
 
 enum class GregLevel {
-    LOW_DEBUG, MID_DEBUG, HIGH_DEBUG, IO_DEBUG, WARNING, NONE
+    LOW_DEBUG, MID_DEBUG, HIGH_DEBUG, IO_DEBUG, WARNING
 }
 
 class GregLogger(private val logger: Logger) {
-    var level: GregLevel = GregLevel.NONE
+    var level: GregLevel = GregLevel.WARNING
     fun log(level: GregLevel, vararg vs: Any?) {
-        if (this.level <= level) {
-            if (level >= GregLevel.WARNING)
-                logger.warning(vs.joinToString(" ") { it.toString() })
-            else
-                logger.info(vs.joinToString(" ") { it.toString() })
+        if (level >= GregLevel.WARNING)
+            logger.warning(vs.joinToString(" ") { it.toString() })
+        else if (this.level <= level) {
+            logger.info(vs.joinToString(" ") { it.toString() })
         }
     }
     fun low(vararg vs: Any?) = log(GregLevel.LOW_DEBUG, *vs)

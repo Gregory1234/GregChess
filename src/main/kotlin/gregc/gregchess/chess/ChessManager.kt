@@ -71,7 +71,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
     fun start() {
         plugin.server.pluginManager.registerEvents(this, plugin)
         plugin.config.getStringList("ChessArenas").forEach {
-            arenas += ChessArena(it)
+            arenas += ChessArena(config, it)
         }
         Chessboard.Settings.init(settingsManager)
         ChessClock.Settings.init(settingsManager)
@@ -98,7 +98,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
             arenas.remove(arena)
         }
         addedArenas.forEach { name ->
-            arenas += ChessArena(name)
+            arenas += ChessArena(config, name)
         }
     }
 

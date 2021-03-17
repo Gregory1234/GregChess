@@ -5,7 +5,7 @@ import java.lang.Exception
 import java.lang.IllegalArgumentException
 import kotlin.reflect.KClass
 
-class ConfigManager(private val plugin: JavaPlugin, private val rootPath : String = "") {
+class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String = "") {
 
     private val config
         get() = plugin.config.getConfigurationSection(rootPath)!!
@@ -15,9 +15,16 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath : Strin
         return ConfigManager(plugin, section.currentPath!!)
     }
 
-    fun <T> get(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?): T {
+    fun <T> get(
+        path: String,
+        type: String,
+        default: T,
+        warnMissing: Boolean = true,
+        parser: (String) -> T?
+    ): T {
         val str = config.getString(path)
-        val fullPath = (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
+        val fullPath =
+            (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
         if (str == null) {
             if (warnMissing)
                 plugin.logger.warning("Not found $type $fullPath, defaulted to $default!")
@@ -31,8 +38,14 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath : Strin
         return ret
     }
 
-    fun <T> getList(path: String, type: String, warnMissing: Boolean = true, parser: (String) -> T?): List<T> {
-        val fullPath = (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
+    fun <T> getList(
+        path: String,
+        type: String,
+        warnMissing: Boolean = true,
+        parser: (String) -> T?
+    ): List<T> {
+        val fullPath =
+            (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
         if (path !in config) {
             if (warnMissing)
                 plugin.logger.warning("Not found list of $type $fullPath, defaulted to an empty list!")
@@ -44,8 +57,7 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath : Strin
             if (ret == null) {
                 plugin.logger.warning("${type.capitalize()} $fullPath is in a wrong format, ignored!")
                 null
-            }
-            else
+            } else
                 ret
         }
 
@@ -69,7 +81,12 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath : Strin
 
     fun getError(name: String) = get("Message.Error.$name", "error", name) { chatColor(it) }
 
-    inline fun <reified T : Enum<T>> getEnum(path: String, default: T, cl: KClass<T>, warnMissing: Boolean = true) =
+    inline fun <reified T : Enum<T>> getEnum(
+        path: String,
+        default: T,
+        cl: KClass<T>,
+        warnMissing: Boolean = true
+    ) =
         get(path, cl.simpleName?.decapitalize() ?: "enum", default, warnMissing) {
             try {
                 enumValueOf(it.toUpperCase())
@@ -78,7 +95,11 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath : Strin
             }
         }
 
-    inline fun <reified T : Enum<T>> getEnumList(path: String, cl: KClass<T>, warnMissing: Boolean = true) =
+    inline fun <reified T : Enum<T>> getEnumList(
+        path: String,
+        cl: KClass<T>,
+        warnMissing: Boolean = true
+    ) =
         getList(path, cl.simpleName?.decapitalize() ?: "enum", warnMissing) {
             try {
                 enumValueOf<T>(it.toUpperCase())
@@ -86,4 +107,9 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath : Strin
                 null
             }
         }
+
+    fun getOptionalString(path: String): String? =
+        get(path, "optional string", null, false) { chatColor(it) }
+
+    fun getHexString(path: String) = get(path, "hex string", null) { hexToBytes(it) }
 }

@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
+import java.lang.IllegalArgumentException
 import java.time.Duration
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
@@ -66,7 +67,11 @@ fun Location.playSound(s: Sound, volume: Float = 3.0f, pitch: Float = 1.0f) =
     world?.playSound(this, s, volume, pitch)
 
 
-abstract class Arena(val name: String) {
+abstract class Arena(
+    val config: ConfigManager,
+    val name: String,
+    val resourcePackPath: String? = null
+) {
     abstract val defaultData: PlayerData
     abstract val spectatorData: PlayerData
     abstract val worldGen: ChunkGenerator
@@ -96,7 +101,8 @@ abstract class Arena(val name: String) {
         p.playerData = defaultData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
-        p.sendMessage(chatColor("&eTeleported to $name."))
+        p.sendMessage(config.getString("Message.Teleported").replace("$1", name))
+        setResourcePack(p)
     }
 
     fun teleportSpectator(p: Player) {
@@ -104,12 +110,33 @@ abstract class Arena(val name: String) {
         p.playerData = spectatorData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
-        p.sendMessage(chatColor("&eTeleported to $name."))
+        p.sendMessage(config.getString("Message.Teleported").replace("$1", name))
+        setResourcePack(p)
+    }
+
+    private fun setResourcePack(p: Player) {
+        resourcePackPath?.let {
+            glog.io(config.getOptionalString(resourcePackPath))
+            config.getOptionalString(resourcePackPath)?.let {
+                val h = config.getHexString(resourcePackPath + "Hash")
+                if (h == null)
+                    p.setResourcePack(it)
+                else
+                    p.setResourcePack(it, h)
+            }
+        }
     }
 
     fun exit(p: Player) {
         p.playerData = data[p.uniqueId]!!
         data.remove(p.uniqueId)
+        resourcePackPath?.let {
+            glog.io(config.getString("EmptyResourcePack"))
+            p.setResourcePack(
+                config.getString("EmptyResourcePack"),
+                hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
+            )
+        }
     }
 
     fun isEmpty() = world.players.isEmpty()
@@ -128,7 +155,11 @@ abstract class Arena(val name: String) {
     }
 }
 
-fun JavaPlugin.addCommand(config: ConfigManager, name: String, command: (CommandSender, Array<String>) -> Unit) {
+fun JavaPlugin.addCommand(
+    config: ConfigManager,
+    name: String,
+    command: (CommandSender, Array<String>) -> Unit
+) {
     getCommand(name)?.setExecutor { sender, _, _, args ->
         try {
             command(sender, args)
@@ -140,7 +171,10 @@ fun JavaPlugin.addCommand(config: ConfigManager, name: String, command: (Command
     }
 }
 
-fun JavaPlugin.addCommandTab(name: String, tabCompleter: (CommandSender, Array<String>) -> List<String>?) {
+fun JavaPlugin.addCommandTab(
+    name: String,
+    tabCompleter: (CommandSender, Array<String>) -> List<String>?
+) {
     getCommand(name)?.setTabCompleter { sender, _, _, args ->
         tabCompleter(sender, args)?.toMutableList()
     }
@@ -214,6 +248,19 @@ fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<
 
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 
+fun hexToBytes(hex: String): ByteArray? {
+    if (hex.length % 2 == 1) return null
+    val ret = ByteArray(hex.length / 2)
+    try {
+        for (i in hex.indices step 2) {
+            ret[i / 2] = hex.substring(i..i + 1).toInt(16).toByte()
+        }
+    } catch (e: IllegalArgumentException) {
+        return null
+    }
+    return ret
+}
+
 fun Duration.toTicks(): Long = toMillis() / 50
 
 val Int.seconds: Duration
@@ -235,7 +282,8 @@ fun parseDuration(s: String): Duration? {
     val match1 = Regex("""^(-|\+|)(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(s)
     if (match1 != null) {
         val amount =
-            (match1.groupValues[2].toDoubleOrNull() ?: return null) * (if (match1.groupValues[1] == "-") -1 else 1)
+            (match1.groupValues[2].toDoubleOrNull()
+                ?: return null) * (if (match1.groupValues[1] == "-") -1 else 1)
         return when (match1.groupValues[3]) {
             "s" -> amount.seconds
             "ms" -> amount.milliseconds

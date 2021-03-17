@@ -3,6 +3,7 @@ ChessArenas:
   arena1
 
 Message:
+  Teleported: "&eTeleported to $1."
   CopyFEN: "Copy FEN"
   ChooseSettings: "Choose settings"
   PawnPromotion: "Pawn promotion"
