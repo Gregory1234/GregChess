@@ -29,9 +29,10 @@ class SettingsManager(val plugin: JavaPlugin, val config: ConfigManager) {
             return presets.getValues(false).mapNotNull { (key, value) ->
                 if (value !is ConfigurationSection) return@mapNotNull null
                 val relaxedInsufficientMaterial = value.getBoolean("Relaxed")
+                val simpleCastling = value.getBoolean("SimpleCastling")
                 val components = value.getValues(false)
                     .mapNotNull { (k, v) -> componentChoice[k]?.get(v.toString()) }
-                Pair(key, ChessGame.Settings(key, relaxedInsufficientMaterial, components))
+                Pair(key, ChessGame.Settings(key, relaxedInsufficientMaterial, simpleCastling, components))
             }.toMap()
         }
 

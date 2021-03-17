@@ -275,7 +275,10 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
     ) {
         override val isValid: Boolean
             get() {
-                return (between(piece.pos.file, target.pos.file) + listOf(piece.pos.file, target.pos.file))
+                return (between(piece.pos.file, target.pos.file) + listOf(
+                    piece.pos.file,
+                    target.pos.file
+                ))
                     .mapNotNull { origin.board.getSquare(piece.pos.copy(file = it)) }
                     .all { origin.board.checkingPotentialMoves(!piece.side, it).isEmpty() }
             }
@@ -299,36 +302,56 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
     }
 
     val board = piece.square.board
+    val settings = board.game.settings
     val neighbours =
         piece.pos.neighbours().mapNotNull { board.getSquare(it) }.flatMap { jumpTo(piece, it) }
     val castles = mutableListOf<ChessMove>()
     if (!piece.hasMoved) {
         for (rook in board.pieces.filter { it.type == ChessType.ROOK }) {
             if (!rook.hasMoved && rook.side == piece.side && rook.pos.rank == piece.pos.rank) {
-                if (rook.pos.file < piece.pos.file) { // Queenside
-                    val blocking = between(min(rook.pos.file, 1), max(4, piece.pos.file))
+                if (settings.simpleCastling) {
+                    val blocking = between(rook.pos.file, piece.pos.file)
                         .mapNotNull { board[piece.pos.copy(file = it)] }
-                    if (blocking.any { it !in listOf(rook, piece) }) continue
-                    val targetSquare = board.getSquare(piece.pos.copy(file = 2)) ?: continue
-                    val rookTargetSquare = board.getSquare(piece.pos.copy(file = 3)) ?: continue
-                    castles.add(
-                        Castles(
-                            piece, rook, targetSquare, rookTargetSquare,
-                            piece.pos.file == 4 && rook.pos.file == 0
+                    if (blocking.isNotEmpty()) continue
+                    if (rook.pos.file - piece.pos.file in listOf(-1, 1)) {
+                        castles.add(Castles(piece, rook, rook.square, piece.square, true))
+                    } else {
+                        val targetSquare =
+                            board.getSquare(
+                                piece.pos.copy(file = piece.pos.file.towards(rook.pos.file, 2))
+                            ) ?: continue
+                        val rookTargetSquare =
+                            board.getSquare(
+                                piece.pos.copy(file = piece.pos.file.towards(rook.pos.file, 1))
+                            ) ?: continue
+                        castles.add(Castles(piece, rook, targetSquare, rookTargetSquare, true))
+                    }
+                } else {
+                    if (rook.pos.file < piece.pos.file) { // Queenside
+                        val blocking = between(min(rook.pos.file, 1), max(4, piece.pos.file))
+                            .mapNotNull { board[piece.pos.copy(file = it)] }
+                        if (blocking.any { it !in listOf(rook, piece) }) continue
+                        val targetSquare = board.getSquare(piece.pos.copy(file = 2)) ?: continue
+                        val rookTargetSquare = board.getSquare(piece.pos.copy(file = 3)) ?: continue
+                        castles.add(
+                            Castles(
+                                piece, rook, targetSquare, rookTargetSquare,
+                                piece.pos.file == 4 && rook.pos.file == 0
+                            )
                         )
-                    )
-                } else { // Kingside
-                    val blocking = between(min(piece.pos.file, 4), max(7, rook.pos.file))
-                        .mapNotNull { board[piece.pos.copy(file = it)] }
-                    if (blocking.any { it !in listOf(rook, piece) }) continue
-                    val targetSquare = board.getSquare(piece.pos.copy(file = 6)) ?: continue
-                    val rookTargetSquare = board.getSquare(piece.pos.copy(file = 5)) ?: continue
-                    castles.add(
-                        Castles(
-                            piece, rook, targetSquare, rookTargetSquare,
-                            piece.pos.file == 4 && rook.pos.file == 7
+                    } else { // Kingside
+                        val blocking = between(min(piece.pos.file, 4), max(7, rook.pos.file))
+                            .mapNotNull { board[piece.pos.copy(file = it)] }
+                        if (blocking.any { it !in listOf(rook, piece) }) continue
+                        val targetSquare = board.getSquare(piece.pos.copy(file = 6)) ?: continue
+                        val rookTargetSquare = board.getSquare(piece.pos.copy(file = 5)) ?: continue
+                        castles.add(
+                            Castles(
+                                piece, rook, targetSquare, rookTargetSquare,
+                                piece.pos.file == 4 && rook.pos.file == 7
+                            )
                         )
-                    )
+                    }
                 }
             }
         }

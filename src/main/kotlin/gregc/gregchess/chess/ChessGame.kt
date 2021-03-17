@@ -283,6 +283,7 @@ class ChessGame(
     data class Settings(
         val name: String,
         val relaxedInsufficientMaterial: Boolean,
+        val simpleCastling: Boolean,
         val components: Collection<ComponentSettings>
     )
 
