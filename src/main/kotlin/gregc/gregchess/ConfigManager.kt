@@ -27,12 +27,12 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String
             (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
         if (str == null) {
             if (warnMissing)
-                plugin.logger.warning("Not found $type $fullPath, defaulted to $default!")
+                glog.warn("Not found $type $fullPath, defaulted to $default!")
             return default
         }
         val ret = parser(str)
         if (ret == null) {
-            plugin.logger.warning("${type.capitalize()} $fullPath is in a wrong format, defaulted to $default!")
+            glog.warn("${type.capitalize()} $fullPath is in a wrong format, defaulted to $default!")
             return default
         }
         return ret
@@ -48,14 +48,14 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String
             (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
         if (path !in config) {
             if (warnMissing)
-                plugin.logger.warning("Not found list of $type $fullPath, defaulted to an empty list!")
+                glog.warn("Not found list of $type $fullPath, defaulted to an empty list!")
             return emptyList()
         }
         val str = config.getStringList(path)
         return str.mapNotNull {
             val ret = parser(it)
             if (ret == null) {
-                plugin.logger.warning("${type.capitalize()} $fullPath is in a wrong format, ignored!")
+                glog.warn("${type.capitalize()} $fullPath is in a wrong format, ignored!")
                 null
             } else
                 ret
@@ -72,7 +72,6 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String
             try {
                 chatColor(it.format(*args))
             } catch (e: Exception) {
-                plugin.logger.warning(e.stackTraceToString())
                 null
             }
         }

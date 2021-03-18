@@ -90,21 +90,31 @@ class ChessGame(
     }
 
     fun start() {
-        scoreboard += object : GameProperty(config.getString("Component.Scoreboard.Preset")) {
-            override fun invoke() = settings.name
+        try {
+            scoreboard += object : GameProperty(config.getString("Component.Scoreboard.Preset")) {
+                override fun invoke() = settings.name
+            }
+            scoreboard += object : PlayerProperty(config.getString("Component.Scoreboard.Player")) {
+                override fun invoke(s: ChessSide) =
+                    config.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
+            }
+            realPlayers.forEach(arena::teleport)
+            black.sendTitle("", config.getString("Title.YouArePlayingAs.Black"))
+            white.sendTitle(config.getString("Title.YourTurn"), config.getString("Title.YouArePlayingAs.White"))
+            white.sendMessage(config.getString("Message.YouArePlayingAs.White"))
+            black.sendMessage(config.getString("Message.YouArePlayingAs.Black"))
+            components.forEach { it.start() }
+            scoreboard.start()
+            startTurn()
+        } catch (e : Exception) {
+            arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
+            realPlayers.forEach { it.sendMessage(config.getError("TeleportFailed")) }
+            stopping = true
+            components.forEach { it.stop() }
+            scoreboard.stop()
+            components.forEach { it.clear() }
+            throw e
         }
-        scoreboard += object : PlayerProperty(config.getString("Component.Scoreboard.Player")) {
-            override fun invoke(s: ChessSide) =
-                config.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
-        }
-        realPlayers.forEach(arena::teleport)
-        black.sendTitle("", config.getString("Title.YouArePlayingAs.Black"))
-        white.sendTitle(config.getString("Title.YourTurn"), config.getString("Title.YouArePlayingAs.White"))
-        white.sendMessage(config.getString("Message.YouArePlayingAs.White"))
-        black.sendMessage(config.getString("Message.YouArePlayingAs.Black"))
-        components.forEach { it.start() }
-        scoreboard.start()
-        startTurn()
     }
 
     fun spectate(p: Player) {

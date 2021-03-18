@@ -61,6 +61,7 @@ Message:
     ClockNotFound: "&cYour game has no clock!"
     NothingToTakeback: "&cThere are no moves to takeback!"
     WrongDurationFormat: "&cWrong duration format!"
+    TeleportFailed: "&cTeleport failed!"
     NotHuman:
       Opponent: "&cYour opponent is not a human!"
     InGame:

@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
+import java.io.File
 import java.lang.IllegalArgumentException
 import java.time.Duration
 import java.util.*
@@ -87,12 +88,12 @@ abstract class Arena(
     val world by lazy {
         worldCreated = true
         if (GregChessInfo.server.getWorld(name) != null) {
-            Bukkit.getLogger().warning("World already exists!")
+            glog.warn("World already exists!", name)
             return@lazy GregChessInfo.server.getWorld(name)!!
         }
 
         GregChessInfo.server.createWorld(WorldCreator(name).generator(worldGen))
-
+        glog.io("Created arena", name)
         GregChessInfo.server.getWorld(name)!!.apply(setSettings)
     }
 
@@ -102,6 +103,7 @@ abstract class Arena(
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
         p.sendMessage(config.getString("Message.Teleported").replace("$1", name))
+        glog.mid("Teleported", p.name, "to arena", name)
         setResourcePack(p)
     }
 
@@ -111,6 +113,7 @@ abstract class Arena(
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
         p.sendMessage(config.getString("Message.Teleported").replace("$1", name))
+        glog.mid("Teleported spectator", p.name, "to arena", name)
         setResourcePack(p)
     }
 
@@ -137,6 +140,7 @@ abstract class Arena(
                 hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
             )
         }
+        glog.mid("Teleported", p.name, "out of arena", name)
     }
 
     fun isEmpty() = world.players.isEmpty()
@@ -146,12 +150,24 @@ abstract class Arena(
         val folder = world.worldFolder
         Bukkit.unloadWorld(world, false)
         folder.deleteRecursively()
+        glog.io("Deleted arena", name)
     }
 
     override fun toString() = "Arena(name = ${world.name})"
     fun clearScoreboard() {
         scoreboard.teams.forEach { it.unregister() }
         scoreboard.objectives.forEach { it.unregister() }
+    }
+
+    fun safeExit(p: Player){
+        p.playerData = data[p.uniqueId]!!
+        data.remove(p.uniqueId)
+        resourcePackPath?.let {
+            p.setResourcePack(
+                config.getString("EmptyResourcePack"),
+                hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
+            )
+        }
     }
 }
 
@@ -302,7 +318,12 @@ fun parseDuration(s: String): Duration? {
     return null
 }
 
-val glog = GregLogger(GregChessInfo.logger)
+val glog: GregLogger
+    get() {
+        val file = File(Bukkit.getPluginManager().getPlugin("GregChess")!!.dataFolder.absolutePath+"/GregChess.log")
+        file.createNewFile()
+        return GregLogger(GregChessInfo.logger, file)
+    }
 
 object GregChessInfo {
     val server by lazy { Bukkit.getServer() }

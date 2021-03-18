@@ -75,18 +75,22 @@ class RequestType<in T>(
     operator fun plusAssign(request: Request<T>) {
         if (!validateSender(request.sender)) {
             request.sender.sendMessage(getError("CannotSend"))
+            glog.mid("Invalid sender", request)
             return
         }
         if (request.sender == request.receiver) {
             onAccept(request)
+            glog.mid("Self request", request)
             return
         }
         requests.firstOrNull { it.sender == request.sender }?.let {
             request.sender.sendMessage(getError("AlreadySent"))
+            glog.mid("Already sent", request)
             return
         }
-        requests.firstOrNull { it.receiver == request.receiver || it.sender == request.receiver }?.let {
+        requests.firstOrNull { it.receiver == request.sender || it.sender == request.receiver }?.let {
             request.sender.sendMessage(getError("AlreadySent"))
+            glog.mid("Already sent", request)
             return
         }
         requests += request
@@ -102,6 +106,7 @@ class RequestType<in T>(
                 .replace("$2", printT(request.value)) + " "
         )
         request.receiver.spigot().sendMessage(messageReceiver, messageAccept)
+        glog.mid("Sent", request)
     }
 
     fun simpleCall(request: Request<T>) {
@@ -125,6 +130,7 @@ class RequestType<in T>(
         request.receiver.sendMessage(getMessage("Received.Accept"))
         onAccept(request)
         requests -= request
+        glog.mid("Accepted", request)
     }
 
     fun accept(p: Player) {
@@ -139,6 +145,7 @@ class RequestType<in T>(
         request.sender.sendMessage(getMessage("Sent.Cancel").replace("$1", request.receiver.name))
         request.receiver.sendMessage(getMessage("Received.Cancel").replace("$1", request.sender.name))
         requests -= request
+        glog.mid("Cancelled", request)
     }
 
     fun cancel(p: Player) {
