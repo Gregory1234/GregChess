@@ -4,6 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Material
 import org.bukkit.Sound
+import java.util.*
 
 class ChessPiece(
     val type: ChessType,
@@ -21,6 +22,10 @@ class ChessPiece(
         get() = square.pos
     var hasMoved = hasMoved
         private set
+
+    val uuid = UUID.randomUUID()
+
+    override fun toString() = "ChessPiece(uuid = $uuid, pos = $pos, type = $type, side = $side)"
 
     private val board
         get() = square.board
@@ -59,6 +64,7 @@ class ChessPiece(
 
     init {
         render()
+        glog.low("Piece created", board.game.uuid, uuid, pos, type, side)
     }
 
     private fun render() {

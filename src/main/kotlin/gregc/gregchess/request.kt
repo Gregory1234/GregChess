@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.java.JavaPlugin
+import java.util.*
 
 class RequestManager(private val plugin: JavaPlugin) : Listener {
     private val requestTypes = mutableListOf<RequestType<*>>()
@@ -75,22 +76,22 @@ class RequestType<in T>(
     operator fun plusAssign(request: Request<T>) {
         if (!validateSender(request.sender)) {
             request.sender.sendMessage(getError("CannotSend"))
-            glog.mid("Invalid sender", request)
+            glog.mid("Invalid sender", request.uuid)
             return
         }
         if (request.sender == request.receiver) {
             onAccept(request)
-            glog.mid("Self request", request)
+            glog.mid("Self request", request.uuid)
             return
         }
         requests.firstOrNull { it.sender == request.sender }?.let {
             request.sender.sendMessage(getError("AlreadySent"))
-            glog.mid("Already sent", request)
+            glog.mid("Already sent", request.uuid)
             return
         }
         requests.firstOrNull { it.receiver == request.sender || it.sender == request.receiver }?.let {
             request.sender.sendMessage(getError("AlreadySent"))
-            glog.mid("Already sent", request)
+            glog.mid("Already sent", request.uuid)
             return
         }
         requests += request
@@ -106,7 +107,7 @@ class RequestType<in T>(
                 .replace("$2", printT(request.value)) + " "
         )
         request.receiver.spigot().sendMessage(messageReceiver, messageAccept)
-        glog.mid("Sent", request)
+        glog.mid("Sent", request.uuid)
     }
 
     fun simpleCall(request: Request<T>) {
@@ -116,6 +117,7 @@ class RequestType<in T>(
         }
         requests.firstOrNull { it.receiver == request.receiver }?.let {
             request.sender.sendMessage(getError("AlreadySent"))
+            glog.mid("Already sent", request.uuid)
             return
         }
         requests.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }?.let {
@@ -130,7 +132,7 @@ class RequestType<in T>(
         request.receiver.sendMessage(getMessage("Received.Accept"))
         onAccept(request)
         requests -= request
-        glog.mid("Accepted", request)
+        glog.mid("Accepted", request.uuid)
     }
 
     fun accept(p: Player) {
@@ -145,7 +147,7 @@ class RequestType<in T>(
         request.sender.sendMessage(getMessage("Sent.Cancel").replace("$1", request.receiver.name))
         request.receiver.sendMessage(getMessage("Received.Cancel").replace("$1", request.sender.name))
         requests -= request
-        glog.mid("Cancelled", request)
+        glog.mid("Cancelled", request.uuid)
     }
 
     fun cancel(p: Player) {
@@ -162,4 +164,9 @@ class RequestType<in T>(
 
 data class RequestMessages(val name: String, val acceptCommand: String, val cancelCommand: String)
 
-data class Request<out T>(val sender: Player, val receiver: Player, val value: T)
+data class Request<out T>(val sender: Player, val receiver: Player, val value: T){
+    val uuid: UUID = UUID.randomUUID()
+    init {
+        glog.low("Created request", uuid, sender, receiver, value)
+    }
+}

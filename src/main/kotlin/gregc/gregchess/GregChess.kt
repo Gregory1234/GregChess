@@ -7,6 +7,7 @@ import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
+import java.io.File
 import kotlin.contracts.ExperimentalContracts
 
 @Suppress("unused")
@@ -21,17 +22,17 @@ class GregChess : JavaPlugin(), Listener {
     private val chess = ChessManager(this, time, config)
 
     private val drawRequest = RequestTypeBuilder<Unit>(config).messagesSimple(
-            "Draw",
-            "/chess draw",
-            "/chess draw"
+        "Draw",
+        "/chess draw",
+        "/chess draw"
     ).validate { chess[it]?.hasTurn() ?: false }.onAccept { (sender, _, _) ->
         chess.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())
     }.register(requests)
 
     private val takebackRequest = RequestTypeBuilder<Unit>(config).messagesSimple(
-            "Takeback",
-            "/chess undo",
-            "/chess undo"
+        "Takeback",
+        "/chess undo",
+        "/chess undo"
     ).validate {
         val game = chess.getGame(it) ?: return@validate false
         (game[!game.currentTurn] as? ChessPlayer.Human)?.player == it
@@ -39,16 +40,22 @@ class GregChess : JavaPlugin(), Listener {
         chess.getGame(sender)?.board?.undoLastMove()
     }.register(requests)
 
-    private val duelRequest = RequestTypeBuilder<Pair<ChessArena, ChessGame.Settings>>(config).messagesSimple(
+    private val duelRequest =
+        RequestTypeBuilder<Pair<ChessArena, ChessGame.Settings>>(config).messagesSimple(
             "Duel",
             "/chess duel accept",
             "/chess duel cancel"
-    ).print { (_, settings) -> settings.name }.onAccept { (sender, receiver, t) ->
-        chess.startDuel(sender, receiver, t.first, t.second)
-    }.register(requests)
+        ).print { (_, settings) -> settings.name }.onAccept { (sender, receiver, t) ->
+            chess.startDuel(sender, receiver, t.first, t.second)
+        }.register(requests)
 
     @ExperimentalContracts
     override fun onEnable() {
+        try {
+            File(dataFolder.absolutePath + "/GregChess.log").renameTo(File(dataFolder.absolutePath + "/backup.log"))
+        } catch (e: Exception) {
+
+        }
         server.pluginManager.registerEvents(this, this)
         saveDefaultConfig()
         chess.start()
@@ -148,7 +155,7 @@ class GregChess : JavaPlugin(), Listener {
                     try {
                         game.board[ChessPosition.parseFromString(args[2])]?.capture()
                         game.board[ChessPosition.parseFromString(args[1])]
-                                ?.move(game.board.getSquare(ChessPosition.parseFromString(args[2]))!!)
+                            ?.move(game.board.getSquare(ChessPosition.parseFromString(args[2]))!!)
                         game.board.updateMoves()
                         player.sendMessage(config.getString("Message.BoardOpDone"))
                     } catch (e: IllegalArgumentException) {
@@ -178,7 +185,8 @@ class GregChess : JavaPlugin(), Listener {
                     val game = chess.getGame(player)
                     commandRequireNotNull(game, "NotInGame.You")
                     val message = TextComponent(config.getString("Message.CopyFEN"))
-                    message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN())
+                    message.clickEvent =
+                        ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN())
                     player.spigot().sendMessage(message)
                 }
                 "time" -> {
@@ -276,11 +284,31 @@ class GregChess : JavaPlugin(), Listener {
         }
         addCommandTab("chess") { s, args ->
             fun <T> ifPermission(vararg list: T) =
-                    if (s.hasPermission("greg-chess.debug")) list.map { it.toString() } else emptyList()
+                if (s.hasPermission("greg-chess.debug")) list.map { it.toString() } else emptyList()
 
             when (args.size) {
-                1 -> listOf("duel", "stockfish", "resign", "leave", "draw", "save", "spectate", "undo") +
-                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci", "reload", "debug", "dev")
+                1 -> listOf(
+                    "duel",
+                    "stockfish",
+                    "resign",
+                    "leave",
+                    "draw",
+                    "save",
+                    "spectate",
+                    "undo"
+                ) +
+                        ifPermission(
+                            "capture",
+                            "spawn",
+                            "move",
+                            "skip",
+                            "load",
+                            "time",
+                            "uci",
+                            "reload",
+                            "debug",
+                            "dev"
+                        )
                 2 -> when (args[0]) {
                     "duel" -> null
                     "spawn" -> ifPermission(*ChessSide.values())

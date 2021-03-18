@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Loc
+import gregc.gregchess.glog
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -12,6 +13,8 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         ChessPlayer(side, silent) {
 
         override val name = player.name
+
+        override fun toString() = "ChessPlayer.Human(name = $name, side = $side)"
 
         override fun sendMessage(msg: String) = player.sendMessage(msg)
         override fun sendTitle(title: String, subtitle: String) = player.sendTitle(title, subtitle, 10, 70, 20)
@@ -61,6 +64,8 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
 
         override val name = engine.name
 
+        override fun toString() = "ChessPlayer.Engine(name = $name, side = $side)"
+
         override fun stop() = engine.stop()
 
         override fun sendMessage(msg: String) {}
@@ -107,6 +112,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         game.board.lastMove?.clear()
         game.board.lastMove = data
         game.board.lastMove?.render()
+        glog.low("Finished move", data)
         game.nextTurn()
     }
 

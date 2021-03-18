@@ -1,10 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.chatColor
+import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.seconds
-import gregc.gregchess.ticks
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -12,6 +9,7 @@ import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
@@ -22,8 +20,8 @@ class ChessGame(
     val settings: Settings,
     private val chessManager: ChessManager
 ) {
-
-    override fun toString() = "ChessGame(arena = $arena)"
+    val uuid: UUID = UUID.randomUUID()
+    override fun toString() = "ChessGame(arena = $arena, uuid = $uuid)"
     private val components = settings.components.map { it.getComponent(this) }
 
     val board: Chessboard = getComponent(Chessboard::class)!!
@@ -45,6 +43,7 @@ class ChessGame(
     init {
         white.game = this
         black.game = this
+        glog.low("Game created", uuid, white, black, arena, settings)
     }
 
     val players: List<ChessPlayer> = listOf(white, black)
@@ -106,6 +105,7 @@ class ChessGame(
             components.forEach { it.start() }
             scoreboard.start()
             startTurn()
+            glog.mid("Started game", uuid)
         } catch (e : Exception) {
             arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
             realPlayers.forEach { it.sendMessage(config.getError("TeleportFailed")) }
@@ -113,6 +113,7 @@ class ChessGame(
             components.forEach { it.stop() }
             scoreboard.stop()
             components.forEach { it.clear() }
+            glog.mid("Failed to start game", uuid)
             throw e
         }
     }
@@ -133,12 +134,14 @@ class ChessGame(
         components.forEach { it.startTurn() }
         if (!stopping)
             this[currentTurn].startTurn()
+        glog.low("Started turn", uuid, currentTurn)
     }
 
     private fun startPreviousTurn() {
         components.forEach { it.startPreviousTurn() }
         if (!stopping)
             this[currentTurn].startTurn()
+        glog.low("Started previous turn", uuid, currentTurn)
     }
 
     sealed class EndReason(val namePath: String, val winner: ChessSide?) {
@@ -230,6 +233,7 @@ class ChessGame(
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
             }
         }
+        glog.low("Stopped game", uuid, reason)
     }
 
     operator fun get(player: Player): ChessPlayer.Human? =

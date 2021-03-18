@@ -2,6 +2,7 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
+import gregc.gregchess.glog
 import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -153,6 +154,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             }
         }
         boardState.values.forEach { it.render() }
+        glog.mid("Rendered chessboard", game.uuid)
     }
 
     override fun clear() {
@@ -164,6 +166,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 game.world.getBlockAt(i, 101, j).type = Material.AIR
             }
         }
+        glog.mid("Cleared chessboard", game.uuid)
     }
 
     fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
@@ -171,11 +174,13 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     operator fun plusAssign(captured: ChessPiece.Captured) {
         captured.render()
         capturedPieces += captured
+        glog.low("Added captured", game.uuid, captured)
     }
 
     operator fun minusAssign(captured: ChessPiece.Captured) {
         capturedPieces -= captured
         captured.hide()
+        glog.low("Removed captured", game.uuid, captured)
     }
 
     fun getMoves(pos: ChessPosition) = boardState[pos]?.bakedMoves.orEmpty()
@@ -458,6 +463,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             moves.removeLast()
             lastMove?.render()
             game.previousTurn()
+            glog.mid("Undid last move", game.uuid, it)
         }
     }
 }
