@@ -5,9 +5,16 @@ ChessArenas:
 Message:
   Teleported: "&eTeleported to $1."
   CopyFEN: "Copy FEN"
+  LoadedFEN: "&eLoaded FEN!"
   ChooseSettings: "Choose settings"
   PawnPromotion: "Pawn promotion"
   InCheck: "&cYou are in check!"
+  ConfigReloaded: "&ePlugin config reloaded!"
+  LevelSet: "&eDebug level set successfully!"
+  EngineCommandSent: "&eEngine command sent!"
+  TimeOpDone: "&eCompleted the chess clock operation!"
+  SkippedTurn: "&eSkipped a turn!"
+  BoardOpDone: "&eCompleted the chessboard operation!"
   YouArePlayingAs:
     White: "&eYou are playing with the white pieces"
     Black: "&eYou are playing with the black pieces"

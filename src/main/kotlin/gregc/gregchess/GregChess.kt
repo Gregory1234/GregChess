@@ -110,11 +110,13 @@ class GregChess : JavaPlugin(), Listener {
                         try {
                             ChessPosition.parseFromString(args[1])
                         } catch (e: IllegalArgumentException) {
-                            throw CommandException(e.toString())
+                            e.printStackTrace()
+                            throw CommandException("WrongArgument")
                         }
                     }
                     p.game.board[pos]?.capture()
                     p.game.board.updateMoves()
+                    player.sendMessage(config.getString("Message.BoardOpDone"))
                 }
                 "spawn" -> {
                     commandRequirePlayer(player)
@@ -131,8 +133,10 @@ class GregChess : JavaPlugin(), Listener {
                         square.piece?.capture()
                         square.piece = ChessPiece(piece, ChessSide.valueOf(args[1]), square)
                         game.board.updateMoves()
+                        player.sendMessage(config.getString("Message.BoardOpDone"))
                     } catch (e: Exception) {
-                        throw CommandException(e.toString())
+                        e.printStackTrace()
+                        throw CommandException("WrongArgument")
                     }
                 }
                 "move" -> {
@@ -146,8 +150,10 @@ class GregChess : JavaPlugin(), Listener {
                         game.board[ChessPosition.parseFromString(args[1])]
                                 ?.move(game.board.getSquare(ChessPosition.parseFromString(args[2]))!!)
                         game.board.updateMoves()
+                        player.sendMessage(config.getString("Message.BoardOpDone"))
                     } catch (e: IllegalArgumentException) {
-                        throw CommandException(e.toString())
+                        e.printStackTrace()
+                        throw CommandException("WrongArgument")
                     }
                 }
                 "skip" -> {
@@ -157,6 +163,7 @@ class GregChess : JavaPlugin(), Listener {
                     val game = chess.getGame(player)
                     commandRequireNotNull(game, "NotInGame.You")
                     game.nextTurn()
+                    player.sendMessage(config.getString("Message.SkippedTurn"))
                 }
                 "load" -> {
                     commandRequirePlayer(player)
@@ -164,6 +171,7 @@ class GregChess : JavaPlugin(), Listener {
                     val game = chess.getGame(player)
                     commandRequireNotNull(game, "NotInGame.You")
                     game.board.setFromFEN(args.drop(1).joinToString(separator = " "))
+                    player.sendMessage(config.getString("Message.LoadedFEN"))
                 }
                 "save" -> {
                     commandRequirePlayer(player)
@@ -190,8 +198,10 @@ class GregChess : JavaPlugin(), Listener {
                             "set" -> clock.setTime(side, time)
                             else -> throw CommandException("WrongArgument")
                         }
+                        player.sendMessage(config.getString("Message.TimeOpDone"))
                     } catch (e: IllegalArgumentException) {
-                        throw CommandException(e.toString())
+                        e.printStackTrace()
+                        throw CommandException("WrongArgument")
                     }
                 }
                 "uci" -> {
@@ -211,22 +221,32 @@ class GregChess : JavaPlugin(), Listener {
                             "send" -> engine.engine.sendCommand(args.drop(2).joinToString(" "))
                             else -> throw CommandException("WrongArgument")
                         }
+                        player.sendMessage(config.getString("Message.EngineCommandSent"))
                     } catch (e: IllegalArgumentException) {
+                        e.printStackTrace()
                         throw CommandException(e.toString())
                     }
                 }
                 "spectate" -> {
                     commandRequirePlayer(player)
-                    commandRequireArgumentsMin(args, 2)
+                    commandRequireArguments(args, 2)
                     val toSpectate = GregChessInfo.server.getPlayer(args[1])
                     commandRequireNotNull(toSpectate, "PlayerNotFound")
                     chess.spectate(player, toSpectate)
                 }
                 "reload" -> {
                     commandRequirePermission(player, "greg-chess.debug")
-                    commandRequireArgumentsMin(args, 1)
+                    commandRequireArguments(args, 1)
                     reloadConfig()
                     chess.reload()
+                    player.sendMessage(config.getString("Message.ConfigReloaded"))
+                }
+                "dev" -> {
+                    if (!server.pluginManager.isPluginEnabled("DevHelpPlugin"))
+                        throw CommandException("WrongArgument")
+                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequireArguments(args, 1)
+                    server.dispatchCommand(player, "devhelp GregChess 1.0")
                 }
                 "undo" -> {
                     commandRequirePlayer(player)
@@ -245,8 +265,10 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequireArguments(args, 2)
                     try {
                         glog.level = GregLevel.valueOf(args[1])
+                        player.sendMessage(config.getString("Message.LevelSet"))
                     } catch (e: IllegalArgumentException) {
-                        throw CommandException(e.toString())
+                        e.printStackTrace()
+                        throw CommandException("WrongArgument")
                     }
                 }
                 else -> throw CommandException("WrongArgument")
@@ -258,7 +280,7 @@ class GregChess : JavaPlugin(), Listener {
 
             when (args.size) {
                 1 -> listOf("duel", "stockfish", "resign", "leave", "draw", "save", "spectate", "undo") +
-                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci", "reload", "debug")
+                        ifPermission("capture", "spawn", "move", "skip", "load", "time", "uci", "reload", "debug", "dev")
                 2 -> when (args[0]) {
                     "duel" -> null
                     "spawn" -> ifPermission(*ChessSide.values())
