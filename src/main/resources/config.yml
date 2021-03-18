@@ -63,6 +63,7 @@ Message:
     NoPermission: "&cYou do not have permission to do this!"
     PlayerNotFound: "&cPlayer doesn't exist!"
     NoArenas: "&cThere are no free arenas!"
+    GameNotFound: "&cGame not found!"
     EngineNotFound: "&cThere are no engines in this game!"
     BoardNotFound: "&cYour game has no chessboard!"
     ClockNotFound: "&cYour game has no clock!"

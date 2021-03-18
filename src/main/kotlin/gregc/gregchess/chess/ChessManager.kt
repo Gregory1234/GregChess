@@ -39,6 +39,8 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
         fun getGame(player: Player) = games[player.uniqueId] ?: spectators[player.uniqueId]
 
+        fun getGame(uuid: UUID) = games.values.firstOrNull { it.uuid == uuid }
+
         fun remove(game: ChessGame) {
             game.realPlayers.forEach { games.remove(it.uniqueId) }
             game.spectators.forEach { spectators.remove(it.uniqueId) }
@@ -141,6 +143,8 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
     }
 
     operator fun get(player: Player) = players[player]
+
+    operator fun get(uuid: UUID) = players.getGame(uuid)
 
     fun getGame(player: Player) = players.getGame(player)
 

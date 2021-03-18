@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import java.util.*
 import kotlin.contracts.ExperimentalContracts
 
 @Suppress("unused")
@@ -232,7 +233,7 @@ class GregChess : JavaPlugin(), Listener {
                         player.sendMessage(config.getString("Message.EngineCommandSent"))
                     } catch (e: IllegalArgumentException) {
                         e.printStackTrace()
-                        throw CommandException(e.toString())
+                        throw CommandException("WrongArgument")
                     }
                 }
                 "spectate" -> {
@@ -279,6 +280,38 @@ class GregChess : JavaPlugin(), Listener {
                         throw CommandException("WrongArgument")
                     }
                 }
+                "info" -> {
+                    commandRequireArgumentsMin(args, 2)
+                    try {
+                        when (args[1].toLowerCase()) {
+                            "game" -> {
+                                val game: ChessGame?
+                                if (args.size == 2) {
+                                    commandRequirePlayer(player)
+                                    game = chess.getGame(player)
+                                    commandRequireNotNull(game, "NotInGame.You")
+                                } else {
+                                    commandRequireArguments(args, 3)
+                                    game = chess[UUID.fromString(args[2])]
+                                    commandRequireNotNull(game, "GameNotFound")
+                                }
+                                player.sendMessage(game.toString())
+                            }
+                            "piece" -> {
+                                commandRequireArguments(args, 2)
+                                commandRequirePlayer(player)
+                                val game = chess.getGame(player)
+                                commandRequireNotNull(game, "NotInGame.You")
+                                val piece = game.board[Loc.fromLocation(player.location)]
+                                player.sendMessage(piece.toString())
+                            }
+                            else -> throw CommandException("WrongArgument")
+                        }
+                    } catch (e: IllegalArgumentException) {
+                        e.printStackTrace()
+                        throw CommandException("WrongArgument")
+                    }
+                }
                 else -> throw CommandException("WrongArgument")
             }
         }
@@ -288,33 +321,19 @@ class GregChess : JavaPlugin(), Listener {
 
             when (args.size) {
                 1 -> listOf(
-                    "duel",
-                    "stockfish",
-                    "resign",
-                    "leave",
-                    "draw",
-                    "save",
-                    "spectate",
-                    "undo"
-                ) +
-                        ifPermission(
-                            "capture",
-                            "spawn",
-                            "move",
-                            "skip",
-                            "load",
-                            "time",
-                            "uci",
-                            "reload",
-                            "debug",
-                            "dev"
-                        )
+                    "duel", "stockfish", "resign", "leave", "draw", "save", "spectate",
+                    "undo", "info"
+                ) + ifPermission(
+                    "capture", "spawn", "move", "skip", "load", "time", "uci",
+                    "reload", "debug", "dev"
+                )
                 2 -> when (args[0]) {
                     "duel" -> null
                     "spawn" -> ifPermission(*ChessSide.values())
                     "time" -> ifPermission(*ChessSide.values())
                     "uci" -> ifPermission("set", "send")
                     "spectate" -> null
+                    "info" -> listOf("game", "piece")
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
