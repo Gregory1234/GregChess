@@ -181,7 +181,6 @@ fun JavaPlugin.addCommand(
             command(sender, args)
         } catch (e: CommandException) {
             sender.sendMessage(config.getError(e.playerMsg))
-            sender.sendMessage(config.getError(e.playerMsg))
         }
         true
     }
