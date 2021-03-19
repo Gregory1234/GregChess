@@ -2,6 +2,44 @@
 ChessArenas:
   arena1
 
+Request:
+  Accept: "&a[Accept]"
+  Cancel: "&c[Cancel]"
+  Duel:
+    Sent:
+      Request: "&eDuel request sent."
+      Cancel: "&eYou cancelled the duel with $1."
+      Accept: "&aYou accepted the duel request."
+    Received:
+      Request: "&e$1 challenges you to a chess game: $2."
+      Cancel: "&eDuel with $1 has been cancelled."
+      Accept: "&aYour duel request has been accepted."
+    Error:
+      NotFound: "&cDuel request not found."
+    TimedOut: "&eDuel request with $1 has timed out."
+    Duration: 5m
+  Draw:
+    Sent:
+      Request: "&eDraw offer sent."
+      Cancel: "&eYou cancelled the draw offer."
+      Accept: "&aYou accepted the draw offer."
+    Received:
+      Request: "&eYour opponent wants a draw."
+      Cancel: "&eThe draw offer has been cancelled."
+      Accept: "&aThe draw offer has been accepted."
+    Error:
+      CannotSend: "&cIt is your opponent's turn!"
+  Takeback:
+    Sent:
+      Request: "&eTakeback request sent."
+      Cancel: "&eYou cancelled the takeback request."
+      Accept: "&aYou accepted the takeback request."
+    Received:
+      Request: "&eYour opponent wants a takeback."
+      Cancel: "&eThe takeback request has been cancelled."
+      Accept: "&aThe takeback request has been accepted."
+    Error:
+      CannotSend: "&cIt is your turn!"
 Message:
   Teleported: "&eTeleported to $1."
   CopyFEN: "Copy FEN"
@@ -22,39 +60,6 @@ Message:
     WhiteWon: "The game has finished! White won by $1."
     BlackWon: "The game has finished! Black won by $1."
     ItWasADraw: "The game has finished! It was a draw by $1."
-  Request:
-    Accept: "&a[Accept]"
-    Cancel: "&c[Cancel]"
-    Duel:
-      Sent:
-        Request: "&eDuel request sent."
-        Cancel: "&eYou cancelled the duel with $1."
-        Accept: "&aYou accepted the duel request."
-      Received:
-        Request: "&e$1 challenges you to a chess game: $2."
-        Cancel: "&eDuel with $1 has been cancelled."
-        Accept: "&aYour duel request has been accepted."
-      NotFound: "&cDuel request not found."
-    Draw:
-      Sent:
-        Request: "&eDraw offer sent."
-        Cancel: "&eYou cancelled the draw offer."
-        Accept: "&aYou accepted the draw offer."
-      Received:
-        Request: "&eYour opponent wants a draw."
-        Cancel: "&eThe draw offer has been cancelled."
-        Accept: "&aThe draw offer has been accepted."
-      CannotSend: "&cIt is your opponent's turn!"
-    Takeback:
-      Sent:
-        Request: "&eTakeback request sent."
-        Cancel: "&eYou cancelled the takeback request."
-        Accept: "&aYou accepted the takeback request."
-      Received:
-        Request: "&eYour opponent wants a takeback."
-        Cancel: "&eThe takeback request has been cancelled."
-        Accept: "&aThe takeback request has been accepted."
-      CannotSend: "&cIt is your turn!"
   Error:
     NotPlayer: "&cYou are not a player!"
     WrongArgumentsNumber: "&cWrong number of arguments!"

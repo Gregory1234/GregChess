@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.java.JavaPlugin
+import java.time.LocalDateTime
 import java.util.*
 
 class RequestManager(private val plugin: JavaPlugin) : Listener {
@@ -30,14 +31,15 @@ class RequestManager(private val plugin: JavaPlugin) : Listener {
 
 }
 
-class RequestTypeBuilder<T>(private val configManager: ConfigManager) {
+class RequestTypeBuilder<T>(private val config: ConfigManager, private val time: TimeManager) {
     private lateinit var messages: RequestMessages
     private var validateSender: (Player) -> Boolean = { true }
     private var printT: (T) -> String = { it.toString() }
     private var onAccept: (Request<T>) -> Unit = {}
+    private var onCancel: (Request<T>) -> Unit = {}
 
     fun register(m: RequestManager) =
-        m.register(RequestType(configManager, messages, validateSender, printT, onAccept))
+        m.register(RequestType(config, time, messages, validateSender, printT, onAccept, onCancel))
 
     fun messagesSimple(
         root: String,
@@ -62,56 +64,74 @@ class RequestTypeBuilder<T>(private val configManager: ConfigManager) {
         this.onAccept = onAccept
         return this
     }
+
+    fun onCancel(onCancel: (Request<T>) -> Unit): RequestTypeBuilder<T> {
+        this.onCancel = onCancel
+        return this
+    }
 }
 
 
 class RequestType<in T>(
     private val config: ConfigManager,
+    private val time: TimeManager,
     private val messages: RequestMessages,
     private inline val validateSender: (Player) -> Boolean = { true },
     private inline val printT: (T) -> String = { it.toString() },
-    private inline val onAccept: (Request<T>) -> Unit
+    private inline val onAccept: (Request<T>) -> Unit,
+    private inline val onCancel: (Request<T>) -> Unit
 ) {
     private val requests = mutableMapOf<UUID, Request<T>>()
     private val root = messages.name
 
-    private fun getMessage(name: String) = config.getString("Message.Request.$root.$name")
+    private fun getMessage(name: String) = config.getString("Request.$root.$name")
     private fun getFormatMessage(name: String, vararg args: Any?) =
-        config.getFormatString("Message.Request.$root.$name", *args)
+        config.getFormatString("Request.$root.$name", *args)
 
-    operator fun plusAssign(request: Request<T>) {
+    private fun call(request: Request<T>, simple: Boolean) {
         if (!validateSender(request.sender)) {
-            request.sender.sendMessage(getMessage("CannotSend"))
+            request.sender.sendMessage(getMessage("Error.CannotSend"))
             glog.mid("Invalid sender", request.uniqueId)
             return
         }
-        if (request.sender == request.receiver) {
+        if ((simple || config.getBool("Request.SelfAccept", true))
+            && request.sender == request.receiver
+        ) {
             glog.mid("Self request", request.uniqueId)
             onAccept(request)
             return
         }
         requests[request.uniqueId] = request
-        val messageCancel = TextComponent(config.getString("Message.Request.Cancel"))
+        val messageCancel = TextComponent(config.getString("Request.Cancel"))
         messageCancel.clickEvent =
             ClickEvent(
                 ClickEvent.Action.RUN_COMMAND,
-                "${messages.cancelCommand} ${request.uniqueId}"
+                if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
             )
         val messageSender = TextComponent(getMessage("Sent.Request") + " ")
         request.sender.spigot().sendMessage(messageSender, messageCancel)
 
-        val messageAccept = TextComponent(config.getString("Message.Request.Accept"))
+        val messageAccept = TextComponent(config.getString("Request.Accept"))
         messageAccept.clickEvent =
             ClickEvent(
                 ClickEvent.Action.RUN_COMMAND,
-                "${messages.acceptCommand} ${request.uniqueId}"
+                if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
             )
         val messageReceiver = TextComponent(
             getFormatMessage("Received.Request", request.sender.name, printT(request.value)) + " "
         )
         request.receiver.spigot().sendMessage(messageReceiver, messageAccept)
+        val duration = config.getOptionalDuration("Request.$root.Duration")
+        if (duration != null)
+            time.runTaskLater(duration) {
+                if (request.uniqueId in requests)
+                    timeOut(request)
+            }
         glog.mid("Sent", request.uniqueId)
     }
+
+    operator fun plusAssign(request: Request<T>) = call(request, false)
+
 
     fun simpleCall(request: Request<T>) {
         requests.values.firstOrNull { it.sender == request.sender }?.let {
@@ -123,7 +143,7 @@ class RequestType<in T>(
                 accept(request)
                 return
             }
-        plusAssign(request)
+        call(request, true)
     }
 
     fun accept(request: Request<T>) {
@@ -137,7 +157,7 @@ class RequestType<in T>(
     fun accept(p: Player, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.receiver)
-            p.sendMessage(getMessage("NotFound"))
+            p.sendMessage(getMessage("Error.NotFound"))
         else
             accept(request)
     }
@@ -146,15 +166,24 @@ class RequestType<in T>(
         request.sender.sendMessage(getFormatMessage("Sent.Cancel", request.receiver.name))
         request.receiver.sendMessage(getFormatMessage("Received.Cancel", request.sender.name))
         requests.remove(request.uniqueId)
+        onCancel(request)
         glog.mid("Cancelled", request.uniqueId)
     }
 
     fun cancel(p: Player, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.sender)
-            p.sendMessage(getMessage("NotFound"))
+            p.sendMessage(getMessage("Error.NotFound"))
         else
             cancel(request)
+    }
+
+    fun timeOut(request: Request<T>) {
+        request.sender.sendMessage(getFormatMessage("TimedOut", request.receiver.name))
+        request.receiver.sendMessage(getFormatMessage("TimedOut", request.sender.name))
+        requests.remove(request.uniqueId)
+        onCancel(request)
+        glog.mid("Timed out", request.uniqueId)
     }
 
     fun quietRemove(p: Player) = requests.values.filter { it.sender == p || it.receiver == p }
@@ -166,6 +195,7 @@ data class RequestMessages(val name: String, val acceptCommand: String, val canc
 
 data class Request<out T>(val sender: Player, val receiver: Player, val value: T) {
     val uniqueId: UUID = UUID.randomUUID()
+    val time = LocalDateTime.now()
 
     init {
         glog.low("Created request", uniqueId, sender, receiver, value)

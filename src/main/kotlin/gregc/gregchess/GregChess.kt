@@ -22,7 +22,7 @@ class GregChess : JavaPlugin(), Listener {
 
     private val chess = ChessManager(this, time, config)
 
-    private val drawRequest = RequestTypeBuilder<Unit>(config).messagesSimple(
+    private val drawRequest = RequestTypeBuilder<Unit>(config, time).messagesSimple(
         "Draw",
         "/chess draw",
         "/chess draw"
@@ -30,7 +30,7 @@ class GregChess : JavaPlugin(), Listener {
         chess.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())
     }.register(requests)
 
-    private val takebackRequest = RequestTypeBuilder<Unit>(config).messagesSimple(
+    private val takebackRequest = RequestTypeBuilder<Unit>(config, time).messagesSimple(
         "Takeback",
         "/chess undo",
         "/chess undo"
@@ -42,12 +42,14 @@ class GregChess : JavaPlugin(), Listener {
     }.register(requests)
 
     private val duelRequest =
-        RequestTypeBuilder<Pair<ChessArena, ChessGame.Settings>>(config).messagesSimple(
+        RequestTypeBuilder<Pair<ChessArena, ChessGame.Settings>>(config, time).messagesSimple(
             "Duel",
             "/chess duel accept",
             "/chess duel cancel"
         ).print { (_, settings) -> settings.name }.onAccept { (sender, receiver, t) ->
             chess.startDuel(sender, receiver, t.first, t.second)
+        }.onCancel { (_, _, t) ->
+            t.first.clear()
         }.register(requests)
 
     @ExperimentalContracts

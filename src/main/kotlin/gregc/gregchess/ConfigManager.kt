@@ -106,5 +106,9 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String
     fun getOptionalString(path: String): String? =
         get(path, "optional string", null, false) { chatColor(it) }
 
+    fun getOptionalDuration(path: String) = get(path, "duration", null, false, ::parseDuration)
+
     fun getHexString(path: String) = get(path, "hex string", null) { hexToBytes(it) }
+
+    fun getBool(path: String, default: Boolean) = get(path, "boolean", default) { it.toBoolean() }
 }
