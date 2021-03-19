@@ -48,10 +48,16 @@ class ChessGame(
 
     val players: List<ChessPlayer> = listOf(white, black)
 
-    val spectators = mutableListOf<Player>()
+    private val spectatorUUID = mutableListOf<UUID>()
 
-    val realPlayers: List<Player> =
-        players.mapNotNull { (it as? ChessPlayer.Human)?.player }.distinctBy { it.uniqueId }
+    private val spectators: List<Player>
+        get() = spectatorUUID.mapNotNull { Bukkit.getPlayer(it) }
+
+    private val playerUUID: List<UUID> =
+        players.mapNotNull { (it as? ChessPlayer.Human)?.player }.map{it.uniqueId }.distinct()
+
+    private val realPlayers: List<Player>
+        get() = playerUUID.mapNotNull { Bukkit.getPlayer(it) }
 
     var currentTurn = ChessSide.WHITE
 
@@ -75,6 +81,11 @@ class ChessGame(
         }
     }
 
+    fun forEachPlayer(function: (Player) -> Unit) = realPlayers.forEach(function)
+    fun forEachSpectator(function: (Player) -> Unit) = spectators.forEach(function)
+
+    operator fun contains(p: Player) = p in realPlayers
+
     fun nextTurn() {
         components.forEach { it.endTurn() }
         Bukkit.getPluginManager().callEvent(TurnEndEvent(this, this[currentTurn]))
@@ -97,7 +108,7 @@ class ChessGame(
                 override fun invoke(s: ChessSide) =
                     config.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
             }
-            realPlayers.forEach(arena::teleport)
+            forEachPlayer(arena::teleport)
             black.sendTitle("", config.getString("Title.YouArePlayingAs.Black"))
             white.sendTitle(config.getString("Title.YourTurn"), config.getString("Title.YouArePlayingAs.White"))
             white.sendMessage(config.getString("Message.YouArePlayingAs.White"))
@@ -108,7 +119,7 @@ class ChessGame(
             startTurn()
         } catch (e : Exception) {
             arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
-            realPlayers.forEach { it.sendMessage(config.getError("TeleportFailed")) }
+            forEachPlayer { it.sendMessage(config.getError("TeleportFailed")) }
             stopping = true
             components.forEach { it.stop() }
             scoreboard.stop()
@@ -119,14 +130,14 @@ class ChessGame(
     }
 
     fun spectate(p: Player) {
-        spectators += p
+        spectatorUUID += p.uniqueId
         arena.teleportSpectator(p)
         components.forEach { it.spectatorJoin(p) }
     }
 
     fun spectatorLeave(p: Player) {
         components.forEach { it.spectatorLeave(p) }
-        spectators -= p
+        spectatorUUID -= p.uniqueId
         arena.exit(p)
     }
 
@@ -185,12 +196,14 @@ class ChessGame(
 
     private var stopping = false
 
+    fun quickStop(reason: EndReason) = stop(reason, realPlayers)
+
     fun stop(reason: EndReason, quick: List<Player> = emptyList()) {
         if (stopping) return
         stopping = true
         components.forEach { it.stop() }
         var anyLong = false
-        realPlayers.forEach {
+        forEachPlayer {
             if (reason.winner != null) {
                 this[it]?.sendTitle(
                     config.getString(if (reason.winner == this[it]!!.side) "Title.Player.YouWon" else "Title.Player.YouLost"),
@@ -209,7 +222,7 @@ class ChessGame(
                 }
             }
         }
-        spectators.forEach {
+        forEachSpectator {
             if (reason.winner != null) {
                 this[it]?.sendTitle(
                     config.getString(if (reason.winner == ChessSide.WHITE) "Title.Spectator.WhiteWon" else "Title.Spectator.BlackWon"),

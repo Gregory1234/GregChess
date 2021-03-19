@@ -26,46 +26,50 @@ import org.bukkit.event.entity.CreatureSpawnEvent
 
 class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager, val config: ConfigManager) :
     Listener {
-    private class PlayerMap {
-        private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
-        private val spectators: MutableMap<UUID, ChessGame> = mutableMapOf()
-        private val gameList: MutableList<ChessGame> = mutableListOf()
-
-        operator fun get(player: Player) = games[player.uniqueId]?.get(player)
-        operator fun plusAssign(game: ChessGame) {
-            game.realPlayers.forEach { games[it.uniqueId] = game }
-            gameList += game
-        }
-
-        fun getGame(player: Player) = games[player.uniqueId] ?: spectators[player.uniqueId]
-
-        fun getGame(uuid: UUID) = games.values.firstOrNull { it.uuid == uuid }
-
-        fun remove(game: ChessGame) {
-            game.realPlayers.forEach { games.remove(it.uniqueId) }
-            game.spectators.forEach { spectators.remove(it.uniqueId) }
-            gameList.remove(game)
-        }
-
-        operator fun contains(player: HumanEntity) = player.uniqueId in games || player.uniqueId in spectators
-        fun forEachGame(f: (ChessGame) -> Unit) {
-            gameList.forEach(f)
-        }
-
-        fun stopSpectating(player: Player) {
-            spectators[player.uniqueId]?.spectatorLeave(player)
-            spectators.remove(player.uniqueId)
-        }
-
-        fun spectate(player: Player, game: ChessGame) {
-            game.spectate(player)
-            spectators[player.uniqueId] = game
-        }
-    }
 
     private val settingsManager = SettingsManager(plugin, config)
 
-    private val players = PlayerMap()
+    private val playerGames: MutableMap<UUID, UUID> = mutableMapOf()
+    private val spectatorGames: MutableMap<UUID, UUID> = mutableMapOf()
+    private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
+
+    private fun forEachGame(function: (ChessGame) -> Unit) = games.values.forEach(function)
+
+    private fun addGame(g: ChessGame) {
+        games[g.uuid] = g
+        g.forEachPlayer { playerGames[it.uniqueId] = g.uuid }
+    }
+
+    private fun removeGame(g: ChessGame) {
+        games.remove(g.uuid)
+        g.forEachPlayer { playerGames.remove(it.uniqueId) }
+        g.forEachSpectator { spectatorGames.remove(it.uniqueId) }
+    }
+
+    private fun isInGame(p: HumanEntity) = p.uniqueId in playerGames
+
+    fun getGame(p: Player) = games[playerGames[p.uniqueId]]
+
+    private fun getChessPlayer(p: Player) = getGame(p)?.get(p)
+    operator fun get(p: Player): ChessPlayer.Human? = getChessPlayer(p)
+
+    operator fun get(uuid: UUID): ChessGame? = games[uuid]
+
+    private fun isSpectatingGame(p: Player) = p.uniqueId in spectatorGames
+
+    private fun getGameSpectator(p: Player) = games[spectatorGames[p.uniqueId]]
+
+    private fun removeSpectator(p: Player) {
+        val g = getGameSpectator(p) ?: return
+        g.spectatorLeave(p)
+        spectatorGames.remove(p.uniqueId)
+    }
+
+    private fun addSpectator(p: Player, g: ChessGame) {
+        spectatorGames[p.uniqueId] = g.uuid
+        g.spectate(p)
+    }
+
     private val arenas = mutableListOf<ChessArena>()
 
     private fun nextArena(): ChessArena? = arenas.firstOrNull { it.isEmpty() }
@@ -80,7 +84,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
     }
 
     fun stop() {
-        players.forEachGame { it.stop(ChessGame.EndReason.PluginRestart(), it.realPlayers) }
+        forEachGame { it.quickStop(ChessGame.EndReason.PluginRestart()) }
         arenas.forEach { it.delete() }
     }
 
@@ -91,9 +95,9 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
         val addedArenas = newArenas - oldArenas
         removedArenas.forEach { name ->
             val arena = arenas.first { it.name == name }
-            players.forEachGame {
+            forEachGame {
                 if (it.arena == arena) {
-                    it.stop(ChessGame.EndReason.ArenaRemoved(), it.realPlayers)
+                    it.quickStop(ChessGame.EndReason.ArenaRemoved())
                 }
             }
             arena.delete()
@@ -106,9 +110,9 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
     @ExperimentalContracts
     fun duelMenu(player: Player, opponent: Player, callback: (ChessArena, ChessGame.Settings) -> Unit) {
-        if (player in players)
+        if (isInGame(player))
             throw CommandException("InGame.You")
-        if (opponent in players)
+        if (isInGame(opponent))
             throw CommandException("InGame.Opponent")
         val arena = nextArena()
         commandRequireNotNull(arena, "NoArenas")
@@ -122,12 +126,12 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
             return
         val game = ChessGame(player, opponent, arena, settings, this)
         game.start()
-        players += game
+        addGame(game)
     }
 
     @ExperimentalContracts
     fun stockfish(player: Player) {
-        if (player in players)
+        if (isInGame(player))
             throw CommandException("InGame.You")
         val arena = nextArena()
         commandRequireNotNull(arena, "NoArenas")
@@ -138,38 +142,32 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
             val black = ChessPlayer.Engine(ChessEngine(plugin, "stockfish"), ChessSide.BLACK)
             val game = ChessGame(white, black, arena, it, this)
             game.start()
-            players += game
+            addGame(game)
         }.inventory)
     }
 
-    operator fun get(player: Player) = players[player]
-
-    operator fun get(uuid: UUID) = players.getGame(uuid)
-
-    fun getGame(player: Player) = players.getGame(player)
-
     fun leave(player: Player) {
-        val p = players[player]
+        val p = getChessPlayer(player)
         if (p != null) {
             p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
         } else {
-            if (player !in players)
+            if (!isSpectatingGame(player))
                 throw CommandException("NotInGame.You")
-            players.stopSpectating(player)
+            removeSpectator(player)
         }
     }
 
     @ExperimentalContracts
-    fun spectate(player: Player, toSpectate: Player) {
-        val spec = players[toSpectate]
+    fun addSpectator(player: Player, toSpectate: Player) {
+        val spec = getChessPlayer(toSpectate)
         commandRequireNotNull(spec, "NotInGame.Player")
-        val game = players.getGame(player)
+        val game = getGame(player)
         if (game != null) {
-            if (player in game.realPlayers)
+            if (player in game)
                 throw CommandException("InGame.You")
-            players.stopSpectating(player)
+            removeSpectator(player)
         }
-        players.spectate(player, spec.game)
+        addSpectator(player, spec.game)
     }
 
     fun reload() {
@@ -180,19 +178,17 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
-        if (e.player in players) {
-            val player = players[e.player]
-            if (player != null)
-                player.game.stop(ChessGame.EndReason.Resignation(!player.side), listOf(e.player))
-            else
-                players.stopSpectating(e.player)
-        }
+        val player = getChessPlayer(e.player)
+        if (player != null)
+            player.game.stop(ChessGame.EndReason.Resignation(!player.side), listOf(e.player))
+        else if (isSpectatingGame(e.player))
+            removeSpectator(e.player)
     }
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.entity as? Player ?: return
-        val game = players.getGame(ent) ?: return
+        val game = getGame(ent) ?: return
         ent.health = 20.0
         ent.foodLevel = 20
         ent.teleport(game.world.spawnLocation)
@@ -201,7 +197,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        val player = players[e.player] ?: return
+        val player = getChessPlayer(e.player) ?: return
         e.isCancelled = true
         val block = e.clickedBlock ?: return
 
@@ -214,14 +210,14 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (e.player in players) {
+        if (isInGame(e.player)) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.whoClicked in players) {
+        if (isInGame(e.whoClicked)) {
             e.isCancelled = true
         }
     }
@@ -229,7 +225,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
         val holder = e.inventory.holder
-        if (e.whoClicked in players) {
+        if (isInGame(e.whoClicked)) {
             e.isCancelled = true
             if (holder is ChessPlayer.PawnPromotionScreen) {
                 e.currentItem?.let { holder.applyEvent(it.type); e.whoClicked.closeInventory() }
@@ -244,7 +240,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
     @EventHandler
     fun onInventoryClose(e: InventoryCloseEvent) {
-        if (e.player in players) {
+        if (isInGame(e.player)) {
             val holder = e.inventory.holder
             if (holder is ChessPlayer.PawnPromotionScreen) {
                 if (!holder.finished)
@@ -264,14 +260,14 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (e.player in players) {
+        if (isInGame(e.player)) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onChessGameEnd(e: ChessGame.EndEvent) {
-        players.remove(e.game)
+        removeGame(e.game)
     }
 
     @EventHandler
@@ -280,4 +276,5 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
             e.isCancelled = true
         }
     }
+
 }

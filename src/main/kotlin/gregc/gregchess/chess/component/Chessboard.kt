@@ -140,12 +140,12 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         if (game.currentTurn == ChessSide.BLACK) {
             val wLast = (if (moves.size <= 1) "" else moves[moves.size - 2].name)
             val bLast = (lastMove?.name ?: "")
-            game.realPlayers.forEach { p -> p.sendMessage("$num $wLast  | $bLast") }
+            game.forEachPlayer { p -> p.sendMessage("$num $wLast  | $bLast") }
             fullMoveCounter++
         } else if (piecesOf(!game.currentTurn).flatMap { p -> getMoves(p.pos).filter { it.isLegal } }
                 .isEmpty()) {
             val wLast = (lastMove?.name ?: "")
-            game.realPlayers.forEach { p -> p.sendMessage("$num $wLast  |") }
+            game.forEachPlayer { p -> p.sendMessage("$num $wLast  |") }
         }
     }
 

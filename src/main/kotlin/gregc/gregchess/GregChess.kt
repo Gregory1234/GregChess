@@ -256,7 +256,7 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequireArguments(args, 2)
                     val toSpectate = GregChessInfo.server.getPlayer(args[1])
                     commandRequireNotNull(toSpectate, "PlayerNotFound")
-                    chess.spectate(player, toSpectate)
+                    chess.addSpectator(player, toSpectate)
                 }
                 "reload" -> {
                     commandRequirePermission(player, "greg-chess.debug")
@@ -375,7 +375,7 @@ class GregChess : JavaPlugin(), Listener {
 
     @EventHandler
     fun onGameEnd(e: ChessGame.EndEvent) {
-        e.game.realPlayers.forEach {
+        e.game.forEachPlayer {
             drawRequest.quietRemove(it)
             takebackRequest.quietRemove(it)
         }
