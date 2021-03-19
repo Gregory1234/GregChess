@@ -270,7 +270,7 @@ class GregChess : JavaPlugin(), Listener {
                         throw CommandException("WrongArgument")
                     commandRequirePermission(player, "greg-chess.debug")
                     commandRequireArguments(args, 1)
-                    server.dispatchCommand(player, "devhelp GregChess 1.0")
+                    server.dispatchCommand(player, "devhelp GregChess ${description.version}")
                 }
                 "undo" -> {
                     commandRequirePlayer(player)

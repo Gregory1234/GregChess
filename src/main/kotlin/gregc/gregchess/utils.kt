@@ -102,7 +102,7 @@ abstract class Arena(
         p.playerData = defaultData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
-        p.sendMessage(config.getString("Message.Teleported").replace("$1", name))
+        p.sendMessage(config.getFormatString("Message.Teleported", name))
         glog.mid("Teleported", p.name, "to arena", name)
         setResourcePack(p)
     }
@@ -112,7 +112,7 @@ abstract class Arena(
         p.playerData = spectatorData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
-        p.sendMessage(config.getString("Message.Teleported").replace("$1", name))
+        p.sendMessage(config.getFormatString("Message.Teleported", name))
         glog.mid("Teleported spectator", p.name, "to arena", name)
         setResourcePack(p)
     }
@@ -159,7 +159,7 @@ abstract class Arena(
         scoreboard.objectives.forEach { it.unregister() }
     }
 
-    fun safeExit(p: Player){
+    fun safeExit(p: Player) {
         p.playerData = data[p.uniqueId]!!
         data.remove(p.uniqueId)
         resourcePackPath?.let {
@@ -317,9 +317,25 @@ fun parseDuration(s: String): Duration? {
     return null
 }
 
+fun numberedFormat(s: String, vararg args: Any?): String? {
+    var retNull = false
+    val ret = s.replace(Regex("""\$(?:(\d+)|\{(\d+)})""")) {
+        val i = it.groupValues[1].toIntOrNull()
+        if (i == null || i < 1 || i > args.size) {
+            retNull = true
+            ""
+        } else
+            args[i-1].toString()
+    }
+    return if (retNull) null else ret
+}
+
 val glog: GregLogger
     get() {
-        val file = File(Bukkit.getPluginManager().getPlugin("GregChess")!!.dataFolder.absolutePath+"/GregChess.log")
+        val file = File(
+            Bukkit.getPluginManager()
+                .getPlugin("GregChess")!!.dataFolder.absolutePath + "/GregChess.log"
+        )
         file.createNewFile()
         return GregLogger(GregChessInfo.logger, file)
     }

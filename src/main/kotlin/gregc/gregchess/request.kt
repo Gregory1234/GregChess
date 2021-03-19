@@ -76,6 +76,8 @@ class RequestType<in T>(
     private val root = messages.name
 
     private fun getMessage(name: String) = config.getString("Message.Request.$root.$name")
+    private fun getFormatMessage(name: String, vararg args: Any?) =
+        config.getFormatString("Message.Request.$root.$name", *args)
 
     operator fun plusAssign(request: Request<T>) {
         if (!validateSender(request.sender)) {
@@ -83,22 +85,23 @@ class RequestType<in T>(
             glog.mid("Invalid sender", request.uuid)
             return
         }
-        /*if (request.sender == request.receiver) {
+        if (request.sender == request.receiver) {
             glog.mid("Self request", request.uuid)
             onAccept(request)
             return
-        }*/
+        }
         requests[request.uuid] = request
         val messageCancel = TextComponent(config.getString("Message.Request.Cancel"))
-        messageCancel.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "${messages.cancelCommand} ${request.uuid}")
+        messageCancel.clickEvent =
+            ClickEvent(ClickEvent.Action.RUN_COMMAND, "${messages.cancelCommand} ${request.uuid}")
         val messageSender = TextComponent(getMessage("Sent.Request") + " ")
         request.sender.spigot().sendMessage(messageSender, messageCancel)
 
         val messageAccept = TextComponent(config.getString("Message.Request.Accept"))
-        messageAccept.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "${messages.acceptCommand} ${request.uuid}")
+        messageAccept.clickEvent =
+            ClickEvent(ClickEvent.Action.RUN_COMMAND, "${messages.acceptCommand} ${request.uuid}")
         val messageReceiver = TextComponent(
-            getMessage("Received.Request").replace("$1", request.sender.name)
-                .replace("$2", printT(request.value)) + " "
+            getFormatMessage("Received.Request", request.sender.name, printT(request.value)) + " "
         )
         request.receiver.spigot().sendMessage(messageReceiver, messageAccept)
         glog.mid("Sent", request.uuid)
@@ -109,21 +112,17 @@ class RequestType<in T>(
             cancel(request)
             return
         }
-        requests.values.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }?.let {
-            accept(request)
-            return
-        }
+        requests.values.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }
+            ?.let {
+                accept(request)
+                return
+            }
         plusAssign(request)
     }
 
     fun accept(request: Request<T>) {
-        request.sender.sendMessage(getMessage("Sent.Accept").replace("$1", request.receiver.name))
-        request.receiver.sendMessage(
-            getMessage("Received.Accept").replace(
-                "$1",
-                request.sender.name
-            )
-        )
+        request.sender.sendMessage(getFormatMessage("Sent.Accept", request.receiver.name))
+        request.receiver.sendMessage(getFormatMessage("Received.Accept", request.sender.name))
         requests.remove(request.uuid)
         onAccept(request)
         glog.mid("Accepted", request.uuid)
@@ -138,13 +137,8 @@ class RequestType<in T>(
     }
 
     fun cancel(request: Request<T>) {
-        request.sender.sendMessage(getMessage("Sent.Cancel").replace("$1", request.receiver.name))
-        request.receiver.sendMessage(
-            getMessage("Received.Cancel").replace(
-                "$1",
-                request.sender.name
-            )
-        )
+        request.sender.sendMessage(getFormatMessage("Sent.Cancel", request.receiver.name))
+        request.receiver.sendMessage(getFormatMessage("Received.Cancel", request.sender.name))
         requests.remove(request.uuid)
         glog.mid("Cancelled", request.uuid)
     }

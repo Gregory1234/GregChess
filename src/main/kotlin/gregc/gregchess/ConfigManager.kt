@@ -69,11 +69,7 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String
 
     fun getFormatString(path: String, vararg args: Any?) =
         get(path, "format string", path) {
-            try {
-                chatColor(it.format(*args))
-            } catch (e: Exception) {
-                null
-            }
+            numberedFormat(it, *args)?.let(::chatColor)
         }
 
     fun getDuration(path: String) = get(path, "duration", 0.seconds, true, ::parseDuration)
