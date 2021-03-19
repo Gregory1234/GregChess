@@ -159,7 +159,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             }
         }
         boardState.values.forEach { it.render() }
-        glog.mid("Rendered chessboard", game.uuid)
+        glog.mid("Rendered chessboard", game.uniqueId)
     }
 
     override fun clear() {
@@ -171,7 +171,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 game.world.getBlockAt(i, 101, j).type = Material.AIR
             }
         }
-        glog.mid("Cleared chessboard", game.uuid)
+        glog.mid("Cleared chessboard", game.uniqueId)
     }
 
     fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
@@ -179,13 +179,13 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     operator fun plusAssign(captured: ChessPiece.Captured) {
         captured.render()
         capturedPieces += captured
-        glog.low("Added captured", game.uuid, captured)
+        glog.low("Added captured", game.uniqueId, captured)
     }
 
     operator fun minusAssign(captured: ChessPiece.Captured) {
         capturedPieces -= captured
         captured.hide()
-        glog.low("Removed captured", game.uuid, captured)
+        glog.low("Removed captured", game.uniqueId, captured)
     }
 
     fun getMoves(pos: ChessPosition) = boardState[pos]?.bakedMoves.orEmpty()
@@ -475,7 +475,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             moves.removeLast()
             lastMove?.render()
             game.previousTurn()
-            glog.mid("Undid last move", game.uuid, it)
+            glog.mid("Undid last move", game.uniqueId, it)
         }
     }
 }

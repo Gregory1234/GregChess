@@ -23,9 +23,10 @@ class ChessPiece(
     var hasMoved = hasMoved
         private set
 
-    val uuid = UUID.randomUUID()
+    val uniqueId = UUID.randomUUID()
 
-    override fun toString() = "ChessPiece(uuid = $uuid, pos = $pos, type = $type, side = $side)"
+    override fun toString() =
+        "ChessPiece(uniqueId = $uniqueId, pos = $pos, type = $type, side = $side)"
 
     private val board
         get() = square.board
@@ -64,7 +65,7 @@ class ChessPiece(
 
     init {
         render()
-        glog.low("Piece created", board.game.uuid, uuid, pos, type, side)
+        glog.low("Piece created", board.game.uniqueId, uniqueId, pos, type, side)
     }
 
     private fun render() {
@@ -144,7 +145,7 @@ class ChessPiece(
     }
 
     companion object {
-        fun autoMove(moves: Map<ChessPiece, ChessSquare>){
+        fun autoMove(moves: Map<ChessPiece, ChessSquare>) {
             moves.forEach { (piece, target) ->
                 glog.mid("Auto-moved", piece.type, "from", piece.pos, "to", target.pos)
                 piece.hasMoved = true

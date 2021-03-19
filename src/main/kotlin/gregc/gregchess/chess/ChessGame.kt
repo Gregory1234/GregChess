@@ -20,8 +20,8 @@ class ChessGame(
     val settings: Settings,
     private val chessManager: ChessManager
 ) {
-    val uuid: UUID = UUID.randomUUID()
-    override fun toString() = "ChessGame(arena = $arena, uuid = $uuid)"
+    val uniqueId: UUID = UUID.randomUUID()
+    override fun toString() = "ChessGame(arena = $arena, uniqueId = $uniqueId)"
     private val components = settings.components.map { it.getComponent(this) }
 
     val board: Chessboard = getComponent(Chessboard::class)!!
@@ -43,7 +43,7 @@ class ChessGame(
     init {
         white.game = this
         black.game = this
-        glog.low("Game created", uuid, white, black, arena, settings)
+        glog.low("Game created", uniqueId, white, black, arena, settings)
     }
 
     val players: List<ChessPlayer> = listOf(white, black)
@@ -115,7 +115,7 @@ class ChessGame(
             black.sendMessage(config.getString("Message.YouArePlayingAs.Black"))
             components.forEach { it.start() }
             scoreboard.start()
-            glog.mid("Started game", uuid)
+            glog.mid("Started game", uniqueId)
             startTurn()
         } catch (e : Exception) {
             arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
@@ -124,7 +124,7 @@ class ChessGame(
             components.forEach { it.stop() }
             scoreboard.stop()
             components.forEach { it.clear() }
-            glog.mid("Failed to start game", uuid)
+            glog.mid("Failed to start game", uniqueId)
             throw e
         }
     }
@@ -145,14 +145,14 @@ class ChessGame(
         components.forEach { it.startTurn() }
         if (!stopping)
             this[currentTurn].startTurn()
-        glog.low("Started turn", uuid, currentTurn)
+        glog.low("Started turn", uniqueId, currentTurn)
     }
 
     private fun startPreviousTurn() {
         components.forEach { it.startPreviousTurn() }
         if (!stopping)
             this[currentTurn].startTurn()
-        glog.low("Started previous turn", uuid, currentTurn)
+        glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
     sealed class EndReason(val namePath: String, val winner: ChessSide?) {
@@ -250,7 +250,7 @@ class ChessGame(
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
             }
         }
-        glog.low("Stopped game", uuid, reason)
+        glog.low("Stopped game", uniqueId, reason)
     }
 
     operator fun get(player: Player): ChessPlayer.Human? =

@@ -13,7 +13,7 @@ data class MoveData(
     inline val undo: () -> Unit
 ) {
 
-    override fun toString() = "MoveData(name = $name, origin = $origin, target = $target, piece.uuid = ${piece.uuid})"
+    override fun toString() = "MoveData(name = $name, origin = $origin, target = $target, piece.uuid = ${piece.uniqueId})"
 
     fun render() {
         origin.previousMoveMarker = Material.BROWN_CONCRETE

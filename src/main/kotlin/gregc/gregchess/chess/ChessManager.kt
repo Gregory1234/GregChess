@@ -36,12 +36,12 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
     private fun forEachGame(function: (ChessGame) -> Unit) = games.values.forEach(function)
 
     private fun addGame(g: ChessGame) {
-        games[g.uuid] = g
-        g.forEachPlayer { playerGames[it.uniqueId] = g.uuid }
+        games[g.uniqueId] = g
+        g.forEachPlayer { playerGames[it.uniqueId] = g.uniqueId }
     }
 
     private fun removeGame(g: ChessGame) {
-        games.remove(g.uuid)
+        games.remove(g.uniqueId)
         g.forEachPlayer { playerGames.remove(it.uniqueId) }
         g.forEachSpectator { spectatorGames.remove(it.uniqueId) }
     }
@@ -66,7 +66,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
     }
 
     private fun addSpectator(p: Player, g: ChessGame) {
-        spectatorGames[p.uniqueId] = g.uuid
+        spectatorGames[p.uniqueId] = g.uniqueId
         g.spectate(p)
     }
 
