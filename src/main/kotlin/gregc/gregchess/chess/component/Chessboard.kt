@@ -6,10 +6,13 @@ import gregc.gregchess.glog
 import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import java.lang.NullPointerException
 import kotlin.math.abs
 
-class Chessboard(override val game: ChessGame, private val settings: Settings) : ChessGame.Component {
-    data class Settings(private val initialFEN: String?, val chess960: Boolean = false) : ChessGame.ComponentSettings {
+class Chessboard(override val game: ChessGame, private val settings: Settings) :
+    ChessGame.Component {
+    data class Settings(private val initialFEN: String?, val chess960: Boolean = false) :
+        ChessGame.ComponentSettings {
         override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN(): String {
@@ -50,7 +53,8 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     class Renderer(private val board: Chessboard) {
         fun getPos(loc: Loc) = ChessPosition((4 * 8 - 1 - loc.x).div(3), (loc.z - 8).div(3))
 
-        fun getPieceLoc(pos: ChessPosition) = Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
+        fun getPieceLoc(pos: ChessPosition) =
+            Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
 
         fun getCapturedLoc(piece: ChessPiece.Captured): Loc {
             val cap =
@@ -138,7 +142,8 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             val bLast = (lastMove?.name ?: "")
             game.realPlayers.forEach { p -> p.sendMessage("$num $wLast  | $bLast") }
             fullMoveCounter++
-        } else if (piecesOf(!game.currentTurn).flatMap { p -> getMoves(p.pos).filter { it.isLegal } }.isEmpty()) {
+        } else if (piecesOf(!game.currentTurn).flatMap { p -> getMoves(p.pos).filter { it.isLegal } }
+                .isEmpty()) {
             val wLast = (lastMove?.name ?: "")
             game.realPlayers.forEach { p -> p.sendMessage("$num $wLast  |") }
         }
@@ -198,11 +203,17 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
                 val checks = checkingPotentialMoves(!piece.side, target)
                 return checks.isEmpty()
             }
-            val myKing = piecesOf(piece.side).find { it.type == ChessType.KING } ?: return false
+            val myKing = try {
+                piecesOf(piece.side).find { it.type == ChessType.KING }!!
+            } catch (e: NullPointerException) {
+                game.stop(ChessGame.EndReason.Error(e))
+                throw e
+            }
             val checks = checkingMoves(!piece.side, myKing.square)
             if (checks.any { target.pos !in it.potentialBlocks && target != it.origin })
                 return false
-            val pins = pinningMoves(!piece.side, myKing.square).filter { it.actualBlocks[0] == origin.pos }
+            val pins =
+                pinningMoves(!piece.side, myKing.square).filter { it.actualBlocks[0] == origin.pos }
             if (pins.any { target.pos !in it.potentialBlocks && target != it.origin })
                 return false
             return true
@@ -213,7 +224,8 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             .filter { it.target == pos && !it.defensive && it.actualBlocks.size == 1 }
 
     fun checkingPotentialMoves(by: ChessSide, pos: ChessSquare) =
-        piecesOf(by).flatMap { getMoves(it.pos) }.filter { it.target == pos }.filter { it.canAttack }
+        piecesOf(by).flatMap { getMoves(it.pos) }.filter { it.target == pos }
+            .filter { it.canAttack }
 
     fun checkingMoves(by: ChessSide, pos: ChessSquare) =
         piecesOf(by).flatMap { getMoves(it.pos) }.mapNotNull { it as? ChessMove.Attack }

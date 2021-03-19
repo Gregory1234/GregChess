@@ -104,8 +104,8 @@ class ChessGame(
             black.sendMessage(config.getString("Message.YouArePlayingAs.Black"))
             components.forEach { it.start() }
             scoreboard.start()
-            startTurn()
             glog.mid("Started game", uuid)
+            startTurn()
         } catch (e : Exception) {
             arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
             realPlayers.forEach { it.sendMessage(config.getError("TeleportFailed")) }
@@ -145,6 +145,8 @@ class ChessGame(
     }
 
     sealed class EndReason(val namePath: String, val winner: ChessSide?) {
+        override fun toString() = "EndReason.${javaClass.name.split(".","$").last()}(winner = $winner)"
+
         class Checkmate(winner: ChessSide) : EndReason("Chess.EndReason.Checkmate", winner)
         class Resignation(winner: ChessSide) : EndReason("Chess.EndReason.Resignation", winner)
         class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", winner)
@@ -157,7 +159,9 @@ class ChessGame(
         class DrawAgreement : EndReason("Chess.EndReason.DrawAgreement", null)
         class Timeout(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.Timeout", winner)
         class DrawTimeout : ChessGame.EndReason("Chess.EndReason.DrawTimeout", null)
-        class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", null)
+        class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", null){
+            override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
+        }
 
         fun getMessage(config: ConfigManager) = config.getFormatString(
             when (winner) {

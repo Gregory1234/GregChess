@@ -6,6 +6,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
+import java.lang.NullPointerException
 
 
 sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
@@ -17,7 +18,9 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         override fun toString() = "ChessPlayer.Human(name = $name, side = $side)"
 
         override fun sendMessage(msg: String) = player.sendMessage(msg)
-        override fun sendTitle(title: String, subtitle: String) = player.sendTitle(title, subtitle, 10, 70, 20)
+        override fun sendTitle(title: String, subtitle: String) =
+            player.sendTitle(title, subtitle, 10, 70, 20)
+
         fun pickUp(loc: Loc) {
             if (!game.board.renderer.getPos(loc).isValid()) return
             val piece = game.board[loc] ?: return
@@ -77,7 +80,8 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             engine.getMove(game.board.getFEN(), { str ->
                 val origin = ChessPosition.parseFromString(str.take(2))
                 val target = ChessPosition.parseFromString(str.drop(2).take(2))
-                val promotion = str.drop(4).firstOrNull()?.let { ChessType.parseFromStandardChar(it) }
+                val promotion =
+                    str.drop(4).firstOrNull()?.let { ChessType.parseFromStandardChar(it) }
                 val move = game.board.getMoves(origin)
                     .first { it.display.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
                 finishMove(move)
@@ -102,7 +106,12 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
     private val pieces
         get() = game.board.piecesOf(side)
     private val king
-        get() = pieces.find { it.type == ChessType.KING }!!
+        get() = try {
+            pieces.find { it.type == ChessType.KING }!!
+        } catch (e: NullPointerException) {
+            game.stop(ChessGame.EndReason.Error(e))
+            throw e
+        }
 
     protected fun getAllowedMoves(piece: ChessPiece): List<ChessMove> =
         game.board.getMoves(piece.pos).filter { game.board.run { it.isLegal } }
@@ -124,7 +133,8 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         private val moves: List<Pair<ChessType, ChessMove>>
     ) : InventoryHolder {
         var finished: Boolean = false
-        private val inv = Bukkit.createInventory(this, 9, player.game.config.getString("Message.PawnPromotion"))
+        private val inv =
+            Bukkit.createInventory(this, 9, player.game.config.getString("Message.PawnPromotion"))
 
         private val typesTmp = mutableMapOf<Material, ChessType>()
 

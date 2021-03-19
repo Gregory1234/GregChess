@@ -80,18 +80,18 @@ class RequestType<in T>(
             return
         }
         if (request.sender == request.receiver) {
-            onAccept(request)
             glog.mid("Self request", request.uuid)
+            onAccept(request)
             return
         }
         requests.firstOrNull { it.sender == request.sender }?.let {
-            request.sender.sendMessage(getError("AlreadySent"))
             glog.mid("Already sent", request.uuid)
+            request.sender.sendMessage(getError("AlreadySent"))
             return
         }
         requests.firstOrNull { it.receiver == request.sender || it.sender == request.receiver }?.let {
-            request.sender.sendMessage(getError("AlreadySent"))
             glog.mid("Already sent", request.uuid)
+            request.sender.sendMessage(getError("AlreadySent"))
             return
         }
         requests += request
@@ -116,8 +116,8 @@ class RequestType<in T>(
             return
         }
         requests.firstOrNull { it.receiver == request.receiver }?.let {
-            request.sender.sendMessage(getError("AlreadySent"))
             glog.mid("Already sent", request.uuid)
+            request.sender.sendMessage(getError("AlreadySent"))
             return
         }
         requests.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }?.let {
