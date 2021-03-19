@@ -35,7 +35,6 @@ Message:
         Cancel: "&eDuel with $1 has been cancelled."
         Accept: "&aYour duel request has been accepted."
       NotFound: "&cDuel request not found."
-      AlreadySent: "&cDuel request already sent."
     Draw:
       Sent:
         Request: "&eDraw offer sent."

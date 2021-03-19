@@ -36,9 +36,14 @@ class RequestTypeBuilder<T>(private val configManager: ConfigManager) {
     private var printT: (T) -> String = { it.toString() }
     private var onAccept: (Request<T>) -> Unit = {}
 
-    fun register(m: RequestManager) = m.register(RequestType(configManager, messages, validateSender, printT, onAccept))
+    fun register(m: RequestManager) =
+        m.register(RequestType(configManager, messages, validateSender, printT, onAccept))
 
-    fun messagesSimple(root: String, acceptCommand: String, cancelCommand: String): RequestTypeBuilder<T> {
+    fun messagesSimple(
+        root: String,
+        acceptCommand: String,
+        cancelCommand: String
+    ): RequestTypeBuilder<T> {
         messages = RequestMessages(root, acceptCommand, cancelCommand)
         return this
     }
@@ -67,41 +72,30 @@ class RequestType<in T>(
     private inline val printT: (T) -> String = { it.toString() },
     private inline val onAccept: (Request<T>) -> Unit
 ) {
-    private val requests = mutableListOf<Request<T>>()
+    private val requests = mutableMapOf<UUID, Request<T>>()
     private val root = messages.name
 
-    private fun getError(name: String) = config.getError("$root.$name")
     private fun getMessage(name: String) = config.getString("Message.Request.$root.$name")
 
     operator fun plusAssign(request: Request<T>) {
         if (!validateSender(request.sender)) {
-            request.sender.sendMessage(getError("CannotSend"))
+            request.sender.sendMessage(getMessage("CannotSend"))
             glog.mid("Invalid sender", request.uuid)
             return
         }
-        if (request.sender == request.receiver) {
+        /*if (request.sender == request.receiver) {
             glog.mid("Self request", request.uuid)
             onAccept(request)
             return
-        }
-        requests.firstOrNull { it.sender == request.sender }?.let {
-            glog.mid("Already sent", request.uuid)
-            request.sender.sendMessage(getError("AlreadySent"))
-            return
-        }
-        requests.firstOrNull { it.receiver == request.sender || it.sender == request.receiver }?.let {
-            glog.mid("Already sent", request.uuid)
-            request.sender.sendMessage(getError("AlreadySent"))
-            return
-        }
-        requests += request
+        }*/
+        requests[request.uuid] = request
         val messageCancel = TextComponent(config.getString("Message.Request.Cancel"))
-        messageCancel.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, messages.cancelCommand)
+        messageCancel.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "${messages.cancelCommand} ${request.uuid}")
         val messageSender = TextComponent(getMessage("Sent.Request") + " ")
         request.sender.spigot().sendMessage(messageSender, messageCancel)
 
         val messageAccept = TextComponent(config.getString("Message.Request.Accept"))
-        messageAccept.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, messages.acceptCommand)
+        messageAccept.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "${messages.acceptCommand} ${request.uuid}")
         val messageReceiver = TextComponent(
             getMessage("Received.Request").replace("$1", request.sender.name)
                 .replace("$2", printT(request.value)) + " "
@@ -111,61 +105,68 @@ class RequestType<in T>(
     }
 
     fun simpleCall(request: Request<T>) {
-        requests.firstOrNull { it.sender == request.sender }?.let {
-            cancel(it)
+        requests.values.firstOrNull { it.sender == request.sender }?.let {
+            cancel(request)
             return
         }
-        requests.firstOrNull { it.receiver == request.receiver }?.let {
-            glog.mid("Already sent", request.uuid)
-            request.sender.sendMessage(getError("AlreadySent"))
-            return
-        }
-        requests.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }?.let {
-            accept(it)
+        requests.values.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }?.let {
+            accept(request)
             return
         }
         plusAssign(request)
     }
 
     fun accept(request: Request<T>) {
-        request.sender.sendMessage(getMessage("Sent.Accept"))
-        request.receiver.sendMessage(getMessage("Received.Accept"))
+        request.sender.sendMessage(getMessage("Sent.Accept").replace("$1", request.receiver.name))
+        request.receiver.sendMessage(
+            getMessage("Received.Accept").replace(
+                "$1",
+                request.sender.name
+            )
+        )
+        requests.remove(request.uuid)
         onAccept(request)
-        requests -= request
         glog.mid("Accepted", request.uuid)
     }
 
-    fun accept(p: Player) {
-        val request = requests.firstOrNull { it.receiver == p }
-        if (request == null)
-            p.sendMessage(getError("NotFound"))
+    fun accept(p: Player, uuid: UUID) {
+        val request = requests[uuid]
+        if (request == null || p != request.receiver)
+            p.sendMessage(getMessage("NotFound"))
         else
             accept(request)
     }
 
     fun cancel(request: Request<T>) {
         request.sender.sendMessage(getMessage("Sent.Cancel").replace("$1", request.receiver.name))
-        request.receiver.sendMessage(getMessage("Received.Cancel").replace("$1", request.sender.name))
-        requests -= request
+        request.receiver.sendMessage(
+            getMessage("Received.Cancel").replace(
+                "$1",
+                request.sender.name
+            )
+        )
+        requests.remove(request.uuid)
         glog.mid("Cancelled", request.uuid)
     }
 
-    fun cancel(p: Player) {
-        val request = requests.firstOrNull { it.sender == p }
-        if (request == null)
-            p.sendMessage(getError("NotFound"))
+    fun cancel(p: Player, uuid: UUID) {
+        val request = requests[uuid]
+        if (request == null || p != request.sender)
+            p.sendMessage(getMessage("NotFound"))
         else
             cancel(request)
     }
 
-    fun quietRemove(p: Player) = requests.removeIf { it.sender == p || it.receiver == p }
+    fun quietRemove(p: Player) = requests.values.filter { it.sender == p || it.receiver == p }
+        .forEach { requests.remove(it.uuid) }
 
 }
 
 data class RequestMessages(val name: String, val acceptCommand: String, val cancelCommand: String)
 
-data class Request<out T>(val sender: Player, val receiver: Player, val value: T){
+data class Request<out T>(val sender: Player, val receiver: Player, val value: T) {
     val uuid: UUID = UUID.randomUUID()
+
     init {
         glog.low("Created request", uuid, sender, receiver, value)
     }

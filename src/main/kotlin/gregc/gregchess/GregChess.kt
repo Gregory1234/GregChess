@@ -66,11 +66,26 @@ class GregChess : JavaPlugin(), Listener {
             when (args[0].toLowerCase()) {
                 "duel" -> {
                     commandRequirePlayer(player)
-                    commandRequireArguments(args, 2)
+                    commandRequireArgumentsMin(args, 2)
                     when (args[1].toLowerCase()) {
-                        "accept" -> duelRequest.accept(player)
-                        "cancel" -> duelRequest.cancel(player)
+                        "accept" -> {
+                            commandRequireArguments(args, 3)
+                            try {
+                                duelRequest.accept(player, UUID.fromString(args[2]))
+                            } catch (e: IllegalArgumentException) {
+                                throw CommandException("WrongArgument")
+                            }
+                        }
+                        "cancel" -> {
+                            commandRequireArguments(args, 3)
+                            try {
+                                duelRequest.cancel(player, UUID.fromString(args[2]))
+                            } catch (e: IllegalArgumentException) {
+                                throw CommandException("WrongArgument")
+                            }
+                        }
                         else -> {
+                            commandRequireArguments(args, 2)
                             val opponent = GregChessInfo.server.getPlayer(args[1])
                             commandRequireNotNull(opponent, "PlayerNotFound")
                             chess.duelMenu(player, opponent) { arena, settings ->
