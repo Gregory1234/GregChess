@@ -23,7 +23,7 @@ class ChessPiece(
     var hasMoved = hasMoved
         private set
 
-    val uniqueId = UUID.randomUUID()
+    val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() =
         "ChessPiece(uniqueId = $uniqueId, pos = $pos, type = $type, side = $side)"
@@ -38,7 +38,7 @@ class ChessPiece(
         val type: ChessType,
         val side: ChessSide,
         val by: ChessSide,
-        val board: Chessboard
+        private val board: Chessboard
     ) {
 
         private val config

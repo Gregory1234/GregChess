@@ -114,7 +114,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         }
 
     protected fun getAllowedMoves(piece: ChessPiece): List<ChessMove> =
-        game.board.getMoves(piece.pos).filter { game.board.run { it.isLegal } }
+        game.board.getMoves(piece.pos).filter(game.board::isLegal)
 
     fun finishMove(move: ChessMove) {
         val data = move.execute(game.config)

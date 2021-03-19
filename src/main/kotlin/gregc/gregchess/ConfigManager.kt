@@ -1,7 +1,6 @@
 package gregc.gregchess
 
 import org.bukkit.plugin.java.JavaPlugin
-import java.lang.Exception
 import java.lang.IllegalArgumentException
 import kotlin.reflect.KClass
 

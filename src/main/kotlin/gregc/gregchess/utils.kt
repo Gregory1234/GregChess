@@ -71,7 +71,7 @@ fun Location.playSound(s: Sound, volume: Float = 3.0f, pitch: Float = 1.0f) =
 abstract class Arena(
     val config: ConfigManager,
     val name: String,
-    val resourcePackPath: String? = null
+    private val resourcePackPath: String? = null
 ) {
     abstract val defaultData: PlayerData
     abstract val spectatorData: PlayerData
@@ -135,11 +135,13 @@ abstract class Arena(
         p.playerData = data[p.uniqueId]!!
         data.remove(p.uniqueId)
         resourcePackPath?.let {
-            glog.io(config.getString("EmptyResourcePack"))
-            p.setResourcePack(
-                config.getString("EmptyResourcePack"),
-                hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
-            )
+            config.getOptionalString(resourcePackPath)?.let {
+                glog.io(config.getString("EmptyResourcePack"))
+                p.setResourcePack(
+                    config.getString("EmptyResourcePack"),
+                    hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
+                )
+            }
         }
         glog.mid("Teleported", p.name, "out of arena", name)
     }

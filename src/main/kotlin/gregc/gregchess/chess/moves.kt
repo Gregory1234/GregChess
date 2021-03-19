@@ -13,7 +13,8 @@ data class MoveData(
     inline val undo: () -> Unit
 ) {
 
-    override fun toString() = "MoveData(name = $name, origin = $origin, target = $target, piece.uuid = ${piece.uniqueId})"
+    override fun toString() =
+        "MoveData(name = $name, origin = $origin, target = $target, piece.uuid = ${piece.uniqueId})"
 
     fun render() {
         origin.previousMoveMarker = Material.BROWN_CONCRETE
@@ -167,8 +168,8 @@ fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
     val board = target.board
     val pieces = board.pieces.filter { it.side == piece.side && it.type == piece.type }
     val consideredPieces =
-        pieces.filter {
-            it.square.bakedMoves.orEmpty().any { it.target == target && board.run { it.isLegal } }
+        pieces.filter { p ->
+            p.square.bakedMoves.orEmpty().any { it.target == target && board.isLegal(it) }
         }
     return when {
         consideredPieces.size == 1 -> ""
@@ -181,7 +182,7 @@ fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
 fun checkForChecks(side: ChessSide, board: Chessboard): String {
     board.updateMoves()
     return when {
-        board.piecesOf(!side).flatMap { board.run { getMoves(it.pos).filter { it.isLegal } } }
+        board.piecesOf(!side).flatMap { board.getMoves(it.pos).filter(board::isLegal) }
             .isEmpty() -> "#"
         board.checkingMoves(side, board.piecesOf(!side).first { it.type == ChessType.KING }.square)
             .isNotEmpty() -> "+"

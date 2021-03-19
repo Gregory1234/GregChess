@@ -7,7 +7,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.java.JavaPlugin
-import java.time.LocalDateTime
 import java.util.*
 
 class RequestManager(private val plugin: JavaPlugin) : Listener {
@@ -146,7 +145,7 @@ class RequestType<in T>(
         call(request, true)
     }
 
-    fun accept(request: Request<T>) {
+    private fun accept(request: Request<T>) {
         request.sender.sendMessage(getFormatMessage("Sent.Accept", request.receiver.name))
         request.receiver.sendMessage(getFormatMessage("Received.Accept", request.sender.name))
         requests.remove(request.uniqueId)
@@ -162,7 +161,7 @@ class RequestType<in T>(
             accept(request)
     }
 
-    fun cancel(request: Request<T>) {
+    private fun cancel(request: Request<T>) {
         request.sender.sendMessage(getFormatMessage("Sent.Cancel", request.receiver.name))
         request.receiver.sendMessage(getFormatMessage("Received.Cancel", request.sender.name))
         requests.remove(request.uniqueId)
@@ -178,7 +177,7 @@ class RequestType<in T>(
             cancel(request)
     }
 
-    fun timeOut(request: Request<T>) {
+    private fun timeOut(request: Request<T>) {
         request.sender.sendMessage(getFormatMessage("TimedOut", request.receiver.name))
         request.receiver.sendMessage(getFormatMessage("TimedOut", request.sender.name))
         requests.remove(request.uniqueId)
@@ -195,7 +194,6 @@ data class RequestMessages(val name: String, val acceptCommand: String, val canc
 
 data class Request<out T>(val sender: Player, val receiver: Player, val value: T) {
     val uniqueId: UUID = UUID.randomUUID()
-    val time = LocalDateTime.now()
 
     init {
         glog.low("Created request", uniqueId, sender, receiver, value)
