@@ -24,7 +24,11 @@ import kotlin.contracts.ExperimentalContracts
 import org.bukkit.event.entity.CreatureSpawnEvent
 
 
-class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager, val config: ConfigManager) :
+class ChessManager(
+    private val plugin: JavaPlugin,
+    val timeManager: TimeManager,
+    val config: ConfigManager
+) :
     Listener {
 
     private val settingsManager = SettingsManager(plugin, config)
@@ -72,7 +76,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
     private val arenas = mutableListOf<ChessArena>()
 
-    private fun nextArena(): ChessArena? = arenas.firstOrNull { it.isEmpty() }
+    private fun nextArena(): ChessArena? = arenas.firstOrNull { it.isAvailable() }
 
     fun start() {
         plugin.server.pluginManager.registerEvents(this, plugin)
@@ -109,19 +113,29 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
     }
 
     @ExperimentalContracts
-    fun duelMenu(player: Player, opponent: Player, callback: (ChessArena, ChessGame.Settings) -> Unit) {
+    fun duelMenu(
+        player: Player,
+        opponent: Player,
+        callback: (ChessArena, ChessGame.Settings) -> Unit
+    ) {
         if (isInGame(player))
             throw CommandException("InGame.You")
         if (isInGame(opponent))
             throw CommandException("InGame.Opponent")
         val arena = nextArena()
         commandRequireNotNull(arena, "NoArenas")
-        player.openInventory(ChessGame.SettingsMenu(settingsManager) {
+        arena.reserve()
+        player.openInventory(ChessGame.SettingsScreen(settingsManager, { arena.clear() }) {
             callback(arena, it)
         }.inventory)
     }
 
-    fun startDuel(player: Player, opponent: Player, arena: ChessArena, settings: ChessGame.Settings) {
+    fun startDuel(
+        player: Player,
+        opponent: Player,
+        arena: ChessArena,
+        settings: ChessGame.Settings
+    ) {
         if (!arena.isEmpty())
             return
         val game = ChessGame(player, opponent, arena, settings, this)
@@ -135,9 +149,10 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
             throw CommandException("InGame.You")
         val arena = nextArena()
         commandRequireNotNull(arena, "NoArenas")
-        player.openInventory(ChessGame.SettingsMenu(settingsManager) {
+        arena.reserve()
+        player.openInventory(ChessGame.SettingsScreen(settingsManager, { arena.clear() }) {
             if (!arena.isEmpty())
-                return@SettingsMenu
+                return@SettingsScreen
             val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
             val black = ChessPlayer.Engine(ChessEngine(plugin, "stockfish"), ChessSide.BLACK)
             val game = ChessGame(white, black, arena, it, this)
@@ -231,7 +246,7 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
                 e.currentItem?.let { holder.applyEvent(it.type); e.whoClicked.closeInventory() }
             }
         } else {
-            if (holder is ChessGame.SettingsMenu) {
+            if (holder is ChessGame.SettingsScreen) {
                 e.currentItem?.itemMeta?.displayName?.let { holder.applyEvent(it); e.whoClicked.closeInventory() }
                 e.isCancelled = true
             }
@@ -240,11 +255,16 @@ class ChessManager(private val plugin: JavaPlugin, val timeManager: TimeManager,
 
     @EventHandler
     fun onInventoryClose(e: InventoryCloseEvent) {
+        val holder = e.inventory.holder
         if (isInGame(e.player)) {
-            val holder = e.inventory.holder
             if (holder is ChessPlayer.PawnPromotionScreen) {
                 if (!holder.finished)
                     holder.applyEvent(null)
+            }
+        } else {
+            if (holder is ChessGame.SettingsScreen) {
+                if (!holder.finished)
+                    holder.cancel()
             }
         }
     }

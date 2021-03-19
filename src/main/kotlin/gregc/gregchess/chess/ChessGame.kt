@@ -54,7 +54,7 @@ class ChessGame(
         get() = spectatorUUID.mapNotNull { Bukkit.getPlayer(it) }
 
     private val playerUUID: List<UUID> =
-        players.mapNotNull { (it as? ChessPlayer.Human)?.player }.map{it.uniqueId }.distinct()
+        players.mapNotNull { (it as? ChessPlayer.Human)?.player }.map { it.uniqueId }.distinct()
 
     private val realPlayers: List<Player>
         get() = playerUUID.mapNotNull { Bukkit.getPlayer(it) }
@@ -68,7 +68,8 @@ class ChessGame(
 
     val scoreboard = ScoreboardManager(this, chessManager.timeManager)
 
-    fun <T : Component> getComponent(cl: KClass<T>): T? = components.mapNotNull { cl.safeCast(it) }.firstOrNull()
+    fun <T : Component> getComponent(cl: KClass<T>): T? =
+        components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
     class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
         override fun getHandlers() = handlerList
@@ -110,14 +111,17 @@ class ChessGame(
             }
             forEachPlayer(arena::teleport)
             black.sendTitle("", config.getString("Title.YouArePlayingAs.Black"))
-            white.sendTitle(config.getString("Title.YourTurn"), config.getString("Title.YouArePlayingAs.White"))
+            white.sendTitle(
+                config.getString("Title.YourTurn"),
+                config.getString("Title.YouArePlayingAs.White")
+            )
             white.sendMessage(config.getString("Message.YouArePlayingAs.White"))
             black.sendMessage(config.getString("Message.YouArePlayingAs.Black"))
             components.forEach { it.start() }
             scoreboard.start()
             glog.mid("Started game", uniqueId)
             startTurn()
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
             forEachPlayer { it.sendMessage(config.getError("TeleportFailed")) }
             stopping = true
@@ -156,7 +160,8 @@ class ChessGame(
     }
 
     sealed class EndReason(val namePath: String, val winner: ChessSide?) {
-        override fun toString() = "EndReason.${javaClass.name.split(".","$").last()}(winner = $winner)"
+        override fun toString() =
+            "EndReason.${javaClass.name.split(".", "$").last()}(winner = $winner)"
 
         class Checkmate(winner: ChessSide) : EndReason("Chess.EndReason.Checkmate", winner)
         class Resignation(winner: ChessSide) : EndReason("Chess.EndReason.Resignation", winner)
@@ -170,7 +175,7 @@ class ChessGame(
         class DrawAgreement : EndReason("Chess.EndReason.DrawAgreement", null)
         class Timeout(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.Timeout", winner)
         class DrawTimeout : ChessGame.EndReason("Chess.EndReason.DrawTimeout", null)
-        class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", null){
+        class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", null) {
             override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
         }
 
@@ -210,7 +215,10 @@ class ChessGame(
                     config.getString(reason.namePath)
                 )
             } else {
-                this[it]?.sendTitle(config.getString("Title.Player.YouDrew"), config.getString(reason.namePath))
+                this[it]?.sendTitle(
+                    config.getString("Title.Player.YouDrew"),
+                    config.getString(reason.namePath)
+                )
             }
             it.sendMessage(reason.getMessage(config))
             if (it in quick) {
@@ -229,7 +237,10 @@ class ChessGame(
                     config.getString(reason.namePath)
                 )
             } else {
-                this[it]?.sendTitle(config.getString("Title.Spectator.ItWasADraw"), config.getString(reason.namePath))
+                this[it]?.sendTitle(
+                    config.getString("Title.Spectator.ItWasADraw"),
+                    config.getString(reason.namePath)
+                )
             }
             it.sendMessage(reason.getMessage(config))
             if (anyLong) {
@@ -240,17 +251,20 @@ class ChessGame(
                 }
             }
         }
-        if (reason is EndReason.PluginRestart)
+        if (reason is EndReason.PluginRestart) {
+            glog.low("Stopped game", uniqueId, reason)
             return
+        }
         chessManager.timeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
             scoreboard.stop()
             components.forEach { it.clear() }
             chessManager.timeManager.runTaskLater(1.ticks) {
                 players.forEach(ChessPlayer::stop)
+                arena.clear()
+                glog.low("Stopped game", uniqueId, reason)
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
             }
         }
-        glog.low("Stopped game", uniqueId, reason)
     }
 
     operator fun get(player: Player): ChessPlayer.Human? =
@@ -272,9 +286,18 @@ class ChessGame(
         components.forEach { it.update() }
     }
 
-    class SettingsMenu(private val settingsManager: SettingsManager, private inline val callback: (Settings) -> Unit) :
+    class SettingsScreen(
+        private val settingsManager: SettingsManager,
+        private inline val cancelCallback: () -> Unit,
+        private inline val callback: (Settings) -> Unit
+    ) :
         InventoryHolder {
-        private val inv = Bukkit.createInventory(this, 9, settingsManager.config.getString("Message.ChooseSettings"))
+        private val inv = Bukkit.createInventory(
+            this,
+            9,
+            settingsManager.config.getString("Message.ChooseSettings")
+        )
+        var finished: Boolean = false
 
         init {
             for ((p, _) in settingsManager.settingsChoice) {
@@ -289,7 +312,13 @@ class ChessGame(
         override fun getInventory() = inv
 
         fun applyEvent(choice: String) {
+            finished = true
             settingsManager.settingsChoice[choice]?.let(callback)
+        }
+
+        fun cancel() {
+            finished = true
+            cancelCallback()
         }
     }
 

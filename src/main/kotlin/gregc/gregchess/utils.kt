@@ -77,6 +77,7 @@ abstract class Arena(
     abstract val spectatorData: PlayerData
     abstract val worldGen: ChunkGenerator
     abstract val setSettings: World.() -> Unit
+    private var reserved = false
 
     val scoreboard by lazy {
         Bukkit.getScoreboardManager()!!.newScoreboard
@@ -144,6 +145,19 @@ abstract class Arena(
     }
 
     fun isEmpty() = world.players.isEmpty()
+    fun isAvailable() = isEmpty() && !reserved
+
+    fun reserve() {
+        reserved = true
+        glog.low("Reserved", name)
+    }
+
+    fun clear() {
+        world.players.forEach(::exit)
+        reserved = false
+        glog.low("Cleared", name)
+    }
+
     fun delete() {
         if (!worldCreated)
             return
@@ -169,6 +183,7 @@ abstract class Arena(
             )
         }
     }
+
 }
 
 fun JavaPlugin.addCommand(
@@ -325,7 +340,7 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
             retNull = true
             ""
         } else
-            args[i-1].toString()
+            args[i - 1].toString()
     }
     return if (retNull) null else ret
 }
