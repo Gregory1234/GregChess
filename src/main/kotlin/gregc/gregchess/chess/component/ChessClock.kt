@@ -38,7 +38,7 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
     }
 
     private val view
-        get() = ConfigManager.getView("Component.Clock")!!
+        get() = ConfigManager.getView("Component.Clock")
 
     data class Time(
         var diff: Duration,

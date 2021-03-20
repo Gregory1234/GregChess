@@ -11,7 +11,7 @@ class ScoreboardManager(private val game: ChessGame) {
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 
-    private val view = ConfigManager.getView("Component.Scoreboard")!!
+    private val view = ConfigManager.getView("Component.Scoreboard")
 
     private val objective =
         game.arena.scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))

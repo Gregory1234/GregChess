@@ -7,28 +7,34 @@ object ConfigManager : View("")
 
 open class View protected constructor(private val rootPath: String = "") {
     private val config
-        get() = GregInfo.plugin.config.getConfigurationSection(rootPath)!!
+        get() = GregInfo.plugin.config
+    private val section
+        get() = config.getConfigurationSection(rootPath)
 
-    fun getView(path: String): View? {// TODO: this should never return null!
-        val section = config.getConfigurationSection(path) ?: return null
-        return View(section.currentPath!!)
-    }
+    private fun childPath(path: String) = (if (rootPath == "") path else ("$rootPath.$path"))
+
+    fun getView(path: String) = View(childPath(path))
 
     val keys: List<String>
-        get() = config.getKeys(false).toList()
+        get() = section?.getKeys(false)?.toList().orEmpty()
 
-    fun toMap() = config.getValues(false).mapValues { (_, v) -> v.toString() }
+    val children: Map<String,View>
+        get() = section?.getKeys(false)?.mapNotNull {
+            val view = getView(it)
+            if (view.exists) Pair(it, view)
+            else null
+        }.orEmpty().toMap()
+
+    fun toMap() = section?.getValues(false)?.mapValues { (_, v) -> v.toString() }.orEmpty()
+
+    val exists
+        get() = section != null
 
     fun <T> get(
-        path: String,
-        type: String,
-        default: T,
-        warnMissing: Boolean = true,
-        parser: (String) -> T?
+        path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?
     ): T {
-        val str = config.getString(path)
-        val fullPath =
-            (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
+        val fullPath = childPath(path)
+        val str = config.getString(fullPath)
         if (str == null) {
             if (warnMissing)
                 glog.warn("Not found $type $fullPath, defaulted to $default!")
@@ -43,19 +49,15 @@ open class View protected constructor(private val rootPath: String = "") {
     }
 
     fun <T> getList(
-        path: String,
-        type: String,
-        warnMissing: Boolean = true,
-        parser: (String) -> T?
+        path: String, type: String, warnMissing: Boolean = true, parser: (String) -> T?
     ): List<T> {
-        val fullPath =
-            (if (config.currentPath.orEmpty() == "") "" else (config.currentPath.orEmpty() + ".")) + path
-        if (path !in config) {
+        val fullPath = childPath(path)
+        if (fullPath !in config) {
             if (warnMissing)
                 glog.warn("Not found list of $type $fullPath, defaulted to an empty list!")
             return emptyList()
         }
-        val str = config.getStringList(path)
+        val str = config.getStringList(fullPath)
         return str.mapNotNull {
             val ret = parser(it)
             if (ret == null) {

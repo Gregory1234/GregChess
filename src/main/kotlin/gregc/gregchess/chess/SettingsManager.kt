@@ -12,30 +12,21 @@ object SettingsManager {
         componentChoice[name] = presets
     }
 
-    inline fun <T : ChessGame.ComponentSettings> registerComponent(
-        name: String,
-        parser: (View) -> T
-    ) {
-        val view = ConfigManager.getView("Settings.$name") ?: return
-        registerComponent(name, view.keys.mapNotNull { key ->
-            val child = view.getView(key) ?: return@mapNotNull null
-            Pair(key, parser(child))
-        }.toMap())
+    inline fun <T : ChessGame.ComponentSettings>
+            registerComponent(name: String, parser: (View) -> T) {
+        val view = ConfigManager.getView("Settings.$name")
+        registerComponent(name, view.children.mapValues { (_, child) -> parser(child) })
     }
 
     val settingsChoice: Map<String, ChessGame.Settings>
         get() {
-            val presets =
-                ConfigManager.getView("Settings.Presets") ?: return emptyMap()
-            return presets.keys.mapNotNull { key ->
-                val child = presets.getView(key) ?: return@mapNotNull null
+            val presets = ConfigManager.getView("Settings.Presets")
+            return presets.children.mapValues { (key, child) ->
                 val relaxedInsufficientMaterial = child.getBool("Relaxed", true)
                 val simpleCastling = child.getBool("SimpleCastling", false)
                 val components = child.toMap().mapNotNull { (k, v) -> componentChoice[k]?.get(v) }
-                val ret =
-                    ChessGame.Settings(key, relaxedInsufficientMaterial, simpleCastling, components)
-                Pair(key, ret)
-            }.toMap()
+                ChessGame.Settings(key, relaxedInsufficientMaterial, simpleCastling, components)
+            }
         }
 
 }

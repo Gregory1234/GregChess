@@ -20,7 +20,7 @@ enum class ChessType(
     KNIGHT("Chess.Piece.Knight", 'n', ::knightMovement, true),
     PAWN("Chess.Piece.Pawn", 'p', ::pawnMovement, false);
 
-    private val view = ConfigManager.getView(path)!!
+    private val view = ConfigManager.getView(path)
 
     fun getMaterial(side: ChessSide): Material =
         view.getEnum("Item.${side.standardName}", Material.AIR, Material::class)
