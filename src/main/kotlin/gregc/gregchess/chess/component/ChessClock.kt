@@ -1,8 +1,8 @@
 package gregc.gregchess.chess.component
 
+import gregc.gregchess.ConfigManager
 import gregc.gregchess.chess.*
 import gregc.gregchess.seconds
-import org.bukkit.entity.Player
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -10,32 +10,35 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 
-class ChessClock(override val game: ChessGame, private val settings: Settings) : ChessGame.Component {
+class ChessClock(override val game: ChessGame, private val settings: Settings) :
+    ChessGame.Component {
 
     enum class Type(val usesIncrement: Boolean = true) {
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
 
-    data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
-        ChessGame.ComponentSettings {
+    data class Settings(
+        val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds
+    ) : ChessGame.ComponentSettings {
+
         override fun getComponent(game: ChessGame) = ChessClock(game, this)
 
         companion object {
 
-            fun init(settingsManager: SettingsManager) {
-                settingsManager.registerComponent("Clock") {
+            fun init() {
+                SettingsManager.registerComponent("Clock") {
                     val t = it.getEnum("Type", Type.INCREMENT, Type::class, false)
                     Settings(
-                        t,
-                        it.getDuration("Initial"),
-                        if (t.usesIncrement) it.getDuration("Increment") else 0.seconds
+                        t, it.getDuration("Initial"),
+                        it.getDuration("Increment", t.usesIncrement)
                     )
                 }
             }
         }
     }
 
-    private fun getString(path: String) = game.config.getString("Component.Clock.$path")
+    private val view
+        get() = ConfigManager.getView("Component.Clock")!!
 
     data class Time(
         var diff: Duration,
@@ -82,8 +85,10 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
     private fun timeout(side: ChessSide) {
         if (game.board.piecesOf(!side).size == 1)
             game.stop(ChessGame.EndReason.DrawTimeout())
-        else if (game.settings.relaxedInsufficientMaterial
-            && game.board.piecesOf(!side).size == 2 && game.board.piecesOf(!side).any { it.type.minor }
+        else if (
+            game.settings.relaxedInsufficientMaterial
+            && game.board.piecesOf(!side).size == 2
+            && game.board.piecesOf(!side).any { it.type.minor }
         )
             game.stop(ChessGame.EndReason.DrawTimeout())
         else
@@ -91,19 +96,21 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
     }
 
     private fun format(time: Duration): String {
-        val formatter = DateTimeFormatter.ofPattern(getString("TimeFormat"))
-        return (LocalTime.ofNanoOfDay(ceil(time.toNanos().toDouble() / 1000000.0).toLong() * 1000000)).format(formatter)
+        val formatter = DateTimeFormatter.ofPattern(view.getString("TimeFormat"))
+        return (LocalTime.ofNanoOfDay(
+            ceil(time.toNanos().toDouble() / 1000000.0).toLong() * 1000000
+        )).format(formatter)
     }
 
     override fun start() {
 
         if (settings.type == Type.FIXED) {
-            game.scoreboard += object : GameProperty(getString("TimeRemainingSimple")) {
+            game.scoreboard += object : GameProperty(view.getString("TimeRemainingSimple")) {
                 override fun invoke() = format(getTimeRemaining(game.currentTurn))
             }
             startTimer()
         } else {
-            game.scoreboard += object : PlayerProperty(getString("TimeRemaining")) {
+            game.scoreboard += object : PlayerProperty(view.getString("TimeRemaining")) {
                 override fun invoke(s: ChessSide) = format(getTimeRemaining(s))
             }
         }
@@ -140,31 +147,26 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
             Type.BRONSTEIN -> {
                 val reset = Duration.between(getTime(turn).start, time)
                 getTime(turn).diff =
-                    Duration.between(time, getTime(turn).end + if (increment > reset) reset else increment)
+                    Duration.between(
+                        time,
+                        getTime(turn).end + if (increment > reset) reset else increment
+                    )
             }
             Type.SIMPLE -> {
                 getTime(!turn) += increment
                 getTime(!turn).begin = time + increment
                 getTime(turn).diff = Duration.between(
-                    if (getTime(turn).begin == null || time > getTime(turn).begin) time else getTime(turn).begin,
+                    if (getTime(turn).begin == null || time > getTime(turn).begin) time
+                    else getTime(turn).begin,
                     getTime(turn).end
                 )
             }
         }
     }
 
-    override fun startPreviousTurn() {}
-    override fun previousTurn() {}
-
     override fun stop() {
         stopTime = LocalDateTime.now()
     }
-
-    override fun spectatorJoin(p: Player) {}
-    override fun spectatorLeave(p: Player) {}
-
-    override fun startTurn() {}
-    override fun clear() {}
 
     fun addTime(side: ChessSide, addition: Duration) {
         getTime(side) += addition

@@ -5,7 +5,6 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.glog
 import gregc.gregchess.star
 import org.bukkit.Material
-import org.bukkit.entity.Player
 import java.lang.NullPointerException
 import java.util.*
 import kotlin.math.abs
@@ -40,8 +39,8 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
         companion object {
 
-            fun init(settingsManager: SettingsManager) {
-                settingsManager.registerComponent(
+            fun init() {
+                SettingsManager.registerComponent(
                     "Board", mapOf(
                         "normal" to Settings(null),
                         "chess960" to Settings(null, true)
@@ -122,11 +121,6 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         setFromFEN(settings.genFEN())
     }
 
-    override fun update() {}
-    override fun stop() {}
-    override fun spectatorJoin(p: Player) {}
-    override fun spectatorLeave(p: Player) {}
-    override fun startPreviousTurn() {}
     override fun startTurn() {
         checkForGameEnd()
     }

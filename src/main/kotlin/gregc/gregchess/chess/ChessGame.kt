@@ -14,11 +14,8 @@ import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
 class ChessGame(
-    private val white: ChessPlayer,
-    private val black: ChessPlayer,
-    val arena: ChessArena,
-    val settings: Settings,
-    private val chessManager: ChessManager
+    private val white: ChessPlayer, private val black: ChessPlayer,
+    val arena: ChessArena, val settings: Settings
 ) {
     val uniqueId: UUID = UUID.randomUUID()
     override fun toString() = "ChessGame(arena = $arena, uniqueId = $uniqueId)"
@@ -27,17 +24,12 @@ class ChessGame(
     val board: Chessboard = getComponent(Chessboard::class)!!
 
     constructor(
-        whitePlayer: Player,
-        blackPlayer: Player,
-        arena: ChessArena,
-        settings: Settings,
-        chessManager: ChessManager
+        whitePlayer: Player, blackPlayer: Player,
+        arena: ChessArena, settings: Settings
     ) : this(
         ChessPlayer.Human(whitePlayer, ChessSide.WHITE, whitePlayer == blackPlayer),
         ChessPlayer.Human(blackPlayer, ChessSide.BLACK, whitePlayer == blackPlayer),
-        arena,
-        settings,
-        chessManager
+        arena, settings
     )
 
     init {
@@ -64,9 +56,7 @@ class ChessGame(
     val world
         get() = arena.world
 
-    val config = chessManager.config
-
-    val scoreboard = ScoreboardManager(this, chessManager.timeManager)
+    val scoreboard = ScoreboardManager(this)
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
@@ -102,28 +92,30 @@ class ChessGame(
 
     fun start() {
         try {
-            scoreboard += object : GameProperty(config.getString("Component.Scoreboard.Preset")) {
+            scoreboard += object :
+                GameProperty(ConfigManager.getString("Component.Scoreboard.Preset")) {
                 override fun invoke() = settings.name
             }
-            scoreboard += object : PlayerProperty(config.getString("Component.Scoreboard.Player")) {
+            scoreboard += object :
+                PlayerProperty(ConfigManager.getString("Component.Scoreboard.Player")) {
                 override fun invoke(s: ChessSide) =
-                    config.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
+                    ConfigManager.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
             }
             forEachPlayer(arena::teleport)
-            black.sendTitle("", config.getString("Title.YouArePlayingAs.Black"))
+            black.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
             white.sendTitle(
-                config.getString("Title.YourTurn"),
-                config.getString("Title.YouArePlayingAs.White")
+                ConfigManager.getString("Title.YourTurn"),
+                ConfigManager.getString("Title.YouArePlayingAs.White")
             )
-            white.sendMessage(config.getString("Message.YouArePlayingAs.White"))
-            black.sendMessage(config.getString("Message.YouArePlayingAs.Black"))
+            white.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
+            black.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
             components.forEach { it.start() }
             scoreboard.start()
             glog.mid("Started game", uniqueId)
             startTurn()
         } catch (e: Exception) {
             arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
-            forEachPlayer { it.sendMessage(config.getError("TeleportFailed")) }
+            forEachPlayer { it.sendMessage(ConfigManager.getError("TeleportFailed")) }
             stopping = true
             components.forEach { it.stop() }
             scoreboard.stop()
@@ -179,12 +171,12 @@ class ChessGame(
             override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
         }
 
-        fun getMessage(config: ConfigManager) = config.getFormatString(
+        fun getMessage() = ConfigManager.getFormatString(
             when (winner) {
                 ChessSide.WHITE -> "Message.GameFinished.WhiteWon"
                 ChessSide.BLACK -> "Message.GameFinished.BlackWon"
                 null -> "Message.GameFinished.ItWasADraw"
-            }, config.getString(namePath)
+            }, ConfigManager.getString(namePath)
         )
     }
 
@@ -211,21 +203,21 @@ class ChessGame(
         forEachPlayer {
             if (reason.winner != null) {
                 this[it]?.sendTitle(
-                    config.getString(if (reason.winner == this[it]!!.side) "Title.Player.YouWon" else "Title.Player.YouLost"),
-                    config.getString(reason.namePath)
+                    ConfigManager.getString(if (reason.winner == this[it]!!.side) "Title.Player.YouWon" else "Title.Player.YouLost"),
+                    ConfigManager.getString(reason.namePath)
                 )
             } else {
                 this[it]?.sendTitle(
-                    config.getString("Title.Player.YouDrew"),
-                    config.getString(reason.namePath)
+                    ConfigManager.getString("Title.Player.YouDrew"),
+                    ConfigManager.getString(reason.namePath)
                 )
             }
-            it.sendMessage(reason.getMessage(config))
+            it.sendMessage(reason.getMessage())
             if (it in quick) {
                 arena.exit(it)
             } else {
                 anyLong = true
-                chessManager.timeManager.runTaskLater(3.seconds) {
+                TimeManager.runTaskLater(3.seconds) {
                     arena.exit(it)
                 }
             }
@@ -233,20 +225,20 @@ class ChessGame(
         forEachSpectator {
             if (reason.winner != null) {
                 this[it]?.sendTitle(
-                    config.getString(if (reason.winner == ChessSide.WHITE) "Title.Spectator.WhiteWon" else "Title.Spectator.BlackWon"),
-                    config.getString(reason.namePath)
+                    ConfigManager.getString(if (reason.winner == ChessSide.WHITE) "Title.Spectator.WhiteWon" else "Title.Spectator.BlackWon"),
+                    ConfigManager.getString(reason.namePath)
                 )
             } else {
                 this[it]?.sendTitle(
-                    config.getString("Title.Spectator.ItWasADraw"),
-                    config.getString(reason.namePath)
+                    ConfigManager.getString("Title.Spectator.ItWasADraw"),
+                    ConfigManager.getString(reason.namePath)
                 )
             }
-            it.sendMessage(reason.getMessage(config))
+            it.sendMessage(reason.getMessage())
             if (anyLong) {
                 arena.exit(it)
             } else {
-                chessManager.timeManager.runTaskLater(3.seconds) {
+                TimeManager.runTaskLater(3.seconds) {
                     arena.exit(it)
                 }
             }
@@ -255,10 +247,10 @@ class ChessGame(
             glog.low("Stopped game", uniqueId, reason)
             return
         }
-        chessManager.timeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
+        TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
             scoreboard.stop()
             components.forEach { it.clear() }
-            chessManager.timeManager.runTaskLater(1.ticks) {
+            TimeManager.runTaskLater(1.ticks) {
                 players.forEach(ChessPlayer::stop)
                 arena.clear()
                 glog.low("Stopped game", uniqueId, reason)
@@ -287,7 +279,6 @@ class ChessGame(
     }
 
     class SettingsScreen(
-        private val settingsManager: SettingsManager,
         private inline val cancelCallback: () -> Unit,
         private inline val callback: (Settings) -> Unit
     ) :
@@ -295,12 +286,12 @@ class ChessGame(
         private val inv = Bukkit.createInventory(
             this,
             9,
-            settingsManager.config.getString("Message.ChooseSettings")
+            ConfigManager.getString("Message.ChooseSettings")
         )
         var finished: Boolean = false
 
         init {
-            for ((p, _) in settingsManager.settingsChoice) {
+            for ((p, _) in SettingsManager.settingsChoice) {
                 val item = ItemStack(Material.IRON_BLOCK)
                 val meta = item.itemMeta
                 meta?.setDisplayName(p)
@@ -313,7 +304,7 @@ class ChessGame(
 
         fun applyEvent(choice: String) {
             finished = true
-            settingsManager.settingsChoice[choice]?.let(callback)
+            SettingsManager.settingsChoice[choice]?.let(callback)
         }
 
         fun cancel() {
@@ -324,16 +315,16 @@ class ChessGame(
 
     interface Component {
         val game: ChessGame
-        fun start()
-        fun update()
-        fun stop()
-        fun clear()
-        fun spectatorJoin(p: Player)
-        fun spectatorLeave(p: Player)
-        fun startTurn()
-        fun endTurn()
-        fun startPreviousTurn()
-        fun previousTurn()
+        fun start() {}
+        fun update() {}
+        fun stop() {}
+        fun clear() {}
+        fun spectatorJoin(p: Player) {}
+        fun spectatorLeave(p: Player) {}
+        fun startTurn() {}
+        fun endTurn() {}
+        fun startPreviousTurn() {}
+        fun previousTurn() {}
     }
 
     interface ComponentSettings {

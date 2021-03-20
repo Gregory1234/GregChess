@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.ConfigManager
 import gregc.gregchess.Loc
 import gregc.gregchess.glog
 import org.bukkit.Bukkit
@@ -31,7 +32,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             heldMoves?.forEach { it.render() }
             held = piece
             piece.pickUp()
-            player.inventory.setItem(0, piece.type.getItem(game.config, piece.side))
+            player.inventory.setItem(0, piece.type.getItem(piece.side))
         }
 
         fun makeMove(loc: Loc) {
@@ -90,8 +91,6 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         }
     }
 
-    private fun getString(path: String) = game.config.getString(path)
-
     var held: ChessPiece? = null
     protected var heldMoves: List<ChessMove>? = null
 
@@ -117,7 +116,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         game.board.getMoves(piece.pos).filter(game.board::isLegal)
 
     fun finishMove(move: ChessMove) {
-        val data = move.execute(game.config)
+        val data = move.execute()
         game.board.lastMove?.clear()
         game.board.lastMove = data
         game.board.lastMove?.render()
@@ -134,14 +133,14 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
     ) : InventoryHolder {
         var finished: Boolean = false
         private val inv =
-            Bukkit.createInventory(this, 9, player.game.config.getString("Message.PawnPromotion"))
+            Bukkit.createInventory(this, 9, ConfigManager.getString("Message.PawnPromotion"))
 
         private val typesTmp = mutableMapOf<Material, ChessType>()
 
         init {
             for ((p, _) in moves) {
-                inv.addItem(p.getItem(player.game.config, pawn.side))
-                typesTmp[p.getMaterial(player.game.config, pawn.side)] = p
+                inv.addItem(p.getItem(pawn.side))
+                typesTmp[p.getMaterial(pawn.side)] = p
             }
         }
 
@@ -170,11 +169,14 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
                 game.stop(ChessGame.EndReason.Checkmate(!side))
             } else if (!silent) {
                 //player.spigot().sendMessage(ChatMessageType.ACTION_BAR, *TextComponent.fromLegacyText(chatColor("&cYou are in check!")))
-                sendTitle(getString("Title.YourTurn"), getString("Title.InCheck"))
-                sendMessage(getString("Message.InCheck"))
+                sendTitle(
+                    ConfigManager.getString("Title.YourTurn"),
+                    ConfigManager.getString("Title.InCheck")
+                )
+                sendMessage(ConfigManager.getString("Message.InCheck"))
             } else {
-                sendTitle(getString("Title.InCheck"))
-                sendMessage(getString("Message.InCheck"))
+                sendTitle(ConfigManager.getString("Title.InCheck"))
+                sendMessage(ConfigManager.getString("Message.InCheck"))
             }
         } else {
             var inStalemate = true
@@ -187,7 +189,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             if (inStalemate) {
                 game.stop(ChessGame.EndReason.Stalemate())
             } else if (!silent) {
-                sendTitle(getString("Title.YourTurn"))
+                sendTitle(ConfigManager.getString("Title.YourTurn"))
             }
         }
 

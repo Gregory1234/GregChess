@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack
 import java.lang.IllegalArgumentException
 
 enum class ChessType(
-    val path: String,
+    path: String,
     val standardChar: Char,
     val moveScheme: (ChessPiece) -> List<ChessMove>,
     val minor: Boolean
@@ -20,15 +20,17 @@ enum class ChessType(
     KNIGHT("Chess.Piece.Knight", 'n', ::knightMovement, true),
     PAWN("Chess.Piece.Pawn", 'p', ::pawnMovement, false);
 
-    fun getMaterial(config: ConfigManager, side: ChessSide): Material =
-        config.getEnum("$path.Item.${side.standardName}", Material.AIR, Material::class)
+    private val view = ConfigManager.getView(path)!!
 
-    fun getStructure(config: ConfigManager, side: ChessSide): List<Material> =
-        config.getEnumList("$path.Structure.${side.standardName}", Material::class)
+    fun getMaterial(side: ChessSide): Material =
+        view.getEnum("Item.${side.standardName}", Material.AIR, Material::class)
+
+    fun getStructure(side: ChessSide): List<Material> =
+        view.getEnumList("Structure.${side.standardName}", Material::class)
 
     companion object {
-        fun parseFromChar(config: ConfigManager, c: Char) =
-            values().firstOrNull { it.getChar(config) == c.toLowerCase() }
+        fun parseFromChar(c: Char) =
+            values().firstOrNull { it.char == c.toLowerCase() }
                 ?: throw IllegalArgumentException(c.toString())
 
         fun parseFromStandardChar(c: Char): ChessType =
@@ -36,19 +38,21 @@ enum class ChessType(
                 ?: throw IllegalArgumentException(c.toString())
     }
 
-    fun getItem(config: ConfigManager, side: ChessSide): ItemStack {
-        val item = ItemStack(getMaterial(config, side))
+    fun getItem(side: ChessSide): ItemStack {
+        val item = ItemStack(getMaterial(side))
         val meta = item.itemMeta!!
-        meta.setDisplayName(chatColor(side.getPieceName(config, getName(config))))
+        meta.setDisplayName(chatColor(side.getPieceName(pieceName)))
         item.itemMeta = meta
         return item
     }
 
-    fun getSound(config: ConfigManager, name: String): Sound =
-        config.getEnum("$path.Sound.$name", Sound.BLOCK_STONE_HIT, Sound::class)
+    fun getSound(name: String): Sound =
+        view.getEnum("Sound.$name", Sound.BLOCK_STONE_HIT, Sound::class)
 
-    fun getName(config: ConfigManager) = config.getString("$path.Name")
-    fun getChar(config: ConfigManager) = config.getChar("$path.Char")
+    val pieceName
+        get() = view.getString("Name")
+    val char
+        get() = view.getChar("Char")
 
     val promotions
         get() = if (this == PAWN) listOf(QUEEN, ROOK, BISHOP, KNIGHT)

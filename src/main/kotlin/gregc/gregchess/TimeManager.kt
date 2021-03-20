@@ -5,7 +5,8 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
 
-class TimeManager(private val plugin: JavaPlugin) {
+object TimeManager {
+
     class CancellableContext internal constructor(private val r: BukkitRunnable){
         fun cancel(){
             r.cancel()
@@ -13,7 +14,7 @@ class TimeManager(private val plugin: JavaPlugin) {
     }
 
     fun runTaskLater(delay: Duration, callback: () -> Unit) {
-        Bukkit.getScheduler().runTaskLater(plugin, Runnable(callback), delay.toTicks())
+        Bukkit.getScheduler().runTaskLater(GregInfo.plugin, Runnable(callback), delay.toTicks())
     }
 
     fun runTaskTimer(delay: Duration, period: Duration, callback: CancellableContext.() -> Unit) {
@@ -22,6 +23,6 @@ class TimeManager(private val plugin: JavaPlugin) {
             override fun run(){
                 cc.callback()
             }
-        }.runTaskTimer(plugin, delay.toTicks(), period.toTicks())
+        }.runTaskTimer(GregInfo.plugin, delay.toTicks(), period.toTicks())
     }
 }

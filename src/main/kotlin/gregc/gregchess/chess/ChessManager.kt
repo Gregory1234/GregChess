@@ -18,20 +18,12 @@ import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.plugin.java.JavaPlugin
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import org.bukkit.event.entity.CreatureSpawnEvent
 
 
-class ChessManager(
-    private val plugin: JavaPlugin,
-    val timeManager: TimeManager,
-    val config: ConfigManager
-) :
-    Listener {
-
-    private val settingsManager = SettingsManager(plugin, config)
+object ChessManager : Listener {
 
     private val playerGames: MutableMap<UUID, UUID> = mutableMapOf()
     private val spectatorGames: MutableMap<UUID, UUID> = mutableMapOf()
@@ -81,12 +73,12 @@ class ChessManager(
     private fun nextArena(): ChessArena? = arenas.firstOrNull { it.isAvailable() }
 
     fun start() {
-        plugin.server.pluginManager.registerEvents(this, plugin)
-        plugin.config.getStringList("ChessArenas").forEach {
-            arenas += ChessArena(config, it)
+        GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
+        ConfigManager.getStringList("ChessArenas").forEach {
+            arenas += ChessArena(it)
         }
-        Chessboard.Settings.init(settingsManager)
-        ChessClock.Settings.init(settingsManager)
+        Chessboard.Settings.init()
+        ChessClock.Settings.init()
     }
 
     fun stop() {
@@ -96,7 +88,7 @@ class ChessManager(
 
     private fun reloadArenas() {
         val oldArenas = arenas.map { it.name }
-        val newArenas = plugin.config.getStringList("ChessArenas")
+        val newArenas = ConfigManager.getStringList("ChessArenas")
         val removedArenas = oldArenas - newArenas
         val addedArenas = newArenas - oldArenas
         removedArenas.forEach { name ->
@@ -110,7 +102,7 @@ class ChessManager(
             arenas.remove(arena)
         }
         addedArenas.forEach { name ->
-            arenas += ChessArena(config, name)
+            arenas += ChessArena(name)
         }
     }
 
@@ -127,7 +119,7 @@ class ChessManager(
         val arena = nextArena()
         commandRequireNotNull(arena, "NoArenas")
         arena.reserve()
-        player.openInventory(ChessGame.SettingsScreen(settingsManager, { arena.clear() }) {
+        player.openInventory(ChessGame.SettingsScreen({ arena.clear() }) {
             callback(arena, it)
         }.inventory)
     }
@@ -140,7 +132,7 @@ class ChessManager(
     ) {
         if (!arena.isEmpty())
             return
-        val game = ChessGame(player, opponent, arena, settings, this)
+        val game = ChessGame(player, opponent, arena, settings)
         game.start()
         addGame(game)
     }
@@ -152,12 +144,12 @@ class ChessManager(
         val arena = nextArena()
         commandRequireNotNull(arena, "NoArenas")
         arena.reserve()
-        player.openInventory(ChessGame.SettingsScreen(settingsManager, { arena.clear() }) {
+        player.openInventory(ChessGame.SettingsScreen({ arena.clear() }) {
             if (!arena.isEmpty())
                 return@SettingsScreen
             val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
-            val black = ChessPlayer.Engine(ChessEngine(plugin, "stockfish"), ChessSide.BLACK)
-            val game = ChessGame(white, black, arena, it, this)
+            val black = ChessPlayer.Engine(ChessEngine("stockfish"), ChessSide.BLACK)
+            val game = ChessGame(white, black, arena, it)
             game.start()
             addGame(game)
         }.inventory)
@@ -189,8 +181,8 @@ class ChessManager(
 
     fun reload() {
         reloadArenas()
-        Chessboard.Settings.init(settingsManager)
-        ChessClock.Settings.init(settingsManager)
+        Chessboard.Settings.init()
+        ChessClock.Settings.init()
     }
 
     @EventHandler

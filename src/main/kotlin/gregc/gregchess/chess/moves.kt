@@ -54,7 +54,7 @@ sealed class ChessMove(
 
     abstract val canAttack: Boolean
 
-    abstract fun execute(config: ConfigManager): MoveData
+    abstract fun execute(): MoveData
 
     interface Promoting {
         val promotion: ChessType?
@@ -76,17 +76,17 @@ sealed class ChessMove(
         override val canAttack
             get() = defensive
 
-        override fun execute(config: ConfigManager): MoveData {
+        override fun execute(): MoveData {
             val pieceHasMoved = piece.hasMoved
             var name = ""
             if (piece.type != ChessType.PAWN)
-                name += piece.type.getChar(config).toUpperCase()
+                name += piece.type.char.toUpperCase()
             name += getUniquenessCoordinate(piece, target)
             name += target.pos.toString()
             piece.move(target)
             if (promotion != null) {
                 piece.promote(promotion)
-                name += promotion.getChar(config).toUpperCase()
+                name += promotion.char.toUpperCase()
             }
             name += checkForChecks(piece.side, piece.square.board)
             val undoReset = if (piece.type == ChessType.PAWN)
@@ -123,22 +123,22 @@ sealed class ChessMove(
         override val floor
             get() = if (promotion == null) Material.RED_CONCRETE else Material.BLUE_CONCRETE
 
-        override fun execute(config: ConfigManager): MoveData {
+        override fun execute(): MoveData {
             val pieceHasMoved = piece.hasMoved
             var name = ""
             name += if (piece.type == ChessType.PAWN)
                 piece.pos.fileStr
             else
-                piece.type.getChar(config).toUpperCase()
+                piece.type.char.toUpperCase()
             name += getUniquenessCoordinate(piece, target)
-            name += config.getString("Chess.Capture")
+            name += ConfigManager.getString("Chess.Capture")
             name += target.pos.toString()
             val capturedPiece = capture.piece
             val c = capturedPiece?.capture()
             piece.move(target)
             if (promotion != null) {
                 piece.promote(promotion)
-                name += promotion.getChar(config).toUpperCase()
+                name += promotion.char.toUpperCase()
             }
             name += checkForChecks(piece.side, piece.square.board)
             if (target != capture)
@@ -289,7 +289,7 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
         override val canAttack
             get() = false
 
-        override fun execute(config: ConfigManager): MoveData {
+        override fun execute(): MoveData {
             var name = if (rook.pos.file < origin.pos.file) "O-O-O" else "O-O"
             val rookOrigin = rook.square
             ChessPiece.autoMove(mapOf(rook to rookTargetSquare, piece to target))

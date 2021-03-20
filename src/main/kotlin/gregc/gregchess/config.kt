@@ -1,18 +1,23 @@
 package gregc.gregchess
 
-import org.bukkit.plugin.java.JavaPlugin
 import java.lang.IllegalArgumentException
 import kotlin.reflect.KClass
 
-class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String = "") {
+object ConfigManager : View("")
 
+open class View protected constructor(private val rootPath: String = "") {
     private val config
-        get() = plugin.config.getConfigurationSection(rootPath)!!
+        get() = GregInfo.plugin.config.getConfigurationSection(rootPath)!!
 
-    fun getSection(path: String): ConfigManager? {
+    fun getView(path: String): View? {// TODO: this should never return null!
         val section = config.getConfigurationSection(path) ?: return null
-        return ConfigManager(plugin, section.currentPath!!)
+        return View(section.currentPath!!)
     }
+
+    val keys: List<String>
+        get() = config.getKeys(false).toList()
+
+    fun toMap() = config.getValues(false).mapValues { (_, v) -> v.toString() }
 
     fun <T> get(
         path: String,
@@ -71,7 +76,8 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String
             numberedFormat(it, *args)?.let(::chatColor)
         }
 
-    fun getDuration(path: String) = get(path, "duration", 0.seconds, true, ::parseDuration)
+    fun getDuration(path: String, warnMissing: Boolean = true) =
+        get(path, "duration", 0.seconds, warnMissing, ::parseDuration)
 
     fun getError(name: String) = get("Message.Error.$name", "error", name) { chatColor(it) }
 
@@ -110,4 +116,6 @@ class ConfigManager(private val plugin: JavaPlugin, private val rootPath: String
     fun getHexString(path: String) = get(path, "hex string", null) { hexToBytes(it) }
 
     fun getBool(path: String, default: Boolean) = get(path, "boolean", default) { it.toBoolean() }
+
+    fun getStringList(path: String) = getList(path, "string") { chatColor(it) }
 }

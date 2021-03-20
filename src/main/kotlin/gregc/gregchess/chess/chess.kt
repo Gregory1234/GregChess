@@ -4,8 +4,6 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.*
 import org.bukkit.generator.ChunkGenerator
-import org.bukkit.plugin.java.JavaPlugin
-import org.bukkit.scheduler.BukkitRunnable
 import java.lang.Exception
 import java.util.*
 import java.util.concurrent.Callable
@@ -13,7 +11,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-class ChessArena(config: ConfigManager, name: String) : Arena(config, name, "Chess.ResourcePack") {
+class ChessArena(name: String) : Arena(name, "Chess.ResourcePack") {
     class WorldGen : ChunkGenerator() {
         override fun generateChunkData(
             world: World,
@@ -55,8 +53,8 @@ enum class ChessSide(
     operator fun not(): ChessSide = if (this == WHITE) BLACK else WHITE
     operator fun inc(): ChessSide = not()
 
-    fun getPieceName(config: ConfigManager, name: String) =
-        config.getFormatString("$path.Piece", name)
+    fun getPieceName(name: String) =
+        ConfigManager.getFormatString("$path.Piece", name)
 
     companion object {
         fun parseFromStandardChar(c: Char) =
@@ -89,7 +87,7 @@ data class ChessPosition(val file: Int, val rank: Int) {
     }
 }
 
-class ChessEngine(private val plugin: JavaPlugin, val name: String) {
+class ChessEngine(val name: String) {
     private val process: Process = ProcessBuilder("stockfish").start()
 
     private val reader = process.inputStream.bufferedReader()
@@ -138,7 +136,7 @@ class ChessEngine(private val plugin: JavaPlugin, val name: String) {
     fun getMove(fen: String, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
         var move = ""
         var exc: Exception? = null
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+        Bukkit.getScheduler().runTaskAsynchronously(GregInfo.plugin, Runnable {
             try {
                 sendCommand("position fen $fen")
                 sendCommand("go movetime " + moveTime.toMillis())
@@ -156,17 +154,15 @@ class ChessEngine(private val plugin: JavaPlugin, val name: String) {
             }
         })
         //TODO: this is potentially dangerous!
-        object : BukkitRunnable() {
-            override fun run() {
-                if (move != "") {
-                    onSuccess(move)
-                    cancel()
-                } else if (exc != null) {
-                    onException(exc!!)
-                    cancel()
-                }
+        TimeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks){
+            if (move != "") {
+                onSuccess(move)
+                cancel()
+            } else if (exc != null) {
+                onException(exc!!)
+                cancel()
             }
-        }.runTaskTimer(plugin, moveTime.toTicks() + 1, 1)
+        }
     }
 }
 

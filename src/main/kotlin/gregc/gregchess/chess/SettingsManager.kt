@@ -1,12 +1,12 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ConfigManager
-import org.bukkit.configuration.ConfigurationSection
-import org.bukkit.plugin.java.JavaPlugin
+import gregc.gregchess.View
 
-class SettingsManager(val plugin: JavaPlugin, val config: ConfigManager) {
+object SettingsManager {
 
-    private val componentChoice: MutableMap<String, Map<String, ChessGame.ComponentSettings>> = mutableMapOf()
+    private val componentChoice: MutableMap<String, Map<String, ChessGame.ComponentSettings>> =
+        mutableMapOf()
 
     fun <T : ChessGame.ComponentSettings> registerComponent(name: String, presets: Map<String, T>) {
         componentChoice[name] = presets
@@ -14,25 +14,27 @@ class SettingsManager(val plugin: JavaPlugin, val config: ConfigManager) {
 
     inline fun <T : ChessGame.ComponentSettings> registerComponent(
         name: String,
-        parser: (ConfigManager) -> T
+        parser: (View) -> T
     ) {
-        val section = plugin.config.getConfigurationSection("Settings.$name") ?: return
-        registerComponent(name, section.getValues(false).mapNotNull { (key, value) ->
-            if (value !is ConfigurationSection) return@mapNotNull null
-            Pair(key, parser(config.getSection("Settings.$name.$key")!!))
+        val view = ConfigManager.getView("Settings.$name") ?: return
+        registerComponent(name, view.keys.mapNotNull { key ->
+            val child = view.getView(key) ?: return@mapNotNull null
+            Pair(key, parser(child))
         }.toMap())
     }
 
     val settingsChoice: Map<String, ChessGame.Settings>
         get() {
-            val presets = plugin.config.getConfigurationSection("Settings.Presets") ?: return emptyMap()
-            return presets.getValues(false).mapNotNull { (key, value) ->
-                if (value !is ConfigurationSection) return@mapNotNull null
-                val relaxedInsufficientMaterial = value.getBoolean("Relaxed")
-                val simpleCastling = value.getBoolean("SimpleCastling")
-                val components = value.getValues(false)
-                    .mapNotNull { (k, v) -> componentChoice[k]?.get(v.toString()) }
-                Pair(key, ChessGame.Settings(key, relaxedInsufficientMaterial, simpleCastling, components))
+            val presets =
+                ConfigManager.getView("Settings.Presets") ?: return emptyMap()
+            return presets.keys.mapNotNull { key ->
+                val child = presets.getView(key) ?: return@mapNotNull null
+                val relaxedInsufficientMaterial = child.getBool("Relaxed", true)
+                val simpleCastling = child.getBool("SimpleCastling", false)
+                val components = child.toMap().mapNotNull { (k, v) -> componentChoice[k]?.get(v) }
+                val ret =
+                    ChessGame.Settings(key, relaxedInsufficientMaterial, simpleCastling, components)
+                Pair(key, ret)
             }.toMap()
         }
 

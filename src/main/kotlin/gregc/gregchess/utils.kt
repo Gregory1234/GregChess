@@ -4,6 +4,7 @@ import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.event.Listener
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
@@ -23,12 +24,9 @@ data class PlayerData(
     val inventory: List<ItemStack?> = List(41) { null },
     val gameMode: GameMode = GameMode.SURVIVAL,
     val health: Double = 20.0,
-    val foodLevel: Int = 20,
-    val saturation: Float = 20.0F,
-    val level: Int = 0,
-    val exp: Float = 0.0F,
-    val allowFlight: Boolean = false,
-    val isFlying: Boolean = false,
+    val foodLevel: Int = 20, val saturation: Float = 20.0F,
+    val level: Int = 0, val exp: Float = 0.0F,
+    val allowFlight: Boolean = false, val isFlying: Boolean = false,
     val effects: List<PotionEffect> = emptyList(),
     val scoreboard: Scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
 )
@@ -39,12 +37,9 @@ var Player.playerData: PlayerData
         inventory.contents.toList(),
         gameMode,
         health,
-        foodLevel,
-        saturation,
-        level,
-        exp,
-        allowFlight,
-        isFlying,
+        foodLevel, saturation,
+        level, exp,
+        allowFlight, isFlying,
         activePotionEffects.toList(),
         scoreboard
     )
@@ -52,12 +47,9 @@ var Player.playerData: PlayerData
         inventory.contents = d.inventory.toTypedArray()
         gameMode = d.gameMode
         health = d.health
-        foodLevel = d.foodLevel
-        saturation = d.saturation
-        level = level
-        exp = d.exp
-        allowFlight = d.allowFlight
-        isFlying = d.isFlying
+        foodLevel = d.foodLevel; saturation = d.saturation
+        level = level; exp = d.exp
+        allowFlight = d.allowFlight; isFlying = d.isFlying
         activePotionEffects.forEach { removePotionEffect(it.type) }
         d.effects.forEach(::addPotionEffect)
         d.location?.let(::teleport)
@@ -68,11 +60,7 @@ fun Location.playSound(s: Sound, volume: Float = 3.0f, pitch: Float = 1.0f) =
     world?.playSound(this, s, volume, pitch)
 
 
-abstract class Arena(
-    val config: ConfigManager,
-    val name: String,
-    private val resourcePackPath: String? = null
-) {
+abstract class Arena(val name: String, private val resourcePackPath: String? = null) {
     abstract val defaultData: PlayerData
     abstract val spectatorData: PlayerData
     abstract val worldGen: ChunkGenerator
@@ -88,14 +76,14 @@ abstract class Arena(
     private var worldCreated: Boolean = false
     val world by lazy {
         worldCreated = true
-        if (GregChessInfo.server.getWorld(name) != null) {
+        if (GregInfo.server.getWorld(name) != null) {
             glog.warn("World already exists!", name)
-            return@lazy GregChessInfo.server.getWorld(name)!!
+            return@lazy GregInfo.server.getWorld(name)!!
         }
 
-        GregChessInfo.server.createWorld(WorldCreator(name).generator(worldGen))
+        GregInfo.server.createWorld(WorldCreator(name).generator(worldGen))
         glog.io("Created arena", name)
-        GregChessInfo.server.getWorld(name)!!.apply(setSettings)
+        GregInfo.server.getWorld(name)!!.apply(setSettings)
     }
 
     fun teleport(p: Player) {
@@ -103,7 +91,7 @@ abstract class Arena(
         p.playerData = defaultData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
-        p.sendMessage(config.getFormatString("Message.Teleported", name))
+        p.sendMessage(ConfigManager.getFormatString("Message.Teleported", name))
         glog.mid("Teleported", p.name, "to arena", name)
         setResourcePack(p)
     }
@@ -113,16 +101,16 @@ abstract class Arena(
         p.playerData = spectatorData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
-        p.sendMessage(config.getFormatString("Message.Teleported", name))
+        p.sendMessage(ConfigManager.getFormatString("Message.Teleported", name))
         glog.mid("Teleported spectator", p.name, "to arena", name)
         setResourcePack(p)
     }
 
     private fun setResourcePack(p: Player) {
         resourcePackPath?.let {
-            glog.io(config.getOptionalString(resourcePackPath))
-            config.getOptionalString(resourcePackPath)?.let {
-                val h = config.getHexString(resourcePackPath + "Hash")
+            glog.io(ConfigManager.getOptionalString(resourcePackPath))
+            ConfigManager.getOptionalString(resourcePackPath)?.let {
+                val h = ConfigManager.getHexString(resourcePackPath + "Hash")
                 if (h == null)
                     p.setResourcePack(it)
                 else
@@ -135,10 +123,10 @@ abstract class Arena(
         p.playerData = data[p.uniqueId]!!
         data.remove(p.uniqueId)
         resourcePackPath?.let {
-            config.getOptionalString(resourcePackPath)?.let {
-                glog.io(config.getString("EmptyResourcePack"))
+            ConfigManager.getOptionalString(resourcePackPath)?.let {
+                glog.io(ConfigManager.getString("EmptyResourcePack"))
                 p.setResourcePack(
-                    config.getString("EmptyResourcePack"),
+                    ConfigManager.getString("EmptyResourcePack"),
                     hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
                 )
             }
@@ -180,7 +168,7 @@ abstract class Arena(
         data.remove(p.uniqueId)
         resourcePackPath?.let {
             p.setResourcePack(
-                config.getString("EmptyResourcePack"),
+                ConfigManager.getString("EmptyResourcePack"),
                 hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
             )
         }
@@ -189,7 +177,6 @@ abstract class Arena(
 }
 
 fun JavaPlugin.addCommand(
-    config: ConfigManager,
     name: String,
     command: (CommandSender, Array<String>) -> Unit
 ) {
@@ -197,7 +184,7 @@ fun JavaPlugin.addCommand(
         try {
             command(sender, args)
         } catch (e: CommandException) {
-            sender.sendMessage(config.getError(e.playerMsg))
+            sender.sendMessage(ConfigManager.getError(e.playerMsg))
         }
         true
     }
@@ -349,16 +336,18 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
 
 val glog: GregLogger
     get() {
-        val file = File(
-            Bukkit.getPluginManager()
-                .getPlugin("GregChess")!!.dataFolder.absolutePath + "/GregChess.log"
-        )
+        val file = File(GregInfo.plugin.dataFolder.absolutePath + "/GregChess.log")
         file.createNewFile()
-        return GregLogger(GregChessInfo.logger, file)
+        return GregLogger(file)
     }
 
-object GregChessInfo {
+object GregInfo {
+
     val server by lazy { Bukkit.getServer() }
     val logger
-        get() = Bukkit.getPluginManager().getPlugin("GregChess")?.logger!!
+        get() = plugin.logger
+    val plugin
+        get() = Bukkit.getPluginManager().getPlugin("GregChess")!!
+
+    fun registerListener(l: Listener) = server.pluginManager.registerEvents(l, plugin)
 }

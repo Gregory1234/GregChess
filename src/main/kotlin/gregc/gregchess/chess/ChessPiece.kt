@@ -31,9 +31,6 @@ class ChessPiece(
     private val board
         get() = square.board
 
-    private val config
-        get() = board.game.config
-
     class Captured(
         val type: ChessType,
         val side: ChessSide,
@@ -41,20 +38,17 @@ class ChessPiece(
         private val board: Chessboard
     ) {
 
-        private val config
-            get() = board.game.config
-
         private val loc
             get() = board.renderer.getCapturedLoc(this)
 
         fun render() {
-            type.getStructure(config, side).forEachIndexed { i, m ->
+            type.getStructure(side).forEachIndexed { i, m ->
                 board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
             }
         }
 
         fun hide() {
-            type.getStructure(config, side).forEachIndexed { i, _ ->
+            type.getStructure(side).forEachIndexed { i, _ ->
                 board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
             }
         }
@@ -69,13 +63,13 @@ class ChessPiece(
     }
 
     private fun render() {
-        type.getStructure(config, side).forEachIndexed { i, m ->
+        type.getStructure(side).forEachIndexed { i, m ->
             board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
         }
     }
 
     private fun hide() {
-        type.getStructure(config, side).forEachIndexed { i, _ ->
+        type.getStructure(side).forEachIndexed { i, _ ->
             board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
         }
     }
@@ -118,9 +112,9 @@ class ChessPiece(
         loc.toLocation(board.game.world).playSound(s)
     }
 
-    private fun playPickUpSound() = playSound(type.getSound(config, "PickUp"))
-    private fun playMoveSound() = playSound(type.getSound(config, "Move"))
-    private fun playCaptureSound() = playSound(type.getSound(config, "Capture"))
+    private fun playPickUpSound() = playSound(type.getSound("PickUp"))
+    private fun playMoveSound() = playSound(type.getSound("Move"))
+    private fun playCaptureSound() = playSound(type.getSound("Capture"))
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved
