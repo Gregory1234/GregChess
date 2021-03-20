@@ -199,7 +199,9 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequirePermission(player, "greg-chess.debug")
                     val game = ChessManager.getGame(player)
                     commandRequireNotNull(game, "NotInGame.You")
-                    game.board.setFromFEN(args.drop(1).joinToString(separator = " "))
+                    game.board.setFromFEN(
+                        FEN.parseFromString(args.drop(1).joinToString(separator = " "))
+                    )
                     player.sendMessage(ConfigManager.getString("Message.LoadedFEN"))
                 }
                 "save" -> {
@@ -208,7 +210,7 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequireNotNull(game, "NotInGame.You")
                     val message = TextComponent(config.getString("Message.CopyFEN"))
                     message.clickEvent =
-                        ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN())
+                        ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN().toString())
                     player.spigot().sendMessage(message)
                 }
                 "time" -> {
