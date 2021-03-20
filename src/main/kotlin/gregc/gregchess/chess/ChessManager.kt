@@ -39,6 +39,8 @@ class ChessManager(
 
     private fun forEachGame(function: (ChessGame) -> Unit) = games.values.forEach(function)
 
+    fun firstGame(function: (ChessGame) -> Boolean): ChessGame? = games.values.firstOrNull(function)
+
     private fun addGame(g: ChessGame) {
         games[g.uniqueId] = g
         g.forEachPlayer { playerGames[it.uniqueId] = g.uniqueId }

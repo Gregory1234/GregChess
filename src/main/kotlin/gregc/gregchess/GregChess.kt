@@ -232,7 +232,7 @@ class GregChess : JavaPlugin(), Listener {
                 }
                 "uci" -> {
                     commandRequirePlayer(player)
-                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequirePermission(player, "greg-chess.admin")
                     commandRequireArgumentsMin(args, 2)
                     val game = chess.getGame(player)
                     commandRequireNotNull(game, "NotInGame.You")
@@ -261,7 +261,7 @@ class GregChess : JavaPlugin(), Listener {
                     chess.addSpectator(player, toSpectate)
                 }
                 "reload" -> {
-                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequirePermission(player, "greg-chess.admin")
                     commandRequireArguments(args, 1)
                     reloadConfig()
                     chess.reload()
@@ -270,7 +270,7 @@ class GregChess : JavaPlugin(), Listener {
                 "dev" -> {
                     if (!server.pluginManager.isPluginEnabled("DevHelpPlugin"))
                         throw CommandException("WrongArgument")
-                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequirePermission(player, "greg-chess.admin")
                     commandRequireArguments(args, 1)
                     server.dispatchCommand(player, "devhelp GregChess ${description.version}")
                 }
@@ -287,7 +287,7 @@ class GregChess : JavaPlugin(), Listener {
                     takebackRequest.simpleCall(Request(player, opponent.player, Unit))
                 }
                 "debug" -> {
-                    commandRequirePermission(player, "greg-chess.debug")
+                    commandRequirePermission(player, "greg-chess.admin")
                     commandRequireArguments(args, 2)
                     try {
                         glog.level = GregLevel.valueOf(args[1])
@@ -308,6 +308,7 @@ class GregChess : JavaPlugin(), Listener {
                                     game = chess.getGame(player)
                                     commandRequireNotNull(game, "NotInGame.You")
                                 } else {
+                                    commandRequirePermission(player, "greg-chess.info")
                                     commandRequireArguments(args, 3)
                                     game = chess[UUID.fromString(args[2])]
                                     commandRequireNotNull(game, "GameNotFound")
@@ -315,12 +316,31 @@ class GregChess : JavaPlugin(), Listener {
                                 player.sendMessage(game.toString())
                             }
                             "piece" -> {
-                                commandRequireArguments(args, 2)
-                                commandRequirePlayer(player)
-                                val game = chess.getGame(player)
-                                commandRequireNotNull(game, "NotInGame.You")
-                                val piece = game.board[Loc.fromLocation(player.location)]
-                                player.sendMessage(piece.toString())
+                                if (args.size == 2) {
+                                    commandRequirePlayer(player)
+                                    val game = chess.getGame(player)
+                                    commandRequireNotNull(game, "NotInGame.You")
+                                    val piece = game.board[Loc.fromLocation(player.location)]
+                                    player.sendMessage(piece.toString())
+                                } else {
+                                    commandRequireArguments(args, 3)
+                                    if (args[2].length == 2) {
+                                        commandRequirePlayer(player)
+                                        val game = chess.getGame(player)
+                                        commandRequireNotNull(game, "NotInGame.You")
+                                        val piece =
+                                            game.board[ChessPosition.parseFromString(args[2])]
+                                        player.sendMessage(piece.toString())
+                                    } else {
+                                        commandRequirePermission(player, "greg-chess.info")
+                                        val game =
+                                            chess.firstGame { UUID.fromString(args[2]) in it.board }
+                                        commandRequireNotNull(game, "GameNotFound")
+                                        val piece =
+                                            game.board[UUID.fromString(args[2])]
+                                        player.sendMessage(piece.toString())
+                                    }
+                                }
                             }
                             else -> throw CommandException("WrongArgument")
                         }
@@ -333,28 +353,29 @@ class GregChess : JavaPlugin(), Listener {
             }
         }
         addCommandTab("chess") { s, args ->
-            fun <T> ifPermission(vararg list: T) =
-                if (s.hasPermission("greg-chess.debug")) list.map { it.toString() } else emptyList()
+            fun <T> ifPermission(perm: String, vararg list: T) =
+                if (s.hasPermission(perm)) list.map { it.toString() } else emptyList()
 
             when (args.size) {
                 1 -> listOf(
                     "duel", "stockfish", "resign", "leave", "draw", "save", "spectate",
                     "undo", "info"
                 ) + ifPermission(
-                    "capture", "spawn", "move", "skip", "load", "time", "uci",
-                    "reload", "debug", "dev"
+                    "greg-chess.debug", "capture", "spawn", "move", "skip", "load", "time"
+                ) + ifPermission(
+                    "greg-chess.admin", "uci", "reload", "dev", "debug"
                 )
                 2 -> when (args[0]) {
                     "duel" -> null
-                    "spawn" -> ifPermission(*ChessSide.values())
-                    "time" -> ifPermission(*ChessSide.values())
-                    "uci" -> ifPermission("set", "send")
+                    "spawn" -> ifPermission("greg-chess.debug", *ChessSide.values())
+                    "time" -> ifPermission("greg-chess.debug", *ChessSide.values())
+                    "uci" -> ifPermission("greg-chess.admin", "set", "send")
                     "spectate" -> null
                     "info" -> listOf("game", "piece")
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission(*ChessType.values())
+                    "spawn" -> ifPermission("greg-chess.debug", *ChessType.values())
                     "time" -> ifPermission("add", "set")
                     else -> listOf()
                 }

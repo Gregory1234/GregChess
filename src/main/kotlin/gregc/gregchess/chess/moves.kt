@@ -14,7 +14,7 @@ data class MoveData(
 ) {
 
     override fun toString() =
-        "MoveData(name = $name, origin = $origin, target = $target, piece.uuid = ${piece.uniqueId})"
+        "MoveData(name = $name, origin.pos = ${origin.pos}, target.pos = ${target.pos}, piece.uuid = ${piece.uniqueId})"
 
     fun render() {
         origin.previousMoveMarker = Material.BROWN_CONCRETE

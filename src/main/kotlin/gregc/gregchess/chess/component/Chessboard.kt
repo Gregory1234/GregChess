@@ -7,6 +7,7 @@ import gregc.gregchess.star
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import java.lang.NullPointerException
+import java.util.*
 import kotlin.math.abs
 
 class Chessboard(override val game: ChessGame, private val settings: Settings) :
@@ -173,6 +174,9 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
         }
         glog.mid("Cleared chessboard", game.uniqueId)
     }
+
+    operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uniqueId == pieceUniqueId }
+    operator fun get(pieceUniqueId: UUID) = pieces.firstOrNull { it.uniqueId == pieceUniqueId }
 
     fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
 

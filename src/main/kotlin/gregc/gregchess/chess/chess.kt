@@ -32,7 +32,8 @@ class ChessArena(config: ConfigManager, name: String) : Arena(config, name, "Che
     }
 
     override val defaultData = PlayerData(allowFlight = true, isFlying = true)
-    override val spectatorData = PlayerData(allowFlight = true, isFlying = true, gameMode = GameMode.SPECTATOR)
+    override val spectatorData =
+        PlayerData(allowFlight = true, isFlying = true, gameMode = GameMode.SPECTATOR)
     override val worldGen: ChunkGenerator = WorldGen()
     override val setSettings: World.() -> Unit = {
         setSpawnLocation(4, 101, 4)
@@ -42,18 +43,25 @@ class ChessArena(config: ConfigManager, name: String) : Arena(config, name, "Che
     }
 }
 
-enum class ChessSide(private val path: String, val standardName: String, val standardChar: Char, val direction: Int) {
+enum class ChessSide(
+    private val path: String,
+    val standardName: String,
+    val standardChar: Char,
+    val direction: Int
+) {
     WHITE("Chess.Side.White", "White", 'w', 1),
     BLACK("Chess.Side.Black", "Black", 'b', -1);
 
     operator fun not(): ChessSide = if (this == WHITE) BLACK else WHITE
     operator fun inc(): ChessSide = not()
 
-    fun getPieceName(config: ConfigManager, name: String) = config.getFormatString("$path.Piece", name)
+    fun getPieceName(config: ConfigManager, name: String) =
+        config.getFormatString("$path.Piece", name)
 
     companion object {
         fun parseFromStandardChar(c: Char) =
-            values().firstOrNull { it.standardChar == c } ?: throw IllegalArgumentException(c.toString())
+            values().firstOrNull { it.standardChar == c }
+                ?: throw IllegalArgumentException(c.toString())
     }
 
 }
@@ -73,7 +81,11 @@ data class ChessPosition(val file: Int, val rank: Int) {
     fun isValid() = file in (0..7) && rank in (0..7)
 
     companion object {
-        fun parseFromString(s: String) = ChessPosition(s[0].toLowerCase() - 'a', s[1] - '1')
+        fun parseFromString(s: String): ChessPosition {
+            if (s.length != 2 || s[0] !in 'a'..'h' || s[1] !in '1'..'8')
+                throw IllegalArgumentException(s)
+            return ChessPosition(s[0].toLowerCase() - 'a', s[1] - '1')
+        }
     }
 }
 
@@ -162,14 +174,19 @@ data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
     var piece: ChessPiece? = null
     var bakedMoves: List<ChessMove>? = null
 
-    private val baseFloor = if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
+        private val baseFloor =
+        if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
     var previousMoveMarker: Material? = null
     var moveMarker: Material? = null
     private val floor
         get() = moveMarker ?: previousMoveMarker ?: baseFloor
+
+    override fun toString() = "ChessSquare(game.uniqueId = ${board.game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
+
     fun render() {
         board.renderer.fillFloor(pos, floor)
     }
+
     fun clear() {
         piece?.clear()
         bakedMoves = null
