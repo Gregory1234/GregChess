@@ -92,7 +92,7 @@ sealed class ChessMove(
             val undoReset = if (piece.type == ChessType.PAWN)
                 piece.square.board.resetMovesSinceLastCapture()
             else
-                piece.square.board::undoMove
+                piece.square.board.increaseMovesSinceLastCapture()
             val undo = {
                 if (promotion != null)
                     piece.square.piece?.demote(piece)
@@ -294,9 +294,10 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
             val rookOrigin = rook.square
             ChessPiece.autoMove(mapOf(rook to rookTargetSquare, piece to target))
             name += checkForChecks(piece.side, origin.board)
+            val undoInc = origin.board.increaseMovesSinceLastCapture()
             val undo = {
                 ChessPiece.autoMove(mapOf(rook to rookOrigin, piece to origin))
-                origin.board.undoMove()
+                undoInc()
                 piece.force(false)
                 rook.force(false)
             }

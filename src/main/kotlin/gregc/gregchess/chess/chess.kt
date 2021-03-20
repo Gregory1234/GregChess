@@ -133,7 +133,7 @@ class ChessEngine(val name: String) {
         readLine()
     }
 
-    fun getMove(fen: String, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
+    fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
         var move = ""
         var exc: Exception? = null
         Bukkit.getScheduler().runTaskAsynchronously(GregInfo.plugin, Runnable {
@@ -154,7 +154,7 @@ class ChessEngine(val name: String) {
             }
         })
         //TODO: this is potentially dangerous!
-        TimeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks){
+        TimeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks) {
             if (move != "") {
                 onSuccess(move)
                 cancel()
@@ -170,14 +170,15 @@ data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
     var piece: ChessPiece? = null
     var bakedMoves: List<ChessMove>? = null
 
-        private val baseFloor =
+    private val baseFloor =
         if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
     var previousMoveMarker: Material? = null
     var moveMarker: Material? = null
     private val floor
         get() = moveMarker ?: previousMoveMarker ?: baseFloor
 
-    override fun toString() = "ChessSquare(game.uniqueId = ${board.game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
+    override fun toString() =
+        "ChessSquare(game.uniqueId = ${board.game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
 
     fun render() {
         board.renderer.fillFloor(pos, floor)
