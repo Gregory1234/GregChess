@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.Loc
-import gregc.gregchess.glog
+import gregc.gregchess.*
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -51,13 +49,9 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
             }
             val chosenMoves = moves.filter { it.display == newSquare }
             if (chosenMoves.size != 1) {
-                player.openInventory(PawnPromotionScreen(piece, this, chosenMoves.mapNotNull {
-                    val p = (it as? ChessMove.Promoting)?.promotion
-                    if (p != null)
-                        p to it
-                    else
-                        null
-                }).inventory)
+                val promotingMoves =
+                    chosenMoves.mapNotNull { m -> (m as? ChessMove.Promoting)?.promotion?.let { it to m } }
+                player.openScreen(PawnPromotionScreen(piece, promotingMoves, this))
             } else {
                 finishMove(chosenMoves.first())
             }
@@ -127,30 +121,18 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
     fun hasTurn(): Boolean = game.currentTurn == side
 
     class PawnPromotionScreen(
-        pawn: ChessPiece,
-        private val player: ChessPlayer,
-        private val moves: List<Pair<ChessType, ChessMove>>
-    ) : InventoryHolder {
-        var finished: Boolean = false
-        private val inv =
-            Bukkit.createInventory(this, 9, ConfigManager.getString("Message.PawnPromotion"))
-
-        private val typesTmp = mutableMapOf<Material, ChessType>()
-
-        init {
-            for ((p, _) in moves) {
-                inv.addItem(p.getItem(pawn.side))
-                typesTmp[p.getMaterial(pawn.side)] = p
-            }
+        private val pawn: ChessPiece,
+        private val moves: List<Pair<ChessType, ChessMove>>,
+        private val player: ChessPlayer
+    ) : Screen<ChessMove>("Message.PawnPromotion") {
+        override fun getContent() = moves.mapIndexed { i, (t, m) ->
+            ScreenOption(t.getItem(pawn.side), m, InventoryPosition.fromIndex(i))
         }
 
-        override fun getInventory() = inv
+        override fun onClick(v: ChessMove) = player.finishMove(v)
 
-        fun applyEvent(choice: Material?) {
-            val m = moves.find { it.first == typesTmp[choice] }?.second ?: moves.first().second
-            player.finishMove(m)
-            finished = true
-        }
+        override fun onCancel() = player.finishMove(moves.first().second)
+
     }
 
     open fun stop() {}

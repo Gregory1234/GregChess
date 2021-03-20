@@ -38,13 +38,18 @@ object ChessManager : Listener {
         g.forEachPlayer { playerGames[it.uniqueId] = g.uniqueId }
     }
 
+    fun startGame(g: ChessGame) {
+        addGame(g)
+        g.start()
+    }
+
     private fun removeGame(g: ChessGame) {
         games.remove(g.uniqueId)
         g.forEachPlayer { playerGames.remove(it.uniqueId) }
         g.forEachSpectator { spectatorGames.remove(it.uniqueId) }
     }
 
-    private fun isInGame(p: HumanEntity) = p.uniqueId in playerGames
+    fun isInGame(p: HumanEntity) = p.uniqueId in playerGames
 
     fun getGame(p: Player) = games[playerGames[p.uniqueId]]
 
@@ -107,52 +112,11 @@ object ChessManager : Listener {
     }
 
     @ExperimentalContracts
-    fun duelMenu(
-        player: Player,
-        opponent: Player,
-        callback: (ChessArena, ChessGame.Settings) -> Unit
-    ) {
-        if (isInGame(player))
-            throw CommandException("InGame.You")
-        if (isInGame(opponent))
-            throw CommandException("InGame.Opponent")
+    fun duelMenu(player: Player, callback: (ChessArena, ChessGame.Settings) -> Unit) {
         val arena = nextArena()
         commandRequireNotNull(arena, "NoArenas")
         arena.reserve()
-        player.openInventory(ChessGame.SettingsScreen({ arena.clear() }) {
-            callback(arena, it)
-        }.inventory)
-    }
-
-    fun startDuel(
-        player: Player,
-        opponent: Player,
-        arena: ChessArena,
-        settings: ChessGame.Settings
-    ) {
-        if (!arena.isEmpty())
-            return
-        val game = ChessGame(player, opponent, arena, settings)
-        game.start()
-        addGame(game)
-    }
-
-    @ExperimentalContracts
-    fun stockfish(player: Player) {
-        if (isInGame(player))
-            throw CommandException("InGame.You")
-        val arena = nextArena()
-        commandRequireNotNull(arena, "NoArenas")
-        arena.reserve()
-        player.openInventory(ChessGame.SettingsScreen({ arena.clear() }) {
-            if (!arena.isEmpty())
-                return@SettingsScreen
-            val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
-            val black = ChessPlayer.Engine(ChessEngine("stockfish"), ChessSide.BLACK)
-            val game = ChessGame(white, black, arena, it)
-            game.start()
-            addGame(game)
-        }.inventory)
+        player.openScreen(ChessGame.SettingsScreen(arena, callback))
     }
 
     fun leave(player: Player) {
@@ -233,33 +197,8 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        val holder = e.inventory.holder
         if (isInGame(e.whoClicked)) {
             e.isCancelled = true
-            if (holder is ChessPlayer.PawnPromotionScreen) {
-                e.currentItem?.let { holder.applyEvent(it.type); e.whoClicked.closeInventory() }
-            }
-        } else {
-            if (holder is ChessGame.SettingsScreen) {
-                e.currentItem?.itemMeta?.displayName?.let { holder.applyEvent(it); e.whoClicked.closeInventory() }
-                e.isCancelled = true
-            }
-        }
-    }
-
-    @EventHandler
-    fun onInventoryClose(e: InventoryCloseEvent) {
-        val holder = e.inventory.holder
-        if (isInGame(e.player)) {
-            if (holder is ChessPlayer.PawnPromotionScreen) {
-                if (!holder.finished)
-                    holder.applyEvent(null)
-            }
-        } else {
-            if (holder is ChessGame.SettingsScreen) {
-                if (!holder.finished)
-                    holder.cancel()
-            }
         }
     }
 

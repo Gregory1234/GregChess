@@ -6,6 +6,8 @@ import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 import java.util.*
@@ -39,7 +41,7 @@ class GregChess : JavaPlugin(), Listener {
             "/chess duel accept",
             "/chess duel cancel"
         ).print { (_, settings) -> settings.name }.onAccept { (sender, receiver, t) ->
-            ChessManager.startDuel(sender, receiver, t.first, t.second)
+            ChessManager.startGame(ChessGame(sender, receiver, t.first, t.second))
         }.onCancel { (_, _, t) ->
             t.first.clear()
         }.register()
@@ -61,6 +63,8 @@ class GregChess : JavaPlugin(), Listener {
                 "duel" -> {
                     commandRequirePlayer(player)
                     commandRequireArgumentsMin(args, 2)
+                    if (ChessManager.isInGame(player))
+                        throw CommandException("InGame.You")
                     when (args[1].toLowerCase()) {
                         "accept" -> {
                             commandRequireArguments(args, 3)
@@ -82,7 +86,9 @@ class GregChess : JavaPlugin(), Listener {
                             commandRequireArguments(args, 2)
                             val opponent = GregInfo.server.getPlayer(args[1])
                             commandRequireNotNull(opponent, "PlayerNotFound")
-                            ChessManager.duelMenu(player, opponent) { arena, settings ->
+                            if (ChessManager.isInGame(opponent))
+                                throw CommandException("InGame.Opponent")
+                            ChessManager.duelMenu(player) { arena, settings ->
                                 duelRequest += Request(player, opponent, Pair(arena, settings))
                             }
                         }
@@ -91,7 +97,13 @@ class GregChess : JavaPlugin(), Listener {
                 "stockfish" -> {
                     commandRequirePlayer(player)
                     commandRequireArguments(args, 1)
-                    ChessManager.stockfish(player)
+                    if (ChessManager.isInGame(player))
+                        throw CommandException("InGame.You")
+                    ChessManager.duelMenu(player) { arena, settings ->
+                        val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
+                        val black = ChessPlayer.Engine(ChessEngine("stockfish"), ChessSide.BLACK)
+                        ChessManager.startGame(ChessGame(white, black, arena, settings))
+                    }
                 }
                 "resign" -> {
                     commandRequirePlayer(player)
@@ -393,6 +405,26 @@ class GregChess : JavaPlugin(), Listener {
         e.game.forEachPlayer {
             drawRequest.quietRemove(it)
             takebackRequest.quietRemove(it)
+        }
+    }
+
+    @EventHandler
+    fun onInventoryClick(e: InventoryClickEvent) {
+        val holder = e.inventory.holder
+        if (holder is Screen.Holder<*>) {
+            e.isCancelled = true
+            if (!holder.finished)
+                if (holder.applyEvent(InventoryPosition.fromIndex(e.slot)))
+                    e.whoClicked.closeInventory()
+        }
+    }
+
+    @EventHandler
+    fun onInventoryClose(e: InventoryCloseEvent) {
+        val holder = e.inventory.holder
+        if (holder is Screen.Holder<*>) {
+            if (!holder.finished)
+                holder.cancel()
         }
     }
 }

@@ -279,37 +279,24 @@ class ChessGame(
     }
 
     class SettingsScreen(
-        private inline val cancelCallback: () -> Unit,
-        private inline val callback: (Settings) -> Unit
-    ) :
-        InventoryHolder {
-        private val inv = Bukkit.createInventory(
-            this,
-            9,
-            ConfigManager.getString("Message.ChooseSettings")
-        )
-        var finished: Boolean = false
-
-        init {
-            for ((p, _) in SettingsManager.settingsChoice) {
+        private val arena: ChessArena,
+        private inline val startGame: (ChessArena, Settings) -> Unit
+    ) : Screen<Settings>("Message.ChooseSettings") {
+        override fun getContent() =
+            SettingsManager.settingsChoice.toList().mapIndexed { index, (name, s) ->
                 val item = ItemStack(Material.IRON_BLOCK)
                 val meta = item.itemMeta
-                meta?.setDisplayName(p)
+                meta?.setDisplayName(name)
                 item.itemMeta = meta
-                inv.addItem(item)
+                ScreenOption(item, s, InventoryPosition.fromIndex(index))
             }
+
+        override fun onClick(v: Settings) {
+            startGame(arena, v)
         }
 
-        override fun getInventory() = inv
-
-        fun applyEvent(choice: String) {
-            finished = true
-            SettingsManager.settingsChoice[choice]?.let(callback)
-        }
-
-        fun cancel() {
-            finished = true
-            cancelCallback()
+        override fun onCancel() {
+            arena.clear()
         }
     }
 

@@ -117,7 +117,7 @@ open class View protected constructor(private val rootPath: String = "") {
 
     fun getHexString(path: String) = get(path, "hex string", null) { hexToBytes(it) }
 
-    fun getBool(path: String, default: Boolean) = get(path, "boolean", default) { it.toBoolean() }
+    fun getBool(path: String, default: Boolean) = get(path, "boolean", default, false) { it.toBoolean() }
 
     fun getStringList(path: String) = getList(path, "string") { chatColor(it) }
 }
