@@ -41,7 +41,10 @@ class GregChess : JavaPlugin(), Listener {
             "/chess duel accept",
             "/chess duel cancel"
         ).print { (_, settings) -> settings.name }.onAccept { (sender, receiver, t) ->
-            ChessManager.startGame(ChessGame(sender, receiver, t.first, t.second))
+            ChessGame(t.first, t.second) {
+                white = ChessPlayer.Human(sender, ChessSide.WHITE, sender == receiver, uniqueId)
+                black = ChessPlayer.Human(receiver, ChessSide.BLACK, sender == receiver, uniqueId)
+            }.start()
         }.onCancel { (_, _, t) ->
             t.first.clear()
         }.register()
@@ -100,9 +103,10 @@ class GregChess : JavaPlugin(), Listener {
                     if (ChessManager.isInGame(player))
                         throw CommandException("InGame.You")
                     ChessManager.duelMenu(player) { arena, settings ->
-                        val white = ChessPlayer.Human(player, ChessSide.WHITE, false)
-                        val black = ChessPlayer.Engine(ChessEngine("stockfish"), ChessSide.BLACK)
-                        ChessManager.startGame(ChessGame(white, black, arena, settings))
+                        ChessGame(arena, settings) {
+                            white = ChessPlayer.Human(player, ChessSide.WHITE, false, uniqueId)
+                            black = ChessPlayer.Engine(ChessEngine("stockfish"), ChessSide.BLACK, uniqueId)
+                        }.start()
                     }
                 }
                 "resign" -> {
@@ -210,7 +214,10 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequireNotNull(game, "NotInGame.You")
                     val message = TextComponent(config.getString("Message.CopyFEN"))
                     message.clickEvent =
-                        ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, game.board.getFEN().toString())
+                        ClickEvent(
+                            ClickEvent.Action.COPY_TO_CLIPBOARD,
+                            game.board.getFEN().toString()
+                        )
                     player.spigot().sendMessage(message)
                 }
                 "time" -> {

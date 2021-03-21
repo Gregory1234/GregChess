@@ -1,20 +1,23 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.InventoryHolder
 import java.lang.NullPointerException
+import java.util.*
 
 
-sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
-    class Human(val player: Player, side: ChessSide, silent: Boolean) :
-        ChessPlayer(side, silent) {
+sealed class ChessPlayer(
+    val side: ChessSide,
+    private val silent: Boolean,
+    protected val gameUniqueId: UUID
+) {
+    class Human(val player: Player, side: ChessSide, silent: Boolean, gameUniqueId: UUID) :
+        ChessPlayer(side, silent, gameUniqueId) {
 
         override val name = player.name
 
-        override fun toString() = "ChessPlayer.Human(name = $name, side = $side)"
+        override fun toString() = "ChessPlayer.Human(name = $name, side = $side, game.uniqueId = $gameUniqueId)"
 
         override fun sendMessage(msg: String) = player.sendMessage(msg)
         override fun sendTitle(title: String, subtitle: String) =
@@ -58,7 +61,8 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         }
     }
 
-    class Engine(val engine: ChessEngine, side: ChessSide) : ChessPlayer(side, true) {
+    class Engine(val engine: ChessEngine, side: ChessSide, gameUniqueId: UUID) :
+        ChessPlayer(side, true, gameUniqueId) {
 
         override val name = engine.name
 
@@ -85,10 +89,11 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean) {
         }
     }
 
+    val game: ChessGame
+        get() = ChessManager[gameUniqueId]!!
+
     var held: ChessPiece? = null
     protected var heldMoves: List<ChessMove>? = null
-
-    lateinit var game: ChessGame
 
     abstract val name: String
 

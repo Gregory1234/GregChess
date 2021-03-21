@@ -13,30 +13,27 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
-class ChessGame(
-    private val white: ChessPlayer, private val black: ChessPlayer,
-    val arena: ChessArena, val settings: Settings
-) {
+class ChessGame(val arena: ChessArena, val settings: Settings, setup: GameSetup.() -> Unit) {
+    class GameSetup internal constructor(val uniqueId: UUID) {
+        lateinit var white: ChessPlayer
+        lateinit var black: ChessPlayer
+    }
+
     val uniqueId: UUID = UUID.randomUUID()
+    private val white: ChessPlayer
+    private val black: ChessPlayer
+
+    init {
+        ChessManager.registerGame(this)
+        val s = GameSetup(uniqueId).apply(setup)
+        white = s.white
+        black = s.black
+    }
+
     override fun toString() = "ChessGame(arena = $arena, uniqueId = $uniqueId)"
     private val components = settings.components.map { it.getComponent(this) }
 
     val board: Chessboard = getComponent(Chessboard::class)!!
-
-    constructor(
-        whitePlayer: Player, blackPlayer: Player,
-        arena: ChessArena, settings: Settings
-    ) : this(
-        ChessPlayer.Human(whitePlayer, ChessSide.WHITE, whitePlayer == blackPlayer),
-        ChessPlayer.Human(blackPlayer, ChessSide.BLACK, whitePlayer == blackPlayer),
-        arena, settings
-    )
-
-    init {
-        white.game = this
-        black.game = this
-        glog.low("Game created", uniqueId, white, black, arena, settings)
-    }
 
     val players: List<ChessPlayer> = listOf(white, black)
 
@@ -57,6 +54,11 @@ class ChessGame(
         get() = arena.world
 
     val scoreboard = ScoreboardManager(this)
+
+    init {
+        ChessManager.registerGamePlayers(this)
+        glog.low("Game created", uniqueId, white, black, arena, settings)
+    }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
@@ -180,7 +182,7 @@ class ChessGame(
         )
     }
 
-    class EndEvent(val game: ChessGame) : Event() {
+    class EndEvent(val game: ChessGame, val gameEndReason: EndReason) : Event() {
         override fun getHandlers() = handlerList
 
         companion object {
@@ -254,7 +256,7 @@ class ChessGame(
                 players.forEach(ChessPlayer::stop)
                 arena.clear()
                 glog.low("Stopped game", uniqueId, reason)
-                Bukkit.getPluginManager().callEvent(EndEvent(this))
+                Bukkit.getPluginManager().callEvent(EndEvent(this, reason))
             }
         }
     }

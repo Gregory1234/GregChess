@@ -12,7 +12,6 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
@@ -33,28 +32,26 @@ object ChessManager : Listener {
 
     fun firstGame(function: (ChessGame) -> Boolean): ChessGame? = games.values.firstOrNull(function)
 
-    private fun addGame(g: ChessGame) {
+    fun registerGame(g: ChessGame) {
+        glog.low("Registering game", g.uniqueId)
         games[g.uniqueId] = g
+    }
+
+    fun registerGamePlayers(g: ChessGame) {// TODO: this is weird
+        glog.low("Registering game players", g.uniqueId)
         g.forEachPlayer { playerGames[it.uniqueId] = g.uniqueId }
     }
 
-    fun startGame(g: ChessGame) {
-        addGame(g)
-        g.start()
-    }
-
     private fun removeGame(g: ChessGame) {
-        games.remove(g.uniqueId)
-        g.forEachPlayer { playerGames.remove(it.uniqueId) }
-        g.forEachSpectator { spectatorGames.remove(it.uniqueId) }
+        games[g.uniqueId] = g
+        g.forEachPlayer { playerGames[it.uniqueId] = g.uniqueId }
     }
 
     fun isInGame(p: HumanEntity) = p.uniqueId in playerGames
 
     fun getGame(p: Player) = games[playerGames[p.uniqueId]]
 
-    private fun getChessPlayer(p: Player) = getGame(p)?.get(p)
-    operator fun get(p: Player): ChessPlayer.Human? = getChessPlayer(p)
+    operator fun get(p: Player): ChessPlayer.Human? = getGame(p)?.get(p)
 
     operator fun get(uuid: UUID): ChessGame? = games[uuid]
 
@@ -120,7 +117,7 @@ object ChessManager : Listener {
     }
 
     fun leave(player: Player) {
-        val p = getChessPlayer(player)
+        val p = this[player]
         if (p != null) {
             p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
         } else {
@@ -132,7 +129,7 @@ object ChessManager : Listener {
 
     @ExperimentalContracts
     fun addSpectator(player: Player, toSpectate: Player) {
-        val spec = getChessPlayer(toSpectate)
+        val spec = this[toSpectate]
         commandRequireNotNull(spec, "NotInGame.Player")
         val game = getGame(player)
         if (game != null) {
@@ -151,7 +148,7 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
-        val player = getChessPlayer(e.player)
+        val player = this[e.player]
         if (player != null)
             player.game.stop(ChessGame.EndReason.Resignation(!player.side), listOf(e.player))
         else if (isSpectatingGame(e.player))
@@ -170,7 +167,7 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        val player = getChessPlayer(e.player) ?: return
+        val player = this[e.player] ?: return
         e.isCancelled = true
         val block = e.clickedBlock ?: return
 
