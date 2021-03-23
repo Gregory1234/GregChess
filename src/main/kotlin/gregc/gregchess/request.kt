@@ -80,7 +80,7 @@ class RequestType<in T>(
     private val requests = mutableMapOf<UUID, Request<T>>()
     private val root = messages.name
 
-    private val view = ConfigManager.getView("Request.$root")!!
+    private val view = ConfigManager.getView("Request.$root")
 
     private fun call(request: Request<T>, simple: Boolean) {
         if (!validateSender(request.sender)) {
@@ -129,12 +129,12 @@ class RequestType<in T>(
 
     fun simpleCall(request: Request<T>) {
         requests.values.firstOrNull { it.sender == request.sender }?.let {
-            cancel(request)
+            cancel(it)
             return
         }
         requests.values.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }
             ?.let {
-                accept(request)
+                accept(it)
                 return
             }
         call(request, true)

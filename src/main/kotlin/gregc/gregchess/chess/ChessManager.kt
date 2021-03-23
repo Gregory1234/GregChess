@@ -32,19 +32,19 @@ object ChessManager : Listener {
 
     fun firstGame(function: (ChessGame) -> Boolean): ChessGame? = games.values.firstOrNull(function)
 
-    fun registerGame(g: ChessGame) {
+    private fun registerGame(g: ChessGame) {
         glog.low("Registering game", g.uniqueId)
         games[g.uniqueId] = g
     }
 
-    fun registerGamePlayers(g: ChessGame) {// TODO: this is weird
-        glog.low("Registering game players", g.uniqueId)
-        g.forEachPlayer { playerGames[it.uniqueId] = g.uniqueId }
+    private fun registerGamePlayer(p: ChessPlayer.Human) {
+        glog.low("Registering game player", p.player.uniqueId)
+        playerGames[p.player.uniqueId] = p.gameUniqueId
     }
 
     private fun removeGame(g: ChessGame) {
-        games[g.uniqueId] = g
-        g.forEachPlayer { playerGames[it.uniqueId] = g.uniqueId }
+        games.remove(g.uniqueId)
+        g.forEachPlayer { playerGames.remove(it.uniqueId) }
     }
 
     fun isInGame(p: HumanEntity) = p.uniqueId in playerGames
@@ -213,6 +213,16 @@ object ChessManager : Listener {
         if (isInGame(e.player)) {
             e.isCancelled = true
         }
+    }
+
+    @EventHandler
+    fun onChessGameRegister(e: ChessGame.RegisterEvent) {
+        registerGame(e.game)
+    }
+
+    @EventHandler
+    fun onChessPlayerRegister(e: ChessPlayer.RegisterEvent) {
+        registerGamePlayer(e.player)
     }
 
     @EventHandler

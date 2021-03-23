@@ -36,17 +36,17 @@ class GregChess : JavaPlugin(), Listener {
     }.register()
 
     private val duelRequest =
-        RequestTypeBuilder<Pair<ChessArena, ChessGame.Settings>>().messagesSimple(
+        RequestTypeBuilder<ChessGame>().messagesSimple(
             "Duel",
             "/chess duel accept",
             "/chess duel cancel"
-        ).print { (_, settings) -> settings.name }.onAccept { (sender, receiver, t) ->
-            ChessGame(t.first, t.second) {
+        ).print { it.settings.name }.onAccept { (sender, receiver, g) ->
+            g.register {
                 white = ChessPlayer.Human(sender, ChessSide.WHITE, sender == receiver, uniqueId)
                 black = ChessPlayer.Human(receiver, ChessSide.BLACK, sender == receiver, uniqueId)
             }.start()
         }.onCancel { (_, _, t) ->
-            t.first.clear()
+            t.arena.clear()
         }.register()
 
     @ExperimentalContracts
@@ -92,7 +92,7 @@ class GregChess : JavaPlugin(), Listener {
                             if (ChessManager.isInGame(opponent))
                                 throw CommandException("InGame.Opponent")
                             ChessManager.duelMenu(player) { arena, settings ->
-                                duelRequest += Request(player, opponent, Pair(arena, settings))
+                                duelRequest += Request(player, opponent, ChessGame(arena, settings))
                             }
                         }
                     }
@@ -103,7 +103,7 @@ class GregChess : JavaPlugin(), Listener {
                     if (ChessManager.isInGame(player))
                         throw CommandException("InGame.You")
                     ChessManager.duelMenu(player) { arena, settings ->
-                        ChessGame(arena, settings) {
+                        ChessGame(arena, settings).register {
                             white = ChessPlayer.Human(player, ChessSide.WHITE, false, uniqueId)
                             black = ChessPlayer.Engine(ChessEngine("stockfish"), ChessSide.BLACK, uniqueId)
                         }.start()
@@ -249,7 +249,7 @@ class GregChess : JavaPlugin(), Listener {
                     commandRequireArgumentsMin(args, 2)
                     val game = ChessManager.getGame(player)
                     commandRequireNotNull(game, "NotInGame.You")
-                    val engine = game.players.mapNotNull { it as? ChessPlayer.Engine }.firstOrNull()
+                    val engine = game.chessPlayers.mapNotNull { it as? ChessPlayer.Engine }.firstOrNull()
                     commandRequireNotNull(engine, "EngineNotFound")
                     try {
                         when (args[1].toLowerCase()) {

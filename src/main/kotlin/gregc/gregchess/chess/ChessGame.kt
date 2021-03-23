@@ -7,27 +7,38 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
-import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
-class ChessGame(val arena: ChessArena, val settings: Settings, setup: GameSetup.() -> Unit) {
+class ChessGame(val arena: ChessArena, val settings: Settings) {
     class GameSetup internal constructor(val uniqueId: UUID) {
         lateinit var white: ChessPlayer
         lateinit var black: ChessPlayer
     }
 
     val uniqueId: UUID = UUID.randomUUID()
-    private val white: ChessPlayer
-    private val black: ChessPlayer
 
-    init {
-        ChessManager.registerGame(this)
+    class RegisterEvent(val game: ChessGame) : Event() {
+        override fun getHandlers() = handlerList
+
+        companion object {
+            @Suppress("unused")
+            @JvmStatic
+            fun getHandlerList(): HandlerList = handlerList
+            private val handlerList = HandlerList()
+        }
+    }
+
+    fun register(setup: GameSetup.() -> Unit): ChessGame {
+        Bukkit.getPluginManager().callEvent(RegisterEvent(this))
         val s = GameSetup(uniqueId).apply(setup)
-        white = s.white
-        black = s.black
+        players += s.white
+        players += s.black
+        players.forEach { it.register() }
+        glog.low("Game registered", uniqueId, s.white, s.black, arena, settings)
+        return this
     }
 
     override fun toString() = "ChessGame(arena = $arena, uniqueId = $uniqueId)"
@@ -35,7 +46,12 @@ class ChessGame(val arena: ChessArena, val settings: Settings, setup: GameSetup.
 
     val board: Chessboard = getComponent(Chessboard::class)!!
 
-    val players: List<ChessPlayer> = listOf(white, black)
+    private val players = mutableListOf<ChessPlayer>()
+
+    private val white
+        get() = players.firstOrNull { it.side == ChessSide.WHITE }
+    private val black
+        get() = players.firstOrNull { it.side == ChessSide.BLACK }
 
     private val spectatorUUID = mutableListOf<UUID>()
 
@@ -44,6 +60,9 @@ class ChessGame(val arena: ChessArena, val settings: Settings, setup: GameSetup.
 
     private val playerUUID: List<UUID> =
         players.mapNotNull { (it as? ChessPlayer.Human)?.player }.map { it.uniqueId }.distinct()
+
+    val chessPlayers: List<ChessPlayer>
+        get() = players.toList()
 
     private val realPlayers: List<Player>
         get() = playerUUID.mapNotNull { Bukkit.getPlayer(it) }
@@ -54,11 +73,6 @@ class ChessGame(val arena: ChessArena, val settings: Settings, setup: GameSetup.
         get() = arena.world
 
     val scoreboard = ScoreboardManager(this)
-
-    init {
-        ChessManager.registerGamePlayers(this)
-        glog.low("Game created", uniqueId, white, black, arena, settings)
-    }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
@@ -92,7 +106,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings, setup: GameSetup.
         startPreviousTurn()
     }
 
-    fun start() {
+    fun start(): ChessGame {
         try {
             scoreboard += object :
                 GameProperty(ConfigManager.getString("Component.Scoreboard.Preset")) {
@@ -104,17 +118,18 @@ class ChessGame(val arena: ChessArena, val settings: Settings, setup: GameSetup.
                     ConfigManager.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
             }
             forEachPlayer(arena::teleport)
-            black.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
-            white.sendTitle(
+            black?.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
+            white?.sendTitle(
                 ConfigManager.getString("Title.YourTurn"),
                 ConfigManager.getString("Title.YouArePlayingAs.White")
             )
-            white.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
-            black.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
+            white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
+            black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
             components.forEach { it.start() }
             scoreboard.start()
             glog.mid("Started game", uniqueId)
             startTurn()
+            return this
         } catch (e: Exception) {
             arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
             forEachPlayer { it.sendMessage(ConfigManager.getError("TeleportFailed")) }
@@ -262,22 +277,26 @@ class ChessGame(val arena: ChessArena, val settings: Settings, setup: GameSetup.
     }
 
     operator fun get(player: Player): ChessPlayer.Human? =
-        if (white is ChessPlayer.Human && black is ChessPlayer.Human && white.player == black.player && white.player == player)
+        if (players.map { it as? ChessPlayer.Human }.all { it?.player == player })
             this[currentTurn] as? ChessPlayer.Human
-        else if (white is ChessPlayer.Human && white.player == player)
-            white
-        else if (black is ChessPlayer.Human && black.player == player)
-            black
-        else
-            null
+        else players.mapNotNull { it as? ChessPlayer.Human }.firstOrNull { it.player == player }
 
-    operator fun get(side: ChessSide): ChessPlayer = when (side) {
-        ChessSide.WHITE -> white
-        ChessSide.BLACK -> black
-    }
+    operator fun get(side: ChessSide): ChessPlayer = tryOrStopNull(
+        when (side) {
+            ChessSide.WHITE -> white
+            ChessSide.BLACK -> black
+        }
+    )
 
     fun update() {
         components.forEach { it.update() }
+    }
+
+    fun <E> tryOrStopNull(expr: E?): E = try {
+        expr!!
+    } catch (e: NullPointerException) {
+        stop(EndReason.Error(e))
+        throw e
     }
 
     class SettingsScreen(
