@@ -105,7 +105,6 @@ sealed class ChessPlayer(
             private val handlerList = HandlerList()
         }
     }
-
     val game: ChessGame
         get() = ChessManager[gameUniqueId]!!
 
@@ -122,6 +121,9 @@ sealed class ChessPlayer(
         get() = game.board.piecesOf(side)
     private val king
         get() = game.tryOrStopNull(pieces.find { it.type == ChessType.KING })
+
+    val opponent
+        get() = game[!side]
 
     protected fun getAllowedMoves(piece: ChessPiece): List<ChessMove> =
         game.board.getMoves(piece.pos).filter(game.board::isLegal)

@@ -58,14 +58,11 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     private val spectators: List<Player>
         get() = spectatorUUID.mapNotNull { Bukkit.getPlayer(it) }
 
-    private val playerUUID: List<UUID> =
-        players.mapNotNull { (it as? ChessPlayer.Human)?.player }.map { it.uniqueId }.distinct()
-
     val chessPlayers: List<ChessPlayer>
         get() = players.toList()
 
     private val realPlayers: List<Player>
-        get() = playerUUID.mapNotNull { Bukkit.getPlayer(it) }
+        get() = players.mapNotNull { (it as? ChessPlayer.Human)?.player }.distinct()
 
     var currentTurn = ChessSide.WHITE
 

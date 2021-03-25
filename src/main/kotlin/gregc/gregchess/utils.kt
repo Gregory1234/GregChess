@@ -12,6 +12,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
 import java.io.File
 import java.lang.IllegalArgumentException
+import java.lang.NullPointerException
 import java.time.Duration
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
@@ -87,7 +88,9 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     }
 
     fun teleport(p: Player) {
-        data[p.uniqueId] = p.playerData
+        if(p.uniqueId !in data)
+            data[p.uniqueId] = p.playerData
+        glog.warn(data)
         p.playerData = defaultData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
@@ -97,7 +100,8 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     }
 
     fun teleportSpectator(p: Player) {
-        data[p.uniqueId] = p.playerData
+        if(p.uniqueId !in data)
+            data[p.uniqueId] = p.playerData
         p.playerData = spectatorData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
@@ -120,18 +124,24 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     }
 
     fun exit(p: Player) {
-        p.playerData = data[p.uniqueId]!!
-        data.remove(p.uniqueId)
-        resourcePackPath?.let {
-            ConfigManager.getOptionalString(resourcePackPath)?.let {
-                glog.io(ConfigManager.getString("EmptyResourcePack"))
-                p.setResourcePack(
-                    ConfigManager.getString("EmptyResourcePack"),
-                    hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
-                )
+        try {
+            p.playerData = data[p.uniqueId]!!
+            data.remove(p.uniqueId)
+            resourcePackPath?.let {
+                ConfigManager.getOptionalString(resourcePackPath)?.let {
+                    glog.io(ConfigManager.getString("EmptyResourcePack"))
+                    p.setResourcePack(
+                        ConfigManager.getString("EmptyResourcePack"),
+                        hexToBytes("6202c61ae5d659ea7a9772aa1cde15cc3614494d")!!
+                    )
+                }
             }
+            glog.mid("Teleported", p.name, "out of arena", name)
+        } catch (e: NullPointerException) {
+            p.sendMessage(ConfigManager.getError("TeleportFailed"))
+            p.teleport(Bukkit.getServer().getWorld("world")?.spawnLocation ?: p.world.spawnLocation)
+            e.printStackTrace()
         }
-        glog.mid("Teleported", p.name, "out of arena", name)
     }
 
     fun isEmpty() = world.players.isEmpty()
@@ -217,38 +227,45 @@ class CommandException(val playerMsg: String) : Exception() {
 }
 
 @ExperimentalContracts
-fun <T> commandRequireNotNull(e: T?, msg: String) {
+fun cRequire(e: Boolean, msg: String) {
     contract {
-        returns() implies (e != null)
+        returns() implies e
     }
-    if (e == null) throw CommandException(msg)
+    if (!e) throw CommandException(msg)
 }
 
 @ExperimentalContracts
-fun commandRequirePlayer(e: CommandSender, msg: String = "NotPlayer") {
+fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
+    cRequire(args.size in min..max, "WrongArgumentsNumber")
+}
+
+@ExperimentalContracts
+fun cPerms(p: CommandSender, perm: String) {
+    cRequire(p.hasPermission(perm), "NoPerms")
+}
+
+@ExperimentalContracts
+fun cPlayer(p: CommandSender) {
     contract {
-        returns() implies (e is Player)
+        returns() implies (p is Player)
     }
-    if (e !is Player) throw CommandException(msg)
+    cRequire(p is Player, "NotPlayer")
 }
 
-fun commandRequireArgumentsGeneral(
-    e: Array<String>,
-    lower: Int = 0, upper: Int = Int.MAX_VALUE,
-    msg: String = "WrongArgumentsNumber"
-) {
-    if (e.size !in lower..upper) throw CommandException(msg)
+fun <T> cWrongArgument(block: () -> T): T = try {
+    block()
+} catch (e: IllegalArgumentException) {
+    e.printStackTrace()
+    cWrongArgument()
 }
 
-fun commandRequireArguments(e: Array<String>, num: Int, msg: String = "WrongArgumentsNumber") =
-    commandRequireArgumentsGeneral(e, num, num, msg)
+fun cWrongArgument(): Nothing = throw CommandException("WrongArgument")
 
-fun commandRequireArgumentsMin(e: Array<String>, min: Int, msg: String = "WrongArgumentsNumber") =
-    commandRequireArgumentsGeneral(e, min, msg = msg)
+fun <T> cNotNull(p: T?, msg: String): T = p ?: throw CommandException(msg)
 
-fun commandRequirePermission(e: CommandSender, permission: String, msg: String = "NoPerms") {
-    if (!e.hasPermission(permission)) throw CommandException(msg)
-}
+inline fun <reified T, reified R : T> cCast(p: T, msg: String): R = cNotNull(p as? R, msg)
+
+fun cServerPlayer(name: String) = cNotNull(GregInfo.server.getPlayer(name), "PlayerNotFound")
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 

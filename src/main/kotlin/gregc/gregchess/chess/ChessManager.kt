@@ -74,6 +74,8 @@ object ChessManager : Listener {
 
     private fun nextArena(): ChessArena? = arenas.firstOrNull { it.isAvailable() }
 
+    private fun cNextArena(): ChessArena = cNotNull(nextArena(), "NoArenas")
+
     fun start() {
         GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
         ConfigManager.getStringList("ChessArenas").forEach {
@@ -110,31 +112,28 @@ object ChessManager : Listener {
 
     @ExperimentalContracts
     fun duelMenu(player: Player, callback: (ChessArena, ChessGame.Settings) -> Unit) {
-        val arena = nextArena()
-        commandRequireNotNull(arena, "NoArenas")
+        val arena = cNextArena()
         arena.reserve()
         player.openScreen(ChessGame.SettingsScreen(arena, callback))
     }
 
+    @ExperimentalContracts
     fun leave(player: Player) {
         val p = this[player]
         if (p != null) {
             p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
         } else {
-            if (!isSpectatingGame(player))
-                throw CommandException("NotInGame.You")
+            cRequire(isSpectatingGame(player), "NotInGame.You")
             removeSpectator(player)
         }
     }
 
     @ExperimentalContracts
     fun addSpectator(player: Player, toSpectate: Player) {
-        val spec = this[toSpectate]
-        commandRequireNotNull(spec, "NotInGame.Player")
+        val spec = cNotNull(this[toSpectate], "NotInGame.Player")
         val game = getGame(player)
         if (game != null) {
-            if (player in game)
-                throw CommandException("InGame.You")
+            cRequire(player !in game, "InGame.You")
             removeSpectator(player)
         }
         addSpectator(player, spec.game)

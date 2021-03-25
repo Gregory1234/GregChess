@@ -101,7 +101,7 @@ class ChessEngine(val name: String) {
     fun setOption(name: String, value: String) {
         when (name) {
             "time" -> {
-                moveTime = parseDuration(value) ?: throw CommandException("WrongDurationFormat")
+                moveTime = cNotNull(parseDuration(value), "WrongDurationFormat")
             }
             else -> {
                 glog.io("setoption name $name value $value")
