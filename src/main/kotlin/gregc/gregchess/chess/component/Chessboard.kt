@@ -31,7 +31,8 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
     }
 
     class Renderer(private val board: Chessboard) {
-        fun getPos(loc: Loc) = ChessPosition((4 * 8 - 1 - loc.x).div(3), (loc.z - 8).div(3))
+        fun getPos(loc: Loc) =
+            ChessPosition(Math.floorDiv(4 * 8 - 1 - loc.x, 3), Math.floorDiv(loc.z - 8, 3))
 
         fun getPieceLoc(pos: ChessPosition) =
             Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)

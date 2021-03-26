@@ -90,7 +90,6 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     fun teleport(p: Player) {
         if(p.uniqueId !in data)
             data[p.uniqueId] = p.playerData
-        glog.warn(data)
         p.playerData = defaultData
         p.teleport(world.spawnLocation)
         p.scoreboard = scoreboard
