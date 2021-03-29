@@ -8,6 +8,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.inventory.ItemStack
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
@@ -71,6 +72,9 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
 
     val scoreboard = ScoreboardManager(this)
 
+    lateinit var startTime: LocalDateTime
+        private set
+
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
@@ -105,6 +109,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
 
     fun start(): ChessGame {
         try {
+            startTime = LocalDateTime.now()
             scoreboard += object :
                 GameProperty(ConfigManager.getString("Component.Scoreboard.Preset")) {
                 override fun invoke() = settings.name
@@ -165,23 +170,24 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
-    sealed class EndReason(val namePath: String, val winner: ChessSide?) {
+    sealed class EndReason(val namePath: String, val reasonPGN: String, val winner: ChessSide?) {
+
         override fun toString() =
             "EndReason.${javaClass.name.split(".", "$").last()}(winner = $winner)"
 
-        class Checkmate(winner: ChessSide) : EndReason("Chess.EndReason.Checkmate", winner)
-        class Resignation(winner: ChessSide) : EndReason("Chess.EndReason.Resignation", winner)
-        class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", winner)
-        class PluginRestart : EndReason("Chess.EndReason.PluginRestart", null)
-        class ArenaRemoved : EndReason("Chess.EndReason.ArenaRemoved", null)
-        class Stalemate : EndReason("Chess.EndReason.Stalemate", null)
-        class InsufficientMaterial : EndReason("Chess.EndReason.InsufficientMaterial", null)
-        class FiftyMoves : EndReason("Chess.EndReason.FiftyMoves", null)
-        class Repetition : EndReason("Chess.EndReason.Repetition", null)
-        class DrawAgreement : EndReason("Chess.EndReason.DrawAgreement", null)
-        class Timeout(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.Timeout", winner)
-        class DrawTimeout : ChessGame.EndReason("Chess.EndReason.DrawTimeout", null)
-        class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", null) {
+        class Checkmate(winner: ChessSide) : EndReason("Chess.EndReason.Checkmate", "normal", winner)
+        class Resignation(winner: ChessSide) : EndReason("Chess.EndReason.Resignation", "abandoned", winner)
+        class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", "abandoned", winner)
+        class PluginRestart : EndReason("Chess.EndReason.PluginRestart", "emergency", null)
+        class ArenaRemoved : EndReason("Chess.EndReason.ArenaRemoved", "emergency", null)
+        class Stalemate : EndReason("Chess.EndReason.Stalemate", "normal", null)
+        class InsufficientMaterial : EndReason("Chess.EndReason.InsufficientMaterial", "normal", null)
+        class FiftyMoves : EndReason("Chess.EndReason.FiftyMoves", "normal", null)
+        class Repetition : EndReason("Chess.EndReason.Repetition", "normal", null)
+        class DrawAgreement : EndReason("Chess.EndReason.DrawAgreement", "normal", null)
+        class Timeout(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.Timeout", "time forfeit", winner)
+        class DrawTimeout : ChessGame.EndReason("Chess.EndReason.DrawTimeout", "time forfeit", null)
+        class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", "emergency", null) {
             override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
         }
 
@@ -194,7 +200,9 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         )
     }
 
-    class EndEvent(val game: ChessGame, val gameEndReason: EndReason) : Event() {
+    class EndEvent(val game: ChessGame) : Event() {
+        val gameEndReason = game.endReason
+
         override fun getHandlers() = handlerList
 
         companion object {
@@ -206,12 +214,15 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     }
 
     private var stopping = false
+    var endReason: EndReason? = null
+        private set
 
     fun quickStop(reason: EndReason) = stop(reason, realPlayers)
 
     fun stop(reason: EndReason, quick: List<Player> = emptyList()) {
         if (stopping) return
         stopping = true
+        endReason = reason
         components.forEach { it.stop() }
         var anyLong = false
         forEachPlayer {
@@ -268,7 +279,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
                 players.forEach(ChessPlayer::stop)
                 arena.clear()
                 glog.low("Stopped game", uniqueId, reason)
-                Bukkit.getPluginManager().callEvent(EndEvent(this, reason))
+                Bukkit.getPluginManager().callEvent(EndEvent(this))
             }
         }
     }

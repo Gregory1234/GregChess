@@ -10,11 +10,12 @@ data class MoveData(
     val origin: ChessSquare,
     val target: ChessSquare,
     val name: String,
+    val standardName: String,
     inline val undo: () -> Unit
 ) {
 
     override fun toString() =
-        "MoveData(name = $name, origin.pos = ${origin.pos}, target.pos = ${target.pos}, piece.uuid = ${piece.uniqueId})"
+        "MoveData(name = $name, standardName = $standardName, origin.pos = ${origin.pos}, target.pos = ${target.pos}, piece.uuid = ${piece.uniqueId})"
 
     fun render() {
         origin.previousMoveMarker = Material.BROWN_CONCRETE
@@ -79,16 +80,24 @@ sealed class ChessMove(
         override fun execute(): MoveData {
             val pieceHasMoved = piece.hasMoved
             var name = ""
-            if (piece.type != ChessType.PAWN)
+            var standardName = ""
+            if (piece.type != ChessType.PAWN) {
                 name += piece.type.char.toUpperCase()
+                standardName += piece.type.standardChar.toUpperCase()
+            }
             name += getUniquenessCoordinate(piece, target)
+            standardName += getUniquenessCoordinate(piece, target)
             name += target.pos.toString()
+            standardName += target.pos.toString()
             piece.move(target)
             if (promotion != null) {
                 piece.promote(promotion)
                 name += promotion.char.toUpperCase()
+                standardName += "="
+                standardName += promotion.standardChar.toUpperCase()
             }
             name += checkForChecks(piece.side, piece.square.board)
+            standardName += checkForChecks(piece.side, piece.square.board)
             val undoReset = if (piece.type == ChessType.PAWN)
                 piece.square.board.resetMovesSinceLastCapture()
             else
@@ -100,7 +109,7 @@ sealed class ChessMove(
                 undoReset()
                 piece.force(pieceHasMoved)
             }
-            return MoveData(piece, origin, target, name, undo)
+            return MoveData(piece, origin, target, name, standardName, undo)
         }
     }
 
@@ -126,21 +135,32 @@ sealed class ChessMove(
         override fun execute(): MoveData {
             val pieceHasMoved = piece.hasMoved
             var name = ""
+            var standardName = ""
             name += if (piece.type == ChessType.PAWN)
                 piece.pos.fileStr
             else
                 piece.type.char.toUpperCase()
+            standardName += if (piece.type == ChessType.PAWN)
+                piece.pos.fileStr
+            else
+                piece.type.standardChar.toUpperCase()
             name += getUniquenessCoordinate(piece, target)
+            standardName += getUniquenessCoordinate(piece, target)
             name += ConfigManager.getString("Chess.Capture")
+            standardName += "x"
             name += target.pos.toString()
+            standardName += target.pos.toString()
             val capturedPiece = capture.piece
             val c = capturedPiece?.capture()
             piece.move(target)
             if (promotion != null) {
                 piece.promote(promotion)
                 name += promotion.char.toUpperCase()
+                standardName += "="
+                standardName += promotion.standardChar.toUpperCase()
             }
             name += checkForChecks(piece.side, piece.square.board)
+            standardName += checkForChecks(piece.side, piece.square.board)
             if (target != capture)
                 name += " e.p."
             val undoReset = piece.square.board.resetMovesSinceLastCapture()
@@ -152,7 +172,7 @@ sealed class ChessMove(
                 undoReset()
                 piece.force(pieceHasMoved)
             }
-            return MoveData(piece, origin, target, name, undo)
+            return MoveData(piece, origin, target, name, standardName, undo)
         }
     }
 
@@ -301,7 +321,7 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
                 piece.force(false)
                 rook.force(false)
             }
-            return MoveData(piece, origin, target, name, undo)
+            return MoveData(piece, origin, target, name, name, undo)
         }
     }
 

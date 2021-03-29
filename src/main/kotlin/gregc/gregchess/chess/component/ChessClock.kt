@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 
-class ChessClock(override val game: ChessGame, private val settings: Settings) :
+class ChessClock(override val game: ChessGame, val settings: Settings) :
     ChessGame.Component {
 
     enum class Type(val usesIncrement: Boolean = true) {
@@ -20,6 +20,16 @@ class ChessClock(override val game: ChessGame, private val settings: Settings) :
     data class Settings(
         val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds
     ) : ChessGame.ComponentSettings {
+
+        fun getPGN() = buildString {
+            if (type == Type.SIMPLE) {
+                append("1/", initialTime.toSeconds())
+            } else {
+                append(initialTime.toSeconds())
+                if (!increment.isZero)
+                    append("+", increment.toSeconds())
+            }
+        }
 
         override fun getComponent(game: ChessGame) = ChessClock(game, this)
 

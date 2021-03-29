@@ -53,6 +53,8 @@ data class FEN(
         castlingRightsToString('a', castlingRightsBlack)
     } ${enPassantSquare ?: "-"}"
 
+    fun isInitial() = this == FEN()
+
     companion object {
         private fun castlingRightsToString(base: Char, cr: List<Int>) =
             if (cr.all { it in listOf(0, 7) })

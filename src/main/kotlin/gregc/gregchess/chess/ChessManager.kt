@@ -3,6 +3,8 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.component.Chessboard
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
@@ -226,6 +228,13 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onChessGameEnd(e: ChessGame.EndEvent) {
+        val message = TextComponent(ConfigManager.getString("Message.CopyPGN"))
+        message.clickEvent =
+            ClickEvent(
+                ClickEvent.Action.COPY_TO_CLIPBOARD,
+                PGN.generate(e.game).toString()
+            )
+        e.game.forEachPlayer { it.spigot().sendMessage(message) }
         removeGame(e.game)
     }
 

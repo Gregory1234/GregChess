@@ -9,9 +9,9 @@ import java.lang.NullPointerException
 import java.util.*
 import kotlin.math.abs
 
-class Chessboard(override val game: ChessGame, private val settings: Settings) :
+class Chessboard(override val game: ChessGame, val settings: Settings) :
     ChessGame.Component {
-    data class Settings(private val initialFEN: FEN?, val chess960: Boolean = false) :
+    data class Settings(val initialFEN: FEN?, val chess960: Boolean = false) :
         ChessGame.ComponentSettings {
         override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
@@ -88,6 +88,11 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
     private val moves: MutableList<MoveData> = mutableListOf()
 
+    val moveHistory: List<MoveData>
+        get() = moves
+
+    val initialFEN = settings.genFEN()
+
     var lastMove
         get() = moves.lastOrNull()
         set(v) {
@@ -99,7 +104,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
 
     override fun start() {
         render()
-        setFromFEN(settings.genFEN())
+        setFromFEN(initialFEN)
     }
 
     override fun startTurn() {
@@ -226,7 +231,7 @@ class Chessboard(override val game: ChessGame, private val settings: Settings) :
             val origin = getSquare(piece.pos.plusR(-2 * piece.side.direction))!!
             val target = piece.square
             piece.move(origin)
-            lastMove = MoveData(piece, origin, target, "") {}
+            lastMove = MoveData(piece, origin, target, "", "") {}
             piece.move(target)
         }
 

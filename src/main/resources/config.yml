@@ -43,6 +43,7 @@ Request:
 Message:
   Teleported: "&eTeleported to $1."
   CopyFEN: "Copy FEN"
+  CopyPGN: "Copy PGN"
   LoadedFEN: "&eLoaded FEN!"
   ChooseSettings: "Choose settings"
   PawnPromotion: "Pawn promotion"
