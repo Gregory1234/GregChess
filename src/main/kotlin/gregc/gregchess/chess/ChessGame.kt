@@ -14,33 +14,8 @@ import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
 class ChessGame(val arena: ChessArena, val settings: Settings) {
-    class GameSetup internal constructor(val uniqueId: UUID) {
-        lateinit var white: ChessPlayer
-        lateinit var black: ChessPlayer
-    }
 
     val uniqueId: UUID = UUID.randomUUID()
-
-    class RegisterEvent(val game: ChessGame) : Event() {
-        override fun getHandlers() = handlerList
-
-        companion object {
-            @Suppress("unused")
-            @JvmStatic
-            fun getHandlerList(): HandlerList = handlerList
-            private val handlerList = HandlerList()
-        }
-    }
-
-    fun register(setup: GameSetup.() -> Unit): ChessGame {
-        Bukkit.getPluginManager().callEvent(RegisterEvent(this))
-        val s = GameSetup(uniqueId).apply(setup)
-        players += s.white
-        players += s.black
-        players.forEach { it.register() }
-        glog.low("Game registered", uniqueId, s.white, s.black, arena, settings)
-        return this
-    }
 
     override fun toString() = "ChessGame(arena = $arena, uniqueId = $uniqueId)"
     private val components = settings.components.map { it.getComponent(this) }
@@ -71,6 +46,27 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         get() = arena.world
 
     val scoreboard = ScoreboardManager(this)
+
+    class AddPlayersScope(private val game: ChessGame){
+
+        fun human(p: Player, side: ChessSide, silent: Boolean) {
+            game.players += ChessPlayer.Human(p, side, silent, game)
+        }
+
+        fun engine(name: String, side: ChessSide) {
+            game.players += ChessPlayer.Engine(ChessEngine(name), side, game)
+        }
+
+    }
+
+    fun addPlayers(init: AddPlayersScope.() -> Unit): ChessGame {
+        if (started)
+            throw IllegalArgumentException()
+        AddPlayersScope(this).init()
+        return this
+    }
+
+    private var started = false
 
     lateinit var startTime: LocalDateTime
         private set
@@ -107,6 +103,18 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         startPreviousTurn()
     }
 
+    class StartEvent(val game: ChessGame) : Event() {
+
+        override fun getHandlers() = handlerList
+
+        companion object {
+            @Suppress("unused")
+            @JvmStatic
+            fun getHandlerList(): HandlerList = handlerList
+            private val handlerList = HandlerList()
+        }
+    }
+
     fun start(): ChessGame {
         try {
             startTime = LocalDateTime.now()
@@ -129,7 +137,9 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
             black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
             components.forEach { it.start() }
             scoreboard.start()
+            started = true
             glog.mid("Started game", uniqueId)
+            Bukkit.getPluginManager().callEvent(StartEvent(this))
             startTurn()
             return this
         } catch (e: Exception) {
@@ -201,7 +211,6 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     }
 
     class EndEvent(val game: ChessGame) : Event() {
-        val gameEndReason = game.endReason
 
         override fun getHandlers() = handlerList
 
@@ -223,64 +232,70 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         if (stopping) return
         stopping = true
         endReason = reason
-        components.forEach { it.stop() }
-        var anyLong = false
-        forEachPlayer {
-            if (reason.winner != null) {
-                this[it]?.sendTitle(
-                    ConfigManager.getString(if (reason.winner == this[it]!!.side) "Title.Player.YouWon" else "Title.Player.YouLost"),
-                    ConfigManager.getString(reason.namePath)
-                )
-            } else {
-                this[it]?.sendTitle(
-                    ConfigManager.getString("Title.Player.YouDrew"),
-                    ConfigManager.getString(reason.namePath)
-                )
-            }
-            it.sendMessage(reason.getMessage())
-            if (it in quick) {
-                arena.exit(it)
-            } else {
-                anyLong = true
-                TimeManager.runTaskLater(3.seconds) {
+        try {
+            components.forEach { it.stop() }
+            var anyLong = false
+            forEachPlayer {
+                if (reason.winner != null) {
+                    this[it]?.sendTitle(
+                        ConfigManager.getString(if (reason.winner == this[it]!!.side) "Title.Player.YouWon" else "Title.Player.YouLost"),
+                        ConfigManager.getString(reason.namePath)
+                    )
+                } else {
+                    this[it]?.sendTitle(
+                        ConfigManager.getString("Title.Player.YouDrew"),
+                        ConfigManager.getString(reason.namePath)
+                    )
+                }
+                it.sendMessage(reason.getMessage())
+                if (it in quick) {
                     arena.exit(it)
+                } else {
+                    anyLong = true
+                    TimeManager.runTaskLater(3.seconds) {
+                        arena.exit(it)
+                    }
                 }
             }
-        }
-        forEachSpectator {
-            if (reason.winner != null) {
-                this[it]?.sendTitle(
-                    ConfigManager.getString(if (reason.winner == ChessSide.WHITE) "Title.Spectator.WhiteWon" else "Title.Spectator.BlackWon"),
-                    ConfigManager.getString(reason.namePath)
-                )
-            } else {
-                this[it]?.sendTitle(
-                    ConfigManager.getString("Title.Spectator.ItWasADraw"),
-                    ConfigManager.getString(reason.namePath)
-                )
-            }
-            it.sendMessage(reason.getMessage())
-            if (anyLong) {
-                arena.exit(it)
-            } else {
-                TimeManager.runTaskLater(3.seconds) {
+            forEachSpectator {
+                if (reason.winner != null) {
+                    this[it]?.sendTitle(
+                        ConfigManager.getString(if (reason.winner == ChessSide.WHITE) "Title.Spectator.WhiteWon" else "Title.Spectator.BlackWon"),
+                        ConfigManager.getString(reason.namePath)
+                    )
+                } else {
+                    this[it]?.sendTitle(
+                        ConfigManager.getString("Title.Spectator.ItWasADraw"),
+                        ConfigManager.getString(reason.namePath)
+                    )
+                }
+                it.sendMessage(reason.getMessage())
+                if (anyLong) {
                     arena.exit(it)
+                } else {
+                    TimeManager.runTaskLater(3.seconds) {
+                        arena.exit(it)
+                    }
                 }
             }
-        }
-        if (reason is EndReason.PluginRestart) {
-            glog.low("Stopped game", uniqueId, reason)
-            return
-        }
-        TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
-            scoreboard.stop()
-            components.forEach { it.clear() }
-            TimeManager.runTaskLater(1.ticks) {
-                players.forEach(ChessPlayer::stop)
-                arena.clear()
+            if (reason is EndReason.PluginRestart) {
                 glog.low("Stopped game", uniqueId, reason)
-                Bukkit.getPluginManager().callEvent(EndEvent(this))
+                return
             }
+            TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
+                scoreboard.stop()
+                components.forEach { it.clear() }
+                TimeManager.runTaskLater(1.ticks) {
+                    players.forEach(ChessPlayer::stop)
+                    arena.clear()
+                    glog.low("Stopped game", uniqueId, reason)
+                    Bukkit.getPluginManager().callEvent(EndEvent(this))
+                }
+            }
+        } catch(e: Exception) {
+            arena.world.players.forEach { arena.safeExit(it) }
+            Bukkit.getPluginManager().callEvent(EndEvent(this))
+            throw e
         }
     }
 

@@ -23,11 +23,11 @@ class ChessClock(override val game: ChessGame, val settings: Settings) :
 
         fun getPGN() = buildString {
             if (type == Type.SIMPLE) {
-                append("1/", initialTime.toSeconds())
+                append("1/", initialTime.seconds)
             } else {
-                append(initialTime.toSeconds())
+                append(initialTime.seconds)
                 if (!increment.isZero)
-                    append("+", increment.toSeconds())
+                    append("+", increment.seconds)
             }
         }
 

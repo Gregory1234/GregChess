@@ -1,34 +1,21 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.event.Event
-import org.bukkit.event.HandlerList
-import java.lang.NullPointerException
-import java.util.*
 
 
-sealed class ChessPlayer(
-    val side: ChessSide,
-    private val silent: Boolean,
-    val gameUniqueId: UUID
-) {
-    class Human(val player: Player, side: ChessSide, silent: Boolean, gameUniqueId: UUID) :
-        ChessPlayer(side, silent, gameUniqueId) {
+sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val game: ChessGame ) {
+    class Human(val player: Player, side: ChessSide, silent: Boolean, game: ChessGame) :
+        ChessPlayer(side, silent, game) {
 
         override val name = player.name
 
-        override fun toString() = "ChessPlayer.Human(name = $name, side = $side, game.uniqueId = $gameUniqueId)"
+        override fun toString() = "ChessPlayer.Human(name = $name, side = $side, game.uniqueId = ${game.uniqueId})"
 
         override fun sendMessage(msg: String) = player.sendMessage(msg)
         override fun sendTitle(title: String, subtitle: String) =
             player.sendTitle(title, subtitle, 10, 70, 20)
-
-        override fun register() {
-            Bukkit.getPluginManager().callEvent(RegisterEvent(this))
-        }
 
         fun pickUp(loc: Loc) {
             if (!game.board.renderer.getPos(loc).isValid()) return
@@ -68,8 +55,8 @@ sealed class ChessPlayer(
         }
     }
 
-    class Engine(val engine: ChessEngine, side: ChessSide, gameUniqueId: UUID) :
-        ChessPlayer(side, true, gameUniqueId) {
+    class Engine(val engine: ChessEngine, side: ChessSide, game: ChessGame) :
+        ChessPlayer(side, true, game) {
 
         override val name = engine.name
 
@@ -95,18 +82,6 @@ sealed class ChessPlayer(
 
         }
     }
-    class RegisterEvent(val player: Human) : Event() {
-        override fun getHandlers() = handlerList
-
-        companion object {
-            @Suppress("unused")
-            @JvmStatic
-            fun getHandlerList(): HandlerList = handlerList
-            private val handlerList = HandlerList()
-        }
-    }
-    val game: ChessGame
-        get() = ChessManager[gameUniqueId]!!
 
     var held: ChessPiece? = null
     protected var heldMoves: List<ChessMove>? = null
@@ -153,8 +128,6 @@ sealed class ChessPlayer(
         override fun onCancel() = player.finishMove(moves.first().second)
 
     }
-
-    open fun register() {}
 
     open fun stop() {}
 

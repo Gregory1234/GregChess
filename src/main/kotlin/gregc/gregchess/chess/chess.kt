@@ -117,7 +117,7 @@ class ChessEngine(val name: String) {
         process.outputStream.flush()
         executor.submit(Callable {
             glog.io(reader.readLine())
-        })[moveTime.toSeconds() / 2 + 3, TimeUnit.SECONDS]
+        })[moveTime.seconds / 2 + 3, TimeUnit.SECONDS]
         glog.io(command)
         process.outputStream.write(("$command\n").toByteArray())
         process.outputStream.flush()
@@ -127,7 +127,7 @@ class ChessEngine(val name: String) {
         val a = reader.readLine()
         glog.io(a)
         a
-    })[moveTime.toSeconds() / 2 + 3, TimeUnit.SECONDS]
+    })[moveTime.seconds / 2 + 3, TimeUnit.SECONDS]
 
     init {
         readLine()

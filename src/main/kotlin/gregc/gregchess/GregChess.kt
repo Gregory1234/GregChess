@@ -36,11 +36,9 @@ class GregChess : JavaPlugin(), Listener {
         RequestTypeBuilder<ChessGame>().messagesSimple(
             "Duel", "/chess duel accept", "/chess duel cancel"
         ).print { it.settings.name }.onAccept { (sender, receiver, g) ->
-            g.register {
-                white =
-                    ChessPlayer.Human(sender, ChessSide.WHITE, sender == receiver, uniqueId)
-                black =
-                    ChessPlayer.Human(receiver, ChessSide.BLACK, sender == receiver, uniqueId)
+            g.addPlayers {
+                human(sender, ChessSide.WHITE, sender == receiver)
+                human(receiver, ChessSide.BLACK, sender == receiver)
             }.start()
         }.onCancel { (_, _, t) ->
             t.arena.clear()
@@ -92,11 +90,9 @@ class GregChess : JavaPlugin(), Listener {
                     cArgs(args, 1, 1)
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
                     ChessManager.duelMenu(player) { arena, settings ->
-                        ChessGame(arena, settings).register {
-                            white =
-                                ChessPlayer.Human(player, ChessSide.WHITE, false, uniqueId)
-                            val engine = ChessEngine("stockfish")
-                            black = ChessPlayer.Engine(engine, ChessSide.BLACK, uniqueId)
+                        ChessGame(arena, settings).addPlayers {
+                            human(player, ChessSide.WHITE, false)
+                            engine("stockfish", ChessSide.BLACK)
                         }.start()
                     }
                 }
