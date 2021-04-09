@@ -46,11 +46,6 @@ class GregChess : JavaPlugin(), Listener {
 
     @ExperimentalContracts
     override fun onEnable() {
-        try {
-            File(dataFolder.absolutePath + "/GregChess.log")
-                .renameTo(File(dataFolder.absolutePath + "/backup.log"))
-        } catch (e: Exception) {
-        }
         server.pluginManager.registerEvents(this, this)
         saveDefaultConfig()
         ChessManager.start()

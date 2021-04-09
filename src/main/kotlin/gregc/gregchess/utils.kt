@@ -14,6 +14,8 @@ import java.io.File
 import java.lang.IllegalArgumentException
 import java.lang.NullPointerException
 import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -352,7 +354,7 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
 
 val glog: GregLogger
     get() {
-        val file = File(GregInfo.plugin.dataFolder.absolutePath + "/GregChess.log")
+        val file = File(GregInfo.plugin.dataFolder.absolutePath + "/GregChess-${DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())}.log")
         file.createNewFile()
         return GregLogger(file)
     }
