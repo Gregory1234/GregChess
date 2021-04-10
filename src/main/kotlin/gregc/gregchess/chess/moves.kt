@@ -325,8 +325,9 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
         }
     }
 
-    val board = piece.square.board
-    val settings = board.game.settings
+    val game = piece.square.game
+    val board = game.board
+    val settings = game.settings
     val neighbours =
         piece.pos.neighbours().mapNotNull { board.getSquare(it) }.flatMap { jumpTo(piece, it) }
     val castles = mutableListOf<ChessMove>()

@@ -166,7 +166,7 @@ class ChessEngine(val name: String) {
     }
 }
 
-data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
+data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
     var piece: ChessPiece? = null
     var bakedMoves: List<ChessMove>? = null
 
@@ -177,8 +177,11 @@ data class ChessSquare(val pos: ChessPosition, val board: Chessboard) {
     private val floor
         get() = moveMarker ?: previousMoveMarker ?: baseFloor
 
+    val board
+        get() = game.board
+
     override fun toString() =
-        "ChessSquare(game.uniqueId = ${board.game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
+        "ChessSquare(game.uniqueId = ${game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
 
     fun render() {
         board.renderer.fillFloor(pos, floor)

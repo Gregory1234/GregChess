@@ -28,6 +28,9 @@ class ChessPiece(
     override fun toString() =
         "ChessPiece(uniqueId = $uniqueId, pos = $pos, type = $type, side = $side)"
 
+    private val game
+        get() = square.game
+
     private val board
         get() = square.board
 
@@ -43,13 +46,13 @@ class ChessPiece(
 
         fun render() {
             type.getStructure(side).forEachIndexed { i, m ->
-                board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
+                board.renderer.getBlockAt(loc.copy(y = loc.y + i)).type = m
             }
         }
 
         fun hide() {
             type.getStructure(side).forEachIndexed { i, _ ->
-                board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
+                board.renderer.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
             }
         }
     }
@@ -59,18 +62,18 @@ class ChessPiece(
 
     init {
         render()
-        glog.low("Piece created", board.game.uniqueId, uniqueId, pos, type, side)
+        glog.low("Piece created", game.uniqueId, uniqueId, pos, type, side)
     }
 
     private fun render() {
         type.getStructure(side).forEachIndexed { i, m ->
-            board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
+            board.renderer.getBlockAt(loc.copy(y = loc.y + i)).type = m
         }
     }
 
     private fun hide() {
         type.getStructure(side).forEachIndexed { i, _ ->
-            board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
+            board.renderer.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
         }
     }
 
@@ -109,7 +112,7 @@ class ChessPiece(
     }
 
     private fun playSound(s: Sound) {
-        loc.toLocation(board.game.world).playSound(s)
+        board.renderer.toLocation(loc).playSound(s)
     }
 
     private fun playPickUpSound() = playSound(type.getSound("PickUp"))

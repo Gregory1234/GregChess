@@ -60,7 +60,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
 
             tags += TagPair("Result", result ?: "*")
             tags += TagPair("PlyCount", game.board.moveHistory.size.toString())
-            val timeControl = game.getComponent(ChessClock::class)?.settings?.getPGN() ?: "-"
+            val timeControl = game.settings.clock?.getPGN() ?: "-"
             tags += TagPair("TimeControl", timeControl)
             val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(game.startTime)
             tags += TagPair("Time", time)
@@ -71,7 +71,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
                 tags += TagPair("SetUp", "1")
                 tags += TagPair("FEN", game.board.initialFEN.toString())
             }
-            if (game.board.settings.chess960) {
+            if (game.settings.board.chess960) {
                 tags += TagPair("Variant", "Chess960")
             }
 

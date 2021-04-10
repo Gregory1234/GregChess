@@ -2,6 +2,7 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
+import gregc.gregchess.getBlockAt
 import gregc.gregchess.glog
 import gregc.gregchess.star
 import org.bukkit.Material
@@ -9,24 +10,26 @@ import java.lang.NullPointerException
 import java.util.*
 import kotlin.math.abs
 
-class Chessboard(override val game: ChessGame, val settings: Settings) :
-    ChessGame.Component {
-    data class Settings(val initialFEN: FEN?, val chess960: Boolean = false) :
-        ChessGame.ComponentSettings {
-        override fun getComponent(game: ChessGame) = Chessboard(game, this)
+class Chessboard(private val game: ChessGame, settings: Settings) {
+    data class Settings(val initialFEN: FEN?, val chess960: Boolean = false) {
+        fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN() = initialFEN ?: if (!chess960) FEN() else FEN.generateChess960()
 
         companion object {
 
-            fun init() {
-                SettingsManager.registerComponent(
-                    "Board", mapOf(
-                        "normal" to Settings(null),
-                        "chess960" to Settings(null, true)
-                    )
-                )
+            private val normal = Settings(null)
+
+            operator fun get(name: String?) = when (name) {
+                "normal" -> normal
+                null -> normal
+                "chess960" -> Settings(null, true)
+                else -> {
+                    glog.warn("Invalid chessboard configuration $name, defaulted to normal")
+                    normal
+                }
             }
+
         }
     }
 
@@ -56,13 +59,17 @@ class Chessboard(override val game: ChessGame, val settings: Settings) :
                 board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
             }
         }
+
+        fun getBlockAt(loc: Loc) = board.game.world.getBlockAt(loc)
+
+        fun toLocation(loc: Loc) = loc.toLocation(board.game.world)
     }
 
     val renderer = Renderer(this)
 
     private val boardState = (0..7).star(0..7) { i, j ->
         val pos = ChessPosition(i, j)
-        Pair(pos, ChessSquare(pos, this))
+        Pair(pos, ChessSquare(pos, game))
     }.toMap()
 
     private var movesSinceLastCapture = 0
@@ -102,20 +109,20 @@ class Chessboard(override val game: ChessGame, val settings: Settings) :
                 moves.clear()
         }
 
-    override fun start() {
+    fun start() {
         render()
         setFromFEN(initialFEN)
     }
 
-    override fun startTurn() {
+    fun startTurn() {
         checkForGameEnd()
     }
 
-    override fun previousTurn() {
+    fun previousTurn() {
         updateMoves()
     }
 
-    override fun endTurn() {
+    fun endTurn() {
         updateMoves()
         val num = "${fullMoveCounter}."
         if (game.currentTurn == ChessSide.BLACK) {
@@ -143,7 +150,7 @@ class Chessboard(override val game: ChessGame, val settings: Settings) :
         glog.mid("Rendered chessboard", game.uniqueId)
     }
 
-    override fun clear() {
+    fun clear() {
         boardState.values.forEach { it.clear() }
         capturedPieces.forEach { it.hide() }
         for (i in 0 until 8 * 5) {

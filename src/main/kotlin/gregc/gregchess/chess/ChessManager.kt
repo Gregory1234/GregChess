@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.ChessClock
-import gregc.gregchess.chess.component.Chessboard
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.block.BlockFace
@@ -73,8 +71,6 @@ object ChessManager : Listener {
         ConfigManager.getStringList("ChessArenas").forEach {
             arenas += ChessArena(it)
         }
-        Chessboard.Settings.init()
-        ChessClock.Settings.init()
     }
 
     fun stop() {
@@ -133,8 +129,6 @@ object ChessManager : Listener {
 
     fun reload() {
         reloadArenas()
-        Chessboard.Settings.init()
-        ChessClock.Settings.init()
     }
 
     @EventHandler

@@ -1,7 +1,6 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.ChessClock
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.command.CommandSender
@@ -10,7 +9,6 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
-import java.io.File
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 
@@ -186,7 +184,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 4, 4)
                     val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
-                    val clock = cNotNull(game.getComponent(ChessClock::class), "ClockNotFound")
+                    val clock = cNotNull(game.clock, "ClockNotFound")
                     cWrongArgument {
                         val side = ChessSide.valueOf(args[1])
                         val time = cNotNull(parseDuration(args[3]), "WrongArgument")

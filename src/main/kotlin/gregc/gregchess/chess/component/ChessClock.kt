@@ -2,6 +2,7 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.ConfigManager
 import gregc.gregchess.chess.*
+import gregc.gregchess.glog
 import gregc.gregchess.seconds
 import java.time.Duration
 import java.time.LocalDateTime
@@ -10,8 +11,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 
-class ChessClock(override val game: ChessGame, val settings: Settings) :
-    ChessGame.Component {
+class ChessClock(private val game: ChessGame, private val settings: Settings) {
 
     enum class Type(val usesIncrement: Boolean = true) {
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
@@ -19,7 +19,7 @@ class ChessClock(override val game: ChessGame, val settings: Settings) :
 
     data class Settings(
         val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds
-    ) : ChessGame.ComponentSettings {
+    ) {
 
         fun getPGN() = buildString {
             if (type == Type.SIMPLE) {
@@ -31,17 +31,27 @@ class ChessClock(override val game: ChessGame, val settings: Settings) :
             }
         }
 
-        override fun getComponent(game: ChessGame) = ChessClock(game, this)
+        fun getComponent(game: ChessGame) = ChessClock(game, this)
 
         companion object {
 
-            fun init() {
-                SettingsManager.registerComponent("Clock") {
-                    val t = it.getEnum("Type", Type.INCREMENT, Type::class, false)
-                    Settings(
-                        t, it.getDuration("Initial"),
-                        it.getDuration("Increment", t.usesIncrement)
-                    )
+            operator fun get(name: String?) = when (name) {
+                "none" -> null
+                null -> null
+                else -> {
+                    val settings = SettingsManager.parseSettings("Clock") {
+                        val t = it.getEnum("Type", Type.INCREMENT, Type::class, false)
+                        Settings(
+                            t, it.getDuration("Initial"),
+                            it.getDuration("Increment", t.usesIncrement)
+                        )
+                    }
+                    if (name in settings)
+                        settings[name]
+                    else {
+                        glog.warn("Invalid chessboard configuration $name, defaulted to none")
+                        null
+                    }
                 }
             }
         }
@@ -112,7 +122,7 @@ class ChessClock(override val game: ChessGame, val settings: Settings) :
         )).format(formatter)
     }
 
-    override fun start() {
+    fun start() {
 
         if (settings.type == Type.FIXED) {
             game.scoreboard += object : GameProperty(view.getString("TimeRemainingSimple")) {
@@ -135,11 +145,11 @@ class ChessClock(override val game: ChessGame, val settings: Settings) :
         started = true
     }
 
-    override fun update() {
+    fun update() {
         ChessSide.values().forEach { if (getTimeRemaining(it).isNegative) timeout(it) }
     }
 
-    override fun endTurn() {
+    fun endTurn() {
         val increment = if (started) settings.increment else 0.seconds
         if (!started)
             startTimer()
@@ -174,7 +184,7 @@ class ChessClock(override val game: ChessGame, val settings: Settings) :
         }
     }
 
-    override fun stop() {
+    fun stop() {
         stopTime = LocalDateTime.now()
     }
 
