@@ -282,7 +282,7 @@ class GregChess : JavaPlugin(), Listener {
                 }
                 3 -> when (args[0]) {
                     "spawn" -> ifPermission("greg-chess.debug", *ChessType.values())
-                    "time" -> ifPermission("add", "set")
+                    "time" -> ifPermission("greg-chess.admin", "add", "set")
                     else -> listOf()
                 }
                 else -> listOf()

@@ -3,7 +3,9 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.ConfigManager
 import gregc.gregchess.chess.*
 import gregc.gregchess.glog
+import gregc.gregchess.minutes
 import gregc.gregchess.seconds
+import java.lang.Long.max
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -49,8 +51,17 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) {
                     if (name in settings)
                         settings[name]
                     else {
-                        glog.warn("Invalid chessboard configuration $name, defaulted to none")
-                        null
+                        val match = Regex("""(\d+)\+(\d+)""").find(name)
+                        if (match != null) {
+                            Settings(
+                                Type.INCREMENT,
+                                match.groupValues[1].toLong().minutes,
+                                match.groupValues[2].toInt().seconds
+                            )
+                        } else {
+                            glog.warn("Invalid chessboard configuration $name, defaulted to none")
+                            null
+                        }
                     }
                 }
             }
@@ -118,7 +129,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) {
     private fun format(time: Duration): String {
         val formatter = DateTimeFormatter.ofPattern(view.getString("TimeFormat"))
         return (LocalTime.ofNanoOfDay(
-            ceil(time.toNanos().toDouble() / 1000000.0).toLong() * 1000000
+            max(ceil(time.toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0)
         )).format(formatter)
     }
 

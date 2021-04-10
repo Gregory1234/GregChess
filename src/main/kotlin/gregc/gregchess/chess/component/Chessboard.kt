@@ -25,8 +25,15 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
                 null -> normal
                 "chess960" -> Settings(null, true)
                 else -> {
-                    glog.warn("Invalid chessboard configuration $name, defaulted to normal")
-                    normal
+                    if (name.startsWith("fen ")) try {
+                        Settings(FEN.parseFromString(name.drop(4)))
+                    } catch (e: IllegalArgumentException) {
+                        glog.warn("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal")
+                        normal
+                    } else {
+                        glog.warn("Invalid chessboard configuration $name, defaulted to normal")
+                        normal
+                    }
                 }
             }
 

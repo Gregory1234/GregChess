@@ -1,5 +1,7 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.glog
+
 data class FEN(
     val boardState: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
     val currentTurn: ChessSide = ChessSide.WHITE,
@@ -15,8 +17,7 @@ data class FEN(
 
         rows.reversed().forEachIndexed { ri, r ->
             var i = 0
-            while (i < 8) {
-                val c = r[i]
+            r.forEach { c ->
                 if (c in '1'..'8') {
                     repeat(c - '0') { j -> f(ChessPosition(i + j, ri), null) }
                     i += c - '0'
