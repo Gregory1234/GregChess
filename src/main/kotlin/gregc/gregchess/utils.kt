@@ -51,7 +51,7 @@ var Player.playerData: PlayerData
         gameMode = d.gameMode
         health = d.health
         foodLevel = d.foodLevel; saturation = d.saturation
-        level = level; exp = d.exp
+        level = d.level; exp = d.exp
         allowFlight = d.allowFlight; isFlying = d.isFlying
         activePotionEffects.forEach { removePotionEffect(it.type) }
         d.effects.forEach(::addPotionEffect)
