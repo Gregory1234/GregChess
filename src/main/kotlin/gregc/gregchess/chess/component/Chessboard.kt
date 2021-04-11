@@ -1,11 +1,9 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.Loc
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.getBlockAt
-import gregc.gregchess.glog
-import gregc.gregchess.star
 import org.bukkit.Material
+import org.bukkit.Sound
 import java.lang.NullPointerException
 import java.util.*
 import kotlin.math.abs
@@ -48,16 +46,25 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
             Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
 
         fun getCapturedLoc(piece: ChessPiece.Captured): Loc {
-            val cap =
-                if (piece in board.capturedPieces) board.capturedPieces.takeWhile { it != piece } else board.capturedPieces
+            val cap = board.capturedPieces.takeWhile { it != piece }
             val pos = if (piece.type == ChessType.PAWN)
-                Pair(cap.count { it.side == piece.side && it.type == ChessType.PAWN }, 1)
+                Pair(cap.count { it.by == piece.by && it.type == ChessType.PAWN }, 1)
             else
-                Pair(cap.count { it.side == piece.side && it.type != ChessType.PAWN }, 0)
-            return when (!piece.side) {
+                Pair(cap.count { it.by == piece.by && it.type != ChessType.PAWN }, 0)
+            return when (piece.by) {
                 ChessSide.WHITE -> Loc(4 * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
                 ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * 4 + 2 + 2 * pos.second)
             }
+        }
+
+        fun renderPiece(loc: Loc, structure: List<Material>) {
+            structure.forEachIndexed { i, m ->
+                board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
+            }
+        }
+
+        fun playPieceSound(pos: ChessPosition, sound: Sound){
+            getPieceLoc(pos).toLocation(board.game.world).playSound(sound)
         }
 
         fun fillFloor(pos: ChessPosition, floor: Material) {
@@ -66,10 +73,6 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
                 board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
             }
         }
-
-        fun getBlockAt(loc: Loc) = board.game.world.getBlockAt(loc)
-
-        fun toLocation(loc: Loc) = loc.toLocation(board.game.world)
     }
 
     val renderer = Renderer(this)

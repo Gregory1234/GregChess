@@ -151,7 +151,7 @@ sealed class ChessMove(
             name += target.pos.toString()
             standardName += target.pos.toString()
             val capturedPiece = capture.piece
-            val c = capturedPiece?.capture()
+            val c = capturedPiece?.capture(piece.side)
             piece.move(target)
             if (promotion != null) {
                 piece.promote(promotion)

@@ -45,15 +45,11 @@ class ChessPiece(
             get() = board.renderer.getCapturedLoc(this)
 
         fun render() {
-            type.getStructure(side).forEachIndexed { i, m ->
-                board.renderer.getBlockAt(loc.copy(y = loc.y + i)).type = m
-            }
+            board.renderer.renderPiece(loc, type.getStructure(side))
         }
 
         fun hide() {
-            type.getStructure(side).forEachIndexed { i, _ ->
-                board.renderer.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
-            }
+            board.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
         }
     }
 
@@ -66,15 +62,11 @@ class ChessPiece(
     }
 
     private fun render() {
-        type.getStructure(side).forEachIndexed { i, m ->
-            board.renderer.getBlockAt(loc.copy(y = loc.y + i)).type = m
-        }
+        board.renderer.renderPiece(loc, type.getStructure(side))
     }
 
     private fun hide() {
-        type.getStructure(side).forEachIndexed { i, _ ->
-            board.renderer.getBlockAt(loc.copy(y = loc.y + i)).type = Material.AIR
-        }
+        board.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
     }
 
     fun move(target: ChessSquare) {
@@ -96,10 +88,10 @@ class ChessPiece(
         playMoveSound()
     }
 
-    fun capture(): Captured {
+    fun capture(by: ChessSide): Captured {
         glog.mid("Captured", type, "at", pos)
         clear()
-        val captured = Captured(type, side, !side, square.board)
+        val captured = Captured(type, side, by, square.board)
         board += captured
         playCaptureSound()
         return captured
@@ -112,7 +104,7 @@ class ChessPiece(
     }
 
     private fun playSound(s: Sound) {
-        board.renderer.toLocation(loc).playSound(s)
+        board.renderer.playPieceSound(pos, s)
     }
 
     private fun playPickUpSound() = playSound(type.getSound("PickUp"))
