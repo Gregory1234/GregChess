@@ -26,10 +26,10 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
                     if (name.startsWith("fen ")) try {
                         Settings(FEN.parseFromString(name.drop(4)))
                     } catch (e: IllegalArgumentException) {
-                        glog.warn("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal")
+                        glog.warn("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
                         normal
                     } else {
-                        glog.warn("Invalid chessboard configuration $name, defaulted to normal")
+                        glog.warn("Invalid chessboard configuration $name, defaulted to normal!")
                         normal
                     }
                 }
@@ -63,7 +63,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
             }
         }
 
-        fun playPieceSound(pos: ChessPosition, sound: Sound){
+        fun playPieceSound(pos: ChessPosition, sound: Sound) {
             getPieceLoc(pos).toLocation(board.game.world).playSound(sound)
         }
 

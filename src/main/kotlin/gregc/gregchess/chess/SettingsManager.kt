@@ -3,6 +3,7 @@ package gregc.gregchess.chess
 import gregc.gregchess.ConfigManager
 import gregc.gregchess.View
 import gregc.gregchess.chess.component.ChessClock
+import gregc.gregchess.chess.component.ChessVariant
 import gregc.gregchess.chess.component.Chessboard
 
 object SettingsManager {
@@ -16,9 +17,13 @@ object SettingsManager {
             return presets.children.mapValues { (key, child) ->
                 val relaxedInsufficientMaterial = child.getBool("Relaxed", true)
                 val simpleCastling = child.getBool("SimpleCastling", false)
+                val variant = ChessVariant[child.getOptionalString("Variant")]
                 val board = Chessboard.Settings[child.getOptionalString("Board")]
                 val clock = ChessClock.Settings[child.getOptionalString("Clock")]
-                ChessGame.Settings(key, relaxedInsufficientMaterial, simpleCastling, board, clock)
+                ChessGame.Settings(
+                    key, relaxedInsufficientMaterial, simpleCastling,
+                    variant, board, clock
+                )
             }
         }
 

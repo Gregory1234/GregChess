@@ -59,7 +59,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) {
                                 match.groupValues[2].toInt().seconds
                             )
                         } else {
-                            glog.warn("Invalid chessboard configuration $name, defaulted to none")
+                            glog.warn("Invalid chessboard configuration $name, defaulted to none!")
                             null
                         }
                     }

@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.ChessClock
+import gregc.gregchess.chess.component.ChessVariant
 import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -344,6 +345,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         val name: String,
         val relaxedInsufficientMaterial: Boolean,
         val simpleCastling: Boolean,
+        val variant: ChessVariant,
         val board: Chessboard.Settings,
         val clock: ChessClock.Settings?
     )
