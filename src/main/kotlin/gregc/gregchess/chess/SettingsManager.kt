@@ -15,15 +15,11 @@ object SettingsManager {
         get() {
             val presets = ConfigManager.getView("Settings.Presets")
             return presets.children.mapValues { (key, child) ->
-                val relaxedInsufficientMaterial = child.getBool("Relaxed", true)
                 val simpleCastling = child.getBool("SimpleCastling", false)
                 val variant = ChessVariant[child.getOptionalString("Variant")]
                 val board = Chessboard.Settings[child.getOptionalString("Board")]
                 val clock = ChessClock.Settings[child.getOptionalString("Clock")]
-                ChessGame.Settings(
-                    key, relaxedInsufficientMaterial, simpleCastling,
-                    variant, board, clock
-                )
+                ChessGame.Settings(key, simpleCastling, variant, board, clock)
             }
         }
 

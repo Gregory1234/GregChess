@@ -116,12 +116,6 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) {
     private fun timeout(side: ChessSide) {
         if (game.board.piecesOf(!side).size == 1)
             game.stop(ChessGame.EndReason.DrawTimeout())
-        else if (
-            game.settings.relaxedInsufficientMaterial
-            && game.board.piecesOf(!side).size == 2
-            && game.board.piecesOf(!side).any { it.type.minor }
-        )
-            game.stop(ChessGame.EndReason.DrawTimeout())
         else
             game.stop(ChessGame.EndReason.Timeout(!side))
     }

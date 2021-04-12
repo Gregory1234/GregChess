@@ -343,7 +343,6 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
 
     data class Settings(
         val name: String,
-        val relaxedInsufficientMaterial: Boolean,
         val simpleCastling: Boolean,
         val variant: ChessVariant,
         val board: Chessboard.Settings,

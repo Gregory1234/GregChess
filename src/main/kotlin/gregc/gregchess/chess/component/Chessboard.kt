@@ -322,14 +322,6 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
             game.stop(ChessGame.EndReason.InsufficientMaterial())
         if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
             game.stop(ChessGame.EndReason.InsufficientMaterial())
-        if (game.settings.relaxedInsufficientMaterial) {
-            if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 2 && blackPieces.any { it.type.minor })
-                game.stop(ChessGame.EndReason.InsufficientMaterial())
-            if (whitePieces.size == 3 && whitePieces.count { it.type == ChessType.KNIGHT } == 2 && blackPieces.size == 1)
-                game.stop(ChessGame.EndReason.InsufficientMaterial())
-            if (blackPieces.size == 3 && blackPieces.count { it.type == ChessType.KNIGHT } == 2 && whitePieces.size == 1)
-                game.stop(ChessGame.EndReason.InsufficientMaterial())
-        }
     }
 
     private fun addBoardHash(): Int {
