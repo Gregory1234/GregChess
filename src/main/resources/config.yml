@@ -216,6 +216,7 @@ Chess:
     Timeout: "timeout"
     DrawTimeout: "timeout vs insufficient material"
     Error: "error"
+    ThreeChecks: "three checks"
 
 Component:
   Scoreboard:
@@ -223,10 +224,12 @@ Component:
     Preset: "Preset"
     Player: "player"
     PlayerPrefix: "&b"
-    GeneralFormat: "$1:"
-    WhiteFormat: "White $1:"
-    BlackFormat: "Black $1:"
+    GeneralFormat: "$1: "
+    WhiteFormat: "White $1: "
+    BlackFormat: "Black $1: "
   Clock:
     TimeRemainingSimple: "Time remaining"
     TimeRemaining: "time"
     TimeFormat: "mm:ss.S"
+  CheckCounter:
+    CheckCounter: "check counter"

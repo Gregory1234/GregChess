@@ -90,7 +90,7 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     }
 
     fun teleport(p: Player) {
-        if(p.uniqueId !in data)
+        if (p.uniqueId !in data)
             data[p.uniqueId] = p.playerData
         p.playerData = defaultData
         p.teleport(world.spawnLocation)
@@ -101,7 +101,7 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     }
 
     fun teleportSpectator(p: Player) {
-        if(p.uniqueId !in data)
+        if (p.uniqueId !in data)
             data[p.uniqueId] = p.playerData
         p.playerData = spectatorData
         p.teleport(world.spawnLocation)
@@ -270,6 +270,8 @@ fun cServerPlayer(name: String) = cNotNull(GregInfo.server.getPlayer(name), "Pla
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 
+fun randomString(size: Int) =
+    String(CharArray(size) { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() })
 
 fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
     listOf(x to y, x to -y, -x to y, -x to -y, y to x, -y to x, y to -x, -y to -x).distinct()
@@ -354,7 +356,11 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
 
 val glog: GregLogger
     get() {
-        val file = File(GregInfo.plugin.dataFolder.absolutePath + "/GregChess-${DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())}.log")
+        val file = File(
+            GregInfo.plugin.dataFolder.absolutePath + "/GregChess-${
+                DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
+            }.log"
+        )
         file.createNewFile()
         return GregLogger(file)
     }

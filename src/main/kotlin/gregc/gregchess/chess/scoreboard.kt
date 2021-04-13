@@ -1,9 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.TimeManager
-import gregc.gregchess.chatColor
-import gregc.gregchess.seconds
+import gregc.gregchess.*
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
@@ -26,29 +23,34 @@ class ScoreboardManager(private val game: ChessGame) {
         playerProperties += p
     }
 
+    private fun newTeam(): Team {
+        var s: String
+        do {
+            s = randomString(16)
+        } while (game.arena.scoreboard.getTeam(s) != null)
+        return game.arena.scoreboard.registerNewTeam(s)
+    }
+
     fun start() {
         objective.displaySlot = DisplaySlot.SIDEBAR
-        val l = gameProperties.size * 2 + 1 + playerProperties.size * 4 + 1
+        val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
         gameProperties.forEach {
-            it.team = objective.scoreboard?.registerNewTeam(it.name)
+            it.team = newTeam()
+            it.team?.addEntry(view.getFormatString("GeneralFormat", it.name))
             objective.getScore(view.getFormatString("GeneralFormat", it.name)).score = i--
-            it.team?.addEntry(chatColor("&r").repeat(i))
-            objective.getScore(chatColor("&r").repeat(i)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            it.teamWhite = objective.scoreboard?.registerNewTeam(it.name + "White")
+            it.teamWhite = newTeam()
+            it.teamWhite?.addEntry(view.getFormatString("WhiteFormat", it.name))
             objective.getScore(view.getFormatString("WhiteFormat", it.name)).score = i--
-            it.teamWhite?.addEntry(chatColor("&r").repeat(i))
-            objective.getScore(chatColor("&r").repeat(i)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            it.teamBlack = objective.scoreboard?.registerNewTeam(it.name + "Black")
+            it.teamBlack = newTeam()
+            it.teamBlack?.addEntry(view.getFormatString("BlackFormat", it.name))
             objective.getScore(view.getFormatString("BlackFormat", it.name)).score = i--
-            it.teamBlack?.addEntry(chatColor("&r").repeat(i))
-            objective.getScore(chatColor("&r").repeat(i)).score = i--
         }
 
         TimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
@@ -63,11 +65,11 @@ class ScoreboardManager(private val game: ChessGame) {
         if (stopping)
             return
         gameProperties.forEach {
-            it.team?.prefix = it()
+            it.team?.suffix = it()
         }
         playerProperties.forEach {
-            it.teamWhite?.prefix = it(ChessSide.WHITE)
-            it.teamBlack?.prefix = it(ChessSide.BLACK)
+            it.teamWhite?.suffix = it(ChessSide.WHITE)
+            it.teamBlack?.suffix = it(ChessSide.BLACK)
         }
     }
 

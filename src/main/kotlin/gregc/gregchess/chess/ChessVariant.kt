@@ -1,17 +1,18 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.ConfigManager
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.glog
-import java.lang.NullPointerException
 
 abstract class ChessVariant(val name: String) {
     companion object {
-        private val normal = Normal()
+        private val normal = Normal
 
         private val variants = mutableMapOf<String, ChessVariant>()
 
         init {
-            this += Normal()
+            this += Normal
+            this += ThreeChecks
         }
 
         operator fun get(name: String?) = when (name) {
@@ -27,6 +28,7 @@ abstract class ChessVariant(val name: String) {
         }
     }
 
+    abstract fun start(game: ChessGame)
     abstract fun finishMove(move: ChessMove)
     abstract fun isLegal(move: ChessMove): Boolean
     abstract fun isInCheck(king: ChessPiece): Boolean
@@ -46,7 +48,10 @@ abstract class ChessVariant(val name: String) {
         allMoves(by, pos.board).mapNotNull { it as? ChessMove.Attack }
             .filter { it.target == pos && it.isValid }
 
-    class Normal : ChessVariant("Normal") {
+    object Normal : ChessVariant("Normal") {
+        override fun start(game: ChessGame) {
+        }
+
         override fun finishMove(move: ChessMove) {
             val game = move.origin.game
             val data = move.execute()
@@ -65,12 +70,9 @@ abstract class ChessVariant(val name: String) {
             }
             val game = move.origin.game
 
-            val myKing = try {
-                game.board.piecesOf(piece.side).find { it.type == ChessType.KING }!!
-            } catch (e: NullPointerException) {
-                game.stop(ChessGame.EndReason.Error(e))
-                throw e
-            }
+            val myKing =
+                game.tryOrStopNull(
+                    game.board.piecesOf(piece.side).find { it.type == ChessType.KING })
             val checks = checkingMoves(!piece.side, myKing.square)
             if (checks.any { target.pos !in it.potentialBlocks && target != it.origin })
                 return false
@@ -83,5 +85,61 @@ abstract class ChessVariant(val name: String) {
 
         override fun isInCheck(king: ChessPiece): Boolean =
             checkingMoves(!king.side, king.square).isNotEmpty()
+    }
+
+    object ThreeChecks : ChessVariant("ThreeChecks") {
+        class CheckCounter(private val game: ChessGame) : ChessGame.Component {
+            private var whiteChecks = 0
+            private var blackChecks = 0
+
+            override fun start() {
+                game.scoreboard += object :
+                    PlayerProperty(ConfigManager.getString("Component.CheckCounter.CheckCounter")) {
+                    override fun invoke(s: ChessSide): String = when (s) {
+                        ChessSide.WHITE -> whiteChecks
+                        ChessSide.BLACK -> blackChecks
+                    }.toString()
+                }
+            }
+
+            operator fun plusAssign(side: ChessSide) {
+                when (side) {
+                    ChessSide.WHITE -> {
+                        if (++whiteChecks >= 3)
+                            game.stop(ThreeChecksEndReason(ChessSide.BLACK))
+                    }
+                    ChessSide.BLACK -> {
+                        if (++blackChecks >= 3)
+                            game.stop(ThreeChecksEndReason(ChessSide.WHITE))
+                    }
+                }
+            }
+        }
+
+        class ThreeChecksEndReason(winner: ChessSide) :
+            ChessGame.EndReason("Chess.EndReason.ThreeChecks", "normal", winner)
+
+        override fun start(game: ChessGame) {
+            game.registerComponent(CheckCounter(game))
+        }
+
+        override fun finishMove(move: ChessMove) {
+            val game = move.origin.game
+            val data = move.execute()
+            game.board.lastMove?.clear()
+            game.board.lastMove = data
+            game.board.lastMove?.render()
+            glog.low("Finished move", data)
+            val enemyKing = game.tryOrStopNull(
+                game.board.piecesOf(!game.currentTurn).find { it.type == ChessType.KING })
+            if (isInCheck(enemyKing))
+                game.getComponent(CheckCounter::class)!! += !game.currentTurn
+            game.nextTurn()
+        }
+
+        override fun isLegal(move: ChessMove) = Normal.isLegal(move)
+
+        override fun isInCheck(king: ChessPiece) = Normal.isInCheck(king)
+
     }
 }

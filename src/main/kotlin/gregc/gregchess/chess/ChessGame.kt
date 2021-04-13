@@ -11,6 +11,8 @@ import org.bukkit.event.HandlerList
 import org.bukkit.inventory.ItemStack
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.reflect.KClass
+import kotlin.reflect.safeCast
 
 class ChessGame(val arena: ChessArena, val settings: Settings) {
     val uniqueId: UUID = UUID.randomUUID()
@@ -26,6 +28,9 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     fun registerComponent(c: Component) {
         components += c
     }
+
+    fun <T : Component> getComponent(cl: KClass<T>): T? =
+        components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
     private val players = mutableListOf<ChessPlayer>()
 
@@ -139,6 +144,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
             )
             white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
             black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
+            variant.start(this)
             components.forEach { it.start() }
             scoreboard.start()
             started = true
@@ -183,7 +189,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
-    sealed class EndReason(val namePath: String, val reasonPGN: String, val winner: ChessSide?) {
+    open class EndReason(val namePath: String, val reasonPGN: String, val winner: ChessSide?) {
 
         override fun toString() =
             "EndReason.${javaClass.name.split(".", "$").last()}(winner = $winner)"
