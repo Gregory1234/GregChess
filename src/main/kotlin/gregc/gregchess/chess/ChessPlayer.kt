@@ -50,7 +50,7 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
                     chosenMoves.mapNotNull { m -> (m as? ChessMove.Promoting)?.promotion?.let { it to m } }
                 player.openScreen(PawnPromotionScreen(piece, promotingMoves, this))
             } else {
-                finishMove(chosenMoves.first())
+                game.variant.finishMove(chosenMoves.first())
             }
         }
     }
@@ -77,7 +77,7 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
                     str.drop(4).firstOrNull()?.let { ChessType.parseFromStandardChar(it) }
                 val move = game.board.getMoves(origin)
                     .first { it.display.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
-                finishMove(move)
+                game.variant.finishMove(move)
             }, { game.stop(ChessGame.EndReason.Error(it)) })
 
         }
@@ -101,16 +101,7 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
         get() = game[!side]
 
     protected fun getAllowedMoves(piece: ChessPiece): List<ChessMove> =
-        game.board.getMoves(piece.pos).filter(game.board::isLegal)
-
-    fun finishMove(move: ChessMove) {
-        val data = move.execute()
-        game.board.lastMove?.clear()
-        game.board.lastMove = data
-        game.board.lastMove?.render()
-        glog.low("Finished move", data)
-        game.nextTurn()
-    }
+        game.board.getMoves(piece.pos).filter(game.variant::isLegal)
 
     fun hasTurn(): Boolean = game.currentTurn == side
 
@@ -123,17 +114,16 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
             ScreenOption(t.getItem(pawn.side), m, InventoryPosition.fromIndex(i))
         }
 
-        override fun onClick(v: ChessMove) = player.finishMove(v)
+        override fun onClick(v: ChessMove) = player.game.variant.finishMove(v)
 
-        override fun onCancel() = player.finishMove(moves.first().second)
+        override fun onCancel() = player.game.variant.finishMove(moves.first().second)
 
     }
 
     open fun stop() {}
 
     open fun startTurn() {
-        val checkingMoves = game.board.checkingMoves(!side, king.square)
-        if (checkingMoves.isNotEmpty()) {
+        if (game.variant.isInCheck(king)) {
             var inMate = true
             for (p in pieces) {
                 if (getAllowedMoves(p).isNotEmpty()) {

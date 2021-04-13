@@ -14,7 +14,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 class ChessGame(val arena: ChessArena, val settings: Settings) {
-
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() = "ChessGame(arena = $arena, uniqueId = $uniqueId)"
@@ -47,6 +46,8 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         get() = arena.world
 
     val scoreboard = ScoreboardManager(this)
+
+    val variant = settings.variant
 
     class AddPlayersScope(private val game: ChessGame){
 

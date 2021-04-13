@@ -96,8 +96,8 @@ sealed class ChessMove(
                 standardName += "="
                 standardName += promotion.standardChar.toUpperCase()
             }
-            name += checkForChecks(piece.side, piece.square.board)
-            standardName += checkForChecks(piece.side, piece.square.board)
+            name += checkForChecks(piece.side, piece.square.game)
+            standardName += checkForChecks(piece.side, piece.square.game)
             val undoReset = if (piece.type == ChessType.PAWN)
                 piece.square.board.resetMovesSinceLastCapture()
             else
@@ -159,8 +159,8 @@ sealed class ChessMove(
                 standardName += "="
                 standardName += promotion.standardChar.toUpperCase()
             }
-            name += checkForChecks(piece.side, piece.square.board)
-            standardName += checkForChecks(piece.side, piece.square.board)
+            name += checkForChecks(piece.side, piece.square.game)
+            standardName += checkForChecks(piece.side, piece.square.game)
             if (target != capture)
                 name += " e.p."
             val undoReset = piece.square.board.resetMovesSinceLastCapture()
@@ -185,11 +185,11 @@ sealed class ChessMove(
 }
 
 fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
-    val board = target.board
-    val pieces = board.pieces.filter { it.side == piece.side && it.type == piece.type }
+    val game = target.game
+    val pieces = game.board.pieces.filter { it.side == piece.side && it.type == piece.type }
     val consideredPieces =
         pieces.filter { p ->
-            p.square.bakedMoves.orEmpty().any { it.target == target && board.isLegal(it) }
+            p.square.bakedMoves.orEmpty().any { it.target == target && game.variant.isLegal(it) }
         }
     return when {
         consideredPieces.size == 1 -> ""
@@ -199,13 +199,15 @@ fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
     }
 }
 
-fun checkForChecks(side: ChessSide, board: Chessboard): String {
-    board.updateMoves()
+fun checkForChecks(side: ChessSide, game: ChessGame): String {
+    game.board.updateMoves()
+    val pieces = game.board.piecesOf(!side)
+    val inCheck = game.variant.isInCheck(pieces.first { it.type == ChessType.KING })
+    val noMoves =
+        pieces.flatMap { game.board.getMoves(it.pos).filter(game.variant::isLegal) }.isEmpty()
     return when {
-        board.piecesOf(!side).flatMap { board.getMoves(it.pos).filter(board::isLegal) }
-            .isEmpty() -> "#"
-        board.checkingMoves(side, board.piecesOf(!side).first { it.type == ChessType.KING }.square)
-            .isNotEmpty() -> "+"
+        inCheck && noMoves -> "#"
+        inCheck -> "+"
         else -> ""
     }
 }
@@ -298,12 +300,14 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
     ) {
         override val isValid: Boolean
             get() {
-                return (between(piece.pos.file, target.pos.file) + listOf(
+                // TODO: remake this
+                /*return (between(piece.pos.file, target.pos.file) + listOf(
                     piece.pos.file,
                     target.pos.file
                 ))
                     .mapNotNull { origin.board.getSquare(piece.pos.copy(file = it)) }
-                    .all { origin.board.checkingPotentialMoves(!piece.side, it).isEmpty() }
+                    .all { origin.board.checkingPotentialMoves(!piece.side, it).isEmpty() }*/
+                return true
             }
 
         override val canAttack
@@ -313,7 +317,7 @@ fun kingMovement(piece: ChessPiece): List<ChessMove> {
             var name = if (rook.pos.file < origin.pos.file) "O-O-O" else "O-O"
             val rookOrigin = rook.square
             ChessPiece.autoMove(mapOf(rook to rookTargetSquare, piece to target))
-            name += checkForChecks(piece.side, origin.board)
+            name += checkForChecks(piece.side, origin.game)
             val undoInc = origin.board.increaseMovesSinceLastCapture()
             val undo = {
                 ChessPiece.autoMove(mapOf(rook to rookOrigin, piece to origin))

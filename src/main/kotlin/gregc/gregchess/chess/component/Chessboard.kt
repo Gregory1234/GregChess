@@ -4,7 +4,6 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import org.bukkit.Material
 import org.bukkit.Sound
-import java.lang.NullPointerException
 import java.util.*
 import kotlin.math.abs
 
@@ -140,8 +139,9 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
             val bLast = (lastMove?.name ?: "")
             game.forEachPlayer { p -> p.sendMessage("$num $wLast  | $bLast") }
             fullMoveCounter++
-        } else if (piecesOf(!game.currentTurn).flatMap { p -> getMoves(p.pos).filter { isLegal(it) } }
-                .isEmpty()) {
+        } else if (piecesOf(!game.currentTurn)
+                .flatMap { p -> getMoves(p.pos).filter { game.variant.isLegal(it) } }.isEmpty()
+        ) {
             val wLast = (lastMove?.name ?: "")
             game.forEachPlayer { p -> p.sendMessage("$num $wLast  |") }
         }
@@ -196,40 +196,6 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
             square.bakedMoves = square.piece?.let { it.type.moveScheme(it) }
         }
     }
-
-    fun isLegal(move: ChessMove): Boolean = move.run {
-        if (!isValid) return false
-        if (piece.type == ChessType.KING) {
-            val checks = checkingPotentialMoves(!piece.side, target)
-            return checks.isEmpty()
-        }
-        val myKing = try {
-            piecesOf(piece.side).find { it.type == ChessType.KING }!!
-        } catch (e: NullPointerException) {
-            game.stop(ChessGame.EndReason.Error(e))
-            throw e
-        }
-        val checks = checkingMoves(!piece.side, myKing.square)
-        if (checks.any { target.pos !in it.potentialBlocks && target != it.origin })
-            return false
-        val pins =
-            pinningMoves(!piece.side, myKing.square).filter { it.actualBlocks[0] == origin.pos }
-        if (pins.any { target.pos !in it.potentialBlocks && target != it.origin })
-            return false
-        return true
-    }
-
-    fun pinningMoves(by: ChessSide, pos: ChessSquare) =
-        piecesOf(by).flatMap { getMoves(it.pos) }.mapNotNull { it as? ChessMove.Attack }
-            .filter { it.target == pos && !it.defensive && it.actualBlocks.size == 1 }
-
-    fun checkingPotentialMoves(by: ChessSide, pos: ChessSquare) =
-        piecesOf(by).flatMap { getMoves(it.pos) }.filter { it.target == pos }
-            .filter { it.canAttack }
-
-    fun checkingMoves(by: ChessSide, pos: ChessSquare) =
-        piecesOf(by).flatMap { getMoves(it.pos) }.mapNotNull { it as? ChessMove.Attack }
-            .filter { it.target == pos && it.isValid }
 
 
     fun setFromFEN(fen: FEN) {
