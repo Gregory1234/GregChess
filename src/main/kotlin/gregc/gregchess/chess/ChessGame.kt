@@ -2,7 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.ChessClock
-import gregc.gregchess.chess.component.ChessVariant
 import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -21,6 +20,12 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     val board: Chessboard = settings.board.getComponent(this)
 
     val clock: ChessClock? = settings.clock?.getComponent(this)
+
+    private val components = listOfNotNull<Component>(board, clock).toMutableList()
+
+    fun registerComponent(c: Component) {
+        components += c
+    }
 
     private val players = mutableListOf<ChessPlayer>()
 
@@ -90,15 +95,14 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     operator fun contains(p: Player) = p in realPlayers
 
     fun nextTurn() {
-        board.endTurn()
-        clock?.endTurn()
+        components.forEach { it.endTurn() }
         Bukkit.getPluginManager().callEvent(TurnEndEvent(this, this[currentTurn]))
         currentTurn++
         startTurn()
     }
 
     fun previousTurn() {
-        board.previousTurn()
+        components.forEach { it.previousTurn() }
         currentTurn++
         startPreviousTurn()
     }
@@ -135,8 +139,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
             )
             white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
             black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
-            board.start()
-            clock?.start()
+            components.forEach { it.start() }
             scoreboard.start()
             started = true
             glog.mid("Started game", uniqueId)
@@ -147,32 +150,34 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
             arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
             forEachPlayer { it.sendMessage(ConfigManager.getError("TeleportFailed")) }
             stopping = true
-            clock?.stop()
-            scoreboard.stop()
-            board.clear()
+            components.forEach { it.stop() }
+            components.forEach { it.clear() }
             glog.mid("Failed to start game", uniqueId)
             throw e
         }
     }
 
     fun spectate(p: Player) {
+        components.forEach { it.spectatorJoin(p) }
         spectatorUUID += p.uniqueId
         arena.teleportSpectator(p)
     }
 
     fun spectatorLeave(p: Player) {
+        components.forEach { it.spectatorLeave(p) }
         spectatorUUID -= p.uniqueId
         arena.exit(p)
     }
 
     private fun startTurn() {
-        board.startTurn()
+        components.forEach { it.startTurn() }
         if (!stopping)
             this[currentTurn].startTurn()
         glog.low("Started turn", uniqueId, currentTurn)
     }
 
     private fun startPreviousTurn() {
+        components.forEach { it.startPreviousTurn() }
         if (!stopping)
             this[currentTurn].startTurn()
         glog.low("Started previous turn", uniqueId, currentTurn)
@@ -231,7 +236,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         stopping = true
         endReason = reason
         try {
-            clock?.stop()
+            components.forEach { it.stop() }
             var anyLong = false
             forEachPlayer {
                 if (reason.winner != null) {
@@ -282,7 +287,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
             }
             TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
                 scoreboard.stop()
-                board.clear()
+                components.forEach { it.clear() }
                 TimeManager.runTaskLater(1.ticks) {
                     players.forEach(ChessPlayer::stop)
                     arena.clear()
@@ -310,7 +315,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     )
 
     fun update() {
-        clock?.update()
+        components.forEach { it.update() }
     }
 
     fun <E> tryOrStopNull(expr: E?): E = try {
@@ -349,6 +354,19 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         val board: Chessboard.Settings,
         val clock: ChessClock.Settings?
     )
+
+    interface Component {
+        fun start() {}
+        fun update() {}
+        fun stop() {}
+        fun clear() {}
+        fun spectatorJoin(p: Player) {}
+        fun spectatorLeave(p: Player) {}
+        fun startTurn() {}
+        fun endTurn() {}
+        fun startPreviousTurn() {}
+        fun previousTurn() {}
+    }
 
 
 }

@@ -7,7 +7,7 @@ import org.bukkit.Sound
 import java.util.*
 import kotlin.math.abs
 
-class Chessboard(private val game: ChessGame, settings: Settings) {
+class Chessboard(private val game: ChessGame, settings: Settings): ChessGame.Component {
     data class Settings(val initialFEN: FEN?, val chess960: Boolean = false) {
         fun getComponent(game: ChessGame) = Chessboard(game, this)
 
@@ -118,20 +118,20 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
                 moves.clear()
         }
 
-    fun start() {
+    override fun start() {
         render()
         setFromFEN(initialFEN)
     }
 
-    fun startTurn() {
+    override fun startTurn() {
         checkForGameEnd()
     }
 
-    fun previousTurn() {
+    override fun previousTurn() {
         updateMoves()
     }
 
-    fun endTurn() {
+    override fun endTurn() {
         updateMoves()
         val num = "${fullMoveCounter}."
         if (game.currentTurn == ChessSide.BLACK) {
@@ -160,7 +160,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) {
         glog.mid("Rendered chessboard", game.uniqueId)
     }
 
-    fun clear() {
+    override fun clear() {
         boardState.values.forEach { it.clear() }
         capturedPieces.forEach { it.hide() }
         for (i in 0 until 8 * 5) {

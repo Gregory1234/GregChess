@@ -1,6 +1,6 @@
-package gregc.gregchess.chess.component
+package gregc.gregchess.chess
 
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.glog
 import java.lang.NullPointerException
 

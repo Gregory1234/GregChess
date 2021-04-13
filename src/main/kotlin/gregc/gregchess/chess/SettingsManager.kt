@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.ConfigManager
 import gregc.gregchess.View
 import gregc.gregchess.chess.component.ChessClock
-import gregc.gregchess.chess.component.ChessVariant
 import gregc.gregchess.chess.component.Chessboard
 
 object SettingsManager {
