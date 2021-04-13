@@ -13,6 +13,7 @@ abstract class ChessVariant(val name: String) {
         init {
             this += Normal
             this += ThreeChecks
+            this += KingOfTheHill
         }
 
         operator fun get(name: String?) = when (name) {
@@ -141,5 +142,31 @@ abstract class ChessVariant(val name: String) {
 
         override fun isInCheck(king: ChessPiece) = Normal.isInCheck(king)
 
+    }
+
+    object KingOfTheHill: ChessVariant("KingOfTheHill") {
+
+        class KingOfTheHillEndReason(winner: ChessSide) :
+            ChessGame.EndReason("Chess.EndReason.KingOfTheHill", "normal", winner)
+
+        override fun start(game: ChessGame) {
+        }
+
+        override fun finishMove(move: ChessMove) {
+            val game = move.origin.game
+            val data = move.execute()
+            game.board.lastMove?.clear()
+            game.board.lastMove = data
+            game.board.lastMove?.render()
+            glog.low("Finished move", data)
+            if(move.piece.type == ChessType.KING && listOf(move.target.pos.file, move.target.pos.rank).all {it in (3..4)})
+                game.stop(KingOfTheHillEndReason(move.piece.side))
+            else
+                game.nextTurn()
+        }
+
+        override fun isLegal(move: ChessMove) = Normal.isLegal(move)
+
+        override fun isInCheck(king: ChessPiece) = Normal.isInCheck(king)
     }
 }

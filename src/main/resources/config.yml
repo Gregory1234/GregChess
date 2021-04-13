@@ -217,6 +217,7 @@ Chess:
     DrawTimeout: "timeout vs insufficient material"
     Error: "error"
     ThreeChecks: "three checks"
+    KingOfTheHill: "king of the hill"
 
 Component:
   Scoreboard:
