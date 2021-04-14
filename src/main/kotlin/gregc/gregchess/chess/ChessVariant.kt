@@ -14,6 +14,7 @@ abstract class ChessVariant(val name: String) {
             this += Normal
             this += ThreeChecks
             this += KingOfTheHill
+            this += Atomic
         }
 
         operator fun get(name: String?) = when (name) {
@@ -69,7 +70,7 @@ abstract class ChessVariant(val name: String) {
                 val checks = checkingPotentialMoves(!piece.side, target)
                 return checks.isEmpty()
             }
-            val game = move.origin.game
+            val game = origin.game
 
             val myKing =
                 game.tryOrStopNull(
@@ -144,7 +145,7 @@ abstract class ChessVariant(val name: String) {
 
     }
 
-    object KingOfTheHill: ChessVariant("KingOfTheHill") {
+    object KingOfTheHill : ChessVariant("KingOfTheHill") {
 
         class KingOfTheHillEndReason(winner: ChessSide) :
             ChessGame.EndReason("Chess.EndReason.KingOfTheHill", "normal", winner)
@@ -159,7 +160,11 @@ abstract class ChessVariant(val name: String) {
             game.board.lastMove = data
             game.board.lastMove?.render()
             glog.low("Finished move", data)
-            if(move.piece.type == ChessType.KING && listOf(move.target.pos.file, move.target.pos.rank).all {it in (3..4)})
+            if (move.piece.type == ChessType.KING && listOf(
+                    move.target.pos.file,
+                    move.target.pos.rank
+                ).all { it in (3..4) }
+            )
                 game.stop(KingOfTheHillEndReason(move.piece.side))
             else
                 game.nextTurn()
@@ -168,5 +173,82 @@ abstract class ChessVariant(val name: String) {
         override fun isLegal(move: ChessMove) = Normal.isLegal(move)
 
         override fun isInCheck(king: ChessPiece) = Normal.isInCheck(king)
+    }
+
+    object Atomic : ChessVariant("Atomic") {
+        class AtomicEndReason(winner: ChessSide) :
+            ChessGame.EndReason("Chess.EndReason.Atomic", "normal", winner)
+
+        override fun start(game: ChessGame) {
+        }
+
+        override fun finishMove(move: ChessMove) {
+            val game = move.origin.game
+            val data = move.execute()
+            game.board.lastMove?.clear()
+            game.board.lastMove = data
+            game.board.lastMove?.render()
+            glog.low("Finished move", data)
+            if (move is ChessMove.Attack) {
+                move.target.pos.neighbours().forEach { pos ->
+                    game.board[pos]?.let {
+                        if (it.type == ChessType.KING)
+                            game.stop(AtomicEndReason(move.piece.side))
+                        if (it.type != ChessType.PAWN)
+                            it.capture(move.piece.side)
+                    }
+                }
+                move.piece.capture(move.piece.side)
+            }
+            game.nextTurn()
+        }
+
+        override fun isLegal(move: ChessMove): Boolean = move.run {
+            val game = origin.game
+
+            if (!isValid) return false
+            if (piece.type == ChessType.KING) {
+                val checks =
+                    zeroIfTogether(!piece.side, target, checkingPotentialMoves(!piece.side, target))
+                return move !is ChessMove.Attack && checks.isEmpty()
+            }
+
+            if (move is ChessMove.Attack && target.pos.neighbours().mapNotNull { game.board[it] }
+                    .any { it.type == ChessType.KING && it.side == piece.side })
+                return false
+
+            val myKing =
+                game.tryOrStopNull(
+                    game.board.piecesOf(piece.side).find { it.type == ChessType.KING })
+            val checks = zeroIfTogether(
+                !piece.side,
+                myKing.square,
+                checkingMoves(!piece.side, myKing.square)
+            )
+            if (checks.any { target.pos !in it.potentialBlocks && target != it.origin })
+                return false
+            val pins = zeroIfTogether(
+                !piece.side,
+                myKing.square,
+                pinningMoves(
+                    !piece.side,
+                    myKing.square
+                ).filter { it.actualBlocks[0] == origin.pos })
+            if (pins.any { target.pos !in it.potentialBlocks && target != it.origin })
+                return false
+            return true
+        }
+
+        private fun <T> zeroIfTogether(by: ChessSide, pos: ChessSquare, list: List<T>) =
+            if (pos.pos.neighbours().mapNotNull { pos.game.board[it] }
+                    .any { it.type == ChessType.KING && it.side == by }) emptyList()
+            else list
+
+        override fun isInCheck(king: ChessPiece) =
+            zeroIfTogether(
+                !king.side,
+                king.square,
+                checkingMoves(!king.side, king.square)
+            ).isNotEmpty()
     }
 }
