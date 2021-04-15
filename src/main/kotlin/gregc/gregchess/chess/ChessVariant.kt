@@ -68,10 +68,10 @@ abstract class ChessVariant(val name: String) {
 
         private fun isValid(move: MoveCandidate): Boolean = move.run {
 
-            if (pass.any { origin.board[it] != null })
+            if (needed.any { p -> origin.board[p].let { it != null && it !in help }})
                 return false
 
-            if (target.piece != null && control != target)
+            if (target.piece != null && control != target && target.piece !in help)
                 return false
 
             if (control?.piece == null && mustCapture)
@@ -90,8 +90,9 @@ abstract class ChessVariant(val name: String) {
                 return false
 
             if (piece.type == ChessType.KING) {
-                val checks = checkingPotentialMoves(!piece.side, target)
-                return checks.isEmpty()
+                return (pass + target.pos).mapNotNull { game.board.getSquare(it) }.all {
+                    checkingPotentialMoves(!piece.side, it).isEmpty()
+                }
             }
 
             val myKing =

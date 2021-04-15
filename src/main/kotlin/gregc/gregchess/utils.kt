@@ -355,16 +355,15 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
     return if (retNull) null else ret
 }
 
-val glog: GregLogger
-    get() {
-        val file = File(
-            GregInfo.plugin.dataFolder.absolutePath + "/GregChess-${
-                DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
-            }.log"
-        )
-        file.createNewFile()
-        return GregLogger(file)
-    }
+val glog: GregLogger = run {
+    val file = File(
+        GregInfo.plugin.dataFolder.absolutePath + "/GregChess-${
+            DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
+        }.log"
+    )
+    file.createNewFile()
+    GregLogger(file)
+}
 
 object GregInfo {
 

@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ConfigManager
+import gregc.gregchess.between
 import gregc.gregchess.rotationsOf
 import org.bukkit.Material
 import kotlin.math.abs
@@ -35,9 +36,10 @@ class MoveData(
 
 abstract class MoveCandidate(
     val piece: ChessPiece, val target: ChessSquare, val floor: Material,
-    val pass: Collection<ChessPosition>, val control: ChessSquare? = target,
-    val promotion: ChessType? = null, val mustCapture: Boolean = false,
-    val display: ChessSquare = target
+    val pass: Collection<ChessPosition>, val help: Collection<ChessPiece> = emptyList(),
+    val needed: Collection<ChessPosition> = pass,
+    val control: ChessSquare? = target, val promotion: ChessType? = null,
+    val mustCapture: Boolean = false, val display: ChessSquare = target
 ) {
 
     companion object {
@@ -47,7 +49,7 @@ abstract class MoveCandidate(
     }
 
     override fun toString() =
-        "MoveCandidate(piece = $piece, target = ${target.pos}, pass = [${pass.joinToString()}], control = ${control?.pos}, promotion = $promotion, mustCapture = $mustCapture, display = ${display.pos})"
+        "MoveCandidate(piece = $piece, target = ${target.pos}, pass = [${pass.joinToString()}], help = [${help.joinToString()}], needed = [${needed.joinToString()}], control = ${control?.pos}, promotion = $promotion, mustCapture = $mustCapture, display = ${display.pos})"
 
     val origin = piece.square
 
@@ -188,9 +190,68 @@ fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
     class KingMove(piece: ChessPiece, target: ChessSquare, floor: Material) :
         MoveCandidate(piece, target, floor, emptyList())
 
+    class Castles(
+        piece: ChessPiece, target: ChessSquare,
+        val rook: ChessPiece, val rookTarget: ChessSquare,
+        pass: Collection<ChessPosition>, needed: Collection<ChessPosition>, display: ChessSquare
+    ) : MoveCandidate(
+        piece, target,
+        BLUE, pass, help = listOf(rook), needed = needed,
+        control = null, display = display
+    ) {
+        override fun execute(): MoveData {
+            val base = baseName()
+            val standardBase = baseStandardName()
+            ChessPiece.autoMove(mapOf(piece to target, rook to rookTarget))
+            val ch = checkForChecks(piece.side, piece.square.game)
+            return MoveData(piece, origin, target, base + ch, standardBase + ch, display)
+        }
+
+        override fun baseName() = baseStandardName()
+
+        override fun baseStandardName() = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
+    }
+
+    val castles = mutableListOf<MoveCandidate>()
+
+    val game = piece.square.game
+
+    if (!piece.hasMoved)
+        game.board.piecesOf(piece.side)
+            .filter { it.type == ChessType.ROOK && !it.hasMoved && it.pos.rank == piece.pos.rank }
+            .forEach { rook ->
+
+                if (game.settings.simpleCastling) {
+                    TODO()
+                } else {
+                    val target: ChessSquare
+                    val rookTarget: ChessSquare
+                    val pass: List<ChessPosition>
+                    val needed: List<ChessPosition>
+                    if (piece.pos.file > rook.pos.file) {
+                        target = game.board.getSquare(piece.pos.copy(file = 2))!!
+                        rookTarget = game.board.getSquare(piece.pos.copy(file = 3))!!
+                        pass = between(piece.pos.file, 2).map { piece.pos.copy(file = it) }
+                        needed =
+                            pass + ((rook.pos.file..3) - piece.pos.file).map { piece.pos.copy(file = it) }
+                    } else {
+                        target = game.board.getSquare(piece.pos.copy(file = 6))!!
+                        rookTarget = game.board.getSquare(piece.pos.copy(file = 5))!!
+                        pass = between(piece.pos.file, 6).map { piece.pos.copy(file = it) }
+                        needed =
+                            pass + ((rook.pos.file..5) - piece.pos.file).map { piece.pos.copy(file = it) }
+                    }
+                    castles += Castles(
+                        piece, target,
+                        rook, rookTarget,
+                        pass, needed, if (game.settings.board.chess960) rook.square else target
+                    )
+                }
+            }
+
     return jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) {
         KingMove(piece, it, defaultColor(it))
-    }
+    } + castles
 }
 
 fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
@@ -204,13 +265,21 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
     class PawnPush(
         piece: ChessPiece, target: ChessSquare,
         pass: ChessPosition?, promotion: ChessType?
-    ) : MoveCandidate(piece, target, ifProm(promotion, GREEN), listOfNotNull(pass), null, promotion)
+    ) : MoveCandidate(
+        piece, target,
+        ifProm(promotion, GREEN), listOfNotNull(pass),
+        control = null, promotion = promotion
+    )
 
     class PawnCapture(piece: ChessPiece, target: ChessSquare, promotion: ChessType?) :
-        MoveCandidate(piece, target, ifProm(promotion, RED), emptyList(), target, promotion, true)
+        MoveCandidate(
+            piece, target,
+            ifProm(promotion, RED), emptyList(),
+            promotion = promotion, mustCapture = true
+        )
 
     class EnPassantCapture(piece: ChessPiece, target: ChessSquare, control: ChessSquare) :
-        MoveCandidate(piece, target, RED, emptyList(), control, mustCapture = true) {
+        MoveCandidate(piece, target, RED, emptyList(), control = control, mustCapture = true) {
         override fun execute(): MoveData {
             val base = baseName()
             val standardBase = baseStandardName()
