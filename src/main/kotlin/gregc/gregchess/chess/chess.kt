@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.*
 import org.bukkit.generator.ChunkGenerator
 import java.lang.Exception
@@ -87,6 +86,62 @@ data class ChessPosition(val file: Int, val rank: Int) {
     }
 }
 
+class ChessPositionSteps(
+    val start: ChessPosition,
+    private val jump: Pair<Int, Int>,
+    override val size: Int
+) :
+    Collection<ChessPosition> {
+    class ChessIterator(
+        val start: ChessPosition,
+        private val jump: Pair<Int, Int>,
+        private var remaining: Int
+    ) : Iterator<ChessPosition> {
+        private var value = start
+
+        override fun hasNext() = remaining > 0
+
+        override fun next(): ChessPosition {
+            value += jump
+            remaining--
+            return value
+        }
+    }
+
+    companion object {
+        private fun calcSize(start: ChessPosition, jump: Pair<Int, Int>): Int {
+            val ret = mutableListOf<Int>()
+
+            if (jump.first > 0) {
+                ret += Math.floorDiv(8 - start.file, jump.first)
+            } else if (jump.first < 0) {
+                ret += Math.floorDiv(start.file, -jump.first)
+            }
+
+            if (jump.second > 0) {
+                ret += Math.floorDiv(8 - start.rank, jump.second)
+            } else if (jump.second < 0) {
+                ret += Math.floorDiv(start.rank, -jump.second)
+            }
+
+            return ret.minOrNull() ?: 1
+        }
+    }
+
+    constructor(start: ChessPosition, jump: Pair<Int, Int>) :
+            this(start, jump, calcSize(start, jump))
+
+    override fun contains(element: ChessPosition): Boolean =
+        jump.first.divides(element.file - start.file, size - 1)
+                && jump.second.divides(element.rank - start.rank, size - 1)
+
+    override fun containsAll(elements: Collection<ChessPosition>) = elements.all { it in this }
+
+    override fun isEmpty() = size <= 0
+
+    override fun iterator() = ChessIterator(start, jump, size)
+}
+
 class ChessEngine(val name: String) {
     private val process: Process = ProcessBuilder("stockfish").start()
 
@@ -168,7 +223,7 @@ class ChessEngine(val name: String) {
 
 data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
     var piece: ChessPiece? = null
-    var bakedMoves: List<ChessMove>? = null
+    var bakedMoves: List<MoveCandidate>? = null
 
     private val baseFloor =
         if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS

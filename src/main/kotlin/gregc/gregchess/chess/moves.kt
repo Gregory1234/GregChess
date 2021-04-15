@@ -1,43 +1,88 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
-import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.ConfigManager
 import org.bukkit.Material
-import kotlin.math.*
+import kotlin.math.abs
 
-data class MoveData(
+class MoveData(
     val piece: ChessPiece,
     val origin: ChessSquare,
     val target: ChessSquare,
     val name: String,
     val standardName: String,
-    inline val undo: () -> Unit
+    val display: ChessSquare = target
 ) {
 
-    override fun toString() =
-        "MoveData(name = $name, standardName = $standardName, origin.pos = ${origin.pos}, target.pos = ${target.pos}, piece.uuid = ${piece.uniqueId})"
-
-    fun render() {
-        origin.previousMoveMarker = Material.BROWN_CONCRETE
-        origin.render()
-        target.previousMoveMarker = Material.ORANGE_CONCRETE
-        target.render()
+    fun undo() {
+        TODO("Not yet implemented")
     }
 
     fun clear() {
         origin.previousMoveMarker = null
         origin.render()
-        target.previousMoveMarker = null
-        target.render()
+        display.previousMoveMarker = null
+        display.render()
+    }
+
+    fun render() {
+        origin.previousMoveMarker = Material.BROWN_CONCRETE
+        origin.render()
+        display.previousMoveMarker = Material.ORANGE_CONCRETE
+        display.render()
     }
 }
 
-sealed class ChessMove(
-    val piece: ChessPiece,
-    val target: ChessSquare,
+abstract class MoveCandidate(
+    val piece: ChessPiece, val target: ChessSquare, val floor: Material,
+    val pass: Collection<ChessPosition>, val control: ChessSquare? = target,
+    val promotion: ChessType? = null, val mustCapture: Boolean = false,
     val display: ChessSquare = target
 ) {
+
+    companion object {
+        val RED = Material.RED_CONCRETE
+        val GREEN = Material.GREEN_CONCRETE
+        val BLUE = Material.BLUE_CONCRETE
+    }
+
     val origin = piece.square
+
+    open fun execute(): MoveData {
+        val base = baseName()
+        val standardBase = baseStandardName()
+        control?.piece?.capture(piece.side)
+        piece.move(target)
+        promotion?.let { piece.promote(it) }
+        val ch = checkForChecks(piece.side, piece.square.game)
+        return MoveData(piece, origin, target, base + ch, standardBase + ch, display)
+    }
+
+    open fun baseName() = buildString {
+        if (piece.type != ChessType.PAWN) {
+            append(piece.type.char.toUpperCase())
+            append(getUniquenessCoordinate(piece, target))
+        } else if (control != null)
+            append(piece.pos.fileStr)
+        if (control?.piece != null)
+            append(ConfigManager.getString("Chess.Capture"))
+        promotion?.let { append(it.char.toUpperCase()) }
+        append(target.pos)
+    }
+
+    open fun baseStandardName() = buildString {
+        if (piece.type != ChessType.PAWN) {
+            append(piece.type.standardChar.toUpperCase())
+            append(getUniquenessCoordinate(piece, target))
+        } else if (control != null)
+            append(origin.pos.fileStr)
+        if (control?.piece != null)
+            append("x")
+        promotion?.let {
+            append("=")
+            append(it.standardChar.toUpperCase())
+        }
+        append(target.pos)
+    }
 
     fun render() {
         display.moveMarker = floor
@@ -48,140 +93,6 @@ sealed class ChessMove(
         display.moveMarker = null
         display.render()
     }
-
-    abstract val isValid: Boolean
-
-    abstract val floor: Material
-
-    abstract val canAttack: Boolean
-
-    abstract fun execute(): MoveData
-
-    interface Promoting {
-        val promotion: ChessType?
-    }
-
-    class Normal(
-        piece: ChessPiece,
-        target: ChessSquare,
-        val defensive: Boolean = true,
-        override val promotion: ChessType? = null
-    ) : ChessMove(piece, target), Promoting {
-
-        override val isValid: Boolean
-            get() = true
-
-        override val floor
-            get() = if (promotion == null) Material.GREEN_CONCRETE else Material.BLUE_CONCRETE
-
-        override val canAttack
-            get() = defensive
-
-        override fun execute(): MoveData {
-            val pieceHasMoved = piece.hasMoved
-            var name = ""
-            var standardName = ""
-            if (piece.type != ChessType.PAWN) {
-                name += piece.type.char.toUpperCase()
-                standardName += piece.type.standardChar.toUpperCase()
-            }
-            name += getUniquenessCoordinate(piece, target)
-            standardName += getUniquenessCoordinate(piece, target)
-            name += target.pos.toString()
-            standardName += target.pos.toString()
-            piece.move(target)
-            if (promotion != null) {
-                piece.promote(promotion)
-                name += promotion.char.toUpperCase()
-                standardName += "="
-                standardName += promotion.standardChar.toUpperCase()
-            }
-            name += checkForChecks(piece.side, piece.square.game)
-            standardName += checkForChecks(piece.side, piece.square.game)
-            val undoReset = if (piece.type == ChessType.PAWN)
-                piece.square.board.resetMovesSinceLastCapture()
-            else
-                piece.square.board.increaseMovesSinceLastCapture()
-            val undo = {
-                if (promotion != null)
-                    piece.square.piece?.demote(piece)
-                piece.move(origin)
-                undoReset()
-                piece.force(pieceHasMoved)
-            }
-            return MoveData(piece, origin, target, name, standardName, undo)
-        }
-    }
-
-    class Attack(
-        piece: ChessPiece,
-        target: ChessSquare,
-        val capture: ChessSquare = target,
-        val defensive: Boolean = false,
-        val potentialBlocks: List<ChessPosition> = emptyList(),
-        val actualBlocks: List<ChessPosition> = emptyList(),
-        override val promotion: ChessType? = null
-    ) : ChessMove(piece, target), Promoting {
-
-        override val isValid: Boolean
-            get() = actualBlocks.isEmpty() && !defensive
-
-        override val canAttack
-            get() = actualBlocks.isEmpty()
-
-        override val floor
-            get() = if (promotion == null) Material.RED_CONCRETE else Material.BLUE_CONCRETE
-
-        override fun execute(): MoveData {
-            val pieceHasMoved = piece.hasMoved
-            var name = ""
-            var standardName = ""
-            name += if (piece.type == ChessType.PAWN)
-                piece.pos.fileStr
-            else
-                piece.type.char.toUpperCase()
-            standardName += if (piece.type == ChessType.PAWN)
-                piece.pos.fileStr
-            else
-                piece.type.standardChar.toUpperCase()
-            name += getUniquenessCoordinate(piece, target)
-            standardName += getUniquenessCoordinate(piece, target)
-            name += ConfigManager.getString("Chess.Capture")
-            standardName += "x"
-            name += target.pos.toString()
-            standardName += target.pos.toString()
-            val capturedPiece = capture.piece
-            val c = capturedPiece?.capture(piece.side)
-            piece.move(target)
-            if (promotion != null) {
-                piece.promote(promotion)
-                name += promotion.char.toUpperCase()
-                standardName += "="
-                standardName += promotion.standardChar.toUpperCase()
-            }
-            name += checkForChecks(piece.side, piece.square.game)
-            standardName += checkForChecks(piece.side, piece.square.game)
-            if (target != capture)
-                name += " e.p."
-            val undoReset = piece.square.board.resetMovesSinceLastCapture()
-            val undo = {
-                if (promotion != null)
-                    piece.square.piece?.demote(piece)
-                piece.move(origin)
-                capturedPiece?.resurrect(c!!)
-                undoReset()
-                piece.force(pieceHasMoved)
-            }
-            return MoveData(piece, origin, target, name, standardName, undo)
-        }
-    }
-
-    abstract class Special(piece: ChessPiece, display: ChessSquare, target: ChessSquare) :
-        ChessMove(piece, display, target) {
-        override val floor
-            get() = Material.BLUE_CONCRETE
-    }
-
 }
 
 fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
@@ -203,8 +114,7 @@ fun checkForChecks(side: ChessSide, game: ChessGame): String {
     game.board.updateMoves()
     val pieces = game.board.piecesOf(!side)
     val inCheck = game.variant.isInCheck(pieces.first { it.type == ChessType.KING })
-    val noMoves =
-        pieces.flatMap { game.board.getMoves(it.pos).filter(game.variant::isLegal) }.isEmpty()
+    val noMoves = pieces.all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
     return when {
         inCheck && noMoves -> "#"
         inCheck -> "+"
@@ -212,219 +122,79 @@ fun checkForChecks(side: ChessSide, game: ChessGame): String {
     }
 }
 
-fun jumpTo(piece: ChessPiece, target: ChessSquare): List<ChessMove> =
-    when (target.piece) {
-        null -> listOf(ChessMove.Normal(piece, target))
-        else -> listOf(
-            ChessMove.Attack(
-                piece,
-                target,
-                defensive = piece.side == target.piece?.side
-            )
-        )
-    }
-
-fun directionRay(piece: ChessPiece, dir: Pair<Int, Int>): List<ChessMove> {
-    var p = piece.pos + dir
-    val board = piece.square.board
-    val ret = mutableListOf<ChessMove>()
-    val actualBlocks = mutableListOf<ChessPosition>()
-    val potentialBlocks = mutableListOf<ChessPosition>()
-    ret.apply {
-        while (p.isValid()) {
-            while (p.isValid() && board[p] == null) {
-                potentialBlocks += p
-                add(ChessMove.Normal(piece, board.getSquare(p) ?: continue))
-                p += dir
-            }
-            //TODO: ChessPiece.Type.KING shouldn't be mentioned here.
-            val target = board[p]
-            if (target?.type == ChessType.KING && target.side != piece.side) {
-                add(
-                    ChessMove.Attack(
-                        piece,
-                        target.square,
-                        potentialBlocks = potentialBlocks.toList()
-                    )
-                )
-                potentialBlocks += p
-                p += dir
-            } else
-                break
-        }
-        while (p.isValid()) {
-            val target = board[p] ?: break
-            add(
-                ChessMove.Attack(
-                    piece,
-                    target.square,
-                    defensive = target.side == piece.side,
-                    actualBlocks = actualBlocks.toList(),
-                    potentialBlocks = potentialBlocks.toList()
-                )
-            )
-            actualBlocks += p
-            do {
-                potentialBlocks += p
-                p += dir
-            } while (p.isValid() && board[p] == null)
-        }
-    }
-    return ret
+fun knightMovement(piece: ChessPiece): List<MoveCandidate> {
+    return emptyList()
 }
 
-fun knightMovement(piece: ChessPiece) =
-    rotationsOf(2, 1).map { piece.pos + it }.mapNotNull { piece.square.board.getSquare(it) }
-        .flatMap { jumpTo(piece, it) }
+fun rookMovement(piece: ChessPiece): List<MoveCandidate> {
+    return emptyList()
+}
 
-fun rookMovement(piece: ChessPiece) =
-    rotationsOf(1, 0).flatMap { directionRay(piece, it) }
+fun bishopMovement(piece: ChessPiece): List<MoveCandidate> {
+    return emptyList()
+}
 
-fun bishopMovement(piece: ChessPiece) =
-    rotationsOf(1, 1).flatMap { directionRay(piece, it) }
+fun queenMovement(piece: ChessPiece): List<MoveCandidate> {
+    return emptyList()
+}
 
-fun queenMovement(piece: ChessPiece) =
-    (rotationsOf(1, 0) + rotationsOf(1, 1)).flatMap { directionRay(piece, it) }
+fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
+    return emptyList()
+}
 
-fun kingMovement(piece: ChessPiece): List<ChessMove> {
-    class Castles(
-        piece: ChessPiece,
-        val rook: ChessPiece,
-        target: ChessSquare,
-        val rookTargetSquare: ChessSquare,
-        targetDisplay: Boolean
-    ) : ChessMove.Special(
-        piece,
-        target,
-        if (targetDisplay) target else rook.square
-    ) {
-        override val isValid: Boolean
-            get() {
-                // TODO: remake this
-                /*return (between(piece.pos.file, target.pos.file) + listOf(
-                    piece.pos.file,
-                    target.pos.file
-                ))
-                    .mapNotNull { origin.board.getSquare(piece.pos.copy(file = it)) }
-                    .all { origin.board.checkingPotentialMoves(!piece.side, it).isEmpty() }*/
-                return true
-            }
+fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
 
-        override val canAttack
-            get() = false
+    fun ifProm(promotion: ChessType?, floor: Material) =
+        if (promotion == null) floor else MoveCandidate.BLUE
 
+    fun handlePromotion(pos: ChessPosition, f: (ChessType?) -> Unit) =
+        if (pos.rank in listOf(0,7)) ChessType.PAWN.promotions.forEach(f) else f(null)
+
+    class PawnPush(
+        piece: ChessPiece, target: ChessSquare,
+        pass: ChessPosition?, promotion: ChessType?
+    ) : MoveCandidate(piece, target, ifProm(promotion, GREEN), listOfNotNull(pass), null, promotion)
+
+    class PawnCapture(piece: ChessPiece, target: ChessSquare, promotion: ChessType?) :
+        MoveCandidate(piece, target, ifProm(promotion, RED), emptyList(), target, promotion, true)
+
+    class EnPassantCapture(piece: ChessPiece, target: ChessSquare, control: ChessSquare) :
+        MoveCandidate(piece, target, RED, emptyList(), control, mustCapture = true) {
         override fun execute(): MoveData {
-            var name = if (rook.pos.file < origin.pos.file) "O-O-O" else "O-O"
-            val rookOrigin = rook.square
-            ChessPiece.autoMove(mapOf(rook to rookTargetSquare, piece to target))
-            name += checkForChecks(piece.side, origin.game)
-            val undoInc = origin.board.increaseMovesSinceLastCapture()
-            val undo = {
-                ChessPiece.autoMove(mapOf(rook to rookOrigin, piece to origin))
-                undoInc()
-                piece.force(false)
-                rook.force(false)
-            }
-            return MoveData(piece, origin, target, name, name, undo)
+            val base = baseName()
+            val standardBase = baseStandardName()
+            control?.piece?.capture(piece.side)
+            piece.move(target)
+            val ch = checkForChecks(piece.side, piece.square.game)
+            return MoveData(piece, origin, target, "$base$ch e.p.", standardBase + ch, display)
         }
     }
 
-    val game = piece.square.game
-    val board = game.board
-    val settings = game.settings
-    val neighbours =
-        piece.pos.neighbours().mapNotNull { board.getSquare(it) }.flatMap { jumpTo(piece, it) }
-    val castles = mutableListOf<ChessMove>()
-    if (!piece.hasMoved) {
-        for (rook in board.pieces.filter { it.type == ChessType.ROOK }) {
-            if (!rook.hasMoved && rook.side == piece.side && rook.pos.rank == piece.pos.rank) {
-                if (settings.simpleCastling) {
-                    val blocking = between(rook.pos.file, piece.pos.file)
-                        .mapNotNull { board[piece.pos.copy(file = it)] }
-                    if (blocking.isNotEmpty()) continue
-                    if (rook.pos.file - piece.pos.file in listOf(-1, 1)) {
-                        castles.add(Castles(piece, rook, rook.square, piece.square, true))
-                    } else {
-                        val targetSquare =
-                            board.getSquare(
-                                piece.pos.copy(file = piece.pos.file.towards(rook.pos.file, 2))
-                            ) ?: continue
-                        val rookTargetSquare =
-                            board.getSquare(
-                                piece.pos.copy(file = piece.pos.file.towards(rook.pos.file, 1))
-                            ) ?: continue
-                        castles.add(Castles(piece, rook, targetSquare, rookTargetSquare, true))
-                    }
-                } else {
-                    if (rook.pos.file < piece.pos.file) { // Queenside
-                        val blocking = between(min(rook.pos.file, 1), max(4, piece.pos.file))
-                            .mapNotNull { board[piece.pos.copy(file = it)] }
-                        if (blocking.any { it !in listOf(rook, piece) }) continue
-                        val targetSquare = board.getSquare(piece.pos.copy(file = 2)) ?: continue
-                        val rookTargetSquare = board.getSquare(piece.pos.copy(file = 3)) ?: continue
-                        castles.add(
-                            Castles(
-                                piece, rook, targetSquare, rookTargetSquare,
-                                piece.pos.file == 4 && rook.pos.file == 0
-                            )
-                        )
-                    } else { // Kingside
-                        val blocking = between(min(piece.pos.file, 4), max(7, rook.pos.file))
-                            .mapNotNull { board[piece.pos.copy(file = it)] }
-                        if (blocking.any { it !in listOf(rook, piece) }) continue
-                        val targetSquare = board.getSquare(piece.pos.copy(file = 6)) ?: continue
-                        val rookTargetSquare = board.getSquare(piece.pos.copy(file = 5)) ?: continue
-                        castles.add(
-                            Castles(
-                                piece, rook, targetSquare, rookTargetSquare,
-                                piece.pos.file == 4 && rook.pos.file == 7
-                            )
-                        )
-                    }
-                }
+    val ret = mutableListOf<MoveCandidate>()
+    piece.square.board.getSquare(piece.pos.plusR(piece.side.direction))?.let {t ->
+        handlePromotion(t.pos) {
+            ret += PawnPush(piece, t, null, it)
+        }
+    }
+    if (!piece.hasMoved)
+        piece.square.board.getSquare(piece.pos.plusR(2 * piece.side.direction))?.let { t ->
+            handlePromotion(t.pos) {
+                ret += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), it)
             }
         }
-    }
-    return neighbours + castles
-}
-
-fun pawnMovement(piece: ChessPiece): List<ChessMove> {
-    val ret = mutableListOf<ChessMove>()
-    val dir = Pair(0, piece.side.direction)
-    val board = piece.square.board
-    val origin = piece.pos
-    val target1 = board.getSquare(origin + dir)
-    if (target1 != null && target1.piece == null) {
-        if ((origin + dir).rank !in listOf(0, 7))
-            ret.add(ChessMove.Normal(piece, target1, defensive = false))
-        else
-            for (p in piece.type.promotions)
-                ret.add(ChessMove.Normal(piece, target1, promotion = p, defensive = false))
-        val target2 = board.getSquare(origin + dir * 2)
-        if (target2 != null && target2.piece == null && !piece.hasMoved) {
-            ret.add(ChessMove.Normal(piece, target2, defensive = false))
-        }
-    }
     for (s in listOf(-1, 1)) {
-        val target3 = board.getSquare(origin + Pair(s, piece.side.direction)) ?: continue
-        when {
-            target3.piece == null || target3.piece?.side == piece.side ->
-                ret.add(ChessMove.Attack(piece, target3, defensive = true))
-            target3.pos.rank !in listOf(0, 7) ->
-                ret.add(ChessMove.Attack(piece, target3))
-            else ->
-                for (p in piece.type.promotions)
-                    ret.add(ChessMove.Attack(piece, target3, promotion = p))
+        piece.square.board.getSquare(piece.pos + Pair(s, piece.side.direction))?.let { t ->
+            handlePromotion(t.pos) {
+                ret += PawnCapture(piece, t, it)
+            }
         }
-        val target4 = board.getSquare(origin.plusF(s))
-        if (target3.piece == null && target4?.piece?.side == !piece.side) {
-            val captured = board[origin.plusF(s)] ?: continue
-            val lastMove = board.lastMove ?: continue
-            if (captured.type == ChessType.PAWN &&
-                lastMove.target == target4 &&
-                lastMove.origin.pos == origin.plus(s, piece.side.direction * 2)
-            ) {
-                ret.add(ChessMove.Attack(piece, target3, target4))
+        val p = piece.square.board[piece.pos.plusF(s)]
+        val lm = piece.square.board.lastMove
+        if (p?.type == ChessType.PAWN && p.side == !piece.side
+            && lm?.piece == p && abs(lm.origin.pos.rank - lm.target.pos.rank) == 2
+        ) {
+            piece.square.board.getSquare(piece.pos + Pair(s, piece.side.direction))?.let {
+                ret += EnPassantCapture(piece, it, p.square)
             }
         }
     }

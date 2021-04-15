@@ -10,7 +10,7 @@ import java.lang.IllegalArgumentException
 enum class ChessType(
     path: String,
     val standardChar: Char,
-    val moveScheme: (ChessPiece) -> List<ChessMove>,
+    val moveScheme: (ChessPiece) -> List<MoveCandidate>,
     val minor: Boolean
 ) {
     KING("Chess.Piece.King", 'k', ::kingMovement, false),

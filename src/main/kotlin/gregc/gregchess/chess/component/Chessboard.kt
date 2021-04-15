@@ -7,7 +7,7 @@ import org.bukkit.Sound
 import java.util.*
 import kotlin.math.abs
 
-class Chessboard(private val game: ChessGame, settings: Settings): ChessGame.Component {
+class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Component {
     data class Settings(val initialFEN: FEN?, val chess960: Boolean = false) {
         fun getComponent(game: ChessGame) = Chessboard(game, this)
 
@@ -139,12 +139,13 @@ class Chessboard(private val game: ChessGame, settings: Settings): ChessGame.Com
             val bLast = (lastMove?.name ?: "")
             game.forEachPlayer { p -> p.sendMessage("$num $wLast  | $bLast") }
             fullMoveCounter++
-        } else if (piecesOf(!game.currentTurn)
-                .flatMap { p -> getMoves(p.pos).filter { game.variant.isLegal(it) } }.isEmpty()
-        ) {
-            val wLast = (lastMove?.name ?: "")
-            game.forEachPlayer { p -> p.sendMessage("$num $wLast  |") }
         }
+    }
+
+    override fun stop() {
+        val num = "${fullMoveCounter}."
+        val wLast = (lastMove?.name ?: "")
+        game.forEachPlayer { p -> p.sendMessage("$num $wLast  |") }
     }
 
     private fun render() {
@@ -193,7 +194,7 @@ class Chessboard(private val game: ChessGame, settings: Settings): ChessGame.Com
 
     fun updateMoves() {
         boardState.forEach { (_, square) ->
-            square.bakedMoves = square.piece?.let { it.type.moveScheme(it) }
+            square.bakedMoves = square.piece?.let { p -> p.type.moveScheme(p) }
         }
     }
 
@@ -213,9 +214,7 @@ class Chessboard(private val game: ChessGame, settings: Settings): ChessGame.Com
             val piece = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
             val origin = getSquare(piece.pos.plusR(-2 * piece.side.direction))!!
             val target = piece.square
-            piece.move(origin)
-            lastMove = MoveData(piece, origin, target, "", "") {}
-            piece.move(target)
+            lastMove = MoveData(piece, origin, target, "", "")
         }
 
         movesSinceLastCapture = fen.halfmoveClock
@@ -261,7 +260,7 @@ class Chessboard(private val game: ChessGame, settings: Settings): ChessGame.Com
             castling(ChessSide.WHITE),
             castling(ChessSide.BLACK),
             lastMove?.let {
-                if (it.target.piece?.type == ChessType.PAWN
+                if (it.piece.type == ChessType.PAWN
                     && abs(it.origin.pos.rank - it.target.pos.rank) == 2
                 ) {
                     it.origin.pos.copy(rank = (it.origin.pos.rank + it.target.pos.rank) / 2)

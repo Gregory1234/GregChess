@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.glog
 
@@ -12,9 +11,9 @@ abstract class ChessVariant(val name: String) {
 
         init {
             this += Normal
-            this += ThreeChecks
+            /*this += ThreeChecks
             this += KingOfTheHill
-            this += Atomic
+            this += Atomic*/
         }
 
         operator fun get(name: String?) = when (name) {
@@ -31,30 +30,32 @@ abstract class ChessVariant(val name: String) {
     }
 
     abstract fun start(game: ChessGame)
-    abstract fun finishMove(move: ChessMove)
-    abstract fun isLegal(move: ChessMove): Boolean
+    abstract fun finishMove(move: MoveCandidate)
+    abstract fun isLegal(move: MoveCandidate): Boolean
     abstract fun isInCheck(king: ChessPiece): Boolean
 
-    private fun allMoves(side: ChessSide, board: Chessboard) =
+    protected fun allMoves(side: ChessSide, board: Chessboard) =
         board.piecesOf(side).flatMap { board.getMoves(it.pos) }
 
-    protected fun pinningMoves(by: ChessSide, pos: ChessSquare) =
-        allMoves(by, pos.board).mapNotNull { it as? ChessMove.Attack }
-            .filter { it.target == pos && !it.defensive && it.actualBlocks.size == 1 }
-
-    protected fun checkingPotentialMoves(by: ChessSide, pos: ChessSquare) =
-        allMoves(by, pos.board).filter { it.target == pos }
-            .filter { it.canAttack }
-
-    protected fun checkingMoves(by: ChessSide, pos: ChessSquare) =
-        allMoves(by, pos.board).mapNotNull { it as? ChessMove.Attack }
-            .filter { it.target == pos && it.isValid }
-
     object Normal : ChessVariant("Normal") {
+
+        private fun pinningMoves(by: ChessSide, pos: ChessSquare) =
+            allMoves(by, pos.board).filter { it.control == pos }
+                .filter { m -> m.pass.count { pos.board[it] != null } == 1 }
+
+        private fun checkingPotentialMoves(by: ChessSide, pos: ChessSquare) =
+            allMoves(by, pos.board).filter { it.target == pos }
+                .filter { it.control != null }
+                .filter { m -> m.pass.all { pos.board[it] == null } }
+
+        private fun checkingMoves(by: ChessSide, pos: ChessSquare) =
+            allMoves(by, pos.board).filter { it.control == pos }
+                .filter { m -> m.pass.all { pos.board[it] == null } }
+
         override fun start(game: ChessGame) {
         }
 
-        override fun finishMove(move: ChessMove) {
+        override fun finishMove(move: MoveCandidate) {
             val game = move.origin.game
             val data = move.execute()
             game.board.lastMove?.clear()
@@ -64,23 +65,39 @@ abstract class ChessVariant(val name: String) {
             game.nextTurn()
         }
 
-        override fun isLegal(move: ChessMove): Boolean = move.run {
-            if (!isValid) return false
+        private fun isValid(move: MoveCandidate): Boolean = move.run {
+
+            if (pass.any {origin.board[it] != null})
+                return false
+
+            if (target.piece != null && control != target)
+                return false
+
+            if (control?.piece == null && mustCapture)
+                return false
+
+            return true
+        }
+
+        override fun isLegal(move: MoveCandidate): Boolean = move.run {
+            val game = origin.game
+
+            if (!isValid(move))
+                return false
+
             if (piece.type == ChessType.KING) {
                 val checks = checkingPotentialMoves(!piece.side, target)
                 return checks.isEmpty()
             }
-            val game = origin.game
 
             val myKing =
                 game.tryOrStopNull(
                     game.board.piecesOf(piece.side).find { it.type == ChessType.KING })
             val checks = checkingMoves(!piece.side, myKing.square)
-            if (checks.any { target.pos !in it.potentialBlocks && target != it.origin })
+            if (checks.any { target.pos !in it.pass && target != it.origin })
                 return false
-            val pins =
-                pinningMoves(!piece.side, myKing.square).filter { it.actualBlocks[0] == origin.pos }
-            if (pins.any { target.pos !in it.potentialBlocks && target != it.origin })
+            val pins = pinningMoves(!piece.side, myKing.square).filter { origin.pos in it.pass }
+            if (pins.any { target.pos !in it.pass && target != it.origin })
                 return false
             return true
         }
@@ -89,7 +106,7 @@ abstract class ChessVariant(val name: String) {
             checkingMoves(!king.side, king.square).isNotEmpty()
     }
 
-    object ThreeChecks : ChessVariant("ThreeChecks") {
+    /*object ThreeChecks : ChessVariant("ThreeChecks") {
         class CheckCounter(private val game: ChessGame) : ChessGame.Component {
             private var whiteChecks = 0
             private var blackChecks = 0
@@ -250,5 +267,5 @@ abstract class ChessVariant(val name: String) {
                 king.square,
                 checkingMoves(!king.side, king.square)
             ).isNotEmpty()
-    }
+    }*/
 }

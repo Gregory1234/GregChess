@@ -5,13 +5,14 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 
 
-sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val game: ChessGame ) {
+sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val game: ChessGame) {
     class Human(val player: Player, side: ChessSide, silent: Boolean, game: ChessGame) :
         ChessPlayer(side, silent, game) {
 
         override val name = player.name
 
-        override fun toString() = "ChessPlayer.Human(name = $name, side = $side, game.uniqueId = ${game.uniqueId})"
+        override fun toString() =
+            "ChessPlayer.Human(name = $name, side = $side, game.uniqueId = ${game.uniqueId})"
 
         override fun sendMessage(msg: String) = player.sendMessage(msg)
         override fun sendTitle(title: String, subtitle: String) =
@@ -23,7 +24,7 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
             if (piece.side != side) return
             piece.square.moveMarker = Material.YELLOW_CONCRETE
             piece.square.render()
-            heldMoves = getAllowedMoves(piece)
+            heldMoves = piece.square.bakedMoves.orEmpty().filter { game.variant.isLegal(it) }
             heldMoves?.forEach { it.render() }
             held = piece
             piece.pickUp()
@@ -39,6 +40,7 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
             piece.square.render()
             moves.forEach { it.clear() }
             held = null
+            heldMoves = null
             player.inventory.setItem(0, null)
             if (newSquare == piece.square) {
                 piece.placeDown()
@@ -46,8 +48,7 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
             }
             val chosenMoves = moves.filter { it.display == newSquare }
             if (chosenMoves.size != 1) {
-                val promotingMoves =
-                    chosenMoves.mapNotNull { m -> (m as? ChessMove.Promoting)?.promotion?.let { it to m } }
+                val promotingMoves = chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } }
                 player.openScreen(PawnPromotionScreen(piece, promotingMoves, this))
             } else {
                 game.variant.finishMove(chosenMoves.first())
@@ -76,7 +77,7 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
                 val promotion =
                     str.drop(4).firstOrNull()?.let { ChessType.parseFromStandardChar(it) }
                 val move = game.board.getMoves(origin)
-                    .first { it.display.pos == target && if (it is ChessMove.Promoting) (it.promotion == promotion) else true }
+                    .first { it.display.pos == target && it.promotion == promotion }
                 game.variant.finishMove(move)
             }, { game.stop(ChessGame.EndReason.Error(it)) })
 
@@ -84,7 +85,7 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
     }
 
     var held: ChessPiece? = null
-    protected var heldMoves: List<ChessMove>? = null
+    protected var heldMoves: List<MoveCandidate>? = null
 
     abstract val name: String
 
@@ -100,21 +101,18 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
     val opponent
         get() = game[!side]
 
-    protected fun getAllowedMoves(piece: ChessPiece): List<ChessMove> =
-        game.board.getMoves(piece.pos).filter(game.variant::isLegal)
-
     fun hasTurn(): Boolean = game.currentTurn == side
 
     class PawnPromotionScreen(
         private val pawn: ChessPiece,
-        private val moves: List<Pair<ChessType, ChessMove>>,
+        private val moves: List<Pair<ChessType, MoveCandidate>>,
         private val player: ChessPlayer
-    ) : Screen<ChessMove>("Message.PawnPromotion") {
+    ) : Screen<MoveCandidate>("Message.PawnPromotion") {
         override fun getContent() = moves.mapIndexed { i, (t, m) ->
             ScreenOption(t.getItem(pawn.side), m, InventoryPosition.fromIndex(i))
         }
 
-        override fun onClick(v: ChessMove) = player.game.variant.finishMove(v)
+        override fun onClick(v: MoveCandidate) = player.game.variant.finishMove(v)
 
         override fun onCancel() = player.game.variant.finishMove(moves.first().second)
 
@@ -122,43 +120,23 @@ sealed class ChessPlayer( val side: ChessSide, private val silent: Boolean, val 
 
     open fun stop() {}
 
-    open fun startTurn() {
-        if (game.variant.isInCheck(king)) {
-            var inMate = true
-            for (p in pieces) {
-                if (getAllowedMoves(p).isNotEmpty()) {
-                    inMate = false
-                    break
-                }
-            }
-            if (inMate) {
-                game.stop(ChessGame.EndReason.Checkmate(!side))
-            } else if (!silent) {
-                //player.spigot().sendMessage(ChatMessageType.ACTION_BAR, *TextComponent.fromLegacyText(chatColor("&cYou are in check!")))
-                sendTitle(
-                    ConfigManager.getString("Title.YourTurn"),
-                    ConfigManager.getString("Title.InCheck")
-                )
-                sendMessage(ConfigManager.getString("Message.InCheck"))
-            } else {
-                sendTitle(ConfigManager.getString("Title.InCheck"))
-                sendMessage(ConfigManager.getString("Message.InCheck"))
-            }
+    fun announceInCheck() {
+        if (!silent) {
+            sendTitle(
+                ConfigManager.getString("Title.YourTurn"),
+                ConfigManager.getString("Title.InCheck")
+            )
+            sendMessage(ConfigManager.getString("Message.InCheck"))
         } else {
-            var inStalemate = true
-            for (p in pieces) {
-                if (getAllowedMoves(p).isNotEmpty()) {
-                    inStalemate = false
-                    break
-                }
-            }
-            if (inStalemate) {
-                game.stop(ChessGame.EndReason.Stalemate())
-            } else if (!silent) {
-                sendTitle(ConfigManager.getString("Title.YourTurn"))
-            }
+            sendTitle(ConfigManager.getString("Title.InCheck"))
+            sendMessage(ConfigManager.getString("Message.InCheck"))
         }
+    }
 
+    open fun startTurn() {
+        if (!silent) {
+            sendTitle(ConfigManager.getString("Title.YourTurn"))
+        }
     }
 
 }

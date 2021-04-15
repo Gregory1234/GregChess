@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToLong
 
@@ -281,6 +282,15 @@ fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 u
 fun Int.towards(goal: Int, amount: Int) =
     if (goal < this) this - amount
     else this + amount
+
+fun Int.divides(other: Int, maxAbs: Int? = null) =
+    when {
+        maxAbs == null -> if (this == 0) other == 0 else other % this == 0
+        maxAbs < 0 -> false
+        maxAbs == 0 -> other == 0
+        else -> if (this == 0) other == 0 else other % this == 0
+                && abs(Math.floorDiv(other, this)) <= maxAbs
+    }
 
 fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> =
     flatMap { x -> other.map { y -> function(x, y) } }
