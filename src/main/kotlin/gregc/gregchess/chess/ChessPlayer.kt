@@ -95,8 +95,6 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
 
     private val pieces
         get() = game.board.piecesOf(side)
-    private val king
-        get() = game.tryOrStopNull(pieces.find { it.type == ChessType.KING })
 
     val opponent
         get() = game[!side]
@@ -137,6 +135,9 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
         if (!silent) {
             sendTitle(ConfigManager.getString("Title.YourTurn"))
         }
+        val king = game.board.piecesOf(side).firstOrNull {it.type == ChessType.KING}
+        if(king != null && game.variant.isInCheck(king))
+            announceInCheck()
     }
 
 }

@@ -190,7 +190,7 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
         }
         val p = piece.square.board[piece.pos.plusF(s)]
         val lm = piece.square.board.lastMove
-        if (p?.type == ChessType.PAWN && p.side == !piece.side
+        if (p?.type == ChessType.PAWN
             && lm?.piece == p && abs(lm.origin.pos.rank - lm.target.pos.rank) == 2
         ) {
             piece.square.board.getSquare(piece.pos + Pair(s, piece.side.direction))?.let {

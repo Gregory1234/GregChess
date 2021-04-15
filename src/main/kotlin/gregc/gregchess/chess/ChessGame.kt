@@ -101,6 +101,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
 
     fun nextTurn() {
         components.forEach { it.endTurn() }
+        variant.checkForGameEnd(this)
         Bukkit.getPluginManager().callEvent(TurnEndEvent(this, this[currentTurn]))
         currentTurn++
         startTurn()

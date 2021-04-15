@@ -123,10 +123,6 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
         setFromFEN(initialFEN)
     }
 
-    override fun startTurn() {
-        checkForGameEnd()
-    }
-
     override fun previousTurn() {
         updateMoves()
     }
@@ -140,12 +136,15 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
             game.forEachPlayer { p -> p.sendMessage("$num $wLast  | $bLast") }
             fullMoveCounter++
         }
+        addBoardHash()
     }
 
     override fun stop() {
-        val num = "${fullMoveCounter}."
-        val wLast = (lastMove?.name ?: "")
-        game.forEachPlayer { p -> p.sendMessage("$num $wLast  |") }
+        if (game.currentTurn == ChessSide.WHITE) {
+            val num = "${fullMoveCounter}."
+            val wLast = (lastMove?.name ?: "")
+            game.forEachPlayer { p -> p.sendMessage("$num $wLast  |") }
+        }
     }
 
     private fun render() {
@@ -274,19 +273,14 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
 
     private fun getBoardHash() = getFEN().toHash()
 
-    private fun checkForGameEnd() {
-        if (addBoardHash() == 3)
+    fun checkForRepetition() {
+        if (boardHashes[getBoardHash().hashCode()] ?: 0 >= 3)
             game.stop(ChessGame.EndReason.Repetition())
+    }
+
+    fun checkForFiftyMoveRule() {
         if (movesSinceLastCapture >= 100)
             game.stop(ChessGame.EndReason.FiftyMoves())
-        val whitePieces = piecesOf(ChessSide.WHITE)
-        val blackPieces = piecesOf(ChessSide.BLACK)
-        if (whitePieces.size == 1 && blackPieces.size == 1)
-            game.stop(ChessGame.EndReason.InsufficientMaterial())
-        if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
-            game.stop(ChessGame.EndReason.InsufficientMaterial())
-        if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
-            game.stop(ChessGame.EndReason.InsufficientMaterial())
     }
 
     private fun addBoardHash(): Int {

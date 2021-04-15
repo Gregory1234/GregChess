@@ -33,6 +33,7 @@ abstract class ChessVariant(val name: String) {
     abstract fun finishMove(move: MoveCandidate)
     abstract fun isLegal(move: MoveCandidate): Boolean
     abstract fun isInCheck(king: ChessPiece): Boolean
+    abstract fun checkForGameEnd(game: ChessGame)
 
     protected fun allMoves(side: ChessSide, board: Chessboard) =
         board.piecesOf(side).flatMap { board.getMoves(it.pos) }
@@ -67,13 +68,16 @@ abstract class ChessVariant(val name: String) {
 
         private fun isValid(move: MoveCandidate): Boolean = move.run {
 
-            if (pass.any {origin.board[it] != null})
+            if (pass.any { origin.board[it] != null })
                 return false
 
             if (target.piece != null && control != target)
                 return false
 
             if (control?.piece == null && mustCapture)
+                return false
+
+            if (control?.piece?.side == piece.side)
                 return false
 
             return true
@@ -104,6 +108,22 @@ abstract class ChessVariant(val name: String) {
 
         override fun isInCheck(king: ChessPiece): Boolean =
             checkingMoves(!king.side, king.square).isNotEmpty()
+
+        override fun checkForGameEnd(game: ChessGame) {
+            if (game.board.piecesOf(!game.currentTurn)
+                    .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
+            ) game.stop(ChessGame.EndReason.Checkmate(game.currentTurn))
+            game.board.checkForRepetition()
+            game.board.checkForFiftyMoveRule()
+            val whitePieces = game.board.piecesOf(ChessSide.WHITE)
+            val blackPieces = game.board.piecesOf(ChessSide.BLACK)
+            if (whitePieces.size == 1 && blackPieces.size == 1)
+                game.stop(ChessGame.EndReason.InsufficientMaterial())
+            if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
+                game.stop(ChessGame.EndReason.InsufficientMaterial())
+            if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
+                game.stop(ChessGame.EndReason.InsufficientMaterial())
+        }
     }
 
     /*object ThreeChecks : ChessVariant("ThreeChecks") {
