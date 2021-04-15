@@ -102,9 +102,10 @@ class ChessPositionSteps(
         override fun hasNext() = remaining > 0
 
         override fun next(): ChessPosition {
+            val ret = value
             value += jump
             remaining--
-            return value
+            return ret
         }
     }
 
@@ -115,13 +116,13 @@ class ChessPositionSteps(
             if (jump.first > 0) {
                 ret += Math.floorDiv(8 - start.file, jump.first)
             } else if (jump.first < 0) {
-                ret += Math.floorDiv(start.file, -jump.first)
+                ret += Math.floorDiv(start.file + 1, -jump.first)
             }
 
             if (jump.second > 0) {
                 ret += Math.floorDiv(8 - start.rank, jump.second)
             } else if (jump.second < 0) {
-                ret += Math.floorDiv(start.rank, -jump.second)
+                ret += Math.floorDiv(start.rank + 1, -jump.second)
             }
 
             return ret.minOrNull() ?: 1
@@ -131,9 +132,26 @@ class ChessPositionSteps(
     constructor(start: ChessPosition, jump: Pair<Int, Int>) :
             this(start, jump, calcSize(start, jump))
 
-    override fun contains(element: ChessPosition): Boolean =
-        jump.first.divides(element.file - start.file, size - 1)
-                && jump.second.divides(element.rank - start.rank, size - 1)
+    override fun contains(element: ChessPosition): Boolean {
+        if (jump.first == 0) {
+            if (jump.second == 0) {
+                return element == start
+            }
+            val m = Math.floorMod(element.rank - start.rank, jump.second)
+            if (m != 0)
+                return false
+            val d = Math.floorDiv(element.rank - start.rank, jump.second)
+            return d in (0 until size)
+        } else {
+            val m = Math.floorMod(element.file - start.file, jump.first)
+            if (m != 0)
+                return false
+            val d = Math.floorDiv(element.file - start.file, jump.first)
+            if (d !in (0 until size))
+                return false
+            return (element.rank - start.rank) == d * jump.second
+        }
+    }
 
     override fun containsAll(elements: Collection<ChessPosition>) = elements.all { it in this }
 

@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ConfigManager
+import gregc.gregchess.rotationsOf
 import org.bukkit.Material
 import kotlin.math.abs
 
@@ -44,6 +45,9 @@ abstract class MoveCandidate(
         val GREEN = Material.GREEN_CONCRETE
         val BLUE = Material.BLUE_CONCRETE
     }
+
+    override fun toString() =
+        "MoveCandidate(piece = $piece, target = ${target.pos}, pass = [${pass.joinToString()}], control = ${control?.pos}, promotion = $promotion, mustCapture = $mustCapture, display = ${display.pos})"
 
     val origin = piece.square
 
@@ -122,24 +126,71 @@ fun checkForChecks(side: ChessSide, game: ChessGame): String {
     }
 }
 
+fun defaultColor(square: ChessSquare) =
+    if (square.piece == null) MoveCandidate.GREEN else MoveCandidate.RED
+
+fun jumps(piece: ChessPiece, dirs: Collection<Pair<Int, Int>>, f: (ChessSquare) -> MoveCandidate) =
+    dirs.map { piece.pos + it }.filter { it.isValid() }
+        .mapNotNull { piece.square.board.getSquare(it) }.map(f)
+
+fun rays(
+    piece: ChessPiece, dirs: Collection<Pair<Int, Int>>,
+    f: (Int, Pair<Int, Int>, ChessSquare) -> MoveCandidate
+) = dirs.flatMap { dir ->
+    ChessPositionSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
+        piece.square.board.getSquare(pos)?.let { f(index + 1, dir, it) }
+    }
+}
+
 fun knightMovement(piece: ChessPiece): List<MoveCandidate> {
-    return emptyList()
+    class KnightJump(piece: ChessPiece, target: ChessSquare, floor: Material) :
+        MoveCandidate(piece, target, floor, emptyList())
+
+    return jumps(piece, rotationsOf(2, 1)) {
+        KnightJump(piece, it, defaultColor(it))
+    }
 }
 
 fun rookMovement(piece: ChessPiece): List<MoveCandidate> {
-    return emptyList()
+    class RookMove(
+        piece: ChessPiece, target: ChessSquare,
+        dir: Pair<Int, Int>, amount: Int, floor: Material
+    ) : MoveCandidate(piece, target, floor, ChessPositionSteps(piece.pos + dir, dir, amount - 1))
+
+    return rays(piece, rotationsOf(1, 0)) { index, dir, square ->
+        RookMove(piece, square, dir, index, defaultColor(square))
+    }
 }
 
 fun bishopMovement(piece: ChessPiece): List<MoveCandidate> {
-    return emptyList()
+    class BishopMove(
+        piece: ChessPiece, target: ChessSquare,
+        dir: Pair<Int, Int>, amount: Int, floor: Material
+    ) : MoveCandidate(piece, target, floor, ChessPositionSteps(piece.pos + dir, dir, amount - 1))
+
+    return rays(piece, rotationsOf(1, 1)) { index, dir, square ->
+        BishopMove(piece, square, dir, index, defaultColor(square))
+    }
 }
 
 fun queenMovement(piece: ChessPiece): List<MoveCandidate> {
-    return emptyList()
+    class QueenMove(
+        piece: ChessPiece, target: ChessSquare,
+        dir: Pair<Int, Int>, amount: Int, floor: Material
+    ) : MoveCandidate(piece, target, floor, ChessPositionSteps(piece.pos + dir, dir, amount - 1))
+
+    return rays(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) { index, dir, square ->
+        QueenMove(piece, square, dir, index, defaultColor(square))
+    }
 }
 
 fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
-    return emptyList()
+    class KingMove(piece: ChessPiece, target: ChessSquare, floor: Material) :
+        MoveCandidate(piece, target, floor, emptyList())
+
+    return jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) {
+        KingMove(piece, it, defaultColor(it))
+    }
 }
 
 fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
@@ -148,7 +199,7 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
         if (promotion == null) floor else MoveCandidate.BLUE
 
     fun handlePromotion(pos: ChessPosition, f: (ChessType?) -> Unit) =
-        if (pos.rank in listOf(0,7)) ChessType.PAWN.promotions.forEach(f) else f(null)
+        if (pos.rank in listOf(0, 7)) ChessType.PAWN.promotions.forEach(f) else f(null)
 
     class PawnPush(
         piece: ChessPiece, target: ChessSquare,
@@ -171,7 +222,7 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
     }
 
     val ret = mutableListOf<MoveCandidate>()
-    piece.square.board.getSquare(piece.pos.plusR(piece.side.direction))?.let {t ->
+    piece.square.board.getSquare(piece.pos.plusR(piece.side.direction))?.let { t ->
         handlePromotion(t.pos) {
             ret += PawnPush(piece, t, null, it)
         }
