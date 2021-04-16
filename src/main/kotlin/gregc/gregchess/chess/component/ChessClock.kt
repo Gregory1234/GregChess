@@ -114,13 +114,6 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) :
     fun getTimeRemaining(s: ChessSide) =
         getTime(s).getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
-    private fun timeout(side: ChessSide) {
-        if (game.board.piecesOf(!side).size == 1)
-            game.stop(ChessGame.EndReason.DrawTimeout())
-        else
-            game.stop(ChessGame.EndReason.Timeout(!side))
-    }
-
     private fun format(time: Duration): String {
         val formatter = DateTimeFormatter.ofPattern(view.getString("TimeFormat"))
         return (LocalTime.ofNanoOfDay(
@@ -152,7 +145,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) :
     }
 
     override fun update() {
-        ChessSide.values().forEach { if (getTimeRemaining(it).isNegative) timeout(it) }
+        ChessSide.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
     }
 
     override fun endTurn() {

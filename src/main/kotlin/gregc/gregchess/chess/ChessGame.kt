@@ -19,6 +19,8 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
 
     override fun toString() = "ChessGame(arena = $arena, uniqueId = $uniqueId)"
 
+    val variant = settings.variant
+
     val board: Chessboard = settings.board.getComponent(this)
 
     val clock: ChessClock? = settings.clock?.getComponent(this)
@@ -56,8 +58,6 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         get() = arena.world
 
     val scoreboard = ScoreboardManager(this)
-
-    val variant = settings.variant
 
     class AddPlayersScope(private val game: ChessGame){
 
@@ -145,8 +145,8 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
             )
             white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
             black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
-            variant.start(this)
             components.forEach { it.start() }
+            variant.start(this)
             scoreboard.start()
             started = true
             glog.mid("Started game", uniqueId)
@@ -210,6 +210,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", "emergency", null) {
             override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
         }
+        class AllPiecesLost(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.PiecesLost", "normal", winner)
 
         fun getMessage() = ConfigManager.getFormatString(
             when (winner) {

@@ -20,6 +20,7 @@ abstract class ChessVariant(val name: String) {
             this += KingOfTheHill
             this += Atomic
             this += Antichess
+            this += Horde
         }
 
         operator fun get(name: String?) = when (name) {
@@ -39,12 +40,15 @@ abstract class ChessVariant(val name: String) {
     abstract fun finishMove(move: MoveCandidate)
     abstract fun isLegal(move: MoveCandidate): Boolean
     abstract fun isInCheck(king: ChessPiece): Boolean
+    abstract fun checkForGameEnd(game: ChessGame)
+    abstract fun timeout(game: ChessGame, side: ChessSide)
+
     open fun isInCheck(game: ChessGame, side: ChessSide): Boolean {
         val king = game.board.kingOf(side)
         return king != null && isInCheck(king)
     }
 
-    abstract fun checkForGameEnd(game: ChessGame)
+    abstract fun genFEN(chess960: Boolean): FEN
     abstract val promotions: Collection<ChessType>
 
     protected fun allMoves(side: ChessSide, board: Chessboard) =
@@ -118,7 +122,7 @@ abstract class ChessVariant(val name: String) {
             if (game.board.piecesOf(!game.currentTurn)
                     .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
             ) {
-                if(isInCheck(game, !game.currentTurn))
+                if (isInCheck(game, !game.currentTurn))
                     game.stop(ChessGame.EndReason.Checkmate(game.currentTurn))
                 else
                     game.stop(ChessGame.EndReason.Stalemate())
@@ -135,8 +139,17 @@ abstract class ChessVariant(val name: String) {
                 game.stop(ChessGame.EndReason.InsufficientMaterial())
         }
 
+        override fun timeout(game: ChessGame, side: ChessSide) {
+            if (game.board.piecesOf(!side).size == 1)
+                game.stop(ChessGame.EndReason.DrawTimeout())
+            else
+                game.stop(ChessGame.EndReason.Timeout(!side))
+        }
+
         override val promotions: Collection<ChessType>
             get() = listOf(ChessType.QUEEN, ChessType.ROOK, ChessType.BISHOP, ChessType.KNIGHT)
+
+        override fun genFEN(chess960: Boolean) = if (!chess960) FEN() else FEN.generateChess960()
     }
 
     object ThreeChecks : ChessVariant("ThreeChecks") {
@@ -187,6 +200,8 @@ abstract class ChessVariant(val name: String) {
 
         override fun isInCheck(king: ChessPiece): Boolean = Normal.isInCheck(king)
 
+        override fun timeout(game: ChessGame, side: ChessSide) = Normal.timeout(game, side)
+
         override fun checkForGameEnd(game: ChessGame) {
             game.getComponent(CheckCounter::class)?.checkForGameEnd()
             Normal.checkForGameEnd(game)
@@ -194,6 +209,8 @@ abstract class ChessVariant(val name: String) {
 
         override val promotions: Collection<ChessType>
             get() = Normal.promotions
+
+        override fun genFEN(chess960: Boolean) = Normal.genFEN(chess960)
     }
 
     object KingOfTheHill : ChessVariant("KingOfTheHill") {
@@ -213,6 +230,8 @@ abstract class ChessVariant(val name: String) {
 
         override fun isInCheck(king: ChessPiece): Boolean = Normal.isInCheck(king)
 
+        override fun timeout(game: ChessGame, side: ChessSide) = Normal.timeout(game, side)
+
         override fun checkForGameEnd(game: ChessGame) {
             game.board.pieces.filter { it.type == ChessType.KING }.forEach {
                 if (it.pos.file in (3..4) && it.pos.rank in (3..4))
@@ -223,6 +242,8 @@ abstract class ChessVariant(val name: String) {
 
         override val promotions: Collection<ChessType>
             get() = Normal.promotions
+
+        override fun genFEN(chess960: Boolean) = Normal.genFEN(chess960)
     }
 
     object Atomic : ChessVariant("Atomic") {
@@ -303,15 +324,17 @@ abstract class ChessVariant(val name: String) {
             Normal.checkForGameEnd(game)
         }
 
+        override fun timeout(game: ChessGame, side: ChessSide) = Normal.timeout(game, side)
+
         override val promotions: Collection<ChessType>
             get() = Normal.promotions
+
+        override fun genFEN(chess960: Boolean) = Normal.genFEN(chess960)
     }
 
     object Antichess : ChessVariant("Antichess") {
-        class AllPiecesLost(winner: ChessSide) :
-            ChessGame.EndReason("Chess.EndReason.Antichess", "normal", winner)
-        class Stalemate(winner: ChessSide):
-            ChessGame.EndReason("Chess.EndReason.AntichessStalemate", "normal", winner)
+        class Stalemate(winner: ChessSide) :
+            ChessGame.EndReason("Chess.EndReason.Stalemate", "normal", winner)
 
         override fun start(game: ChessGame) {
         }
@@ -326,9 +349,9 @@ abstract class ChessVariant(val name: String) {
             if (move.control?.piece != null)
                 return true
             return move.board.piecesOf(move.piece.side).none { m ->
-                    m.square.bakedMoves.orEmpty().filter { Normal.isValid(it) }
-                        .any { it.control?.piece != null }
-                }
+                m.square.bakedMoves.orEmpty().filter { Normal.isValid(it) }
+                    .any { it.control?.piece != null }
+            }
         }
 
         override fun isInCheck(king: ChessPiece) = false
@@ -337,7 +360,7 @@ abstract class ChessVariant(val name: String) {
 
         override fun checkForGameEnd(game: ChessGame) {
             if (game.board.piecesOf(!game.currentTurn).isEmpty())
-                game.stop(AllPiecesLost(!game.currentTurn))
+                game.stop(ChessGame.EndReason.AllPiecesLost(!game.currentTurn))
             if (game.board.piecesOf(!game.currentTurn)
                     .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
             ) {
@@ -347,7 +370,64 @@ abstract class ChessVariant(val name: String) {
             game.board.checkForFiftyMoveRule()
         }
 
+        override fun timeout(game: ChessGame, side: ChessSide) =
+            game.stop(ChessGame.EndReason.Timeout(side))
+
         override val promotions: Collection<ChessType>
             get() = Normal.promotions + ChessType.KING
+
+        override fun genFEN(chess960: Boolean) = Normal.genFEN(chess960)
+    }
+
+    object Horde : ChessVariant("Horde") {
+        override fun start(game: ChessGame) {
+            game.board.piecesOf(ChessSide.WHITE).filter { it.pos.rank == 0 }.forEach {
+                it.force(false)
+            }
+        }
+
+        override fun finishMove(move: MoveCandidate) {
+            Normal.finishMove(move)
+            if (move.piece.type == ChessType.PAWN && move.target.pos.rank == 1) {
+                move.piece.force(false)
+            }
+        }
+
+        override fun isLegal(move: MoveCandidate): Boolean =
+            if (move.piece.side == ChessSide.BLACK)
+                Normal.isLegal(move)
+            else
+                Normal.isValid(move)
+
+        override fun isInCheck(king: ChessPiece) =
+            king.side == ChessSide.BLACK && Normal.isInCheck(king)
+
+        override fun checkForGameEnd(game: ChessGame) {
+            if (game.board.piecesOf(ChessSide.BLACK)
+                    .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
+            ) {
+                if (isInCheck(game, ChessSide.BLACK))
+                    game.stop(ChessGame.EndReason.Checkmate(ChessSide.WHITE))
+                else
+                    game.stop(ChessGame.EndReason.Stalemate())
+            }
+            if (game.board.piecesOf(ChessSide.WHITE).isEmpty())
+                game.stop(ChessGame.EndReason.AllPiecesLost(ChessSide.BLACK))
+            game.board.checkForRepetition()
+            game.board.checkForFiftyMoveRule()
+        }
+
+        override fun timeout(game: ChessGame, side: ChessSide) =
+            game.stop(ChessGame.EndReason.Timeout(side))
+
+        override val promotions: Collection<ChessType>
+            get() = Normal.promotions
+
+        override fun genFEN(chess960: Boolean): FEN {
+            val base = Normal.genFEN(chess960)
+            val state = base.boardState.split("/").dropLast(5)
+                .joinToString("/") + "/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP"
+            return base.copy(boardState = state, castlingRightsBlack = emptyList())
+        }
     }
 }

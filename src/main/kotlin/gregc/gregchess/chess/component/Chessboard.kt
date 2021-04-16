@@ -11,7 +11,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
     data class Settings(val initialFEN: FEN?, val chess960: Boolean = false) {
         fun getComponent(game: ChessGame) = Chessboard(game, this)
 
-        fun genFEN() = initialFEN ?: if (!chess960) FEN() else FEN.generateChess960()
+        fun genFEN(game: ChessGame) = initialFEN ?: game.variant.genFEN(chess960)
 
         companion object {
 
@@ -103,7 +103,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
     val moveHistory: List<MoveData>
         get() = moves
 
-    val initialFEN = settings.genFEN()
+    val initialFEN = settings.genFEN(game)
 
     var lastMove
         get() = moves.lastOrNull()
