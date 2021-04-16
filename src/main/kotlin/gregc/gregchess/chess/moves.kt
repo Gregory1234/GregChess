@@ -15,6 +15,9 @@ class MoveData(
     val display: ChessSquare = target
 ) {
 
+    override fun toString() =
+        "MoveData(piece = $piece, name = $name, standardName = $standardName)"
+
     fun undo() {
         TODO("Not yet implemented")
     }
@@ -59,7 +62,7 @@ abstract class MoveCandidate(
         control?.piece?.capture(piece.side)
         piece.move(target)
         promotion?.let { piece.promote(it) }
-        val ch = checkForChecks(piece.side, piece.square.game)
+        val ch = checkForChecks(piece.side, game)
         return MoveData(piece, origin, target, base + ch, standardBase + ch, display)
     }
 
@@ -99,6 +102,9 @@ abstract class MoveCandidate(
         display.moveMarker = null
         display.render()
     }
+
+    val board = origin.board
+    val game = origin.game
 }
 
 fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
@@ -206,7 +212,7 @@ fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
             val base = baseName()
             val standardBase = baseStandardName()
             ChessPiece.autoMove(mapOf(piece to target, rook to rookTarget))
-            val ch = checkForChecks(piece.side, piece.square.game)
+            val ch = checkForChecks(piece.side, game)
             return MoveData(piece, origin, target, base + ch, standardBase + ch, display)
         }
 
@@ -287,7 +293,7 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
             val standardBase = baseStandardName()
             control?.piece?.capture(piece.side)
             piece.move(target)
-            val ch = checkForChecks(piece.side, piece.square.game)
+            val ch = checkForChecks(piece.side, game)
             return MoveData(piece, origin, target, "$base$ch e.p.", standardBase + ch, display)
         }
     }

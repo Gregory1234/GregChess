@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.ConfigManager
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.doIn
 import gregc.gregchess.glog
 import gregc.gregchess.star
 import org.bukkit.Material
@@ -40,6 +41,7 @@ abstract class ChessVariant(val name: String) {
         val king = game.board.kingOf(side)
         return king != null && isInCheck(king)
     }
+
     abstract fun checkForGameEnd(game: ChessGame)
 
     protected fun allMoves(side: ChessSide, board: Chessboard) =
@@ -49,29 +51,29 @@ abstract class ChessVariant(val name: String) {
 
         fun pinningMoves(by: ChessSide, pos: ChessSquare) =
             allMoves(by, pos.board).filter { it.control == pos }
-                .filter { m -> m.pass.count { pos.board[it] != null && pos.board[it]?.piece !in m.help } == 1 }
+                .filter { m -> m.pass.count { pos.board[it]?.piece != null && pos.board[it]?.piece !in m.help } == 1 }
 
         fun checkingMoves(by: ChessSide, pos: ChessSquare) =
             allMoves(by, pos.board).filter { it.control == pos }.filter { m ->
-                m.needed.none { p -> m.origin.board[p]?.piece.let { it != null && it !in m.help && !(it.side == !m.piece.side && it.type == ChessType.KING) } }
+                m.needed.mapNotNull { m.board[it]?.piece }
+                    .all { it.side == !m.piece.side && it.type == ChessType.KING && it in m.help }
             }
 
         override fun start(game: ChessGame) {
         }
 
-        override fun finishMove(move: MoveCandidate) {
-            val game = move.origin.game
-            val data = move.execute()
-            game.board.lastMove?.clear()
-            game.board.lastMove = data
-            game.board.lastMove?.render()
+        override fun finishMove(move: MoveCandidate) = move.run {
+            val data = execute()
+            board.lastMove?.clear()
+            board.lastMove = data
+            board.lastMove?.render()
             glog.low("Finished move", data)
             game.nextTurn()
         }
 
         fun isValid(move: MoveCandidate): Boolean = move.run {
 
-            if (needed.any { p -> origin.board[p].let { it != null && it.piece !in help } })
+            if (needed.any { p -> board[p].let { it?.piece != null && it.piece !in help } })
                 return false
 
             if (target.piece != null && control != target && target.piece !in help)
@@ -87,8 +89,6 @@ abstract class ChessVariant(val name: String) {
         }
 
         override fun isLegal(move: MoveCandidate): Boolean = move.run {
-            val game = origin.game
-
             if (!isValid(move))
                 return false
 
@@ -230,32 +230,27 @@ abstract class ChessVariant(val name: String) {
         private fun checkingMoves(by: ChessSide, pos: ChessSquare) =
             if (nextToKing(by, pos.pos, pos.board)) emptyList() else Normal.checkingMoves(by, pos)
 
-        override fun finishMove(move: MoveCandidate) {
-            val game = move.origin.game
-            val attacking = move.control?.piece != null
-            val data = move.execute()
-            game.board.lastMove?.clear()
-            game.board.lastMove = data
-            game.board.lastMove?.render()
+        override fun finishMove(move: MoveCandidate) = move.run {
+            val attacking = control?.piece != null
+            val data = execute()
+            board.lastMove?.clear()
+            board.lastMove = data
+            board.lastMove?.render()
             if (attacking) {
-                (-1..1).star((-1..1)) { x, y ->
-                    game.board[move.target.pos + Pair(x, y)]?.piece?.let {
-                        if (it.type != ChessType.PAWN || (x == 0 && y == 0))
-                            it.capture(move.piece.side)
-                    }
+                target.neighbours().mapNotNull { it.piece }.forEach {
+                    if (it.type != ChessType.PAWN)
+                        it.capture(piece.side)
                 }
-                game.arena.world.createExplosion(
-                    game.board.renderer.getPieceLoc(move.piece.pos).toLocation(game.arena.world),
-                    4.0f, false, false
-                )
+                piece.capture(piece.side)
+                board.renderer.getPieceLoc(piece.pos).doIn(game.arena.world) { world, l ->
+                    world.createExplosion(l, 4.0f, false, false)
+                }
             }
             glog.low("Finished move", data)
             game.nextTurn()
         }
 
         override fun isLegal(move: MoveCandidate): Boolean = move.run {
-            val game = origin.game
-
             if (!Normal.isValid(move))
                 return false
 

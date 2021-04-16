@@ -26,7 +26,7 @@ class ChessPiece(
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() =
-        "ChessPiece(uniqueId = $uniqueId, pos = $pos, type = $type, side = $side)"
+        "ChessPiece(uniqueId = $uniqueId, pos = $pos, type = $type, side = $side, hasMoved = $hasMoved)"
 
     private val game
         get() = square.game

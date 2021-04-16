@@ -63,7 +63,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
         }
 
         fun playPieceSound(pos: ChessPosition, sound: Sound) {
-            getPieceLoc(pos).toLocation(board.game.world).playSound(sound)
+            getPieceLoc(pos).doIn(board.game.world) { world, l -> world.playSound(l, sound) }
         }
 
         fun fillFloor(pos: ChessPosition, floor: Material) {
@@ -172,9 +172,10 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
     operator fun get(pieceUniqueId: UUID) = pieces.firstOrNull { it.uniqueId == pieceUniqueId }
 
     fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
-    fun piecesOf(side: ChessSide, type: ChessType) = pieces.filter { it.side == side && it.type == type }
+    fun piecesOf(side: ChessSide, type: ChessType) =
+        pieces.filter { it.side == side && it.type == type }
 
-    fun kingOf(side: ChessSide) = piecesOf(side).firstOrNull {it.type == ChessType.KING}
+    fun kingOf(side: ChessSide) = piecesOf(side).firstOrNull { it.type == ChessType.KING }
 
     operator fun plusAssign(captured: ChessPiece.Captured) {
         captured.render()

@@ -268,4 +268,6 @@ data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
         moveMarker = null
         board.renderer.fillFloor(pos, floor)
     }
+
+    fun neighbours() = pos.neighbours().mapNotNull { this.board[it] }
 }

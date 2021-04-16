@@ -60,8 +60,9 @@ var Player.playerData: PlayerData
         scoreboard = d.scoreboard
     }
 
-fun Location.playSound(s: Sound, volume: Float = 3.0f, pitch: Float = 1.0f) =
-    world?.playSound(this, s, volume, pitch)
+fun World.playSound(l: Location, s: Sound) = playSound(l, s, 3.0f, 1.0f)
+
+fun <R> Loc.doIn(w: World, f: (World, Location) -> R) = f(w, toLocation(w))
 
 
 abstract class Arena(val name: String, private val resourcePackPath: String? = null) {
