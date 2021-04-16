@@ -8,6 +8,7 @@ import gregc.gregchess.star
 import org.bukkit.Material
 
 abstract class ChessVariant(val name: String) {
+
     companion object {
         private val normal = Normal
 
@@ -18,6 +19,7 @@ abstract class ChessVariant(val name: String) {
             this += ThreeChecks
             this += KingOfTheHill
             this += Atomic
+            this += Antichess
         }
 
         operator fun get(name: String?) = when (name) {
@@ -43,6 +45,7 @@ abstract class ChessVariant(val name: String) {
     }
 
     abstract fun checkForGameEnd(game: ChessGame)
+    abstract val promotions: Collection<ChessType>
 
     protected fun allMoves(side: ChessSide, board: Chessboard) =
         board.piecesOf(side).flatMap { board.getMoves(it.pos) }
@@ -114,7 +117,12 @@ abstract class ChessVariant(val name: String) {
         override fun checkForGameEnd(game: ChessGame) {
             if (game.board.piecesOf(!game.currentTurn)
                     .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
-            ) game.stop(ChessGame.EndReason.Checkmate(game.currentTurn))
+            ) {
+                if(isInCheck(game, !game.currentTurn))
+                    game.stop(ChessGame.EndReason.Checkmate(game.currentTurn))
+                else
+                    game.stop(ChessGame.EndReason.Stalemate())
+            }
             game.board.checkForRepetition()
             game.board.checkForFiftyMoveRule()
             val whitePieces = game.board.piecesOf(ChessSide.WHITE)
@@ -126,6 +134,9 @@ abstract class ChessVariant(val name: String) {
             if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
                 game.stop(ChessGame.EndReason.InsufficientMaterial())
         }
+
+        override val promotions: Collection<ChessType>
+            get() = listOf(ChessType.QUEEN, ChessType.ROOK, ChessType.BISHOP, ChessType.KNIGHT)
     }
 
     object ThreeChecks : ChessVariant("ThreeChecks") {
@@ -181,6 +192,8 @@ abstract class ChessVariant(val name: String) {
             Normal.checkForGameEnd(game)
         }
 
+        override val promotions: Collection<ChessType>
+            get() = Normal.promotions
     }
 
     object KingOfTheHill : ChessVariant("KingOfTheHill") {
@@ -207,6 +220,9 @@ abstract class ChessVariant(val name: String) {
             }
             Normal.checkForGameEnd(game)
         }
+
+        override val promotions: Collection<ChessType>
+            get() = Normal.promotions
     }
 
     object Atomic : ChessVariant("Atomic") {
@@ -286,5 +302,52 @@ abstract class ChessVariant(val name: String) {
                 game.stop(AtomicEndReason(game.currentTurn))
             Normal.checkForGameEnd(game)
         }
+
+        override val promotions: Collection<ChessType>
+            get() = Normal.promotions
+    }
+
+    object Antichess : ChessVariant("Antichess") {
+        class AllPiecesLost(winner: ChessSide) :
+            ChessGame.EndReason("Chess.EndReason.Antichess", "normal", winner)
+        class Stalemate(winner: ChessSide):
+            ChessGame.EndReason("Chess.EndReason.AntichessStalemate", "normal", winner)
+
+        override fun start(game: ChessGame) {
+        }
+
+        override fun finishMove(move: MoveCandidate) = Normal.finishMove(move)
+
+        override fun isLegal(move: MoveCandidate): Boolean {
+            if (!Normal.isValid(move))
+                return false
+            if (move.piece.type == ChessType.KING && move.help.isNotEmpty())
+                return false
+            if (move.control?.piece != null)
+                return true
+            return move.board.piecesOf(move.piece.side).none { m ->
+                    m.square.bakedMoves.orEmpty().filter { Normal.isValid(it) }
+                        .any { it.control?.piece != null }
+                }
+        }
+
+        override fun isInCheck(king: ChessPiece) = false
+
+        override fun isInCheck(game: ChessGame, side: ChessSide) = false
+
+        override fun checkForGameEnd(game: ChessGame) {
+            if (game.board.piecesOf(!game.currentTurn).isEmpty())
+                game.stop(AllPiecesLost(!game.currentTurn))
+            if (game.board.piecesOf(!game.currentTurn)
+                    .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
+            ) {
+                game.stop(Stalemate(!game.currentTurn))
+            }
+            game.board.checkForRepetition()
+            game.board.checkForFiftyMoveRule()
+        }
+
+        override val promotions: Collection<ChessType>
+            get() = Normal.promotions + ChessType.KING
     }
 }

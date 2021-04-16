@@ -219,6 +219,8 @@ Chess:
     ThreeChecks: "three checks"
     KingOfTheHill: "king of the hill"
     Atomic: "explosion"
+    Antichess: "all pieces lost"
+    AntichessStalemate: "stalemate"
 
 Component:
   Scoreboard:

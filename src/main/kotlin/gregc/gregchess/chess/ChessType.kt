@@ -53,8 +53,4 @@ enum class ChessType(
         get() = view.getString("Name")
     val char
         get() = view.getChar("Char")
-
-    val promotions
-        get() = if (this == PAWN) listOf(QUEEN, ROOK, BISHOP, KNIGHT)
-        else emptyList()
 }

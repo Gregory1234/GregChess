@@ -268,7 +268,7 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
         if (promotion == null) floor else MoveCandidate.BLUE
 
     fun handlePromotion(pos: ChessPosition, f: (ChessType?) -> Unit) =
-        if (pos.rank in listOf(0, 7)) ChessType.PAWN.promotions.forEach(f) else f(null)
+        if (pos.rank in listOf(0, 7)) piece.square.game.variant.promotions.forEach(f) else f(null)
 
     class PawnPush(
         piece: ChessPiece, target: ChessSquare,
