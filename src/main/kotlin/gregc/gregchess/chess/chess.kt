@@ -245,10 +245,11 @@ data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
 
     private val baseFloor =
         if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
+    var variantMarker: Material? = null
     var previousMoveMarker: Material? = null
     var moveMarker: Material? = null
     private val floor
-        get() = moveMarker ?: previousMoveMarker ?: baseFloor
+        get() = moveMarker ?: previousMoveMarker ?: variantMarker ?: baseFloor
 
     val board
         get() = game.board
