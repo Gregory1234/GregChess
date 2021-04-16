@@ -49,11 +49,11 @@ abstract class ChessVariant(val name: String) {
 
         fun pinningMoves(by: ChessSide, pos: ChessSquare) =
             allMoves(by, pos.board).filter { it.control == pos }
-                .filter { m -> m.pass.count { pos.board[it] != null && pos.board[it] !in m.help } == 1 }
+                .filter { m -> m.pass.count { pos.board[it] != null && pos.board[it]?.piece !in m.help } == 1 }
 
         fun checkingMoves(by: ChessSide, pos: ChessSquare) =
             allMoves(by, pos.board).filter { it.control == pos }.filter { m ->
-                m.needed.none { p -> m.origin.board[p].let { it != null && it !in m.help && !(it.side == !m.piece.side && it.type == ChessType.KING) } }
+                m.needed.none { p -> m.origin.board[p]?.piece.let { it != null && it !in m.help && !(it.side == !m.piece.side && it.type == ChessType.KING) } }
             }
 
         override fun start(game: ChessGame) {
@@ -71,7 +71,7 @@ abstract class ChessVariant(val name: String) {
 
         fun isValid(move: MoveCandidate): Boolean = move.run {
 
-            if (needed.any { p -> origin.board[p].let { it != null && it !in help } })
+            if (needed.any { p -> origin.board[p].let { it != null && it.piece !in help } })
                 return false
 
             if (target.piece != null && control != target && target.piece !in help)
@@ -93,7 +93,7 @@ abstract class ChessVariant(val name: String) {
                 return false
 
             if (piece.type == ChessType.KING) {
-                return (pass + target.pos).mapNotNull { game.board.getSquare(it) }.all {
+                return (pass + target.pos).mapNotNull { game.board[it] }.all {
                     checkingMoves(!piece.side, it).isEmpty()
                 }
             }
@@ -190,7 +190,7 @@ abstract class ChessVariant(val name: String) {
 
         override fun start(game: ChessGame) {
             (3..4).star((3..4)) { x, y ->
-                game.board.getSquare(ChessPosition(x, y))?.variantMarker = Material.PURPLE_CONCRETE
+                game.board[ChessPosition(x, y)]?.variantMarker = Material.PURPLE_CONCRETE
             }
         }
 
@@ -239,7 +239,7 @@ abstract class ChessVariant(val name: String) {
             game.board.lastMove?.render()
             if (attacking) {
                 (-1..1).star((-1..1)) { x, y ->
-                    game.board[move.target.pos + Pair(x, y)]?.let {
+                    game.board[move.target.pos + Pair(x, y)]?.piece?.let {
                         if (it.type != ChessType.PAWN || (x == 0 && y == 0))
                             it.capture(move.piece.side)
                     }
@@ -263,7 +263,7 @@ abstract class ChessVariant(val name: String) {
                 if (move.control?.piece != null)
                     return false
 
-                return (pass + target.pos).mapNotNull { game.board.getSquare(it) }.all {
+                return (pass + target.pos).mapNotNull { game.board[it] }.all {
                     checkingMoves(!piece.side, it).isEmpty()
                 }
             }

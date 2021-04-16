@@ -104,10 +104,9 @@ abstract class MoveCandidate(
 fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
     val game = target.game
     val pieces = game.board.pieces.filter { it.side == piece.side && it.type == piece.type }
-    val consideredPieces =
-        pieces.filter { p ->
-            p.square.bakedMoves.orEmpty().any { it.target == target && game.variant.isLegal(it) }
-        }
+    val consideredPieces = pieces.filter { p ->
+        p.square.bakedMoves.orEmpty().any { it.target == target && game.variant.isLegal(it) }
+    }
     return when {
         consideredPieces.size == 1 -> ""
         consideredPieces.count { it.pos.file == piece.pos.file } == 1 -> piece.pos.fileStr
@@ -131,16 +130,20 @@ fun checkForChecks(side: ChessSide, game: ChessGame): String {
 fun defaultColor(square: ChessSquare) =
     if (square.piece == null) MoveCandidate.GREEN else MoveCandidate.RED
 
-inline fun jumps(piece: ChessPiece, dirs: Collection<Pair<Int, Int>>, f: (ChessSquare) -> MoveCandidate) =
+inline fun jumps(
+    piece: ChessPiece,
+    dirs: Collection<Pair<Int, Int>>,
+    f: (ChessSquare) -> MoveCandidate
+) =
     dirs.map { piece.pos + it }.filter { it.isValid() }
-        .mapNotNull { piece.square.board.getSquare(it) }.map(f)
+        .mapNotNull { piece.square.board[it] }.map(f)
 
 inline fun rays(
     piece: ChessPiece, dirs: Collection<Pair<Int, Int>>,
     f: (Int, Pair<Int, Int>, ChessSquare) -> MoveCandidate
 ) = dirs.flatMap { dir ->
     ChessPositionSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
-        piece.square.board.getSquare(pos)?.let { f(index + 1, dir, it) }
+        piece.square.board[pos]?.let { f(index + 1, dir, it) }
     }
 }
 
@@ -229,13 +232,13 @@ fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
                     val pass: List<ChessPosition>
                     val needed: List<ChessPosition>
                     if (piece.pos.file > rook.pos.file) {
-                        target = game.board.getSquare(piece.pos.copy(file = 2))!!
-                        rookTarget = game.board.getSquare(piece.pos.copy(file = 3))!!
+                        target = game.board[piece.pos.copy(file = 2)]!!
+                        rookTarget = game.board[piece.pos.copy(file = 3)]!!
                         pass = between(piece.pos.file, 2).map { piece.pos.copy(file = it) }
                         needed = (rook.pos.file..3).map { piece.pos.copy(file = it) }
                     } else {
-                        target = game.board.getSquare(piece.pos.copy(file = 6))!!
-                        rookTarget = game.board.getSquare(piece.pos.copy(file = 5))!!
+                        target = game.board[piece.pos.copy(file = 6)]!!
+                        rookTarget = game.board[piece.pos.copy(file = 5)]!!
                         pass = between(piece.pos.file, 6).map { piece.pos.copy(file = it) }
                         needed = (rook.pos.file..5).map { piece.pos.copy(file = it) }
                     }
@@ -290,29 +293,29 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
     }
 
     val ret = mutableListOf<MoveCandidate>()
-    piece.square.board.getSquare(piece.pos.plusR(piece.side.direction))?.let { t ->
+    piece.square.board[piece.pos.plusR(piece.side.direction)]?.let { t ->
         handlePromotion(t.pos) {
             ret += PawnPush(piece, t, null, it)
         }
     }
     if (!piece.hasMoved)
-        piece.square.board.getSquare(piece.pos.plusR(2 * piece.side.direction))?.let { t ->
+        piece.square.board[piece.pos.plusR(2 * piece.side.direction)]?.let { t ->
             handlePromotion(t.pos) {
                 ret += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), it)
             }
         }
     for (s in listOf(-1, 1)) {
-        piece.square.board.getSquare(piece.pos + Pair(s, piece.side.direction))?.let { t ->
+        piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let { t ->
             handlePromotion(t.pos) {
                 ret += PawnCapture(piece, t, it)
             }
         }
-        val p = piece.square.board[piece.pos.plusF(s)]
+        val p = piece.square.board[piece.pos.plusF(s)]?.piece
         val lm = piece.square.board.lastMove
         if (p?.type == ChessType.PAWN
             && lm?.piece == p && abs(lm.origin.pos.rank - lm.target.pos.rank) == 2
         ) {
-            piece.square.board.getSquare(piece.pos + Pair(s, piece.side.direction))?.let {
+            piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let {
                 ret += EnPassantCapture(piece, it, p.square)
             }
         }

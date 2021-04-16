@@ -90,17 +90,13 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
     val pieces: List<ChessPiece>
         get() = boardState.values.mapNotNull { it.piece }
 
-    operator fun get(pos: ChessPosition) = getSquare(pos)?.piece
-
     operator fun plusAssign(piece: ChessPiece) {
         piece.square.piece = piece
     }
 
+    operator fun get(pos: ChessPosition) = boardState[pos]
+
     operator fun get(loc: Loc) = this[renderer.getPos(loc)]
-
-    fun getSquare(pos: ChessPosition) = boardState[pos]
-
-    fun getSquare(loc: Loc) = getSquare(renderer.getPos(loc))
 
     private val moves: MutableList<MoveData> = mutableListOf()
 
@@ -208,14 +204,14 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
         fen.forEachSquare { pos, tr ->
             if (tr != null) {
                 val (t, s, hm) = tr
-                this += ChessPiece(t, s, getSquare(pos)!!, hm)
+                this += ChessPiece(t, s, this[pos]!!, hm)
             }
         }
         if (fen.enPassantSquare != null) {
             val pos = fen.enPassantSquare
-            val piece = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
-            val origin = getSquare(piece.pos.plusR(-2 * piece.side.direction))!!
-            val target = piece.square
+            val target = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
+            val piece = target.piece!!
+            val origin = this[piece.pos.plusR(-2 * piece.side.direction)]!!
             lastMove = MoveData(piece, origin, target, "", "")
         }
 
@@ -243,7 +239,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
                 var e = 0
                 buildString {
                     for (i in 0..7) {
-                        val piece = this@Chessboard[ChessPosition(i, it)]
+                        val piece = this@Chessboard[ChessPosition(i, it)]?.piece
                         if (piece == null)
                             e++
                         else {

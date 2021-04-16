@@ -116,7 +116,7 @@ class GregChess : JavaPlugin(), Listener {
                         p.game.board.renderer.getPos(Loc.fromLocation(player.location))
                     else
                         cWrongArgument { ChessPosition.parseFromString(args[1]) }
-                    p.game.board[pos]?.capture(p.side)
+                    p.game.board[pos]?.piece?.capture(p.side)
                     p.game.board.updateMoves()
                     player.sendMessage(ConfigManager.getString("Message.BoardOpDone"))
                 }
@@ -128,9 +128,9 @@ class GregChess : JavaPlugin(), Listener {
                     val game = p.game
                     cWrongArgument {
                         val square = if (args.size == 3)
-                            game.board.getSquare(Loc.fromLocation(player.location))!!
+                            game.board[Loc.fromLocation(player.location)]!!
                         else
-                            game.board.getSquare(ChessPosition.parseFromString(args[3]))!!
+                            game.board[ChessPosition.parseFromString(args[3])]!!
                         val piece = ChessType.valueOf(args[2])
                         square.piece?.capture(p.side)
                         square.piece = ChessPiece(piece, ChessSide.valueOf(args[1]), square)
@@ -145,9 +145,9 @@ class GregChess : JavaPlugin(), Listener {
                     val p = cNotNull(ChessManager[player], "NotInGame.You")
                     val game = p.game
                     cWrongArgument {
-                        game.board[ChessPosition.parseFromString(args[2])]?.capture(p.side)
-                        game.board[ChessPosition.parseFromString(args[1])]
-                            ?.move(game.board.getSquare(ChessPosition.parseFromString(args[2]))!!)
+                        game.board[ChessPosition.parseFromString(args[2])]?.piece?.capture(p.side)
+                        game.board[ChessPosition.parseFromString(args[1])]?.piece
+                            ?.move(game.board[ChessPosition.parseFromString(args[2])]!!)
                         game.board.updateMoves()
                         player.sendMessage(ConfigManager.getString("Message.BoardOpDone"))
                     }

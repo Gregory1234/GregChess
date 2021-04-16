@@ -20,7 +20,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
 
         fun pickUp(loc: Loc) {
             if (!game.board.renderer.getPos(loc).isValid()) return
-            val piece = game.board[loc] ?: return
+            val piece = game.board[loc]?.piece ?: return
             if (piece.side != side) return
             piece.square.moveMarker = Material.YELLOW_CONCRETE
             piece.square.render()
@@ -32,7 +32,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
         }
 
         fun makeMove(loc: Loc) {
-            val newSquare = game.board.getSquare(loc) ?: return
+            val newSquare = game.board[loc] ?: return
             val piece = held ?: return
             val moves = heldMoves ?: return
             if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
@@ -92,9 +92,6 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
     abstract fun sendMessage(msg: String)
 
     abstract fun sendTitle(title: String, subtitle: String = "")
-
-    private val pieces
-        get() = game.board.piecesOf(side)
 
     val opponent
         get() = game[!side]
