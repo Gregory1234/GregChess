@@ -254,7 +254,7 @@ fun cPlayer(p: CommandSender) {
     cRequire(p is Player, "NotPlayer")
 }
 
-fun <T> cWrongArgument(block: () -> T): T = try {
+inline fun <T> cWrongArgument(block: () -> T): T = try {
     block()
 } catch (e: IllegalArgumentException) {
     e.printStackTrace()
@@ -283,7 +283,7 @@ fun Int.towards(goal: Int, amount: Int) =
     if (goal < this) this - amount
     else this + amount
 
-fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> =
+inline fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> =
     flatMap { x -> other.map { y -> function(x, y) } }
 
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)

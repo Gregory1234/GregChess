@@ -131,11 +131,11 @@ fun checkForChecks(side: ChessSide, game: ChessGame): String {
 fun defaultColor(square: ChessSquare) =
     if (square.piece == null) MoveCandidate.GREEN else MoveCandidate.RED
 
-fun jumps(piece: ChessPiece, dirs: Collection<Pair<Int, Int>>, f: (ChessSquare) -> MoveCandidate) =
+inline fun jumps(piece: ChessPiece, dirs: Collection<Pair<Int, Int>>, f: (ChessSquare) -> MoveCandidate) =
     dirs.map { piece.pos + it }.filter { it.isValid() }
         .mapNotNull { piece.square.board.getSquare(it) }.map(f)
 
-fun rays(
+inline fun rays(
     piece: ChessPiece, dirs: Collection<Pair<Int, Int>>,
     f: (Int, Pair<Int, Int>, ChessSquare) -> MoveCandidate
 ) = dirs.flatMap { dir ->
