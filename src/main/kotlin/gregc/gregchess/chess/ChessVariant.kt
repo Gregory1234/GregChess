@@ -42,16 +42,12 @@ abstract class ChessVariant(val name: String) {
 
         private fun pinningMoves(by: ChessSide, pos: ChessSquare) =
             allMoves(by, pos.board).filter { it.control == pos }
-                .filter { m -> m.pass.count { pos.board[it] != null } == 1 }
-
-        private fun checkingPotentialMoves(by: ChessSide, pos: ChessSquare) =
-            allMoves(by, pos.board).filter { it.target == pos }
-                .filter { it.control != null }
-                .filter { m -> m.pass.all { pos.board[it] == null } }
+                .filter { m -> m.pass.count { pos.board[it] != null && pos.board[it] !in m.help } == 1 }
 
         private fun checkingMoves(by: ChessSide, pos: ChessSquare) =
-            allMoves(by, pos.board).filter { it.control == pos }
-                .filter { m -> m.pass.all { pos.board[it] == null } }
+            allMoves(by, pos.board).filter { it.control == pos }.filter { m ->
+                m.needed.none { p -> m.origin.board[p].let { it != null && it !in m.help && !(it.side == !m.piece.side && it.type == ChessType.KING) } }
+            }
 
         override fun start(game: ChessGame) {
         }
@@ -68,7 +64,7 @@ abstract class ChessVariant(val name: String) {
 
         private fun isValid(move: MoveCandidate): Boolean = move.run {
 
-            if (needed.any { p -> origin.board[p].let { it != null && it !in help }})
+            if (needed.any { p -> origin.board[p].let { it != null && it !in help } })
                 return false
 
             if (target.piece != null && control != target && target.piece !in help)
@@ -91,7 +87,7 @@ abstract class ChessVariant(val name: String) {
 
             if (piece.type == ChessType.KING) {
                 return (pass + target.pos).mapNotNull { game.board.getSquare(it) }.all {
-                    checkingPotentialMoves(!piece.side, it).isEmpty()
+                    checkingMoves(!piece.side, it).isEmpty()
                 }
             }
 

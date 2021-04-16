@@ -196,7 +196,7 @@ fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
         pass: Collection<ChessPosition>, needed: Collection<ChessPosition>, display: ChessSquare
     ) : MoveCandidate(
         piece, target,
-        BLUE, pass, help = listOf(rook), needed = needed,
+        BLUE, pass, help = listOf(piece, rook), needed = needed,
         control = null, display = display
     ) {
         override fun execute(): MoveData {
@@ -232,19 +232,18 @@ fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
                         target = game.board.getSquare(piece.pos.copy(file = 2))!!
                         rookTarget = game.board.getSquare(piece.pos.copy(file = 3))!!
                         pass = between(piece.pos.file, 2).map { piece.pos.copy(file = it) }
-                        needed =
-                            pass + ((rook.pos.file..3) - piece.pos.file).map { piece.pos.copy(file = it) }
+                        needed = (rook.pos.file..3).map { piece.pos.copy(file = it) }
                     } else {
                         target = game.board.getSquare(piece.pos.copy(file = 6))!!
                         rookTarget = game.board.getSquare(piece.pos.copy(file = 5))!!
                         pass = between(piece.pos.file, 6).map { piece.pos.copy(file = it) }
-                        needed =
-                            pass + ((rook.pos.file..5) - piece.pos.file).map { piece.pos.copy(file = it) }
+                        needed = (rook.pos.file..5).map { piece.pos.copy(file = it) }
                     }
                     castles += Castles(
                         piece, target,
                         rook, rookTarget,
-                        pass, needed, if (game.settings.board.chess960) rook.square else target
+                        pass + piece.pos, pass + needed,
+                        if (game.settings.board.chess960) rook.square else target
                     )
                 }
             }
