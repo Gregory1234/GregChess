@@ -135,7 +135,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
         if (!silent) {
             sendTitle(ConfigManager.getString("Title.YourTurn"))
         }
-        val king = game.board.piecesOf(side).firstOrNull {it.type == ChessType.KING}
+        val king = game.board.kingOf(side)
         if(king != null && game.variant.isInCheck(king))
             announceInCheck()
     }

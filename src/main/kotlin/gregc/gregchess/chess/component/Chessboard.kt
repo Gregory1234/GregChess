@@ -176,6 +176,9 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
     operator fun get(pieceUniqueId: UUID) = pieces.firstOrNull { it.uniqueId == pieceUniqueId }
 
     fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
+    fun piecesOf(side: ChessSide, type: ChessType) = pieces.filter { it.side == side && it.type == type }
+
+    fun kingOf(side: ChessSide) = piecesOf(side).firstOrNull {it.type == ChessType.KING}
 
     operator fun plusAssign(captured: ChessPiece.Captured) {
         captured.render()
@@ -231,9 +234,8 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
 
     fun getFEN(): FEN {
         fun castling(side: ChessSide) =
-            if (pieces.any { it.type == ChessType.KING && it.side == side && !it.hasMoved })
-                pieces.filter { it.type == ChessType.ROOK && it.side == side && !it.hasMoved }
-                    .map { it.pos.file }
+            if (kingOf(side)?.hasMoved == false)
+                piecesOf(side, ChessType.ROOK).filter { !it.hasMoved }.map { it.pos.file }
             else emptyList()
 
         return FEN(

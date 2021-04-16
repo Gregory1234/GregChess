@@ -119,7 +119,7 @@ fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
 fun checkForChecks(side: ChessSide, game: ChessGame): String {
     game.board.updateMoves()
     val pieces = game.board.piecesOf(!side)
-    val inCheck = game.variant.isInCheck(pieces.first { it.type == ChessType.KING })
+    val inCheck = game.variant.isInCheck(game, !side)
     val noMoves = pieces.all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
     return when {
         inCheck && noMoves -> "#"
@@ -217,8 +217,8 @@ fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
     val game = piece.square.game
 
     if (!piece.hasMoved)
-        game.board.piecesOf(piece.side)
-            .filter { it.type == ChessType.ROOK && !it.hasMoved && it.pos.rank == piece.pos.rank }
+        game.board.piecesOf(piece.side, ChessType.ROOK)
+            .filter { !it.hasMoved && it.pos.rank == piece.pos.rank }
             .forEach { rook ->
 
                 if (game.settings.simpleCastling) {

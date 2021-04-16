@@ -36,6 +36,10 @@ abstract class ChessVariant(val name: String) {
     abstract fun finishMove(move: MoveCandidate)
     abstract fun isLegal(move: MoveCandidate): Boolean
     abstract fun isInCheck(king: ChessPiece): Boolean
+    open fun isInCheck(game: ChessGame, side: ChessSide): Boolean {
+        val king = game.board.kingOf(side)
+        return king != null && isInCheck(king)
+    }
     abstract fun checkForGameEnd(game: ChessGame)
 
     protected fun allMoves(side: ChessSide, board: Chessboard) =
@@ -94,9 +98,7 @@ abstract class ChessVariant(val name: String) {
                 }
             }
 
-            val myKing =
-                game.tryOrStopNull(
-                    game.board.piecesOf(piece.side).find { it.type == ChessType.KING })
+            val myKing = game.tryOrStopNull(game.board.kingOf(piece.side))
             val checks = checkingMoves(!piece.side, myKing.square)
             if (checks.any { target.pos !in it.pass && target != it.origin })
                 return false
@@ -142,9 +144,7 @@ abstract class ChessVariant(val name: String) {
             }
 
             override fun endTurn() {
-                if (game.variant.isInCheck(
-                        game.board.piecesOf(!game.currentTurn).first { it.type == ChessType.KING })
-                )
+                if (game.variant.isInCheck(game, !game.currentTurn))
                     when (!game.currentTurn) {
                         ChessSide.WHITE -> {
                             whiteChecks++
@@ -217,10 +217,10 @@ abstract class ChessVariant(val name: String) {
         }
 
         private fun nextToKing(side: ChessSide, pos: ChessPosition, board: Chessboard): Boolean =
-            board.pieces.any { it.type == ChessType.KING && it.side == side && it.pos in pos.neighbours() }
+            pos in board.kingOf(side)?.pos?.neighbours().orEmpty()
 
         private fun kingHug(board: Chessboard): Boolean {
-            val wk = board.piecesOf(ChessSide.WHITE).firstOrNull { it.type == ChessType.KING }?.pos
+            val wk = board.kingOf(ChessSide.WHITE)?.pos
             return wk != null && nextToKing(ChessSide.BLACK, wk, board)
         }
 
@@ -268,8 +268,7 @@ abstract class ChessVariant(val name: String) {
                 }
             }
 
-            val myKing =
-                game.board.piecesOf(piece.side).find { it.type == ChessType.KING } ?: return false
+            val myKing = game.board.kingOf(piece.side) ?: return false
 
             if (move.control?.piece != null)
                 if (myKing.pos in move.target.pos.neighbours())
@@ -288,7 +287,7 @@ abstract class ChessVariant(val name: String) {
             checkingMoves(!king.side, king.square).isNotEmpty()
 
         override fun checkForGameEnd(game: ChessGame) {
-            if (game.board.piecesOf(!game.currentTurn).none { it.type == ChessType.KING })
+            if (game.board.kingOf(!game.currentTurn) == null)
                 game.stop(AtomicEndReason(game.currentTurn))
             Normal.checkForGameEnd(game)
         }
