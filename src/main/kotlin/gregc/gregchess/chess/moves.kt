@@ -12,15 +12,13 @@ class MoveData(
     val target: ChessSquare,
     val name: String,
     val standardName: String,
-    val display: ChessSquare = target
+    val captured: Boolean,
+    val display: ChessSquare = target,
+    val undo: () -> Unit
 ) {
 
     override fun toString() =
         "MoveData(piece = $piece, name = $name, standardName = $standardName)"
-
-    fun undo() {
-        TODO("Not yet implemented")
-    }
 
     fun clear() {
         origin.previousMoveMarker = null
@@ -59,11 +57,21 @@ abstract class MoveCandidate(
     open fun execute(): MoveData {
         val base = baseName()
         val standardBase = baseStandardName()
-        control?.piece?.capture(piece.side)
+        val hasMoved = piece.hasMoved
+        val ct = control?.piece
+        val captured = ct?.capture(piece.side)
         piece.move(target)
         promotion?.let { piece.promote(it) }
+        val hmc =
+            if (piece.type == ChessType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
         val ch = checkForChecks(piece.side, game)
-        return MoveData(piece, origin, target, base + ch, standardBase + ch, display)
+        return MoveData(piece, origin, target, base + ch, standardBase + ch, ct != null, display) {
+            hmc()
+            promotion?.let { piece.square.piece?.demote(piece) }
+            piece.move(origin)
+            captured?.let { ct.resurrect(it) }
+            piece.force(hasMoved)
+        }
     }
 
     open fun baseName() = buildString {
@@ -211,9 +219,16 @@ fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
         override fun execute(): MoveData {
             val base = baseName()
             val standardBase = baseStandardName()
+            val rookOrigin = rook.square
             ChessPiece.autoMove(mapOf(piece to target, rook to rookTarget))
             val ch = checkForChecks(piece.side, game)
-            return MoveData(piece, origin, target, base + ch, standardBase + ch, display)
+            val hmc = board.increaseMovesSinceLastCapture()
+            return MoveData(piece, origin, target, base + ch, standardBase + ch, false, display) {
+                hmc()
+                ChessPiece.autoMove(mapOf(piece to origin, rook to rookOrigin))
+                piece.force(false)
+                rook.force(false)
+            }
         }
 
         override fun baseName() = baseStandardName()
@@ -291,10 +306,21 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
         override fun execute(): MoveData {
             val base = baseName()
             val standardBase = baseStandardName()
-            control?.piece?.capture(piece.side)
+            val hasMoved = piece.hasMoved
+            val ct = control?.piece
+            val captured = ct?.capture(piece.side)
             piece.move(target)
             val ch = checkForChecks(piece.side, game)
-            return MoveData(piece, origin, target, "$base$ch e.p.", standardBase + ch, display)
+            val hmc = board.resetMovesSinceLastCapture()
+            return MoveData(
+                piece, origin, target, "$base$ch e.p.", standardBase + ch,
+                true, display
+            ) {
+                hmc()
+                piece.move(origin)
+                captured?.let { ct.resurrect(it) }
+                piece.force(hasMoved)
+            }
         }
     }
 

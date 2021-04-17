@@ -132,7 +132,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
             game.forEachPlayer { p -> p.sendMessage("$num $wLast  | $bLast") }
             fullMoveCounter++
         }
-        addBoardHash()
+        addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
     }
 
     override fun stop() {
@@ -213,7 +213,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
             val target = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
             val piece = target.piece!!
             val origin = this[piece.pos.plusR(-2 * piece.side.direction)]!!
-            lastMove = MoveData(piece, origin, target, "", "")
+            lastMove = MoveData(piece, origin, target, "", "", true) {}
         }
 
         movesSinceLastCapture = fen.halfmoveClock
@@ -226,7 +226,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
             updateMoves()
 
         boardHashes.clear()
-        addBoardHash()
+        addBoardHash(fen)
     }
 
     fun getFEN(): FEN {
@@ -270,10 +270,8 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
         )
     }
 
-    private fun getBoardHash() = getFEN().toHash()
-
     fun checkForRepetition() {
-        if (boardHashes[getBoardHash().hashCode()] ?: 0 >= 3)
+        if (boardHashes[getFEN().copy(currentTurn = !game.currentTurn).hashed()] ?: 0 >= 3)
             game.stop(ChessGame.EndReason.Repetition())
     }
 
@@ -282,10 +280,10 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
             game.stop(ChessGame.EndReason.FiftyMoves())
     }
 
-    private fun addBoardHash(): Int {
-        val hash = getBoardHash()
-        boardHashes[hash.hashCode()] = (boardHashes[hash.hashCode()] ?: 0).plus(1)
-        return boardHashes[hash.hashCode()]!!
+    private fun addBoardHash(fen: FEN): Int {
+        val hash = fen.hashed()
+        boardHashes[hash] = (boardHashes[hash] ?: 0) + 1
+        return boardHashes[hash]!!
     }
 
     fun resetMovesSinceLastCapture(): () -> Unit {
@@ -306,10 +304,9 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
     fun undoLastMove() {
         lastMove?.let {
             it.clear()
-            val hash = getBoardHash()
-            if (boardHashes[hash.hashCode()] != null)
-                boardHashes[hash.hashCode()] = boardHashes[hash.hashCode()]!! - 1
-            it.undo()
+            val hash = getFEN().hashed()
+            boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
+            game.variant.undoLastMove(it)
             if (game.currentTurn == ChessSide.WHITE)
                 fullMoveCounter--
             moves.removeLast()

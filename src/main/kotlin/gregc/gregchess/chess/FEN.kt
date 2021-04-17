@@ -56,6 +56,8 @@ data class FEN(
 
     fun isInitial() = this == FEN()
 
+    fun hashed(): Int = toHash().hashCode()
+
     companion object {
         private fun castlingRightsToString(base: Char, cr: List<Int>) =
             if (cr.all { it in listOf(0, 7) })

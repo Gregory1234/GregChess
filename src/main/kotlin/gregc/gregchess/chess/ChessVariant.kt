@@ -42,6 +42,7 @@ abstract class ChessVariant(val name: String) {
     abstract fun isInCheck(king: ChessPiece): Boolean
     abstract fun checkForGameEnd(game: ChessGame)
     abstract fun timeout(game: ChessGame, side: ChessSide)
+    abstract fun undoLastMove(move: MoveData)
 
     open fun isInCheck(game: ChessGame, side: ChessSide): Boolean {
         val king = game.board.kingOf(side)
@@ -146,6 +147,8 @@ abstract class ChessVariant(val name: String) {
                 game.stop(ChessGame.EndReason.Timeout(!side))
         }
 
+        override fun undoLastMove(move: MoveData) = move.undo()
+
         override val promotions: Collection<ChessType>
             get() = listOf(ChessType.QUEEN, ChessType.ROOK, ChessType.BISHOP, ChessType.KNIGHT)
 
@@ -207,6 +210,8 @@ abstract class ChessVariant(val name: String) {
             Normal.checkForGameEnd(game)
         }
 
+        override fun undoLastMove(move: MoveData) = Normal.undoLastMove(move)
+
         override val promotions: Collection<ChessType>
             get() = Normal.promotions
 
@@ -240,6 +245,8 @@ abstract class ChessVariant(val name: String) {
             Normal.checkForGameEnd(game)
         }
 
+        override fun undoLastMove(move: MoveData) = Normal.undoLastMove(move)
+
         override val promotions: Collection<ChessType>
             get() = Normal.promotions
 
@@ -247,10 +254,39 @@ abstract class ChessVariant(val name: String) {
     }
 
     object Atomic : ChessVariant("Atomic") {
+        class ExplosionManager(private val game: ChessGame) : ChessGame.Component {
+            private val explosions = mutableListOf<List<Pair<ChessPiece, ChessPiece.Captured>>>()
+
+            fun explode(pos: ChessPosition) {
+                val exp = mutableListOf<Pair<ChessPiece, ChessPiece.Captured>>()
+                fun helper(p: ChessPiece) {
+                    exp += Pair(p, p.capture(game.currentTurn))
+                }
+
+                game.board[pos]?.piece?.let(::helper)
+                game.board[pos]?.neighbours()?.forEach {
+                    if (it.piece?.type != ChessType.PAWN)
+                        it.piece?.let(::helper)
+                }
+                game.board.renderer.getPieceLoc(pos).doIn(game.arena.world) { world, l ->
+                    world.createExplosion(l, 4.0f, false, false)
+                }
+                explosions += exp
+            }
+
+            fun reverseExplosion() {
+                val exp = explosions.last()
+                exp.forEach { (p, c) ->
+                    p.resurrect(c)
+                }
+            }
+        }
+
         class AtomicEndReason(winner: ChessSide) :
             ChessGame.EndReason("Chess.EndReason.Atomic", "normal", winner)
 
         override fun start(game: ChessGame) {
+            game.registerComponent(ExplosionManager(game))
         }
 
         private fun nextToKing(side: ChessSide, pos: ChessPosition, board: Chessboard): Boolean =
@@ -268,21 +304,12 @@ abstract class ChessVariant(val name: String) {
             if (nextToKing(by, pos.pos, pos.board)) emptyList() else Normal.checkingMoves(by, pos)
 
         override fun finishMove(move: MoveCandidate) = move.run {
-            val attacking = control?.piece != null
             val data = execute()
             board.lastMove?.clear()
             board.lastMove = data
             board.lastMove?.render()
-            if (attacking) {
-                target.neighbours().mapNotNull { it.piece }.forEach {
-                    if (it.type != ChessType.PAWN)
-                        it.capture(piece.side)
-                }
-                piece.capture(piece.side)
-                board.renderer.getPieceLoc(piece.pos).doIn(game.arena.world) { world, l ->
-                    world.createExplosion(l, 4.0f, false, false)
-                }
-            }
+            if (data.captured)
+                game.getComponent(ExplosionManager::class)?.explode(target.pos)
             glog.low("Finished move", data)
             game.nextTurn()
         }
@@ -325,6 +352,12 @@ abstract class ChessVariant(val name: String) {
         }
 
         override fun timeout(game: ChessGame, side: ChessSide) = Normal.timeout(game, side)
+
+        override fun undoLastMove(move: MoveData) {
+            if(move.captured)
+                move.origin.game.getComponent(ExplosionManager::class)?.reverseExplosion()
+            move.undo()
+        }
 
         override val promotions: Collection<ChessType>
             get() = Normal.promotions
@@ -373,6 +406,8 @@ abstract class ChessVariant(val name: String) {
         override fun timeout(game: ChessGame, side: ChessSide) =
             game.stop(ChessGame.EndReason.Timeout(side))
 
+        override fun undoLastMove(move: MoveData) = Normal.undoLastMove(move)
+
         override val promotions: Collection<ChessType>
             get() = Normal.promotions + ChessType.KING
 
@@ -419,6 +454,8 @@ abstract class ChessVariant(val name: String) {
 
         override fun timeout(game: ChessGame, side: ChessSide) =
             game.stop(ChessGame.EndReason.Timeout(side))
+
+        override fun undoLastMove(move: MoveData) = Normal.undoLastMove(move)
 
         override val promotions: Collection<ChessType>
             get() = Normal.promotions

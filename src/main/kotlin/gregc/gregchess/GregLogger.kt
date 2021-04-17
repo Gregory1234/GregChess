@@ -12,7 +12,7 @@ class GregLogger(private val logFile: File) {
     var level: Level = Level.WARNING
     private fun log(level: Level, vararg vs: Any?) {
         val source = Thread.currentThread().stackTrace[3].className
-        if (level >= Level.WARNING) {
+        if (level == Level.WARNING) {
             GregInfo.logger.warning("[$source] " + vs.joinToString(" ") { it.toString() })
         } else if (this.level <= level) {
             GregInfo.logger.info("[$source] " + vs.joinToString(" ") { it.toString() })
