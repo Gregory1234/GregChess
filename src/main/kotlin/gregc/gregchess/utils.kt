@@ -82,7 +82,7 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     val world by lazy {
         worldCreated = true
         if (GregInfo.server.getWorld(name) != null) {
-            glog.warn("World already exists!", name)
+            //glog.warn("World already exists!", name)
             return@lazy GregInfo.server.getWorld(name)!!
         }
 

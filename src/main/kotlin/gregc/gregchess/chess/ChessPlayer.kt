@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.entity.Player
 
@@ -8,6 +9,19 @@ import org.bukkit.entity.Player
 sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val game: ChessGame) {
     class Human(val player: Player, side: ChessSide, silent: Boolean, game: ChessGame) :
         ChessPlayer(side, silent, game) {
+
+        var isAdmin = false
+            set(value) {
+                if (!value) {
+                    val loc = player.location
+                    player.playerData = game.arena.defaultData
+                    held?.let { player.inventory.setItem(0, it.type.getItem(it.side)) }
+                    player.teleport(loc)
+                } else {
+                    player.gameMode = GameMode.CREATIVE
+                }
+                field = value
+            }
 
         override val name = player.name
 
@@ -133,7 +147,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
             sendTitle(ConfigManager.getString("Title.YourTurn"))
         }
         val king = game.board.kingOf(side)
-        if(king != null && game.variant.isInCheck(king))
+        if (king != null && game.variant.isInCheck(king))
             announceInCheck()
     }
 

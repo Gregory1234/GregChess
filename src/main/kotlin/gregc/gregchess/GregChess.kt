@@ -257,6 +257,13 @@ class GregChess : JavaPlugin(), Listener {
                         printInfo(player, args.drop(1).toTypedArray())
                     }
                 }
+                "admin" -> {
+                    cPlayer(player)
+                    cPerms(player, "greg-chess.admin")
+                    cArgs(args, 1, 1)
+                    val p = cNotNull(ChessManager[player], "NotInGame.You")
+                    p.isAdmin = !p.isAdmin
+                }
                 else -> cWrongArgument()
             }
         }
@@ -271,7 +278,7 @@ class GregChess : JavaPlugin(), Listener {
                 ) + ifPermission(
                     "greg-chess.debug", "capture", "spawn", "move", "skip", "load", "time"
                 ) + ifPermission(
-                    "greg-chess.admin", "uci", "reload", "dev", "debug"
+                    "greg-chess.admin", "uci", "reload", "dev", "debug", "admin"
                 )
                 2 -> when (args[0]) {
                     "duel" -> null

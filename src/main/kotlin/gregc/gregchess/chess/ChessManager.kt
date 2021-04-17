@@ -75,7 +75,7 @@ object ChessManager : Listener {
 
     fun stop() {
         forEachGame { it.quickStop(ChessGame.EndReason.PluginRestart()) }
-        arenas.forEach { it.delete() }
+        //arenas.forEach { it.delete() }
     }
 
     private fun reloadArenas() {
@@ -90,7 +90,7 @@ object ChessManager : Listener {
                     it.quickStop(ChessGame.EndReason.ArenaRemoved())
                 }
             }
-            arena.delete()
+            //arena.delete()
             arenas.remove(arena)
         }
         addedArenas.forEach { name ->
@@ -153,9 +153,10 @@ object ChessManager : Listener {
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
         val player = this[e.player] ?: return
+        if (player.isAdmin)
+            return
         e.isCancelled = true
         val block = e.clickedBlock ?: return
-
         if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
             player.pickUp(block.loc)
         } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
@@ -165,21 +166,21 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (isInGame(e.player)) {
+        if (this[e.player]?.isAdmin == false) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (isInGame(e.whoClicked)) {
+        if (e.whoClicked.let {it is Player && this[it]?.isAdmin == false}) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        if (isInGame(e.whoClicked)) {
+        if (e.whoClicked.let {it is Player && this[it]?.isAdmin == false}) {
             e.isCancelled = true
         }
     }
@@ -195,7 +196,7 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (isInGame(e.player)) {
+        if (this[e.player]?.isAdmin == false) {
             e.isCancelled = true
         }
     }
