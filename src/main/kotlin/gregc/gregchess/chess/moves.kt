@@ -58,8 +58,7 @@ abstract class MoveCandidate(
         val base = baseName()
         val standardBase = baseStandardName()
         val hasMoved = piece.hasMoved
-        val ct = control?.piece
-        val captured = ct?.capture(piece.side)
+        val ct = captured?.capture(piece.side)
         piece.move(target)
         promotion?.let { piece.promote(it) }
         val hmc =
@@ -69,7 +68,7 @@ abstract class MoveCandidate(
             hmc()
             promotion?.let { piece.square.piece?.demote(piece) }
             piece.move(origin)
-            captured?.let { ct.resurrect(it) }
+            ct?.let { captured?.resurrect(it) }
             piece.force(hasMoved)
         }
     }
@@ -80,7 +79,7 @@ abstract class MoveCandidate(
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(piece.pos.fileStr)
-        if (control?.piece != null)
+        if (captured != null)
             append(ConfigManager.getString("Chess.Capture"))
         promotion?.let { append(it.char.toUpperCase()) }
         append(target.pos)
@@ -92,7 +91,7 @@ abstract class MoveCandidate(
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(origin.pos.fileStr)
-        if (control?.piece != null)
+        if (captured != null)
             append("x")
         promotion?.let {
             append("=")
@@ -113,6 +112,11 @@ abstract class MoveCandidate(
 
     val board = origin.board
     val game = origin.game
+
+    val blocks: List<ChessPiece>
+        get() = needed.mapNotNull { board[it]?.piece }
+
+    val captured = control?.piece
 }
 
 fun getUniquenessCoordinate(piece: ChessPiece, target: ChessSquare): String {
@@ -307,8 +311,7 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
             val base = baseName()
             val standardBase = baseStandardName()
             val hasMoved = piece.hasMoved
-            val ct = control?.piece
-            val captured = ct?.capture(piece.side)
+            val ct = captured?.capture(piece.side)
             piece.move(target)
             val ch = checkForChecks(piece.side, game)
             val hmc = board.resetMovesSinceLastCapture()
@@ -318,7 +321,7 @@ fun pawnMovement(piece: ChessPiece): List<MoveCandidate> {
             ) {
                 hmc()
                 piece.move(origin)
-                captured?.let { ct.resurrect(it) }
+                ct?.let { captured?.resurrect(it) }
                 piece.force(hasMoved)
             }
         }

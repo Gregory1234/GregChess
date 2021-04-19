@@ -60,12 +60,12 @@ abstract class ChessVariant(val name: String) {
 
         fun pinningMoves(by: ChessSide, pos: ChessSquare) =
             allMoves(by, pos.board).filter { it.control == pos }
-                .filter { m -> m.pass.count { pos.board[it]?.piece != null && pos.board[it]?.piece !in m.help } == 1 }
+                .filter { m -> m.blocks.count { it !in m.help } == 1 }
 
         fun checkingMoves(by: ChessSide, pos: ChessSquare) =
             allMoves(by, pos.board).filter { it.control == pos }.filter { m ->
                 m.needed.mapNotNull { m.board[it]?.piece }
-                    .all { it.side == !m.piece.side && it.type == ChessType.KING && it in m.help }
+                    .all { it.side == !m.piece.side && it.type == ChessType.KING || it in m.help }
             }
 
         override fun start(game: ChessGame) {
@@ -91,10 +91,10 @@ abstract class ChessVariant(val name: String) {
             if (target.piece != null && control != target && target.piece !in help)
                 return false
 
-            if (control?.piece == null && mustCapture)
+            if (captured == null && mustCapture)
                 return false
 
-            if (control?.piece?.side == piece.side)
+            if (captured?.side == piece.side)
                 return false
 
             return true
@@ -334,7 +334,7 @@ abstract class ChessVariant(val name: String) {
                 return false
 
             if (piece.type == ChessType.KING) {
-                if (move.control?.piece != null)
+                if (move.captured != null)
                     return false
 
                 return (pass + target.pos).mapNotNull { game.board[it] }.all {
@@ -344,7 +344,7 @@ abstract class ChessVariant(val name: String) {
 
             val myKing = game.board.kingOf(piece.side) ?: return false
 
-            if (move.control?.piece != null)
+            if (move.captured != null)
                 if (myKing.pos in move.target.pos.neighbours())
                     return false
 
@@ -397,11 +397,11 @@ abstract class ChessVariant(val name: String) {
                 return false
             if (move.piece.type == ChessType.KING && move.help.isNotEmpty())
                 return false
-            if (move.control?.piece != null)
+            if (move.captured != null)
                 return true
             return move.board.piecesOf(move.piece.side).none { m ->
                 m.square.bakedMoves.orEmpty().filter { Normal.isValid(it) }
-                    .any { it.control?.piece != null }
+                    .any { it.captured != null }
             }
         }
 
