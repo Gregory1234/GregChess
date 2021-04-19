@@ -258,11 +258,11 @@ class GregChess : JavaPlugin(), Listener {
                         when (args[1].toLowerCase()) {
                             "game" -> {
                                 val game = selectGame(player, args.dropArray(2))
-                                player.sendMessage(game.getInfo())
+                                player.spigot().sendMessage(game.getInfo())
                             }
                             "piece" -> {
                                 val piece = selectPiece(player, args.dropArray(2))
-                                player.sendMessage(piece.getInfo())
+                                player.spigot().sendMessage(piece.getInfo())
                             }
                             else -> cWrongArgument()
                         }

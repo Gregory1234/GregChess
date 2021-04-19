@@ -36,10 +36,14 @@ abstract class ChessVariant(val name: String) {
         }
     }
 
+    enum class MoveLegality {
+        INVALID, IN_CHECK, PINNED, SPECIAL, LEGAL
+    }
+
     open fun start(game: ChessGame) {}
     open fun chessboardSetup(board: Chessboard) {}
     open fun finishMove(move: MoveCandidate) {}
-    open fun isLegal(move: MoveCandidate): Boolean = Normal.isLegal(move)
+    open fun getLegality(move: MoveCandidate): MoveLegality = Normal.getLegality(move)
     open fun isInCheck(king: ChessPiece): Boolean = Normal.isInCheck(king)
     open fun checkForGameEnd(game: ChessGame) = Normal.checkForGameEnd(game)
     open fun timeout(game: ChessGame, side: ChessSide) = Normal.timeout(game, side)
@@ -49,6 +53,8 @@ abstract class ChessVariant(val name: String) {
         val king = game.board.kingOf(side)
         return king != null && isInCheck(king)
     }
+
+    fun isLegal(move: MoveCandidate) = getLegality(move) == MoveLegality.LEGAL
 
     open fun genFEN(chess960: Boolean): FEN = Normal.genFEN(chess960)
     open val promotions: Collection<ChessType>
@@ -86,24 +92,24 @@ abstract class ChessVariant(val name: String) {
             return true
         }
 
-        override fun isLegal(move: MoveCandidate): Boolean = move.run {
+        override fun getLegality(move: MoveCandidate): MoveLegality = move.run {
             if (!isValid(move))
-                return false
+                return MoveLegality.INVALID
 
             if (piece.type == ChessType.KING) {
-                return (pass + target.pos).mapNotNull { game.board[it] }.all {
-                    checkingMoves(!piece.side, it).isEmpty()
-                }
+                return if ((pass + target.pos).mapNotNull { game.board[it] }.all {
+                        checkingMoves(!piece.side, it).isEmpty()
+                    }) MoveLegality.LEGAL else MoveLegality.IN_CHECK
             }
 
             val myKing = game.tryOrStopNull(game.board.kingOf(piece.side))
             val checks = checkingMoves(!piece.side, myKing.square)
             if (checks.any { target.pos !in it.pass && target != it.origin })
-                return false
+                return MoveLegality.IN_CHECK
             val pins = pinningMoves(!piece.side, myKing.square).filter { origin.pos in it.pass }
             if (pins.any { target.pos !in it.pass && target != it.origin })
-                return false
-            return true
+                return MoveLegality.PINNED
+            return MoveLegality.LEGAL
         }
 
         override fun isInCheck(king: ChessPiece): Boolean =
@@ -270,33 +276,33 @@ abstract class ChessVariant(val name: String) {
                 move.game.getComponent(ExplosionManager::class)?.explode(move.target.pos)
         }
 
-        override fun isLegal(move: MoveCandidate): Boolean = move.run {
+        override fun getLegality(move: MoveCandidate): MoveLegality = move.run {
 
             if (!Normal.isValid(move))
-                return false
+                return MoveLegality.INVALID
 
             if (piece.type == ChessType.KING) {
                 if (move.captured != null)
-                    return false
+                    return MoveLegality.SPECIAL
 
-                return (pass + target.pos).mapNotNull { game.board[it] }.all {
-                    checkingMoves(!piece.side, it).isEmpty()
-                }
+                if ((pass + target.pos).mapNotNull { game.board[it] }.all {
+                        checkingMoves(!piece.side, it).isEmpty()
+                    }) MoveLegality.LEGAL else MoveLegality.IN_CHECK
             }
 
-            val myKing = game.board.kingOf(piece.side) ?: return false
+            val myKing = game.board.kingOf(piece.side) ?: return MoveLegality.IN_CHECK
 
             if (move.captured != null)
                 if (myKing.pos in move.target.pos.neighbours())
-                    return false
+                    return MoveLegality.SPECIAL
 
             val checks = checkingMoves(!piece.side, myKing.square)
             if (checks.any { target.pos !in it.pass && target != it.origin })
-                return false
+                return MoveLegality.IN_CHECK
             val pins = pinningMoves(!piece.side, myKing.square).filter { origin.pos in it.pass }
             if (pins.any { target.pos !in it.pass && target != it.origin })
-                return false
-            return true
+                return MoveLegality.PINNED
+            return MoveLegality.LEGAL
         }
 
         override fun isInCheck(king: ChessPiece): Boolean =
@@ -319,17 +325,17 @@ abstract class ChessVariant(val name: String) {
         class Stalemate(winner: ChessSide) :
             ChessGame.EndReason("Chess.EndReason.Stalemate", "normal", winner)
 
-        override fun isLegal(move: MoveCandidate): Boolean {
+        override fun getLegality(move: MoveCandidate): MoveLegality {
             if (!Normal.isValid(move))
-                return false
+                return MoveLegality.INVALID
             if (move.piece.type == ChessType.KING && move.help.isNotEmpty())
-                return false
+                return MoveLegality.INVALID
             if (move.captured != null)
-                return true
-            return move.board.piecesOf(move.piece.side).none { m ->
-                m.square.bakedMoves.orEmpty().filter { Normal.isValid(it) }
-                    .any { it.captured != null }
-            }
+                return MoveLegality.LEGAL
+            return if (move.board.piecesOf(move.piece.side).none { m ->
+                    m.square.bakedMoves.orEmpty().filter { Normal.isValid(it) }
+                        .any { it.captured != null }
+                }) MoveLegality.LEGAL else MoveLegality.SPECIAL
         }
 
         override fun isInCheck(king: ChessPiece) = false
@@ -368,11 +374,12 @@ abstract class ChessVariant(val name: String) {
             }
         }
 
-        override fun isLegal(move: MoveCandidate): Boolean =
-            if (move.piece.side == ChessSide.BLACK)
-                Normal.isLegal(move)
-            else
-                Normal.isValid(move)
+        override fun getLegality(move: MoveCandidate): MoveLegality =
+            when {
+                move.piece.side == ChessSide.BLACK -> Normal.getLegality(move)
+                Normal.isValid(move) -> MoveLegality.LEGAL
+                else -> MoveLegality.INVALID
+            }
 
         override fun isInCheck(king: ChessPiece) =
             king.side == ChessSide.BLACK && Normal.isInCheck(king)

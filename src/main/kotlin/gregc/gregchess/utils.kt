@@ -1,5 +1,7 @@
 package gregc.gregchess
 
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
@@ -19,7 +21,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToLong
 
@@ -288,6 +289,28 @@ inline fun <reified T> Array<T>.dropArray(n: Int) = drop(n).toTypedArray()
 
 inline fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> =
     flatMap { x -> other.map { y -> function(x, y) } }
+
+class BuildTextComponentScope {
+    val returnValue = TextComponent()
+    fun append(str: String) {
+        returnValue.addExtra(str)
+    }
+    fun append(tc: TextComponent){
+        returnValue.addExtra(tc)
+    }
+    fun append(v: Any?, clickEvent: ClickEvent? = null) {
+        val c = TextComponent(v.toString())
+        if (clickEvent != null)
+            c.clickEvent = clickEvent
+        append(c)
+    }
+    fun appendCopy(v: Any?, copy: Any?) {
+        append(v, ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, copy.toString()))
+    }
+}
+
+inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
+    BuildTextComponentScope().apply(f).returnValue
 
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 

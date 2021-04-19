@@ -96,25 +96,30 @@ class RequestType<in T>(
             return
         }
         requests[request.uniqueId] = request
-        val messageCancel = TextComponent(ConfigManager.getString("Request.Cancel"))
-        messageCancel.clickEvent =
-            ClickEvent(
-                ClickEvent.Action.RUN_COMMAND,
-                if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
+        request.sender.spigot().sendMessage(buildTextComponent {
+            append(view.getString("Sent.Request") + " ")
+            append(
+                ConfigManager.getString("Request.Cancel"), ClickEvent(
+                    ClickEvent.Action.RUN_COMMAND,
+                    if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
+                )
             )
-        val messageSender = TextComponent(view.getString("Sent.Request") + " ")
-        request.sender.spigot().sendMessage(messageSender, messageCancel)
-
-        val messageAccept = TextComponent(ConfigManager.getString("Request.Accept"))
-        messageAccept.clickEvent =
-            ClickEvent(
-                ClickEvent.Action.RUN_COMMAND,
-                if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
+        })
+        request.receiver.spigot().sendMessage(buildTextComponent {
+            append(
+                view.getFormatString(
+                    "Received.Request",
+                    request.sender.name,
+                    printT(request.value)
+                ) + " "
             )
-        val messageReceiver = TextComponent(
-            view.getFormatString("Received.Request", request.sender.name, printT(request.value)) + " "
-        )
-        request.receiver.spigot().sendMessage(messageReceiver, messageAccept)
+            append(
+                ClickEvent(
+                    ClickEvent.Action.RUN_COMMAND,
+                    if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
+                )
+            )
+        })
         val duration = ConfigManager.getOptionalDuration("Request.$root.Duration")
         if (duration != null)
             TimeManager.runTaskLater(duration) {

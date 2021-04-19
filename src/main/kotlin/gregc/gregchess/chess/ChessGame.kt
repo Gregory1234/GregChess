@@ -342,13 +342,14 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         nextTurn()
     }
 
-    fun getInfo() = buildString {
-        append("Players: ${players.joinToString { "${it.name} as ${it.side}" }}\n")
+    fun getInfo() = buildTextComponent {
+        appendCopy("UUID: $uniqueId\n", uniqueId)
+        append("Players: ${players.joinToString { "${it.name} as ${it.side.standardName}" }}\n")
         append("Spectators: ${spectators.joinToString { it.name }}\n")
         append("Arena: ${arena.name}\n")
         append("Preset: ${settings.name}\n")
         append("Variant: ${variant.name}\n")
-        append("Components: ${components.joinToString { it.javaClass.simpleName }}\n")
+        append("Components: ${components.joinToString { it.javaClass.simpleName }}")
     }
 
     class SettingsScreen(

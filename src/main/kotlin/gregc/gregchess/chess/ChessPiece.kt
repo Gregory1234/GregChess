@@ -5,6 +5,8 @@ import gregc.gregchess.chess.component.Chessboard
 import org.bukkit.Material
 import org.bukkit.Sound
 import java.util.*
+import gregc.gregchess.chess.ChessVariant.MoveLegality.*
+import net.md_5.bungee.api.chat.ClickEvent
 
 class ChessPiece(
     val type: ChessType,
@@ -152,11 +154,27 @@ class ChessPiece(
         }
     }
 
-    fun getInfo() = buildString {
+    fun getInfo() = buildTextComponent {
         append("Name: $standardName\n")
+        appendCopy("UUID: $uniqueId\n", uniqueId)
         append("Position: $pos\n")
         append(if (hasMoved) "Has moved\n" else "Has not moved\n")
-        append("All moves: ${square.bakedMoves.orEmpty().joinToString { it.baseStandardName() }}\n")
-        append("Legal moves: ${square.bakedMoves.orEmpty().filter {square.game.variant.isLegal(it) }.joinToString { it.baseStandardName() }}\n")
+        appendCopy("Game: ${game.uniqueId}\n", game.uniqueId)
+        val moves = square.bakedMoves.orEmpty()
+        append("All moves: ${moves.joinToString { it.baseStandardName() }}")
+        val reasons =
+            mapOf(
+                LEGAL to "Legal moves",
+                PINNED to "Moves blocked by pins",
+                IN_CHECK to "Moves blocked because of checks",
+                INVALID to "Invalid moves",
+                SPECIAL to "Moves blocked for other reasons"
+            )
+        moves.groupBy { m -> reasons[game.variant.getLegality(m)] }.forEach { (l, m) ->
+            if (l != null) {
+                append("\n")
+                append("$l: ${m.joinToString { it.baseStandardName() }}")
+            }
+        }
     }
 }
