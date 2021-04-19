@@ -12,6 +12,9 @@ class ChessPiece(
     initSquare: ChessSquare,
     hasMoved: Boolean = false
 ) {
+    val standardName
+        get() = "${side.standardName} ${type.name.toLowerCase()}"
+
     var square: ChessSquare = initSquare
         private set(v) {
             hide()
@@ -147,5 +150,13 @@ class ChessPiece(
                 piece.playMoveSound()
             }
         }
+    }
+
+    fun getInfo() = buildString {
+        append("Name: $standardName\n")
+        append("Position: $pos\n")
+        append(if (hasMoved) "Has moved\n" else "Has not moved\n")
+        append("All moves: ${square.bakedMoves.orEmpty().joinToString { it.baseStandardName() }}\n")
+        append("Legal moves: ${square.bakedMoves.orEmpty().filter {square.game.variant.isLegal(it) }.joinToString { it.baseStandardName() }}\n")
     }
 }

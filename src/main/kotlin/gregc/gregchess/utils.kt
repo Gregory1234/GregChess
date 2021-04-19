@@ -280,9 +280,11 @@ fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
 
 fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
 
-fun Int.towards(goal: Int, amount: Int) =
-    if (goal < this) this - amount
-    else this + amount
+fun isValidUUID(s: String) =
+    Regex("""^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}${'$'}""")
+        .matches(s)
+
+inline fun <reified T> Array<T>.dropArray(n: Int) = drop(n).toTypedArray()
 
 inline fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> =
     flatMap { x -> other.map { y -> function(x, y) } }

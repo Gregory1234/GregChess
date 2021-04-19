@@ -253,8 +253,19 @@ class GregChess : JavaPlugin(), Listener {
                     }
                 }
                 "info" -> {
+                    cArgs(args, 2)
                     cWrongArgument {
-                        printInfo(player, args.drop(1).toTypedArray())
+                        when (args[1].toLowerCase()) {
+                            "game" -> {
+                                val game = selectGame(player, args.dropArray(2))
+                                player.sendMessage(game.getInfo())
+                            }
+                            "piece" -> {
+                                val piece = selectPiece(player, args.dropArray(2))
+                                player.sendMessage(piece.getInfo())
+                            }
+                            else -> cWrongArgument()
+                        }
                     }
                 }
                 "admin" -> {
@@ -300,47 +311,46 @@ class GregChess : JavaPlugin(), Listener {
     }
 
     @ExperimentalContracts
-    private fun printInfo(player: CommandSender, args: Array<String>) {
-        cArgs(args, 1)
-        when (args[0].toLowerCase()) {
-            "game" -> {
-                val game: ChessGame = if (args.size == 2) {
-                    cPlayer(player)
-                    cNotNull(ChessManager.getGame(player), "NotInGame.You")
+    fun selectPiece(player: CommandSender, args: Array<String>) =
+        when (args.size) {
+            0 -> {
+                cPlayer(player)
+                val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                cNotNull(game.board[Loc.fromLocation(player.location)]?.piece, "PieceNotFound")
+            }
+            1 -> {
+                if (isValidUUID(args[0])) {
+                    cPerms(player, "greg-chess.info")
+                    val game = cNotNull(
+                        ChessManager.firstGame { UUID.fromString(args[0]) in it.board },
+                        "PieceNotFound"
+                    )
+                    game.board[UUID.fromString(args[0])]!!
                 } else {
+                    cPlayer(player)
+                    val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                    cNotNull(game.board[ChessPosition.parseFromString(args[0])]?.piece, "PieceNotFound")
+                }
+            }
+            else -> throw CommandException("WrongArgumentsNumber")
+        }
+
+    @ExperimentalContracts
+    fun selectGame(player: CommandSender, args: Array<String>) =
+        when (args.size) {
+            0 -> {
+                cPlayer(player)
+                cNotNull(ChessManager.getGame(player), "NotInGame.You")
+            }
+            1 -> {
+                cWrongArgument {
                     cPerms(player, "greg-chess.info")
                     cArgs(args, 3, 3)
                     cNotNull(ChessManager[UUID.fromString(args[2])], "GameNotFound")
                 }
-                player.sendMessage(game.toString())
             }
-            "piece" -> {
-                if (args.size == 2) {
-                    cPlayer(player)
-                    val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
-                    val piece = game.board[Loc.fromLocation(player.location)]
-                    player.sendMessage(piece.toString())
-                } else {
-                    cArgs(args, 3, 3)
-                    if (args[2].length == 2) {
-                        cPlayer(player)
-                        val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
-                        val piece = game.board[ChessPosition.parseFromString(args[2])]
-                        player.sendMessage(piece.toString())
-                    } else {
-                        cPerms(player, "greg-chess.info")
-                        val game = cNotNull(
-                            ChessManager.firstGame { UUID.fromString(args[2]) in it.board },
-                            "GameNotFound"
-                        )
-                        val piece = game.board[UUID.fromString(args[2])]
-                        player.sendMessage(piece.toString())
-                    }
-                }
-            }
-            else -> cWrongArgument()
+            else -> throw CommandException("WrongArgumentsNumber")
         }
-    }
 
     override fun onDisable() {
         ChessManager.stop()

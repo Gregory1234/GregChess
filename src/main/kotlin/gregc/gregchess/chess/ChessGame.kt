@@ -342,6 +342,15 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         nextTurn()
     }
 
+    fun getInfo() = buildString {
+        append("Players: ${players.joinToString { "${it.name} as ${it.side}" }}\n")
+        append("Spectators: ${spectators.joinToString { it.name }}\n")
+        append("Arena: ${arena.name}\n")
+        append("Preset: ${settings.name}\n")
+        append("Variant: ${variant.name}\n")
+        append("Components: ${components.joinToString { it.javaClass.simpleName }}\n")
+    }
+
     class SettingsScreen(
         private val arena: ChessArena,
         private inline val startGame: (ChessArena, Settings) -> Unit
