@@ -333,6 +333,15 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         throw e
     }
 
+    fun finishMove(move: MoveCandidate) {
+        val data = move.execute()
+        board.lastMove?.clear()
+        board.lastMove = data
+        board.lastMove?.render()
+        glog.low("Finished move", data)
+        nextTurn()
+    }
+
     class SettingsScreen(
         private val arena: ChessArena,
         private inline val startGame: (ChessArena, Settings) -> Unit

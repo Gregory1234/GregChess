@@ -65,7 +65,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
                 val promotingMoves = chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } }
                 player.openScreen(PawnPromotionScreen(piece, promotingMoves, this))
             } else {
-                game.variant.finishMove(chosenMoves.first())
+                game.finishMove(chosenMoves.first())
             }
         }
     }
@@ -92,7 +92,7 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
                     str.drop(4).firstOrNull()?.let { ChessType.parseFromStandardChar(it) }
                 val move = game.board.getMoves(origin)
                     .first { it.display.pos == target && it.promotion == promotion }
-                game.variant.finishMove(move)
+                game.finishMove(move)
             }, { game.stop(ChessGame.EndReason.Error(it)) })
 
         }
@@ -121,9 +121,9 @@ sealed class ChessPlayer(val side: ChessSide, private val silent: Boolean, val g
             ScreenOption(t.getItem(pawn.side), m, InventoryPosition.fromIndex(i))
         }
 
-        override fun onClick(v: MoveCandidate) = player.game.variant.finishMove(v)
+        override fun onClick(v: MoveCandidate) = player.game.finishMove(v)
 
-        override fun onCancel() = player.game.variant.finishMove(moves.first().second)
+        override fun onCancel() = player.game.finishMove(moves.first().second)
 
     }
 

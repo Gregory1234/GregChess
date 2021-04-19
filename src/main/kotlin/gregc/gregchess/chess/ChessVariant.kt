@@ -36,9 +36,9 @@ abstract class ChessVariant(val name: String) {
         }
     }
 
-    open fun start(game: ChessGame){}
-    open fun chessboardSetup(board: Chessboard){}
-    open fun finishMove(move: MoveCandidate) = Normal.finishMove(move)
+    open fun start(game: ChessGame) {}
+    open fun chessboardSetup(board: Chessboard) {}
+    open fun finishMove(move: MoveCandidate) {}
     open fun isLegal(move: MoveCandidate): Boolean = Normal.isLegal(move)
     open fun isInCheck(king: ChessPiece): Boolean = Normal.isInCheck(king)
     open fun checkForGameEnd(game: ChessGame) = Normal.checkForGameEnd(game)
@@ -68,15 +68,6 @@ abstract class ChessVariant(val name: String) {
                 m.needed.mapNotNull { m.board[it]?.piece }
                     .all { it.side == !m.piece.side && it.type == ChessType.KING || it in m.help }
             }
-
-        override fun finishMove(move: MoveCandidate) = move.run {
-            val data = execute()
-            board.lastMove?.clear()
-            board.lastMove = data
-            board.lastMove?.render()
-            glog.low("Finished move", data)
-            game.nextTurn()
-        }
 
         fun isValid(move: MoveCandidate): Boolean = move.run {
 
@@ -274,15 +265,9 @@ abstract class ChessVariant(val name: String) {
         private fun checkingMoves(by: ChessSide, pos: ChessSquare) =
             if (nextToKing(by, pos.pos, pos.board)) emptyList() else Normal.checkingMoves(by, pos)
 
-        override fun finishMove(move: MoveCandidate) = move.run {
-            val data = execute()
-            board.lastMove?.clear()
-            board.lastMove = data
-            board.lastMove?.render()
-            if (data.captured)
-                game.getComponent(ExplosionManager::class)?.explode(target.pos)
-            glog.low("Finished move", data)
-            game.nextTurn()
+        override fun finishMove(move: MoveCandidate) {
+            if (move.captured != null)
+                move.game.getComponent(ExplosionManager::class)?.explode(move.target.pos)
         }
 
         override fun isLegal(move: MoveCandidate): Boolean = move.run {
@@ -324,7 +309,7 @@ abstract class ChessVariant(val name: String) {
         }
 
         override fun undoLastMove(move: MoveData) {
-            if(move.captured)
+            if (move.captured)
                 move.origin.game.getComponent(ExplosionManager::class)?.reverseExplosion()
             move.undo()
         }
@@ -378,7 +363,6 @@ abstract class ChessVariant(val name: String) {
         }
 
         override fun finishMove(move: MoveCandidate) {
-            Normal.finishMove(move)
             if (move.piece.type == ChessType.PAWN && move.target.pos.rank == 1) {
                 move.piece.force(false)
             }

@@ -61,6 +61,7 @@ abstract class MoveCandidate(
         val ct = captured?.capture(piece.side)
         piece.move(target)
         promotion?.let { piece.promote(it) }
+        game.variant.finishMove(this)
         val hmc =
             if (piece.type == ChessType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
         val ch = checkForChecks(piece.side, game)
