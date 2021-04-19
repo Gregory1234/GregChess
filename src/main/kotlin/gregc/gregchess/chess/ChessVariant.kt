@@ -37,6 +37,7 @@ abstract class ChessVariant(val name: String) {
     }
 
     abstract fun start(game: ChessGame)
+    abstract fun chessboardSetup(board: Chessboard)
     abstract fun finishMove(move: MoveCandidate)
     abstract fun isLegal(move: MoveCandidate): Boolean
     abstract fun isInCheck(king: ChessPiece): Boolean
@@ -68,6 +69,9 @@ abstract class ChessVariant(val name: String) {
             }
 
         override fun start(game: ChessGame) {
+        }
+
+        override fun chessboardSetup(board: Chessboard) {
         }
 
         override fun finishMove(move: MoveCandidate) = move.run {
@@ -197,6 +201,9 @@ abstract class ChessVariant(val name: String) {
             game.registerComponent(CheckCounter(game))
         }
 
+        override fun chessboardSetup(board: Chessboard) {
+        }
+
         override fun finishMove(move: MoveCandidate) = Normal.finishMove(move)
 
         override fun isLegal(move: MoveCandidate): Boolean = Normal.isLegal(move)
@@ -223,10 +230,14 @@ abstract class ChessVariant(val name: String) {
         class KingOfTheHillEndReason(winner: ChessSide) :
             ChessGame.EndReason("Chess.EndReason.KingOfTheHill", "normal", winner)
 
-        override fun start(game: ChessGame) {
+        override fun chessboardSetup(board: Chessboard) {
             (3..4).star((3..4)) { x, y ->
-                game.board[ChessPosition(x, y)]?.variantMarker = Material.PURPLE_CONCRETE
+                board[ChessPosition(x, y)]?.variantMarker = Material.PURPLE_CONCRETE
+                board[ChessPosition(x, y)]?.render()
             }
+        }
+
+        override fun start(game: ChessGame) {
         }
 
         override fun finishMove(move: MoveCandidate) = Normal.finishMove(move)
@@ -289,6 +300,9 @@ abstract class ChessVariant(val name: String) {
             game.registerComponent(ExplosionManager(game))
         }
 
+        override fun chessboardSetup(board: Chessboard) {
+        }
+
         private fun nextToKing(side: ChessSide, pos: ChessPosition, board: Chessboard): Boolean =
             pos in board.kingOf(side)?.pos?.neighbours().orEmpty()
 
@@ -315,6 +329,7 @@ abstract class ChessVariant(val name: String) {
         }
 
         override fun isLegal(move: MoveCandidate): Boolean = move.run {
+
             if (!Normal.isValid(move))
                 return false
 
@@ -372,6 +387,9 @@ abstract class ChessVariant(val name: String) {
         override fun start(game: ChessGame) {
         }
 
+        override fun chessboardSetup(board: Chessboard) {
+        }
+
         override fun finishMove(move: MoveCandidate) = Normal.finishMove(move)
 
         override fun isLegal(move: MoveCandidate): Boolean {
@@ -415,10 +433,13 @@ abstract class ChessVariant(val name: String) {
     }
 
     object Horde : ChessVariant("Horde") {
-        override fun start(game: ChessGame) {
-            game.board.piecesOf(ChessSide.WHITE).filter { it.pos.rank == 0 }.forEach {
+        override fun chessboardSetup(board: Chessboard) {
+            board.piecesOf(ChessSide.WHITE).filter { it.pos.rank == 0 }.forEach {
                 it.force(false)
             }
+        }
+
+        override fun start(game: ChessGame) {
         }
 
         override fun finishMove(move: MoveCandidate) {

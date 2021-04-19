@@ -134,9 +134,10 @@ class ChessPositionSteps(
 
     override fun contains(element: ChessPosition): Boolean {
         if (jump.first == 0) {
-            if (jump.second == 0) {
+            if (element.file != start.file)
+                return false
+            if (jump.second == 0)
                 return element == start
-            }
             val m = Math.floorMod(element.rank - start.rank, jump.second)
             if (m != 0)
                 return false
@@ -263,6 +264,7 @@ data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
 
     fun clear() {
         piece?.clear()
+        variantMarker = null
         bakedMoves = null
         previousMoveMarker = null
         moveMarker = null

@@ -161,8 +161,8 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
         capturedPieces.forEach { it.hide() }
         for (i in 0 until 8 * 5) {
             for (j in 0 until 8 * 5) {
-                game.world.getBlockAt(i, 100, j).type = Material.AIR
-                game.world.getBlockAt(i, 101, j).type = Material.AIR
+                for (k in 100..105)
+                    game.world.getBlockAt(i, k, j).type = Material.AIR
             }
         }
         glog.mid("Cleared chessboard", game.uniqueId)
@@ -199,9 +199,10 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
 
 
     fun setFromFEN(fen: FEN) {
-        capturedPieces.forEach { it.hide() }
+        clear()
         capturedPieces.clear()
         boardState.values.forEach { it.clear() }
+        render()
         fen.forEachSquare { pos, tr ->
             if (tr != null) {
                 val (t, s, hm) = tr
@@ -227,6 +228,7 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
 
         boardHashes.clear()
         addBoardHash(fen)
+        game.variant.chessboardSetup(this)
     }
 
     fun getFEN(): FEN {
