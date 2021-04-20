@@ -29,6 +29,12 @@ processResources {
     }
 }
 
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs += "-Xopt-in=kotlin.contracts.ExperimentalContracts"
+    }
+}
+
 sourceSets {
     main.kotlin.srcDirs += 'src/main/kotlin'
 }

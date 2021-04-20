@@ -19,7 +19,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.floor
 import kotlin.math.roundToLong
@@ -190,13 +189,41 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
 
 }
 
-fun JavaPlugin.addCommand(
-    name: String,
-    command: (CommandSender, Array<String>) -> Unit
-) {
+class CommandArgs(val player: CommandSender, val args: Array<String>) {
+    var index = 0
+    val size = args.size
+
+    fun nextArg(): String {
+        cArgs(args, ++index)
+        return args[index - 1]
+    }
+
+    operator fun get(n: Int): String {
+        cArgs(args, index + n + 1)
+        return args[index + n]
+    }
+
+    fun endArgs() {
+        cArgs(args, max = index)
+    }
+
+    fun lastArg(): String {
+        cArgs(args, ++index, index)
+        return args[index - 1]
+    }
+
+    fun latestArg() = get(-1)
+
+    fun rest() = args.drop(index)
+
+    fun restString() = rest().joinToString(" ")
+
+}
+
+fun JavaPlugin.addCommand(name: String, command: CommandArgs.() -> Unit) {
     getCommand(name)?.setExecutor { sender, _, _, args ->
         try {
-            command(sender, args)
+            command(CommandArgs(sender, args))
         } catch (e: CommandException) {
             sender.sendMessage(ConfigManager.getError(e.playerMsg))
         }
@@ -204,12 +231,9 @@ fun JavaPlugin.addCommand(
     }
 }
 
-fun JavaPlugin.addCommandTab(
-    name: String,
-    tabCompleter: (CommandSender, Array<String>) -> List<String>?
-) {
+fun JavaPlugin.addCommandTab(name: String, tabCompleter: CommandArgs.() -> List<String>?) {
     getCommand(name)?.setTabCompleter { sender, _, _, args ->
-        tabCompleter(sender, args)?.toMutableList()
+        tabCompleter(CommandArgs(sender, args))?.toMutableList()
     }
 }
 
@@ -230,7 +254,6 @@ class CommandException(val playerMsg: String) : Exception() {
         get() = "Uncaught command error: $playerMsg"
 }
 
-@ExperimentalContracts
 fun cRequire(e: Boolean, msg: String) {
     contract {
         returns() implies e
@@ -238,17 +261,14 @@ fun cRequire(e: Boolean, msg: String) {
     if (!e) throw CommandException(msg)
 }
 
-@ExperimentalContracts
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
     cRequire(args.size in min..max, "WrongArgumentsNumber")
 }
 
-@ExperimentalContracts
 fun cPerms(p: CommandSender, perm: String) {
     cRequire(p.hasPermission(perm), "NoPerms")
 }
 
-@ExperimentalContracts
 fun cPlayer(p: CommandSender) {
     contract {
         returns() implies (p is Player)
@@ -295,15 +315,18 @@ class BuildTextComponentScope {
     fun append(str: String) {
         returnValue.addExtra(str)
     }
-    fun append(tc: TextComponent){
+
+    fun append(tc: TextComponent) {
         returnValue.addExtra(tc)
     }
+
     fun append(v: Any?, clickEvent: ClickEvent? = null) {
         val c = TextComponent(v.toString())
         if (clickEvent != null)
             c.clickEvent = clickEvent
         append(c)
     }
+
     fun appendCopy(v: Any?, copy: Any?) {
         append(v, ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, copy.toString()))
     }

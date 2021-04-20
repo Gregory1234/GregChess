@@ -18,7 +18,6 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import java.util.*
-import kotlin.contracts.ExperimentalContracts
 import org.bukkit.event.entity.CreatureSpawnEvent
 
 
@@ -98,14 +97,12 @@ object ChessManager : Listener {
         }
     }
 
-    @ExperimentalContracts
     fun duelMenu(player: Player, callback: (ChessArena, ChessGame.Settings) -> Unit) {
         val arena = cNextArena()
         arena.reserve()
         player.openScreen(ChessGame.SettingsScreen(arena, callback))
     }
 
-    @ExperimentalContracts
     fun leave(player: Player) {
         val p = this[player]
         if (p != null) {
@@ -116,7 +113,6 @@ object ChessManager : Listener {
         }
     }
 
-    @ExperimentalContracts
     fun addSpectator(player: Player, toSpectate: Player) {
         val spec = cNotNull(this[toSpectate], "NotInGame.Player")
         val game = getGame(player)
