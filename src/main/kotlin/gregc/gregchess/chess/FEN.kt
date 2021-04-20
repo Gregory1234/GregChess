@@ -1,7 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.glog
-
 data class FEN(
     val boardState: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
     val currentTurn: ChessSide = ChessSide.WHITE,
@@ -9,7 +7,8 @@ data class FEN(
     val castlingRightsBlack: List<Int> = listOf(0, 7),
     val enPassantSquare: ChessPosition? = null,
     val halfmoveClock: Int = 0,
-    val fullmoveClock: Int = 1
+    val fullmoveClock: Int = 1,
+    val chess960: Boolean = false
 ) {
 
     fun forEachSquare(f: (ChessPosition, Triple<ChessType, ChessSide, Boolean>?) -> Unit) {
@@ -43,15 +42,15 @@ data class FEN(
     }
 
     override fun toString() = "$boardState ${currentTurn.standardChar} ${
-        castlingRightsToString('A', castlingRightsWhite)
+        castlingRightsToString(chess960, 'A', castlingRightsWhite)
     }${
-        castlingRightsToString('a', castlingRightsBlack)
+        castlingRightsToString(chess960, 'a', castlingRightsBlack)
     } ${enPassantSquare ?: "-"} $halfmoveClock $fullmoveClock"
 
     fun toHash() = "$boardState ${currentTurn.standardChar} ${
-        castlingRightsToString('A', castlingRightsWhite)
+        castlingRightsToString(chess960, 'A', castlingRightsWhite)
     }${
-        castlingRightsToString('a', castlingRightsBlack)
+        castlingRightsToString(chess960, 'a', castlingRightsBlack)
     } ${enPassantSquare ?: "-"}"
 
     fun isInitial() = this == FEN()
@@ -59,8 +58,8 @@ data class FEN(
     fun hashed(): Int = toHash().hashCode()
 
     companion object {
-        private fun castlingRightsToString(base: Char, cr: List<Int>) =
-            if (cr.all { it in listOf(0, 7) })
+        private fun castlingRightsToString(chess960: Boolean, base: Char, cr: List<Int>) =
+            if (chess960)
                 cr.map { if (it == 0) base + ('q' - 'a') else base + ('k' - 'a') }.joinToString("")
                     .reversed()
             else
@@ -73,6 +72,26 @@ data class FEN(
                 in 'a'..'h' -> it - 'a'
                 else -> throw IllegalArgumentException(s)
             }
+        }
+
+        private fun detectChess960(board: String, castling: String): Boolean {
+            if (castling.any { it !in "KQkq" })
+                return true
+            val whiteRow = board.split("/").last()
+            val blackRow = board.split("/").first()
+            if ("KQ".any { it in castling } && whiteRow.takeWhile { it != 'K' }
+                    .sumBy { if (it.isDigit()) it.toInt() else 1 } != 4) return true
+            if ("kq".any { it in castling } && blackRow.takeWhile { it != 'k' }
+                    .sumBy { if (it.isDigit()) it.toInt() else 1 } != 4) return true
+            castling.forEach {
+                when (it) {
+                    'K' -> if (!whiteRow.endsWith('R')) return true
+                    'Q' -> if (!whiteRow.startsWith('R')) return true
+                    'k' -> if (!blackRow.endsWith('r')) return true
+                    'q' -> if (!blackRow.startsWith('r')) return true
+                }
+            }
+            return false
         }
 
         fun parseFromString(fen: String): FEN {
@@ -88,7 +107,8 @@ data class FEN(
                 parseCastlingRights(parts[2].filter { it.isLowerCase() }),
                 if (parts[3] == "-") null else ChessPosition.parseFromString(parts[3]),
                 parts[4].toInt(),
-                parts[5].toInt()
+                parts[5].toInt(),
+                detectChess960(parts[0], parts[2])
             )
         }
 

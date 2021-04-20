@@ -7,8 +7,12 @@ import org.bukkit.Sound
 import java.util.*
 import kotlin.math.abs
 
-class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Component {
-    data class Settings(val initialFEN: FEN?, val chess960: Boolean = false) {
+class Chessboard(private val game: ChessGame, private val settings: Settings) :
+    ChessGame.Component {
+    data class Settings(
+        val initialFEN: FEN?,
+        internal val chess960: Boolean = initialFEN?.chess960 ?: false
+    ) {
         fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN(game: ChessGame) = initialFEN ?: game.variant.genFEN(chess960)
@@ -104,6 +108,25 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
         get() = moves
 
     val initialFEN = settings.genFEN(game)
+
+    val chess960: Boolean
+        get() {
+            if (settings.chess960)
+                return true
+            val whiteKing = kingOf(ChessSide.WHITE)
+            val blackKing = kingOf(ChessSide.BLACK)
+            val whiteRooks = piecesOf(ChessSide.WHITE, ChessType.ROOK).filter { !it.hasMoved }
+            val blackRooks = piecesOf(ChessSide.BLACK, ChessType.ROOK).filter { !it.hasMoved }
+            if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != ChessPosition(4, 0))
+                return true
+            if (blackKing != null && !blackKing.hasMoved && blackKing.pos != ChessPosition(4, 7))
+                return true
+            if (whiteRooks.any { it.pos.rank == 0 && it.pos.file !in listOf(0, 7) })
+                return true
+            if (blackRooks.any { it.pos.rank == 7 && it.pos.file !in listOf(0, 7) })
+                return true
+            return false
+        }
 
     var lastMove
         get() = moves.lastOrNull()
@@ -234,7 +257,9 @@ class Chessboard(private val game: ChessGame, settings: Settings) : ChessGame.Co
     fun getFEN(): FEN {
         fun castling(side: ChessSide) =
             if (kingOf(side)?.hasMoved == false)
-                piecesOf(side, ChessType.ROOK).filter { !it.hasMoved }.map { it.pos.file }
+                piecesOf(side, ChessType.ROOK)
+                    .filter { !it.hasMoved && it.pos.rank == kingOf(side)?.pos?.rank }
+                    .map { it.pos.file }
             else emptyList()
 
         return FEN(

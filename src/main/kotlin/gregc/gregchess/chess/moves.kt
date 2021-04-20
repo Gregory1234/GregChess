@@ -272,7 +272,7 @@ fun kingMovement(piece: ChessPiece): List<MoveCandidate> {
                         piece, target,
                         rook, rookTarget,
                         pass + piece.pos, pass + needed,
-                        if (game.settings.board.chess960) rook.square else target
+                        if (game.board.chess960) rook.square else target
                     )
                 }
             }

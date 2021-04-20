@@ -66,13 +66,24 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
             tags += TagPair("Termination", game.endReason?.reasonPGN ?: "unterminated")
             tags += TagPair("Mode", "ICS")
 
-            if (!game.board.initialFEN.isInitial()) {
+            if (!game.board.initialFEN.isInitial() || game.board.chess960) {
                 tags += TagPair("SetUp", "1")
                 tags += TagPair("FEN", game.board.initialFEN.toString())
             }
-            if (game.settings.board.chess960) {
-                tags += TagPair("Variant", "Chess960")
-            }
+            val variant = mutableListOf<String>().apply {
+                if (game.variant != ChessVariant.Normal) {
+                    this += game.variant.name
+                }
+                if (game.board.chess960) {
+                    this += "Chess960"
+                }
+                if (game.settings.simpleCastling) {
+                    this += "SimpleCastling"
+                }
+            }.joinToString(" ")
+
+            if (variant.isNotBlank())
+                tags += TagPair("Variant", variant)
 
             return PGN(
                 tags,
