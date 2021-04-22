@@ -13,8 +13,6 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
 import java.io.File
-import java.lang.IllegalArgumentException
-import java.lang.NullPointerException
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -161,15 +159,6 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
         glog.low("Cleared", name)
     }
 
-    fun delete() {
-        if (!worldCreated)
-            return
-        val folder = world.worldFolder
-        Bukkit.unloadWorld(world, false)
-        folder.deleteRecursively()
-        glog.io("Deleted arena", name)
-    }
-
     override fun toString() = "Arena(name = ${world.name})"
     fun clearScoreboard() {
         scoreboard.teams.forEach { it.unregister() }
@@ -305,10 +294,9 @@ fun isValidUUID(s: String) =
     Regex("""^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}${'$'}""")
         .matches(s)
 
-inline fun <reified T> Array<T>.dropArray(n: Int) = drop(n).toTypedArray()
-
-inline fun <T, U, R> Iterable<T>.star(other: Iterable<U>, function: (T, U) -> R): List<R> =
-    flatMap { x -> other.map { y -> function(x, y) } }
+operator fun Pair<Int, Int>.rangeTo(other: Pair<Int, Int>) = (first..other.first).flatMap { i ->
+    (second..other.second).map { j -> Pair(i, j) }
+}
 
 class BuildTextComponentScope {
     val returnValue = TextComponent()

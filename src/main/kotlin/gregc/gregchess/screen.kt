@@ -1,8 +1,6 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.SettingsManager
 import org.bukkit.Bukkit
-import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
@@ -12,22 +10,24 @@ abstract class Screen<T>(val namePath: String) {
     abstract fun onClick(v: T)
     abstract fun onCancel()
     fun create() = Holder(this)
-    class Holder<T> internal constructor(private val screen: Screen<T>): InventoryHolder {
+    class Holder<T> internal constructor(private val screen: Screen<T>) : InventoryHolder {
+        private val content = screen.getContent()
         private val inv = Bukkit.createInventory(
             this,
-            9,
+            content.size - content.size % 9 + 9,
             ConfigManager.getString(screen.namePath)
         )
+
         var finished: Boolean = false
 
         init {
-            screen.getContent().forEach { (item, _, pos) -> inv.setItem(pos.index, item) }
+            content.forEach { (item, _, pos) -> inv.setItem(pos.index, item) }
         }
 
         override fun getInventory() = inv
 
         fun applyEvent(choice: InventoryPosition): Boolean {
-            screen.getContent().forEach { (_, v, pos) ->
+            content.forEach { (_, v, pos) ->
                 if (pos == choice) {
                     screen.onClick(v)
                     finished = true
@@ -45,6 +45,7 @@ abstract class Screen<T>(val namePath: String) {
 
 data class InventoryPosition(val x: Int, val y: Int) {
     val index = x + y * 9
+
     companion object {
         fun fromIndex(index: Int) = InventoryPosition(index % 9, index.div(9))
     }

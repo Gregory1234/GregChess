@@ -1,6 +1,5 @@
 package gregc.gregchess
 
-import java.lang.IllegalArgumentException
 import kotlin.reflect.KClass
 
 object ConfigManager : View("")
@@ -15,17 +14,12 @@ open class View protected constructor(private val rootPath: String = "") {
 
     fun getView(path: String) = View(childPath(path))
 
-    val keys: List<String>
-        get() = section?.getKeys(false)?.toList().orEmpty()
-
-    val children: Map<String,View>
+    val children: Map<String, View>
         get() = section?.getKeys(false)?.mapNotNull {
             val view = getView(it)
             if (view.exists) Pair(it, view)
             else null
         }.orEmpty().toMap()
-
-    fun toMap() = section?.getValues(false)?.mapValues { (_, v) -> v.toString() }.orEmpty()
 
     val exists
         get() = section != null
@@ -117,7 +111,8 @@ open class View protected constructor(private val rootPath: String = "") {
 
     fun getHexString(path: String) = get(path, "hex string", null) { hexToBytes(it) }
 
-    fun getBool(path: String, default: Boolean) = get(path, "boolean", default, false) { it.toBoolean() }
+    fun getBool(path: String, default: Boolean) =
+        get(path, "boolean", default, false) { it.toBoolean() }
 
     fun getStringList(path: String) = getList(path, "string") { chatColor(it) }
 }

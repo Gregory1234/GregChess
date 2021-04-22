@@ -292,7 +292,7 @@ class GregChess : JavaPlugin(), Listener {
         }
     }
 
-    fun CommandArgs.selectPiece() =
+    private fun CommandArgs.selectPiece() =
         when (rest().size) {
             0 -> {
                 cPlayer(player)
@@ -310,13 +310,16 @@ class GregChess : JavaPlugin(), Listener {
                 } else {
                     cPlayer(player)
                     val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
-                    cNotNull(game.board[ChessPosition.parseFromString(latestArg())]?.piece, "PieceNotFound")
+                    cNotNull(
+                        game.board[ChessPosition.parseFromString(latestArg())]?.piece,
+                        "PieceNotFound"
+                    )
                 }
             }
             else -> throw CommandException("WrongArgumentsNumber")
         }
 
-    fun CommandArgs.selectGame() =
+    private fun CommandArgs.selectGame() =
         when (rest().size) {
             0 -> {
                 cPlayer(player)

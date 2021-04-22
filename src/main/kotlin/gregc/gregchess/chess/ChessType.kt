@@ -5,7 +5,6 @@ import gregc.gregchess.chatColor
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
-import java.lang.IllegalArgumentException
 
 enum class ChessType(
     path: String,

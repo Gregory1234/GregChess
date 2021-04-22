@@ -145,7 +145,9 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) :
     }
 
     override fun update() {
-        ChessSide.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
+        ChessSide.values().forEach {
+            if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it)
+        }
     }
 
     override fun endTurn() {

@@ -1,14 +1,13 @@
 package gregc.gregchess
 
 import org.bukkit.Bukkit
-import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
 
 object TimeManager {
 
-    class CancellableContext internal constructor(private val r: BukkitRunnable){
-        fun cancel(){
+    class CancellableContext internal constructor(private val r: BukkitRunnable) {
+        fun cancel() {
             r.cancel()
         }
     }
@@ -18,9 +17,9 @@ object TimeManager {
     }
 
     fun runTaskTimer(delay: Duration, period: Duration, callback: CancellableContext.() -> Unit) {
-        object : BukkitRunnable(){
+        object : BukkitRunnable() {
             val cc = CancellableContext(this)
-            override fun run(){
+            override fun run() {
                 cc.callback()
             }
         }.runTaskTimer(GregInfo.plugin, delay.toTicks(), period.toTicks())

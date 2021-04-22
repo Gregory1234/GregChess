@@ -4,7 +4,7 @@ import gregc.gregchess.ConfigManager
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.doIn
 import gregc.gregchess.glog
-import gregc.gregchess.star
+import gregc.gregchess.rangeTo
 import org.bukkit.Material
 
 abstract class ChessVariant(val name: String) {
@@ -206,7 +206,7 @@ abstract class ChessVariant(val name: String) {
             ChessGame.EndReason("Chess.EndReason.KingOfTheHill", "normal", winner)
 
         override fun chessboardSetup(board: Chessboard) {
-            (3..4).star((3..4)) { x, y ->
+            (Pair(3, 3)..Pair(4, 4)).forEach { (x, y) ->
                 board[ChessPosition(x, y)]?.variantMarker = Material.PURPLE_CONCRETE
                 board[ChessPosition(x, y)]?.render()
             }

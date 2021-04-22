@@ -1,12 +1,12 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.buildTextComponent
+import gregc.gregchess.chess.ChessVariant.MoveLegality.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.glog
 import org.bukkit.Material
 import org.bukkit.Sound
 import java.util.*
-import gregc.gregchess.chess.ChessVariant.MoveLegality.*
-import net.md_5.bungee.api.chat.ClickEvent
 
 class ChessPiece(
     val type: ChessType,

@@ -25,7 +25,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
 
     val clock: ChessClock? = settings.clock?.getComponent(this)
 
-    private val components = listOfNotNull<Component>(board, clock).toMutableList()
+    private val components = listOfNotNull(board, clock).toMutableList()
 
     fun registerComponent(c: Component) {
         components += c
@@ -59,7 +59,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
 
     val scoreboard = ScoreboardManager(this)
 
-    class AddPlayersScope(private val game: ChessGame){
+    class AddPlayersScope(private val game: ChessGame) {
 
         fun human(p: Player, side: ChessSide, silent: Boolean) {
             game.players += ChessPlayer.Human(p, side, silent, game)
@@ -195,6 +195,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         override fun toString() =
             "EndReason.${javaClass.name.split(".", "$").last()}(winner = $winner)"
 
+        // @formatter:off
         class Checkmate(winner: ChessSide) : EndReason("Chess.EndReason.Checkmate", "normal", winner)
         class Resignation(winner: ChessSide) : EndReason("Chess.EndReason.Resignation", "abandoned", winner)
         class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", "abandoned", winner)
@@ -211,6 +212,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
             override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
         }
         class AllPiecesLost(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.PiecesLost", "normal", winner)
+        // @formatter:on
 
         fun getMessage() = ConfigManager.getFormatString(
             when (winner) {
@@ -303,7 +305,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
                     Bukkit.getPluginManager().callEvent(EndEvent(this))
                 }
             }
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             arena.world.players.forEach { arena.safeExit(it) }
             Bukkit.getPluginManager().callEvent(EndEvent(this))
             throw e

@@ -72,7 +72,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
 
         fun fillFloor(pos: ChessPosition, floor: Material) {
             val (x, y, z) = getPieceLoc(pos)
-            (-1..1).star(-1..1) { i, j ->
+            (Pair(-1, -1)..Pair(1, 1)).forEach { (i, j) ->
                 board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
             }
         }
@@ -80,10 +80,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
 
     val renderer = Renderer(this)
 
-    private val boardState = (0..7).star(0..7) { i, j ->
+    private val boardState = (Pair(0, 0)..Pair(7, 7)).associate { (i, j) ->
         val pos = ChessPosition(i, j)
-        Pair(pos, ChessSquare(pos, game))
-    }.toMap()
+        pos to ChessSquare(pos, game)
+    }
 
     private var movesSinceLastCapture = 0
     private var fullMoveCounter = 0

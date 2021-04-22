@@ -4,6 +4,7 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+@Suppress("unused")
 class GregLogger(private val logFile: File) {
     enum class Level {
         LOW_DEBUG, MID_DEBUG, HIGH_DEBUG, IO_DEBUG, WARNING, DEBUG

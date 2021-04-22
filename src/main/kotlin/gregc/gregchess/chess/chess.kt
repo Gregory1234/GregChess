@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import org.bukkit.*
 import org.bukkit.generator.ChunkGenerator
-import java.lang.Exception
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -73,7 +72,7 @@ data class ChessPosition(val file: Int, val rank: Int) {
     val rankStr = (rank + 1).toString()
 
     fun neighbours(): List<ChessPosition> =
-        (-1..1).star(-1..1) { a, b -> this.plus(a, b) }.filter { it.isValid() } - this
+        (Pair(-1, -1)..Pair(1, 1)).map(::plus).filter { it.isValid() } - this
 
     fun isValid() = file in (0..7) && rank in (0..7)
 
