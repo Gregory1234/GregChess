@@ -1,5 +1,7 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.component6
+
 data class FEN(
     val boardState: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
     val currentTurn: ChessSide = ChessSide.WHITE,
@@ -41,17 +43,29 @@ data class FEN(
         }
     }
 
-    override fun toString() = "$boardState ${currentTurn.standardChar} ${
-        castlingRightsToString(chess960, 'A', castlingRightsWhite)
-    }${
-        castlingRightsToString(chess960, 'a', castlingRightsBlack)
-    } ${enPassantSquare ?: "-"} $halfmoveClock $fullmoveClock"
+    override fun toString() = buildString {
+        append(boardState)
+        append(" ")
+        append(currentTurn.standardChar)
+        append(" ")
+        append(castlingRightsToString(chess960, 'A', castlingRightsWhite))
+        append(castlingRightsToString(chess960, 'a', castlingRightsBlack))
+        append(enPassantSquare ?: "-")
+        append(" ")
+        append(halfmoveClock)
+        append(" ")
+        append(fullmoveClock)
+    }
 
-    fun toHash() = "$boardState ${currentTurn.standardChar} ${
-        castlingRightsToString(chess960, 'A', castlingRightsWhite)
-    }${
-        castlingRightsToString(chess960, 'a', castlingRightsBlack)
-    } ${enPassantSquare ?: "-"}"
+    fun toHash() = buildString {
+        append(boardState)
+        append(" ")
+        append(currentTurn.standardChar)
+        append(" ")
+        append(castlingRightsToString(chess960, 'A', castlingRightsWhite))
+        append(castlingRightsToString(chess960, 'a', castlingRightsBlack))
+        append(enPassantSquare ?: "-")
+    }
 
     fun isInitial() = this == FEN()
 
@@ -59,17 +73,14 @@ data class FEN(
 
     companion object {
         private fun castlingRightsToString(chess960: Boolean, base: Char, cr: List<Int>) =
-            if (chess960)
-                cr.map { if (it == 0) base + ('q' - 'a') else base + ('k' - 'a') }.joinToString("")
-                    .reversed()
-            else
-                cr.map { base + it }.joinToString("")
+            cr.map { base + if (chess960) (if (it < 4) 'q' else 'a') - 'a' else it }.sorted()
+                .joinToString("")
 
-        private fun parseCastlingRights(s: String) = s.toLowerCase().map {
-            when (it) {
-                'k' -> 7
-                'q' -> 0
-                in 'a'..'h' -> it - 'a'
+        private fun parseCastlingRights(r: String, s: String) = s.toLowerCase().map { c ->
+            when (c) {
+                'k' -> r.indexOfLast { it.toLowerCase() == 'r' }
+                'q' -> r.indexOfFirst { it.toLowerCase() == 'r' }
+                in 'a'..'h' -> c - 'a'
                 else -> throw IllegalArgumentException(s)
             }
         }
@@ -97,18 +108,19 @@ data class FEN(
         fun parseFromString(fen: String): FEN {
             val parts = fen.split(" ")
             if (parts.size != 6) throw IllegalArgumentException(fen)
-            if (parts[1].length != 1) throw IllegalArgumentException(fen)
-            if (parts[4].toInt() < 0) throw IllegalArgumentException(fen)
-            if (parts[5].toInt() <= 0) throw IllegalArgumentException(fen)
+            val (board, turn, castling, enPassant, halfmove, fullmove) = parts
+            if (turn.length != 1) throw IllegalArgumentException(fen)
+            if (halfmove.toInt() < 0) throw IllegalArgumentException(fen)
+            if (fullmove.toInt() <= 0) throw IllegalArgumentException(fen)
             return FEN(
-                parts[0],
-                ChessSide.parseFromStandardChar(parts[1][0]),
-                parseCastlingRights(parts[2].filter { it.isUpperCase() }),
-                parseCastlingRights(parts[2].filter { it.isLowerCase() }),
-                if (parts[3] == "-") null else ChessPosition.parseFromString(parts[3]),
-                parts[4].toInt(),
-                parts[5].toInt(),
-                detectChess960(parts[0], parts[2])
+                board,
+                ChessSide.parseFromStandardChar(turn[0]),
+                parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
+                parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() }),
+                if (enPassant == "-") null else ChessPosition.parseFromString(enPassant),
+                halfmove.toInt(),
+                fullmove.toInt(),
+                detectChess960(board, castling)
             )
         }
 
@@ -129,7 +141,8 @@ data class FEN(
             return FEN(
                 "$row/$pawns/8/8/8/8/${pawns.toUpperCase()}/${row.toUpperCase()}",
                 castlingRightsWhite = listOf(r1, r2),
-                castlingRightsBlack = listOf(r1, r2)
+                castlingRightsBlack = listOf(r1, r2),
+                chess960 = true
             )
         }
     }

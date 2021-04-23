@@ -290,6 +290,8 @@ fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
 
 fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
 
+operator fun <E> List<E>.component6(): E = this[5]
+
 fun isValidUUID(s: String) =
     Regex("""^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}${'$'}""")
         .matches(s)
