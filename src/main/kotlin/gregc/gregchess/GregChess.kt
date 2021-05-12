@@ -15,7 +15,7 @@ class GregChess : JavaPlugin(), Listener {
 
     private val drawRequest = RequestTypeBuilder<Unit>().messagesSimple(
         "Draw", "/chess draw", "/chess draw"
-    ).validate { ChessManager[it]?.hasTurn() ?: false }.onAccept { (sender, _, _) ->
+    ).validate { ChessManager[it]?.hasTurn ?: false }.onAccept { (sender, _, _) ->
         ChessManager.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())
     }.register()
 

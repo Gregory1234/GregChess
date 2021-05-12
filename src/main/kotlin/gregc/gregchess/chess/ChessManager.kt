@@ -152,11 +152,13 @@ object ChessManager : Listener {
         if (player.isAdmin)
             return
         e.isCancelled = true
-        val block = e.clickedBlock ?: return
-        if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
-            player.pickUp(player.game.board.renderer.getPos(block.loc))
-        } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
-            player.makeMove(player.game.board.renderer.getPos(block.loc))
+        if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
+            val block = e.clickedBlock ?: return
+            if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
+                player.pickUp(player.game.board.renderer.getPos(block.loc))
+            } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {
+                player.makeMove(player.game.board.renderer.getPos(block.loc))
+            }
         }
     }
 

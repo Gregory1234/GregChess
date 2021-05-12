@@ -218,6 +218,9 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
         boardState.forEach { (_, square) ->
             square.bakedMoves = square.piece?.let { p -> p.type.moveScheme(p) }
         }
+        boardState.forEach { (_, square) ->
+            square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it) }
+        }
     }
 
 

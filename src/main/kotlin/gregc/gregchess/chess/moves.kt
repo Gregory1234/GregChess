@@ -22,16 +22,12 @@ class MoveData(
 
     fun clear() {
         origin.previousMoveMarker = null
-        origin.render()
         display.previousMoveMarker = null
-        display.render()
     }
 
     fun render() {
         origin.previousMoveMarker = Material.BROWN_CONCRETE
-        origin.render()
         display.previousMoveMarker = Material.ORANGE_CONCRETE
-        display.render()
     }
 }
 

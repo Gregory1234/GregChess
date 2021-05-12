@@ -242,12 +242,25 @@ class ChessEngine(val name: String) {
 data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
     var piece: ChessPiece? = null
     var bakedMoves: List<MoveCandidate>? = null
+    var bakedLegalMoves: List<MoveCandidate>? = null
 
     private val baseFloor =
         if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
     var variantMarker: Material? = null
+        set(v) {
+            field = v
+            render()
+        }
     var previousMoveMarker: Material? = null
+        set(v) {
+            field = v
+            render()
+        }
     var moveMarker: Material? = null
+        set(v) {
+            field = v
+            render()
+        }
     private val floor
         get() = moveMarker ?: previousMoveMarker ?: variantMarker ?: baseFloor
 

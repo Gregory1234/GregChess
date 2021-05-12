@@ -6,10 +6,22 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 
 
-abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val game: ChessGame) {
+abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val game: ChessGame): ChessGame.Component {
 
     var held: ChessPiece? = null
-    protected var heldMoves: List<MoveCandidate>? = null
+        set(v) {
+            v?.let {
+                it.square.moveMarker = Material.YELLOW_CONCRETE
+                it.square.bakedLegalMoves?.forEach(MoveCandidate::render)
+                it.pickUp()
+            }
+            field?.let {
+                it.square.moveMarker = null
+                it.square.bakedLegalMoves?.forEach(MoveCandidate::clear)
+                it.placeDown()
+            }
+            field = v
+        }
 
     abstract val name: String
 
@@ -20,16 +32,18 @@ abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val
     val opponent
         get() = game[!side]
 
-    fun hasTurn(): Boolean = game.currentTurn == side
+    val hasTurn
+        get() = game.currentTurn == side
 
-    open fun stop() {}
+    val pieces
+        get() = game.board.piecesOf(side)
 
-    fun announceInCheck() {
+    val king
+        get() = game.board.kingOf(side)
+
+    private fun announceInCheck() {
         if (!silent) {
-            sendTitle(
-                ConfigManager.getString("Title.YourTurn"),
-                ConfigManager.getString("Title.InCheck")
-            )
+            sendTitle(ConfigManager.getString("Title.YourTurn"), ConfigManager.getString("Title.InCheck"))
             sendMessage(ConfigManager.getString("Message.InCheck"))
         } else {
             sendTitle(ConfigManager.getString("Title.InCheck"))
@@ -37,12 +51,11 @@ abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val
         }
     }
 
-    open fun startTurn() {
+    override fun startTurn() {
         if (!silent) {
             sendTitle(ConfigManager.getString("Title.YourTurn"))
         }
-        val king = game.board.kingOf(side)
-        if (king != null && game.variant.isInCheck(king))
+        if (king?.let { game.variant.isInCheck(it) } == true)
             announceInCheck()
     }
 
@@ -91,30 +104,18 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
     fun pickUp(pos: ChessPosition) {
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
-        piece.square.moveMarker = Material.YELLOW_CONCRETE
-        piece.square.render()
-        heldMoves = piece.square.bakedMoves.orEmpty().filter { game.variant.isLegal(it) }
-        heldMoves?.forEach { it.render() }
         held = piece
-        piece.pickUp()
-        player.inventory.setItem(0, piece.type.getItem(piece.side))
+        player.inventory.setItem(0, piece.item)
     }
 
     fun makeMove(pos: ChessPosition) {
         val newSquare = game.board[pos] ?: return
         val piece = held ?: return
-        val moves = heldMoves ?: return
+        val moves = piece.square.bakedLegalMoves ?: return
         if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
-        piece.square.moveMarker = null
-        piece.square.render()
-        moves.forEach { it.clear() }
         held = null
-        heldMoves = null
         player.inventory.setItem(0, null)
-        if (newSquare == piece.square) {
-            piece.placeDown()
-            return
-        }
+        if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1) {
             val promotingMoves = chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } }
@@ -125,8 +126,7 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
     }
 }
 
-class EnginePlayer(val engine: ChessEngine, side: ChessSide, game: ChessGame) :
-    ChessPlayer(side, true, game) {
+class EnginePlayer(val engine: ChessEngine, side: ChessSide, game: ChessGame) : ChessPlayer(side, true, game) {
 
     override val name = engine.name
 
