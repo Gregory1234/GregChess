@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import org.bukkit.scoreboard.DisplaySlot
+import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.Team
 
 class ScoreboardManager(private val game: ChessGame) {
@@ -10,8 +11,7 @@ class ScoreboardManager(private val game: ChessGame) {
 
     private val view = ConfigManager.getView("Component.Scoreboard")
 
-    private val objective =
-        game.arena.scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))
+    private lateinit var objective: Objective
 
     private var stopping = false
 
@@ -27,11 +27,12 @@ class ScoreboardManager(private val game: ChessGame) {
         var s: String
         do {
             s = randomString(16)
-        } while (game.arena.scoreboard.getTeam(s) != null)
-        return game.arena.scoreboard.registerNewTeam(s)
+        } while (game.renderer.scoreboard.getTeam(s) != null)
+        return game.renderer.scoreboard.registerNewTeam(s)
     }
 
     fun start() {
+        objective = game.renderer.scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
@@ -77,7 +78,7 @@ class ScoreboardManager(private val game: ChessGame) {
         if (stopping)
             return
         stopping = true
-        game.arena.clearScoreboard()
+        game.renderer.clearScoreboard()
     }
 }
 

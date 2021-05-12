@@ -2,7 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.buildTextComponent
 import gregc.gregchess.chess.ChessVariant.MoveLegality.*
-import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.glog
 import org.bukkit.Material
 import org.bukkit.Sound
@@ -47,23 +46,23 @@ class ChessPiece(
         val type: ChessType,
         val side: ChessSide,
         val by: ChessSide,
-        private val board: Chessboard
+        val pos: Pair<Int, Int>,
+        private val game: ChessGame
     ) {
-
         private val loc
-            get() = board.renderer.getCapturedLoc(this)
+            get() = game.renderer.getCapturedLoc(pos, by)
 
         fun render() {
-            board.renderer.renderPiece(loc, type.getStructure(side))
+            game.renderer.renderPiece(loc, type.getStructure(side))
         }
 
         fun hide() {
-            board.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
+            game.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
         }
     }
 
     private val loc
-        get() = board.renderer.getPieceLoc(pos)
+        get() = game.renderer.getPieceLoc(pos)
 
     init {
         render()
@@ -71,11 +70,11 @@ class ChessPiece(
     }
 
     private fun render() {
-        board.renderer.renderPiece(loc, type.getStructure(side))
+        game.renderer.renderPiece(loc, type.getStructure(side))
     }
 
     private fun hide() {
-        board.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
+        game.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
     }
 
     fun move(target: ChessSquare) {
@@ -100,7 +99,7 @@ class ChessPiece(
     fun capture(by: ChessSide): Captured {
         glog.mid("Captured", type, "at", pos)
         clear()
-        val captured = Captured(type, side, by, square.board)
+        val captured = Captured(type, side, by, board.nextCapturedPos(type, by), game)
         board += captured
         playCaptureSound()
         return captured
@@ -113,7 +112,7 @@ class ChessPiece(
     }
 
     private fun playSound(s: Sound) {
-        board.renderer.playPieceSound(pos, s)
+        game.renderer.playPieceSound(pos, s)
     }
 
     private fun playPickUpSound() = playSound(type.getSound("PickUp"))

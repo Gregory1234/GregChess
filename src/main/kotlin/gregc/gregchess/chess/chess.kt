@@ -271,7 +271,7 @@ data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
         "ChessSquare(game.uniqueId = ${game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
 
     fun render() {
-        board.renderer.fillFloor(pos, floor)
+        game.renderer.fillFloor(pos, floor)
     }
 
     fun clear() {
@@ -280,7 +280,7 @@ data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
         bakedMoves = null
         previousMoveMarker = null
         moveMarker = null
-        board.renderer.fillFloor(pos, floor)
+        game.renderer.fillFloor(pos, floor)
     }
 
     fun neighbours() = pos.neighbours().mapNotNull { this.board[it] }

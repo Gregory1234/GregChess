@@ -14,10 +14,10 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
-class ChessGame(val arena: ChessArena, val settings: Settings) {
+class ChessGame(val settings: Settings) {
     val uniqueId: UUID = UUID.randomUUID()
 
-    override fun toString() = "ChessGame(arena = $arena, uniqueId = $uniqueId)"
+    override fun toString() = "ChessGame(uniqueId = $uniqueId)"
 
     val variant = settings.variant
 
@@ -25,7 +25,9 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
 
     val clock: ChessClock? = settings.clock?.getComponent(this)
 
-    private val components = listOfNotNull(board, clock).toMutableList()
+    val renderer: Renderer = Renderer(this)
+
+    private val components = listOfNotNull(board, clock, renderer).toMutableList()
 
     fun registerComponent(c: Component) {
         components += c
@@ -53,9 +55,6 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         get() = players.mapNotNull { (it as? BukkitChessPlayer)?.player }.distinct()
 
     var currentTurn = ChessSide.WHITE
-
-    val world
-        get() = arena.world
 
     val scoreboard = ScoreboardManager(this)
 
@@ -128,33 +127,39 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     fun start(): ChessGame {
         try {
             startTime = LocalDateTime.now()
-            scoreboard += object :
-                GameProperty(ConfigManager.getString("Component.Scoreboard.Preset")) {
-                override fun invoke() = settings.name
+            if (renderer.checkForFreeArenas()) {
+                scoreboard += object :
+                    GameProperty(ConfigManager.getString("Component.Scoreboard.Preset")) {
+                    override fun invoke() = settings.name
+                }
+                scoreboard += object :
+                    PlayerProperty(ConfigManager.getString("Component.Scoreboard.Player")) {
+                    override fun invoke(s: ChessSide) =
+                        ConfigManager.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
+                }
+                forEachPlayer(renderer::addPlayer)
+                black?.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
+                white?.sendTitle(
+                    ConfigManager.getString("Title.YourTurn"),
+                    ConfigManager.getString("Title.YouArePlayingAs.White")
+                )
+                white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
+                black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
+                components.forEach { it.start() }
+                variant.start(this)
+                scoreboard.start()
+                started = true
+                glog.mid("Started game", uniqueId)
+                Bukkit.getPluginManager().callEvent(StartEvent(this))
+                startTurn()
+            } else {
+                forEachPlayer { it.sendMessage(ConfigManager.getError("NoArenas")) }
+                stopping = true
+                glog.mid("No free arenas", uniqueId)
             }
-            scoreboard += object :
-                PlayerProperty(ConfigManager.getString("Component.Scoreboard.Player")) {
-                override fun invoke(s: ChessSide) =
-                    ConfigManager.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
-            }
-            forEachPlayer(arena::teleport)
-            black?.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
-            white?.sendTitle(
-                ConfigManager.getString("Title.YourTurn"),
-                ConfigManager.getString("Title.YouArePlayingAs.White")
-            )
-            white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
-            black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
-            components.forEach { it.start() }
-            variant.start(this)
-            scoreboard.start()
-            started = true
-            glog.mid("Started game", uniqueId)
-            Bukkit.getPluginManager().callEvent(StartEvent(this))
-            startTurn()
             return this
         } catch (e: Exception) {
-            arena.world.players.forEach { if (it in realPlayers) arena.safeExit(it) }
+            renderer.evacuate()
             forEachPlayer { it.sendMessage(ConfigManager.getError("TeleportFailed")) }
             stopping = true
             components.forEach { it.stop() }
@@ -167,13 +172,11 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     fun spectate(p: Player) {
         components.forEach { it.spectatorJoin(p) }
         spectatorUUID += p.uniqueId
-        arena.teleportSpectator(p)
     }
 
     fun spectatorLeave(p: Player) {
         components.forEach { it.spectatorLeave(p) }
         spectatorUUID -= p.uniqueId
-        arena.exit(p)
     }
 
     private fun startTurn() {
@@ -201,6 +204,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", "abandoned", winner)
         class PluginRestart : EndReason("Chess.EndReason.PluginRestart", "emergency", null)
         class ArenaRemoved : EndReason("Chess.EndReason.ArenaRemoved", "emergency", null)
+        class NoArenaEndReason : ChessGame.EndReason("Chess.EndReason.NoArena", "emergency", null)
         class Stalemate : EndReason("Chess.EndReason.Stalemate", "normal", null)
         class InsufficientMaterial : EndReason("Chess.EndReason.InsufficientMaterial", "normal", null)
         class FiftyMoves : EndReason("Chess.EndReason.FiftyMoves", "normal", null)
@@ -262,11 +266,11 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
                 }
                 it.sendMessage(reason.getMessage())
                 if (it in quick) {
-                    arena.exit(it)
+                    renderer.removePlayer(it)
                 } else {
                     anyLong = true
                     TimeManager.runTaskLater(3.seconds) {
-                        arena.exit(it)
+                        renderer.removePlayer(it)
                     }
                 }
             }
@@ -284,10 +288,10 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
                 }
                 it.sendMessage(reason.getMessage())
                 if (anyLong) {
-                    arena.exit(it)
+                    renderer.removePlayer(it)
                 } else {
                     TimeManager.runTaskLater(3.seconds) {
-                        arena.exit(it)
+                        renderer.removePlayer(it)
                     }
                 }
             }
@@ -300,13 +304,13 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
                 components.forEach { it.clear() }
                 TimeManager.runTaskLater(1.ticks) {
                     players.forEach(ChessPlayer::stop)
-                    arena.clear()
+                    renderer.clearArena()
                     glog.low("Stopped game", uniqueId, reason)
                     Bukkit.getPluginManager().callEvent(EndEvent(this))
                 }
             }
         } catch (e: Exception) {
-            arena.world.players.forEach { arena.safeExit(it) }
+            renderer.evacuate()
             Bukkit.getPluginManager().callEvent(EndEvent(this))
             throw e
         }
@@ -348,15 +352,14 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         appendCopy("UUID: $uniqueId\n", uniqueId)
         append("Players: ${players.joinToString { "${it.name} as ${it.side.standardName}" }}\n")
         append("Spectators: ${spectators.joinToString { it.name }}\n")
-        append("Arena: ${arena.name}\n")
+        append("Arena: ${renderer.arenaName}\n")
         append("Preset: ${settings.name}\n")
         append("Variant: ${variant.name}\n")
         append("Components: ${components.joinToString { it.javaClass.simpleName }}")
     }
 
     class SettingsScreen(
-        private val arena: ChessArena,
-        private inline val startGame: (ChessArena, Settings) -> Unit
+        private inline val startGame: (Settings) -> Unit
     ) : Screen<Settings>("Message.ChooseSettings") {
         override fun getContent() =
             SettingsManager.settingsChoice.toList().mapIndexed { index, (name, s) ->
@@ -368,11 +371,10 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
             }
 
         override fun onClick(v: Settings) {
-            startGame(arena, v)
+            startGame(v)
         }
 
         override fun onCancel() {
-            arena.clear()
         }
     }
 

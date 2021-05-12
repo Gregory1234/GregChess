@@ -37,7 +37,7 @@ class GregChess : JavaPlugin(), Listener {
                 human(receiver, ChessSide.BLACK, sender == receiver)
             }.start()
         }.onCancel { (_, _, t) ->
-            t.arena.clear()
+            t.renderer.clearArena()
         }.register()
 
     override fun onEnable() {
@@ -65,9 +65,9 @@ class GregChess : JavaPlugin(), Listener {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!ChessManager.isInGame(opponent), "InGame.Opponent")
-                            ChessManager.duelMenu(player) { arena, settings ->
-                                duelRequest += Request(player, opponent, ChessGame(arena, settings))
-                            }
+                            player.openScreen(ChessGame.SettingsScreen { settings ->
+                                duelRequest += Request(player, opponent, ChessGame(settings))
+                            })
                         }
                     }
                 }
@@ -75,12 +75,12 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     endArgs()
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
-                    ChessManager.duelMenu(player) { arena, settings ->
-                        ChessGame(arena, settings).addPlayers {
+                    player.openScreen(ChessGame.SettingsScreen { settings ->
+                        ChessGame(settings).addPlayers {
                             human(player, ChessSide.WHITE, false)
                             engine("stockfish", ChessSide.BLACK)
                         }.start()
-                    }
+                    })
                 }
                 "resign" -> {
                     cPlayer(player)
@@ -105,7 +105,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.debug")
                     val p = cNotNull(ChessManager[player], "NotInGame.You")
                     val pos = if (args.size == 1)
-                        p.game.board.renderer.getPos(Loc.fromLocation(player.location))
+                        p.game.renderer.getPos(Loc.fromLocation(player.location))
                     else
                         cWrongArgument { ChessPosition.parseFromString(nextArg()) }
                     endArgs()

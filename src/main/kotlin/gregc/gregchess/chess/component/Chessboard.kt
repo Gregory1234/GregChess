@@ -2,8 +2,6 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import org.bukkit.Material
-import org.bukkit.Sound
 import java.util.*
 import kotlin.math.abs
 
@@ -41,45 +39,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
         }
     }
 
-    class Renderer(private val board: Chessboard) {
-        fun getPos(loc: Loc) =
-            ChessPosition(Math.floorDiv(4 * 8 - 1 - loc.x, 3), Math.floorDiv(loc.z - 8, 3))
-
-        fun getPieceLoc(pos: ChessPosition) =
-            Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
-
-        fun getCapturedLoc(piece: ChessPiece.Captured): Loc {
-            val cap = board.capturedPieces.takeWhile { it != piece }
-            val pos = if (piece.type == ChessType.PAWN)
-                Pair(cap.count { it.by == piece.by && it.type == ChessType.PAWN }, 1)
-            else
-                Pair(cap.count { it.by == piece.by && it.type != ChessType.PAWN }, 0)
-            return when (piece.by) {
-                ChessSide.WHITE -> Loc(4 * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
-                ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * 4 + 2 + 2 * pos.second)
-            }
-        }
-
-        fun renderPiece(loc: Loc, structure: List<Material>) {
-            structure.forEachIndexed { i, m ->
-                board.game.world.getBlockAt(loc.copy(y = loc.y + i)).type = m
-            }
-        }
-
-        fun playPieceSound(pos: ChessPosition, sound: Sound) {
-            getPieceLoc(pos).doIn(board.game.world) { world, l -> world.playSound(l, sound) }
-        }
-
-        fun fillFloor(pos: ChessPosition, floor: Material) {
-            val (x, y, z) = getPieceLoc(pos)
-            (Pair(-1, -1)..Pair(1, 1)).forEach { (i, j) ->
-                board.game.world.getBlockAt(x + i, y - 1, z + j).type = floor
-            }
-        }
-    }
-
-    val renderer = Renderer(this)
-
     private val boardState = (Pair(0, 0)..Pair(7, 7)).associate { (i, j) ->
         val pos = ChessPosition(i, j)
         pos to ChessSquare(pos, game)
@@ -100,7 +59,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
 
     operator fun get(pos: ChessPosition) = boardState[pos]
 
-    operator fun get(loc: Loc) = this[renderer.getPos(loc)]
+    operator fun get(loc: Loc) = this[game.renderer.getPos(loc)]
 
     private val moves: MutableList<MoveData> = mutableListOf()
 
@@ -167,14 +126,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
     }
 
     private fun render() {
-        for (i in 0 until 8 * 5) {
-            for (j in 0 until 8 * 5) {
-                game.world.getBlockAt(i, 100, j).type = Material.DARK_OAK_PLANKS
-                if (i in 8 - 1..8 * 4 && j in 8 - 1..8 * 4) {
-                    game.world.getBlockAt(i, 101, j).type = Material.DARK_OAK_PLANKS
-                }
-            }
-        }
+        game.renderer.renderBoardBase()
         boardState.values.forEach { it.render() }
         glog.mid("Rendered chessboard", game.uniqueId)
     }
@@ -182,12 +134,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
     override fun clear() {
         boardState.values.forEach { it.clear() }
         capturedPieces.forEach { it.hide() }
-        for (i in 0 until 8 * 5) {
-            for (j in 0 until 8 * 5) {
-                for (k in 100..105)
-                    game.world.getBlockAt(i, k, j).type = Material.AIR
-            }
-        }
+        game.renderer.removeBoard()
         glog.mid("Cleared chessboard", game.uniqueId)
     }
 
@@ -344,5 +291,13 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
             game.previousTurn()
             glog.mid("Undid last move", game.uniqueId, it)
         }
+    }
+
+    fun nextCapturedPos(type: ChessType, by: ChessSide): Pair<Int, Int> {
+        val cap = capturedPieces.filter { it.by == by }
+        return if (type == ChessType.PAWN)
+            Pair(cap.count { it.type == ChessType.PAWN }, 1)
+        else
+            Pair(cap.count { it.type != ChessType.PAWN }, 0)
     }
 }

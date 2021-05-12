@@ -236,7 +236,7 @@ abstract class ChessVariant(val name: String) {
                     if (it.piece?.type != ChessType.PAWN)
                         it.piece?.let(::helper)
                 }
-                game.board.renderer.getPieceLoc(pos).doIn(game.arena.world) { world, l ->
+                game.renderer.doAt(pos) { world, l ->
                     world.createExplosion(l, 4.0f, false, false)
                 }
                 explosions += exp

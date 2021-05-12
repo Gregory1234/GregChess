@@ -83,8 +83,7 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
         set(value) {
             if (!value) {
                 val loc = player.location
-                player.playerData = game.arena.defaultData
-                held?.let { player.inventory.setItem(0, it.type.getItem(it.side)) }
+                game.renderer.resetPlayer(player)
                 player.teleport(loc)
             } else {
                 player.gameMode = GameMode.CREATIVE

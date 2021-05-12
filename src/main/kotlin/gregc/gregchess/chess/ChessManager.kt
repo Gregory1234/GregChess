@@ -61,9 +61,7 @@ object ChessManager : Listener {
 
     private val arenas = mutableListOf<ChessArena>()
 
-    private fun nextArena(): ChessArena? = arenas.firstOrNull { it.isAvailable() }
-
-    private fun cNextArena(): ChessArena = cNotNull(nextArena(), "NoArenas")
+    fun nextArena(): ChessArena? = arenas.firstOrNull { it.isAvailable() }
 
     fun start() {
         GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
@@ -85,7 +83,7 @@ object ChessManager : Listener {
         removedArenas.forEach { name ->
             val arena = arenas.first { it.name == name }
             forEachGame {
-                if (it.arena == arena) {
+                if (it.renderer.isOn(arena)) {
                     it.quickStop(ChessGame.EndReason.ArenaRemoved())
                 }
             }
@@ -95,12 +93,6 @@ object ChessManager : Listener {
         addedArenas.forEach { name ->
             arenas += ChessArena(name)
         }
-    }
-
-    fun duelMenu(player: Player, callback: (ChessArena, ChessGame.Settings) -> Unit) {
-        val arena = cNextArena()
-        arena.reserve()
-        player.openScreen(ChessGame.SettingsScreen(arena, callback))
     }
 
     fun leave(player: Player) {
@@ -142,7 +134,7 @@ object ChessManager : Listener {
         val game = getGame(ent) ?: return
         ent.health = 20.0
         ent.foodLevel = 20
-        ent.teleport(game.world.spawnLocation)
+        ent.teleport(game.renderer.spawnLocation)
         e.isCancelled = true
     }
 
@@ -155,9 +147,9 @@ object ChessManager : Listener {
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
-                player.pickUp(player.game.board.renderer.getPos(block.loc))
+                player.pickUp(player.game.renderer.getPos(block.loc))
             } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {
-                player.makeMove(player.game.board.renderer.getPos(block.loc))
+                player.makeMove(player.game.renderer.getPos(block.loc))
             }
         }
     }
