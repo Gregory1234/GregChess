@@ -395,8 +395,9 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
 }
 
 val glog: GregLogger = run {
+    File(GregInfo.plugin.dataFolder.absolutePath + "/logs").mkdir()
     val file = File(
-        GregInfo.plugin.dataFolder.absolutePath + "/GregChess-${
+        GregInfo.plugin.dataFolder.absolutePath + "/logs/GregChess-${
             DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
         }.log"
     )
