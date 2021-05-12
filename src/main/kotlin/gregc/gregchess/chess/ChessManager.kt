@@ -40,7 +40,7 @@ object ChessManager : Listener {
 
     fun getGame(p: Player) = games[playerGames[p.uniqueId]]
 
-    operator fun get(p: Player): ChessPlayer.Human? = getGame(p)?.get(p)
+    operator fun get(p: Player): BukkitChessPlayer? = getGame(p)?.get(p)
 
     operator fun get(uuid: UUID): ChessGame? = games[uuid]
 
@@ -154,9 +154,9 @@ object ChessManager : Listener {
         e.isCancelled = true
         val block = e.clickedBlock ?: return
         if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
-            player.pickUp(block.loc)
+            player.pickUp(player.game.board.renderer.getPos(block.loc))
         } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null && player.hasTurn() && e.blockFace != BlockFace.DOWN) {
-            player.makeMove(block.loc)
+            player.makeMove(player.game.board.renderer.getPos(block.loc))
         }
     }
 

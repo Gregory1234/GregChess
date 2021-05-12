@@ -23,7 +23,7 @@ class GregChess : JavaPlugin(), Listener {
         "Takeback", "/chess undo", "/chess undo"
     ).validate {
         val game = ChessManager.getGame(it) ?: return@validate false
-        (game[!game.currentTurn] as? ChessPlayer.Human)?.player == it
+        (game[!game.currentTurn] as? BukkitChessPlayer)?.player == it
     }.onAccept { (sender, _, _) ->
         ChessManager.getGame(sender)?.board?.undoLastMove()
     }.register()
@@ -97,7 +97,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     endArgs()
                     val p = cNotNull(ChessManager[player], "NotInGame.You")
-                    val opponent: ChessPlayer.Human = cCast(p.opponent, "NotHuman.Opponent")
+                    val opponent: BukkitChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
                     drawRequest.simpleCall(Request(player, opponent.player, Unit))
                 }
                 "capture" -> {
@@ -195,7 +195,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.admin")
                     val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
-                    val engines = game.chessPlayers.filterIsInstance<ChessPlayer.Engine>()
+                    val engines = game.chessPlayers.filterIsInstance<EnginePlayer>()
                     val engine = cNotNull(engines.firstOrNull(), "EngineNotFound")
                     cWrongArgument {
                         when (nextArg().toLowerCase()) {
@@ -231,7 +231,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     val p = cNotNull(ChessManager[player], "NotInGame.You")
                     cNotNull(p.game.board.lastMove, "NothingToTakeback")
-                    val opponent: ChessPlayer.Human = cCast(p.opponent, "NotHuman.Opponent")
+                    val opponent: BukkitChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
                     takebackRequest.simpleCall(Request(player, opponent.player, Unit))
                 }
                 "debug" -> {
@@ -340,7 +340,7 @@ class GregChess : JavaPlugin(), Listener {
 
     @EventHandler
     fun onTurnEnd(e: ChessGame.TurnEndEvent) {
-        if (e.player is ChessPlayer.Human) {
+        if (e.player is BukkitChessPlayer) {
             drawRequest.quietRemove(e.player.player)
             takebackRequest.quietRemove(e.player.player)
         }

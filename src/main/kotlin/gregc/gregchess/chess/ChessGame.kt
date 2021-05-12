@@ -50,7 +50,7 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         get() = players.toList()
 
     private val realPlayers: List<Player>
-        get() = players.mapNotNull { (it as? ChessPlayer.Human)?.player }.distinct()
+        get() = players.mapNotNull { (it as? BukkitChessPlayer)?.player }.distinct()
 
     var currentTurn = ChessSide.WHITE
 
@@ -62,11 +62,11 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
     class AddPlayersScope(private val game: ChessGame) {
 
         fun human(p: Player, side: ChessSide, silent: Boolean) {
-            game.players += ChessPlayer.Human(p, side, silent, game)
+            game.players += BukkitChessPlayer(p, side, silent, game)
         }
 
         fun engine(name: String, side: ChessSide) {
-            game.players += ChessPlayer.Engine(ChessEngine(name), side, game)
+            game.players += EnginePlayer(ChessEngine(name), side, game)
         }
 
     }
@@ -312,10 +312,10 @@ class ChessGame(val arena: ChessArena, val settings: Settings) {
         }
     }
 
-    operator fun get(player: Player): ChessPlayer.Human? =
-        if (players.map { it as? ChessPlayer.Human }.all { it?.player == player })
-            this[currentTurn] as? ChessPlayer.Human
-        else players.mapNotNull { it as? ChessPlayer.Human }.firstOrNull { it.player == player }
+    operator fun get(player: Player): BukkitChessPlayer? =
+        if (players.map { it as? BukkitChessPlayer }.all { it?.player == player })
+            this[currentTurn] as? BukkitChessPlayer
+        else players.mapNotNull { it as? BukkitChessPlayer }.firstOrNull { it.player == player }
 
     operator fun get(side: ChessSide): ChessPlayer = tryOrStopNull(
         when (side) {
