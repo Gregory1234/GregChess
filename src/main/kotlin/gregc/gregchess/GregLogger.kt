@@ -25,7 +25,7 @@ class GregLogger(private val logFile: File) {
             } $level][$source]: "
                     + vs.joinToString(" ") { it.toString() } + "\n")
     }
-
+    @Deprecated("Don't commit it!")
     fun debug(vararg vs: Any?) = log(Level.DEBUG, *vs)
     fun low(vararg vs: Any?) = log(Level.LOW_DEBUG, *vs)
     fun mid(vararg vs: Any?) = log(Level.MID_DEBUG, *vs)

@@ -1,7 +1,5 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.glog
-
 interface Component
 
 enum class GameBaseEvent {
@@ -26,12 +24,20 @@ enum class TimeModifier {
 }
 
 @Target(AnnotationTarget.FUNCTION)
+@MustBeDocumented
+@Retention(AnnotationRetention.RUNTIME)
 annotation class GameEvent(val value: GameBaseEvent, val mod: TimeModifier = TimeModifier.NORMAL)
 
 inline fun <reified T : Component> T.runGameEvent(value: GameBaseEvent, mod: TimeModifier, vararg args: Any?) {
     this::class.java.methods
         .filter { m -> m.annotations.any { it is GameEvent && it.value == value && it.mod == mod } }
-        .forEach { try { glog.debug(it.name, this.javaClass.name, *args); it.invoke(this, *args)} catch (e: Exception) {e.printStackTrace()} }
+        .forEach {
+            try {
+                it.invoke(this, *args)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
 }
 
 fun Collection<Component>.runGameEvent(value: GameBaseEvent, vararg args: Any?) {
