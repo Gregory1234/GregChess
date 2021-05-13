@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.chess.variant.ChessVariant
 import java.time.format.DateTimeFormatter
 
 class PGN internal constructor(private val tags: List<TagPair>, private val moves: MoveTree) {

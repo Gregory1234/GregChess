@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.buildTextComponent
-import gregc.gregchess.chess.ChessVariant.MoveLegality.*
+import gregc.gregchess.chess.variant.ChessVariant.MoveLegality.*
 import gregc.gregchess.glog
 import org.bukkit.Material
 import org.bukkit.Sound

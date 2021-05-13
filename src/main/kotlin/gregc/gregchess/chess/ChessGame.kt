@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.variant.ChessVariant
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player

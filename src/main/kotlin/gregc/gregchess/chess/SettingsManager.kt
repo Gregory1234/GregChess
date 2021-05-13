@@ -4,6 +4,7 @@ import gregc.gregchess.ConfigManager
 import gregc.gregchess.View
 import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.variant.ChessVariant
 
 object SettingsManager {
 
