@@ -1,18 +1,19 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.component
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
-class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
+class ScoreboardManager(private val game: ChessGame): Component {
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 
     private val view = ConfigManager.getView("Component.Scoreboard")
 
-    val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
+    private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     private val objective = scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))
 
@@ -32,7 +33,21 @@ class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
         return scoreboard.registerNewTeam(s)
     }
 
-    override fun start() {
+    @GameEvent(GameBaseEvent.INIT)
+    fun init() {
+        this += object :
+            GameProperty(ConfigManager.getString("Component.Scoreboard.Preset")) {
+            override fun invoke() = game.settings.name
+        }
+        this += object :
+            PlayerProperty(ConfigManager.getString("Component.Scoreboard.Player")) {
+            override fun invoke(s: ChessSide) =
+                ConfigManager.getString("Component.Scoreboard.PlayerPrefix") + game[s].name
+        }
+    }
+
+    @GameEvent(GameBaseEvent.START, TimeModifier.LATE)
+    fun start() {
         game.forEachPlayer { it.scoreboard = scoreboard }
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
@@ -56,11 +71,13 @@ class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
         }
     }
 
-    override fun spectatorJoin(p: Player) {
+    @GameEvent(GameBaseEvent.SPECTATOR_JOIN)
+    fun spectatorJoin(p: Player) {
         p.scoreboard = scoreboard
     }
 
-    override fun update() {
+    @GameEvent(GameBaseEvent.UPDATE, TimeModifier.LATE)
+    fun update() {
         gameProperties.forEach {
             it.team?.suffix = it()
         }
@@ -70,7 +87,8 @@ class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
         }
     }
 
-    override fun clear() {
+    @GameEvent(GameBaseEvent.CLEAR)
+    fun stop() {
         scoreboard.teams.forEach { it.unregister() }
         scoreboard.objectives.forEach { it.unregister() }
     }

@@ -6,7 +6,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 
 
-abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val game: ChessGame): ChessGame.Component {
+abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val game: ChessGame) {
 
     var held: ChessPiece? = null
         set(v) {
@@ -51,7 +51,9 @@ abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val
         }
     }
 
-    override fun startTurn() {
+    open fun stop() {}
+
+    open fun startTurn() {
         if (!silent) {
             sendTitle(ConfigManager.getString("Title.YourTurn"))
         }

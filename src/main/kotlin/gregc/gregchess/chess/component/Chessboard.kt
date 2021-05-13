@@ -5,8 +5,7 @@ import gregc.gregchess.chess.*
 import java.util.*
 import kotlin.math.abs
 
-class Chessboard(private val game: ChessGame, private val settings: Settings) :
-    ChessGame.Component {
+class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
     data class Settings(
         val initialFEN: FEN?,
         internal val chess960: Boolean = initialFEN?.chess960 ?: false
@@ -96,16 +95,19 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
                 moves.clear()
         }
 
-    override fun start() {
+    @GameEvent(GameBaseEvent.START, TimeModifier.EARLY)
+    fun start() {
         render()
         setFromFEN(initialFEN)
     }
 
-    override fun previousTurn() {
+    @GameEvent(GameBaseEvent.PRE_PREVIOUS_TURN, TimeModifier.EARLY)
+    fun previousTurn() {
         updateMoves()
     }
 
-    override fun endTurn() {
+    @GameEvent(GameBaseEvent.END_TURN)
+    fun endTurn() {
         updateMoves()
         val num = "${fullMoveCounter}."
         if (game.currentTurn == ChessSide.BLACK) {
@@ -117,7 +119,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
         addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
     }
 
-    override fun stop() {
+    @GameEvent(GameBaseEvent.STOP)
+    fun stop() {
         if (game.currentTurn == ChessSide.WHITE) {
             val num = "${fullMoveCounter}."
             val wLast = (lastMove?.name ?: "")
@@ -131,7 +134,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) :
         glog.mid("Rendered chessboard", game.uniqueId)
     }
 
-    override fun clear() {
+    @GameEvent(GameBaseEvent.CLEAR)
+    fun clear() {
         boardState.values.forEach { it.clear() }
         capturedPieces.forEach { it.hide() }
         game.renderer.removeBoard()

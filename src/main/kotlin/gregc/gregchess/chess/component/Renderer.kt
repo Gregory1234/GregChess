@@ -1,13 +1,14 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.component
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.*
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
 import org.bukkit.entity.Player
 
-class Renderer(private val game: ChessGame): ChessGame.Component {
+class Renderer(private val game: ChessGame): Component {
 
     private lateinit var arena: ChessArena
 
@@ -50,8 +51,9 @@ class Renderer(private val game: ChessGame): ChessGame.Component {
         }
     }
 
-    fun addPlayer(p: Player) {
-        arena.teleport(p)
+    @GameEvent(GameBaseEvent.INIT, TimeModifier.EARLY)
+    fun init() {
+        game.forEachPlayer(arena::teleport)
     }
 
     fun checkForFreeArenas(): Boolean {
@@ -87,11 +89,13 @@ class Renderer(private val game: ChessGame): ChessGame.Component {
         world.players.forEach(arena::safeExit)
     }
 
-    override fun spectatorJoin(p: Player) {
+    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, TimeModifier.EARLY)
+    fun spectatorJoin(p: Player) {
         arena.teleportSpectator(p)
     }
 
-    override fun spectatorLeave(p: Player) {
+    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, TimeModifier.LATE)
+    fun spectatorLeave(p: Player) {
         arena.exit(p)
     }
 
@@ -99,6 +103,7 @@ class Renderer(private val game: ChessGame): ChessGame.Component {
         arena.exit(p)
     }
 
+    @GameEvent(GameBaseEvent.VERY_END, TimeModifier.LATE)
     fun clearArena() {
         arena.clear()
     }

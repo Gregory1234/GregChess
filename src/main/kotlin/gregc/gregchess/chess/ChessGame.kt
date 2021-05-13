@@ -1,8 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.ChessClock
-import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.*
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -99,7 +98,7 @@ class ChessGame(val settings: Settings) {
     operator fun contains(p: Player) = p in realPlayers
 
     fun nextTurn() {
-        components.forEach { it.endTurn() }
+        components.runGameEvent(GameBaseEvent.END_TURN)
         variant.checkForGameEnd(this)
         Bukkit.getPluginManager().callEvent(TurnEndEvent(this, this[currentTurn]))
         currentTurn++
@@ -107,7 +106,7 @@ class ChessGame(val settings: Settings) {
     }
 
     fun previousTurn() {
-        components.forEach { it.previousTurn() }
+        components.runGameEvent(GameBaseEvent.PRE_PREVIOUS_TURN)
         currentTurn++
         startPreviousTurn()
     }
@@ -128,16 +127,7 @@ class ChessGame(val settings: Settings) {
         try {
             startTime = LocalDateTime.now()
             if (renderer.checkForFreeArenas()) {
-                scoreboard += object :
-                    GameProperty(ConfigManager.getString("Component.Scoreboard.Preset")) {
-                    override fun invoke() = settings.name
-                }
-                scoreboard += object :
-                    PlayerProperty(ConfigManager.getString("Component.Scoreboard.Player")) {
-                    override fun invoke(s: ChessSide) =
-                        ConfigManager.getString("Component.Scoreboard.PlayerPrefix") + this@ChessGame[s].name
-                }
-                forEachPlayer(renderer::addPlayer)
+                components.runGameEvent(GameBaseEvent.INIT)
                 black?.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
                 white?.sendTitle(
                     ConfigManager.getString("Title.YourTurn"),
@@ -146,13 +136,14 @@ class ChessGame(val settings: Settings) {
                 white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
                 black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
                 variant.start(this)
-                components.forEach { it.start() }
+                components.runGameEvent(GameBaseEvent.START)
                 started = true
                 glog.mid("Started game", uniqueId)
                 TimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
                     if (stopping)
                         cancel()
-                    update()
+                    else
+                        components.runGameEvent(GameBaseEvent.UPDATE)
                 }
                 Bukkit.getPluginManager().callEvent(StartEvent(this))
                 startTurn()
@@ -166,32 +157,32 @@ class ChessGame(val settings: Settings) {
             renderer.evacuate()
             forEachPlayer { it.sendMessage(ConfigManager.getError("TeleportFailed")) }
             stopping = true
-            components.forEach { it.stop() }
-            components.forEach { it.clear() }
+            components.runGameEvent(GameBaseEvent.STOP)
+            components.runGameEvent(GameBaseEvent.CLEAR)
             glog.mid("Failed to start game", uniqueId)
             throw e
         }
     }
 
     fun spectate(p: Player) {
-        components.forEach { it.spectatorJoin(p) }
+        components.runGameEvent(GameBaseEvent.SPECTATOR_JOIN, p)
         spectatorUUID += p.uniqueId
     }
 
     fun spectatorLeave(p: Player) {
-        components.forEach { it.spectatorLeave(p) }
+        components.runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, p)
         spectatorUUID -= p.uniqueId
     }
 
     private fun startTurn() {
-        components.forEach { it.startTurn() }
+        components.runGameEvent(GameBaseEvent.START_TURN)
         if (!stopping)
             this[currentTurn].startTurn()
         glog.low("Started turn", uniqueId, currentTurn)
     }
 
     private fun startPreviousTurn() {
-        components.forEach { it.startPreviousTurn() }
+        components.runGameEvent(GameBaseEvent.START_PREVIOUS_TURN)
         if (!stopping)
             this[currentTurn].startTurn()
         glog.low("Started previous turn", uniqueId, currentTurn)
@@ -253,7 +244,7 @@ class ChessGame(val settings: Settings) {
         stopping = true
         endReason = reason
         try {
-            components.forEach { it.stop() }
+            components.runGameEvent(GameBaseEvent.STOP)
             var anyLong = false
             forEachPlayer {
                 if (reason.winner != null) {
@@ -303,10 +294,10 @@ class ChessGame(val settings: Settings) {
                 return
             }
             TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
-                components.forEach { it.clear() }
+                components.runGameEvent(GameBaseEvent.CLEAR)
                 TimeManager.runTaskLater(1.ticks) {
                     players.forEach(ChessPlayer::stop)
-                    renderer.clearArena()
+                    components.runGameEvent(GameBaseEvent.VERY_END)
                     glog.low("Stopped game", uniqueId, reason)
                     Bukkit.getPluginManager().callEvent(EndEvent(this))
                 }
@@ -329,10 +320,6 @@ class ChessGame(val settings: Settings) {
             ChessSide.BLACK -> black
         }
     )
-
-    fun update() {
-        components.forEach { it.update() }
-    }
 
     fun <E> tryOrStopNull(expr: E?): E = try {
         expr!!
@@ -387,19 +374,5 @@ class ChessGame(val settings: Settings) {
         val board: Chessboard.Settings,
         val clock: ChessClock.Settings?
     )
-
-    interface Component {
-        fun start() {}
-        fun update() {}
-        fun stop() {}
-        fun clear() {}
-        fun spectatorJoin(p: Player) {}
-        fun spectatorLeave(p: Player) {}
-        fun startTurn() {}
-        fun endTurn() {}
-        fun startPreviousTurn() {}
-        fun previousTurn() {}
-    }
-
 
 }

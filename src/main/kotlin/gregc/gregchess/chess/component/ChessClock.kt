@@ -13,8 +13,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 
-class ChessClock(private val game: ChessGame, private val settings: Settings) :
-    ChessGame.Component {
+class ChessClock(private val game: ChessGame, private val settings: Settings) : Component {
 
     enum class Type(val usesIncrement: Boolean = true) {
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
@@ -121,7 +120,8 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) :
         )).format(formatter)
     }
 
-    override fun start() {
+    @GameEvent(GameBaseEvent.START)
+    fun start() {
 
         if (settings.type == Type.FIXED) {
             game.scoreboard += object : GameProperty(view.getString("TimeRemainingSimple")) {
@@ -144,13 +144,15 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) :
         started = true
     }
 
-    override fun update() {
+    @GameEvent(GameBaseEvent.UPDATE)
+    fun update() {
         ChessSide.values().forEach {
             if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it)
         }
     }
 
-    override fun endTurn() {
+    @GameEvent(GameBaseEvent.END_TURN)
+    fun endTurn() {
         val increment = if (started) settings.increment else 0.seconds
         if (!started)
             startTimer()
@@ -185,7 +187,8 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) :
         }
     }
 
-    override fun stop() {
+    @GameEvent(GameBaseEvent.STOP)
+    fun stop() {
         stopTime = LocalDateTime.now()
     }
 

@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ConfigManager
-import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.doIn
 import gregc.gregchess.glog
 import gregc.gregchess.rangeTo
@@ -152,11 +152,12 @@ abstract class ChessVariant(val name: String) {
     }
 
     object ThreeChecks : ChessVariant("ThreeChecks") {
-        class CheckCounter(private val game: ChessGame) : ChessGame.Component {
+        class CheckCounter(private val game: ChessGame) : Component {
             private var whiteChecks = 0
             private var blackChecks = 0
 
-            override fun start() {
+            @GameEvent(GameBaseEvent.START)
+            fun start() {
                 game.scoreboard += object :
                     PlayerProperty(ConfigManager.getString("Component.CheckCounter.CheckCounter")) {
                     override fun invoke(s: ChessSide): String = when (s) {
@@ -166,7 +167,8 @@ abstract class ChessVariant(val name: String) {
                 }
             }
 
-            override fun endTurn() {
+            @GameEvent(GameBaseEvent.END_TURN)
+            fun endTurn() {
                 if (game.variant.isInCheck(game, !game.currentTurn))
                     when (!game.currentTurn) {
                         ChessSide.WHITE -> {
@@ -222,7 +224,7 @@ abstract class ChessVariant(val name: String) {
     }
 
     object Atomic : ChessVariant("Atomic") {
-        class ExplosionManager(private val game: ChessGame) : ChessGame.Component {
+        class ExplosionManager(private val game: ChessGame) : Component {
             private val explosions = mutableListOf<List<Pair<ChessPiece, ChessPiece.Captured>>>()
 
             fun explode(pos: ChessPosition) {
