@@ -27,10 +27,12 @@ class ChessGame(val settings: Settings) {
 
     val renderer: Renderer = Renderer(this)
 
-    private val components = listOfNotNull(board, clock, renderer).toMutableList()
+    val scoreboard = ScoreboardManager(this)
+
+    private val components = listOfNotNull(board, clock, renderer, scoreboard).toMutableList()
 
     fun registerComponent(c: Component) {
-        components += c
+        components.add(components.size-2, c)
     }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
@@ -55,8 +57,6 @@ class ChessGame(val settings: Settings) {
         get() = players.mapNotNull { (it as? BukkitChessPlayer)?.player }.distinct()
 
     var currentTurn = ChessSide.WHITE
-
-    val scoreboard = ScoreboardManager(this)
 
     class AddPlayersScope(private val game: ChessGame) {
 
@@ -145,11 +145,15 @@ class ChessGame(val settings: Settings) {
                 )
                 white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
                 black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
-                components.forEach { it.start() }
                 variant.start(this)
-                scoreboard.start()
+                components.forEach { it.start() }
                 started = true
                 glog.mid("Started game", uniqueId)
+                TimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
+                    if (stopping)
+                        cancel()
+                    update()
+                }
                 Bukkit.getPluginManager().callEvent(StartEvent(this))
                 startTurn()
             } else {
@@ -204,7 +208,6 @@ class ChessGame(val settings: Settings) {
         class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", "abandoned", winner)
         class PluginRestart : EndReason("Chess.EndReason.PluginRestart", "emergency", null)
         class ArenaRemoved : EndReason("Chess.EndReason.ArenaRemoved", "emergency", null)
-        class NoArenaEndReason : ChessGame.EndReason("Chess.EndReason.NoArena", "emergency", null)
         class Stalemate : EndReason("Chess.EndReason.Stalemate", "normal", null)
         class InsufficientMaterial : EndReason("Chess.EndReason.InsufficientMaterial", "normal", null)
         class FiftyMoves : EndReason("Chess.EndReason.FiftyMoves", "normal", null)
@@ -300,7 +303,6 @@ class ChessGame(val settings: Settings) {
                 return
             }
             TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
-                scoreboard.stop()
                 components.forEach { it.clear() }
                 TimeManager.runTaskLater(1.ticks) {
                     players.forEach(ChessPlayer::stop)

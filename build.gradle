@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly "org.spigotmc:spigot-api:$spigotVersion"
+    api "org.spigotmc:spigot-api:$spigotVersion"
 }
 
 processResources {

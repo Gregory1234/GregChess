@@ -5,15 +5,13 @@ import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.Team
 
-class ScoreboardManager(private val game: ChessGame) {
+class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 
     private val view = ConfigManager.getView("Component.Scoreboard")
 
     private lateinit var objective: Objective
-
-    private var stopping = false
 
     operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -31,7 +29,7 @@ class ScoreboardManager(private val game: ChessGame) {
         return game.renderer.scoreboard.registerNewTeam(s)
     }
 
-    fun start() {
+    override fun start() {
         objective = game.renderer.scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
@@ -53,18 +51,9 @@ class ScoreboardManager(private val game: ChessGame) {
             it.teamBlack?.addEntry(view.getFormatString("BlackFormat", it.name))
             objective.getScore(view.getFormatString("BlackFormat", it.name)).score = i--
         }
-
-        TimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
-            if (stopping)
-                cancel()
-            game.update()
-            update()
-        }
     }
 
-    private fun update() {
-        if (stopping)
-            return
+    override fun update() {
         gameProperties.forEach {
             it.team?.suffix = it()
         }
@@ -74,10 +63,7 @@ class ScoreboardManager(private val game: ChessGame) {
         }
     }
 
-    fun stop() {
-        if (stopping)
-            return
-        stopping = true
+    override fun clear() {
         game.renderer.clearScoreboard()
     }
 }
