@@ -103,6 +103,7 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
         player.sendTitle(title, subtitle, 10, 70, 20)
 
     fun pickUp(pos: ChessPosition) {
+        if (!game.running) return
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
         held = piece
@@ -110,6 +111,7 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
     }
 
     fun makeMove(pos: ChessPosition) {
+        if (!game.running) return
         val newSquare = game.board[pos] ?: return
         val piece = held ?: return
         val moves = piece.square.bakedLegalMoves ?: return

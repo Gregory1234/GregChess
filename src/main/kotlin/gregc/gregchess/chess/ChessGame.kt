@@ -8,6 +8,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.inventory.ItemStack
+import java.lang.IllegalStateException
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
@@ -57,29 +58,54 @@ class ChessGame(val settings: Settings) {
 
     var currentTurn = ChessSide.WHITE
 
-    class AddPlayersScope(private val game: ChessGame) {
+    class AddPlayersScope(internal val game: ChessGame) {
+
+        fun addPlayer(p: ChessPlayer) {
+            game.players += p
+        }
 
         fun human(p: Player, side: ChessSide, silent: Boolean) {
-            game.players += BukkitChessPlayer(p, side, silent, game)
+            addPlayer(BukkitChessPlayer(p, side, silent, game))
         }
 
         fun engine(name: String, side: ChessSide) {
-            game.players += EnginePlayer(ChessEngine(name), side, game)
+            addPlayer(EnginePlayer(ChessEngine(name), side, game))
         }
 
     }
 
-    fun addPlayers(init: AddPlayersScope.() -> Unit): ChessGame {
+    private fun requireBeforeStart() {
         if (started)
-            throw IllegalArgumentException()
+            throw IllegalStateException("already started")
+    }
+
+    private fun requireRunning() {
+        if (!started)
+            throw IllegalStateException("not started yet")
+        if (stopping)
+            throw IllegalStateException("already stopping")
+    }
+
+    private fun requireStarted() {
+        if (!started)
+            throw IllegalStateException("not started yet")
+    }
+
+    fun addPlayers(init: AddPlayersScope.() -> Unit): ChessGame {
+        requireBeforeStart()
+        if (players.isNotEmpty())
+            throw IllegalStateException("already added players")
         AddPlayersScope(this).init()
         return this
     }
 
-    private var started = false
-
+    var started = false
+        private set
     lateinit var startTime: LocalDateTime
         private set
+
+    val running
+        get() = started && !stopping
 
     class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
         override fun getHandlers() = handlerList
@@ -98,6 +124,7 @@ class ChessGame(val settings: Settings) {
     operator fun contains(p: Player) = p in realPlayers
 
     fun nextTurn() {
+        requireRunning()
         components.runGameEvent(GameBaseEvent.END_TURN)
         variant.checkForGameEnd(this)
         Bukkit.getPluginManager().callEvent(TurnEndEvent(this, this[currentTurn]))
@@ -106,6 +133,7 @@ class ChessGame(val settings: Settings) {
     }
 
     fun previousTurn() {
+        requireRunning()
         components.runGameEvent(GameBaseEvent.PRE_PREVIOUS_TURN)
         currentTurn++
         startPreviousTurn()
@@ -125,6 +153,7 @@ class ChessGame(val settings: Settings) {
 
     fun start(): ChessGame {
         try {
+            requireBeforeStart()
             startTime = LocalDateTime.now()
             if (renderer.checkForFreeArenas()) {
                 components.runGameEvent(GameBaseEvent.INIT)
@@ -165,11 +194,13 @@ class ChessGame(val settings: Settings) {
     }
 
     fun spectate(p: Player) {
+        requireRunning()
         components.runGameEvent(GameBaseEvent.SPECTATOR_JOIN, p)
         spectatorUUID += p.uniqueId
     }
 
     fun spectatorLeave(p: Player) {
+        requireRunning()
         components.runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, p)
         spectatorUUID -= p.uniqueId
     }
@@ -234,12 +265,14 @@ class ChessGame(val settings: Settings) {
     }
 
     private var stopping = false
+        private set
     var endReason: EndReason? = null
         private set
 
     fun quickStop(reason: EndReason) = stop(reason, realPlayers)
 
     fun stop(reason: EndReason, quick: List<Player> = emptyList()) {
+        requireStarted()
         if (stopping) return
         stopping = true
         endReason = reason
@@ -329,6 +362,7 @@ class ChessGame(val settings: Settings) {
     }
 
     fun finishMove(move: MoveCandidate) {
+        requireRunning()
         val data = move.execute()
         board.lastMove?.clear()
         board.lastMove = data
