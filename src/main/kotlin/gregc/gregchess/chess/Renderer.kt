@@ -17,14 +17,8 @@ class Renderer(private val game: ChessGame): ChessGame.Component {
     val arenaName
         get() = arena.name
 
-    val players
-        get() = world.players
-
     val spawnLocation
         get() = world.spawnLocation
-
-    val scoreboard
-        get() = arena.scoreboard
 
     fun getPos(loc: Loc) =
         ChessPosition(Math.floorDiv(4 * 8 - 1 - loc.x, 3), Math.floorDiv(loc.z - 8, 3))
@@ -62,8 +56,10 @@ class Renderer(private val game: ChessGame): ChessGame.Component {
 
     fun checkForFreeArenas(): Boolean {
         val a = ChessManager.nextArena()
-        if (a != null)
+        if (a != null) {
+            a.reserve()
             arena = a
+        }
         return a != null
     }
 
@@ -88,7 +84,7 @@ class Renderer(private val game: ChessGame): ChessGame.Component {
     }
 
     fun evacuate() {
-        players.forEach(arena::safeExit)
+        world.players.forEach(arena::safeExit)
     }
 
     override fun spectatorJoin(p: Player) {
@@ -111,9 +107,5 @@ class Renderer(private val game: ChessGame): ChessGame.Component {
     fun resetPlayer(p: Player) {
         p.playerData = arena.defaultData
         game[p]?.held?.let { p.inventory.setItem(0, it.item )}
-    }
-
-    fun clearScoreboard() {
-        arena.clearScoreboard()
     }
 }

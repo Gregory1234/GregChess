@@ -1,8 +1,9 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
-import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.Team
 
 class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
@@ -11,7 +12,9 @@ class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
 
     private val view = ConfigManager.getView("Component.Scoreboard")
 
-    private lateinit var objective: Objective
+    val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
+
+    private val objective = scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))
 
     operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -25,12 +28,12 @@ class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
         var s: String
         do {
             s = randomString(16)
-        } while (game.renderer.scoreboard.getTeam(s) != null)
-        return game.renderer.scoreboard.registerNewTeam(s)
+        } while (scoreboard.getTeam(s) != null)
+        return scoreboard.registerNewTeam(s)
     }
 
     override fun start() {
-        objective = game.renderer.scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))
+        game.forEachPlayer { it.scoreboard = scoreboard }
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
@@ -53,6 +56,10 @@ class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
         }
     }
 
+    override fun spectatorJoin(p: Player) {
+        p.scoreboard = scoreboard
+    }
+
     override fun update() {
         gameProperties.forEach {
             it.team?.suffix = it()
@@ -64,7 +71,8 @@ class ScoreboardManager(private val game: ChessGame): ChessGame.Component {
     }
 
     override fun clear() {
-        game.renderer.clearScoreboard()
+        scoreboard.teams.forEach { it.unregister() }
+        scoreboard.objectives.forEach { it.unregister() }
     }
 }
 

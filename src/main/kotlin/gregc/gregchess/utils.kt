@@ -70,10 +70,6 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     abstract val setSettings: World.() -> Unit
     private var reserved = false
 
-    val scoreboard by lazy {
-        Bukkit.getScoreboardManager()!!.newScoreboard
-    }
-
     private val data: MutableMap<UUID, PlayerData> = mutableMapOf()
 
     private var worldCreated: Boolean = false
@@ -94,7 +90,6 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
             data[p.uniqueId] = p.playerData
         p.playerData = defaultData
         p.teleport(world.spawnLocation)
-        p.scoreboard = scoreboard
         p.sendMessage(ConfigManager.getFormatString("Message.Teleported", name))
         glog.mid("Teleported", p.name, "to arena", name)
         setResourcePack(p)
@@ -105,7 +100,6 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
             data[p.uniqueId] = p.playerData
         p.playerData = spectatorData
         p.teleport(world.spawnLocation)
-        p.scoreboard = scoreboard
         p.sendMessage(ConfigManager.getFormatString("Message.Teleported", name))
         glog.mid("Teleported spectator", p.name, "to arena", name)
         setResourcePack(p)
@@ -160,10 +154,6 @@ abstract class Arena(val name: String, private val resourcePackPath: String? = n
     }
 
     override fun toString() = "Arena(name = ${world.name})"
-    fun clearScoreboard() {
-        scoreboard.teams.forEach { it.unregister() }
-        scoreboard.objectives.forEach { it.unregister() }
-    }
 
     fun safeExit(p: Player) {
         p.playerData = data[p.uniqueId]!!
