@@ -255,6 +255,18 @@ class GregChess : JavaPlugin(), Listener {
                     val p = cNotNull(ChessManager[player], "NotInGame.You")
                     p.isAdmin = !p.isAdmin
                 }
+                "simul" -> {
+                    cPlayer(player)
+                    cPerms(player, "greg-chess.admin")
+                    cRequire(!ChessManager.isInGame(player), "InGame.You")
+                    player.openScreen(ChessGame.SettingsScreen { settings ->
+                        val simul = Simul(ChessManager.nextArena()!!, settings)
+                        rest().forEach {
+                            simul.addGame(player.name, it)
+                        }
+                        simul.start()
+                    })
+                }
                 else -> cWrongArgument()
             }
         }
@@ -269,7 +281,7 @@ class GregChess : JavaPlugin(), Listener {
                 ) + ifPermission(
                     "greg-chess.debug", "capture", "spawn", "move", "skip", "load", "time"
                 ) + ifPermission(
-                    "greg-chess.admin", "uci", "reload", "dev", "debug", "admin"
+                    "greg-chess.admin", "uci", "reload", "dev", "debug", "admin", "simul"
                 )
                 2 -> when (args[0]) {
                     "duel" -> null

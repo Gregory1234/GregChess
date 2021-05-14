@@ -42,6 +42,7 @@ Request:
       CannotSend: "&cIt is your turn!"
 Message:
   Teleported: "&eTeleported to $1."
+  Teleporting: "&eTeleporting..."
   CopyFEN: "Copy FEN"
   CopyPGN: "Copy PGN"
   LoadedFEN: "&eLoaded FEN!"
@@ -91,6 +92,7 @@ Title:
   YouArePlayingAs:
     White: "&eYou are playing with the white pieces"
     Black: "&eYou are playing with the black pieces"
+  YouArePlayingAgainst: "&eYou are playing against &c$1"
   Player:
     YouWon: "&aYou won"
     YouLost: "&cYou lost"
@@ -102,6 +104,7 @@ Title:
 
 Chess:
   Capture: "x"
+  SimulDelay: 1s
   Side:
     White:
       Name: "White"
@@ -235,3 +238,5 @@ Component:
     TimeFormat: "mm:ss.S"
   CheckCounter:
     CheckCounter: "check counter"
+  Simul:
+    Current: "current game"

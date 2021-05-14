@@ -294,11 +294,11 @@ class ChessGame(val settings: Settings) {
                 }
                 it.sendMessage(reason.getMessage())
                 if (it in quick) {
-                    renderer.removePlayer(it)
+                    components.runGameEvent(GameBaseEvent.REMOVE_PLAYER, it)
                 } else {
                     anyLong = true
                     TimeManager.runTaskLater(3.seconds) {
-                        renderer.removePlayer(it)
+                        components.runGameEvent(GameBaseEvent.REMOVE_PLAYER, it)
                     }
                 }
             }
@@ -316,10 +316,10 @@ class ChessGame(val settings: Settings) {
                 }
                 it.sendMessage(reason.getMessage())
                 if (anyLong) {
-                    renderer.removePlayer(it)
+                    components.runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, it)
                 } else {
                     TimeManager.runTaskLater(3.seconds) {
-                        renderer.removePlayer(it)
+                        components.runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, it)
                     }
                 }
             }

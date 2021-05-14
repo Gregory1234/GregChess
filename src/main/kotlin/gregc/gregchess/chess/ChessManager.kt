@@ -3,6 +3,7 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
+import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
@@ -23,7 +24,8 @@ import java.util.*
 
 object ChessManager : Listener {
 
-    private val playerGames: MutableMap<UUID, UUID> = mutableMapOf()
+    private val playerGames: MutableMap<UUID, List<UUID>> = mutableMapOf()
+    private val playerCurrentGames: MutableMap<UUID, UUID> = mutableMapOf()
     private val spectatorGames: MutableMap<UUID, UUID> = mutableMapOf()
     private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
 
@@ -33,12 +35,21 @@ object ChessManager : Listener {
 
     private fun removeGame(g: ChessGame) {
         games.remove(g.uniqueId)
-        g.forEachPlayer { playerGames.remove(it.uniqueId) }
+        g.forEachPlayer { p ->
+            playerGames[p.uniqueId].orEmpty().filter { it != g.uniqueId }.let {
+                if (it.isEmpty())
+                    playerGames.remove(p.uniqueId)
+                else
+                    playerGames[p.uniqueId] = it
+            }
+            playerCurrentGames.remove(p.uniqueId)
+        }
     }
 
     fun isInGame(p: HumanEntity) = p.uniqueId in playerGames
 
-    fun getGame(p: Player) = games[playerGames[p.uniqueId]]
+    fun getGame(p: Player) = games[playerCurrentGames[p.uniqueId]]
+    fun getGames(p: Player) = playerGames[p.uniqueId].orEmpty().mapNotNull { games[it] }
 
     operator fun get(p: Player): BukkitChessPlayer? = getGame(p)?.get(p)
 
@@ -73,13 +84,13 @@ object ChessManager : Listener {
     }
 
     fun leave(player: Player) {
-        val p = this[player]
-        if (p != null) {
-            p.game.stop(ChessGame.EndReason.Walkover(!p.side), listOf(player))
-        } else {
-            cRequire(isSpectatingGame(player), "NotInGame.You")
-            removeSpectator(player)
+        val p = getGames(player)
+        cRequire(p.isNotEmpty() || isSpectatingGame(player), "InGame.You")
+        p.forEach {
+            it.stop(ChessGame.EndReason.Walkover(!it[player]!!.side), listOf(player))
         }
+        if (isSpectatingGame(player))
+            removeSpectator(player)
     }
 
     fun addSpectator(player: Player, toSpectate: Player) {
@@ -99,10 +110,11 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
-        val player = this[e.player]
-        if (player != null)
-            player.game.stop(ChessGame.EndReason.Resignation(!player.side), listOf(e.player))
-        else if (isSpectatingGame(e.player))
+        val p = getGames(e.player)
+        p.forEach {
+            it.stop(ChessGame.EndReason.Walkover(!it[e.player]!!.side), listOf(e.player))
+        }
+        if (isSpectatingGame(e.player))
             removeSpectator(e.player)
     }
 
@@ -175,7 +187,8 @@ object ChessManager : Listener {
         games[e.game.uniqueId] = e.game
         e.game.forEachPlayer {
             glog.low("Registering game player", it.uniqueId)
-            playerGames[it.uniqueId] = e.game.uniqueId
+            playerGames[it.uniqueId] = playerGames[it.uniqueId].orEmpty() + e.game.uniqueId
+            playerCurrentGames[it.uniqueId] = e.game.uniqueId
         }
     }
 
@@ -196,6 +209,17 @@ object ChessManager : Listener {
         if (e.location.world?.name in arenas) {
             e.isCancelled = true
         }
+    }
+
+    fun moveToGame(player: Player, newGame: ChessGame) {
+        if (newGame.uniqueId !in playerGames[player.uniqueId].orEmpty())
+            throw IllegalStateException("Player is not in that game")
+        playerCurrentGames[player.uniqueId] = newGame.uniqueId
+    }
+
+    fun nextArena(): String? = arenas.firstOrNull {
+        val w = Bukkit.getWorld(it)
+        w == null || w.players.isEmpty()
     }
 
 }

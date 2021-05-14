@@ -14,7 +14,8 @@ enum class GameBaseEvent {
     START_TURN,
     END_TURN,
     PRE_PREVIOUS_TURN,
-    START_PREVIOUS_TURN
+    START_PREVIOUS_TURN,
+    REMOVE_PLAYER
 }
 
 enum class TimeModifier {

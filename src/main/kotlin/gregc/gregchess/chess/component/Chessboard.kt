@@ -44,7 +44,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     private var movesSinceLastCapture = 0
-    private var fullMoveCounter = 0
+    var fullMoveCounter = 0
+        private set
+    var halfMoveCounter = 0
+        private set
     private val boardHashes = mutableMapOf<Int, Int>()
 
     private val capturedPieces = mutableListOf<ChessPiece.Captured>()
@@ -269,16 +272,20 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     fun resetMovesSinceLastCapture(): () -> Unit {
         val m = movesSinceLastCapture
+        halfMoveCounter++
         movesSinceLastCapture = 0
         return {
             movesSinceLastCapture = m
+            halfMoveCounter--
         }
     }
 
     fun increaseMovesSinceLastCapture(): () -> Unit {
         movesSinceLastCapture++
+        halfMoveCounter++
         return {
             movesSinceLastCapture--
+            halfMoveCounter--
         }
     }
 

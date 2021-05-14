@@ -8,7 +8,7 @@ import kotlin.math.floor
 
 class Renderer(private val game: ChessGame, private val settings: Settings): Component {
 
-    class Settings(val tileSize: Int, val gameModeInfo: GameModeInfo, val arenaWorld: String? = null, val offset: Loc? = null) {
+    data class Settings(val tileSize: Int, val gameModeInfo: GameModeInfo, val arenaWorld: String? = null, val offset: Loc? = null) {
         fun getComponent(game: ChessGame) = Renderer(game, this)
 
         internal val highHalfTile
@@ -26,19 +26,19 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         get() = arena.name
 
     val spawnLocation
-        get() = world.spawnLocation
+        get() = arena.defData.location ?: world.spawnLocation
 
     fun getPos(loc: Loc) =
-        ChessPosition(Math.floorDiv((settings.tileSize+1) * 8 - 1 - loc.x, settings.tileSize), Math.floorDiv(loc.z - 8, settings.tileSize))
+        ChessPosition(Math.floorDiv((settings.tileSize+1) * 8 - 1 - loc.x + arena.offset.x, settings.tileSize), Math.floorDiv(loc.z - arena.offset.z - 8, settings.tileSize))
 
     fun getPieceLoc(pos: ChessPosition) =
-        Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile)
+        Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile) + arena.offset
 
     fun getCapturedLoc(pos: Pair<Int, Int>, by: ChessSide): Loc {
         return when (by) {
             ChessSide.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
             ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * pos.second)
-        }
+        } + arena.offset
     }
 
     fun renderPiece(loc: Loc, structure: List<Material>) {
@@ -71,10 +71,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
             return true
         }
 
-        val a = ChessManager.arenas.firstOrNull {
-            val w = Bukkit.getWorld(it)
-            w == null || w.players.isEmpty()
-        }
+        val a = ChessManager.nextArena()
 
         if (a != null) {
             arena = Arena(a, settings.gameModeInfo, game.scoreboard.scoreboard, settings.offset ?: Loc(0,0,0))
@@ -86,9 +83,9 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
     fun renderBoardBase() {
         for (i in 0 until 8 * (settings.tileSize+2)) {
             for (j in 0 until 8 * (settings.tileSize+2)) {
-                world.getBlockAt(i, 100, j).type = Material.DARK_OAK_PLANKS
+                world.getBlockAt(i + arena.offset.x, 100 + arena.offset.y, j + arena.offset.z).type = Material.DARK_OAK_PLANKS
                 if (i in 8 - 1..8 * (settings.tileSize+1) && j in 8 - 1..8 * (settings.tileSize+1)) {
-                    world.getBlockAt(i, 101, j).type = Material.DARK_OAK_PLANKS
+                    world.getBlockAt(i + arena.offset.x, 101 + arena.offset.y, j + arena.offset.z).type = Material.DARK_OAK_PLANKS
                 }
             }
         }
@@ -98,7 +95,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         for (i in 0 until 8 * (settings.tileSize+2)) {
             for (j in 0 until 8 * (settings.tileSize+2)) {
                 for (k in 100..105)
-                    world.getBlockAt(i, k, j).type = Material.AIR
+                    world.getBlockAt(i + arena.offset.x, k + arena.offset.y, j + arena.offset.z).type = Material.AIR
             }
         }
     }
@@ -112,11 +109,11 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         arena.teleportSpectator(p)
     }
 
-    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, TimeModifier.LATE)
+    @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, TimeModifier.LATE)
     fun spectatorLeave(p: Player) {
         arena.leavePlayer(p)
     }
-
+    @GameEvent(GameBaseEvent.REMOVE_PLAYER)
     fun removePlayer(p: Player) {
         arena.leavePlayer(p)
     }
