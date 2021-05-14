@@ -2,42 +2,9 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import org.bukkit.*
-import org.bukkit.generator.ChunkGenerator
-import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-
-
-class ChessArena(name: String) : Arena(name, "Chess.ResourcePack") {
-    class WorldGen : ChunkGenerator() {
-        override fun generateChunkData(
-            world: World,
-            random: Random,
-            chunkX: Int,
-            chunkZ: Int,
-            biome: BiomeGrid
-        ): ChunkData {
-            return createChunkData(world)
-        }
-
-        override fun shouldGenerateCaves() = false
-        override fun shouldGenerateMobs() = false
-        override fun shouldGenerateDecorations() = false
-        override fun shouldGenerateStructures() = false
-    }
-
-    override val defaultData = PlayerData(allowFlight = true, isFlying = true)
-    override val spectatorData =
-        PlayerData(allowFlight = true, isFlying = true, gameMode = GameMode.SPECTATOR)
-    override val worldGen: ChunkGenerator = WorldGen()
-    override val setSettings: World.() -> Unit = {
-        setSpawnLocation(4, 101, 4)
-        pvp = false
-        setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
-        difficulty = Difficulty.PEACEFUL
-    }
-}
 
 enum class ChessSide(
     private val path: String,

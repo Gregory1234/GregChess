@@ -207,7 +207,6 @@ Chess:
     Resignation: "resignation"
     Walkover: "walkover"
     PluginRestart: "the plugin restarting"
-    ArenaRemoved: "arena deleted"
     Stalemate: "stalemate"
     InsufficientMaterial: "insufficient material"
     FiftyMoves: "the 50-move rule"

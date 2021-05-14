@@ -111,7 +111,7 @@ fun JavaPlugin.addCommandTab(name: String, tabCompleter: CommandArgs.() -> List<
 
 data class Loc(val x: Int, val y: Int, val z: Int) {
     fun toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
-
+    operator fun plus(offset: Loc) = Loc(x+offset.x, y+offset.y, z+offset.z)
     companion object {
         fun fromLocation(l: Location) = Loc(l.x.toInt(), l.y.toInt(), l.z.toInt())
     }

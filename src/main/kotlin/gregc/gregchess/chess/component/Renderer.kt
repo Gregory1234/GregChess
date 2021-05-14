@@ -2,16 +2,13 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.Sound
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.entity.Player
 import kotlin.math.floor
 
 class Renderer(private val game: ChessGame, private val settings: Settings): Component {
 
-    class Settings(val tileSize: Int) {
+    class Settings(val tileSize: Int, val gameModeInfo: GameModeInfo, val arenaWorld: String? = null, val offset: Loc? = null) {
         fun getComponent(game: ChessGame) = Renderer(game, this)
 
         internal val highHalfTile
@@ -20,7 +17,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
             get() = floor((tileSize.toDouble()-1)/2).toInt()
     }
 
-    private lateinit var arena: ChessArena
+    private lateinit var arena: Arena
 
     private val world
         get() = arena.world
@@ -65,16 +62,25 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
 
     @GameEvent(GameBaseEvent.INIT, TimeModifier.EARLY)
     fun init() {
-        game.forEachPlayer(arena::teleport)
+        game.forEachPlayer(arena::teleportPlayer)
     }
 
     fun checkForFreeArenas(): Boolean {
-        val a = ChessManager.nextArena()
-        if (a != null) {
-            a.reserve()
-            arena = a
+        if (settings.arenaWorld != null){
+            arena = Arena(settings.arenaWorld, settings.gameModeInfo, game.scoreboard.scoreboard, settings.offset ?: Loc(0,0,0))
+            return true
         }
-        return a != null
+
+        val a = ChessManager.arenas.firstOrNull {
+            val w = Bukkit.getWorld(it)
+            w == null || w.players.isEmpty()
+        }
+
+        if (a != null) {
+            arena = Arena(a, settings.gameModeInfo, game.scoreboard.scoreboard, settings.offset ?: Loc(0,0,0))
+            return true
+        }
+        return false
     }
 
     fun renderBoardBase() {
@@ -98,7 +104,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
     }
 
     fun evacuate() {
-        world.players.forEach(arena::safeExit)
+        game.forEachPlayer(arena::leavePlayer)
     }
 
     @GameEvent(GameBaseEvent.SPECTATOR_JOIN, TimeModifier.EARLY)
@@ -108,21 +114,15 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
 
     @GameEvent(GameBaseEvent.SPECTATOR_JOIN, TimeModifier.LATE)
     fun spectatorLeave(p: Player) {
-        arena.exit(p)
+        arena.leavePlayer(p)
     }
 
     fun removePlayer(p: Player) {
-        arena.exit(p)
+        arena.leavePlayer(p)
     }
 
-    @GameEvent(GameBaseEvent.VERY_END, TimeModifier.LATE)
-    fun clearArena() {
-        arena.clear()
-    }
-
-    fun isOn(a: ChessArena) = a == arena
     fun resetPlayer(p: Player) {
-        p.playerData = arena.defaultData
+        p.playerData = arena.defData
         game[p]?.held?.let { p.inventory.setItem(0, it.item )}
     }
 }

@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ConfigManager
+import gregc.gregchess.Loc
+import gregc.gregchess.PlayerData
 import gregc.gregchess.View
 import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.component.Chessboard
@@ -22,7 +24,11 @@ object SettingsManager {
                 val board = Chessboard.Settings[child.getOptionalString("Board")]
                 val clock = ChessClock.Settings[child.getOptionalString("Clock")]
                 val tileSize = child.getInt("TileSize", 3)
-                ChessGame.Settings(key, simpleCastling, variant, board, clock, Renderer.Settings(tileSize), ScoreboardManager.Settings())
+                val gameModeInfo = GameModeInfo(Loc(4, 101, 4), PlayerData(allowFlight = true, isFlying = true), false)
+                ChessGame.Settings(
+                    key, simpleCastling, variant,
+                    board, clock, Renderer.Settings(tileSize, gameModeInfo), ScoreboardManager.Settings()
+                )
             }
         }
 

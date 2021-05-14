@@ -17,7 +17,7 @@ class ScoreboardManager(private val game: ChessGame, private val settings: Setti
 
     private val view = ConfigManager.getView("Component.Scoreboard")
 
-    private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
+    val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     private val objective = scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))
 

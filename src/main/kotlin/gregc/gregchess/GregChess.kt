@@ -36,8 +36,6 @@ class GregChess : JavaPlugin(), Listener {
                 human(sender, ChessSide.WHITE, sender == receiver)
                 human(receiver, ChessSide.BLACK, sender == receiver)
             }.start()
-        }.onCancel { (_, _, t) ->
-            t.renderer.clearArena()
         }.register()
 
     override fun onEnable() {

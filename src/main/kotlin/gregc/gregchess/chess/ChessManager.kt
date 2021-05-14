@@ -59,40 +59,17 @@ object ChessManager : Listener {
         g.spectate(p)
     }
 
-    private val arenas = mutableListOf<ChessArena>()
-
-    fun nextArena(): ChessArena? = arenas.firstOrNull { it.isAvailable() }
+    val arenas = mutableListOf<String>()
 
     fun start() {
         GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
         ConfigManager.getStringList("ChessArenas").forEach {
-            arenas += ChessArena(it)
+            arenas += it
         }
     }
 
     fun stop() {
         forEachGame { it.quickStop(ChessGame.EndReason.PluginRestart()) }
-        //arenas.forEach { it.delete() }
-    }
-
-    private fun reloadArenas() {
-        val oldArenas = arenas.map { it.name }
-        val newArenas = ConfigManager.getStringList("ChessArenas")
-        val removedArenas = oldArenas - newArenas
-        val addedArenas = newArenas - oldArenas
-        removedArenas.forEach { name ->
-            val arena = arenas.first { it.name == name }
-            forEachGame {
-                if (it.renderer.isOn(arena)) {
-                    it.quickStop(ChessGame.EndReason.ArenaRemoved())
-                }
-            }
-            //arena.delete()
-            arenas.remove(arena)
-        }
-        addedArenas.forEach { name ->
-            arenas += ChessArena(name)
-        }
     }
 
     fun leave(player: Player) {
@@ -116,7 +93,8 @@ object ChessManager : Listener {
     }
 
     fun reload() {
-        reloadArenas()
+        arenas.clear()
+        arenas.addAll(ConfigManager.getStringList("ChessArenas"))
     }
 
     @EventHandler
@@ -178,7 +156,7 @@ object ChessManager : Listener {
     @EventHandler
     fun onWeatherChange(e: WeatherChangeEvent) {
         if (e.toWeatherState()) {
-            if (e.world.name in arenas.map { it.name }) {
+            if (e.world.name in arenas) {
                 e.isCancelled = true
             }
         }
@@ -215,7 +193,7 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onCreatureSpawn(e: CreatureSpawnEvent) {
-        if (e.location.world?.name in arenas.map { it.name }) {
+        if (e.location.world?.name in arenas) {
             e.isCancelled = true
         }
     }
