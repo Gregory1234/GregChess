@@ -7,7 +7,11 @@ import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
-class ScoreboardManager(private val game: ChessGame): Component {
+class ScoreboardManager(private val game: ChessGame, private val settings: Settings): Component {
+    class Settings {
+        fun getComponent(game: ChessGame) = ScoreboardManager(game, this)
+    }
+
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 

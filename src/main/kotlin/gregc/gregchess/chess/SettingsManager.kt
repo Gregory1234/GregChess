@@ -4,6 +4,8 @@ import gregc.gregchess.ConfigManager
 import gregc.gregchess.View
 import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.Renderer
+import gregc.gregchess.chess.component.ScoreboardManager
 import gregc.gregchess.chess.variant.ChessVariant
 
 object SettingsManager {
@@ -19,7 +21,8 @@ object SettingsManager {
                 val variant = ChessVariant[child.getOptionalString("Variant")]
                 val board = Chessboard.Settings[child.getOptionalString("Board")]
                 val clock = ChessClock.Settings[child.getOptionalString("Clock")]
-                ChessGame.Settings(key, simpleCastling, variant, board, clock)
+                val tileSize = child.getInt("TileSize", 3)
+                ChessGame.Settings(key, simpleCastling, variant, board, clock, Renderer.Settings(tileSize), ScoreboardManager.Settings())
             }
         }
 

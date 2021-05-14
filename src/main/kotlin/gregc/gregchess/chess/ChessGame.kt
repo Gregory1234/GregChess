@@ -26,9 +26,9 @@ class ChessGame(val settings: Settings) {
 
     val clock: ChessClock? = settings.clock?.getComponent(this)
 
-    val renderer: Renderer = Renderer(this)
+    val renderer: Renderer = settings.renderer.getComponent(this)
 
-    val scoreboard = ScoreboardManager(this)
+    val scoreboard = settings.scoreboard.getComponent(this)
 
     private val components = listOfNotNull(board, clock, renderer, scoreboard).toMutableList()
 
@@ -265,7 +265,7 @@ class ChessGame(val settings: Settings) {
         }
     }
 
-    private var stopping = false
+    var stopping = false
         private set
     var endReason: EndReason? = null
         private set
@@ -324,7 +324,11 @@ class ChessGame(val settings: Settings) {
                 }
             }
             if (reason is EndReason.PluginRestart) {
+                components.runGameEvent(GameBaseEvent.CLEAR)
+                players.forEach(ChessPlayer::stop)
                 glog.low("Stopped game", uniqueId, reason)
+                components.runGameEvent(GameBaseEvent.VERY_END)
+                Bukkit.getPluginManager().callEvent(EndEvent(this))
                 return
             }
             TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
@@ -407,7 +411,9 @@ class ChessGame(val settings: Settings) {
         val simpleCastling: Boolean,
         val variant: ChessVariant,
         val board: Chessboard.Settings,
-        val clock: ChessClock.Settings?
+        val clock: ChessClock.Settings?,
+        val renderer: Renderer.Settings,
+        val scoreboard: ScoreboardManager.Settings
     )
 
 }

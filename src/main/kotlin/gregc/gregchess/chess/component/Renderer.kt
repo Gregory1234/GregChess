@@ -7,8 +7,18 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
 import org.bukkit.entity.Player
+import kotlin.math.floor
 
-class Renderer(private val game: ChessGame): Component {
+class Renderer(private val game: ChessGame, private val settings: Settings): Component {
+
+    class Settings(val tileSize: Int) {
+        fun getComponent(game: ChessGame) = Renderer(game, this)
+
+        internal val highHalfTile
+            get() = floor(tileSize.toDouble()/2).toInt()
+        internal val lowHalfTile
+            get() = floor((tileSize.toDouble()-1)/2).toInt()
+    }
 
     private lateinit var arena: ChessArena
 
@@ -22,15 +32,15 @@ class Renderer(private val game: ChessGame): Component {
         get() = world.spawnLocation
 
     fun getPos(loc: Loc) =
-        ChessPosition(Math.floorDiv(4 * 8 - 1 - loc.x, 3), Math.floorDiv(loc.z - 8, 3))
+        ChessPosition(Math.floorDiv((settings.tileSize+1) * 8 - 1 - loc.x, settings.tileSize), Math.floorDiv(loc.z - 8, settings.tileSize))
 
     fun getPieceLoc(pos: ChessPosition) =
-        Loc(4 * 8 - 2 - pos.file * 3, 102, pos.rank * 3 + 8 + 1)
+        Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile)
 
     fun getCapturedLoc(pos: Pair<Int, Int>, by: ChessSide): Loc {
         return when (by) {
-            ChessSide.WHITE -> Loc(4 * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
-            ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * 4 + 2 + 2 * pos.second)
+            ChessSide.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
+            ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * pos.second)
         }
     }
 
@@ -46,7 +56,9 @@ class Renderer(private val game: ChessGame): Component {
 
     fun fillFloor(pos: ChessPosition, floor: Material) {
         val (x, y, z) = getPieceLoc(pos)
-        (Pair(-1, -1)..Pair(1, 1)).forEach { (i, j) ->
+        val mi = -settings.lowHalfTile
+        val ma = settings.highHalfTile
+        (Pair(mi, mi)..Pair(ma, ma)).forEach { (i, j) ->
             world.getBlockAt(x + i, y - 1, z + j).type = floor
         }
     }
@@ -66,10 +78,10 @@ class Renderer(private val game: ChessGame): Component {
     }
 
     fun renderBoardBase() {
-        for (i in 0 until 8 * 5) {
-            for (j in 0 until 8 * 5) {
+        for (i in 0 until 8 * (settings.tileSize+2)) {
+            for (j in 0 until 8 * (settings.tileSize+2)) {
                 world.getBlockAt(i, 100, j).type = Material.DARK_OAK_PLANKS
-                if (i in 8 - 1..8 * 4 && j in 8 - 1..8 * 4) {
+                if (i in 8 - 1..8 * (settings.tileSize+1) && j in 8 - 1..8 * (settings.tileSize+1)) {
                     world.getBlockAt(i, 101, j).type = Material.DARK_OAK_PLANKS
                 }
             }
@@ -77,8 +89,8 @@ class Renderer(private val game: ChessGame): Component {
     }
 
     fun removeBoard() {
-        for (i in 0 until 8 * 5) {
-            for (j in 0 until 8 * 5) {
+        for (i in 0 until 8 * (settings.tileSize+2)) {
+            for (j in 0 until 8 * (settings.tileSize+2)) {
                 for (k in 100..105)
                     world.getBlockAt(i, k, j).type = Material.AIR
             }
