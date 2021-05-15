@@ -92,10 +92,11 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 
 }
 
-inline fun cTry(p: CommandSender, f: () -> Unit) = try {
+inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
     p.sendMessage(ConfigManager.getError(e.playerMsg))
+    err(e)
 }
 
 fun JavaPlugin.addCommand(name: String, command: CommandArgs.() -> Unit) {

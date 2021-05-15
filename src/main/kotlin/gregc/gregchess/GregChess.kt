@@ -260,7 +260,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.admin")
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
                     player.openScreen(ChessGame.SettingsScreen { settings ->
-                        val simul = Simul(ChessManager.nextArena()!!, settings)
+                        val simul = Simul(cNotNull(ChessManager.nextArena(), "NoArenas"), settings)
                         rest().forEach {
                             simul.addGame(player.name, it)
                         }
@@ -369,7 +369,7 @@ class GregChess : JavaPlugin(), Listener {
         val holder = e.inventory.holder
         if (holder is Screen.Holder<*>) {
             e.isCancelled = true
-            cTry(e.whoClicked) {
+            cTry(e.whoClicked, {e.whoClicked.closeInventory()}) {
                 if (!holder.finished)
                     if (holder.applyEvent(InventoryPosition.fromIndex(e.slot)))
                         e.whoClicked.closeInventory()
