@@ -42,3 +42,7 @@ sourceSets {
 jar {
     destinationDirectory.set(file("$rootDir"))
 }
+
+processResources{
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
