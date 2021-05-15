@@ -15,7 +15,7 @@ class ChessPiece(
     hasMoved: Boolean = false
 ) {
     val standardName
-        get() = "${side.standardName} ${type.name.toLowerCase()}"
+        get() = "${side.standardName} ${type.name.lowercase()}"
 
     var square: ChessSquare = initSquare
         private set(v) {

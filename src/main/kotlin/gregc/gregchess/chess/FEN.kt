@@ -76,10 +76,10 @@ data class FEN(
             cr.map { base + if (chess960) (if (it < 4) 'q' else 'a') - 'a' else it }.sorted()
                 .joinToString("")
 
-        private fun parseCastlingRights(r: String, s: String) = s.toLowerCase().map { c ->
+        private fun parseCastlingRights(r: String, s: String) = s.lowercase().map { c ->
             when (c) {
-                'k' -> r.indexOfLast { it.toLowerCase() == 'r' }
-                'q' -> r.indexOfFirst { it.toLowerCase() == 'r' }
+                'k' -> r.indexOfLast { it.lowercaseChar() == 'r' }
+                'q' -> r.indexOfFirst { it.lowercaseChar() == 'r' }
                 in 'a'..'h' -> c - 'a'
                 else -> throw IllegalArgumentException(s)
             }
@@ -91,9 +91,9 @@ data class FEN(
             val whiteRow = board.split("/").last()
             val blackRow = board.split("/").first()
             if ("KQ".any { it in castling } && whiteRow.takeWhile { it != 'K' }
-                    .sumBy { if (it.isDigit()) it.toInt() else 1 } != 4) return true
+                    .sumOf { if (it.isDigit()) it.digitToInt() else 1 } != 4) return true
             if ("kq".any { it in castling } && blackRow.takeWhile { it != 'k' }
-                    .sumBy { if (it.isDigit()) it.toInt() else 1 } != 4) return true
+                    .sumOf { if (it.isDigit()) it.digitToInt() else 1 } != 4) return true
             castling.forEach {
                 when (it) {
                     'K' -> if (!whiteRow.endsWith('R')) return true
@@ -139,7 +139,7 @@ data class FEN(
             val row = String(types.mapNotNull { it }.toCharArray())
             val pawns = ChessType.PAWN.standardChar.toString().repeat(8)
             return FEN(
-                "$row/$pawns/8/8/8/8/${pawns.toUpperCase()}/${row.toUpperCase()}",
+                "$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}",
                 castlingRightsWhite = listOf(r1, r2),
                 castlingRightsBlack = listOf(r1, r2),
                 chess960 = true

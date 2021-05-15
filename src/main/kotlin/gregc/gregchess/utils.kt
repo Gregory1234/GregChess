@@ -210,19 +210,6 @@ inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
 
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 
-fun hexToBytes(hex: String): ByteArray? {
-    if (hex.length % 2 == 1) return null
-    val ret = ByteArray(hex.length / 2)
-    try {
-        for (i in hex.indices step 2) {
-            ret[i / 2] = hex.substring(i..i + 1).toInt(16).toByte()
-        }
-    } catch (e: IllegalArgumentException) {
-        return null
-    }
-    return ret
-}
-
 fun Duration.toTicks(): Long = toMillis() / 50
 
 val Int.seconds: Duration

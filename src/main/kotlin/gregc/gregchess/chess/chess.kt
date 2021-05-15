@@ -47,7 +47,7 @@ data class ChessPosition(val file: Int, val rank: Int) {
         fun parseFromString(s: String): ChessPosition {
             if (s.length != 2 || s[0] !in 'a'..'h' || s[1] !in '1'..'8')
                 throw IllegalArgumentException(s)
-            return ChessPosition(s[0].toLowerCase() - 'a', s[1] - '1')
+            return ChessPosition(s[0].lowercaseChar() - 'a', s[1] - '1')
         }
     }
 }
@@ -80,15 +80,15 @@ class ChessPositionSteps(
             val ret = mutableListOf<Int>()
 
             if (jump.first > 0) {
-                ret += Math.floorDiv(8 - start.file, jump.first)
+                ret += (8 - start.file).floorDiv(jump.first)
             } else if (jump.first < 0) {
-                ret += Math.floorDiv(start.file + 1, -jump.first)
+                ret += (start.file + 1).floorDiv(-jump.first)
             }
 
             if (jump.second > 0) {
-                ret += Math.floorDiv(8 - start.rank, jump.second)
+                ret += (8 - start.rank).floorDiv(jump.second)
             } else if (jump.second < 0) {
-                ret += Math.floorDiv(start.rank + 1, -jump.second)
+                ret += (start.rank + 1).floorDiv(-jump.second)
             }
 
             return ret.minOrNull() ?: 1
@@ -104,16 +104,16 @@ class ChessPositionSteps(
                 return false
             if (jump.second == 0)
                 return element == start
-            val m = Math.floorMod(element.rank - start.rank, jump.second)
+            val m = (element.rank - start.rank).mod(jump.second)
             if (m != 0)
                 return false
-            val d = Math.floorDiv(element.rank - start.rank, jump.second)
+            val d = (element.rank - start.rank).floorDiv(jump.second)
             return d in (0 until size)
         } else {
-            val m = Math.floorMod(element.file - start.file, jump.first)
+            val m = (element.file - start.file).mod(jump.first)
             if (m != 0)
                 return false
-            val d = Math.floorDiv(element.file - start.file, jump.first)
+            val d = (element.file - start.file).floorDiv(jump.first)
             if (d !in (0 until size))
                 return false
             return (element.rank - start.rank) == d * jump.second

@@ -29,7 +29,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         get() = arena.defData.location ?: world.spawnLocation
 
     fun getPos(loc: Loc) =
-        ChessPosition(Math.floorDiv((settings.tileSize+1) * 8 - 1 - loc.x + arena.offset.x, settings.tileSize), Math.floorDiv(loc.z - arena.offset.z - 8, settings.tileSize))
+        ChessPosition(((settings.tileSize+1) * 8 - 1 - loc.x + arena.offset.x).floorDiv(settings.tileSize), (loc.z - arena.offset.z - 8).floorDiv(settings.tileSize))
 
     fun getPieceLoc(pos: ChessPosition) =
         Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile) + arena.offset

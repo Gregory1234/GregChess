@@ -72,19 +72,19 @@ abstract class MoveCandidate(
 
     open fun baseName() = buildString {
         if (piece.type != ChessType.PAWN) {
-            append(piece.type.char.toUpperCase())
+            append(piece.type.char.uppercaseChar())
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(piece.pos.fileStr)
         if (captured != null)
             append(ConfigManager.getString("Chess.Capture"))
-        promotion?.let { append(it.char.toUpperCase()) }
+        promotion?.let { append(it.char.uppercaseChar()) }
         append(target.pos)
     }
 
     open fun baseStandardName() = buildString {
         if (piece.type != ChessType.PAWN) {
-            append(piece.type.standardChar.toUpperCase())
+            append(piece.type.standardChar.uppercaseChar())
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(origin.pos.fileStr)
@@ -92,7 +92,7 @@ abstract class MoveCandidate(
             append("x")
         promotion?.let {
             append("=")
-            append(it.standardChar.toUpperCase())
+            append(it.standardChar.uppercaseChar())
         }
         append(target.pos)
     }

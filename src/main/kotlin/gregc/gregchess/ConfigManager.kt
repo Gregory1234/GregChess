@@ -24,6 +24,9 @@ open class View protected constructor(private val rootPath: String = "") {
     val exists
         get() = section != null
 
+    fun String.upperFirst() = replaceFirstChar { it.uppercase() }
+    fun String.lowerFirst() = replaceFirstChar { it.lowercase() }
+
     fun <T> get(
         path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?
     ): T {
@@ -36,7 +39,7 @@ open class View protected constructor(private val rootPath: String = "") {
         }
         val ret = parser(str)
         if (ret == null) {
-            glog.warn("${type.capitalize()} $fullPath is in a wrong format, defaulted to $default!")
+            glog.warn("${type.upperFirst()} $fullPath is in a wrong format, defaulted to $default!")
             return default
         }
         return ret
@@ -55,7 +58,7 @@ open class View protected constructor(private val rootPath: String = "") {
         return str.mapNotNull {
             val ret = parser(it)
             if (ret == null) {
-                glog.warn("${type.capitalize()} $fullPath is in a wrong format, ignored!")
+                glog.warn("${type.lowerFirst()} $fullPath is in a wrong format, ignored!")
                 null
             } else
                 ret
@@ -83,9 +86,9 @@ open class View protected constructor(private val rootPath: String = "") {
         cl: KClass<T>,
         warnMissing: Boolean = true
     ) =
-        get(path, cl.simpleName?.decapitalize() ?: "enum", default, warnMissing) {
+        get(path, cl.simpleName?.lowerFirst() ?: "enum", default, warnMissing) {
             try {
-                enumValueOf(it.toUpperCase())
+                enumValueOf(it.uppercase())
             } catch (e: IllegalArgumentException) {
                 null
             }
@@ -96,9 +99,9 @@ open class View protected constructor(private val rootPath: String = "") {
         cl: KClass<T>,
         warnMissing: Boolean = true
     ) =
-        getList(path, cl.simpleName?.decapitalize() ?: "enum", warnMissing) {
+        getList(path, cl.simpleName?.lowerFirst() ?: "enum", warnMissing) {
             try {
-                enumValueOf<T>(it.toUpperCase())
+                enumValueOf<T>(it.uppercase())
             } catch (e: IllegalArgumentException) {
                 null
             }
@@ -109,10 +112,8 @@ open class View protected constructor(private val rootPath: String = "") {
 
     fun getOptionalDuration(path: String) = get(path, "duration", null, false, ::parseDuration)
 
-    fun getHexString(path: String) = get(path, "hex string", null) { hexToBytes(it) }
-
     fun getBool(path: String, default: Boolean) =
-        get(path, "boolean", default, false) { it.toBoolean() }
+        get(path, "boolean", default, false) { it.toBooleanStrictOrNull() }
 
     fun getStringList(path: String) = getList(path, "string") { chatColor(it) }
 

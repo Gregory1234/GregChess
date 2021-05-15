@@ -230,7 +230,6 @@ class ChessGame(val settings: Settings) {
         class Resignation(winner: ChessSide) : EndReason("Chess.EndReason.Resignation", "abandoned", winner)
         class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", "abandoned", winner)
         class PluginRestart : EndReason("Chess.EndReason.PluginRestart", "emergency", null)
-        class ArenaRemoved : EndReason("Chess.EndReason.ArenaRemoved", "emergency", null)
         class Stalemate : EndReason("Chess.EndReason.Stalemate", "normal", null)
         class InsufficientMaterial : EndReason("Chess.EndReason.InsufficientMaterial", "normal", null)
         class FiftyMoves : EndReason("Chess.EndReason.FiftyMoves", "normal", null)

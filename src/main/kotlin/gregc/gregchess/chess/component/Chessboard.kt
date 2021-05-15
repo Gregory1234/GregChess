@@ -231,7 +231,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                             if (e != 0)
                                 append(e)
                             e = 0
-                            append(if (piece.side == ChessSide.WHITE) piece.type.char.toUpperCase() else piece.type.char)
+                            append(if (piece.side == ChessSide.WHITE) piece.type.char.uppercaseChar() else piece.type.char)
                         }
                     }
                     if (e == 8)

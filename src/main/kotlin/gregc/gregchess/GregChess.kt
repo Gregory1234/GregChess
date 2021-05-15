@@ -44,11 +44,11 @@ class GregChess : JavaPlugin(), Listener {
         ChessManager.start()
         RequestManager.start()
         addCommand("chess") {
-            when (nextArg().toLowerCase()) {
+            when (nextArg().lowercase()) {
                 "duel" -> {
                     cPlayer(player)
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
-                    when (nextArg().toLowerCase()) {
+                    when (nextArg().lowercase()) {
                         "accept" -> {
                             cWrongArgument {
                                 duelRequest.accept(player, UUID.fromString(lastArg()))
@@ -181,7 +181,7 @@ class GregChess : JavaPlugin(), Listener {
                     cWrongArgument {
                         val side = ChessSide.valueOf(nextArg())
                         val time = cNotNull(parseDuration(this[1]), "WrongArgument")
-                        when (nextArg().toLowerCase()) {
+                        when (nextArg().lowercase()) {
                             "add" -> clock.addTime(side, time)
                             "set" -> clock.setTime(side, time)
                             else -> cWrongArgument()
@@ -196,7 +196,7 @@ class GregChess : JavaPlugin(), Listener {
                     val engines = game.chessPlayers.filterIsInstance<EnginePlayer>()
                     val engine = cNotNull(engines.firstOrNull(), "EngineNotFound")
                     cWrongArgument {
-                        when (nextArg().toLowerCase()) {
+                        when (nextArg().lowercase()) {
                             "set" -> {
                                 engine.engine.setOption(nextArg(), restString())
                             }
@@ -241,7 +241,7 @@ class GregChess : JavaPlugin(), Listener {
                 }
                 "info" -> {
                     cWrongArgument {
-                        when (nextArg().toLowerCase()) {
+                        when (nextArg().lowercase()) {
                             "game" -> player.spigot().sendMessage(selectGame().getInfo())
                             "piece" -> player.spigot().sendMessage(selectPiece().getInfo())
                             else -> cWrongArgument()

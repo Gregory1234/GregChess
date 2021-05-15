@@ -29,11 +29,11 @@ enum class ChessType(
 
     companion object {
         fun parseFromChar(c: Char) =
-            values().firstOrNull { it.char == c.toLowerCase() }
+            values().firstOrNull { it.char == c.lowercaseChar() }
                 ?: throw IllegalArgumentException(c.toString())
 
         fun parseFromStandardChar(c: Char): ChessType =
-            values().firstOrNull { it.standardChar == c.toLowerCase() }
+            values().firstOrNull { it.standardChar == c.lowercaseChar() }
                 ?: throw IllegalArgumentException(c.toString())
     }
 
