@@ -85,6 +85,8 @@ Message:
     NotInGame:
       You: "&cYou are not in a game!"
       Player: "&cThe player isn't in a game!"
+    Simul:
+      Clock: "&cClocks are not supported in simuls."
 
 Title:
   YourTurn: "&eIt is your turn"

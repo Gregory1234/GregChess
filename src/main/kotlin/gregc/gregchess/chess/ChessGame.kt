@@ -9,7 +9,6 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import org.bukkit.inventory.ItemStack
-import java.lang.IllegalStateException
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
@@ -33,18 +32,18 @@ class ChessGame(val settings: Settings) {
     private val components = listOfNotNull(board, clock, renderer, scoreboard).toMutableList()
 
     fun registerComponent(c: Component) {
-        components.add(components.size-2, c)
+        components.add(components.size - 2, c)
     }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
-    private val players = mutableListOf<ChessPlayer>()
+    private lateinit var players: BySides<ChessPlayer>
 
     private val white
-        get() = players.firstOrNull { it.side == ChessSide.WHITE }
+        get() = players.white
     private val black
-        get() = players.firstOrNull { it.side == ChessSide.BLACK }
+        get() = players.black
 
     private val spectatorUUID = mutableListOf<UUID>()
 
@@ -55,14 +54,18 @@ class ChessGame(val settings: Settings) {
         get() = players.toList()
 
     private val realPlayers: List<Player>
-        get() = players.mapNotNull { (it as? BukkitChessPlayer)?.player }.distinct()
+        get() = chessPlayers.mapNotNull { (it as? BukkitChessPlayer)?.player }.distinct()
 
     var currentTurn = ChessSide.WHITE
 
-    class AddPlayersScope(internal val game: ChessGame) {
+    val currentPlayer
+        get() = this[currentTurn]
+
+    inner class AddPlayersScope(val game: ChessGame) {
+        private val players = BySides<ChessPlayer?>(null, null)
 
         fun addPlayer(p: ChessPlayer) {
-            game.players += p
+            players[p.side] = p
         }
 
         fun human(p: Player, side: ChessSide, silent: Boolean) {
@@ -71,6 +74,14 @@ class ChessGame(val settings: Settings) {
 
         fun engine(name: String, side: ChessSide) {
             addPlayer(EnginePlayer(ChessEngine(name), side, game))
+        }
+
+        fun build(): BySides<ChessPlayer> {
+            players.forEach {
+                if (it == null)
+                    throw IllegalStateException("player has not been initialized")
+            }
+            return BySides(players.white!!, players.black!!)
         }
 
     }
@@ -94,9 +105,10 @@ class ChessGame(val settings: Settings) {
 
     fun addPlayers(init: AddPlayersScope.() -> Unit): ChessGame {
         requireBeforeStart()
-        if (players.isNotEmpty())
-            throw IllegalStateException("already added players")
-        AddPlayersScope(this).init()
+        players = AddPlayersScope(this).run {
+            init()
+            build()
+        }
         return this
     }
 
@@ -128,7 +140,7 @@ class ChessGame(val settings: Settings) {
         requireRunning()
         components.runGameEvent(GameBaseEvent.END_TURN)
         variant.checkForGameEnd(this)
-        Bukkit.getPluginManager().callEvent(TurnEndEvent(this, this[currentTurn]))
+        Bukkit.getPluginManager().callEvent(TurnEndEvent(this, currentPlayer))
         currentTurn++
         startTurn()
     }
@@ -158,13 +170,13 @@ class ChessGame(val settings: Settings) {
             startTime = LocalDateTime.now()
             if (renderer.checkForFreeArenas()) {
                 components.runGameEvent(GameBaseEvent.INIT)
-                black?.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
-                white?.sendTitle(
+                black.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
+                white.sendTitle(
                     ConfigManager.getString("Title.YourTurn"),
                     ConfigManager.getString("Title.YouArePlayingAs.White")
                 )
-                white?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
-                black?.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
+                white.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
+                black.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
                 variant.start(this)
                 components.runGameEvent(GameBaseEvent.START)
                 started = true
@@ -209,14 +221,14 @@ class ChessGame(val settings: Settings) {
     private fun startTurn() {
         components.runGameEvent(GameBaseEvent.START_TURN)
         if (!stopping)
-            this[currentTurn].startTurn()
+            currentPlayer.startTurn()
         glog.low("Started turn", uniqueId, currentTurn)
     }
 
     private fun startPreviousTurn() {
         components.runGameEvent(GameBaseEvent.START_PREVIOUS_TURN)
         if (!stopping)
-            this[currentTurn].startTurn()
+            currentPlayer.startTurn()
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
@@ -240,6 +252,7 @@ class ChessGame(val settings: Settings) {
         class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", "emergency", null) {
             override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
         }
+
         class AllPiecesLost(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.PiecesLost", "normal", winner)
         // @formatter:on
 
@@ -347,16 +360,11 @@ class ChessGame(val settings: Settings) {
     }
 
     operator fun get(player: Player): BukkitChessPlayer? =
-        if (players.map { it as? BukkitChessPlayer }.all { it?.player == player })
-            this[currentTurn] as? BukkitChessPlayer
-        else players.mapNotNull { it as? BukkitChessPlayer }.firstOrNull { it.player == player }
+        if (chessPlayers.map { it as? BukkitChessPlayer }.all { it?.player == player })
+            currentPlayer as? BukkitChessPlayer
+        else chessPlayers.mapNotNull { it as? BukkitChessPlayer }.firstOrNull { it.player == player }
 
-    operator fun get(side: ChessSide): ChessPlayer = tryOrStopNull(
-        when (side) {
-            ChessSide.WHITE -> white
-            ChessSide.BLACK -> black
-        }
-    )
+    operator fun get(side: ChessSide): ChessPlayer = tryOrStopNull(players[side])
 
     fun <E> tryOrStopNull(expr: E?): E = try {
         expr!!
@@ -377,7 +385,7 @@ class ChessGame(val settings: Settings) {
 
     fun getInfo() = buildTextComponent {
         appendCopy("UUID: $uniqueId\n", uniqueId)
-        append("Players: ${players.joinToString { "${it.name} as ${it.side.standardName}" }}\n")
+        append("Players: ${chessPlayers.joinToString { "${it.name} as ${it.side.standardName}" }}\n")
         append("Spectators: ${spectators.joinToString { it.name }}\n")
         append("Arena: ${renderer.arenaName}\n")
         append("Preset: ${settings.name}\n")

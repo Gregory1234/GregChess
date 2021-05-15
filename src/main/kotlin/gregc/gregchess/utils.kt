@@ -92,12 +92,16 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 
 }
 
+inline fun cTry(p: CommandSender, f: () -> Unit) = try {
+    f()
+} catch (e: CommandException) {
+    p.sendMessage(ConfigManager.getError(e.playerMsg))
+}
+
 fun JavaPlugin.addCommand(name: String, command: CommandArgs.() -> Unit) {
     getCommand(name)?.setExecutor { sender, _, _, args ->
-        try {
+        cTry(sender){
             command(CommandArgs(sender, args))
-        } catch (e: CommandException) {
-            sender.sendMessage(ConfigManager.getError(e.playerMsg))
         }
         true
     }
@@ -111,7 +115,8 @@ fun JavaPlugin.addCommandTab(name: String, tabCompleter: CommandArgs.() -> List<
 
 data class Loc(val x: Int, val y: Int, val z: Int) {
     fun toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
-    operator fun plus(offset: Loc) = Loc(x+offset.x, y+offset.y, z+offset.z)
+    operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
+
     companion object {
         fun fromLocation(l: Location) = Loc(l.x.toInt(), l.y.toInt(), l.z.toInt())
     }

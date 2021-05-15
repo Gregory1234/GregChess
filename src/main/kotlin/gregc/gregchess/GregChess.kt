@@ -23,7 +23,7 @@ class GregChess : JavaPlugin(), Listener {
         "Takeback", "/chess undo", "/chess undo"
     ).validate {
         val game = ChessManager.getGame(it) ?: return@validate false
-        (game[!game.currentTurn] as? BukkitChessPlayer)?.player == it
+        (game.currentPlayer.opponent as? BukkitChessPlayer)?.player == it
     }.onAccept { (sender, _, _) ->
         ChessManager.getGame(sender)?.board?.undoLastMove()
     }.register()
@@ -369,9 +369,11 @@ class GregChess : JavaPlugin(), Listener {
         val holder = e.inventory.holder
         if (holder is Screen.Holder<*>) {
             e.isCancelled = true
-            if (!holder.finished)
-                if (holder.applyEvent(InventoryPosition.fromIndex(e.slot)))
-                    e.whoClicked.closeInventory()
+            cTry(e.whoClicked) {
+                if (!holder.finished)
+                    if (holder.applyEvent(InventoryPosition.fromIndex(e.slot)))
+                        e.whoClicked.closeInventory()
+            }
         }
     }
 
@@ -379,8 +381,10 @@ class GregChess : JavaPlugin(), Listener {
     fun onInventoryClose(e: InventoryCloseEvent) {
         val holder = e.inventory.holder
         if (holder is Screen.Holder<*>) {
-            if (!holder.finished)
-                holder.cancel()
+            cTry(e.player) {
+                if (!holder.finished)
+                    holder.cancel()
+            }
         }
     }
 }

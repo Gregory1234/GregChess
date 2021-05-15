@@ -99,19 +99,13 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    private var whiteTime = Time(settings.initialTime)
-    private var blackTime = Time(settings.initialTime)
-
-    private fun getTime(s: ChessSide) = when (s) {
-        ChessSide.WHITE -> whiteTime
-        ChessSide.BLACK -> blackTime
-    }
+    private var time = BySides(Time(settings.initialTime), Time(settings.initialTime))
 
     private var started = false
     private var stopTime: LocalDateTime? = null
 
     fun getTimeRemaining(s: ChessSide) =
-        getTime(s).getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
+        time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
     private fun format(time: Duration): String {
         val formatter = DateTimeFormatter.ofPattern(view.getString("TimeFormat"))
@@ -136,10 +130,10 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     }
 
     private fun startTimer() {
-        ChessSide.values().forEach { getTime(it).reset() }
+        ChessSide.values().forEach { time[it].reset() }
         if (settings.type == Type.FIXED) {
-            getTime(game.currentTurn).begin = LocalDateTime.now() + settings.increment
-            getTime(game.currentTurn) += settings.increment
+            time[game.currentTurn].begin = LocalDateTime.now() + settings.increment
+            time[game.currentTurn] += settings.increment
         }
         started = true
     }
@@ -156,32 +150,32 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         val increment = if (started) settings.increment else 0.seconds
         if (!started)
             startTimer()
-        val time = LocalDateTime.now()
+        val now = LocalDateTime.now()
         val turn = game.currentTurn
-        getTime(!turn).start = time
-        getTime(!turn).end = time + getTime(!turn).diff
+        time[!turn].start = now
+        time[!turn].end = now + time[!turn].diff
         when (settings.type) {
             Type.FIXED -> {
-                getTime(turn).diff = settings.initialTime
+                time[turn].diff = settings.initialTime
             }
             Type.INCREMENT -> {
-                getTime(turn).diff = Duration.between(time, getTime(turn).end + increment)
+                time[turn].diff = Duration.between(now, time[turn].end + increment)
             }
             Type.BRONSTEIN -> {
-                val reset = Duration.between(getTime(turn).start, time)
-                getTime(turn).diff =
+                val reset = Duration.between(time[turn].start, now)
+                time[turn].diff =
                     Duration.between(
-                        time,
-                        getTime(turn).end + if (increment > reset) reset else increment
+                        now,
+                        time[turn].end + if (increment > reset) reset else increment
                     )
             }
             Type.SIMPLE -> {
-                getTime(!turn) += increment
-                getTime(!turn).begin = time + increment
-                getTime(turn).diff = Duration.between(
-                    if (getTime(turn).begin == null || time > getTime(turn).begin) time
-                    else getTime(turn).begin,
-                    getTime(turn).end
+                time[!turn] += increment
+                time[!turn].begin = now + increment
+                time[turn].diff = Duration.between(
+                    if (time[turn].begin == null || now > time[turn].begin) now
+                    else time[turn].begin,
+                    time[turn].end
                 )
             }
         }
@@ -193,10 +187,10 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     }
 
     fun addTime(side: ChessSide, addition: Duration) {
-        getTime(side) += addition
+        time[side] += addition
     }
 
     fun setTime(side: ChessSide, seconds: Duration) {
-        getTime(side).set(seconds)
+        time[side].set(seconds)
     }
 }
