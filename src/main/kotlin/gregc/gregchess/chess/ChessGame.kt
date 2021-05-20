@@ -62,7 +62,7 @@ class ChessGame(val settings: Settings) {
         get() = this[currentTurn]
 
     inner class AddPlayersScope(val game: ChessGame) {
-        private val players = BySides<ChessPlayer?>(null, null)
+        private val players = MutableBySides<ChessPlayer?>(null, null)
 
         fun addPlayer(p: ChessPlayer) {
             players[p.side] = p
@@ -76,12 +76,8 @@ class ChessGame(val settings: Settings) {
             addPlayer(EnginePlayer(ChessEngine(name), side, game))
         }
 
-        fun build(): BySides<ChessPlayer> {
-            players.forEach {
-                if (it == null)
-                    throw IllegalStateException("player has not been initialized")
-            }
-            return BySides(players.white!!, players.black!!)
+        fun build(): BySides<ChessPlayer> = players.map {
+            it ?: throw IllegalStateException("player has not been initialized")
         }
 
     }

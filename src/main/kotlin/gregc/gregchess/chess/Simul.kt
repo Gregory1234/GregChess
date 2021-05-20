@@ -19,11 +19,11 @@ class Simul(private val arena: String, private val settings: ChessGame.Settings)
     private val data = mutableMapOf<UUID, PlayerData>()
 
     class SimulManager(val game: ChessGame, val simul: Simul): Component {
-        private lateinit var location: BySides<Location>
+        private lateinit var location: MutableBySides<Location>
 
         @GameEvent(GameBaseEvent.START, TimeModifier.LATE)
         fun start() {
-            location = BySides(game.renderer.spawnLocation, game.renderer.spawnLocation)
+            location = MutableBySides(game.renderer.spawnLocation, game.renderer.spawnLocation)
             game.scoreboard += object : PlayerProperty(ConfigManager.getString("Component.Simul.Current")) {
                 override fun invoke(s: ChessSide): String {
                     val p = game[s]

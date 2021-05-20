@@ -29,7 +29,7 @@ enum class ChessSide(
 
 }
 
-data class BySides<T>(var white: T, var black: T) {
+data class MutableBySides<T>(var white: T, var black: T) {
     operator fun get(side: ChessSide) = when (side) {
         ChessSide.WHITE -> white
         ChessSide.BLACK -> black
@@ -49,6 +49,33 @@ data class BySides<T>(var white: T, var black: T) {
         f(white)
         f(black)
     }
+    fun <R> forEachIndexed(f: (ChessSide, T) -> R) {
+        f(ChessSide.WHITE, white)
+        f(ChessSide.BLACK, black)
+    }
+    fun <R> map(f: (T) -> R) = BySides(f(white), f(black))
+    fun <R> mapIndexed(f: (ChessSide, T) -> R) = BySides(f(ChessSide.WHITE, white), f(ChessSide.BLACK, black))
+    fun toBySides() = BySides(white, black)
+}
+
+data class BySides<T>(val white: T, val black: T) {
+    operator fun get(side: ChessSide) = when (side) {
+        ChessSide.WHITE -> white
+        ChessSide.BLACK -> black
+    }
+
+    fun toList(): List<T> = listOf(white, black)
+    fun forEach(f: (T) -> Unit) {
+        f(white)
+        f(black)
+    }
+    fun <R> forEachIndexed(f: (ChessSide, T) -> R) {
+        f(ChessSide.WHITE, white)
+        f(ChessSide.BLACK, black)
+    }
+    fun <R> map(f: (T) -> R) = BySides(f(white), f(black))
+    fun <R> mapIndexed(f: (ChessSide, T) -> R) = BySides(f(ChessSide.WHITE, white), f(ChessSide.BLACK, black))
+    fun toMutableBySides() = MutableBySides(white, black)
 }
 
 class ChessEngine(val name: String) {
