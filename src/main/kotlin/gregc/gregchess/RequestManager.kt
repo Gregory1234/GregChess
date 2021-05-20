@@ -28,15 +28,12 @@ object RequestManager : Listener {
 
 }
 
-class RequestTypeBuilder<T> {
-    private lateinit var messages: RequestMessages
-    private var validateSender: (Player) -> Boolean = { true }
-    private var printT: (T) -> String = { it.toString() }
-    private var onAccept: (Request<T>) -> Unit = {}
-    private var onCancel: (Request<T>) -> Unit = {}
-
-    fun register() =
-        RequestManager.register(RequestType(messages, validateSender, printT, onAccept, onCancel))
+class RequestTypeBuilder<T> internal constructor() {
+    lateinit var messages: RequestMessages
+    var validateSender: (Player) -> Boolean = { true }
+    var printT: (T) -> String = { it.toString() }
+    var onAccept: (Request<T>) -> Unit = {}
+    var onCancel: (Request<T>) -> Unit = {}
 
     fun messagesSimple(
         root: String,
@@ -46,26 +43,11 @@ class RequestTypeBuilder<T> {
         messages = RequestMessages(root, acceptCommand, cancelCommand)
         return this
     }
+}
 
-    fun validate(validateSender: (Player) -> Boolean): RequestTypeBuilder<T> {
-        this.validateSender = validateSender
-        return this
-    }
-
-    fun print(printT: (T) -> String): RequestTypeBuilder<T> {
-        this.printT = printT
-        return this
-    }
-
-    fun onAccept(onAccept: (Request<T>) -> Unit): RequestTypeBuilder<T> {
-        this.onAccept = onAccept
-        return this
-    }
-
-    fun onCancel(onCancel: (Request<T>) -> Unit): RequestTypeBuilder<T> {
-        this.onCancel = onCancel
-        return this
-    }
+fun <T> buildRequestType(f: RequestTypeBuilder<T>.() -> Unit): RequestType<T> = RequestTypeBuilder<T>().run{
+    f()
+    RequestManager.register(RequestType(messages, validateSender, printT, onAccept, onCancel))
 }
 
 

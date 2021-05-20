@@ -99,7 +99,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    private var time = BySides(Time(settings.initialTime), Time(settings.initialTime))
+    private val time = BySides(Time(settings.initialTime), Time(settings.initialTime))
 
     private var started = false
     private var stopTime: LocalDateTime? = null

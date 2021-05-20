@@ -13,30 +13,28 @@ import java.util.*
 @Suppress("unused")
 class GregChess : JavaPlugin(), Listener {
 
-    private val drawRequest = RequestTypeBuilder<Unit>().messagesSimple(
-        "Draw", "/chess draw", "/chess draw"
-    ).validate { ChessManager[it]?.hasTurn ?: false }.onAccept { (sender, _, _) ->
-        ChessManager.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())
-    }.register()
+    private val drawRequest = buildRequestType<Unit> {
+        messagesSimple("Draw", "/chess draw", "/chess draw")
+        validateSender = { ChessManager[it]?.hasTurn ?: false }
+        onAccept = { (sender, _, _) -> ChessManager.getGame(sender)?.stop(ChessGame.EndReason.DrawAgreement())}
+    }
 
-    private val takebackRequest = RequestTypeBuilder<Unit>().messagesSimple(
-        "Takeback", "/chess undo", "/chess undo"
-    ).validate {
-        val game = ChessManager.getGame(it) ?: return@validate false
-        (game.currentPlayer.opponent as? BukkitChessPlayer)?.player == it
-    }.onAccept { (sender, _, _) ->
-        ChessManager.getGame(sender)?.board?.undoLastMove()
-    }.register()
+    private val takebackRequest = buildRequestType<Unit> {
+        messagesSimple("Takeback", "/chess undo", "/chess undo")
+        validateSender = { (ChessManager.getGame(it)?.currentPlayer?.opponent as? BukkitChessPlayer)?.player == it }
+        onAccept = { (sender, _, _) -> ChessManager.getGame(sender)?.board?.undoLastMove() }
+    }
 
-    private val duelRequest =
-        RequestTypeBuilder<ChessGame>().messagesSimple(
-            "Duel", "/chess duel accept", "/chess duel cancel"
-        ).print { it.settings.name }.onAccept { (sender, receiver, g) ->
+    private val duelRequest = buildRequestType<ChessGame>{
+        messagesSimple("Duel", "/chess duel accept", "/chess duel cancel")
+        printT = { it.settings.name }
+        onAccept = { (sender, receiver, g) ->
             g.addPlayers {
                 human(sender, ChessSide.WHITE, sender == receiver)
                 human(receiver, ChessSide.BLACK, sender == receiver)
             }.start()
-        }.register()
+        }
+    }
 
     override fun onEnable() {
         server.pluginManager.registerEvents(this, this)

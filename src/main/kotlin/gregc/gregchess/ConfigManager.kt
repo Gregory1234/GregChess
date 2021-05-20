@@ -117,5 +117,6 @@ open class View protected constructor(private val rootPath: String = "") {
 
     fun getStringList(path: String) = getList(path, "string") { chatColor(it) }
 
-    fun getInt(path: String, default: Int = 0): Int = get(path, "int", default) { it.toIntOrNull() }
+    fun getInt(path: String, default: Int = 0, warnMissing: Boolean = true): Int =
+        get(path, "int", default, warnMissing) { it.toIntOrNull() }
 }

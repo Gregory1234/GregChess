@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import org.bukkit.Bukkit
-import org.bukkit.Location
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -19,11 +18,12 @@ class Simul(private val arena: String, private val settings: ChessGame.Settings)
     private val data = mutableMapOf<UUID, PlayerData>()
 
     class SimulManager(val game: ChessGame, val simul: Simul): Component {
-        private lateinit var location: MutableBySides<Location>
+        private val location = MutableBySides(game[ChessSide.WHITE].player.location, game[ChessSide.BLACK].player.location)
 
         @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
         fun start() {
-            location = MutableBySides(game.renderer.spawnLocation, game.renderer.spawnLocation)
+            location.white = game.renderer.spawnLocation
+            location.black = game.renderer.spawnLocation
             game.scoreboard += object : PlayerProperty(ConfigManager.getString("Component.Simul.Current")) {
                 override fun invoke(s: ChessSide): String {
                     val p = game[s]
@@ -128,11 +128,11 @@ class Simul(private val arena: String, private val settings: ChessGame.Settings)
 
     fun addGame(white: String, black: String) {
         val newGame = ChessGame(settings.copy(renderer = settings.renderer.copy(arenaWorld = arena, offset = currentOffset)))
-        newGame.registerComponent(SimulManager(newGame, this))
         newGame.addPlayers {
             human(Bukkit.getPlayer(white)!!, ChessSide.WHITE, true)
             human(Bukkit.getPlayer(black)!!, ChessSide.BLACK, true)
         }
+        newGame.registerComponent(SimulManager(newGame, this))
         games.add(newGame)
         currentOffset += Loc(50,0,0)
     }

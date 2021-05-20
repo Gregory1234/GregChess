@@ -23,7 +23,7 @@ object SettingsManager {
                 val variant = ChessVariant[child.getOptionalString("Variant")]
                 val board = Chessboard.Settings[child.getOptionalString("Board")]
                 val clock = ChessClock.Settings[child.getOptionalString("Clock")]
-                val tileSize = child.getInt("TileSize", 3)
+                val tileSize = child.getInt("TileSize", 3, false)
                 val gameModeInfo = GameModeInfo(Loc(4, 101, 4), PlayerData(allowFlight = true, isFlying = true), false)
                 ChessGame.Settings(
                     key, simpleCastling, variant,
