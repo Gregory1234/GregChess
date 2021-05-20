@@ -181,7 +181,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    @GameEvent(GameBaseEvent.STOP)
+    @GameEvent(GameBaseEvent.STOP, GameBaseEvent.PANIC)
     fun stop() {
         stopTime = LocalDateTime.now()
     }

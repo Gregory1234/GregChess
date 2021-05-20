@@ -60,7 +60,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         }
     }
 
-    @GameEvent(GameBaseEvent.INIT, TimeModifier.EARLY)
+    @GameEvent(GameBaseEvent.INIT, mod = TimeModifier.EARLY)
     fun init() {
         game.forEachPlayer(arena::teleportPlayer)
     }
@@ -100,16 +100,17 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         }
     }
 
+    @GameEvent(GameBaseEvent.PANIC)
     fun evacuate() {
         game.forEachPlayer(arena::leavePlayer)
     }
 
-    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, TimeModifier.EARLY)
+    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY)
     fun spectatorJoin(p: Player) {
         arena.teleportSpectator(p)
     }
 
-    @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, TimeModifier.LATE)
+    @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, mod = TimeModifier.LATE)
     fun spectatorLeave(p: Player) {
         arena.leavePlayer(p)
     }

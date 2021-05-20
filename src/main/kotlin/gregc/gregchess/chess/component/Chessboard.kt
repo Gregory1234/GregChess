@@ -98,13 +98,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                 moves.clear()
         }
 
-    @GameEvent(GameBaseEvent.START, TimeModifier.EARLY)
-    fun start() {
-        render()
-        setFromFEN(initialFEN)
-    }
-
-    @GameEvent(GameBaseEvent.PRE_PREVIOUS_TURN, TimeModifier.EARLY)
+    @GameEvent(GameBaseEvent.PRE_PREVIOUS_TURN, mod = TimeModifier.EARLY)
     fun previousTurn() {
         updateMoves()
     }
@@ -137,7 +131,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         glog.mid("Rendered chessboard", game.uniqueId)
     }
 
-    @GameEvent(GameBaseEvent.CLEAR)
+    @GameEvent(GameBaseEvent.CLEAR, GameBaseEvent.PANIC)
     fun clear() {
         boardState.values.forEach { it.clear() }
         capturedPieces.forEach { it.hide() }
@@ -177,6 +171,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
+    @GameEvent(GameBaseEvent.START, mod = TimeModifier.EARLY)
+    fun start() {
+        setFromFEN(settings.genFEN(game))
+    }
 
     fun setFromFEN(fen: FEN) {
         clear()

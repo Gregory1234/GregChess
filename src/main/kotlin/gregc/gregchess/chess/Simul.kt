@@ -21,7 +21,7 @@ class Simul(private val arena: String, private val settings: ChessGame.Settings)
     class SimulManager(val game: ChessGame, val simul: Simul): Component {
         private lateinit var location: MutableBySides<Location>
 
-        @GameEvent(GameBaseEvent.START, TimeModifier.LATE)
+        @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
         fun start() {
             location = MutableBySides(game.renderer.spawnLocation, game.renderer.spawnLocation)
             game.scoreboard += object : PlayerProperty(ConfigManager.getString("Component.Simul.Current")) {
@@ -51,7 +51,7 @@ class Simul(private val arena: String, private val settings: ChessGame.Settings)
         }
 
 
-        @GameEvent(GameBaseEvent.END_TURN, TimeModifier.LATE)
+        @GameEvent(GameBaseEvent.END_TURN, mod = TimeModifier.LATE)
         fun endTurn() {
             val player = game.currentPlayer
             location[player.side] = player.player.location
@@ -78,7 +78,7 @@ class Simul(private val arena: String, private val settings: ChessGame.Settings)
             )
         }
 
-        @GameEvent(GameBaseEvent.REMOVE_PLAYER, TimeModifier.LATE)
+        @GameEvent(GameBaseEvent.REMOVE_PLAYER, mod = TimeModifier.LATE)
         fun movePlayer(player: Player) {
             if (ChessManager[player]?.game != game)
                 return

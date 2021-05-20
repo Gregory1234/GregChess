@@ -7,9 +7,9 @@ import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
-class ScoreboardManager(private val game: ChessGame, private val settings: Settings): Component {
+class ScoreboardManager(private val game: ChessGame): Component {
     class Settings {
-        fun getComponent(game: ChessGame) = ScoreboardManager(game, this)
+        fun getComponent(game: ChessGame) = ScoreboardManager(game)
     }
 
     private val gameProperties = mutableListOf<GameProperty>()
@@ -50,7 +50,7 @@ class ScoreboardManager(private val game: ChessGame, private val settings: Setti
         }
     }
 
-    @GameEvent(GameBaseEvent.START, TimeModifier.LATE)
+    @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
     fun start() {
         game.forEachPlayer { it.scoreboard = scoreboard }
         objective.displaySlot = DisplaySlot.SIDEBAR
@@ -80,7 +80,7 @@ class ScoreboardManager(private val game: ChessGame, private val settings: Setti
         p.scoreboard = scoreboard
     }
 
-    @GameEvent(GameBaseEvent.UPDATE, TimeModifier.LATE)
+    @GameEvent(GameBaseEvent.UPDATE, mod = TimeModifier.LATE)
     fun update() {
         gameProperties.forEach {
             it.team?.suffix = it()
@@ -91,7 +91,7 @@ class ScoreboardManager(private val game: ChessGame, private val settings: Setti
         }
     }
 
-    @GameEvent(GameBaseEvent.CLEAR)
+    @GameEvent(GameBaseEvent.CLEAR, GameBaseEvent.PANIC)
     fun stop() {
         scoreboard.teams.forEach { it.unregister() }
         scoreboard.objectives.forEach { it.unregister() }

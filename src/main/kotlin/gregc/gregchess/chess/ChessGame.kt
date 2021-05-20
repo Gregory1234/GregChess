@@ -183,23 +183,20 @@ class ChessGame(val settings: Settings) {
                     else
                         components.runGameEvent(GameBaseEvent.UPDATE)
                 }
-                Bukkit.getPluginManager().callEvent(StartEvent(this))
-                startTurn()
             } else {
                 forEachPlayer { it.sendMessage(ConfigManager.getError("NoArenas")) }
-                stopping = true
+                panic(CommandException("NoArenas"))
                 glog.mid("No free arenas", uniqueId)
             }
-            return this
         } catch (e: Exception) {
-            renderer.evacuate()
             forEachPlayer { it.sendMessage(ConfigManager.getError("TeleportFailed")) }
-            stopping = true
-            components.runGameEvent(GameBaseEvent.STOP)
-            components.runGameEvent(GameBaseEvent.CLEAR)
+            panic(e)
             glog.mid("Failed to start game", uniqueId)
             throw e
         }
+        Bukkit.getPluginManager().callEvent(StartEvent(this))
+        startTurn()
+        return this
     }
 
     fun spectate(p: Player) {
@@ -349,10 +346,16 @@ class ChessGame(val settings: Settings) {
                 }
             }
         } catch (e: Exception) {
-            renderer.evacuate()
-            Bukkit.getPluginManager().callEvent(EndEvent(this))
+            panic(e)
             throw e
         }
+    }
+
+    private fun panic(e: Exception) {
+        stopping = true
+        components.runGameEvent(GameBaseEvent.PANIC, e)
+        endReason = EndReason.Error(e)
+        Bukkit.getPluginManager().callEvent(EndEvent(this))
     }
 
     operator fun get(player: Player): BukkitChessPlayer? =

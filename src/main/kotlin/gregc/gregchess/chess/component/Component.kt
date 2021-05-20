@@ -15,7 +15,8 @@ enum class GameBaseEvent {
     END_TURN,
     PRE_PREVIOUS_TURN,
     START_PREVIOUS_TURN,
-    REMOVE_PLAYER
+    REMOVE_PLAYER,
+    PANIC
 }
 
 enum class TimeModifier {
@@ -27,12 +28,18 @@ enum class TimeModifier {
 @Target(AnnotationTarget.FUNCTION)
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
-annotation class GameEvent(val value: GameBaseEvent, val mod: TimeModifier = TimeModifier.NORMAL)
+annotation class GameEvent(vararg val value: GameBaseEvent, val mod: TimeModifier = TimeModifier.NORMAL)
+@Target(AnnotationTarget.FUNCTION)
+@MustBeDocumented
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GameEvents(vararg val events: GameEvent)
 
 inline fun <reified T : Component> T.runGameEvent(value: GameBaseEvent, mod: TimeModifier, vararg args: Any?) {
     this::class.java.methods
-        .filter { m -> m.annotations.any { it is GameEvent && it.value == value && it.mod == mod } }
-        .forEach {
+        .filter { m ->
+            m.annotations.map { if (it is GameEvents) it.events else it}
+                .any { it is GameEvent && value in it.value && it.mod == mod }
+        }.forEach {
             try {
                 it.invoke(this, *args)
             } catch (e: Exception) {
