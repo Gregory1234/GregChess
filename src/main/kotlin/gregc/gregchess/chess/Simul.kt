@@ -6,7 +6,7 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
 
-class Simul(private val arena: String, private val settings: ChessGame.Settings) {
+class Simul(private val arena: String, private val settings: GameSettings) {
 
     companion object {
         private val ChessPlayer.player
@@ -33,7 +33,7 @@ class Simul(private val arena: String, private val settings: ChessGame.Settings)
                 }
             }
         }
-        fun getPlayer(g: ChessGame) =
+        private fun getPlayer(g: ChessGame) =
             if (g[ChessSide.WHITE].player == g[ChessSide.BLACK].player) g.currentPlayer else g[game.currentPlayer.player]!!
 
         private fun chooseGame(): ChessGame? {

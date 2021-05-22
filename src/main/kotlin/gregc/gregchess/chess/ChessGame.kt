@@ -2,19 +2,16 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.variant.ChessVariant
 import org.bukkit.Bukkit
-import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
-import org.bukkit.inventory.ItemStack
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
-class ChessGame(val settings: Settings) {
+class ChessGame(val settings: GameSettings) {
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() = "ChessGame(uniqueId = $uniqueId)"
@@ -391,35 +388,5 @@ class ChessGame(val settings: Settings) {
         append("Variant: ${variant.name}\n")
         append("Components: ${components.joinToString { it.javaClass.simpleName }}")
     }
-
-    class SettingsScreen(
-        private inline val startGame: (Settings) -> Unit
-    ) : Screen<Settings>("Message.ChooseSettings") {
-        override fun getContent() =
-            SettingsManager.settingsChoice.toList().mapIndexed { index, (name, s) ->
-                val item = ItemStack(Material.IRON_BLOCK)
-                val meta = item.itemMeta
-                meta?.setDisplayName(name)
-                item.itemMeta = meta
-                ScreenOption(item, s, InventoryPosition.fromIndex(index))
-            }
-
-        override fun onClick(v: Settings) {
-            startGame(v)
-        }
-
-        override fun onCancel() {
-        }
-    }
-
-    data class Settings(
-        val name: String,
-        val simpleCastling: Boolean,
-        val variant: ChessVariant,
-        val board: Chessboard.Settings,
-        val clock: ChessClock.Settings?,
-        val renderer: Renderer.Settings,
-        val scoreboard: ScoreboardManager.Settings
-    )
 
 }

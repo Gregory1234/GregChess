@@ -61,7 +61,7 @@ class GregChess : JavaPlugin(), Listener {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!ChessManager.isInGame(opponent), "InGame.Opponent")
-                            player.openScreen(ChessGame.SettingsScreen { settings ->
+                            player.openScreen(SettingsScreen { settings ->
                                 duelRequest += Request(player, opponent, ChessGame(settings))
                             })
                         }
@@ -71,7 +71,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     endArgs()
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
-                    player.openScreen(ChessGame.SettingsScreen { settings ->
+                    player.openScreen(SettingsScreen { settings ->
                         ChessGame(settings).addPlayers {
                             human(player, ChessSide.WHITE, false)
                             engine("stockfish", ChessSide.BLACK)
@@ -257,7 +257,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.admin")
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
-                    player.openScreen(ChessGame.SettingsScreen { settings ->
+                    player.openScreen(SettingsScreen { settings ->
                         val simul = Simul(cNotNull(ChessManager.nextArena(), "NoArenas"), settings)
                         rest().forEach {
                             simul.addGame(player.name, it)
