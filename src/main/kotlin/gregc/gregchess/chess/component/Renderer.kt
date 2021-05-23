@@ -62,7 +62,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
 
     @GameEvent(GameBaseEvent.INIT, mod = TimeModifier.EARLY)
     fun init() {
-        game.forEachPlayer(arena::teleportPlayer)
+        game.players.forEachReal(arena::teleportPlayer)
     }
 
     fun checkForFreeArenas(): Boolean {
@@ -102,7 +102,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
 
     @GameEvent(GameBaseEvent.PANIC)
     fun evacuate() {
-        game.forEachPlayer(arena::leavePlayer)
+        game.players.forEachReal(arena::leavePlayer)
     }
 
     @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY)

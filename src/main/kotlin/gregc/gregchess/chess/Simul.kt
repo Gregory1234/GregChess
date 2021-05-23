@@ -110,7 +110,7 @@ class Simul(private val arena: String, private val settings: GameSettings) {
         cRequire(settings.clock == null, "Simul.Clock")
         val pls = mutableListOf<Player>()
         games.forEach{ g ->
-            g.forEachPlayer { p ->
+            g.players.forEachReal { p ->
                 if (p.uniqueId !in pls.map { it.uniqueId })
                     pls += p
             }

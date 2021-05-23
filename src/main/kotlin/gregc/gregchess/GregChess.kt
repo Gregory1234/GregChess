@@ -191,7 +191,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.admin")
                     val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
-                    val engines = game.chessPlayers.filterIsInstance<EnginePlayer>()
+                    val engines = game.players.toList().filterIsInstance<EnginePlayer>()
                     val engine = cNotNull(engines.firstOrNull(), "EngineNotFound")
                     cWrongArgument {
                         when (nextArg().lowercase()) {
@@ -356,7 +356,7 @@ class GregChess : JavaPlugin(), Listener {
 
     @EventHandler
     fun onGameEnd(e: ChessGame.EndEvent) {
-        e.game.forEachPlayer {
+        e.game.players.forEachReal {
             drawRequest.quietRemove(it)
             takebackRequest.quietRemove(it)
         }

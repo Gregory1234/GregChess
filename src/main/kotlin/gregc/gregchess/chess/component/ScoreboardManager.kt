@@ -52,7 +52,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
     fun start() {
-        game.forEachPlayer { it.scoreboard = scoreboard }
+        game.players.forEachReal { it.scoreboard = scoreboard }
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l

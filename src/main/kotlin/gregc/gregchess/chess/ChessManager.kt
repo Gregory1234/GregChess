@@ -35,7 +35,7 @@ object ChessManager : Listener {
 
     private fun removeGame(g: ChessGame) {
         games.remove(g.uniqueId)
-        g.forEachPlayer { p ->
+        g.players.forEachReal { p ->
             playerGames[p.uniqueId].orEmpty().filter { it != g.uniqueId }.let {
                 if (it.isEmpty())
                     playerGames.remove(p.uniqueId)
@@ -191,7 +191,7 @@ object ChessManager : Listener {
     fun onChessGameStart(e: ChessGame.StartEvent) {
         glog.low("Registering game", e.game.uniqueId)
         games[e.game.uniqueId] = e.game
-        e.game.forEachPlayer {
+        e.game.players.forEachReal {
             glog.low("Registering game player", it.uniqueId)
             playerGames[it.uniqueId] = playerGames[it.uniqueId].orEmpty() + e.game.uniqueId
             playerCurrentGames[it.uniqueId] = e.game.uniqueId
@@ -206,7 +206,7 @@ object ChessManager : Listener {
                 ClickEvent.Action.COPY_TO_CLIPBOARD,
                 PGN.generate(e.game).toString()
             )
-        e.game.forEachPlayer { it.spigot().sendMessage(message) }
+        e.game.players.forEachReal { it.spigot().sendMessage(message) }
         removeGame(e.game)
     }
 

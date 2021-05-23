@@ -110,7 +110,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         if (game.currentTurn == ChessSide.BLACK) {
             val wLast = (if (moves.size <= 1) "" else moves[moves.size - 2].name)
             val bLast = (lastMove?.name ?: "")
-            game.forEachPlayer { p -> p.sendMessage("$num $wLast  | $bLast") }
+            game.players.forEachReal { p -> p.sendMessage("$num $wLast  | $bLast") }
             fullMoveCounter++
         }
         addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
@@ -121,7 +121,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         if (game.currentTurn == ChessSide.WHITE) {
             val num = "${fullMoveCounter}."
             val wLast = (lastMove?.name ?: "")
-            game.forEachPlayer { p -> p.sendMessage("$num $wLast  |") }
+            game.players.forEachReal { p -> p.sendMessage("$num $wLast  |") }
         }
     }
 
