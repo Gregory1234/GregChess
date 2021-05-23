@@ -43,7 +43,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
 
     fun renderPiece(loc: Loc, structure: List<Material>) {
         structure.forEachIndexed { i, m ->
-            world.getBlockAt(loc.copy(y = loc.y + i)).type = m
+            fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
         }
     }
 
@@ -55,9 +55,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         val (x, y, z) = getPieceLoc(pos)
         val mi = -settings.lowHalfTile
         val ma = settings.highHalfTile
-        (Pair(mi, mi)..Pair(ma, ma)).forEach { (i, j) ->
-            world.getBlockAt(x + i, y - 1, z + j).type = floor
-        }
+        fill(FillVolume(world, floor, Loc(x+mi, y - 1, z+mi), Loc(x+ma, y - 1, z+ma)))
     }
 
     @GameEvent(GameBaseEvent.INIT, mod = TimeModifier.EARLY)
@@ -81,23 +79,12 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
     }
 
     fun renderBoardBase() {
-        for (i in 0 until 8 * (settings.tileSize+2)) {
-            for (j in 0 until 8 * (settings.tileSize+2)) {
-                world.getBlockAt(i + arena.offset.x, 100 + arena.offset.y, j + arena.offset.z).type = Material.DARK_OAK_PLANKS
-                if (i in 8 - 1..8 * (settings.tileSize+1) && j in 8 - 1..8 * (settings.tileSize+1)) {
-                    world.getBlockAt(i + arena.offset.x, 101 + arena.offset.y, j + arena.offset.z).type = Material.DARK_OAK_PLANKS
-                }
-            }
-        }
+        fill(FillVolume(world, Material.DARK_OAK_PLANKS, Loc(0,100,0) + arena.offset, Loc(8 * (settings.tileSize+2)-1,100,8 * (settings.tileSize+2)-1) + arena.offset))
+        fill(FillVolume(world, Material.DARK_OAK_PLANKS, Loc(8 - 1,101,8 - 1) + arena.offset, Loc(8 * (settings.tileSize+1),101,8 * (settings.tileSize+1)) + arena.offset))
     }
 
     fun removeBoard() {
-        for (i in 0 until 8 * (settings.tileSize+2)) {
-            for (j in 0 until 8 * (settings.tileSize+2)) {
-                for (k in 100..105)
-                    world.getBlockAt(i + arena.offset.x, k + arena.offset.y, j + arena.offset.z).type = Material.AIR
-            }
-        }
+        fill(FillVolume(world, Material.AIR, Loc(0,100,0) + arena.offset, Loc(8 * (settings.tileSize+2)-1,105,8 * (settings.tileSize+2)-1) + arena.offset))
     }
 
     @GameEvent(GameBaseEvent.PANIC)
