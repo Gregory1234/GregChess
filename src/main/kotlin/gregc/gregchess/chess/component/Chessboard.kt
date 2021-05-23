@@ -133,8 +133,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     @GameEvent(GameBaseEvent.CLEAR, GameBaseEvent.PANIC)
     fun clear() {
-        boardState.values.forEach { it.clear() }
-        capturedPieces.forEach { it.hide() }
         game.renderer.removeBoard()
         glog.mid("Cleared chessboard", game.uniqueId)
     }
@@ -178,8 +176,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     fun setFromFEN(fen: FEN) {
         clear()
-        capturedPieces.clear()
-        boardState.values.forEach { it.clear() }
         render()
         fen.forEachSquare { pos, tr ->
             if (tr != null) {

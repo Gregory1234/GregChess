@@ -8,6 +8,18 @@ import kotlin.math.floor
 
 class Renderer(private val game: ChessGame, private val settings: Settings): Component {
 
+    private companion object {
+        data class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
+            constructor(world: World, mat: Material, loc: Loc): this(world, mat, loc, loc)
+        }
+        fun fill(vol: FillVolume) {
+            for (i in vol.start.x..vol.stop.x)
+                for (j in vol.start.y..vol.stop.y)
+                    for (k in vol.start.z..vol.stop.z)
+                        vol.world.getBlockAt(i,j,k).type = vol.mat
+        }
+    }
+
     data class Settings(val tileSize: Int, val gameModeInfo: GameModeInfo, val arenaWorld: String? = null, val offset: Loc? = null) {
         fun getComponent(game: ChessGame) = Renderer(game, this)
 

@@ -41,7 +41,6 @@ class GregChess : JavaPlugin(), Listener {
         saveDefaultConfig()
         ChessManager.start()
         RequestManager.start()
-        startFill()
         addCommand("chess") {
             when (nextArg().lowercase()) {
                 "duel" -> {
