@@ -60,6 +60,7 @@ fun World.playSound(l: Location, s: Sound) = playSound(l, s, 3.0f, 1.0f)
 
 fun <R> Loc.doIn(w: World, f: (World, Location) -> R) = f(w, toLocation(w))
 
+fun Player.sendDefTitle(title: String, subtitle: String = "") = sendTitle(title, subtitle, 10, 70, 20)
 
 class CommandArgs(val player: CommandSender, val args: Array<String>) {
     var index = 0

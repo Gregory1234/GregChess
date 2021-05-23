@@ -87,7 +87,10 @@ object ChessManager : Listener {
         val p = getGames(player)
         cRequire(p.isNotEmpty() || isSpectatingGame(player), "InGame.You")
         p.forEach {
-            it.stop(ChessGame.EndReason.Walkover(!it[player]!!.side), listOf(player))
+            it.stop(
+                ChessGame.EndReason.Walkover(!it[player]!!.side),
+                BySides(Unit, Unit).mapIndexed{side, _ -> side != it[player]!!.side}
+            )
         }
         if (isSpectatingGame(player))
             removeSpectator(player)
@@ -112,7 +115,10 @@ object ChessManager : Listener {
     fun onPlayerLeave(e: PlayerQuitEvent) {
         val p = getGames(e.player)
         p.forEach {
-            it.stop(ChessGame.EndReason.Walkover(!it[e.player]!!.side), listOf(e.player))
+            it.stop(
+                ChessGame.EndReason.Walkover(!it[e.player]!!.side),
+                BySides(Unit, Unit).mapIndexed{side, _ -> side != it[e.player]!!.side}
+            )
         }
         if (isSpectatingGame(e.player))
             removeSpectator(e.player)

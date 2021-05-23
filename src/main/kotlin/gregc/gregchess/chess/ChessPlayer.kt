@@ -99,8 +99,7 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
         "BukkitChessPlayer(name = $name, side = $side, game.uniqueId = ${game.uniqueId})"
 
     override fun sendMessage(msg: String) = player.sendMessage(msg)
-    override fun sendTitle(title: String, subtitle: String) =
-        player.sendTitle(title, subtitle, 10, 70, 20)
+    override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
     fun pickUp(pos: ChessPosition) {
         if (!game.running) return

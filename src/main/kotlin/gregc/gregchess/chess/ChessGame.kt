@@ -35,28 +35,33 @@ class ChessGame(val settings: GameSettings) {
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
-    private lateinit var players: BySides<ChessPlayer>
+    private var state: GameState = GameState.Initial
 
-    private val white
-        get() = players.white
-    private val black
-        get() = players.black
+    private fun wrongState(cls: Class<*>): Nothing {
+        val e = WrongStateException(state, cls)
+        stop(EndReason.Error(e))
+        throw e
+    }
 
-    private val spectatorUUID = mutableListOf<UUID>()
+    private inline fun <reified T> require(fail: () -> Nothing = {wrongState(T::class.java)}): T = (state as? T) ?: fail()
 
-    private val spectators: List<Player>
-        get() = spectatorUUID.mapNotNull { Bukkit.getPlayer(it) }
+    private inline fun requireInitial(fail: () -> Nothing = {wrongState(GameState.Initial::class.java)}) = require<GameState.Initial>(fail)
+    private inline fun requireReady(fail: () -> Nothing = {wrongState(GameState.Ready::class.java)}) = require<GameState.Ready>(fail)
+    private inline fun requireStarting(fail: () -> Nothing = {wrongState(GameState.Starting::class.java)}) = require<GameState.Starting>(fail)
+    private inline fun requireRunning(fail: () -> Nothing = {wrongState(GameState.Running::class.java)}) = require<GameState.Running>(fail)
+    private inline fun requireStopping(fail: () -> Nothing = {wrongState(GameState.Stopping::class.java)}) = require<GameState.Stopping>(fail)
 
     val chessPlayers: List<ChessPlayer>
-        get() = players.toList()
+        get() = (state as? GameState.WithPlayers)?.players?.toList().orEmpty()
 
-    private val realPlayers: List<Player>
-        get() = chessPlayers.mapNotNull { (it as? BukkitChessPlayer)?.player }.distinct()
+    var currentTurn: ChessSide
+        get() = require<GameState.WithCurrentPlayer>().currentTurn
+        set(v) {
+            requireRunning().currentTurn = v
+        }
 
-    var currentTurn = ChessSide.WHITE
-
-    val currentPlayer
-        get() = this[currentTurn]
+    val currentPlayer: ChessPlayer
+        get() = require<GameState.WithCurrentPlayer>().currentPlayer
 
     inner class AddPlayersScope(val game: ChessGame) {
         private val players = MutableBySides<ChessPlayer?>(null, null)
@@ -79,39 +84,20 @@ class ChessGame(val settings: GameSettings) {
 
     }
 
-    private fun requireBeforeStart() {
-        if (started)
-            throw IllegalStateException("already started")
-    }
-
-    private fun requireRunning() {
-        if (!started)
-            throw IllegalStateException("not started yet")
-        if (stopping)
-            throw IllegalStateException("already stopping")
-    }
-
-    private fun requireStarted() {
-        if (!started)
-            throw IllegalStateException("not started yet")
-    }
-
     fun addPlayers(init: AddPlayersScope.() -> Unit): ChessGame {
-        requireBeforeStart()
-        players = AddPlayersScope(this).run {
+        requireInitial()
+        state = GameState.Ready(AddPlayersScope(this).run {
             init()
             build()
-        }
+        })
         return this
     }
 
-    var started = false
-        private set
-    lateinit var startTime: LocalDateTime
-        private set
+    val startTime: LocalDateTime
+        get() = require<GameState.WithStartTime>().startTime
 
-    val running
-        get() = started && !stopping
+    val running: Boolean
+        get() = state.running
 
     class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
         override fun getHandlers() = handlerList
@@ -124,23 +110,32 @@ class ChessGame(val settings: GameSettings) {
         }
     }
 
-    fun forEachPlayer(function: (Player) -> Unit) = realPlayers.forEach(function)
-    fun forEachSpectator(function: (Player) -> Unit) = spectators.forEach(function)
+    fun forEachPlayer(function: (Player) -> Unit) {
+        (state as? GameState.WithPlayers)?.forEachReal(function)
+    }
+    fun forEachUniquePlayer(function: (BukkitChessPlayer) -> Unit) {
+        (state as? GameState.WithCurrentPlayer)?.forEachUnique(function)
+    }
+    fun forEachSpectator(function: (Player) -> Unit){
+        (state as? GameState.WithSpectators)?.forEachSpectator(function)
+    }
 
-    operator fun contains(p: Player) = p in realPlayers
+    operator fun contains(p: Player): Boolean = require<GameState.WithPlayers>().contains(p)
 
     fun nextTurn() {
         requireRunning()
-        components.runGameEvent(GameBaseEvent.END_TURN)
+        components.endTurn()
         variant.checkForGameEnd(this)
-        Bukkit.getPluginManager().callEvent(TurnEndEvent(this, currentPlayer))
-        currentTurn++
-        startTurn()
+        if (running) {
+            Bukkit.getPluginManager().callEvent(TurnEndEvent(this, currentPlayer))
+            currentTurn++
+            startTurn()
+        }
     }
 
     fun previousTurn() {
         requireRunning()
-        components.runGameEvent(GameBaseEvent.PRE_PREVIOUS_TURN)
+        components.prePreviousTurn()
         currentTurn++
         startPreviousTurn()
     }
@@ -159,26 +154,27 @@ class ChessGame(val settings: GameSettings) {
 
     fun start(): ChessGame {
         try {
-            requireBeforeStart()
-            startTime = LocalDateTime.now()
+            state = GameState.Starting(requireReady())
             if (renderer.checkForFreeArenas()) {
-                components.runGameEvent(GameBaseEvent.INIT)
-                black.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
-                white.sendTitle(
-                    ConfigManager.getString("Title.YourTurn"),
-                    ConfigManager.getString("Title.YouArePlayingAs.White")
-                )
-                white.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
-                black.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
+                components.init()
+                requireStarting().apply {
+                    black.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
+                    white.sendTitle(
+                        ConfigManager.getString("Title.YourTurn"),
+                        ConfigManager.getString("Title.YouArePlayingAs.White")
+                    )
+                    white.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
+                    black.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
+                }
                 variant.start(this)
-                components.runGameEvent(GameBaseEvent.START)
-                started = true
+                components.start()
+                state = GameState.Running(requireStarting())
                 glog.mid("Started game", uniqueId)
                 TimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
-                    if (stopping)
+                    if (!running)
                         cancel()
                     else
-                        components.runGameEvent(GameBaseEvent.UPDATE)
+                        components.update()
                 }
             } else {
                 forEachPlayer { it.sendMessage(ConfigManager.getError("NoArenas")) }
@@ -197,28 +193,28 @@ class ChessGame(val settings: GameSettings) {
     }
 
     fun spectate(p: Player) {
-        requireRunning()
-        components.runGameEvent(GameBaseEvent.SPECTATOR_JOIN, p)
-        spectatorUUID += p.uniqueId
+        val st = requireRunning()
+        components.spectatorJoin(p)
+        st.spectatorUUIDs += p.uniqueId
     }
 
     fun spectatorLeave(p: Player) {
-        requireRunning()
-        components.runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, p)
-        spectatorUUID -= p.uniqueId
+        val st = requireRunning()
+        components.spectatorLeave(p)
+        st.spectatorUUIDs -= p.uniqueId
     }
 
     private fun startTurn() {
-        components.runGameEvent(GameBaseEvent.START_TURN)
-        if (!stopping)
-            currentPlayer.startTurn()
+        requireRunning()
+        components.startTurn()
+        currentPlayer.startTurn()
         glog.low("Started turn", uniqueId, currentTurn)
     }
 
     private fun startPreviousTurn() {
-        components.runGameEvent(GameBaseEvent.START_PREVIOUS_TURN)
-        if (!stopping)
-            currentPlayer.startTurn()
+        requireRunning()
+        components.startPreviousTurn()
+        currentPlayer.startTurn()
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
@@ -267,77 +263,70 @@ class ChessGame(val settings: GameSettings) {
         }
     }
 
-    var stopping = false
-        private set
-    var endReason: EndReason? = null
-        private set
+    val endReason: EndReason?
+        get() = (state as? GameState.WithEndReason)?.endReason
 
-    fun quickStop(reason: EndReason) = stop(reason, realPlayers)
+    fun quickStop(reason: EndReason) = stop(reason, BySides(white = true, black = true))
 
-    fun stop(reason: EndReason, quick: List<Player> = emptyList()) {
-        requireStarted()
-        if (stopping) return
-        stopping = true
-        endReason = reason
+    fun stop(reason: EndReason, quick: BySides<Boolean> = BySides(white = false, black = false)) {
+        state = GameState.Stopping(requireRunning { requireStopping(); return }, reason)
         try {
-            components.runGameEvent(GameBaseEvent.STOP)
+            components.stop()
             var anyLong = false
-            forEachPlayer {
-                if (reason.winner != null) {
-                    this[it]?.sendTitle(
-                        ConfigManager.getString(if (reason.winner == this[it]!!.side) "Title.Player.YouWon" else "Title.Player.YouLost"),
-                        ConfigManager.getString(reason.namePath)
-                    )
-                } else {
-                    this[it]?.sendTitle(
-                        ConfigManager.getString("Title.Player.YouDrew"),
-                        ConfigManager.getString(reason.namePath)
-                    )
+            forEachUniquePlayer {
+                val wld = when(reason.winner) {
+                    null -> "Drew"
+                    it.side -> "Won"
+                    else -> "Lost"
                 }
+                it.sendTitle(
+                    ConfigManager.getString("Title.Player.You$wld"),
+                    ConfigManager.getString(reason.namePath)
+                )
                 it.sendMessage(reason.getMessage())
-                if (it in quick) {
-                    components.runGameEvent(GameBaseEvent.REMOVE_PLAYER, it)
+                if (quick[it.side]) {
+                    components.removePlayer(it.player)
                 } else {
                     anyLong = true
                     TimeManager.runTaskLater(3.seconds) {
-                        components.runGameEvent(GameBaseEvent.REMOVE_PLAYER, it)
+                        components.removePlayer(it.player)
                     }
                 }
             }
             forEachSpectator {
                 if (reason.winner != null) {
-                    this[it]?.sendTitle(
-                        ConfigManager.getString(if (reason.winner == ChessSide.WHITE) "Title.Spectator.WhiteWon" else "Title.Spectator.BlackWon"),
+                    it.sendDefTitle(
+                        ConfigManager.getString("Title.Spectator.${reason.winner.standardName}Won"),
                         ConfigManager.getString(reason.namePath)
                     )
                 } else {
-                    this[it]?.sendTitle(
+                    it.sendDefTitle(
                         ConfigManager.getString("Title.Spectator.ItWasADraw"),
                         ConfigManager.getString(reason.namePath)
                     )
                 }
                 it.sendMessage(reason.getMessage())
                 if (anyLong) {
-                    components.runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, it)
+                    components.spectatorLeave(it)
                 } else {
                     TimeManager.runTaskLater(3.seconds) {
-                        components.runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, it)
+                        components.spectatorLeave(it)
                     }
                 }
             }
             if (reason is EndReason.PluginRestart) {
-                components.runGameEvent(GameBaseEvent.CLEAR)
-                players.forEach(ChessPlayer::stop)
+                components.clearing()
+                require<GameState.WithPlayers>().forEachPlayer(ChessPlayer::stop)
                 glog.low("Stopped game", uniqueId, reason)
-                components.runGameEvent(GameBaseEvent.VERY_END)
+                components.veryEnd()
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
                 return
             }
             TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
-                components.runGameEvent(GameBaseEvent.CLEAR)
+                components.clearing()
                 TimeManager.runTaskLater(1.ticks) {
-                    players.forEach(ChessPlayer::stop)
-                    components.runGameEvent(GameBaseEvent.VERY_END)
+                    require<GameState.WithPlayers>().forEachPlayer(ChessPlayer::stop)
+                    components.veryEnd()
                     glog.low("Stopped game", uniqueId, reason)
                     Bukkit.getPluginManager().callEvent(EndEvent(this))
                 }
@@ -349,18 +338,15 @@ class ChessGame(val settings: GameSettings) {
     }
 
     private fun panic(e: Exception) {
-        stopping = true
-        components.runGameEvent(GameBaseEvent.PANIC, e)
-        endReason = EndReason.Error(e)
+        e.printStackTrace()
+        components.panic(e)
+        state = GameState.Error(state, e)
         Bukkit.getPluginManager().callEvent(EndEvent(this))
     }
 
-    operator fun get(player: Player): BukkitChessPlayer? =
-        if (chessPlayers.map { it as? BukkitChessPlayer }.all { it?.player == player })
-            currentPlayer as? BukkitChessPlayer
-        else chessPlayers.mapNotNull { it as? BukkitChessPlayer }.firstOrNull { it.player == player }
+    operator fun get(player: Player): BukkitChessPlayer? = (state as? GameState.WithCurrentPlayer)?.get(player)
 
-    operator fun get(side: ChessSide): ChessPlayer = tryOrStopNull(players[side])
+    operator fun get(side: ChessSide): ChessPlayer = require<GameState.WithPlayers>()[side]
 
     fun <E> tryOrStopNull(expr: E?): E = try {
         expr!!
@@ -382,7 +368,7 @@ class ChessGame(val settings: GameSettings) {
     fun getInfo() = buildTextComponent {
         appendCopy("UUID: $uniqueId\n", uniqueId)
         append("Players: ${chessPlayers.joinToString { "${it.name} as ${it.side.standardName}" }}\n")
-        append("Spectators: ${spectators.joinToString { it.name }}\n")
+        append("Spectators: ${(state as? GameState.WithSpectators)?.spectators.orEmpty().joinToString { it.name }}\n")
         append("Arena: ${renderer.arenaName}\n")
         append("Preset: ${settings.name}\n")
         append("Variant: ${variant.name}\n")
