@@ -37,10 +37,13 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    private val boardState = (Pair(0, 0)..Pair(7, 7)).associate { (i, j) ->
+    private val squares = (Pair(0, 0)..Pair(7, 7)).associate { (i, j) ->
         val pos = Pos(i, j)
         pos to Square(pos, game)
     }
+
+    private val boardState
+        get() = FEN.BoardState.fromPieces(squares.mapNotNull { (p, s) -> s.piece?.info?.let { Pair(p, it) } }.toMap())
 
     private var movesSinceLastCapture = 0u
     var fullMoveCounter = 0u
@@ -52,13 +55,13 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     private val capturedPieces = mutableListOf<Piece.Captured>()
 
     val pieces: List<Piece>
-        get() = boardState.values.mapNotNull { it.piece }
+        get() = squares.values.mapNotNull { it.piece }
 
     operator fun plusAssign(piece: Piece) {
         piece.square.piece = piece
     }
 
-    operator fun get(pos: Pos) = boardState[pos]
+    operator fun get(pos: Pos) = squares[pos]
 
     operator fun get(loc: Loc) = this[game.renderer.getPos(loc)]
 
@@ -126,7 +129,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     private fun render() {
         game.renderer.renderBoardBase()
-        boardState.values.forEach { it.render() }
+        squares.values.forEach { it.render() }
         glog.mid("Rendered chessboard", game.uniqueId)
     }
 
@@ -156,13 +159,13 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         glog.low("Removed captured", game.uniqueId, captured)
     }
 
-    fun getMoves(pos: Pos) = boardState[pos]?.bakedMoves.orEmpty()
+    fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
 
     fun updateMoves() {
-        boardState.forEach { (_, square) ->
+        squares.forEach { (_, square) ->
             square.bakedMoves = square.piece?.let { p -> p.type.moveScheme(p) }
         }
-        boardState.forEach { (_, square) ->
+        squares.forEach { (_, square) ->
             square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it) }
         }
     }
@@ -173,11 +176,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     fun setFromFEN(fen: FEN) {
         clear()
         render()
-        fen.forEachSquare { pos, tr ->
-            if (tr != null) {
-                val (t, s, hm) = tr
-                this += Piece(t, s, this[pos]!!, hm)
-            }
+        fen.forEachSquare { (pos, t, s, hm) ->
+            this += Piece(t, s, this[pos]!!, hm)
         }
         if (fen.enPassantSquare != null) {
             val pos = fen.enPassantSquare
@@ -210,24 +210,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             else emptyList()
 
         return FEN(
-            FEN.BoardState((0..7).reversed().joinToString("/") {
-                var e = 0
-                buildString {
-                    for (i in 0..7) {
-                        val piece = this@Chessboard[Pos(i, it)]?.piece
-                        if (piece == null)
-                            e++
-                        else {
-                            if (e != 0)
-                                append(e)
-                            e = 0
-                            append(if (piece.side == Side.WHITE) piece.type.char.uppercaseChar() else piece.type.char)
-                        }
-                    }
-                    if (e == 8)
-                        append(e)
-                }
-            }),
+            boardState,
             game.currentTurn,
             BySides(castling(Side.WHITE), castling(Side.BLACK)),
             lastMove?.let {

@@ -13,6 +13,30 @@ data class FEN(
 ) {
     @JvmInline
     value class BoardState(private val state: String){
+        companion object {
+            fun fromPieces(pieces: Map<Pos, Piece.Info>): BoardState {
+                val rows = List(8) { ri ->
+                    var e = 0
+                    buildString {
+                        (0 until 8).forEach { i ->
+                            val p = pieces[Pos(i, ri)]
+                            if (p == null)
+                                e++
+                            else {
+                                if (e != 0)
+                                    append(e.digitToChar())
+                                e = 0
+                                append(p.standardChar)
+                            }
+                        }
+                        if (e != 0)
+                            append(e.digitToChar())
+                    }
+                }
+                return BoardState(rows.joinToString("/"))
+            }
+        }
+
         init {
             if (state.count {it == '/'} != 7)
                 throw IllegalArgumentException(state)
@@ -36,7 +60,7 @@ data class FEN(
             BoardState(state.split('/').mapIndexed(block).joinToString("/"))
     }
 
-    private fun Char.toPiece(p: Pos): Triple<PieceType, Side, Boolean> {
+    private fun Char.toPiece(p: Pos): Piece.Info {
         val type = PieceType.parseFromStandardChar(this)
         val side = if (isUpperCase()) Side.WHITE else Side.BLACK
         val hasMoved = when (type) {
@@ -47,11 +71,11 @@ data class FEN(
             PieceType.ROOK -> p.file !in castlingRights[side]
             else -> false
         }
-        return Triple(type, side, hasMoved)
+        return Piece.Info(p, type, side, hasMoved)
     }
 
-    fun forEachSquare(f: (Pos, Triple<PieceType, Side, Boolean>?) -> Unit)
-        = boardState.forEachIndexed { p, c -> f(p, c?.toPiece(p))}
+    fun forEachSquare(f: (Piece.Info) -> Unit)
+        = boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(p))}
 
     override fun toString() = buildString {
         append(boardState)

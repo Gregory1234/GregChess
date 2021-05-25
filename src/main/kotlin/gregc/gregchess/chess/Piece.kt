@@ -37,6 +37,17 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     val item: ItemStack
         get() = type.getItem(side)
 
+    data class Info(val pos: Pos, val type: PieceType, val side: Side, val hasMoved: Boolean) {
+        val standardChar
+            get() = when (side) {
+                Side.WHITE -> type.standardChar.uppercaseChar()
+                Side.BLACK -> type.standardChar
+            }
+    }
+
+    val info
+        get() = Info(pos, type, side, hasMoved)
+
     class Captured(
         val type: PieceType,
         val side: Side,
