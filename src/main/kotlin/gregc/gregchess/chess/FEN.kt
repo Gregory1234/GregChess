@@ -4,10 +4,10 @@ import gregc.gregchess.component6
 
 data class FEN(
     val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
-    val currentTurn: ChessSide = ChessSide.WHITE,
+    val currentTurn: Side = Side.WHITE,
     val castlingRightsWhite: List<Int> = listOf(0, 7),
     val castlingRightsBlack: List<Int> = listOf(0, 7),
-    val enPassantSquare: ChessPosition? = null,
+    val enPassantSquare: Pos? = null,
     val halfmoveClock: UInt = 0u,
     val fullmoveClock: UInt = 1u,
     val chess960: Boolean = false
@@ -18,16 +18,16 @@ data class FEN(
             if (state.count {it == '/'} != 7)
                 throw IllegalArgumentException(state)
         }
-        fun forEachIndexed(block: (ChessPosition, Char?) -> Unit) {
+        fun forEachIndexed(block: (Pos, Char?) -> Unit) {
             val rows = state.split('/')
             rows.forEachIndexed { ri, r ->
                 var i = 0
                 r.forEach { c ->
                     if (c in '1'..'8') {
-                        repeat(c.digitToInt()) { j -> block(ChessPosition(i + j, 7-ri), null) }
+                        repeat(c.digitToInt()) { j -> block(Pos(i + j, 7-ri), null) }
                         i += c.digitToInt()
                     } else {
-                        block(ChessPosition(i, 7-ri), c)
+                        block(Pos(i, 7-ri), c)
                         i++
                     }
                 }
@@ -37,24 +37,24 @@ data class FEN(
             BoardState(state.split('/').mapIndexed(block).joinToString("/"))
     }
 
-    private fun Char.toPiece(p: ChessPosition): Triple<ChessType, ChessSide, Boolean> {
-        val type = ChessType.parseFromStandardChar(this)
-        val side = if (isUpperCase()) ChessSide.WHITE else ChessSide.BLACK
+    private fun Char.toPiece(p: Pos): Triple<PieceType, Side, Boolean> {
+        val type = PieceType.parseFromStandardChar(this)
+        val side = if (isUpperCase()) Side.WHITE else Side.BLACK
         val hasMoved = when (type) {
-            ChessType.PAWN -> when (side) {
-                ChessSide.WHITE -> p.rank != 1
-                ChessSide.BLACK -> p.rank != 6
+            PieceType.PAWN -> when (side) {
+                Side.WHITE -> p.rank != 1
+                Side.BLACK -> p.rank != 6
             }
-            ChessType.ROOK -> when (side) {
-                ChessSide.WHITE -> p.file !in castlingRightsWhite
-                ChessSide.BLACK -> p.file !in castlingRightsBlack
+            PieceType.ROOK -> when (side) {
+                Side.WHITE -> p.file !in castlingRightsWhite
+                Side.BLACK -> p.file !in castlingRightsBlack
             }
             else -> false
         }
         return Triple(type, side, hasMoved)
     }
 
-    fun forEachSquare(f: (ChessPosition, Triple<ChessType, ChessSide, Boolean>?) -> Unit)
+    fun forEachSquare(f: (Pos, Triple<PieceType, Side, Boolean>?) -> Unit)
         = boardState.forEachIndexed { p, c -> f(p, c?.toPiece(p))}
 
     override fun toString() = buildString {
@@ -128,10 +128,10 @@ data class FEN(
             if (fullmove.toInt() <= 0) throw IllegalArgumentException(fen)
             return FEN(
                 BoardState(board),
-                ChessSide.parseFromStandardChar(turn[0]),
+                Side.parseFromStandardChar(turn[0]),
                 parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
                 parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() }),
-                if (enPassant == "-") null else ChessPosition.parseFromString(enPassant),
+                if (enPassant == "-") null else Pos.parseFromString(enPassant),
                 halfmove.toUInt(),
                 fullmove.toUInt(),
                 detectChess960(board, castling)
@@ -140,18 +140,18 @@ data class FEN(
 
         fun generateChess960(): FEN {
             val types = MutableList<Char?>(8) { null }
-            types[(0..7).filter { it % 2 == 0 }.random()] = ChessType.BISHOP.standardChar
-            types[(0..7).filter { it % 2 == 1 }.random()] = ChessType.BISHOP.standardChar
-            types[(0..7).filter { types[it] == null }.random()] = ChessType.KNIGHT.standardChar
-            types[(0..7).filter { types[it] == null }.random()] = ChessType.KNIGHT.standardChar
-            types[(0..7).filter { types[it] == null }.random()] = ChessType.QUEEN.standardChar
+            types[(0..7).filter { it % 2 == 0 }.random()] = PieceType.BISHOP.standardChar
+            types[(0..7).filter { it % 2 == 1 }.random()] = PieceType.BISHOP.standardChar
+            types[(0..7).filter { types[it] == null }.random()] = PieceType.KNIGHT.standardChar
+            types[(0..7).filter { types[it] == null }.random()] = PieceType.KNIGHT.standardChar
+            types[(0..7).filter { types[it] == null }.random()] = PieceType.QUEEN.standardChar
             val r1 = types.indexOf(null)
-            types[r1] = ChessType.ROOK.standardChar
-            types[types.indexOf(null)] = ChessType.KING.standardChar
+            types[r1] = PieceType.ROOK.standardChar
+            types[types.indexOf(null)] = PieceType.KING.standardChar
             val r2 = types.indexOf(null)
-            types[r2] = ChessType.ROOK.standardChar
+            types[r2] = PieceType.ROOK.standardChar
             val row = String(types.mapNotNull { it }.toCharArray())
-            val pawns = ChessType.PAWN.standardChar.toString().repeat(8)
+            val pawns = PieceType.PAWN.standardChar.toString().repeat(8)
             return FEN(
                 BoardState("$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}"),
                 castlingRightsWhite = listOf(r1, r2),

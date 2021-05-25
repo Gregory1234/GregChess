@@ -6,17 +6,17 @@ import gregc.gregchess.chess.component.Component
 
 object AtomicChess : ChessVariant("Atomic") {
     class ExplosionManager(private val game: ChessGame) : Component {
-        private val explosions = mutableListOf<List<Pair<ChessPiece, ChessPiece.Captured>>>()
+        private val explosions = mutableListOf<List<Pair<Piece, Piece.Captured>>>()
 
-        fun explode(pos: ChessPosition) {
-            val exp = mutableListOf<Pair<ChessPiece, ChessPiece.Captured>>()
-            fun helper(p: ChessPiece) {
+        fun explode(pos: Pos) {
+            val exp = mutableListOf<Pair<Piece, Piece.Captured>>()
+            fun helper(p: Piece) {
                 exp += Pair(p, p.capture(game.currentTurn))
             }
 
             game.board[pos]?.piece?.let(::helper)
             game.board[pos]?.neighbours()?.forEach {
-                if (it.piece?.type != ChessType.PAWN)
+                if (it.piece?.type != PieceType.PAWN)
                     it.piece?.let(::helper)
             }
             game.renderer.doAt(pos) { world, l ->
@@ -33,25 +33,25 @@ object AtomicChess : ChessVariant("Atomic") {
         }
     }
 
-    class AtomicEndReason(winner: ChessSide) :
+    class AtomicEndReason(winner: Side) :
         ChessGame.EndReason("Chess.EndReason.Atomic", "normal", winner)
 
     override fun start(game: ChessGame) {
         game.registerComponent(ExplosionManager(game))
     }
 
-    private fun nextToKing(side: ChessSide, pos: ChessPosition, board: Chessboard): Boolean =
+    private fun nextToKing(side: Side, pos: Pos, board: Chessboard): Boolean =
         pos in board.kingOf(side)?.pos?.neighbours().orEmpty()
 
     private fun kingHug(board: Chessboard): Boolean {
-        val wk = board.kingOf(ChessSide.WHITE)?.pos
-        return wk != null && nextToKing(ChessSide.BLACK, wk, board)
+        val wk = board.kingOf(Side.WHITE)?.pos
+        return wk != null && nextToKing(Side.BLACK, wk, board)
     }
 
-    private fun pinningMoves(by: ChessSide, pos: ChessSquare) =
+    private fun pinningMoves(by: Side, pos: Square) =
         if (kingHug(pos.board)) emptyList() else Normal.pinningMoves(by, pos)
 
-    private fun checkingMoves(by: ChessSide, pos: ChessSquare) =
+    private fun checkingMoves(by: Side, pos: Square) =
         if (nextToKing(by, pos.pos, pos.board)) emptyList() else Normal.checkingMoves(by, pos)
 
     override fun finishMove(move: MoveCandidate) {
@@ -64,7 +64,7 @@ object AtomicChess : ChessVariant("Atomic") {
         if (!Normal.isValid(move))
             return MoveLegality.INVALID
 
-        if (piece.type == ChessType.KING) {
+        if (piece.type == PieceType.KING) {
             if (move.captured != null)
                 return MoveLegality.SPECIAL
 
@@ -88,8 +88,7 @@ object AtomicChess : ChessVariant("Atomic") {
         return MoveLegality.LEGAL
     }
 
-    override fun isInCheck(king: ChessPiece): Boolean =
-        checkingMoves(!king.side, king.square).isNotEmpty()
+    override fun isInCheck(king: Piece): Boolean = checkingMoves(!king.side, king.square).isNotEmpty()
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.kingOf(!game.currentTurn) == null)

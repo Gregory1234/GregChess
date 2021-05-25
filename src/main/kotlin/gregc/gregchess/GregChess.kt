@@ -30,8 +30,8 @@ class GregChess : JavaPlugin(), Listener {
         printT = { it.settings.name }
         onAccept = { (sender, receiver, g) ->
             g.addPlayers {
-                human(sender, ChessSide.WHITE, sender == receiver)
-                human(receiver, ChessSide.BLACK, sender == receiver)
+                human(sender, Side.WHITE, sender == receiver)
+                human(receiver, Side.BLACK, sender == receiver)
             }.start()
         }
     }
@@ -73,8 +73,8 @@ class GregChess : JavaPlugin(), Listener {
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
                     player.openScreen(SettingsScreen { settings ->
                         ChessGame(settings).addPlayers {
-                            human(player, ChessSide.WHITE, false)
-                            engine("stockfish", ChessSide.BLACK)
+                            human(player, Side.WHITE, false)
+                            engine("stockfish", Side.BLACK)
                         }.start()
                     })
                 }
@@ -103,7 +103,7 @@ class GregChess : JavaPlugin(), Listener {
                     val pos = if (args.size == 1)
                         p.game.renderer.getPos(Loc.fromLocation(player.location))
                     else
-                        cWrongArgument { ChessPosition.parseFromString(nextArg()) }
+                        cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()
                     p.game.board[pos]?.piece?.capture(p.side)
                     p.game.board.updateMoves()
@@ -119,10 +119,10 @@ class GregChess : JavaPlugin(), Listener {
                         val square = if (args.size == 3)
                             game.board[Loc.fromLocation(player.location)]!!
                         else
-                            game.board[ChessPosition.parseFromString(this[2])]!!
-                        val piece = ChessType.valueOf(this[1])
+                            game.board[Pos.parseFromString(this[2])]!!
+                        val piece = PieceType.valueOf(this[1])
                         square.piece?.capture(p.side)
-                        square.piece = ChessPiece(piece, ChessSide.valueOf(this[0]), square)
+                        square.piece = Piece(piece, Side.valueOf(this[0]), square)
                         game.board.updateMoves()
                         player.sendMessage(ConfigManager.getString("Message.BoardOpDone"))
                     }
@@ -134,9 +134,8 @@ class GregChess : JavaPlugin(), Listener {
                     val p = cNotNull(ChessManager[player], "NotInGame.You")
                     val game = p.game
                     cWrongArgument {
-                        game.board[ChessPosition.parseFromString(this[2])]?.piece?.capture(p.side)
-                        game.board[ChessPosition.parseFromString(this[1])]?.piece
-                            ?.move(game.board[ChessPosition.parseFromString(this[2])]!!)
+                        game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
+                        game.board[Pos.parseFromString(this[1])]?.piece?.move(game.board[Pos.parseFromString(this[2])]!!)
                         game.board.updateMoves()
                         player.sendMessage(ConfigManager.getString("Message.BoardOpDone"))
                     }
@@ -177,7 +176,7 @@ class GregChess : JavaPlugin(), Listener {
                     val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
                     val clock = cNotNull(game.clock, "ClockNotFound")
                     cWrongArgument {
-                        val side = ChessSide.valueOf(nextArg())
+                        val side = Side.valueOf(nextArg())
                         val time = cNotNull(parseDuration(this[1]), "WrongArgument")
                         when (nextArg().lowercase()) {
                             "add" -> clock.addTime(side, time)
@@ -283,15 +282,15 @@ class GregChess : JavaPlugin(), Listener {
                 )
                 2 -> when (args[0]) {
                     "duel" -> null
-                    "spawn" -> ifPermission("greg-chess.debug", *ChessSide.values())
-                    "time" -> ifPermission("greg-chess.debug", *ChessSide.values())
+                    "spawn" -> ifPermission("greg-chess.debug", *Side.values())
+                    "time" -> ifPermission("greg-chess.debug", *Side.values())
                     "uci" -> ifPermission("greg-chess.admin", "set", "send")
                     "spectate" -> null
                     "info" -> listOf("game", "piece")
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("greg-chess.debug", *ChessType.values())
+                    "spawn" -> ifPermission("greg-chess.debug", *PieceType.values())
                     "time" -> ifPermission("greg-chess.admin", "add", "set")
                     else -> listOf()
                 }
@@ -318,10 +317,7 @@ class GregChess : JavaPlugin(), Listener {
                 } else {
                     cPlayer(player)
                     val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
-                    cNotNull(
-                        game.board[ChessPosition.parseFromString(latestArg())]?.piece,
-                        "PieceNotFound"
-                    )
+                    cNotNull(game.board[Pos.parseFromString(latestArg())]?.piece, "PieceNotFound")
                 }
             }
             else -> throw CommandException("WrongArgumentsNumber")

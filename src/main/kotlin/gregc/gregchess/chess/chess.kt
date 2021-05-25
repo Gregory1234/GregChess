@@ -6,17 +6,12 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-enum class ChessSide(
-    private val path: String,
-    val standardName: String,
-    val standardChar: Char,
-    val direction: Int
-) {
+enum class Side(private val path: String, val standardName: String, val standardChar: Char, val direction: Int) {
     WHITE("Chess.Side.White", "White", 'w', 1),
     BLACK("Chess.Side.Black", "Black", 'b', -1);
 
-    operator fun not(): ChessSide = if (this == WHITE) BLACK else WHITE
-    operator fun inc(): ChessSide = not()
+    operator fun not(): Side = if (this == WHITE) BLACK else WHITE
+    operator fun inc(): Side = not()
 
     fun getPieceName(name: String) =
         ConfigManager.getFormatString("$path.Piece", name)
@@ -30,16 +25,16 @@ enum class ChessSide(
 }
 
 data class MutableBySides<T>(var white: T, var black: T) {
-    operator fun get(side: ChessSide) = when (side) {
-        ChessSide.WHITE -> white
-        ChessSide.BLACK -> black
+    operator fun get(side: Side) = when (side) {
+        Side.WHITE -> white
+        Side.BLACK -> black
     }
 
-    operator fun set(side: ChessSide, value: T) = when (side) {
-        ChessSide.WHITE -> {
+    operator fun set(side: Side, value: T) = when (side) {
+        Side.WHITE -> {
             white = value
         }
-        ChessSide.BLACK -> {
+        Side.BLACK -> {
             black = value
         }
     }
@@ -49,19 +44,19 @@ data class MutableBySides<T>(var white: T, var black: T) {
         f(white)
         f(black)
     }
-    inline fun <R> forEachIndexed(f: (ChessSide, T) -> R) {
-        f(ChessSide.WHITE, white)
-        f(ChessSide.BLACK, black)
+    inline fun <R> forEachIndexed(f: (Side, T) -> R) {
+        f(Side.WHITE, white)
+        f(Side.BLACK, black)
     }
     inline fun <R> map(f: (T) -> R) = BySides(f(white), f(black))
-    inline fun <R> mapIndexed(f: (ChessSide, T) -> R) = BySides(f(ChessSide.WHITE, white), f(ChessSide.BLACK, black))
+    inline fun <R> mapIndexed(f: (Side, T) -> R) = BySides(f(Side.WHITE, white), f(Side.BLACK, black))
     fun toBySides() = BySides(white, black)
 }
 
 data class BySides<T>(val white: T, val black: T) {
-    operator fun get(side: ChessSide) = when (side) {
-        ChessSide.WHITE -> white
-        ChessSide.BLACK -> black
+    operator fun get(side: Side) = when (side) {
+        Side.WHITE -> white
+        Side.BLACK -> black
     }
 
     fun toList(): List<T> = listOf(white, black)
@@ -69,12 +64,12 @@ data class BySides<T>(val white: T, val black: T) {
         f(white)
         f(black)
     }
-    inline fun <R> forEachIndexed(f: (ChessSide, T) -> R) {
-        f(ChessSide.WHITE, white)
-        f(ChessSide.BLACK, black)
+    inline fun <R> forEachIndexed(f: (Side, T) -> R) {
+        f(Side.WHITE, white)
+        f(Side.BLACK, black)
     }
     inline fun <R> map(f: (T) -> R) = BySides(f(white), f(black))
-    inline fun <R> mapIndexed(f: (ChessSide, T) -> R) = BySides(f(ChessSide.WHITE, white), f(ChessSide.BLACK, black))
+    inline fun <R> mapIndexed(f: (Side, T) -> R) = BySides(f(Side.WHITE, white), f(Side.BLACK, black))
     fun toMutableBySides() = MutableBySides(white, black)
 }
 

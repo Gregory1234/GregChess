@@ -6,9 +6,9 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 
 
-abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val game: ChessGame) {
+abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game: ChessGame) {
 
-    var held: ChessPiece? = null
+    var held: Piece? = null
         set(v) {
             v?.let {
                 it.square.moveMarker = Material.YELLOW_CONCRETE
@@ -63,12 +63,12 @@ abstract class ChessPlayer(val side: ChessSide, private val silent: Boolean, val
 
 }
 
-class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, game: ChessGame) :
+class BukkitChessPlayer(val player: Player, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(side, silent, game) {
 
     class PawnPromotionScreen(
-        private val pawn: ChessPiece,
-        private val moves: List<Pair<ChessType, MoveCandidate>>,
+        private val pawn: Piece,
+        private val moves: List<Pair<PieceType, MoveCandidate>>,
         private val player: ChessPlayer
     ) : Screen<MoveCandidate>("Message.PawnPromotion") {
         override fun getContent() = moves.mapIndexed { i, (t, m) ->
@@ -101,7 +101,7 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
     override fun sendMessage(msg: String) = player.sendMessage(msg)
     override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
-    fun pickUp(pos: ChessPosition) {
+    fun pickUp(pos: Pos) {
         if (!game.running) return
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
@@ -109,7 +109,7 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
         player.inventory.setItem(0, piece.item)
     }
 
-    fun makeMove(pos: ChessPosition) {
+    fun makeMove(pos: Pos) {
         if (!game.running) return
         val newSquare = game.board[pos] ?: return
         val piece = held ?: return
@@ -128,7 +128,7 @@ class BukkitChessPlayer(val player: Player, side: ChessSide, silent: Boolean, ga
     }
 }
 
-class EnginePlayer(val engine: ChessEngine, side: ChessSide, game: ChessGame) : ChessPlayer(side, true, game) {
+class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : ChessPlayer(side, true, game) {
 
     override val name = engine.name
 
@@ -143,10 +143,10 @@ class EnginePlayer(val engine: ChessEngine, side: ChessSide, game: ChessGame) : 
     override fun startTurn() {
         super.startTurn()
         engine.getMove(game.board.getFEN(), { str ->
-            val origin = ChessPosition.parseFromString(str.take(2))
-            val target = ChessPosition.parseFromString(str.drop(2).take(2))
+            val origin = Pos.parseFromString(str.take(2))
+            val target = Pos.parseFromString(str.drop(2).take(2))
             val promotion =
-                str.drop(4).firstOrNull()?.let { ChessType.parseFromStandardChar(it) }
+                str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(it) }
             val move = game.board.getMoves(origin)
                 .first { it.display.pos == target && it.promotion == promotion }
             game.finishMove(move)

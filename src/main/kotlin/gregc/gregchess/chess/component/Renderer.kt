@@ -41,15 +41,15 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         get() = arena.defData.location ?: world.spawnLocation
 
     fun getPos(loc: Loc) =
-        ChessPosition(((settings.tileSize+1) * 8 - 1 - loc.x + arena.offset.x).floorDiv(settings.tileSize), (loc.z - arena.offset.z - 8).floorDiv(settings.tileSize))
+        Pos(((settings.tileSize+1) * 8 - 1 - loc.x + arena.offset.x).floorDiv(settings.tileSize), (loc.z - arena.offset.z - 8).floorDiv(settings.tileSize))
 
-    fun getPieceLoc(pos: ChessPosition) =
+    fun getPieceLoc(pos: Pos) =
         Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile) + arena.offset
 
-    fun getCapturedLoc(pos: Pair<Int, Int>, by: ChessSide): Loc {
+    fun getCapturedLoc(pos: Pair<Int, Int>, by: Side): Loc {
         return when (by) {
-            ChessSide.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
-            ChessSide.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * pos.second)
+            Side.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
+            Side.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * pos.second)
         } + arena.offset
     }
 
@@ -59,11 +59,11 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         }
     }
 
-    fun <R> doAt(pos: ChessPosition, f: (World, Location) -> R) = getPieceLoc(pos).doIn(world, f)
+    fun <R> doAt(pos: Pos, f: (World, Location) -> R) = getPieceLoc(pos).doIn(world, f)
 
-    fun playPieceSound(pos: ChessPosition, sound: Sound) = doAt(pos) { world, l -> world.playSound(l, sound) }
+    fun playPieceSound(pos: Pos, sound: Sound) = doAt(pos) { world, l -> world.playSound(l, sound) }
 
-    fun fillFloor(pos: ChessPosition, floor: Material) {
+    fun fillFloor(pos: Pos, floor: Material) {
         val (x, y, z) = getPieceLoc(pos)
         val mi = -settings.lowHalfTile
         val ma = settings.highHalfTile

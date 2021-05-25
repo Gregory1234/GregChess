@@ -3,13 +3,13 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.chess.*
 
 object Antichess : ChessVariant("Antichess") {
-    class Stalemate(winner: ChessSide) :
+    class Stalemate(winner: Side) :
         ChessGame.EndReason("Chess.EndReason.Stalemate", "normal", winner)
 
     override fun getLegality(move: MoveCandidate): MoveLegality {
         if (!Normal.isValid(move))
             return MoveLegality.INVALID
-        if (move.piece.type == ChessType.KING && move.help.isNotEmpty())
+        if (move.piece.type == PieceType.KING && move.help.isNotEmpty())
             return MoveLegality.INVALID
         if (move.captured != null)
             return MoveLegality.LEGAL
@@ -19,9 +19,9 @@ object Antichess : ChessVariant("Antichess") {
             }) MoveLegality.LEGAL else MoveLegality.SPECIAL
     }
 
-    override fun isInCheck(king: ChessPiece) = false
+    override fun isInCheck(king: Piece) = false
 
-    override fun isInCheck(game: ChessGame, side: ChessSide) = false
+    override fun isInCheck(game: ChessGame, side: Side) = false
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.piecesOf(!game.currentTurn).isEmpty())
@@ -35,9 +35,8 @@ object Antichess : ChessVariant("Antichess") {
         game.board.checkForFiftyMoveRule()
     }
 
-    override fun timeout(game: ChessGame, side: ChessSide) =
-        game.stop(ChessGame.EndReason.Timeout(side))
+    override fun timeout(game: ChessGame, side: Side) = game.stop(ChessGame.EndReason.Timeout(side))
 
-    override val promotions: Collection<ChessType>
-        get() = Normal.promotions + ChessType.KING
+    override val promotions: Collection<PieceType>
+        get() = Normal.promotions + PieceType.KING
 }

@@ -1,15 +1,14 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
+import gregc.gregchess.glog
+import gregc.gregchess.rangeTo
 import java.util.*
 import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
-    data class Settings(
-        val initialFEN: FEN?,
-        internal val chess960: Boolean = initialFEN?.chess960 ?: false
-    ) {
+    data class Settings(val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) {
         fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN(game: ChessGame) = initialFEN ?: game.variant.genFEN(chess960)
@@ -39,8 +38,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     private val boardState = (Pair(0, 0)..Pair(7, 7)).associate { (i, j) ->
-        val pos = ChessPosition(i, j)
-        pos to ChessSquare(pos, game)
+        val pos = Pos(i, j)
+        pos to Square(pos, game)
     }
 
     private var movesSinceLastCapture = 0u
@@ -50,16 +49,16 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         private set
     private val boardHashes = mutableMapOf<Int, Int>()
 
-    private val capturedPieces = mutableListOf<ChessPiece.Captured>()
+    private val capturedPieces = mutableListOf<Piece.Captured>()
 
-    val pieces: List<ChessPiece>
+    val pieces: List<Piece>
         get() = boardState.values.mapNotNull { it.piece }
 
-    operator fun plusAssign(piece: ChessPiece) {
+    operator fun plusAssign(piece: Piece) {
         piece.square.piece = piece
     }
 
-    operator fun get(pos: ChessPosition) = boardState[pos]
+    operator fun get(pos: Pos) = boardState[pos]
 
     operator fun get(loc: Loc) = this[game.renderer.getPos(loc)]
 
@@ -74,13 +73,13 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         get() {
             if (settings.chess960)
                 return true
-            val whiteKing = kingOf(ChessSide.WHITE)
-            val blackKing = kingOf(ChessSide.BLACK)
-            val whiteRooks = piecesOf(ChessSide.WHITE, ChessType.ROOK).filter { !it.hasMoved }
-            val blackRooks = piecesOf(ChessSide.BLACK, ChessType.ROOK).filter { !it.hasMoved }
-            if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != ChessPosition(4, 0))
+            val whiteKing = kingOf(Side.WHITE)
+            val blackKing = kingOf(Side.BLACK)
+            val whiteRooks = piecesOf(Side.WHITE, PieceType.ROOK).filter { !it.hasMoved }
+            val blackRooks = piecesOf(Side.BLACK, PieceType.ROOK).filter { !it.hasMoved }
+            if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != Pos(4, 0))
                 return true
-            if (blackKing != null && !blackKing.hasMoved && blackKing.pos != ChessPosition(4, 7))
+            if (blackKing != null && !blackKing.hasMoved && blackKing.pos != Pos(4, 7))
                 return true
             if (whiteRooks.any { it.pos.rank == 0 && it.pos.file !in listOf(0, 7) })
                 return true
@@ -107,7 +106,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     fun endTurn() {
         updateMoves()
         val num = "${fullMoveCounter}."
-        if (game.currentTurn == ChessSide.BLACK) {
+        if (game.currentTurn == Side.BLACK) {
             val wLast = (if (moves.size <= 1) "" else moves[moves.size - 2].name)
             val bLast = (lastMove?.name ?: "")
             game.players.forEachReal { p -> p.sendMessage("$num $wLast  | $bLast") }
@@ -118,7 +117,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     @GameEvent(GameBaseEvent.STOP)
     fun stop() {
-        if (game.currentTurn == ChessSide.WHITE) {
+        if (game.currentTurn == Side.WHITE) {
             val num = "${fullMoveCounter}."
             val wLast = (lastMove?.name ?: "")
             game.players.forEachReal { p -> p.sendMessage("$num $wLast  |") }
@@ -140,25 +139,24 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uniqueId == pieceUniqueId }
     operator fun get(pieceUniqueId: UUID) = pieces.firstOrNull { it.uniqueId == pieceUniqueId }
 
-    fun piecesOf(side: ChessSide) = pieces.filter { it.side == side }
-    fun piecesOf(side: ChessSide, type: ChessType) =
-        pieces.filter { it.side == side && it.type == type }
+    fun piecesOf(side: Side) = pieces.filter { it.side == side }
+    fun piecesOf(side: Side, type: PieceType) = pieces.filter { it.side == side && it.type == type }
 
-    fun kingOf(side: ChessSide) = piecesOf(side).firstOrNull { it.type == ChessType.KING }
+    fun kingOf(side: Side) = piecesOf(side).firstOrNull { it.type == PieceType.KING }
 
-    operator fun plusAssign(captured: ChessPiece.Captured) {
+    operator fun plusAssign(captured: Piece.Captured) {
         captured.render()
         capturedPieces += captured
         glog.low("Added captured", game.uniqueId, captured)
     }
 
-    operator fun minusAssign(captured: ChessPiece.Captured) {
+    operator fun minusAssign(captured: Piece.Captured) {
         capturedPieces -= captured
         captured.hide()
         glog.low("Removed captured", game.uniqueId, captured)
     }
 
-    fun getMoves(pos: ChessPosition) = boardState[pos]?.bakedMoves.orEmpty()
+    fun getMoves(pos: Pos) = boardState[pos]?.bakedMoves.orEmpty()
 
     fun updateMoves() {
         boardState.forEach { (_, square) ->
@@ -170,9 +168,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     @GameEvent(GameBaseEvent.START, mod = TimeModifier.EARLY)
-    fun start() {
-        setFromFEN(settings.genFEN(game))
-    }
+    fun start() = setFromFEN(settings.genFEN(game))
 
     fun setFromFEN(fen: FEN) {
         clear()
@@ -180,7 +176,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         fen.forEachSquare { pos, tr ->
             if (tr != null) {
                 val (t, s, hm) = tr
-                this += ChessPiece(t, s, this[pos]!!, hm)
+                this += Piece(t, s, this[pos]!!, hm)
             }
         }
         if (fen.enPassantSquare != null) {
@@ -206,9 +202,9 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     fun getFEN(): FEN {
-        fun castling(side: ChessSide) =
+        fun castling(side: Side) =
             if (kingOf(side)?.hasMoved == false)
-                piecesOf(side, ChessType.ROOK)
+                piecesOf(side, PieceType.ROOK)
                     .filter { !it.hasMoved && it.pos.rank == kingOf(side)?.pos?.rank }
                     .map { it.pos.file }
             else emptyList()
@@ -218,14 +214,14 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                 var e = 0
                 buildString {
                     for (i in 0..7) {
-                        val piece = this@Chessboard[ChessPosition(i, it)]?.piece
+                        val piece = this@Chessboard[Pos(i, it)]?.piece
                         if (piece == null)
                             e++
                         else {
                             if (e != 0)
                                 append(e)
                             e = 0
-                            append(if (piece.side == ChessSide.WHITE) piece.type.char.uppercaseChar() else piece.type.char)
+                            append(if (piece.side == Side.WHITE) piece.type.char.uppercaseChar() else piece.type.char)
                         }
                     }
                     if (e == 8)
@@ -233,14 +229,12 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                 }
             }),
             game.currentTurn,
-            castling(ChessSide.WHITE),
-            castling(ChessSide.BLACK),
+            castling(Side.WHITE),
+            castling(Side.BLACK),
             lastMove?.let {
-                if (it.piece.type == ChessType.PAWN
-                    && abs(it.origin.pos.rank - it.target.pos.rank) == 2
-                ) {
+                if (it.piece.type == PieceType.PAWN && abs(it.origin.pos.rank - it.target.pos.rank) == 2)
                     it.origin.pos.copy(rank = (it.origin.pos.rank + it.target.pos.rank) / 2)
-                } else
+                else
                     null
             },
             movesSinceLastCapture,
@@ -289,7 +283,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             val hash = getFEN().hashed()
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
             game.variant.undoLastMove(it)
-            if (game.currentTurn == ChessSide.WHITE)
+            if (game.currentTurn == Side.WHITE)
                 fullMoveCounter--
             moves.removeLast()
             lastMove?.render()
@@ -298,11 +292,11 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    fun nextCapturedPos(type: ChessType, by: ChessSide): Pair<Int, Int> {
+    fun nextCapturedPos(type: PieceType, by: Side): Pair<Int, Int> {
         val cap = capturedPieces.filter { it.by == by }
-        return if (type == ChessType.PAWN)
-            Pair(cap.count { it.type == ChessType.PAWN }, 1)
+        return if (type == PieceType.PAWN)
+            Pair(cap.count { it.type == PieceType.PAWN }, 1)
         else
-            Pair(cap.count { it.type != ChessType.PAWN }, 0)
+            Pair(cap.count { it.type != PieceType.PAWN }, 0)
     }
 }

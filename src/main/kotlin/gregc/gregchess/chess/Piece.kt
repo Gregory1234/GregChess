@@ -8,16 +8,11 @@ import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class ChessPiece(
-    val type: ChessType,
-    val side: ChessSide,
-    initSquare: ChessSquare,
-    hasMoved: Boolean = false
-) {
+class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: Boolean = false) {
     val standardName
         get() = "${side.standardName} ${type.name.lowercase()}"
 
-    var square: ChessSquare = initSquare
+    var square: Square = initSquare
         private set(v) {
             hide()
             field = v
@@ -31,7 +26,7 @@ class ChessPiece(
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() =
-        "ChessPiece(uniqueId = $uniqueId, pos = $pos, type = $type, side = $side, hasMoved = $hasMoved)"
+        "Piece(uniqueId = $uniqueId, pos = $pos, type = $type, side = $side, hasMoved = $hasMoved)"
 
     private val game
         get() = square.game
@@ -43,9 +38,9 @@ class ChessPiece(
         get() = type.getItem(side)
 
     class Captured(
-        val type: ChessType,
-        val side: ChessSide,
-        val by: ChessSide,
+        val type: PieceType,
+        val side: Side,
+        val by: Side,
         val pos: Pair<Int, Int>,
         private val game: ChessGame
     ) {
@@ -77,7 +72,7 @@ class ChessPiece(
         game.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
     }
 
-    fun move(target: ChessSquare) {
+    fun move(target: Square) {
         glog.mid("Moved", type, "from", pos, "to", target.pos)
         target.piece = this
         square.piece = null
@@ -96,7 +91,7 @@ class ChessPiece(
         playMoveSound()
     }
 
-    fun capture(by: ChessSide): Captured {
+    fun capture(by: Side): Captured {
         glog.mid("Captured", type, "at", pos)
         clear()
         val captured = Captured(type, side, by, board.nextCapturedPos(type, by), game)
@@ -105,10 +100,10 @@ class ChessPiece(
         return captured
     }
 
-    fun promote(promotion: ChessType) {
+    fun promote(promotion: PieceType) {
         glog.mid("Promoted", type, "at", pos, "into", promotion)
         hide()
-        square.piece = ChessPiece(promotion, side, square)
+        square.piece = Piece(promotion, side, square)
     }
 
     private fun playSound(s: Sound) {
@@ -123,7 +118,7 @@ class ChessPiece(
         this.hasMoved = hasMoved
     }
 
-    fun demote(piece: ChessPiece) {
+    fun demote(piece: Piece) {
         piece.render()
         hide()
         square.piece = piece
@@ -142,7 +137,7 @@ class ChessPiece(
     }
 
     companion object {
-        fun autoMove(moves: Map<ChessPiece, ChessSquare>) {
+        fun autoMove(moves: Map<Piece, Square>) {
             moves.forEach { (piece, target) ->
                 glog.mid("Auto-moved", piece.type, "from", piece.pos, "to", target.pos)
                 piece.hasMoved = true

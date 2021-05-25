@@ -18,14 +18,14 @@ class Simul(private val arena: String, private val settings: GameSettings) {
     private val data = mutableMapOf<UUID, PlayerData>()
 
     class SimulManager(val game: ChessGame, val simul: Simul): Component {
-        private val location = MutableBySides(game[ChessSide.WHITE].player.location, game[ChessSide.BLACK].player.location)
+        private val location = MutableBySides(game[Side.WHITE].player.location, game[Side.BLACK].player.location)
 
         @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
         fun start() {
             location.white = game.renderer.spawnLocation
             location.black = game.renderer.spawnLocation
             game.scoreboard += object : PlayerProperty(ConfigManager.getString("Component.Simul.Current")) {
-                override fun invoke(s: ChessSide): String {
+                override fun invoke(s: Side): String {
                     val p = game[s]
                     val games = simul.gamesOf(p.player)
                     val current = games.indexOf(p.currentGame) + 1
@@ -34,7 +34,7 @@ class Simul(private val arena: String, private val settings: GameSettings) {
             }
         }
         private fun getPlayer(g: ChessGame) =
-            if (g[ChessSide.WHITE].player == g[ChessSide.BLACK].player) g.currentPlayer else g[game.currentPlayer.player]!!
+            if (g[Side.WHITE].player == g[Side.BLACK].player) g.currentPlayer else g[game.currentPlayer.player]!!
 
         private fun chooseGame(): ChessGame? {
             val player = game.currentPlayer
@@ -129,8 +129,8 @@ class Simul(private val arena: String, private val settings: GameSettings) {
     fun addGame(white: String, black: String) {
         val newGame = ChessGame(settings.copy(renderer = settings.renderer.copy(arenaWorld = arena, offset = currentOffset)))
         newGame.addPlayers {
-            human(Bukkit.getPlayer(white)!!, ChessSide.WHITE, true)
-            human(Bukkit.getPlayer(black)!!, ChessSide.BLACK, true)
+            human(Bukkit.getPlayer(white)!!, Side.WHITE, true)
+            human(Bukkit.getPlayer(black)!!, Side.BLACK, true)
         }
         newGame.registerComponent(SimulManager(newGame, this))
         games.add(newGame)

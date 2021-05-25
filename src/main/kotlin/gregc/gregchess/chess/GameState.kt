@@ -14,7 +14,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         val black: ChessPlayer
     }
     sealed interface WithCurrentPlayer: WithPlayers {
-        val currentTurn: ChessSide
+        val currentTurn: Side
     }
     sealed interface WithStartTime {
         val startTime: LocalDateTime
@@ -39,7 +39,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     data class Starting(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime = LocalDateTime.now(),
-        override var currentTurn: ChessSide = ChessSide.WHITE
+        override var currentTurn: Side = Side.WHITE
         ): GameState(false, false, false), WithCurrentPlayer, WithStartTime {
         constructor(ready: Ready) : this(ready.players)
 
@@ -52,7 +52,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     data class Running(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
-        override var currentTurn: ChessSide,
+        override var currentTurn: Side,
         override val spectatorUUIDs: MutableList<UUID> = mutableListOf()
     ): GameState(true, false, true), WithCurrentPlayer, WithStartTime, WithSpectators {
         constructor(starting: Starting) : this(starting.players, starting.startTime, starting.currentTurn)
@@ -66,7 +66,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     data class Stopping(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
-        override val currentTurn: ChessSide,
+        override val currentTurn: Side,
         override val spectatorUUIDs: MutableList<UUID> = mutableListOf(),
         override val endReason: ChessGame.EndReason
     ): GameState(true, false, false), WithCurrentPlayer, WithStartTime, WithSpectators, WithEndReason {
@@ -82,7 +82,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     data class Stopped(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
-        override val currentTurn: ChessSide,
+        override val currentTurn: Side,
         override val endReason: ChessGame.EndReason
     ): GameState(true, true, false), WithCurrentPlayer, WithStartTime, WithEndReason {
         constructor(stopping: Stopping) :
@@ -107,28 +107,28 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
 val BySides<ChessPlayer>.bukkit get() = toList().filterIsInstance<BukkitChessPlayer>()
 val BySides<ChessPlayer>.real get() = bukkit.map {it.player}.distinct()
 inline fun BySides<ChessPlayer>.forEachReal(f: (Player) -> Unit) = real.forEach(f)
-inline fun BySides<ChessPlayer>.forEachRealIndexed(s: ChessSide, f: (ChessSide, Player) -> Unit) =
+inline fun BySides<ChessPlayer>.forEachRealIndexed(s: Side, f: (Side, Player) -> Unit) =
     forEachUnique(s) { f(it.side, it.player) }
-inline fun BySides<ChessPlayer>.forEachUnique(s: ChessSide, f: (BukkitChessPlayer) -> Unit) =
+inline fun BySides<ChessPlayer>.forEachUnique(s: Side, f: (BukkitChessPlayer) -> Unit) =
     real.mapNotNull { this[it, s] }.forEach(f)
 fun BySides<ChessPlayer>.validate() = forEachIndexed { side, player ->
     if (player.side != side) throw IllegalStateException("Player's side wrong!")
 }
-operator fun BySides<ChessPlayer>.get(p: Player, s: ChessSide): BukkitChessPlayer? =
+operator fun BySides<ChessPlayer>.get(p: Player, s: Side): BukkitChessPlayer? =
     bukkit.filter {it.player == p}.run { singleOrNull() ?: singleOrNull { it.side == s } }
 operator fun BySides<ChessPlayer>.contains(p: Player) = p in real
 
 
 inline fun GameState.WithPlayers.forEachPlayer(f: (ChessPlayer) -> Unit) = players.forEach(f)
 inline fun GameState.WithPlayers.forEachReal(f: (Player) -> Unit) = players.forEachReal(f)
-operator fun GameState.WithPlayers.get(s: ChessSide) = players[s]
+operator fun GameState.WithPlayers.get(s: Side) = players[s]
 operator fun GameState.WithPlayers.contains(p: Player) = p in players
 
 val GameState.WithCurrentPlayer.currentPlayer: ChessPlayer get() = this[currentTurn]
 operator fun GameState.WithCurrentPlayer.get(p: Player) = players[p, currentTurn]
 inline fun GameState.WithCurrentPlayer.forEachUnique(f: (BukkitChessPlayer) -> Unit) =
     players.forEachUnique(currentTurn, f)
-inline fun GameState.WithCurrentPlayer.forEachRealIndexed(f: (ChessSide, Player) -> Unit) =
+inline fun GameState.WithCurrentPlayer.forEachRealIndexed(f: (Side, Player) -> Unit) =
     players.forEachRealIndexed(currentTurn, f)
 
 val GameState.WithSpectators.spectators: List<Player>

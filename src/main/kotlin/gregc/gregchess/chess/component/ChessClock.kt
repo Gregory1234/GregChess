@@ -1,7 +1,10 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.ConfigManager
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.BySides
+import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.SettingsManager
+import gregc.gregchess.chess.Side
 import gregc.gregchess.glog
 import gregc.gregchess.minutes
 import gregc.gregchess.seconds
@@ -104,7 +107,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     private var started = false
     private var stopTime: LocalDateTime? = null
 
-    fun getTimeRemaining(s: ChessSide) =
+    fun getTimeRemaining(s: Side) =
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
     private fun format(time: Duration): String {
@@ -124,13 +127,13 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
             startTimer()
         } else {
             game.scoreboard += object : PlayerProperty(view.getString("TimeRemaining")) {
-                override fun invoke(s: ChessSide) = format(getTimeRemaining(s))
+                override fun invoke(s: Side) = format(getTimeRemaining(s))
             }
         }
     }
 
     private fun startTimer() {
-        ChessSide.values().forEach { time[it].reset() }
+        Side.values().forEach { time[it].reset() }
         if (settings.type == Type.FIXED) {
             time[game.currentTurn].begin = LocalDateTime.now() + settings.increment
             time[game.currentTurn] += settings.increment
@@ -139,11 +142,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     }
 
     @GameEvent(GameBaseEvent.UPDATE)
-    fun update() {
-        ChessSide.values().forEach {
-            if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it)
-        }
-    }
+    fun update() = Side.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
 
     @GameEvent(GameBaseEvent.END_TURN)
     fun endTurn() {
@@ -186,11 +185,11 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         stopTime = LocalDateTime.now()
     }
 
-    fun addTime(side: ChessSide, addition: Duration) {
+    fun addTime(side: Side, addition: Duration) {
         time[side] += addition
     }
 
-    fun setTime(side: ChessSide, seconds: Duration) {
+    fun setTime(side: Side, seconds: Duration) {
         time[side].set(seconds)
     }
 }

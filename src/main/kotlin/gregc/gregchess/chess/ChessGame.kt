@@ -51,7 +51,7 @@ class ChessGame(val settings: GameSettings) {
     private inline fun requireRunning(fail: () -> Nothing = {wrongState(GameState.Running::class.java)}) = require<GameState.Running>(fail)
     private inline fun requireStopping(fail: () -> Nothing = {wrongState(GameState.Stopping::class.java)}) = require<GameState.Stopping>(fail)
 
-    var currentTurn: ChessSide
+    var currentTurn: Side
         get() = require<GameState.WithCurrentPlayer>().currentTurn
         set(v) {
             requireRunning().currentTurn = v
@@ -67,13 +67,9 @@ class ChessGame(val settings: GameSettings) {
             players[p.side] = p
         }
 
-        fun human(p: Player, side: ChessSide, silent: Boolean) {
-            addPlayer(BukkitChessPlayer(p, side, silent, game))
-        }
+        fun human(p: Player, side: Side, silent: Boolean) = addPlayer(BukkitChessPlayer(p, side, silent, game))
 
-        fun engine(name: String, side: ChessSide) {
-            addPlayer(EnginePlayer(ChessEngine(name), side, game))
-        }
+        fun engine(name: String, side: Side) = addPlayer(EnginePlayer(ChessEngine(name), side, game))
 
         fun build(): BySides<ChessPlayer> = players.map {
             it ?: throw IllegalStateException("player has not been initialized")
@@ -210,34 +206,34 @@ class ChessGame(val settings: GameSettings) {
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
-    open class EndReason(val namePath: String, val reasonPGN: String, val winner: ChessSide?) {
+    open class EndReason(val namePath: String, val reasonPGN: String, val winner: Side?) {
 
         override fun toString() =
             "EndReason.${javaClass.name.split(".", "$").last()}(winner = $winner)"
 
         // @formatter:off
-        class Checkmate(winner: ChessSide) : EndReason("Chess.EndReason.Checkmate", "normal", winner)
-        class Resignation(winner: ChessSide) : EndReason("Chess.EndReason.Resignation", "abandoned", winner)
-        class Walkover(winner: ChessSide) : EndReason("Chess.EndReason.Walkover", "abandoned", winner)
+        class Checkmate(winner: Side) : EndReason("Chess.EndReason.Checkmate", "normal", winner)
+        class Resignation(winner: Side) : EndReason("Chess.EndReason.Resignation", "abandoned", winner)
+        class Walkover(winner: Side) : EndReason("Chess.EndReason.Walkover", "abandoned", winner)
         class PluginRestart : EndReason("Chess.EndReason.PluginRestart", "emergency", null)
         class Stalemate : EndReason("Chess.EndReason.Stalemate", "normal", null)
         class InsufficientMaterial : EndReason("Chess.EndReason.InsufficientMaterial", "normal", null)
         class FiftyMoves : EndReason("Chess.EndReason.FiftyMoves", "normal", null)
         class Repetition : EndReason("Chess.EndReason.Repetition", "normal", null)
         class DrawAgreement : EndReason("Chess.EndReason.DrawAgreement", "normal", null)
-        class Timeout(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.Timeout", "time forfeit", winner)
+        class Timeout(winner: Side) : ChessGame.EndReason("Chess.EndReason.Timeout", "time forfeit", winner)
         class DrawTimeout : ChessGame.EndReason("Chess.EndReason.DrawTimeout", "time forfeit", null)
         class Error(val e: Exception) : ChessGame.EndReason("Chess.EndReason.Error", "emergency", null) {
             override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
         }
 
-        class AllPiecesLost(winner: ChessSide) : ChessGame.EndReason("Chess.EndReason.PiecesLost", "normal", winner)
+        class AllPiecesLost(winner: Side) : ChessGame.EndReason("Chess.EndReason.PiecesLost", "normal", winner)
         // @formatter:on
 
         fun getMessage() = ConfigManager.getFormatString(
             when (winner) {
-                ChessSide.WHITE -> "Message.GameFinished.WhiteWon"
-                ChessSide.BLACK -> "Message.GameFinished.BlackWon"
+                Side.WHITE -> "Message.GameFinished.WhiteWon"
+                Side.BLACK -> "Message.GameFinished.BlackWon"
                 null -> "Message.GameFinished.ItWasADraw"
             }, ConfigManager.getString(namePath)
         )
@@ -338,7 +334,7 @@ class ChessGame(val settings: GameSettings) {
 
     operator fun get(player: Player): BukkitChessPlayer? = (state as? GameState.WithCurrentPlayer)?.get(player)
 
-    operator fun get(side: ChessSide): ChessPlayer = require<GameState.WithPlayers>()[side]
+    operator fun get(side: Side): ChessPlayer = require<GameState.WithPlayers>()[side]
 
     fun <E> tryOrStopNull(expr: E?): E = try {
         expr!!

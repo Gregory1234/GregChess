@@ -3,45 +3,36 @@ package gregc.gregchess.chess
 import gregc.gregchess.rangeTo
 import org.bukkit.Material
 
-data class ChessPosition(val file: Int, val rank: Int) {
+data class Pos(val file: Int, val rank: Int) {
     override fun toString() = "$fileStr$rankStr"
     operator fun plus(diff: Pair<Int, Int>) = plus(diff.first, diff.second)
-    fun plus(df: Int, dr: Int) = ChessPosition(file + df, rank + dr)
+    fun plus(df: Int, dr: Int) = Pos(file + df, rank + dr)
     fun plusF(df: Int) = plus(df, 0)
     fun plusR(dr: Int) = plus(0, dr)
     val fileStr = "${'a' + file}"
     val rankStr = (rank + 1).toString()
 
-    fun neighbours(): List<ChessPosition> =
+    fun neighbours(): List<Pos> =
         (Pair(-1, -1)..Pair(1, 1)).map(::plus).filter { it.isValid() } - this
 
     fun isValid() = file in (0..7) && rank in (0..7)
 
     companion object {
-        fun parseFromString(s: String): ChessPosition {
+        fun parseFromString(s: String): Pos {
             if (s.length != 2 || s[0] !in 'a'..'h' || s[1] !in '1'..'8')
                 throw IllegalArgumentException(s)
-            return ChessPosition(s[0].lowercaseChar() - 'a', s[1] - '1')
+            return Pos(s[0].lowercaseChar() - 'a', s[1] - '1')
         }
     }
 }
 
-class ChessPositionSteps(
-    val start: ChessPosition,
-    private val jump: Pair<Int, Int>,
-    override val size: Int
-) :
-    Collection<ChessPosition> {
-    class ChessIterator(
-        val start: ChessPosition,
-        private val jump: Pair<Int, Int>,
-        private var remaining: Int
-    ) : Iterator<ChessPosition> {
+class PosSteps(val start: Pos, private val jump: Pair<Int, Int>, override val size: Int) : Collection<Pos> {
+    class PosIterator(val start: Pos, private val jump: Pair<Int, Int>, private var remaining: Int) : Iterator<Pos> {
         private var value = start
 
         override fun hasNext() = remaining > 0
 
-        override fun next(): ChessPosition {
+        override fun next(): Pos {
             val ret = value
             value += jump
             remaining--
@@ -50,7 +41,7 @@ class ChessPositionSteps(
     }
 
     companion object {
-        private fun calcSize(start: ChessPosition, jump: Pair<Int, Int>): Int {
+        private fun calcSize(start: Pos, jump: Pair<Int, Int>): Int {
             val ret = mutableListOf<Int>()
 
             if (jump.first > 0) {
@@ -69,10 +60,9 @@ class ChessPositionSteps(
         }
     }
 
-    constructor(start: ChessPosition, jump: Pair<Int, Int>) :
-            this(start, jump, calcSize(start, jump))
+    constructor(start: Pos, jump: Pair<Int, Int>) : this(start, jump, calcSize(start, jump))
 
-    override fun contains(element: ChessPosition): Boolean {
+    override fun contains(element: Pos): Boolean {
         if (jump.first == 0) {
             if (element.file != start.file)
                 return false
@@ -94,20 +84,19 @@ class ChessPositionSteps(
         }
     }
 
-    override fun containsAll(elements: Collection<ChessPosition>) = elements.all { it in this }
+    override fun containsAll(elements: Collection<Pos>) = elements.all { it in this }
 
     override fun isEmpty() = size <= 0
 
-    override fun iterator() = ChessIterator(start, jump, size)
+    override fun iterator() = PosIterator(start, jump, size)
 }
 
-data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
-    var piece: ChessPiece? = null
+data class Square(val pos: Pos, val game: ChessGame) {
+    var piece: Piece? = null
     var bakedMoves: List<MoveCandidate>? = null
     var bakedLegalMoves: List<MoveCandidate>? = null
 
-    private val baseFloor =
-        if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
+    private val baseFloor = if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
     var variantMarker: Material? = null
         set(v) {
             field = v
@@ -129,8 +118,7 @@ data class ChessSquare(val pos: ChessPosition, val game: ChessGame) {
     val board
         get() = game.board
 
-    override fun toString() =
-        "ChessSquare(game.uniqueId = ${game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
+    override fun toString() = "Square(game.uniqueId = ${game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
 
     fun render() {
         game.renderer.fillFloor(pos, floor)

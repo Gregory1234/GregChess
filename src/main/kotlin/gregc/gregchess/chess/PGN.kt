@@ -9,14 +9,14 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
     }
 
     class MoveTree internal constructor(
-        private val initial: ChessSide,
+        private val initial: Side,
         private val initialMove: UInt,
         private val moves: List<MoveData>,
         private val result: String?
     ) {
         override fun toString() = buildString {
-            val indexShift = if (initial == ChessSide.WHITE) (initialMove * 2u - 2u) else (initialMove * 2u - 1u)
-            if (initial == ChessSide.BLACK) {
+            val indexShift = if (initial == Side.WHITE) (initialMove * 2u - 2u) else (initialMove * 2u - 1u)
+            if (initial == Side.BLACK) {
                 append(initialMove, ". ")
             }
             moves.forEachIndexed { index, moveData ->
@@ -46,13 +46,13 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
             val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(game.startTime)
             tags += TagPair("Date", date)
             tags += TagPair("Round", "1")
-            tags += TagPair("White", game[ChessSide.WHITE].name)
-            tags += TagPair("Black", game[ChessSide.BLACK].name)
+            tags += TagPair("White", game[Side.WHITE].name)
+            tags += TagPair("Black", game[Side.BLACK].name)
 
             val result = game.endReason?.let {
                 when (it.winner) {
-                    ChessSide.WHITE -> "1-0"
-                    ChessSide.BLACK -> "0-1"
+                    Side.WHITE -> "1-0"
+                    Side.BLACK -> "0-1"
                     null -> "1/2-1/2"
                 }
             }

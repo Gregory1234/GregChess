@@ -45,7 +45,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
         }
         this += object :
             PlayerProperty(ConfigManager.getString("Component.Scoreboard.Player")) {
-            override fun invoke(s: ChessSide) =
+            override fun invoke(s: Side) =
                 ConfigManager.getString("Component.Scoreboard.PlayerPrefix") + game[s].name
         }
     }
@@ -86,8 +86,8 @@ class ScoreboardManager(private val game: ChessGame): Component {
             it.team?.suffix = it()
         }
         playerProperties.forEach {
-            it.teamWhite?.suffix = it(ChessSide.WHITE)
-            it.teamBlack?.suffix = it(ChessSide.BLACK)
+            it.teamWhite?.suffix = it(Side.WHITE)
+            it.teamBlack?.suffix = it(Side.BLACK)
         }
     }
 
@@ -102,7 +102,7 @@ abstract class PlayerProperty(val name: String) {
     var teamWhite: Team? = null
     var teamBlack: Team? = null
 
-    abstract operator fun invoke(s: ChessSide): String
+    abstract operator fun invoke(s: Side): String
 }
 
 abstract class GameProperty(val name: String) {

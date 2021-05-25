@@ -6,10 +6,10 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
-enum class ChessType(
+enum class PieceType(
     path: String,
     val standardChar: Char,
-    val moveScheme: (ChessPiece) -> List<MoveCandidate>,
+    val moveScheme: (Piece) -> List<MoveCandidate>,
     val minor: Boolean
 ) {
     KING("Chess.Piece.King", 'k', ::kingMovement, false),
@@ -21,10 +21,10 @@ enum class ChessType(
 
     private val view = ConfigManager.getView(path)
 
-    fun getMaterial(side: ChessSide): Material =
+    fun getMaterial(side: Side): Material =
         view.getEnum("Item.${side.standardName}", Material.AIR, Material::class)
 
-    fun getStructure(side: ChessSide): List<Material> =
+    fun getStructure(side: Side): List<Material> =
         view.getEnumList("Structure.${side.standardName}", Material::class)
 
     companion object {
@@ -32,12 +32,12 @@ enum class ChessType(
             values().firstOrNull { it.char == c.lowercaseChar() }
                 ?: throw IllegalArgumentException(c.toString())
 
-        fun parseFromStandardChar(c: Char): ChessType =
+        fun parseFromStandardChar(c: Char): PieceType =
             values().firstOrNull { it.standardChar == c.lowercaseChar() }
                 ?: throw IllegalArgumentException(c.toString())
     }
 
-    fun getItem(side: ChessSide): ItemStack {
+    fun getItem(side: Side): ItemStack {
         val item = ItemStack(getMaterial(side))
         val meta = item.itemMeta!!
         meta.setDisplayName(chatColor(side.getPieceName(pieceName)))
