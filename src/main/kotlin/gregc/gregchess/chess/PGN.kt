@@ -10,19 +10,18 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
 
     class MoveTree internal constructor(
         private val initial: ChessSide,
-        private val initialMove: Int,
+        private val initialMove: UInt,
         private val moves: List<MoveData>,
         private val result: String?
     ) {
         override fun toString() = buildString {
-            val indexShift =
-                if (initial == ChessSide.WHITE) (initialMove * 2 - 2) else (initialMove * 2 - 1)
+            val indexShift = if (initial == ChessSide.WHITE) (initialMove * 2u - 2u) else (initialMove * 2u - 1u)
             if (initial == ChessSide.BLACK) {
                 append(initialMove, ". ")
             }
             moves.forEachIndexed { index, moveData ->
                 if (index % 2 == 0)
-                    append((index + indexShift).div(2) + 1, ". ")
+                    append((index.toUInt() + indexShift).div(2u) + 1u, ". ")
                 append(moveData.standardName, " ")
                 if (index % 2 == 1)
                     append("\n")

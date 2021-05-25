@@ -3,45 +3,59 @@ package gregc.gregchess.chess
 import gregc.gregchess.component6
 
 data class FEN(
-    val boardState: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
+    val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
     val currentTurn: ChessSide = ChessSide.WHITE,
     val castlingRightsWhite: List<Int> = listOf(0, 7),
     val castlingRightsBlack: List<Int> = listOf(0, 7),
     val enPassantSquare: ChessPosition? = null,
-    val halfmoveClock: Int = 0,
-    val fullmoveClock: Int = 1,
+    val halfmoveClock: UInt = 0u,
+    val fullmoveClock: UInt = 1u,
     val chess960: Boolean = false
 ) {
-
-    fun forEachSquare(f: (ChessPosition, Triple<ChessType, ChessSide, Boolean>?) -> Unit) {
-        val rows = boardState.split('/')
-
-        rows.reversed().forEachIndexed { ri, r ->
-            var i = 0
-            r.forEach { c ->
-                if (c in '1'..'8') {
-                    repeat(c - '0') { j -> f(ChessPosition(i + j, ri), null) }
-                    i += c - '0'
-                } else {
-                    val type = ChessType.parseFromStandardChar(c)
-                    val side = if (c.isUpperCase()) ChessSide.WHITE else ChessSide.BLACK
-                    val hasMoved = when (type) {
-                        ChessType.PAWN -> when (side) {
-                            ChessSide.WHITE -> ri != 1
-                            ChessSide.BLACK -> ri != 6
-                        }
-                        ChessType.ROOK -> when (side) {
-                            ChessSide.WHITE -> i !in castlingRightsWhite
-                            ChessSide.BLACK -> i !in castlingRightsBlack
-                        }
-                        else -> false
+    @JvmInline
+    value class BoardState(private val state: String){
+        init {
+            if (state.count {it == '/'} != 7)
+                throw IllegalArgumentException(state)
+        }
+        fun forEachIndexed(block: (ChessPosition, Char?) -> Unit) {
+            val rows = state.split('/')
+            rows.forEachIndexed { ri, r ->
+                var i = 0
+                r.forEach { c ->
+                    if (c in '1'..'8') {
+                        repeat(c.digitToInt()) { j -> block(ChessPosition(i + j, 7-ri), null) }
+                        i += c.digitToInt()
+                    } else {
+                        block(ChessPosition(i, 7-ri), c)
+                        i++
                     }
-                    f(ChessPosition(i, ri), Triple(type, side, hasMoved))
-                    i++
                 }
             }
         }
+        fun mapIndexed(block: (Int, String) -> String) =
+            BoardState(state.split('/').mapIndexed(block).joinToString("/"))
     }
+
+    private fun Char.toPiece(p: ChessPosition): Triple<ChessType, ChessSide, Boolean> {
+        val type = ChessType.parseFromStandardChar(this)
+        val side = if (isUpperCase()) ChessSide.WHITE else ChessSide.BLACK
+        val hasMoved = when (type) {
+            ChessType.PAWN -> when (side) {
+                ChessSide.WHITE -> p.rank != 1
+                ChessSide.BLACK -> p.rank != 6
+            }
+            ChessType.ROOK -> when (side) {
+                ChessSide.WHITE -> p.file !in castlingRightsWhite
+                ChessSide.BLACK -> p.file !in castlingRightsBlack
+            }
+            else -> false
+        }
+        return Triple(type, side, hasMoved)
+    }
+
+    fun forEachSquare(f: (ChessPosition, Triple<ChessType, ChessSide, Boolean>?) -> Unit)
+        = boardState.forEachIndexed { p, c -> f(p, c?.toPiece(p))}
 
     override fun toString() = buildString {
         append(boardState)
@@ -113,13 +127,13 @@ data class FEN(
             if (halfmove.toInt() < 0) throw IllegalArgumentException(fen)
             if (fullmove.toInt() <= 0) throw IllegalArgumentException(fen)
             return FEN(
-                board,
+                BoardState(board),
                 ChessSide.parseFromStandardChar(turn[0]),
                 parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
                 parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() }),
                 if (enPassant == "-") null else ChessPosition.parseFromString(enPassant),
-                halfmove.toInt(),
-                fullmove.toInt(),
+                halfmove.toUInt(),
+                fullmove.toUInt(),
                 detectChess960(board, castling)
             )
         }
@@ -139,7 +153,7 @@ data class FEN(
             val row = String(types.mapNotNull { it }.toCharArray())
             val pawns = ChessType.PAWN.standardChar.toString().repeat(8)
             return FEN(
-                "$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}",
+                BoardState("$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}"),
                 castlingRightsWhite = listOf(r1, r2),
                 castlingRightsBlack = listOf(r1, r2),
                 chess960 = true

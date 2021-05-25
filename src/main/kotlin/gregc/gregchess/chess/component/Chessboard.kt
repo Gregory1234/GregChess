@@ -43,10 +43,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         pos to ChessSquare(pos, game)
     }
 
-    private var movesSinceLastCapture = 0
-    var fullMoveCounter = 0
+    private var movesSinceLastCapture = 0u
+    var fullMoveCounter = 0u
         private set
-    var halfMoveCounter = 0
+    var halfMoveCounter = 0u
         private set
     private val boardHashes = mutableMapOf<Int, Int>()
 
@@ -214,7 +214,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             else emptyList()
 
         return FEN(
-            (0..7).reversed().joinToString("/") {
+            FEN.BoardState((0..7).reversed().joinToString("/") {
                 var e = 0
                 buildString {
                     for (i in 0..7) {
@@ -231,7 +231,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                     if (e == 8)
                         append(e)
                 }
-            },
+            }),
             game.currentTurn,
             castling(ChessSide.WHITE),
             castling(ChessSide.BLACK),
@@ -254,7 +254,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     fun checkForFiftyMoveRule() {
-        if (movesSinceLastCapture >= 100)
+        if (movesSinceLastCapture >= 100u)
             game.stop(ChessGame.EndReason.FiftyMoves())
     }
 
@@ -267,7 +267,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     fun resetMovesSinceLastCapture(): () -> Unit {
         val m = movesSinceLastCapture
         halfMoveCounter++
-        movesSinceLastCapture = 0
+        movesSinceLastCapture = 0u
         return {
             movesSinceLastCapture = m
             halfMoveCounter--

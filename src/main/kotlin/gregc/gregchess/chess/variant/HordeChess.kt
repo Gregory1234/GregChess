@@ -46,8 +46,8 @@ object HordeChess : ChessVariant("Horde") {
 
     override fun genFEN(chess960: Boolean): FEN {
         val base = Normal.genFEN(chess960)
-        val state = base.boardState.split("/").dropLast(5)
-            .joinToString("/") + "/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP"
+        val replacement = "///1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP".split("/")
+        val state = base.boardState.mapIndexed { i, r -> replacement[i].ifEmpty { r }}
         return base.copy(boardState = state, castlingRightsBlack = emptyList())
     }
 }
