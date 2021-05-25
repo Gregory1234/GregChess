@@ -5,8 +5,7 @@ import gregc.gregchess.component6
 data class FEN(
     val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
     val currentTurn: Side = Side.WHITE,
-    val castlingRightsWhite: List<Int> = listOf(0, 7),
-    val castlingRightsBlack: List<Int> = listOf(0, 7),
+    val castlingRights: BySides<List<Int>> = BySides(listOf(0, 7), listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: UInt = 0u,
     val fullmoveClock: UInt = 1u,
@@ -45,10 +44,7 @@ data class FEN(
                 Side.WHITE -> p.rank != 1
                 Side.BLACK -> p.rank != 6
             }
-            PieceType.ROOK -> when (side) {
-                Side.WHITE -> p.file !in castlingRightsWhite
-                Side.BLACK -> p.file !in castlingRightsBlack
-            }
+            PieceType.ROOK -> p.file !in castlingRights[side]
             else -> false
         }
         return Triple(type, side, hasMoved)
@@ -62,8 +58,8 @@ data class FEN(
         append(" ")
         append(currentTurn.standardChar)
         append(" ")
-        append(castlingRightsToString(chess960, 'A', castlingRightsWhite))
-        append(castlingRightsToString(chess960, 'a', castlingRightsBlack))
+        append(castlingRightsToString(chess960, 'A', castlingRights.white))
+        append(castlingRightsToString(chess960, 'a', castlingRights.black))
         append(enPassantSquare ?: "-")
         append(" ")
         append(halfmoveClock)
@@ -76,8 +72,8 @@ data class FEN(
         append(" ")
         append(currentTurn.standardChar)
         append(" ")
-        append(castlingRightsToString(chess960, 'A', castlingRightsWhite))
-        append(castlingRightsToString(chess960, 'a', castlingRightsBlack))
+        append(castlingRightsToString(chess960, 'A', castlingRights.white))
+        append(castlingRightsToString(chess960, 'a', castlingRights.black))
         append(enPassantSquare ?: "-")
     }
 
@@ -129,8 +125,10 @@ data class FEN(
             return FEN(
                 BoardState(board),
                 Side.parseFromStandardChar(turn[0]),
-                parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
-                parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() }),
+                BySides(
+                    parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
+                    parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() })
+                ),
                 if (enPassant == "-") null else Pos.parseFromString(enPassant),
                 halfmove.toUInt(),
                 fullmove.toUInt(),
@@ -154,8 +152,7 @@ data class FEN(
             val pawns = PieceType.PAWN.standardChar.toString().repeat(8)
             return FEN(
                 BoardState("$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}"),
-                castlingRightsWhite = listOf(r1, r2),
-                castlingRightsBlack = listOf(r1, r2),
+                castlingRights = BySides(listOf(r1, r2), listOf(r1, r2)),
                 chess960 = true
             )
         }

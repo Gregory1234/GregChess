@@ -2,6 +2,7 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.ConfigManager
 import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.MutableBySides
 import gregc.gregchess.chess.Side
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.GameBaseEvent
@@ -10,38 +11,27 @@ import gregc.gregchess.chess.component.PlayerProperty
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
     class CheckCounter(private val game: ChessGame) : Component {
-        private var whiteChecks = 0
-        private var blackChecks = 0
+        private var checks = MutableBySides(0,0)
 
         @GameEvent(GameBaseEvent.START)
         fun start() {
             game.scoreboard += object :
                 PlayerProperty(ConfigManager.getString("Component.CheckCounter.CheckCounter")) {
-                override fun invoke(s: Side): String = when (s) {
-                    Side.WHITE -> whiteChecks
-                    Side.BLACK -> blackChecks
-                }.toString()
+                override fun invoke(s: Side): String = checks[s].toString()
             }
         }
 
         @GameEvent(GameBaseEvent.END_TURN)
         fun endTurn() {
             if (game.variant.isInCheck(game, !game.currentTurn))
-                when (!game.currentTurn) {
-                    Side.WHITE -> {
-                        whiteChecks++
-                    }
-                    Side.BLACK -> {
-                        blackChecks++
-                    }
-                }
+                checks[!game.currentTurn]++
         }
 
         fun checkForGameEnd() {
-            if (whiteChecks >= 3)
-                game.stop(ThreeChecksEndReason(Side.BLACK))
-            if (blackChecks >= 3)
-                game.stop(ThreeChecksEndReason(Side.WHITE))
+            checks.forEachIndexed {s, c ->
+                if (c >= 3)
+                    game.stop(ThreeChecksEndReason(!s))
+            }
         }
     }
 

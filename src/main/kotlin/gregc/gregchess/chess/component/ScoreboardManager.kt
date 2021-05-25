@@ -63,14 +63,14 @@ class ScoreboardManager(private val game: ChessGame): Component {
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            it.teamWhite = newTeam()
-            it.teamWhite?.addEntry(view.getFormatString("WhiteFormat", it.name))
+            it.teams.white = newTeam()
+            it.teams.white?.addEntry(view.getFormatString("WhiteFormat", it.name))
             objective.getScore(view.getFormatString("WhiteFormat", it.name)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            it.teamBlack = newTeam()
-            it.teamBlack?.addEntry(view.getFormatString("BlackFormat", it.name))
+            it.teams.black = newTeam()
+            it.teams.black?.addEntry(view.getFormatString("BlackFormat", it.name))
             objective.getScore(view.getFormatString("BlackFormat", it.name)).score = i--
         }
     }
@@ -86,8 +86,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
             it.team?.suffix = it()
         }
         playerProperties.forEach {
-            it.teamWhite?.suffix = it(Side.WHITE)
-            it.teamBlack?.suffix = it(Side.BLACK)
+            it.teams.forEachIndexed { s, t -> t?.suffix = it(s) }
         }
     }
 
@@ -99,8 +98,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
 }
 
 abstract class PlayerProperty(val name: String) {
-    var teamWhite: Team? = null
-    var teamBlack: Team? = null
+    val teams: MutableBySides<Team?> = MutableBySides(null, null)
 
     abstract operator fun invoke(s: Side): String
 }

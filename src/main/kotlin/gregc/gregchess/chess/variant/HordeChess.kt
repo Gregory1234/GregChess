@@ -45,6 +45,6 @@ object HordeChess : ChessVariant("Horde") {
         val base = Normal.genFEN(chess960)
         val replacement = "///1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP".split("/")
         val state = base.boardState.mapIndexed { i, r -> replacement[i].ifEmpty { r }}
-        return base.copy(boardState = state, castlingRightsBlack = emptyList())
+        return base.copy(boardState = state, castlingRights = base.castlingRights.copy(black = emptyList()))
     }
 }
