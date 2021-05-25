@@ -171,19 +171,8 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
         appendCopy("Game: ${game.uniqueId}\n", game.uniqueId)
         val moves = square.bakedMoves.orEmpty()
         append("All moves: ${moves.joinToString { it.baseStandardName() }}")
-        val reasons =
-            mapOf(
-                LEGAL to "Legal moves",
-                PINNED to "Moves blocked by pins",
-                IN_CHECK to "Moves blocked because of checks",
-                INVALID to "Invalid moves",
-                SPECIAL to "Moves blocked for other reasons"
-            )
-        moves.groupBy { m -> reasons[game.variant.getLegality(m)] }.forEach { (l, m) ->
-            if (l != null) {
-                append("\n")
-                append("$l: ${m.joinToString { it.baseStandardName() }}")
-            }
+        moves.groupBy { m -> game.variant.getLegality(m) }.forEach { (l, m) ->
+            append("\n${l.prettyName}: ${m.joinToString { it.baseStandardName() }}")
         }
     }
 }

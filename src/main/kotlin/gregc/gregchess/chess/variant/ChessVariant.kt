@@ -33,8 +33,12 @@ abstract class ChessVariant(val name: String) {
         }
     }
 
-    enum class MoveLegality {
-        INVALID, IN_CHECK, PINNED, SPECIAL, LEGAL
+    enum class MoveLegality(val prettyName: String) {
+        INVALID("Invalid moves"),
+        IN_CHECK("Moves blocked because of checks"),
+        PINNED("Moves blocked by pins"),
+        SPECIAL("Moves blocked for other reasons"),
+        LEGAL("Legal moves")
     }
 
     open fun start(game: ChessGame) {}
