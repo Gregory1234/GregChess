@@ -257,7 +257,8 @@ class ChessGame(val settings: GameSettings) {
     fun quickStop(reason: EndReason) = stop(reason, BySides(white = true, black = true))
 
     fun stop(reason: EndReason, quick: BySides<Boolean> = BySides(white = false, black = false)) {
-        state = GameState.Stopping(requireRunning { requireStopping(); return }, reason)
+        val stopping = GameState.Stopping(requireRunning { requireStopping(); return }, reason)
+        state = stopping
         try {
             components.allStop()
             var anyLong = false
@@ -305,6 +306,7 @@ class ChessGame(val settings: GameSettings) {
             if (reason is EndReason.PluginRestart) {
                 components.allClear()
                 require<GameState.WithPlayers>().forEachPlayer(ChessPlayer::stop)
+                state = GameState.Stopped(stopping)
                 glog.low("Stopped game", uniqueId, reason)
                 components.allVeryEnd()
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
@@ -314,6 +316,7 @@ class ChessGame(val settings: GameSettings) {
                 components.allClear()
                 TimeManager.runTaskLater(1.ticks) {
                     require<GameState.WithPlayers>().forEachPlayer(ChessPlayer::stop)
+                    state = GameState.Stopped(stopping)
                     components.allVeryEnd()
                     glog.low("Stopped game", uniqueId, reason)
                     Bukkit.getPluginManager().callEvent(EndEvent(this))
