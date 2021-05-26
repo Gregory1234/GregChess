@@ -4,7 +4,6 @@ main: gregc.gregchess.GregChess
 api-version: 1.16
 author: GregC
 description: Chess Plugin
-depend: [ GregCore ]
 commands:
   chess:
     description: Main chess command
