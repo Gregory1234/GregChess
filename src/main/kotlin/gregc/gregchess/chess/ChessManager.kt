@@ -4,6 +4,7 @@ import gregc.gregchess.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
+import org.bukkit.World
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
@@ -33,8 +34,17 @@ object ChessManager : Listener {
 
     fun firstGame(function: (ChessGame) -> Boolean): ChessGame? = games.values.firstOrNull(function)
 
+    fun registerArena(game: ChessGame) {
+        arenas[game.arena] = game
+    }
+
+    fun expireGame(game: ChessGame) {
+        arenas[game.arena] = null
+    }
+
     private fun removeGame(g: ChessGame) {
         games.remove(g.uniqueId)
+        arenas[g.arena] = null
         g.players.forEachReal { p ->
             playerGames[p.uniqueId].orEmpty().filter { it != g.uniqueId }.let {
                 if (it.isEmpty())
@@ -70,13 +80,13 @@ object ChessManager : Listener {
         g.spectate(p)
     }
 
-    val arenas = mutableListOf<String>()
+    private val arenas = mutableMapOf<Arena, ChessGame?>()
+
+    private fun World.isArena(): Boolean = arenas.any {it.key.name == name}
 
     fun start() {
         GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
-        ConfigManager.getStringList("ChessArenas").forEach {
-            arenas += it
-        }
+        arenas.putAll(ConfigManager.getStringList("ChessArenas").associate { Arena(it) to null })
     }
 
     fun stop() {
@@ -89,7 +99,7 @@ object ChessManager : Listener {
         p.forEach {
             it.stop(
                 ChessGame.EndReason.Walkover(!it[player]!!.side),
-                BySides(Unit, Unit).mapIndexed{side, _ -> side != it[player]!!.side}
+                BySides(Unit, Unit).mapIndexed { side, _ -> side != it[player]!!.side }
             )
         }
         if (isSpectatingGame(player))
@@ -107,8 +117,14 @@ object ChessManager : Listener {
     }
 
     fun reload() {
-        arenas.clear()
-        arenas.addAll(ConfigManager.getStringList("ChessArenas"))
+        val newArenas = ConfigManager.getStringList("ChessArenas")
+        arenas.forEach { (arena, game) ->
+            if (arena.name in newArenas){
+                game?.quickStop(ChessGame.EndReason.ArenaRemoved())
+                arenas.remove(arena)
+            }
+        }
+        arenas.putAll((newArenas-arenas.map {it.key.name}).associate { Arena(it) to null })
     }
 
     @EventHandler
@@ -117,7 +133,7 @@ object ChessManager : Listener {
         p.forEach {
             it.stop(
                 ChessGame.EndReason.Walkover(!it[e.player]!!.side),
-                BySides(Unit, Unit).mapIndexed{side, _ -> side != it[e.player]!!.side}
+                BySides(Unit, Unit).mapIndexed { side, _ -> side != it[e.player]!!.side }
             )
         }
         if (isSpectatingGame(e.player))
@@ -128,9 +144,7 @@ object ChessManager : Listener {
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.entity as? Player ?: return
         val game = getGame(ent) ?: return
-        ent.health = 20.0
-        ent.foodLevel = 20
-        ent.teleport(game.renderer.spawnLocation)
+        game.renderer.resetPlayer(ent)
         e.isCancelled = true
     }
 
@@ -174,7 +188,7 @@ object ChessManager : Listener {
     @EventHandler
     fun onWeatherChange(e: WeatherChangeEvent) {
         if (e.toWeatherState()) {
-            if (e.world.name in arenas) {
+            if (e.world.isArena()) {
                 e.isCancelled = true
             }
         }
@@ -212,7 +226,7 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onCreatureSpawn(e: CreatureSpawnEvent) {
-        if (e.location.world?.name in arenas) {
+        if (e.location.world?.isArena() == true) {
             e.isCancelled = true
         }
     }
@@ -223,9 +237,8 @@ object ChessManager : Listener {
         playerCurrentGames[player.uniqueId] = newGame.uniqueId
     }
 
-    fun nextArena(): String? = arenas.firstOrNull {
-        val w = Bukkit.getWorld(it)
-        w == null || w.players.isEmpty()
-    }
+    fun nextArena(): Arena? = arenas.toList().firstOrNull { (_, game) -> game == null }?.first
+
+    fun cNextArena() = cNotNull(nextArena(), "NoArenas")
 
 }

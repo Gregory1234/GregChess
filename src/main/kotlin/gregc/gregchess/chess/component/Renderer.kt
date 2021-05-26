@@ -4,11 +4,19 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import org.bukkit.*
 import org.bukkit.entity.Player
+import java.lang.IllegalStateException
+import java.util.*
 import kotlin.math.floor
 
 class Renderer(private val game: ChessGame, private val settings: Settings): Component {
 
     private companion object {
+        val defaultSpawnLocation = Loc(4,101,4)
+
+        val defData = PlayerData(allowFlight = true, isFlying = true)
+
+        val spectatorData = defData.copy(gameMode = GameMode.SPECTATOR)
+
         data class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
             constructor(world: World, mat: Material, loc: Loc): this(world, mat, loc, loc)
         }
@@ -20,7 +28,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         }
     }
 
-    data class Settings(val tileSize: Int, val gameModeInfo: GameModeInfo, val arenaWorld: String? = null, val offset: Loc? = null) {
+    data class Settings(val tileSize: Int, val arenaWorld: String? = null, val offset: Loc = Loc(0,0,0)) {
         fun getComponent(game: ChessGame) = Renderer(game, this)
 
         internal val highHalfTile
@@ -29,28 +37,24 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
             get() = floor((tileSize.toDouble()-1)/2).toInt()
     }
 
-    private lateinit var arena: Arena
-
-    private val world
-        get() = arena.world
-
-    val arenaName
-        get() = arena.name
+    private val world = game.arena.world
 
     val spawnLocation
-        get() = arena.defData.location ?: world.spawnLocation
+        get() = defaultSpawnLocation + settings.offset
+
+    private val data = mutableMapOf<UUID, PlayerData>()
 
     fun getPos(loc: Loc) =
-        Pos(((settings.tileSize+1) * 8 - 1 - loc.x + arena.offset.x).floorDiv(settings.tileSize), (loc.z - arena.offset.z - 8).floorDiv(settings.tileSize))
+        Pos(((settings.tileSize+1) * 8 - 1 - loc.x + settings.offset.x).floorDiv(settings.tileSize), (loc.z - settings.offset.z - 8).floorDiv(settings.tileSize))
 
     fun getPieceLoc(pos: Pos) =
-        Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile) + arena.offset
+        Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile) + settings.offset
 
     fun getCapturedLoc(pos: Pair<Int, Int>, by: Side): Loc {
         return when (by) {
             Side.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
             Side.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * pos.second)
-        } + arena.offset
+        } + settings.offset
     }
 
     fun renderPiece(loc: Loc, structure: List<Material>) {
@@ -72,54 +76,56 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
 
     @GameEvent(GameBaseEvent.INIT, mod = TimeModifier.EARLY)
     fun init() {
-        game.players.forEachReal(arena::teleportPlayer)
-    }
-
-    fun checkForFreeArenas(): Boolean {
-        if (settings.arenaWorld != null){
-            arena = Arena(settings.arenaWorld, settings.gameModeInfo, game.scoreboard.scoreboard, settings.offset ?: Loc(0,0,0))
-            return true
-        }
-
-        val a = ChessManager.nextArena()
-
-        if (a != null) {
-            arena = Arena(a, settings.gameModeInfo, game.scoreboard.scoreboard, settings.offset ?: Loc(0,0,0))
-            return true
-        }
-        return false
+        game.players.forEachReal { it.join() }
     }
 
     fun renderBoardBase() {
-        fill(FillVolume(world, Material.DARK_OAK_PLANKS, Loc(0,100,0) + arena.offset, Loc(8 * (settings.tileSize+2)-1,100,8 * (settings.tileSize+2)-1) + arena.offset))
-        fill(FillVolume(world, Material.DARK_OAK_PLANKS, Loc(8 - 1,101,8 - 1) + arena.offset, Loc(8 * (settings.tileSize+1),101,8 * (settings.tileSize+1)) + arena.offset))
+        fill(FillVolume(world, Material.DARK_OAK_PLANKS, Loc(0,100,0) + settings.offset, Loc(8 * (settings.tileSize+2)-1,100,8 * (settings.tileSize+2)-1) + settings.offset))
+        fill(FillVolume(world, Material.DARK_OAK_PLANKS, Loc(8 - 1,101,8 - 1) + settings.offset, Loc(8 * (settings.tileSize+1),101,8 * (settings.tileSize+1)) + settings.offset))
     }
 
     fun removeBoard() {
-        fill(FillVolume(world, Material.AIR, Loc(0,100,0) + arena.offset, Loc(8 * (settings.tileSize+2)-1,105,8 * (settings.tileSize+2)-1) + arena.offset))
+        fill(FillVolume(world, Material.AIR, Loc(0,100,0) + settings.offset, Loc(8 * (settings.tileSize+2)-1,105,8 * (settings.tileSize+2)-1) + settings.offset))
+    }
+
+    private fun Player.join(d: PlayerData = defData){
+        if (uniqueId in data)
+            throw IllegalStateException("player already teleported")
+        data[uniqueId] = playerData
+        reset(d)
+    }
+
+    private fun Player.leave(){
+        if (uniqueId !in data)
+            throw IllegalStateException("player data not found")
+        playerData = data[uniqueId]!!
+        data.remove(uniqueId)
+    }
+
+    private fun Player.reset(d: PlayerData = defData) {
+        playerData = d
+        teleport(spawnLocation.toLocation(this@Renderer.world))
+        game[this]?.held?.let { inventory.setItem(0, it.item )}
     }
 
     @GameEvent(GameBaseEvent.PANIC)
     fun evacuate() {
-        game.players.forEachReal(arena::leavePlayer)
+        game.players.forEachReal { it.leave() }
     }
 
     @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY)
     fun spectatorJoin(p: Player) {
-        arena.teleportSpectator(p)
+        p.join(spectatorData)
     }
 
     @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, mod = TimeModifier.LATE)
     fun spectatorLeave(p: Player) {
-        arena.leavePlayer(p)
+        p.leave()
     }
     @GameEvent(GameBaseEvent.REMOVE_PLAYER)
     fun removePlayer(p: Player) {
-        arena.leavePlayer(p)
+        p.leave()
     }
 
-    fun resetPlayer(p: Player) {
-        p.playerData = arena.defData
-        game[p]?.held?.let { p.inventory.setItem(0, it.item )}
-    }
+    fun resetPlayer(p: Player, d: PlayerData = defData) = p.reset(d)
 }

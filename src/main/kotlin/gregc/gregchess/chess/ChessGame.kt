@@ -11,7 +11,7 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
-class ChessGame(val settings: GameSettings) {
+class ChessGame(val arena: Arena, val settings: GameSettings) {
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() = "ChessGame(uniqueId = $uniqueId)"
@@ -27,6 +27,10 @@ class ChessGame(val settings: GameSettings) {
     val scoreboard = settings.scoreboard.getComponent(this)
 
     private val components = listOfNotNull(board, clock, renderer, scoreboard).toMutableList()
+
+    init {
+        ChessManager.registerArena(this)
+    }
 
     fun registerComponent(c: Component) {
         components.add(components.size - 2, c)
@@ -143,31 +147,25 @@ class ChessGame(val settings: GameSettings) {
     fun start(): ChessGame {
         try {
             state = GameState.Starting(requireReady())
-            if (renderer.checkForFreeArenas()) {
-                components.allInit()
-                requireStarting().apply {
-                    black.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
-                    white.sendTitle(
-                        ConfigManager.getString("Title.YourTurn"),
-                        ConfigManager.getString("Title.YouArePlayingAs.White")
-                    )
-                    white.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
-                    black.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
-                }
-                variant.start(this)
-                components.allStart()
-                state = GameState.Running(requireStarting())
-                glog.mid("Started game", uniqueId)
-                TimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
-                    if (!running)
-                        cancel()
-                    else
-                        components.allUpdate()
-                }
-            } else {
-                players.forEachReal { it.sendMessage(ConfigManager.getError("NoArenas")) }
-                panic(CommandException("NoArenas"))
-                glog.mid("No free arenas", uniqueId)
+            components.allInit()
+            requireStarting().apply {
+                black.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
+                white.sendTitle(
+                    ConfigManager.getString("Title.YourTurn"),
+                    ConfigManager.getString("Title.YouArePlayingAs.White")
+                )
+                white.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.White"))
+                black.sendMessage(ConfigManager.getString("Message.YouArePlayingAs.Black"))
+            }
+            variant.start(this)
+            components.allStart()
+            state = GameState.Running(requireStarting())
+            glog.mid("Started game", uniqueId)
+            TimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
+                if (!running)
+                    cancel()
+                else
+                    components.allUpdate()
             }
         } catch (e: Exception) {
             players.forEachReal { it.sendMessage(ConfigManager.getError("TeleportFailed")) }
@@ -216,6 +214,7 @@ class ChessGame(val settings: GameSettings) {
         class Resignation(winner: Side) : EndReason("Chess.EndReason.Resignation", "abandoned", winner)
         class Walkover(winner: Side) : EndReason("Chess.EndReason.Walkover", "abandoned", winner)
         class PluginRestart : EndReason("Chess.EndReason.PluginRestart", "emergency", null)
+        class ArenaRemoved : EndReason("Chess.EndReason.ArenaRemoved", "emergency", null)
         class Stalemate : EndReason("Chess.EndReason.Stalemate", "normal", null)
         class InsufficientMaterial : EndReason("Chess.EndReason.InsufficientMaterial", "normal", null)
         class FiftyMoves : EndReason("Chess.EndReason.FiftyMoves", "normal", null)
@@ -360,7 +359,7 @@ class ChessGame(val settings: GameSettings) {
         appendCopy("UUID: $uniqueId\n", uniqueId)
         append("Players: ${players.toList().joinToString { "${it.name} as ${it.side.standardName}" }}\n")
         append("Spectators: ${spectators.joinToString { it.name }}\n")
-        append("Arena: ${renderer.arenaName}\n")
+        append("Arena: ${arena.name}\n")
         append("Preset: ${settings.name}\n")
         append("Variant: ${variant.name}\n")
         append("Components: ${components.joinToString { it.javaClass.simpleName }}")

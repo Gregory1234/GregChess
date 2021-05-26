@@ -16,7 +16,7 @@ Request:
       Accept: "&aYour duel request has been accepted."
     Error:
       NotFound: "&cDuel request not found."
-    TimedOut: "&eDuel request with $1 has timed out."
+    Expired: "&eDuel request with $1 has expired."
     Duration: 5m
   Draw:
     Sent:
@@ -212,6 +212,7 @@ Chess:
     Resignation: "resignation"
     Walkover: "walkover"
     PluginRestart: "the plugin restarting"
+    ArenaRemoved: "the arena getting removed"
     Stalemate: "stalemate"
     InsufficientMaterial: "insufficient material"
     FiftyMoves: "the 50-move rule"

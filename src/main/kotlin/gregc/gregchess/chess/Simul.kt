@@ -6,7 +6,7 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
 
-class Simul(private val arena: String, private val settings: GameSettings) {
+class Simul(private val arena: Arena, private val settings: GameSettings) {
 
     companion object {
         private val ChessPlayer.player
@@ -22,8 +22,8 @@ class Simul(private val arena: String, private val settings: GameSettings) {
 
         @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
         fun start() {
-            location.white = game.renderer.spawnLocation
-            location.black = game.renderer.spawnLocation
+            location.white = game.renderer.spawnLocation.toLocation(game.arena.world)
+            location.black = game.renderer.spawnLocation.toLocation(game.arena.world)
             game.scoreboard += object : PlayerProperty(ConfigManager.getString("Component.Simul.Current")) {
                 override fun invoke(s: Side): String {
                     val p = game[s]
@@ -102,7 +102,7 @@ class Simul(private val arena: String, private val settings: GameSettings) {
 
     private val games = mutableListOf<ChessGame>()
 
-    private var currentOffset = settings.renderer.offset ?: Loc(0,0,0)
+    private var currentOffset = settings.renderer.offset
 
     fun gamesOf(p: Player) = games.filter {it.running && p in it}
 
@@ -122,12 +122,12 @@ class Simul(private val arena: String, private val settings: GameSettings) {
         pls.forEach {
             val newGame = gamesOf(it).first()
             ChessManager.moveToGame(it, newGame)
-            it.teleport(newGame.renderer.spawnLocation)
+            it.teleport(newGame.renderer.spawnLocation.toLocation(arena.world))
         }
     }
 
     fun addGame(white: String, black: String) {
-        val newGame = ChessGame(settings.copy(renderer = settings.renderer.copy(arenaWorld = arena, offset = currentOffset)))
+        val newGame = ChessGame(arena, settings.copy(renderer = settings.renderer.copy(offset = currentOffset)))
         newGame.addPlayers {
             human(Bukkit.getPlayer(white)!!, Side.WHITE, true)
             human(Bukkit.getPlayer(black)!!, Side.BLACK, true)

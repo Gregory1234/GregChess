@@ -34,6 +34,9 @@ class GregChess : JavaPlugin(), Listener {
                 human(receiver, Side.BLACK, sender == receiver)
             }.start()
         }
+        onCancel = { (_, _, g) ->
+            ChessManager.expireGame(g)
+        }
     }
 
     override fun onEnable() {
@@ -62,7 +65,7 @@ class GregChess : JavaPlugin(), Listener {
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!ChessManager.isInGame(opponent), "InGame.Opponent")
                             player.openScreen(SettingsScreen { settings ->
-                                duelRequest += Request(player, opponent, ChessGame(settings))
+                                duelRequest += Request(player, opponent, ChessGame(ChessManager.cNextArena(), settings))
                             })
                         }
                     }
@@ -72,7 +75,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
                     player.openScreen(SettingsScreen { settings ->
-                        ChessGame(settings).addPlayers {
+                        ChessGame(ChessManager.cNextArena(), settings).addPlayers {
                             human(player, Side.WHITE, false)
                             engine("stockfish", Side.BLACK)
                         }.start()
@@ -257,7 +260,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.admin")
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
                     player.openScreen(SettingsScreen { settings ->
-                        val simul = Simul(cNotNull(ChessManager.nextArena(), "NoArenas"), settings)
+                        val simul = Simul(ChessManager.cNextArena(), settings)
                         rest().forEach {
                             simul.addGame(player.name, it)
                         }

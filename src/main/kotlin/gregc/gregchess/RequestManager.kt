@@ -105,7 +105,7 @@ class RequestType<in T>(
         if (duration != null)
             TimeManager.runTaskLater(duration) {
                 if (request.uniqueId in requests)
-                    timeOut(request)
+                    expire(request)
             }
         glog.mid("Sent", request.uniqueId)
     }
@@ -158,12 +158,12 @@ class RequestType<in T>(
             cancel(request)
     }
 
-    private fun timeOut(request: Request<T>) {
-        request.sender.sendMessage(view.getFormatString("TimedOut", request.receiver.name))
-        request.receiver.sendMessage(view.getFormatString("TimedOut", request.sender.name))
+    private fun expire(request: Request<T>) {
+        request.sender.sendMessage(view.getFormatString("Expired", request.receiver.name))
+        request.receiver.sendMessage(view.getFormatString("Expired", request.sender.name))
         requests.remove(request.uniqueId)
         onCancel(request)
-        glog.mid("Timed out", request.uniqueId)
+        glog.mid("Expired", request.uniqueId)
     }
 
     fun quietRemove(p: Player) = requests.values.filter { it.sender == p || it.receiver == p }

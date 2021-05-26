@@ -1,7 +1,9 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.Bukkit
+import org.bukkit.*
+import org.bukkit.generator.ChunkGenerator
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -152,3 +154,33 @@ class ChessEngine(val name: String) {
     }
 }
 
+@JvmInline
+value class Arena(val name: String){
+    object WorldGen : ChunkGenerator() {
+        override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid) =
+            createChunkData(world)
+
+        override fun shouldGenerateCaves() = false
+        override fun shouldGenerateMobs() = false
+        override fun shouldGenerateDecorations() = false
+        override fun shouldGenerateStructures() = false
+    }
+}
+
+val Arena.world: World
+    get() {
+        val world = GregInfo.server.getWorld(name)
+
+        return (if (world != null) {
+            glog.low("World already exists", name)
+            world
+        } else {
+            val ret = GregInfo.server.createWorld(WorldCreator(name).generator(Arena.WorldGen))!!
+            glog.io("Created arena", name)
+            ret
+        }).apply {
+            pvp = false
+            setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+            difficulty = Difficulty.PEACEFUL
+        }
+    }
