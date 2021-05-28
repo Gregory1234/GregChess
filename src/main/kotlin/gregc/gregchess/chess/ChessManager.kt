@@ -29,17 +29,9 @@ object ChessManager : Listener {
 
     fun firstGame(function: (ChessGame) -> Boolean): ChessGame? = games.firstOrNull(function)
 
-    fun registerArena(game: ChessGame) {
-        arenas[game.arena] = game
-    }
-
-    fun expireGame(game: ChessGame) {
-        arenas[game.arena] = null
-    }
-
     private fun removeGame(g: ChessGame) {
         games -= g
-        arenas[g.arena] = null
+        g.arena.unregister()
         g.players.forEachReal { p ->
             p.games -= g
             p.currentGame = null
@@ -48,13 +40,9 @@ object ChessManager : Listener {
 
     operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uniqueId == uuid }
 
-    private val arenas = mutableMapOf<Arena, ChessGame?>()
-
-    private fun World.isArena(): Boolean = arenas.any {it.key.name == name}
 
     fun start() {
         GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
-        arenas.putAll(ConfigManager.getStringList("ChessArenas").associate { Arena(it) to null })
     }
 
     fun stop() {
@@ -71,17 +59,6 @@ object ChessManager : Listener {
             )
         }
         player.spectatedGame = null
-    }
-
-    fun reload() {
-        val newArenas = ConfigManager.getStringList("ChessArenas")
-        arenas.forEach { (arena, game) ->
-            if (arena.name in newArenas){
-                game?.quickStop(ChessGame.EndReason.ArenaRemoved())
-                arenas.remove(arena)
-            }
-        }
-        arenas.putAll((newArenas-arenas.map {it.key.name}).associate { Arena(it) to null })
     }
 
     @EventHandler
@@ -142,15 +119,6 @@ object ChessManager : Listener {
     }
 
     @EventHandler
-    fun onWeatherChange(e: WeatherChangeEvent) {
-        if (e.toWeatherState()) {
-            if (e.world.isArena()) {
-                e.isCancelled = true
-            }
-        }
-    }
-
-    @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
         if (e.player.human.isInGame() && !e.player.human.isAdmin) {
             e.isCancelled = true
@@ -180,15 +148,6 @@ object ChessManager : Listener {
         removeGame(e.game)
     }
 
-    @EventHandler
-    fun onCreatureSpawn(e: CreatureSpawnEvent) {
-        if (e.location.world?.isArena() == true) {
-            e.isCancelled = true
-        }
-    }
 
-    fun nextArena(): Arena? = arenas.toList().firstOrNull { (_, game) -> game == null }?.first
-
-    fun cNextArena() = cNotNull(nextArena(), "NoArenas")
 
 }

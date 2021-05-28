@@ -35,7 +35,7 @@ class GregChess : JavaPlugin(), Listener {
             }.start()
         }
         onCancel = { (_, _, g) ->
-            ChessManager.expireGame(g)
+            g.arena.unregister()
         }
     }
 
@@ -43,6 +43,7 @@ class GregChess : JavaPlugin(), Listener {
         server.pluginManager.registerEvents(this, this)
         saveDefaultConfig()
         ChessManager.start()
+        Arena.start()
         RequestManager.start()
         addCommand("chess") {
             when (nextArg().lowercase()) {
@@ -65,7 +66,7 @@ class GregChess : JavaPlugin(), Listener {
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!opponent.human.isInGame(), "InGame.Opponent")
                             player.openScreen(SettingsScreen { settings ->
-                                duelRequest += Request(player.human, opponent.human, ChessGame(ChessManager.cNextArena(), settings))
+                                duelRequest += Request(player.human, opponent.human, ChessGame(Arena.cNext(), settings))
                             })
                         }
                     }
@@ -75,7 +76,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     cRequire(!player.human.isInGame(), "InGame.You")
                     player.openScreen(SettingsScreen { settings ->
-                        ChessGame(ChessManager.cNextArena(), settings).addPlayers {
+                        ChessGame(Arena.cNext(), settings).addPlayers {
                             human(player.human, Side.WHITE, false)
                             engine("stockfish", Side.BLACK)
                         }.start()
@@ -215,7 +216,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.admin")
                     endArgs()
                     reloadConfig()
-                    ChessManager.reload()
+                    Arena.reload()
                     player.sendMessage(ConfigManager.getString("Message.ConfigReloaded"))
                 }
                 "dev" -> {

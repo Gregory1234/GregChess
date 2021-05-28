@@ -28,7 +28,7 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
     private val components = listOfNotNull(board, clock, renderer, scoreboard).toMutableList()
 
     init {
-        ChessManager.registerArena(this)
+        arena.register(this)
     }
 
     fun registerComponent(c: Component) {
