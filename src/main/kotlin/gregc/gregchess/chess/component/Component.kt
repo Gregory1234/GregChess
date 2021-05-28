@@ -30,7 +30,7 @@ enum class TimeModifier {
 @Target(AnnotationTarget.FUNCTION)
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
-annotation class GameEvent(vararg val value: GameBaseEvent, val mod: TimeModifier = TimeModifier.NORMAL)
+annotation class GameEvent(vararg val value: GameBaseEvent, val mod: TimeModifier = TimeModifier.NORMAL, val relaxed: Boolean = false)
 @Target(AnnotationTarget.FUNCTION)
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
@@ -48,7 +48,9 @@ private inline fun <reified T : Component> T.runGameEvent(value: GameBaseEvent, 
                 else
                     it.invoke(this, *args)
             } catch (e: Exception) {
-                e.printStackTrace()
+                if (it.annotations.map { a -> if (a is GameEvents) a.events else a}
+                        .none { a -> a is GameEvent && value in a.value && a.mod == mod && a.relaxed})
+                    e.printStackTrace()
             }
         }
 }

@@ -112,16 +112,16 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         game.players.forEachReal { (it as? BukkitPlayer)?.leave() }
     }
 
-    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY)
+    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY, relaxed = true)
     fun spectatorJoin(p: HumanPlayer) {
         (p as? BukkitPlayer)?.join(spectatorData)
     }
 
-    @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, mod = TimeModifier.LATE)
+    @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, mod = TimeModifier.LATE, relaxed = true)
     fun spectatorLeave(p: HumanPlayer) {
         (p as? BukkitPlayer)?.leave()
     }
-    @GameEvent(GameBaseEvent.REMOVE_PLAYER)
+    @GameEvent(GameBaseEvent.REMOVE_PLAYER, relaxed = true)
     fun removePlayer(p: HumanPlayer) {
         (p as? BukkitPlayer)?.leave()
     }
