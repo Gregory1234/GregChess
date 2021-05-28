@@ -25,14 +25,14 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
 
     val scoreboard = settings.scoreboard.getComponent(this)
 
-    private val components = listOfNotNull(board, clock, renderer, scoreboard).toMutableList()
+    private val components = listOfNotNull(board, clock, renderer, scoreboard, arena).toMutableList()
 
     init {
-        arena.register(this)
+        arena.game = this
     }
 
     fun registerComponent(c: Component) {
-        components.add(components.size - 2, c)
+        components.add(components.size - 3, c)
     }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =

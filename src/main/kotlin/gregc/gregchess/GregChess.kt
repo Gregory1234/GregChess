@@ -35,7 +35,7 @@ class GregChess : JavaPlugin(), Listener {
             }.start()
         }
         onCancel = { (_, _, g) ->
-            g.arena.unregister()
+            g.arena.game = null
         }
     }
 

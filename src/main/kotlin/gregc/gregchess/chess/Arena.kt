@@ -3,6 +3,10 @@ package gregc.gregchess.chess
 import gregc.gregchess.ConfigManager
 import gregc.gregchess.GregInfo
 import gregc.gregchess.cNotNull
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.GameBaseEvent
+import gregc.gregchess.chess.component.GameEvent
+import gregc.gregchess.chess.component.TimeModifier
 import gregc.gregchess.glog
 import org.bukkit.Difficulty
 import org.bukkit.GameRule
@@ -15,32 +19,31 @@ import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.generator.ChunkGenerator
 import java.util.*
 
-@JvmInline
-value class Arena(val name: String){
+data class Arena(val name: String, var game: ChessGame? = null): Component {
 
     companion object: Listener {
-        private val arenas = mutableMapOf<Arena, ChessGame?>()
+        private val arenas = mutableListOf<Arena>()
 
-        fun next(): Arena? = arenas.toList().firstOrNull { (_, game) -> game == null }?.first
+        fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
 
         fun cNext() = cNotNull(next(), "NoArenas")
 
-        fun World.isArena(): Boolean = arenas.any {it.key.name == name}
+        fun World.isArena(): Boolean = arenas.any {it.name == name}
 
         fun reload() {
             val newArenas = ConfigManager.getStringList("ChessArenas")
-            arenas.forEach { (arena, game) ->
-                if (arena.name in newArenas){
-                    game?.quickStop(ChessGame.EndReason.ArenaRemoved())
-                    arenas.remove(arena)
+            arenas.forEach {
+                if (it.name in newArenas){
+                    it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
+                    arenas.remove(it)
                 }
             }
-            arenas.putAll((newArenas- arenas.map {it.key.name}).associate { Arena(it) to null })
+            arenas.addAll((newArenas - arenas.map {it.name}).map { Arena(it) })
         }
 
         fun start() {
             GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
-            arenas.putAll(ConfigManager.getStringList("ChessArenas").associate { Arena(it) to null })
+            arenas.addAll(ConfigManager.getStringList("ChessArenas").map { Arena(it) })
         }
 
         @EventHandler
@@ -69,11 +72,10 @@ value class Arena(val name: String){
         override fun shouldGenerateDecorations() = false
         override fun shouldGenerateStructures() = false
     }
-    fun register(g: ChessGame) {
-        arenas[this] = g
-    }
-    fun unregister() {
-        arenas[this] = null
+
+    @GameEvent(GameBaseEvent.VERY_END, mod = TimeModifier.LATE)
+    fun veryEnd() {
+        game = null
     }
 }
 

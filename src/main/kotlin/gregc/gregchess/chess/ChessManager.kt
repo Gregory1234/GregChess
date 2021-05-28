@@ -31,7 +31,6 @@ object ChessManager : Listener {
 
     private fun removeGame(g: ChessGame) {
         games -= g
-        g.arena.unregister()
         g.players.forEachReal { p ->
             p.games -= g
             p.currentGame = null
