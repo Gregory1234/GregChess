@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.buildTextComponent
-import gregc.gregchess.chess.variant.ChessVariant.MoveLegality.*
 import gregc.gregchess.glog
 import org.bukkit.Material
 import org.bukkit.Sound
@@ -55,20 +54,15 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
         val pos: Pair<Int, Int>,
         private val game: ChessGame
     ) {
-        private val loc
-            get() = game.renderer.getCapturedLoc(pos, by)
 
         fun render() {
-            game.renderer.renderPiece(loc, type.getStructure(side))
+            game.renderer.renderCapturedPiece(pos, by, type.getStructure(side))
         }
 
         fun hide() {
-            game.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
+            game.renderer.renderCapturedPiece(pos, by, type.getStructure(side).map { Material.AIR })
         }
     }
-
-    private val loc
-        get() = game.renderer.getPieceLoc(pos)
 
     init {
         render()
@@ -76,11 +70,11 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     }
 
     private fun render() {
-        game.renderer.renderPiece(loc, type.getStructure(side))
+        game.renderer.renderPiece(pos, type.getStructure(side))
     }
 
     private fun hide() {
-        game.renderer.renderPiece(loc, type.getStructure(side).map { Material.AIR })
+        game.renderer.renderPiece(pos, type.getStructure(side).map { Material.AIR })
     }
 
     fun move(target: Square) {

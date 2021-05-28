@@ -19,9 +19,7 @@ object AtomicChess : ChessVariant("Atomic") {
                 if (it.piece?.type != PieceType.PAWN)
                     it.piece?.let(::helper)
             }
-            game.renderer.doAt(pos) { world, l ->
-                world.createExplosion(l, 4.0f, false, false)
-            }
+            game.renderer.explosionAt(pos)
             explosions += exp
         }
 

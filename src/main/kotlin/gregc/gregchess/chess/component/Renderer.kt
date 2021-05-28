@@ -47,25 +47,33 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
     fun getPos(loc: Loc) =
         Pos(((settings.tileSize+1) * 8 - 1 - loc.x + settings.offset.x).floorDiv(settings.tileSize), (loc.z - settings.offset.z - 8).floorDiv(settings.tileSize))
 
-    fun getPieceLoc(pos: Pos) =
+    private fun getPieceLoc(pos: Pos) =
         Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile) + settings.offset
 
-    fun getCapturedLoc(pos: Pair<Int, Int>, by: Side): Loc {
+    private fun getCapturedLoc(pos: Pair<Int, Int>, by: Side): Loc {
         return when (by) {
             Side.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
             Side.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * pos.second)
         } + settings.offset
     }
 
-    fun renderPiece(loc: Loc, structure: List<Material>) {
+    private fun renderPiece(loc: Loc, structure: List<Material>) {
         structure.forEachIndexed { i, m ->
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
         }
     }
 
-    fun <R> doAt(pos: Pos, f: (World, Location) -> R) = getPieceLoc(pos).doIn(world, f)
+    fun renderPiece(pos: Pos, structure: List<Material>) = renderPiece(getPieceLoc(pos), structure)
+
+    fun renderCapturedPiece(pos: Pair<Int, Int>, by: Side, structure: List<Material>) = renderPiece(getCapturedLoc(pos, by), structure)
+
+    private fun <R> doAt(pos: Pos, f: (World, Location) -> R) = getPieceLoc(pos).doIn(world, f)
 
     fun playPieceSound(pos: Pos, sound: Sound) = doAt(pos) { world, l -> world.playSound(l, sound) }
+
+    fun explosionAt(pos: Pos) = doAt(pos) { world, l ->
+        world.createExplosion(l, 4.0f, false, false)
+    }
 
     fun fillFloor(pos: Pos, floor: Material) {
         val (x, y, z) = getPieceLoc(pos)
