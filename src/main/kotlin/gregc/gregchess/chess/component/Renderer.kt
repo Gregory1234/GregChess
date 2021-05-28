@@ -153,7 +153,11 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
     fun removePlayer(p: BukkitPlayer) {
         p.leave()
     }
-    @GameEvent(GameBaseEvent.ADD_PLAYER, GameBaseEvent.RESET_PLAYER, relaxed = true)
+    @GameEvent(GameBaseEvent.ADD_PLAYER, relaxed = true)
+    fun addPlayer(p: BukkitPlayer) {
+        p.join(if (p.isAdmin) adminData else defData)
+    }
+    @GameEvent(GameBaseEvent.RESET_PLAYER, relaxed = true)
     fun resetPlayer(p: BukkitPlayer) {
         p.reset(if (p.isAdmin) adminData else defData)
     }
