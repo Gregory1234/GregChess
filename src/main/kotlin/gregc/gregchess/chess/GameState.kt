@@ -1,10 +1,7 @@
 package gregc.gregchess.chess
 
-import org.bukkit.Bukkit
-import org.bukkit.entity.Player
 import java.lang.IllegalStateException
 import java.time.LocalDateTime
-import java.util.*
 import kotlin.Exception
 
 sealed class GameState(val started: Boolean, val stopped: Boolean, val running: Boolean) {
@@ -20,7 +17,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         val startTime: LocalDateTime
     }
     sealed interface WithSpectators {
-        val spectatorUUIDs: List<UUID>
+        val spectators: List<HumanPlayer>
     }
     sealed interface WithEndReason {
         val endReason: ChessGame.EndReason
@@ -53,7 +50,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override var currentTurn: Side,
-        override val spectatorUUIDs: MutableList<UUID> = mutableListOf()
+        override val spectators: MutableList<HumanPlayer> = mutableListOf()
     ): GameState(true, false, true), WithCurrentPlayer, WithStartTime, WithSpectators {
         constructor(starting: Starting) : this(starting.players, starting.startTime, starting.currentTurn)
 
@@ -67,11 +64,11 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
-        override val spectatorUUIDs: MutableList<UUID> = mutableListOf(),
+        override val spectators: MutableList<HumanPlayer> = mutableListOf(),
         override val endReason: ChessGame.EndReason
     ): GameState(true, false, false), WithCurrentPlayer, WithStartTime, WithSpectators, WithEndReason {
         constructor(running: Running, endReason: ChessGame.EndReason) :
-                this(running.players, running.startTime, running.currentTurn, running.spectatorUUIDs, endReason)
+                this(running.players, running.startTime, running.currentTurn, running.spectators, endReason)
 
         override val white = players.white
         override val black = players.black
@@ -104,35 +101,33 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
 
 }
 
-val BySides<ChessPlayer>.bukkit get() = toList().filterIsInstance<BukkitChessPlayer>()
-val BySides<ChessPlayer>.real get() = bukkit.map {it.player}.distinct()
-inline fun BySides<ChessPlayer>.forEachReal(f: (Player) -> Unit) = real.forEach(f)
-inline fun BySides<ChessPlayer>.forEachRealIndexed(s: Side, f: (Side, Player) -> Unit) =
+val BySides<ChessPlayer>.humans get() = toList().filterIsInstance<HumanChessPlayer>()
+val BySides<ChessPlayer>.real get() = humans.map {it.player}.distinct()
+inline fun BySides<ChessPlayer>.forEachReal(f: (HumanPlayer) -> Unit) = real.forEach(f)
+inline fun BySides<ChessPlayer>.forEachRealIndexed(s: Side, f: (Side, HumanPlayer) -> Unit) =
     forEachUnique(s) { f(it.side, it.player) }
-inline fun BySides<ChessPlayer>.forEachUnique(s: Side, f: (BukkitChessPlayer) -> Unit) =
+inline fun BySides<ChessPlayer>.forEachUnique(s: Side, f: (HumanChessPlayer) -> Unit) =
     real.mapNotNull { this[it, s] }.forEach(f)
 fun BySides<ChessPlayer>.validate() = forEachIndexed { side, player ->
     if (player.side != side) throw IllegalStateException("Player's side wrong!")
 }
-operator fun BySides<ChessPlayer>.get(p: Player, s: Side): BukkitChessPlayer? =
-    bukkit.filter {it.player == p}.run { singleOrNull() ?: singleOrNull { it.side == s } }
-operator fun BySides<ChessPlayer>.contains(p: Player) = p in real
+operator fun BySides<ChessPlayer>.get(p: HumanPlayer, s: Side): HumanChessPlayer? =
+    humans.filter {it.player == p}.run { singleOrNull() ?: singleOrNull { it.side == s } }
+operator fun BySides<ChessPlayer>.contains(p: HumanPlayer) = p in real
 
 
 inline fun GameState.WithPlayers.forEachPlayer(f: (ChessPlayer) -> Unit) = players.forEach(f)
-inline fun GameState.WithPlayers.forEachReal(f: (Player) -> Unit) = players.forEachReal(f)
+inline fun GameState.WithPlayers.forEachReal(f: (HumanPlayer) -> Unit) = players.forEachReal(f)
 operator fun GameState.WithPlayers.get(s: Side) = players[s]
-operator fun GameState.WithPlayers.contains(p: Player) = p in players
+operator fun GameState.WithPlayers.contains(p: HumanPlayer) = p in players
 
 val GameState.WithCurrentPlayer.currentPlayer: ChessPlayer get() = this[currentTurn]
-operator fun GameState.WithCurrentPlayer.get(p: Player) = players[p, currentTurn]
-inline fun GameState.WithCurrentPlayer.forEachUnique(f: (BukkitChessPlayer) -> Unit) =
+operator fun GameState.WithCurrentPlayer.get(p: HumanPlayer) = players[p, currentTurn]
+inline fun GameState.WithCurrentPlayer.forEachUnique(f: (HumanChessPlayer) -> Unit) =
     players.forEachUnique(currentTurn, f)
-inline fun GameState.WithCurrentPlayer.forEachRealIndexed(f: (Side, Player) -> Unit) =
+inline fun GameState.WithCurrentPlayer.forEachRealIndexed(f: (Side, HumanPlayer) -> Unit) =
     players.forEachRealIndexed(currentTurn, f)
 
-val GameState.WithSpectators.spectators: List<Player>
-    get() = spectatorUUIDs.mapNotNull { Bukkit.getPlayer(it) }
-inline fun GameState.WithSpectators.forEachSpectator(f: (Player) -> Unit) = spectators.forEach(f)
+inline fun GameState.WithSpectators.forEachSpectator(f: (HumanPlayer) -> Unit) = spectators.forEach(f)
 
 class WrongStateException(s: GameState, cls: Class<*>): Exception("expected ${cls.name}, got $s")

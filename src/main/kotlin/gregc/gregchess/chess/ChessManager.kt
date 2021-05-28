@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.HumanEntity
@@ -46,37 +45,37 @@ object ChessManager : Listener {
         games.remove(g.uniqueId)
         arenas[g.arena] = null
         g.players.forEachReal { p ->
-            playerGames[p.uniqueId].orEmpty().filter { it != g.uniqueId }.let {
+            playerGames[p.bukkit.uniqueId].orEmpty().filter { it != g.uniqueId }.let {
                 if (it.isEmpty())
-                    playerGames.remove(p.uniqueId)
+                    playerGames.remove(p.bukkit.uniqueId)
                 else
-                    playerGames[p.uniqueId] = it
+                    playerGames[p.bukkit.uniqueId] = it
             }
-            playerCurrentGames.remove(p.uniqueId)
+            playerCurrentGames.remove(p.bukkit.uniqueId)
         }
     }
 
     fun isInGame(p: HumanEntity) = p.uniqueId in playerGames
 
-    fun getGame(p: Player) = games[playerCurrentGames[p.uniqueId]]
-    fun getGames(p: Player) = playerGames[p.uniqueId].orEmpty().mapNotNull { games[it] }
+    fun getGame(p: HumanPlayer) = games[playerCurrentGames[p.bukkit.uniqueId]]
+    fun getGames(p: HumanPlayer) = playerGames[p.bukkit.uniqueId].orEmpty().mapNotNull { games[it] }
 
-    operator fun get(p: Player): BukkitChessPlayer? = getGame(p)?.get(p)
+    operator fun get(p: HumanPlayer): HumanChessPlayer? = getGame(p)?.get(p)
 
     operator fun get(uuid: UUID): ChessGame? = games[uuid]
 
-    private fun isSpectatingGame(p: Player) = p.uniqueId in spectatorGames
+    private fun isSpectatingGame(p: HumanPlayer) = p.bukkit.uniqueId in spectatorGames
 
-    private fun getGameSpectator(p: Player) = games[spectatorGames[p.uniqueId]]
+    private fun getGameSpectator(p: HumanPlayer) = games[spectatorGames[p.bukkit.uniqueId]]
 
-    private fun removeSpectator(p: Player) {
+    private fun removeSpectator(p: HumanPlayer) {
         val g = getGameSpectator(p) ?: return
         g.spectatorLeave(p)
-        spectatorGames.remove(p.uniqueId)
+        spectatorGames.remove(p.bukkit.uniqueId)
     }
 
-    private fun addSpectator(p: Player, g: ChessGame) {
-        spectatorGames[p.uniqueId] = g.uniqueId
+    private fun addSpectator(p: HumanPlayer, g: ChessGame) {
+        spectatorGames[p.bukkit.uniqueId] = g.uniqueId
         g.spectate(p)
     }
 
@@ -93,7 +92,7 @@ object ChessManager : Listener {
         forEachGame { it.quickStop(ChessGame.EndReason.PluginRestart()) }
     }
 
-    fun leave(player: Player) {
+    fun leave(player: HumanPlayer) {
         val p = getGames(player)
         cRequire(p.isNotEmpty() || isSpectatingGame(player), "InGame.You")
         p.forEach {
@@ -106,7 +105,7 @@ object ChessManager : Listener {
             removeSpectator(player)
     }
 
-    fun addSpectator(player: Player, toSpectate: Player) {
+    fun addSpectator(player: HumanPlayer, toSpectate: HumanPlayer) {
         val spec = cNotNull(this[toSpectate], "NotInGame.Player")
         val game = getGame(player)
         if (game != null) {
@@ -129,28 +128,28 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
-        val p = getGames(e.player)
+        val p = getGames(e.player.human)
         p.forEach {
             it.stop(
-                ChessGame.EndReason.Walkover(!it[e.player]!!.side),
-                BySides(Unit, Unit).mapIndexed { side, _ -> side != it[e.player]!!.side }
+                ChessGame.EndReason.Walkover(!it[e.player.human]!!.side),
+                BySides(Unit, Unit).mapIndexed { side, _ -> side != it[e.player.human]!!.side }
             )
         }
-        if (isSpectatingGame(e.player))
-            removeSpectator(e.player)
+        if (isSpectatingGame(e.player.human))
+            removeSpectator(e.player.human)
     }
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.entity as? Player ?: return
-        val game = getGame(ent) ?: return
-        game.renderer.resetPlayer(ent)
+        val game = getGame(ent.human) ?: return
+        game.renderer.resetPlayer(ent.human)
         e.isCancelled = true
     }
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        val player = this[e.player] ?: return
+        val player = this[e.player.human] ?: return
         if (player.isAdmin)
             return
         e.isCancelled = true
@@ -166,21 +165,21 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (this[e.player]?.isAdmin == false) {
+        if (this[e.player.human]?.isAdmin == false) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.whoClicked.let { it is Player && this[it]?.isAdmin == false }) {
+        if (e.whoClicked.let { it is Player && this[it.human]?.isAdmin == false }) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        if (e.whoClicked.let { it is Player && this[it]?.isAdmin == false }) {
+        if (e.whoClicked.let { it is Player && this[it.human]?.isAdmin == false }) {
             e.isCancelled = true
         }
     }
@@ -196,7 +195,7 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (this[e.player]?.isAdmin == false) {
+        if (this[e.player.human]?.isAdmin == false) {
             e.isCancelled = true
         }
     }
@@ -206,9 +205,9 @@ object ChessManager : Listener {
         glog.low("Registering game", e.game.uniqueId)
         games[e.game.uniqueId] = e.game
         e.game.players.forEachReal {
-            glog.low("Registering game player", it.uniqueId)
-            playerGames[it.uniqueId] = playerGames[it.uniqueId].orEmpty() + e.game.uniqueId
-            playerCurrentGames[it.uniqueId] = e.game.uniqueId
+            glog.low("Registering game player", it.bukkit.uniqueId)
+            playerGames[it.bukkit.uniqueId] = playerGames[it.bukkit.uniqueId].orEmpty() + e.game.uniqueId
+            playerCurrentGames[it.bukkit.uniqueId] = e.game.uniqueId
         }
     }
 
@@ -220,7 +219,7 @@ object ChessManager : Listener {
                 ClickEvent.Action.COPY_TO_CLIPBOARD,
                 PGN.generate(e.game).toString()
             )
-        e.game.players.forEachReal { it.spigot().sendMessage(message) }
+        e.game.players.forEachReal { it.bukkit.spigot().sendMessage(message) }
         removeGame(e.game)
     }
 

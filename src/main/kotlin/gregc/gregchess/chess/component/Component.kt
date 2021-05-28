@@ -1,6 +1,6 @@
 package gregc.gregchess.chess.component
 
-import org.bukkit.entity.Player
+import gregc.gregchess.chess.HumanPlayer
 
 interface Component
 
@@ -62,8 +62,8 @@ private fun Collection<Component>.runGameEvent(value: GameBaseEvent, vararg args
 fun Collection<Component>.allInit() = runGameEvent(GameBaseEvent.INIT)
 fun Collection<Component>.allStart() = runGameEvent(GameBaseEvent.START)
 fun Collection<Component>.allUpdate() = runGameEvent(GameBaseEvent.UPDATE)
-fun Collection<Component>.allSpectatorJoin(p: Player) = runGameEvent(GameBaseEvent.SPECTATOR_JOIN, p)
-fun Collection<Component>.allSpectatorLeave(p: Player) = runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, p)
+fun Collection<Component>.allSpectatorJoin(p: HumanPlayer) = runGameEvent(GameBaseEvent.SPECTATOR_JOIN, p)
+fun Collection<Component>.allSpectatorLeave(p: HumanPlayer) = runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, p)
 fun Collection<Component>.allStop() = runGameEvent(GameBaseEvent.STOP)
 fun Collection<Component>.allClear() = runGameEvent(GameBaseEvent.CLEAR)
 fun Collection<Component>.allVeryEnd() = runGameEvent(GameBaseEvent.VERY_END)
@@ -71,5 +71,5 @@ fun Collection<Component>.allStartTurn() = runGameEvent(GameBaseEvent.START_TURN
 fun Collection<Component>.allEndTurn() = runGameEvent(GameBaseEvent.END_TURN)
 fun Collection<Component>.allPrePreviousTurn() = runGameEvent(GameBaseEvent.PRE_PREVIOUS_TURN)
 fun Collection<Component>.allStartPreviousTurn() = runGameEvent(GameBaseEvent.START_PREVIOUS_TURN)
-fun Collection<Component>.allRemovePlayer(p: Player) = runGameEvent(GameBaseEvent.REMOVE_PLAYER, p)
+fun Collection<Component>.allRemovePlayer(p: HumanPlayer) = runGameEvent(GameBaseEvent.REMOVE_PLAYER, p)
 fun Collection<Component>.allPanic(e: Exception) = runGameEvent(GameBaseEvent.PANIC, e)

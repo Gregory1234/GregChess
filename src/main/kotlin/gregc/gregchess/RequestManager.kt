@@ -1,7 +1,9 @@
 package gregc.gregchess
 
+import gregc.gregchess.chess.HumanPlayer
+import gregc.gregchess.chess.bukkit
+import gregc.gregchess.chess.human
 import net.md_5.bungee.api.chat.ClickEvent
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
@@ -22,7 +24,7 @@ object RequestManager : Listener {
     @EventHandler
     fun onPlayerQuit(e: PlayerQuitEvent) {
         requestTypes.forEach {
-            it.quietRemove(e.player)
+            it.quietRemove(e.player.human)
         }
     }
 
@@ -30,7 +32,7 @@ object RequestManager : Listener {
 
 class RequestTypeBuilder<T> internal constructor() {
     lateinit var messages: RequestMessages
-    var validateSender: (Player) -> Boolean = { true }
+    var validateSender: (HumanPlayer) -> Boolean = { true }
     var printT: (T) -> String = { it.toString() }
     var onAccept: (Request<T>) -> Unit = {}
     var onCancel: (Request<T>) -> Unit = {}
@@ -53,7 +55,7 @@ fun <T> buildRequestType(f: RequestTypeBuilder<T>.() -> Unit): RequestType<T> = 
 
 class RequestType<in T>(
     private val messages: RequestMessages,
-    private inline val validateSender: (Player) -> Boolean = { true },
+    private inline val validateSender: (HumanPlayer) -> Boolean = { true },
     private inline val printT: (T) -> String = { it.toString() },
     private inline val onAccept: (Request<T>) -> Unit,
     private inline val onCancel: (Request<T>) -> Unit
@@ -77,7 +79,7 @@ class RequestType<in T>(
             return
         }
         requests[request.uniqueId] = request
-        request.sender.spigot().sendMessage(buildTextComponent {
+        request.sender.bukkit.spigot().sendMessage(buildTextComponent {
             append(view.getString("Sent.Request") + " ")
             append(
                 ConfigManager.getString("Request.Cancel"), ClickEvent(
@@ -86,7 +88,7 @@ class RequestType<in T>(
                 )
             )
         })
-        request.receiver.spigot().sendMessage(buildTextComponent {
+        request.receiver.bukkit.spigot().sendMessage(buildTextComponent {
             append(
                 view.getFormatString(
                     "Received.Request",
@@ -134,7 +136,7 @@ class RequestType<in T>(
         glog.mid("Accepted", request.uniqueId)
     }
 
-    fun accept(p: Player, uniqueId: UUID) {
+    fun accept(p: HumanPlayer, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.receiver)
             p.sendMessage(view.getString("Error.NotFound"))
@@ -150,7 +152,7 @@ class RequestType<in T>(
         glog.mid("Cancelled", request.uniqueId)
     }
 
-    fun cancel(p: Player, uniqueId: UUID) {
+    fun cancel(p: HumanPlayer, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.sender)
             p.sendMessage(view.getString("Error.NotFound"))
@@ -166,14 +168,14 @@ class RequestType<in T>(
         glog.mid("Expired", request.uniqueId)
     }
 
-    fun quietRemove(p: Player) = requests.values.filter { it.sender == p || it.receiver == p }
+    fun quietRemove(p: HumanPlayer) = requests.values.filter { it.sender == p || it.receiver == p }
         .forEach { requests.remove(it.uniqueId) }
 
 }
 
 data class RequestMessages(val name: String, val acceptCommand: String, val cancelCommand: String)
 
-data class Request<out T>(val sender: Player, val receiver: Player, val value: T) {
+data class Request<out T>(val sender: HumanPlayer, val receiver: HumanPlayer, val value: T) {
     val uniqueId: UUID = UUID.randomUUID()
 
     init {

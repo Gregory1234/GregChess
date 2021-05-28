@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import org.bukkit.Bukkit
-import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 import java.time.LocalDateTime
@@ -71,7 +70,7 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
             players[p.side] = p
         }
 
-        fun human(p: Player, side: Side, silent: Boolean) = addPlayer(BukkitChessPlayer(p, side, silent, game))
+        fun human(p: HumanPlayer, side: Side, silent: Boolean) = addPlayer(HumanChessPlayer(p, side, silent, game))
 
         fun engine(name: String, side: Side) = addPlayer(EnginePlayer(ChessEngine(name), side, game))
 
@@ -109,10 +108,10 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
 
     val players: BySides<ChessPlayer>
         get() = require<GameState.WithPlayers>().players
-    val spectators: List<Player>
+    val spectators: List<HumanPlayer>
         get() = (state as? GameState.WithSpectators)?.spectators.orEmpty()
 
-    operator fun contains(p: Player): Boolean = require<GameState.WithPlayers>().contains(p)
+    operator fun contains(p: HumanPlayer): Boolean = require<GameState.WithPlayers>().contains(p)
 
     fun nextTurn() {
         requireRunning()
@@ -178,16 +177,16 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
         return this
     }
 
-    fun spectate(p: Player) {
+    fun spectate(p: HumanPlayer) {
         val st = requireRunning()
         components.allSpectatorJoin(p)
-        st.spectatorUUIDs += p.uniqueId
+        st.spectators += p
     }
 
-    fun spectatorLeave(p: Player) {
+    fun spectatorLeave(p: HumanPlayer) {
         val st = requireRunning()
         components.allSpectatorLeave(p)
-        st.spectatorUUIDs -= p.uniqueId
+        st.spectators -= p
     }
 
     private fun startTurn() {
@@ -283,12 +282,12 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
             }
             spectators.forEach {
                 if (reason.winner != null) {
-                    it.sendDefTitle(
+                    it.sendTitle(
                         ConfigManager.getString("Title.Spectator.${reason.winner.standardName}Won"),
                         ConfigManager.getString(reason.namePath)
                     )
                 } else {
-                    it.sendDefTitle(
+                    it.sendTitle(
                         ConfigManager.getString("Title.Spectator.ItWasADraw"),
                         ConfigManager.getString(reason.namePath)
                     )
@@ -334,7 +333,7 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
         Bukkit.getPluginManager().callEvent(EndEvent(this))
     }
 
-    operator fun get(player: Player): BukkitChessPlayer? = (state as? GameState.WithCurrentPlayer)?.get(player)
+    operator fun get(player: HumanPlayer): HumanChessPlayer? = (state as? GameState.WithCurrentPlayer)?.get(player)
 
     operator fun get(side: Side): ChessPlayer = require<GameState.WithPlayers>()[side]
 

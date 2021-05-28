@@ -21,7 +21,7 @@ class GregChess : JavaPlugin(), Listener {
 
     private val takebackRequest = buildRequestType<Unit> {
         messagesSimple("Takeback", "/chess undo", "/chess undo")
-        validateSender = { (ChessManager.getGame(it)?.currentPlayer?.opponent as? BukkitChessPlayer)?.player == it }
+        validateSender = { (ChessManager.getGame(it)?.currentPlayer?.opponent as? HumanChessPlayer)?.player == it }
         onAccept = { (sender, _, _) -> ChessManager.getGame(sender)?.board?.undoLastMove() }
     }
 
@@ -52,12 +52,12 @@ class GregChess : JavaPlugin(), Listener {
                     when (nextArg().lowercase()) {
                         "accept" -> {
                             cWrongArgument {
-                                duelRequest.accept(player, UUID.fromString(lastArg()))
+                                duelRequest.accept(player.human, UUID.fromString(lastArg()))
                             }
                         }
                         "cancel" -> {
                             cWrongArgument {
-                                duelRequest.cancel(player, UUID.fromString(lastArg()))
+                                duelRequest.cancel(player.human, UUID.fromString(lastArg()))
                             }
                         }
                         else -> {
@@ -65,7 +65,7 @@ class GregChess : JavaPlugin(), Listener {
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!ChessManager.isInGame(opponent), "InGame.Opponent")
                             player.openScreen(SettingsScreen { settings ->
-                                duelRequest += Request(player, opponent, ChessGame(ChessManager.cNextArena(), settings))
+                                duelRequest += Request(player.human, opponent.human, ChessGame(ChessManager.cNextArena(), settings))
                             })
                         }
                     }
@@ -76,7 +76,7 @@ class GregChess : JavaPlugin(), Listener {
                     cRequire(!ChessManager.isInGame(player), "InGame.You")
                     player.openScreen(SettingsScreen { settings ->
                         ChessGame(ChessManager.cNextArena(), settings).addPlayers {
-                            human(player, Side.WHITE, false)
+                            human(player.human, Side.WHITE, false)
                             engine("stockfish", Side.BLACK)
                         }.start()
                     })
@@ -84,25 +84,25 @@ class GregChess : JavaPlugin(), Listener {
                 "resign" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(ChessManager[player], "NotInGame.You")
+                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
                     p.game.stop(ChessGame.EndReason.Resignation(!p.side))
                 }
                 "leave" -> {
                     cPlayer(player)
                     endArgs()
-                    ChessManager.leave(player)
+                    ChessManager.leave(player.human)
                 }
                 "draw" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(ChessManager[player], "NotInGame.You")
-                    val opponent: BukkitChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
-                    drawRequest.simpleCall(Request(player, opponent.player, Unit))
+                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
+                    val opponent: HumanChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
+                    drawRequest.simpleCall(Request(player.human, opponent.player, Unit))
                 }
                 "capture" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
-                    val p = cNotNull(ChessManager[player], "NotInGame.You")
+                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
                     val pos = if (args.size == 1)
                         p.game.renderer.getPos(Loc.fromLocation(player.location))
                     else
@@ -116,7 +116,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 3, 4)
-                    val p = cNotNull(ChessManager[player], "NotInGame.You")
+                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
                     val game = p.game
                     cWrongArgument {
                         val square = if (args.size == 3)
@@ -134,7 +134,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 3, 3)
-                    val p = cNotNull(ChessManager[player], "NotInGame.You")
+                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
                     val game = p.game
                     cWrongArgument {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
@@ -147,14 +147,14 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     endArgs()
-                    val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                    val game = cNotNull(ChessManager.getGame(player.human), "NotInGame.You")
                     game.nextTurn()
                     player.sendMessage(ConfigManager.getString("Message.SkippedTurn"))
                 }
                 "load" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
-                    val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                    val game = cNotNull(ChessManager.getGame(player.human), "NotInGame.You")
                     game.board.setFromFEN(
                         FEN.parseFromString(restString())
                     )
@@ -163,7 +163,7 @@ class GregChess : JavaPlugin(), Listener {
                 "save" -> {
                     cPlayer(player)
                     endArgs()
-                    val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                    val game = cNotNull(ChessManager.getGame(player.human), "NotInGame.You")
                     val message = TextComponent(config.getString("Message.CopyFEN"))
                     message.clickEvent =
                         ClickEvent(
@@ -176,7 +176,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 4, 4)
-                    val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                    val game = cNotNull(ChessManager.getGame(player.human), "NotInGame.You")
                     val clock = cNotNull(game.clock, "ClockNotFound")
                     cWrongArgument {
                         val side = Side.valueOf(nextArg())
@@ -192,7 +192,7 @@ class GregChess : JavaPlugin(), Listener {
                 "uci" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.admin")
-                    val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                    val game = cNotNull(ChessManager.getGame(player.human), "NotInGame.You")
                     val engines = game.players.toList().filterIsInstance<EnginePlayer>()
                     val engine = cNotNull(engines.firstOrNull(), "EngineNotFound")
                     cWrongArgument {
@@ -209,7 +209,7 @@ class GregChess : JavaPlugin(), Listener {
                 "spectate" -> {
                     cPlayer(player)
                     val toSpectate = cServerPlayer(lastArg())
-                    ChessManager.addSpectator(player, toSpectate)
+                    ChessManager.addSpectator(player.human, toSpectate.human)
                 }
                 "reload" -> {
                     cPerms(player, "greg-chess.admin")
@@ -227,10 +227,10 @@ class GregChess : JavaPlugin(), Listener {
                 "undo" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(ChessManager[player], "NotInGame.You")
+                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
                     cNotNull(p.game.board.lastMove, "NothingToTakeback")
-                    val opponent: BukkitChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
-                    takebackRequest.simpleCall(Request(player, opponent.player, Unit))
+                    val opponent: HumanChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
+                    takebackRequest.simpleCall(Request(player.human, opponent.player, Unit))
                 }
                 "debug" -> {
                     cPerms(player, "greg-chess.admin")
@@ -252,20 +252,8 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.admin")
                     endArgs()
-                    val p = cNotNull(ChessManager[player], "NotInGame.You")
+                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
                     p.isAdmin = !p.isAdmin
-                }
-                "simul" -> {
-                    cPlayer(player)
-                    cPerms(player, "greg-chess.admin")
-                    cRequire(!ChessManager.isInGame(player), "InGame.You")
-                    player.openScreen(SettingsScreen { settings ->
-                        val simul = Simul(ChessManager.cNextArena(), settings)
-                        rest().forEach {
-                            simul.addGame(player.name, it)
-                        }
-                        simul.start()
-                    })
                 }
                 else -> cWrongArgument()
             }
@@ -281,7 +269,7 @@ class GregChess : JavaPlugin(), Listener {
                 ) + ifPermission(
                     "greg-chess.debug", "capture", "spawn", "move", "skip", "load", "time"
                 ) + ifPermission(
-                    "greg-chess.admin", "uci", "reload", "dev", "debug", "admin", "simul"
+                    "greg-chess.admin", "uci", "reload", "dev", "debug", "admin"
                 )
                 2 -> when (args[0]) {
                     "duel" -> null
@@ -306,7 +294,7 @@ class GregChess : JavaPlugin(), Listener {
         when (rest().size) {
             0 -> {
                 cPlayer(player)
-                val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                val game = cNotNull(ChessManager.getGame(player.human), "NotInGame.You")
                 cNotNull(game.board[Loc.fromLocation(player.location)]?.piece, "PieceNotFound")
             }
             1 -> {
@@ -319,7 +307,7 @@ class GregChess : JavaPlugin(), Listener {
                     game.board[UUID.fromString(latestArg())]!!
                 } else {
                     cPlayer(player)
-                    val game = cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                    val game = cNotNull(ChessManager.getGame(player.human), "NotInGame.You")
                     cNotNull(game.board[Pos.parseFromString(latestArg())]?.piece, "PieceNotFound")
                 }
             }
@@ -330,7 +318,7 @@ class GregChess : JavaPlugin(), Listener {
         when (rest().size) {
             0 -> {
                 cPlayer(player)
-                cNotNull(ChessManager.getGame(player), "NotInGame.You")
+                cNotNull(ChessManager.getGame(player.human), "NotInGame.You")
             }
             1 -> {
                 cWrongArgument {
@@ -347,7 +335,7 @@ class GregChess : JavaPlugin(), Listener {
 
     @EventHandler
     fun onTurnEnd(e: ChessGame.TurnEndEvent) {
-        if (e.player is BukkitChessPlayer) {
+        if (e.player is HumanChessPlayer) {
             drawRequest.quietRemove(e.player.player)
             takebackRequest.quietRemove(e.player.player)
         }

@@ -3,7 +3,6 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
-import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
@@ -52,7 +51,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
     fun start() {
-        game.players.forEachReal { it.scoreboard = scoreboard }
+        game.players.forEachReal { it.bukkit.scoreboard = scoreboard }
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
@@ -76,8 +75,8 @@ class ScoreboardManager(private val game: ChessGame): Component {
     }
 
     @GameEvent(GameBaseEvent.SPECTATOR_JOIN)
-    fun spectatorJoin(p: Player) {
-        p.scoreboard = scoreboard
+    fun spectatorJoin(p: HumanPlayer) {
+        p.bukkit.scoreboard = scoreboard
     }
 
     @GameEvent(GameBaseEvent.UPDATE, mod = TimeModifier.LATE)

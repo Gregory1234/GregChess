@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import org.bukkit.GameMode
 import org.bukkit.Material
-import org.bukkit.entity.Player
 
 
 abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game: ChessGame) {
@@ -63,7 +62,7 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 
 }
 
-class BukkitChessPlayer(val player: Player, side: Side, silent: Boolean, game: ChessGame) :
+class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(side, silent, game) {
 
     class PawnPromotionScreen(
@@ -84,11 +83,11 @@ class BukkitChessPlayer(val player: Player, side: Side, silent: Boolean, game: C
     var isAdmin = false
         set(value) {
             if (!value) {
-                val loc = player.location
+                val loc = player.bukkit.location
                 game.renderer.resetPlayer(player)
-                player.teleport(loc)
+                player.bukkit.teleport(loc)
             } else {
-                player.gameMode = GameMode.CREATIVE
+                player.bukkit.gameMode = GameMode.CREATIVE
             }
             field = value
         }
@@ -99,14 +98,14 @@ class BukkitChessPlayer(val player: Player, side: Side, silent: Boolean, game: C
         "BukkitChessPlayer(name = $name, side = $side, game.uniqueId = ${game.uniqueId})"
 
     override fun sendMessage(msg: String) = player.sendMessage(msg)
-    override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
+    override fun sendTitle(title: String, subtitle: String) = player.sendTitle(title, subtitle)
 
     fun pickUp(pos: Pos) {
         if (!game.running) return
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
         held = piece
-        player.inventory.setItem(0, piece.item)
+        player.bukkit.inventory.setItem(0, piece.item)
     }
 
     fun makeMove(pos: Pos) {
@@ -116,12 +115,12 @@ class BukkitChessPlayer(val player: Player, side: Side, silent: Boolean, game: C
         val moves = piece.square.bakedLegalMoves ?: return
         if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
         held = null
-        player.inventory.setItem(0, null)
+        player.bukkit.inventory.setItem(0, null)
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1) {
             val promotingMoves = chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } }
-            player.openScreen(PawnPromotionScreen(piece, promotingMoves, this))
+            player.bukkit.openScreen(PawnPromotionScreen(piece, promotingMoves, this))
         } else {
             game.finishMove(chosenMoves.first())
         }
