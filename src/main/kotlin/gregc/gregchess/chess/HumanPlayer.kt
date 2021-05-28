@@ -8,6 +8,7 @@ import java.util.*
 abstract class HumanPlayer(val name: String) {
     abstract var isAdmin: Boolean
     var currentGame: ChessGame? = null
+    val games = mutableListOf<ChessGame>()
 
     abstract fun sendMessage(msg: String)
     abstract fun sendTitle(title: String, subtitle: String = "")

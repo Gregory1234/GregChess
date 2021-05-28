@@ -24,8 +24,6 @@ import java.util.*
 
 object ChessManager : Listener {
 
-    private val playerGames: MutableMap<UUID, List<UUID>> = mutableMapOf()
-    private val playerCurrentGames: MutableMap<UUID, UUID> = mutableMapOf()
     private val spectatorGames: MutableMap<UUID, UUID> = mutableMapOf()
     private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
 
@@ -45,20 +43,15 @@ object ChessManager : Listener {
         games.remove(g.uniqueId)
         arenas[g.arena] = null
         g.players.forEachReal { p ->
-            playerGames[p.bukkit.uniqueId].orEmpty().filter { it != g.uniqueId }.let {
-                if (it.isEmpty())
-                    playerGames.remove(p.bukkit.uniqueId)
-                else
-                    playerGames[p.bukkit.uniqueId] = it
-            }
-            playerCurrentGames.remove(p.bukkit.uniqueId)
+            p.games -= g
+            p.currentGame = null
         }
     }
 
-    fun isInGame(p: HumanEntity) = p.uniqueId in playerGames
+    fun isInGame(p: HumanEntity) = (p as? Player)?.human?.isInGame() == true
 
-    fun getGame(p: HumanPlayer) = games[playerCurrentGames[p.bukkit.uniqueId]]
-    fun getGames(p: HumanPlayer) = playerGames[p.bukkit.uniqueId].orEmpty().mapNotNull { games[it] }
+    fun getGame(p: HumanPlayer) = p.currentGame
+    fun getGames(p: HumanPlayer) = p.games
 
     operator fun get(p: HumanPlayer): HumanChessPlayer? = getGame(p)?.get(p)
 
@@ -206,8 +199,7 @@ object ChessManager : Listener {
         games[e.game.uniqueId] = e.game
         e.game.players.forEachReal {
             glog.low("Registering game player", it.bukkit.uniqueId)
-            playerGames[it.bukkit.uniqueId] = playerGames[it.bukkit.uniqueId].orEmpty() + e.game.uniqueId
-            playerCurrentGames[it.bukkit.uniqueId] = e.game.uniqueId
+            it.games += e.game
             it.currentGame = e.game
         }
     }
