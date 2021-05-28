@@ -58,14 +58,10 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
 
     override var isAdmin = false
         set(value) {
-            if (!value) {
-                val loc = player.location
-                currentGame?.renderer?.resetPlayer(this)
-                player.teleport(loc)
-            } else {
-                player.gameMode = GameMode.CREATIVE
-            }
             field = value
+            val loc = player.location
+            currentGame?.resetPlayer(this)
+            player.teleport(loc)
         }
 
     override fun sendMessage(msg: String) = player.sendMessage(msg)

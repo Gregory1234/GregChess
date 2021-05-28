@@ -74,7 +74,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
         }
     }
 
-    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, relaxed = true)
+    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, GameBaseEvent.RESET_PLAYER, relaxed = true)
     fun spectatorJoin(p: BukkitPlayer) {
         p.player.scoreboard = scoreboard
     }

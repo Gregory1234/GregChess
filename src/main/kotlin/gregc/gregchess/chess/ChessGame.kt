@@ -146,6 +146,9 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
     fun start(): ChessGame {
         try {
             state = GameState.Starting(requireReady())
+            players.forEachReal {
+                components.allAddPlayer(it)
+            }
             components.allInit()
             requireStarting().apply {
                 black.sendTitle("", ConfigManager.getString("Title.YouArePlayingAs.Black"))
@@ -187,6 +190,10 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
         val st = requireRunning()
         components.allSpectatorLeave(p)
         st.spectators -= p
+    }
+
+    fun resetPlayer(p: BukkitPlayer) {
+        components.allResetPlayer(p)
     }
 
     private fun startTurn() {
