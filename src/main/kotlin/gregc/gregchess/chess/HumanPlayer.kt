@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.buildTextComponent
-import gregc.gregchess.sendDefTitle
+import gregc.gregchess.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.GameMode
@@ -28,11 +26,31 @@ abstract class HumanPlayer(val name: String) {
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
     abstract fun setItem(i: Int, item: ItemStack?)
+    abstract fun pawnPromotionScreen(piece: Piece, moves: List<Pair<PieceType, MoveCandidate>>)
 }
 
 abstract class MinecraftPlayer(val uniqueId: UUID, name: String): HumanPlayer(name)
 
 class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(player.uniqueId, player.name) {
+    class PawnPromotionScreen(
+        private val pawn: Piece,
+        private val moves: List<Pair<PieceType, MoveCandidate>>,
+        private val player: ChessPlayer?
+    ) : Screen<MoveCandidate>("Message.PawnPromotion") {
+        override fun getContent() = moves.mapIndexed { i, (t, m) ->
+            ScreenOption(t.getItem(pawn.side), m, InventoryPosition.fromIndex(i))
+        }
+
+        override fun onClick(v: MoveCandidate) {
+            player?.game?.finishMove(v)
+        }
+
+        override fun onCancel() {
+            player?.game?.finishMove(moves.first().second)
+        }
+
+    }
+
     companion object {
         private val bukkitPlayers = mutableMapOf<Player, BukkitPlayer>()
         fun toHuman(p: Player) = bukkitPlayers.getOrPut(p){ BukkitPlayer(p) }
@@ -70,9 +88,11 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     override fun setItem(i: Int, item: ItemStack?) {
         player.inventory.setItem(i, item)
     }
-}
 
-val HumanPlayer.bukkit get() = (this as BukkitPlayer).player
+    override fun pawnPromotionScreen(piece: Piece, moves: List<Pair<PieceType, MoveCandidate>>) {
+        player.openScreen(PawnPromotionScreen(piece, moves, chess))
+    }
+}
 
 val HumanPlayer.chess get() = this.currentGame?.get(this)
 

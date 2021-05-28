@@ -64,21 +64,6 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(side, silent, game) {
 
-    class PawnPromotionScreen(
-        private val pawn: Piece,
-        private val moves: List<Pair<PieceType, MoveCandidate>>,
-        private val player: ChessPlayer
-    ) : Screen<MoveCandidate>("Message.PawnPromotion") {
-        override fun getContent() = moves.mapIndexed { i, (t, m) ->
-            ScreenOption(t.getItem(pawn.side), m, InventoryPosition.fromIndex(i))
-        }
-
-        override fun onClick(v: MoveCandidate) = player.game.finishMove(v)
-
-        override fun onCancel() = player.game.finishMove(moves.first().second)
-
-    }
-
     override val name = player.name
 
     override fun toString() =
@@ -107,7 +92,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1) {
             val promotingMoves = chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } }
-            player.bukkit.openScreen(PawnPromotionScreen(piece, promotingMoves, this))
+            player.pawnPromotionScreen(piece, promotingMoves)
         } else {
             game.finishMove(chosenMoves.first())
         }
