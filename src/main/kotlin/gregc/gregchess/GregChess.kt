@@ -15,7 +15,7 @@ class GregChess : JavaPlugin(), Listener {
 
     private val drawRequest = buildRequestType<Unit> {
         messagesSimple("Draw", "/chess draw", "/chess draw")
-        validateSender = { ChessManager[it]?.hasTurn ?: false }
+        validateSender = { it.chess?.hasTurn ?: false }
         onAccept = { (sender, _, _) -> sender.currentGame?.stop(ChessGame.EndReason.DrawAgreement())}
     }
 
@@ -84,7 +84,7 @@ class GregChess : JavaPlugin(), Listener {
                 "resign" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
+                    val p = cNotNull(player.human.chess, "NotInGame.You")
                     p.game.stop(ChessGame.EndReason.Resignation(!p.side))
                 }
                 "leave" -> {
@@ -95,14 +95,14 @@ class GregChess : JavaPlugin(), Listener {
                 "draw" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
+                    val p = cNotNull(player.human.chess, "NotInGame.You")
                     val opponent: HumanChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
                     drawRequest.simpleCall(Request(player.human, opponent.player, Unit))
                 }
                 "capture" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
-                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
+                    val p = cNotNull(player.human.chess, "NotInGame.You")
                     val pos = if (args.size == 1)
                         p.game.renderer.getPos(Loc.fromLocation(player.location))
                     else
@@ -116,7 +116,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 3, 4)
-                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
+                    val p = cNotNull(player.human.chess, "NotInGame.You")
                     val game = p.game
                     cWrongArgument {
                         val square = if (args.size == 3)
@@ -134,7 +134,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 3, 3)
-                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
+                    val p = cNotNull(player.human.chess, "NotInGame.You")
                     val game = p.game
                     cWrongArgument {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
@@ -209,7 +209,7 @@ class GregChess : JavaPlugin(), Listener {
                 "spectate" -> {
                     cPlayer(player)
                     val toSpectate = cServerPlayer(lastArg())
-                    ChessManager.addSpectator(player.human, toSpectate.human)
+                    player.human.spectatedGame = cNotNull(toSpectate.human.currentGame, "NotInGame.Player")
                 }
                 "reload" -> {
                     cPerms(player, "greg-chess.admin")
@@ -227,7 +227,7 @@ class GregChess : JavaPlugin(), Listener {
                 "undo" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
+                    val p = cNotNull(player.human.chess, "NotInGame.You")
                     cNotNull(p.game.board.lastMove, "NothingToTakeback")
                     val opponent: HumanChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
                     takebackRequest.simpleCall(Request(player.human, opponent.player, Unit))

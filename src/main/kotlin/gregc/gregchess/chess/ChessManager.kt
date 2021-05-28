@@ -46,20 +46,7 @@ object ChessManager : Listener {
         }
     }
 
-    operator fun get(p: HumanPlayer): HumanChessPlayer? = p.currentGame?.get(p)
-
     operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uniqueId == uuid }
-
-    private fun removeSpectator(p: HumanPlayer) {
-        val g = p.spectatedGame ?: return
-        g.spectatorLeave(p)
-        p.spectatedGame = null
-    }
-
-    private fun addSpectator(p: HumanPlayer, g: ChessGame) {
-        p.spectatedGame = g
-        g.spectate(p)
-    }
 
     private val arenas = mutableMapOf<Arena, ChessGame?>()
 
@@ -83,18 +70,7 @@ object ChessManager : Listener {
                 BySides(Unit, Unit).mapIndexed { side, _ -> side != it[player]!!.side }
             )
         }
-        if (player.isSpectating())
-            removeSpectator(player)
-    }
-
-    fun addSpectator(player: HumanPlayer, toSpectate: HumanPlayer) {
-        val spec = cNotNull(this[toSpectate], "NotInGame.Player")
-        val game = player.currentGame
-        if (game != null) {
-            cRequire(player !in game, "InGame.You")
-            removeSpectator(player)
-        }
-        addSpectator(player, spec.game)
+        player.spectatedGame = null
     }
 
     fun reload() {
@@ -117,8 +93,7 @@ object ChessManager : Listener {
                 BySides(Unit, Unit).mapIndexed { side, _ -> side != it[e.player.human]!!.side }
             )
         }
-        if (e.player.human.isSpectating())
-            removeSpectator(e.player.human)
+        e.player.human.spectatedGame = null
     }
 
     @EventHandler
@@ -131,7 +106,7 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        val player = this[e.player.human] ?: return
+        val player = e.player.human.chess ?: return
         if (!e.player.human.isInGame() || e.player.human.isAdmin)
             return
         e.isCancelled = true

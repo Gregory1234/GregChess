@@ -9,6 +9,11 @@ abstract class HumanPlayer(val name: String) {
     abstract var isAdmin: Boolean
     var currentGame: ChessGame? = null
     var spectatedGame: ChessGame? = null
+        set(v) {
+            field?.spectatorLeave(this)
+            field = v
+            field?.spectate(this)
+        }
     val games = mutableListOf<ChessGame>()
 
     abstract fun sendMessage(msg: String)
@@ -21,7 +26,7 @@ abstract class MinecraftPlayer(val uniqueId: UUID, name: String): HumanPlayer(na
 
 class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(player.uniqueId, player.name) {
     companion object {
-        private val bukkitPlayers = mutableMapOf<Player, HumanPlayer>()
+        private val bukkitPlayers = mutableMapOf<Player, BukkitPlayer>()
         fun toHuman(p: Player) = bukkitPlayers.getOrPut(p){ BukkitPlayer(p) }
     }
 
@@ -43,5 +48,7 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
 }
 
 val HumanPlayer.bukkit get() = (this as BukkitPlayer).player
+
+val HumanPlayer.chess get() = this.currentGame?.get(this)
 
 val Player.human get() = BukkitPlayer.toHuman(this)
