@@ -5,7 +5,6 @@ import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.World
 import org.bukkit.block.BlockFace
-import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -48,12 +47,10 @@ object ChessManager : Listener {
         }
     }
 
-    fun isInGame(p: HumanEntity) = (p as? Player)?.human?.isInGame() == true
-
     fun getGame(p: HumanPlayer) = p.currentGame
     fun getGames(p: HumanPlayer) = p.games
 
-    operator fun get(p: HumanPlayer): HumanChessPlayer? = getGame(p)?.get(p)
+    operator fun get(p: HumanPlayer): HumanChessPlayer? = p.currentGame?.get(p)
 
     operator fun get(uuid: UUID): ChessGame? = games[uuid]
 
@@ -100,7 +97,7 @@ object ChessManager : Listener {
 
     fun addSpectator(player: HumanPlayer, toSpectate: HumanPlayer) {
         val spec = cNotNull(this[toSpectate], "NotInGame.Player")
-        val game = getGame(player)
+        val game = player.currentGame
         if (game != null) {
             cRequire(player !in game, "InGame.You")
             removeSpectator(player)
@@ -135,7 +132,7 @@ object ChessManager : Listener {
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.entity as? Player ?: return
-        val game = getGame(ent.human) ?: return
+        val game = ent.human.currentGame ?: return
         game.renderer.resetPlayer(ent.human)
         e.isCancelled = true
     }
