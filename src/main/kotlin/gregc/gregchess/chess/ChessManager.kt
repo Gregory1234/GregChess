@@ -23,12 +23,11 @@ import java.util.*
 
 object ChessManager : Listener {
 
-    private val spectatorGames: MutableMap<UUID, UUID> = mutableMapOf()
-    private val games: MutableMap<UUID, ChessGame> = mutableMapOf()
+    private val games = mutableListOf<ChessGame>()
 
-    private fun forEachGame(function: (ChessGame) -> Unit) = games.values.forEach(function)
+    private fun forEachGame(function: (ChessGame) -> Unit) = games.forEach(function)
 
-    fun firstGame(function: (ChessGame) -> Boolean): ChessGame? = games.values.firstOrNull(function)
+    fun firstGame(function: (ChessGame) -> Boolean): ChessGame? = games.firstOrNull(function)
 
     fun registerArena(game: ChessGame) {
         arenas[game.arena] = game
@@ -39,7 +38,7 @@ object ChessManager : Listener {
     }
 
     private fun removeGame(g: ChessGame) {
-        games.remove(g.uniqueId)
+        games -= g
         arenas[g.arena] = null
         g.players.forEachReal { p ->
             p.games -= g
@@ -47,25 +46,18 @@ object ChessManager : Listener {
         }
     }
 
-    fun getGame(p: HumanPlayer) = p.currentGame
-    fun getGames(p: HumanPlayer) = p.games
-
     operator fun get(p: HumanPlayer): HumanChessPlayer? = p.currentGame?.get(p)
 
-    operator fun get(uuid: UUID): ChessGame? = games[uuid]
-
-    private fun isSpectatingGame(p: HumanPlayer) = p.bukkit.uniqueId in spectatorGames
-
-    private fun getGameSpectator(p: HumanPlayer) = games[spectatorGames[p.bukkit.uniqueId]]
+    operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uniqueId == uuid }
 
     private fun removeSpectator(p: HumanPlayer) {
-        val g = getGameSpectator(p) ?: return
+        val g = p.spectatedGame ?: return
         g.spectatorLeave(p)
-        spectatorGames.remove(p.bukkit.uniqueId)
+        p.spectatedGame = null
     }
 
     private fun addSpectator(p: HumanPlayer, g: ChessGame) {
-        spectatorGames[p.bukkit.uniqueId] = g.uniqueId
+        p.spectatedGame = g
         g.spectate(p)
     }
 
@@ -83,15 +75,15 @@ object ChessManager : Listener {
     }
 
     fun leave(player: HumanPlayer) {
-        val p = getGames(player)
-        cRequire(p.isNotEmpty() || isSpectatingGame(player), "InGame.You")
+        val p = player.games
+        cRequire(p.isNotEmpty() || player.isSpectating(), "InGame.You")
         p.forEach {
             it.stop(
                 ChessGame.EndReason.Walkover(!it[player]!!.side),
                 BySides(Unit, Unit).mapIndexed { side, _ -> side != it[player]!!.side }
             )
         }
-        if (isSpectatingGame(player))
+        if (player.isSpectating())
             removeSpectator(player)
     }
 
@@ -118,14 +110,14 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
-        val p = getGames(e.player.human)
+        val p = e.player.human.games
         p.forEach {
             it.stop(
                 ChessGame.EndReason.Walkover(!it[e.player.human]!!.side),
                 BySides(Unit, Unit).mapIndexed { side, _ -> side != it[e.player.human]!!.side }
             )
         }
-        if (isSpectatingGame(e.player.human))
+        if (e.player.human.isSpectating())
             removeSpectator(e.player.human)
     }
 
@@ -193,7 +185,7 @@ object ChessManager : Listener {
     @EventHandler
     fun onChessGameStart(e: ChessGame.StartEvent) {
         glog.low("Registering game", e.game.uniqueId)
-        games[e.game.uniqueId] = e.game
+        games += e.game
         e.game.players.forEachReal {
             glog.low("Registering game player", it.bukkit.uniqueId)
             it.games += e.game

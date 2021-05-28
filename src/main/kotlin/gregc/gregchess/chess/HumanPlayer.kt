@@ -8,11 +8,13 @@ import java.util.*
 abstract class HumanPlayer(val name: String) {
     abstract var isAdmin: Boolean
     var currentGame: ChessGame? = null
+    var spectatedGame: ChessGame? = null
     val games = mutableListOf<ChessGame>()
 
     abstract fun sendMessage(msg: String)
     abstract fun sendTitle(title: String, subtitle: String = "")
     fun isInGame(): Boolean = currentGame != null
+    fun isSpectating(): Boolean = spectatedGame != null
 }
 
 abstract class MinecraftPlayer(val uniqueId: UUID, name: String): HumanPlayer(name)
