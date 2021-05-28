@@ -80,18 +80,6 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
 
     }
 
-    var isAdmin = false
-        set(value) {
-            if (!value) {
-                val loc = player.bukkit.location
-                game.renderer.resetPlayer(player)
-                player.bukkit.teleport(loc)
-            } else {
-                player.bukkit.gameMode = GameMode.CREATIVE
-            }
-            field = value
-        }
-
     override val name = player.name
 
     override fun toString() =

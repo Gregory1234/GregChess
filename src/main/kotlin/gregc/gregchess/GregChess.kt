@@ -252,8 +252,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.admin")
                     endArgs()
-                    val p = cNotNull(ChessManager[player.human], "NotInGame.You")
-                    p.isAdmin = !p.isAdmin
+                    player.human.isAdmin = !player.human.isAdmin
                 }
                 else -> cWrongArgument()
             }

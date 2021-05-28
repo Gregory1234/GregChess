@@ -150,7 +150,7 @@ object ChessManager : Listener {
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
         val player = this[e.player.human] ?: return
-        if (player.isAdmin)
+        if (!e.player.human.isInGame() || e.player.human.isAdmin)
             return
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
@@ -165,21 +165,21 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (this[e.player.human]?.isAdmin == false) {
+        if (e.player.human.isInGame() && !e.player.human.isAdmin) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.whoClicked.let { it is Player && this[it.human]?.isAdmin == false }) {
+        if (e.whoClicked.let { it is Player && it.human.isInGame() && !it.human.isAdmin }) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        if (e.whoClicked.let { it is Player && this[it.human]?.isAdmin == false }) {
+        if (e.whoClicked.let { it is Player && it.human.isInGame() && !it.human.isAdmin }) {
             e.isCancelled = true
         }
     }
@@ -195,7 +195,7 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (this[e.player.human]?.isAdmin == false) {
+        if (e.player.human.isInGame() && !e.player.human.isAdmin) {
             e.isCancelled = true
         }
     }
@@ -208,6 +208,7 @@ object ChessManager : Listener {
             glog.low("Registering game player", it.bukkit.uniqueId)
             playerGames[it.bukkit.uniqueId] = playerGames[it.bukkit.uniqueId].orEmpty() + e.game.uniqueId
             playerCurrentGames[it.bukkit.uniqueId] = e.game.uniqueId
+            it.currentGame = e.game
         }
     }
 
@@ -228,12 +229,6 @@ object ChessManager : Listener {
         if (e.location.world?.isArena() == true) {
             e.isCancelled = true
         }
-    }
-
-    fun moveToGame(player: Player, newGame: ChessGame) {
-        if (newGame.uniqueId !in playerGames[player.uniqueId].orEmpty())
-            throw IllegalStateException("Player is not in that game")
-        playerCurrentGames[player.uniqueId] = newGame.uniqueId
     }
 
     fun nextArena(): Arena? = arenas.toList().firstOrNull { (_, game) -> game == null }?.first
