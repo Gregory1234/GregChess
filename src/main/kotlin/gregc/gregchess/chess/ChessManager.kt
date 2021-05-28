@@ -1,23 +1,18 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import net.md_5.bungee.api.chat.ClickEvent
-import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.World
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import org.bukkit.event.weather.WeatherChangeEvent
 import java.util.*
 
 
@@ -129,7 +124,7 @@ object ChessManager : Listener {
         glog.low("Registering game", e.game.uniqueId)
         games += e.game
         e.game.players.forEachReal {
-            glog.low("Registering game player", it.bukkit.uniqueId)
+            glog.low("Registering game player", it)
             it.games += e.game
             it.currentGame = e.game
         }
@@ -137,16 +132,9 @@ object ChessManager : Listener {
 
     @EventHandler
     fun onChessGameEnd(e: ChessGame.EndEvent) {
-        val message = TextComponent(ConfigManager.getString("Message.CopyPGN"))
-        message.clickEvent =
-            ClickEvent(
-                ClickEvent.Action.COPY_TO_CLIPBOARD,
-                PGN.generate(e.game).toString()
-            )
-        e.game.players.forEachReal { it.bukkit.spigot().sendMessage(message) }
+        val pgn = PGN.generate(e.game)
+        e.game.players.forEachReal { it.sendPGN(pgn) }
         removeGame(e.game)
     }
-
-
 
 }

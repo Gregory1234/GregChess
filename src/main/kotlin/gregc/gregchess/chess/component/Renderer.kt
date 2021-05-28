@@ -75,7 +75,7 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
 
     @GameEvent(GameBaseEvent.INIT, mod = TimeModifier.EARLY)
     fun init() {
-        game.players.forEachReal { it.join() }
+        game.players.forEachReal { (it as? BukkitPlayer)?.join() }
     }
 
     fun renderBoardBase() {
@@ -87,44 +87,46 @@ class Renderer(private val game: ChessGame, private val settings: Settings): Com
         fill(FillVolume(world, Material.AIR, Loc(0,100,0) + settings.offset, Loc(8 * (settings.tileSize+2)-1,105,8 * (settings.tileSize+2)-1) + settings.offset))
     }
 
-    private fun HumanPlayer.join(d: PlayerData = defData){
-        if (bukkit.uniqueId in data)
+    private fun BukkitPlayer.join(d: PlayerData = defData){
+        if (uniqueId in data)
             throw IllegalStateException("player already teleported")
-        data[bukkit.uniqueId] = bukkit.playerData
+        data[uniqueId] = player.playerData
         reset(d)
     }
 
-    private fun HumanPlayer.leave(){
-        if (bukkit.uniqueId !in data)
+    private fun BukkitPlayer.leave(){
+        if (uniqueId !in data)
             throw IllegalStateException("player data not found")
-        bukkit.playerData = data[bukkit.uniqueId]!!
-        data.remove(bukkit.uniqueId)
+        player.playerData = data[uniqueId]!!
+        data.remove(uniqueId)
     }
 
-    private fun HumanPlayer.reset(d: PlayerData = defData) {
-        bukkit.playerData = d
-        bukkit.teleport(spawnLocation.toLocation(this@Renderer.world))
-        game[this]?.held?.let { bukkit.inventory.setItem(0, it.item )}
+    private fun BukkitPlayer.reset(d: PlayerData = defData) {
+        player.playerData = d
+        player.teleport(spawnLocation.toLocation(this@Renderer.world))
+        game[this]?.held?.let { setItem(0, it.item )}
     }
 
     @GameEvent(GameBaseEvent.PANIC)
     fun evacuate() {
-        game.players.forEachReal { it.leave() }
+        game.players.forEachReal { (it as? BukkitPlayer)?.leave() }
     }
 
     @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY)
     fun spectatorJoin(p: HumanPlayer) {
-        p.join(spectatorData)
+        (p as? BukkitPlayer)?.join(spectatorData)
     }
 
     @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, mod = TimeModifier.LATE)
     fun spectatorLeave(p: HumanPlayer) {
-        p.leave()
+        (p as? BukkitPlayer)?.leave()
     }
     @GameEvent(GameBaseEvent.REMOVE_PLAYER)
     fun removePlayer(p: HumanPlayer) {
-        p.leave()
+        (p as? BukkitPlayer)?.leave()
     }
 
-    fun resetPlayer(p: HumanPlayer, d: PlayerData = defData) = p.reset(d)
+    fun resetPlayer(p: HumanPlayer, d: PlayerData = defData) {
+        (p as? BukkitPlayer)?.reset(d)
+    }
 }

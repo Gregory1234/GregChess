@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.GameMode
 import org.bukkit.Material
 
 
@@ -93,7 +92,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
         held = piece
-        player.bukkit.inventory.setItem(0, piece.item)
+        player.setItem(0, piece.item)
     }
 
     fun makeMove(pos: Pos) {
@@ -103,7 +102,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         val moves = piece.square.bakedLegalMoves ?: return
         if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
         held = null
-        player.bukkit.inventory.setItem(0, null)
+        player.setItem(0, null)
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1) {

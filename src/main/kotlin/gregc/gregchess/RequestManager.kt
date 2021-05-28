@@ -1,9 +1,7 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.HumanPlayer
-import gregc.gregchess.chess.bukkit
 import gregc.gregchess.chess.human
-import net.md_5.bungee.api.chat.ClickEvent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
@@ -79,30 +77,16 @@ class RequestType<in T>(
             return
         }
         requests[request.uniqueId] = request
-        request.sender.bukkit.spigot().sendMessage(buildTextComponent {
-            append(view.getString("Sent.Request") + " ")
-            append(
-                ConfigManager.getString("Request.Cancel"), ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
-                    if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
-                )
-            )
-        })
-        request.receiver.bukkit.spigot().sendMessage(buildTextComponent {
-            append(
-                view.getFormatString(
-                    "Received.Request",
-                    request.sender.name,
-                    printT(request.value)
-                ) + " "
-            )
-            append(
-                ClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
-                    if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
-                )
-            )
-        })
+        request.sender.sendCommandMessage(
+            view.getString("Sent.Request") + " ",
+            ConfigManager.getString("Request.Cancel"),
+            if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
+        )
+        request.receiver.sendCommandMessage(
+            view.getFormatString("Received.Request", request.sender.name, printT(request.value)) + " ",
+            ConfigManager.getString("Request.Cancel"),
+            if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
+        )
         val duration = ConfigManager.getOptionalDuration("Request.$root.Duration")
         if (duration != null)
             TimeManager.runTaskLater(duration) {

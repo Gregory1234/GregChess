@@ -51,7 +51,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
     fun start() {
-        game.players.forEachReal { it.bukkit.scoreboard = scoreboard }
+        game.players.forEachReal { (it as? BukkitPlayer)?.player?.scoreboard = scoreboard }
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
@@ -76,7 +76,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     @GameEvent(GameBaseEvent.SPECTATOR_JOIN)
     fun spectatorJoin(p: HumanPlayer) {
-        p.bukkit.scoreboard = scoreboard
+        (p as? BukkitPlayer)?.player?.scoreboard = scoreboard
     }
 
     @GameEvent(GameBaseEvent.UPDATE, mod = TimeModifier.LATE)
