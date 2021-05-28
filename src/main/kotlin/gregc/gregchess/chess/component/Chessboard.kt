@@ -1,9 +1,7 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.Loc
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.glog
-import gregc.gregchess.rangeTo
 import java.util.*
 import kotlin.math.abs
 
@@ -63,7 +61,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     operator fun get(pos: Pos) = squares[pos]
 
-    operator fun get(loc: Loc) = this[game.renderer.getPos(loc)]
+    operator fun get(loc: Loc) = this[cNotNull(game.withRenderer<Loc, Pos> { it.getPos(loc) }, "RendererNotFound")]
 
     private val moves: MutableList<MoveData> = mutableListOf()
 
@@ -128,14 +126,14 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     private fun render() {
-        game.renderer.renderBoardBase()
+        game.renderers.forEach { it.renderBoardBase() }
         squares.values.forEach { it.render() }
         glog.mid("Rendered chessboard", game.uniqueId)
     }
 
     @GameEvent(GameBaseEvent.CLEAR, GameBaseEvent.PANIC)
     fun clear() {
-        game.renderer.removeBoard()
+        game.renderers.forEach { it.removeBoard() }
         glog.mid("Cleared chessboard", game.uniqueId)
     }
 

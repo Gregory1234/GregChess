@@ -121,7 +121,7 @@ data class Square(val pos: Pos, val game: ChessGame) {
     override fun toString() = "Square(game.uniqueId = ${game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
 
     fun render() {
-        game.renderer.fillFloor(pos, floor)
+        game.renderers.forEach { it.fillFloor(pos, floor) }
     }
 
     fun clear() {
@@ -130,7 +130,7 @@ data class Square(val pos: Pos, val game: ChessGame) {
         bakedMoves = null
         previousMoveMarker = null
         moveMarker = null
-        game.renderer.fillFloor(pos, floor)
+        game.renderers.forEach { it.fillFloor(pos, floor) }
     }
 
     fun neighbours() = pos.neighbours().mapNotNull { this.board[it] }

@@ -56,11 +56,11 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     ) {
 
         fun render() {
-            game.renderer.renderCapturedPiece(pos, by, type.getStructure(side))
+            game.renderers.forEach { it.renderCapturedPiece(pos, by, type.getStructure(side)) }
         }
 
         fun hide() {
-            game.renderer.renderCapturedPiece(pos, by, type.getStructure(side).map { Material.AIR })
+            game.renderers.forEach { it.renderCapturedPiece(pos, by, type.getStructure(side).map { Material.AIR }) }
         }
     }
 
@@ -70,11 +70,11 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     }
 
     private fun render() {
-        game.renderer.renderPiece(pos, type.getStructure(side))
+        game.renderers.forEach { it.renderPiece(pos, type.getStructure(side)) }
     }
 
     private fun hide() {
-        game.renderer.renderPiece(pos, type.getStructure(side).map { Material.AIR })
+        game.renderers.forEach { it.renderPiece(pos, type.getStructure(side).map { Material.AIR }) }
     }
 
     fun move(target: Square) {
@@ -112,7 +112,7 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     }
 
     private fun playSound(s: Sound) {
-        game.renderer.playPieceSound(pos, s)
+        game.renderers.forEach { it.playPieceSound(pos, s) }
     }
 
     private fun playPickUpSound() = playSound(type.getSound("PickUp"))

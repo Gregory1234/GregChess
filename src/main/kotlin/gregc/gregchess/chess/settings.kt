@@ -1,10 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.ChessClock
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Renderer
-import gregc.gregchess.chess.component.ScoreboardManager
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
@@ -25,7 +22,7 @@ object SettingsManager {
                 val tileSize = child.getInt("TileSize", 3, false)
                 GameSettings(
                     key, simpleCastling, variant,
-                    board, clock, Renderer.Settings(tileSize), ScoreboardManager.Settings()
+                    board, clock, listOf(BukkitRenderer.Settings(tileSize)), ScoreboardManager.Settings()
                 )
             }
         }
@@ -58,6 +55,6 @@ data class GameSettings(
     val variant: ChessVariant,
     val board: Chessboard.Settings,
     val clock: ChessClock.Settings?,
-    val renderer: Renderer.Settings,
+    val renderers: List<Renderer.Settings<*>>,
     val scoreboard: ScoreboardManager.Settings
 )

@@ -105,7 +105,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.debug")
                     val p = cNotNull(player.human.chess, "NotInGame.You")
                     val pos = if (args.size == 1)
-                        p.game.renderer.getPos(Loc.fromLocation(player.location))
+                        cNotNull(p.game.withRenderer<Loc, Pos> { it.getPos(Loc.fromLocation(player.location)) }, "RendererNotFound")
                     else
                         cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()

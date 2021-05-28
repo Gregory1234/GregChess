@@ -83,10 +83,11 @@ object ChessManager : Listener {
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
+            val pos = cNotNull(player.game.withRenderer<Loc, Pos> { it.getPos(block.loc) }, "RendererNotFound")
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
-                player.pickUp(player.game.renderer.getPos(block.loc))
+                player.pickUp(pos)
             } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {
-                player.makeMove(player.game.renderer.getPos(block.loc))
+                player.makeMove(pos)
             }
         }
     }

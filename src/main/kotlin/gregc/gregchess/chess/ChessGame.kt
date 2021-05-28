@@ -21,11 +21,11 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
 
     val clock: ChessClock? = settings.clock?.getComponent(this)
 
-    val renderer: Renderer = settings.renderer.getComponent(this)
+    val renderers: List<Renderer<*>> = settings.renderers.map{ it.getComponent(this) }
 
     val scoreboard = settings.scoreboard.getComponent(this)
 
-    private val components = listOfNotNull(board, clock, renderer, scoreboard, arena).toMutableList()
+    private val components = listOfNotNull(board, clock, *renderers.toTypedArray(), scoreboard, arena).toMutableList()
 
     init {
         arena.game = this
@@ -34,6 +34,10 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
     fun registerComponent(c: Component) {
         components.add(components.size - 3, c)
     }
+
+    @Suppress("unchecked_cast")
+    fun <T, R> withRenderer(block: (Renderer<T>) -> R): R? =
+        renderers.firstNotNullOfOrNull { try {block(it as Renderer<T>)} catch (e: Exception) { null } }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
