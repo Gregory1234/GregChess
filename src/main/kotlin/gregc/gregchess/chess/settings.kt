@@ -22,7 +22,7 @@ object SettingsManager {
                 val tileSize = child.getInt("TileSize", 3, false)
                 GameSettings(
                     key, simpleCastling, variant,
-                    board, clock, listOf(BukkitRenderer.Settings(tileSize)), ScoreboardManager.Settings()
+                    listOfNotNull(board, clock, BukkitRenderer.Settings(tileSize), ScoreboardManager.Settings())
                 )
             }
         }
@@ -53,8 +53,7 @@ data class GameSettings(
     val name: String,
     val simpleCastling: Boolean,
     val variant: ChessVariant,
-    val board: Chessboard.Settings,
-    val clock: ChessClock.Settings?,
-    val renderers: List<Renderer.Settings<*>>,
-    val scoreboard: ScoreboardManager.Settings
-)
+    val components: Collection<Component.Settings<*>>
+) {
+    inline fun <reified T : Component.Settings<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
+}

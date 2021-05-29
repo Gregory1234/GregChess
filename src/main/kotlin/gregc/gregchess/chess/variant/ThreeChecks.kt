@@ -6,6 +6,10 @@ import gregc.gregchess.chess.component.*
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
     class CheckCounter(private val game: ChessGame) : Component {
+        class Settings: Component.Settings<CheckCounter> {
+            override fun getComponent(game: ChessGame) = CheckCounter(game)
+        }
+
         private var checks = MutableBySides(0,0)
 
         @GameEvent(GameBaseEvent.START)
@@ -34,12 +38,15 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         ChessGame.EndReason("Chess.EndReason.ThreeChecks", "normal", winner)
 
     override fun start(game: ChessGame) {
-        game.registerComponent(CheckCounter(game))
+        game.requireComponent<CheckCounter>()
     }
 
     override fun checkForGameEnd(game: ChessGame) {
-        game.getComponent<CheckCounter>()?.checkForGameEnd()
+        game.requireComponent<CheckCounter>().checkForGameEnd()
         Normal.checkForGameEnd(game)
     }
+
+    override val extraComponents: Collection<Component.Settings<*>>
+        get() = listOf(CheckCounter.Settings())
 
 }

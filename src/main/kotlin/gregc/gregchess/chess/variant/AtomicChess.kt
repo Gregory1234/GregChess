@@ -5,6 +5,10 @@ import gregc.gregchess.chess.component.*
 
 object AtomicChess : ChessVariant("Atomic") {
     class ExplosionManager(private val game: ChessGame) : Component {
+        class Settings: Component.Settings<ExplosionManager> {
+            override fun getComponent(game: ChessGame) = ExplosionManager(game)
+        }
+
         private val explosions = mutableListOf<List<Pair<BoardPiece, CapturedPiece>>>()
 
         fun explode(pos: Pos) {
@@ -34,7 +38,7 @@ object AtomicChess : ChessVariant("Atomic") {
         ChessGame.EndReason("Chess.EndReason.Atomic", "normal", winner)
 
     override fun start(game: ChessGame) {
-        game.registerComponent(ExplosionManager(game))
+        game.requireComponent<ExplosionManager>()
     }
 
     private fun nextToKing(side: Side, pos: Pos, board: Chessboard): Boolean =
@@ -95,7 +99,10 @@ object AtomicChess : ChessVariant("Atomic") {
 
     override fun undoLastMove(move: MoveData) {
         if (move.captured)
-            move.origin.game.getComponent<ExplosionManager>()?.reverseExplosion()
+            move.origin.game.requireComponent<ExplosionManager>().reverseExplosion()
         move.undo()
     }
+
+    override val extraComponents: Collection<Component.Settings<*>>
+        get() = listOf(ExplosionManager.Settings())
 }

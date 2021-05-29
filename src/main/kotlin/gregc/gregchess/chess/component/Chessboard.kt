@@ -6,8 +6,9 @@ import java.util.*
 import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
-    data class Settings(val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) {
-        fun getComponent(game: ChessGame) = Chessboard(game, this)
+    data class Settings(val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false)
+        : Component.Settings<Chessboard> {
+        override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN(game: ChessGame) = initialFEN ?: game.variant.genFEN(chess960)
 

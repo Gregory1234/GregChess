@@ -7,9 +7,7 @@ import java.util.*
 import kotlin.math.floor
 
 interface Renderer<in T>: Component {
-    interface Settings<in T> {
-        fun getComponent(game: ChessGame): Renderer<T>
-    }
+    interface Settings<in T>: Component.Settings<Renderer<T>>
     fun getPos(loc: T): Pos
     fun renderPiece(pos: Pos, piece: Piece)
     fun clearPiece(pos: Pos)

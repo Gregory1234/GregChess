@@ -1,8 +1,13 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.chess.HumanPlayer
+import gregc.gregchess.chess.*
+import kotlin.reflect.KClass
 
-interface Component
+interface Component{
+    interface Settings<out T: Component> {
+        fun getComponent(game: ChessGame): T
+    }
+}
 
 enum class GameBaseEvent {
     INIT,
@@ -79,3 +84,5 @@ fun Collection<Component>.allAddPlayer(p: HumanPlayer) = runGameEvent(GameBaseEv
 fun Collection<Component>.allRemovePlayer(p: HumanPlayer) = runGameEvent(GameBaseEvent.REMOVE_PLAYER, p)
 fun Collection<Component>.allResetPlayer(p: HumanPlayer) = runGameEvent(GameBaseEvent.RESET_PLAYER, p)
 fun Collection<Component>.allPanic(e: Exception) = runGameEvent(GameBaseEvent.PANIC, e)
+
+class ComponentNotFoundException(cl: KClass<*>): Exception(cl.toString())

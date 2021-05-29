@@ -6,8 +6,8 @@ import org.bukkit.Bukkit
 import org.bukkit.scoreboard.*
 
 class ScoreboardManager(private val game: ChessGame): Component {
-    class Settings {
-        fun getComponent(game: ChessGame) = ScoreboardManager(game)
+    class Settings: Component.Settings<ScoreboardManager> {
+        override fun getComponent(game: ChessGame) = ScoreboardManager(game)
     }
 
     private val gameProperties = mutableListOf<GameProperty>()

@@ -15,7 +15,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
 
     data class Settings(
         val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds
-    ) {
+    ): Component.Settings<ChessClock> {
 
         fun getPGN() = buildString {
             if (type == Type.SIMPLE) {
@@ -27,7 +27,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
             }
         }
 
-        fun getComponent(game: ChessGame) = ChessClock(game, this)
+        override fun getComponent(game: ChessGame) = ChessClock(game, this)
 
         companion object {
 

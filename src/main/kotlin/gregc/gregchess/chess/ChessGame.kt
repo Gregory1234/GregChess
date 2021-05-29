@@ -15,23 +15,26 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
 
     val variant = settings.variant
 
-    val board: Chessboard = settings.board.getComponent(this)
-
-    val clock: ChessClock? = settings.clock?.getComponent(this)
-
-    val renderers: List<Renderer<*>> = settings.renderers.map{ it.getComponent(this) }
-
-    val scoreboard = settings.scoreboard.getComponent(this)
-
-    private val components = listOfNotNull(board, clock, *renderers.toTypedArray(), scoreboard, arena).toMutableList()
+    private val components = listOf(arena) + (settings.components + variant.extraComponents).map {it.getComponent(this)}
 
     init {
+        try {
+            requireComponent<Chessboard>()
+            requireComponent<ScoreboardManager>()
+        } catch (e: Exception) {
+            panic(e)
+            throw e
+        }
         arena.game = this
     }
 
-    fun registerComponent(c: Component) {
-        components.add(components.size - 3, c)
-    }
+    val board: Chessboard = requireComponent()
+
+    val clock: ChessClock? = getComponent()
+
+    val renderers: List<Renderer<*>> = components.mapNotNull { Renderer::class.safeCast(it) }
+
+    val scoreboard: ScoreboardManager = requireComponent()
 
     @Suppress("unchecked_cast")
     fun <T, R> withRenderer(block: (Renderer<T>) -> R): R? =
@@ -40,7 +43,11 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
+    fun <T : Component> requireComponent(cl: KClass<T>): T = getComponent(cl) ?: throw ComponentNotFoundException(cl)
+
     inline fun <reified T : Component> getComponent(): T? = getComponent(T::class)
+
+    inline fun <reified T : Component> requireComponent(): T = requireComponent(T::class)
 
     private var state: GameState = GameState.Initial
 
