@@ -40,21 +40,23 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
+    inline fun <reified T : Component> getComponent(): T? = getComponent(T::class)
+
     private var state: GameState = GameState.Initial
 
-    private fun wrongState(cls: Class<*>): Nothing {
-        val e = WrongStateException(state, cls)
+    private inline fun <reified T> wrongState(): Nothing {
+        val e = WrongStateException(state, T::class.java)
         stop(EndReason.Error(e))
         throw e
     }
 
-    private inline fun <reified T> require(fail: () -> Nothing = {wrongState(T::class.java)}): T = (state as? T) ?: fail()
+    private inline fun <reified T> require(fail: () -> Nothing = {wrongState<T>()}): T = (state as? T) ?: fail()
 
-    private inline fun requireInitial(fail: () -> Nothing = {wrongState(GameState.Initial::class.java)}) = require<GameState.Initial>(fail)
-    private inline fun requireReady(fail: () -> Nothing = {wrongState(GameState.Ready::class.java)}) = require<GameState.Ready>(fail)
-    private inline fun requireStarting(fail: () -> Nothing = {wrongState(GameState.Starting::class.java)}) = require<GameState.Starting>(fail)
-    private inline fun requireRunning(fail: () -> Nothing = {wrongState(GameState.Running::class.java)}) = require<GameState.Running>(fail)
-    private inline fun requireStopping(fail: () -> Nothing = {wrongState(GameState.Stopping::class.java)}) = require<GameState.Stopping>(fail)
+    private inline fun requireInitial(fail: () -> Nothing = {wrongState<GameState.Initial>()}) = require<GameState.Initial>(fail)
+    private inline fun requireReady(fail: () -> Nothing = {wrongState<GameState.Ready>()}) = require<GameState.Ready>(fail)
+    private inline fun requireStarting(fail: () -> Nothing = {wrongState<GameState.Starting>()}) = require<GameState.Starting>(fail)
+    private inline fun requireRunning(fail: () -> Nothing = {wrongState<GameState.Running>()}) = require<GameState.Running>(fail)
+    private inline fun requireStopping(fail: () -> Nothing = {wrongState<GameState.Stopping>()}) = require<GameState.Stopping>(fail)
 
     var currentTurn: Side
         get() = require<GameState.WithCurrentPlayer>().currentTurn

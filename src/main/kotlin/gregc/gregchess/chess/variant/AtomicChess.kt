@@ -53,7 +53,7 @@ object AtomicChess : ChessVariant("Atomic") {
 
     override fun finishMove(move: MoveCandidate) {
         if (move.captured != null)
-            move.game.getComponent(ExplosionManager::class)?.explode(move.target.pos)
+            move.game.getComponent<ExplosionManager>()?.explode(move.target.pos)
     }
 
     override fun getLegality(move: MoveCandidate): MoveLegality = move.run {
@@ -95,7 +95,7 @@ object AtomicChess : ChessVariant("Atomic") {
 
     override fun undoLastMove(move: MoveData) {
         if (move.captured)
-            move.origin.game.getComponent(ExplosionManager::class)?.reverseExplosion()
+            move.origin.game.getComponent<ExplosionManager>()?.reverseExplosion()
         move.undo()
     }
 }

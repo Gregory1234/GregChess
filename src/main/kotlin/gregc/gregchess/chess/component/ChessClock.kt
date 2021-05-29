@@ -36,7 +36,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 null -> null
                 else -> {
                     val settings = SettingsManager.parseSettings("Clock") {
-                        val t = it.getEnum("Type", Type.INCREMENT, Type::class, false)
+                        val t = it.getEnum("Type", Type.INCREMENT, false)
                         Settings(
                             t, it.getDuration("Initial"),
                             it.getDuration("Increment", t.usesIncrement)

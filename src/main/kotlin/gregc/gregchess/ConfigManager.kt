@@ -1,7 +1,5 @@
 package gregc.gregchess
 
-import kotlin.reflect.KClass
-
 object ConfigManager : View("")
 
 open class View protected constructor(private val rootPath: String = "") {
@@ -83,10 +81,9 @@ open class View protected constructor(private val rootPath: String = "") {
     inline fun <reified T : Enum<T>> getEnum(
         path: String,
         default: T,
-        cl: KClass<T>,
         warnMissing: Boolean = true
     ) =
-        get(path, cl.simpleName?.lowerFirst() ?: "enum", default, warnMissing) {
+        get(path, T::class.simpleName?.lowerFirst() ?: "enum", default, warnMissing) {
             try {
                 enumValueOf(it.uppercase())
             } catch (e: IllegalArgumentException) {
@@ -96,10 +93,9 @@ open class View protected constructor(private val rootPath: String = "") {
 
     inline fun <reified T : Enum<T>> getEnumList(
         path: String,
-        cl: KClass<T>,
         warnMissing: Boolean = true
     ) =
-        getList(path, cl.simpleName?.lowerFirst() ?: "enum", warnMissing) {
+        getList(path, T::class.simpleName?.lowerFirst() ?: "enum", warnMissing) {
             try {
                 enumValueOf<T>(it.uppercase())
             } catch (e: IllegalArgumentException) {

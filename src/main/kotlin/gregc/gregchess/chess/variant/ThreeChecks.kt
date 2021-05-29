@@ -38,7 +38,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
     }
 
     override fun checkForGameEnd(game: ChessGame) {
-        game.getComponent(CheckCounter::class)?.checkForGameEnd()
+        game.getComponent<CheckCounter>()?.checkForGameEnd()
         Normal.checkForGameEnd(game)
     }
 

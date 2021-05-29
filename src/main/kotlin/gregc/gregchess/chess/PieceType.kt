@@ -19,11 +19,9 @@ enum class PieceType(
 
     private val view = ConfigManager.getView(path)
 
-    fun getMaterial(side: Side): Material =
-        view.getEnum("Item.${side.standardName}", Material.AIR, Material::class)
+    fun getMaterial(side: Side): Material = view.getEnum("Item.${side.standardName}", Material.AIR)
 
-    fun getStructure(side: Side): List<Material> =
-        view.getEnumList("Structure.${side.standardName}", Material::class)
+    fun getStructure(side: Side): List<Material> = view.getEnumList("Structure.${side.standardName}")
 
     companion object {
         fun parseFromChar(c: Char) =
@@ -43,8 +41,7 @@ enum class PieceType(
         return item
     }
 
-    fun getSound(name: String): Sound =
-        view.getEnum("Sound.$name", Sound.BLOCK_STONE_HIT, Sound::class)
+    fun getSound(name: String): Sound = view.getEnum("Sound.$name", Sound.BLOCK_STONE_HIT)
 
     val pieceName
         get() = view.getString("Name")
