@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import net.md_5.bungee.api.chat.*
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import java.util.*
 
 abstract class HumanPlayer(val name: String) {
@@ -23,20 +22,19 @@ abstract class HumanPlayer(val name: String) {
     fun isSpectating(): Boolean = spectatedGame != null
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
-    abstract fun setItem(i: Int, item: ItemStack?)
-    abstract fun pawnPromotionScreen(piece: Piece, moves: List<Pair<PieceType, MoveCandidate>>)
+    abstract fun setItem(i: Int, piece: Piece?)
+    abstract fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>)
 }
 
 abstract class MinecraftPlayer(val uniqueId: UUID, name: String): HumanPlayer(name)
 
 class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(player.uniqueId, player.name) {
     class PawnPromotionScreen(
-        private val pawn: Piece,
-        private val moves: List<Pair<PieceType, MoveCandidate>>,
+        private val moves: List<Pair<Piece, MoveCandidate>>,
         private val player: ChessPlayer?
     ) : Screen<MoveCandidate>("Message.PawnPromotion") {
         override fun getContent() = moves.mapIndexed { i, (t, m) ->
-            ScreenOption(t.getItem(pawn.side), m, InventoryPosition.fromIndex(i))
+            ScreenOption(t.item, m, InventoryPosition.fromIndex(i))
         }
 
         override fun onClick(v: MoveCandidate) {
@@ -79,12 +77,12 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
         })
     }
 
-    override fun setItem(i: Int, item: ItemStack?) {
-        player.inventory.setItem(i, item)
+    override fun setItem(i: Int, piece: Piece?) {
+        player.inventory.setItem(i, piece?.item)
     }
 
-    override fun pawnPromotionScreen(piece: Piece, moves: List<Pair<PieceType, MoveCandidate>>) {
-        player.openScreen(PawnPromotionScreen(piece, moves, chess))
+    override fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>) {
+        player.openScreen(PawnPromotionScreen(moves, chess))
     }
 }
 

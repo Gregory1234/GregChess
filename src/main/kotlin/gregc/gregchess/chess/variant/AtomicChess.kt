@@ -5,11 +5,11 @@ import gregc.gregchess.chess.component.*
 
 object AtomicChess : ChessVariant("Atomic") {
     class ExplosionManager(private val game: ChessGame) : Component {
-        private val explosions = mutableListOf<List<Pair<Piece, Piece.Captured>>>()
+        private val explosions = mutableListOf<List<Pair<BoardPiece, CapturedPiece>>>()
 
         fun explode(pos: Pos) {
-            val exp = mutableListOf<Pair<Piece, Piece.Captured>>()
-            fun helper(p: Piece) {
+            val exp = mutableListOf<Pair<BoardPiece, CapturedPiece>>()
+            fun helper(p: BoardPiece) {
                 exp += Pair(p, p.capture(game.currentTurn))
             }
 
@@ -85,7 +85,7 @@ object AtomicChess : ChessVariant("Atomic") {
         return MoveLegality.LEGAL
     }
 
-    override fun isInCheck(king: Piece): Boolean = checkingMoves(!king.side, king.square).isNotEmpty()
+    override fun isInCheck(king: BoardPiece): Boolean = checkingMoves(!king.side, king.square).isNotEmpty()
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.kingOf(!game.currentTurn) == null)

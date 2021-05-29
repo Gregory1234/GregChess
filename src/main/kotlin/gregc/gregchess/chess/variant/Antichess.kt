@@ -19,7 +19,7 @@ object Antichess : ChessVariant("Antichess") {
             }) MoveLegality.LEGAL else MoveLegality.SPECIAL
     }
 
-    override fun isInCheck(king: Piece) = false
+    override fun isInCheck(king: BoardPiece) = false
 
     override fun isInCheck(game: ChessGame, side: Side) = false
 
@@ -37,6 +37,6 @@ object Antichess : ChessVariant("Antichess") {
 
     override fun timeout(game: ChessGame, side: Side) = game.stop(ChessGame.EndReason.Timeout(side))
 
-    override val promotions: Collection<PieceType>
-        get() = Normal.promotions + PieceType.KING
+    override fun promotions(piece: Piece): Collection<Piece>?
+        = Normal.promotions(piece)?.plus(Piece(PieceType.KING, piece.side))
 }

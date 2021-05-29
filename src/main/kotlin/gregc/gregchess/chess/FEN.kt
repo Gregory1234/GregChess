@@ -14,7 +14,7 @@ data class FEN(
     @JvmInline
     value class BoardState(private val state: String){
         companion object {
-            fun fromPieces(pieces: Map<Pos, Piece.Info>): BoardState {
+            fun fromPieces(pieces: Map<Pos, PieceInfo>): BoardState {
                 val rows = List(8) { ri ->
                     var e = 0
                     buildString {
@@ -60,7 +60,7 @@ data class FEN(
             BoardState(state.split('/').mapIndexed(block).joinToString("/"))
     }
 
-    private fun Char.toPiece(p: Pos): Piece.Info {
+    private fun Char.toPiece(p: Pos): PieceInfo {
         val type = PieceType.parseFromStandardChar(this)
         val side = if (isUpperCase()) Side.WHITE else Side.BLACK
         val hasMoved = when (type) {
@@ -71,10 +71,10 @@ data class FEN(
             PieceType.ROOK -> p.file !in castlingRights[side]
             else -> false
         }
-        return Piece.Info(p, type, side, hasMoved)
+        return PieceInfo(p, Piece(type, side), hasMoved)
     }
 
-    fun forEachSquare(f: (Piece.Info) -> Unit)
+    fun forEachSquare(f: (PieceInfo) -> Unit)
         = boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(p))}
 
     override fun toString() = buildString {

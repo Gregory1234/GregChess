@@ -123,7 +123,7 @@ class GregChess : JavaPlugin(), Listener {
                             game.board[Pos.parseFromString(this[2])]!!
                         val piece = PieceType.valueOf(this[1])
                         square.piece?.capture(p.side)
-                        square.piece = Piece(piece, Side.valueOf(this[0]), square)
+                        square.piece = BoardPiece(Piece(piece, Side.valueOf(this[0])), square)
                         game.board.updateMoves()
                         player.sendMessage(ConfigManager.getString("Message.BoardOpDone"))
                     }

@@ -4,7 +4,7 @@ import gregc.gregchess.*
 import kotlin.math.abs
 
 class MoveData(
-    val piece: Piece,
+    val piece: BoardPiece,
     val origin: Square,
     val target: Square,
     val name: String,
@@ -29,10 +29,10 @@ class MoveData(
 }
 
 abstract class MoveCandidate(
-    val piece: Piece, val target: Square, val floor: Floor,
-    val pass: Collection<Pos>, val help: Collection<Piece> = emptyList(),
+    val piece: BoardPiece, val target: Square, val floor: Floor,
+    val pass: Collection<Pos>, val help: Collection<BoardPiece> = emptyList(),
     val needed: Collection<Pos> = pass,
-    val control: Square? = target, val promotion: PieceType? = null,
+    val control: Square? = target, val promotion: Piece? = null,
     val mustCapture: Boolean = false, val display: Square = target
 ) {
 
@@ -69,7 +69,7 @@ abstract class MoveCandidate(
             append(piece.pos.fileStr)
         if (captured != null)
             append(ConfigManager.getString("Chess.Capture"))
-        promotion?.let { append(it.char.uppercaseChar()) }
+        promotion?.let { append(it.type.char.uppercaseChar()) }
         append(target.pos)
     }
 
@@ -101,13 +101,13 @@ abstract class MoveCandidate(
     val board = origin.board
     val game = origin.game
 
-    val blocks: List<Piece>
+    val blocks: List<BoardPiece>
         get() = needed.mapNotNull { board[it]?.piece }
 
     val captured = control?.piece
 }
 
-fun getUniquenessCoordinate(piece: Piece, target: Square): String {
+fun getUniquenessCoordinate(piece: BoardPiece, target: Square): String {
     val game = target.game
     val pieces = game.board.pieces.filter { it.side == piece.side && it.type == piece.type }
     val consideredPieces = pieces.filter { p ->
@@ -135,26 +135,26 @@ fun checkForChecks(side: Side, game: ChessGame): String {
 
 fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Floor.CAPTURE
 
-inline fun jumps(piece: Piece, dirs: Collection<Pair<Int, Int>>, f: (Square) -> MoveCandidate) =
+inline fun jumps(piece: BoardPiece, dirs: Collection<Pair<Int, Int>>, f: (Square) -> MoveCandidate) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map(f)
 
-inline fun rays(piece: Piece, dirs: Collection<Pair<Int, Int>>, f: (Int, Pair<Int, Int>, Square) -> MoveCandidate) =
+inline fun rays(piece: BoardPiece, dirs: Collection<Pair<Int, Int>>, f: (Int, Pair<Int, Int>, Square) -> MoveCandidate) =
     dirs.flatMap { dir ->
         PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
             piece.square.board[pos]?.let { f(index + 1, dir, it) }
         }
     }
 
-fun knightMovement(piece: Piece): List<MoveCandidate> {
-    class KnightJump(piece: Piece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
+fun knightMovement(piece: BoardPiece): List<MoveCandidate> {
+    class KnightJump(piece: BoardPiece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
 
     return jumps(piece, rotationsOf(2, 1)) {
         KnightJump(piece, it, defaultColor(it))
     }
 }
 
-fun rookMovement(piece: Piece): List<MoveCandidate> {
-    class RookMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
+fun rookMovement(piece: BoardPiece): List<MoveCandidate> {
+    class RookMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
         : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 0)) { index, dir, square ->
@@ -162,8 +162,8 @@ fun rookMovement(piece: Piece): List<MoveCandidate> {
     }
 }
 
-fun bishopMovement(piece: Piece): List<MoveCandidate> {
-    class BishopMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
+fun bishopMovement(piece: BoardPiece): List<MoveCandidate> {
+    class BishopMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
         : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 1)) { index, dir, square ->
@@ -171,8 +171,8 @@ fun bishopMovement(piece: Piece): List<MoveCandidate> {
     }
 }
 
-fun queenMovement(piece: Piece): List<MoveCandidate> {
-    class QueenMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
+fun queenMovement(piece: BoardPiece): List<MoveCandidate> {
+    class QueenMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
         : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) { index, dir, square ->
@@ -180,12 +180,12 @@ fun queenMovement(piece: Piece): List<MoveCandidate> {
     }
 }
 
-fun kingMovement(piece: Piece): List<MoveCandidate> {
-    class KingMove(piece: Piece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
+fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
+    class KingMove(piece: BoardPiece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
 
     class Castles(
-        piece: Piece, target: Square,
-        val rook: Piece, val rookTarget: Square,
+        piece: BoardPiece, target: Square,
+        val rook: BoardPiece, val rookTarget: Square,
         pass: Collection<Pos>, needed: Collection<Pos>, display: Square
     ) : MoveCandidate(
         piece, target,
@@ -196,12 +196,12 @@ fun kingMovement(piece: Piece): List<MoveCandidate> {
             val base = baseName()
             val standardBase = baseStandardName()
             val rookOrigin = rook.square
-            Piece.autoMove(mapOf(piece to target, rook to rookTarget))
+            BoardPiece.autoMove(mapOf(piece to target, rook to rookTarget))
             val ch = checkForChecks(piece.side, game)
             val hmc = board.increaseMovesSinceLastCapture()
             return MoveData(piece, origin, target, base + ch, standardBase + ch, false, display) {
                 hmc()
-                Piece.autoMove(mapOf(piece to origin, rook to rookOrigin))
+                BoardPiece.autoMove(mapOf(piece to origin, rook to rookOrigin))
                 piece.force(false)
                 rook.force(false)
             }
@@ -253,29 +253,29 @@ fun kingMovement(piece: Piece): List<MoveCandidate> {
     } + castles
 }
 
-fun pawnMovement(piece: Piece): List<MoveCandidate> {
+fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
 
-    fun ifProm(promotion: PieceType?, floor: Floor) =
+    fun ifProm(promotion: Piece?, floor: Floor) =
         if (promotion == null) floor else Floor.SPECIAL
 
-    fun handlePromotion(pos: Pos, f: (PieceType?) -> Unit) =
-        if (pos.rank in listOf(0, 7)) piece.square.game.variant.promotions.forEach(f) else f(null)
+    fun handlePromotion(pos: Pos, f: (Piece?) -> Unit) =
+        if (pos.rank in listOf(0, 7)) piece.square.game.variant.promotions(piece.piece).orEmpty().forEach(f) else f(null)
 
-    class PawnPush(piece: Piece, target: Square, pass: Pos?, promotion: PieceType?)
+    class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotion: Piece?)
         : MoveCandidate(
             piece, target,
             ifProm(promotion, Floor.MOVE), listOfNotNull(pass),
             control = null, promotion = promotion
         )
 
-    class PawnCapture(piece: Piece, target: Square, promotion: PieceType?) :
+    class PawnCapture(piece: BoardPiece, target: Square, promotion: Piece?) :
         MoveCandidate(
             piece, target,
             ifProm(promotion, Floor.CAPTURE), emptyList(),
             promotion = promotion, mustCapture = true
         )
 
-    class EnPassantCapture(piece: Piece, target: Square, control: Square) :
+    class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
         MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true) {
         override fun execute(): MoveData {
             val base = baseName()

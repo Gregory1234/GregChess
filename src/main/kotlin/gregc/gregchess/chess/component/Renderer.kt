@@ -11,10 +11,10 @@ interface Renderer<in T>: Component {
         fun getComponent(game: ChessGame): Renderer<T>
     }
     fun getPos(loc: T): Pos
-    fun renderPiece(pos: Pos, side: Side, type: PieceType)
+    fun renderPiece(pos: Pos, piece: Piece)
     fun clearPiece(pos: Pos)
-    fun renderCapturedPiece(pos: Pair<Int, Int>, by: Side, side: Side, type: PieceType)
-    fun clearCapturedPiece(pos: Pair<Int, Int>, by: Side)
+    fun renderCapturedPiece(pos: CapturedPos, piece: Piece)
+    fun clearCapturedPiece(pos: CapturedPos)
     fun playPieceSound(pos: Pos, sound: String, type: PieceType)
     fun explosionAt(pos: Pos)
     fun fillFloor(pos: Pos, floor: Floor)
@@ -43,24 +43,25 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
     protected fun getPieceLoc(pos: Pos) =
         Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile) + settings.offset
 
-    protected fun getCapturedLoc(pos: Pair<Int, Int>, by: Side): Loc {
-        return when (by) {
-            Side.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
-            Side.BLACK -> Loc(8 + 2 * pos.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * pos.second)
+    protected fun getCapturedLoc(pos: CapturedPos): Loc {
+        val p = pos.pos
+        return when (pos.by) {
+            Side.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * p.first, 101, 8 - 3 - 2 * p.second)
+            Side.BLACK -> Loc(8 + 2 * p.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * p.second)
         } + settings.offset
     }
 
-    protected abstract fun renderPiece(loc: Loc, side: Side, type: PieceType)
+    protected abstract fun renderPiece(loc: Loc, piece: Piece)
 
     protected abstract fun clearPiece(loc: Loc)
 
-    override fun renderPiece(pos: Pos, side: Side, type: PieceType) = renderPiece(getPieceLoc(pos), side, type)
+    override fun renderPiece(pos: Pos, piece: Piece) = renderPiece(getPieceLoc(pos), piece)
 
     override fun clearPiece(pos: Pos) = clearPiece(getPieceLoc(pos))
 
-    override fun renderCapturedPiece(pos: Pair<Int, Int>, by: Side, side: Side, type: PieceType) = renderPiece(getCapturedLoc(pos, by), side, type)
+    override fun renderCapturedPiece(pos: CapturedPos, piece: Piece) = renderPiece(getCapturedLoc(pos), piece)
 
-    override fun clearCapturedPiece(pos: Pair<Int, Int>, by: Side) = clearPiece(getCapturedLoc(pos, by))
+    override fun clearCapturedPiece(pos: CapturedPos) = clearPiece(getCapturedLoc(pos))
 }
 
 class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(game, settings) {
@@ -90,8 +91,8 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
 
     private val data = mutableMapOf<UUID, PlayerData>()
 
-    override fun renderPiece(loc: Loc, side: Side, type: PieceType) {
-        type.getStructure(side).forEachIndexed { i, m ->
+    override fun renderPiece(loc: Loc, piece: Piece) {
+        piece.type.getStructure(piece.side).forEachIndexed { i, m ->
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
         }
     }
@@ -146,7 +147,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
     private fun BukkitPlayer.reset(d: PlayerData = defData) {
         player.playerData = d
         player.teleport(spawnLocation.toLocation(this@BukkitRenderer.world))
-        game[this]?.held?.let { setItem(0, it.item )}
+        game[this]?.held?.let { setItem(0, it.piece )}
     }
 
     @GameEvent(GameBaseEvent.PANIC)

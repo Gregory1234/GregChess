@@ -98,7 +98,7 @@ enum class Floor {
 }
 
 data class Square(val pos: Pos, val game: ChessGame) {
-    var piece: Piece? = null
+    var piece: BoardPiece? = null
     var bakedMoves: List<MoveCandidate>? = null
     var bakedLegalMoves: List<MoveCandidate>? = null
 

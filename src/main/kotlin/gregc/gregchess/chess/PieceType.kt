@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack
 enum class PieceType(
     path: String,
     val standardChar: Char,
-    val moveScheme: (Piece) -> List<MoveCandidate>,
+    val moveScheme: (BoardPiece) -> List<MoveCandidate>,
     val minor: Boolean
 ) {
     KING("Chess.Piece.King", 'k', ::kingMovement, false),

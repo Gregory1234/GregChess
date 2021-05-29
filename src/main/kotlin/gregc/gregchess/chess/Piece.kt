@@ -4,9 +4,51 @@ import gregc.gregchess.*
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: Boolean = false) {
+data class Piece(val type: PieceType, val side: Side) {
     val standardName
         get() = "${side.standardName} ${type.name.lowercase()}"
+
+    val item: ItemStack
+        get() = type.getItem(side)
+
+    val standardChar
+        get() = when (side) {
+            Side.WHITE -> type.standardChar.uppercaseChar()
+            Side.BLACK -> type.standardChar
+        }
+}
+
+data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)
+
+class CapturedPiece(
+    val piece: Piece,
+    val pos: CapturedPos,
+    private val game: ChessGame
+) {
+    val type = piece.type
+    val side = piece.side
+
+    fun render() {
+        game.renderers.forEach { it.renderCapturedPiece(pos, piece) }
+    }
+
+    fun hide() {
+        game.renderers.forEach { it.clearCapturedPiece(pos) }
+    }
+}
+
+data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
+    val type = piece.type
+    val side = piece.side
+    val standardChar
+        get() = piece.standardChar
+}
+
+class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false) {
+    val standardName
+        get() = piece.standardName
+    val type = piece.type
+    val side = piece.side
 
     var square: Square = initSquare
         private set(v) {
@@ -30,36 +72,8 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     private val board
         get() = square.board
 
-    val item: ItemStack
-        get() = type.getItem(side)
-
-    data class Info(val pos: Pos, val type: PieceType, val side: Side, val hasMoved: Boolean) {
-        val standardChar
-            get() = when (side) {
-                Side.WHITE -> type.standardChar.uppercaseChar()
-                Side.BLACK -> type.standardChar
-            }
-    }
-
     val info
-        get() = Info(pos, type, side, hasMoved)
-
-    class Captured(
-        val type: PieceType,
-        val side: Side,
-        val by: Side,
-        val pos: Pair<Int, Int>,
-        private val game: ChessGame
-    ) {
-
-        fun render() {
-            game.renderers.forEach { it.renderCapturedPiece(pos, by, side, type) }
-        }
-
-        fun hide() {
-            game.renderers.forEach { it.clearCapturedPiece(pos, by) }
-        }
-    }
+        get() = PieceInfo(pos, piece, hasMoved)
 
     init {
         render()
@@ -67,7 +81,7 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     }
 
     private fun render() {
-        game.renderers.forEach { it.renderPiece(pos, side, type) }
+        game.renderers.forEach { it.renderPiece(pos, piece) }
     }
 
     private fun hide() {
@@ -93,19 +107,19 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
         playMoveSound()
     }
 
-    fun capture(by: Side): Captured {
+    fun capture(by: Side): CapturedPiece {
         glog.mid("Captured", type, "at", pos)
         clear()
-        val captured = Captured(type, side, by, board.nextCapturedPos(type, by), game)
+        val captured = CapturedPiece(piece, board.nextCapturedPos(type, by), game)
         board += captured
         playCaptureSound()
         return captured
     }
 
-    fun promote(promotion: PieceType) {
+    fun promote(promotion: Piece) {
         glog.mid("Promoted", type, "at", pos, "into", promotion)
         hide()
-        square.piece = Piece(promotion, side, square)
+        square.piece = BoardPiece(promotion, square)
     }
 
     private fun playSound(s: String) {
@@ -120,13 +134,13 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
         this.hasMoved = hasMoved
     }
 
-    fun demote(piece: Piece) {
+    fun demote(piece: BoardPiece) {
         piece.render()
         hide()
         square.piece = piece
     }
 
-    fun resurrect(captured: Captured) {
+    fun resurrect(captured: CapturedPiece) {
         board -= captured
         render()
         square.piece = this
@@ -139,7 +153,7 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     }
 
     companion object {
-        fun autoMove(moves: Map<Piece, Square>) {
+        fun autoMove(moves: Map<BoardPiece, Square>) {
             moves.forEach { (piece, target) ->
                 glog.mid("Auto-moved", piece.type, "from", piece.pos, "to", target.pos)
                 piece.hasMoved = true

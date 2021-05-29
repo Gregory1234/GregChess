@@ -50,12 +50,12 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         private set
     private val boardHashes = mutableMapOf<Int, Int>()
 
-    private val capturedPieces = mutableListOf<Piece.Captured>()
+    private val capturedPieces = mutableListOf<CapturedPiece>()
 
-    val pieces: List<Piece>
+    val pieces: List<BoardPiece>
         get() = squares.values.mapNotNull { it.piece }
 
-    operator fun plusAssign(piece: Piece) {
+    operator fun plusAssign(piece: BoardPiece) {
         piece.square.piece = piece
     }
 
@@ -145,13 +145,13 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     fun kingOf(side: Side) = piecesOf(side).firstOrNull { it.type == PieceType.KING }
 
-    operator fun plusAssign(captured: Piece.Captured) {
+    operator fun plusAssign(captured: CapturedPiece) {
         captured.render()
         capturedPieces += captured
         glog.low("Added captured", game.uniqueId, captured)
     }
 
-    operator fun minusAssign(captured: Piece.Captured) {
+    operator fun minusAssign(captured: CapturedPiece) {
         capturedPieces -= captured
         captured.hide()
         glog.low("Removed captured", game.uniqueId, captured)
@@ -175,8 +175,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         clear()
         squares.values.forEach(Square::empty)
         render()
-        fen.forEachSquare { (pos, t, s, hm) ->
-            this += Piece(t, s, this[pos]!!, hm)
+        fen.forEachSquare { (pos, p, hm) ->
+            this += BoardPiece(p, this[pos]!!, hm)
         }
         if (fen.enPassantSquare != null) {
             val pos = fen.enPassantSquare
@@ -273,11 +273,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    fun nextCapturedPos(type: PieceType, by: Side): Pair<Int, Int> {
-        val cap = capturedPieces.filter { it.by == by }
-        return if (type == PieceType.PAWN)
-            Pair(cap.count { it.type == PieceType.PAWN }, 1)
-        else
-            Pair(cap.count { it.type != PieceType.PAWN }, 0)
+    fun nextCapturedPos(type: PieceType, by: Side): CapturedPos {
+        val cap = capturedPieces.filter { it.pos.by == by }
+        return CapturedPos(by,
+            if (type == PieceType.PAWN) Pair(cap.count { it.type == PieceType.PAWN }, 1)
+            else Pair(cap.count { it.type != PieceType.PAWN }, 0))
     }
 }

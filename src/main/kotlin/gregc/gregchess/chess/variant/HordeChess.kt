@@ -23,7 +23,7 @@ object HordeChess : ChessVariant("Horde") {
             else -> MoveLegality.INVALID
         }
 
-    override fun isInCheck(king: Piece) = king.side == Side.BLACK && Normal.isInCheck(king)
+    override fun isInCheck(king: BoardPiece) = king.side == Side.BLACK && Normal.isInCheck(king)
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.piecesOf(Side.BLACK).all { game.board.getMoves(it.pos).none(game.variant::isLegal) }) {

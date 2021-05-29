@@ -45,7 +45,7 @@ abstract class ChessVariant(val name: String) {
     open fun chessboardSetup(board: Chessboard) {}
     open fun finishMove(move: MoveCandidate) {}
     open fun getLegality(move: MoveCandidate): MoveLegality = Normal.getLegality(move)
-    open fun isInCheck(king: Piece): Boolean = Normal.isInCheck(king)
+    open fun isInCheck(king: BoardPiece): Boolean = Normal.isInCheck(king)
     open fun checkForGameEnd(game: ChessGame) = Normal.checkForGameEnd(game)
     open fun timeout(game: ChessGame, side: Side) = Normal.timeout(game, side)
     open fun undoLastMove(move: MoveData) = Normal.undoLastMove(move)
@@ -58,8 +58,7 @@ abstract class ChessVariant(val name: String) {
     fun isLegal(move: MoveCandidate) = getLegality(move) == MoveLegality.LEGAL
 
     open fun genFEN(chess960: Boolean): FEN = Normal.genFEN(chess960)
-    open val promotions: Collection<PieceType>
-        get() = Normal.promotions
+    open fun promotions(piece: Piece): Collection<Piece>? = Normal.promotions(piece)
 
     protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { board.getMoves(it.pos) }
 
@@ -111,7 +110,7 @@ abstract class ChessVariant(val name: String) {
             return MoveLegality.LEGAL
         }
 
-        override fun isInCheck(king: Piece): Boolean =
+        override fun isInCheck(king: BoardPiece): Boolean =
             checkingMoves(!king.side, king.square).isNotEmpty()
 
         override fun checkForGameEnd(game: ChessGame) {
@@ -144,8 +143,11 @@ abstract class ChessVariant(val name: String) {
 
         override fun undoLastMove(move: MoveData) = move.undo()
 
-        override val promotions: Collection<PieceType>
-            get() = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
+        override fun promotions(piece: Piece): Collection<Piece>? =
+            if (piece.type == PieceType.PAWN)
+                listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map {Piece(it, piece.side)}
+            else
+                null
 
         override fun genFEN(chess960: Boolean) = if (!chess960) FEN() else FEN.generateChess960()
     }
