@@ -183,7 +183,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             val target = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
             val piece = target.piece!!
             val origin = this[piece.pos.plusR(-2 * piece.side.direction)]!!
-            lastMove = MoveData(piece, origin, target, "", "", true) {}
+            lastMove = MoveData(piece.piece, origin, target, "", "", true) {}
         }
 
         movesSinceLastCapture = fen.halfmoveClock

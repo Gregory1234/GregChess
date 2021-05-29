@@ -4,7 +4,7 @@ import gregc.gregchess.*
 import kotlin.math.abs
 
 class MoveData(
-    val piece: BoardPiece,
+    val piece: Piece,
     val origin: Square,
     val target: Square,
     val name: String,
@@ -52,7 +52,7 @@ abstract class MoveCandidate(
         val hmc =
             if (piece.type == PieceType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
         val ch = checkForChecks(piece.side, game)
-        return MoveData(piece, origin, target, base + ch, standardBase + ch, ct != null, display) {
+        return MoveData(piece.piece, origin, target, base + ch, standardBase + ch, ct != null, display) {
             hmc()
             promotion?.let { piece.square.piece?.demote(piece) }
             piece.move(origin)
@@ -199,7 +199,7 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
             BoardPiece.autoMove(mapOf(piece to target, rook to rookTarget))
             val ch = checkForChecks(piece.side, game)
             val hmc = board.increaseMovesSinceLastCapture()
-            return MoveData(piece, origin, target, base + ch, standardBase + ch, false, display) {
+            return MoveData(piece.piece, origin, target, base + ch, standardBase + ch, false, display) {
                 hmc()
                 BoardPiece.autoMove(mapOf(piece to origin, rook to rookOrigin))
                 piece.force(false)
@@ -285,10 +285,7 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
             piece.move(target)
             val ch = checkForChecks(piece.side, game)
             val hmc = board.resetMovesSinceLastCapture()
-            return MoveData(
-                piece, origin, target, "$base$ch e.p.", standardBase + ch,
-                true, display
-            ) {
+            return MoveData(piece.piece, origin, target, "$base$ch e.p.", standardBase + ch,true, display) {
                 hmc()
                 piece.move(origin)
                 ct?.let { captured?.resurrect(it) }
@@ -317,7 +314,7 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
         }
         val p = piece.square.board[piece.pos.plusF(s)]?.piece
         val lm = piece.square.board.lastMove
-        if (p?.type == PieceType.PAWN && lm?.piece == p && abs(lm.origin.pos.rank - lm.target.pos.rank) == 2) {
+        if (p?.type == PieceType.PAWN && lm?.piece == p.piece && abs(lm.origin.pos.rank - lm.target.pos.rank) == 2) {
             piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let {
                 ret += EnPassantCapture(piece, it, p.square)
             }
