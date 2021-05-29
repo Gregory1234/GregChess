@@ -1,19 +1,9 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.GregInfo
-import gregc.gregchess.cNotNull
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.GameBaseEvent
-import gregc.gregchess.chess.component.GameEvent
-import gregc.gregchess.chess.component.TimeModifier
-import gregc.gregchess.glog
-import org.bukkit.Difficulty
-import org.bukkit.GameRule
-import org.bukkit.World
-import org.bukkit.WorldCreator
-import org.bukkit.event.EventHandler
-import org.bukkit.event.Listener
+import gregc.gregchess.*
+import gregc.gregchess.chess.component.*
+import org.bukkit.*
+import org.bukkit.event.*
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.generator.ChunkGenerator

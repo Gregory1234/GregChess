@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
-import java.lang.IllegalStateException
 import java.time.LocalDateTime
-import kotlin.Exception
 
 sealed class GameState(val started: Boolean, val stopped: Boolean, val running: Boolean) {
     sealed interface WithPlayers {

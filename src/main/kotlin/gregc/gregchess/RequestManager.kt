@@ -1,11 +1,16 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.HumanPlayer
-import gregc.gregchess.chess.human
-import org.bukkit.event.EventHandler
-import org.bukkit.event.Listener
+import gregc.gregchess.chess.*
+import org.bukkit.event.*
 import org.bukkit.event.player.PlayerQuitEvent
 import java.util.*
+import kotlin.collections.contains
+import kotlin.collections.filter
+import kotlin.collections.firstOrNull
+import kotlin.collections.forEach
+import kotlin.collections.mutableListOf
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
 object RequestManager : Listener {
     private val requestTypes = mutableListOf<RequestType<*>>()

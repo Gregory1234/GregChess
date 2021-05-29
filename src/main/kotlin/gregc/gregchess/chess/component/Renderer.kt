@@ -3,7 +3,6 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import org.bukkit.*
-import java.lang.IllegalStateException
 import java.util.*
 import kotlin.math.floor
 

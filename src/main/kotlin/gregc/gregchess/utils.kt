@@ -1,7 +1,6 @@
 package gregc.gregchess
 
-import net.md_5.bungee.api.chat.ClickEvent
-import net.md_5.bungee.api.chat.TextComponent
+import net.md_5.bungee.api.chat.*
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
@@ -12,8 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
 import java.io.File
-import java.time.Duration
-import java.time.LocalDateTime
+import java.time.*
 import java.time.format.DateTimeFormatter
 import kotlin.contracts.contract
 import kotlin.math.floor

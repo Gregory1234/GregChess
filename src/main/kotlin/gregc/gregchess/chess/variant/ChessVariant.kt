@@ -1,7 +1,7 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.glog
 
 abstract class ChessVariant(val name: String) {

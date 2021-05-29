@@ -1,9 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.buildTextComponent
-import gregc.gregchess.glog
-import org.bukkit.Material
-import org.bukkit.Sound
+import gregc.gregchess.*
+import org.bukkit.*
 import org.bukkit.inventory.ItemStack
 import java.util.*
 

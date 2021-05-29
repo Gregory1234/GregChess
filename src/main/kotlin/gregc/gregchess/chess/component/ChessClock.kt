@@ -1,19 +1,10 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.chess.BySides
-import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.SettingsManager
-import gregc.gregchess.chess.Side
-import gregc.gregchess.glog
-import gregc.gregchess.minutes
-import gregc.gregchess.seconds
-import java.lang.Long.max
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.LocalTime
+import gregc.gregchess.*
+import gregc.gregchess.chess.*
+import java.time.*
 import java.time.format.DateTimeFormatter
-import kotlin.math.ceil
+import kotlin.math.*
 
 
 class ChessClock(private val game: ChessGame, private val settings: Settings) : Component {

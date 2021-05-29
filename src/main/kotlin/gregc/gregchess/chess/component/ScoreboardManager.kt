@@ -3,8 +3,7 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
-import org.bukkit.scoreboard.DisplaySlot
-import org.bukkit.scoreboard.Team
+import org.bukkit.scoreboard.*
 
 class ScoreboardManager(private val game: ChessGame): Component {
     class Settings {

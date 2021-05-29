@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.between
-import gregc.gregchess.rotationsOf
+import gregc.gregchess.*
 import org.bukkit.Material
 import kotlin.math.abs
 

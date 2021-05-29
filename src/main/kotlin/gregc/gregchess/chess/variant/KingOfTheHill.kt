@@ -1,9 +1,6 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.Pos
-import gregc.gregchess.chess.Side
-import gregc.gregchess.chess.PieceType
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.rangeTo
 import org.bukkit.Material

@@ -3,12 +3,10 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import org.bukkit.Bukkit
-import org.bukkit.event.Event
-import org.bukkit.event.HandlerList
+import org.bukkit.event.*
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.reflect.KClass
-import kotlin.reflect.safeCast
+import kotlin.reflect.*
 
 class ChessGame(val arena: Arena, val settings: GameSettings) {
     val uniqueId: UUID = UUID.randomUUID()

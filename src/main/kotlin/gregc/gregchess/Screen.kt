@@ -2,8 +2,7 @@ package gregc.gregchess
 
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
-import org.bukkit.inventory.InventoryHolder
-import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.*
 
 abstract class Screen<T>(val namePath: String) {
     abstract fun getContent(): List<ScreenOption<T>>

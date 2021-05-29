@@ -1,12 +1,8 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.*
-import org.bukkit.generator.ChunkGenerator
-import java.util.*
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import org.bukkit.Bukkit
+import java.util.concurrent.*
 
 enum class Side(private val path: String, val standardName: String, val standardChar: Char, val direction: Int) {
     WHITE("Chess.Side.White", "White", 'w', 1),

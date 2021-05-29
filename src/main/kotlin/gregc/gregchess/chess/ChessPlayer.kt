@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.ConfigManager
 import org.bukkit.Material
 
 

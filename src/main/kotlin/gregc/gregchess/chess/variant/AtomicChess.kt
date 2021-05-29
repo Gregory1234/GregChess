@@ -1,8 +1,7 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.*
 
 object AtomicChess : ChessVariant("Atomic") {
     class ExplosionManager(private val game: ChessGame) : Component {

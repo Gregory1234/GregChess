@@ -1,9 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import net.md_5.bungee.api.chat.ClickEvent
-import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.GameMode
+import net.md_5.bungee.api.chat.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
