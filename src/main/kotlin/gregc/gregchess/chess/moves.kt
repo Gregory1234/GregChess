@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.Material
 import kotlin.math.abs
 
 class MoveData(
@@ -24,24 +23,18 @@ class MoveData(
     }
 
     fun render() {
-        origin.previousMoveMarker = Material.BROWN_CONCRETE
-        display.previousMoveMarker = Material.ORANGE_CONCRETE
+        origin.previousMoveMarker = Floor.LAST_START
+        display.previousMoveMarker = Floor.LAST_END
     }
 }
 
 abstract class MoveCandidate(
-    val piece: Piece, val target: Square, val floor: Material,
+    val piece: Piece, val target: Square, val floor: Floor,
     val pass: Collection<Pos>, val help: Collection<Piece> = emptyList(),
     val needed: Collection<Pos> = pass,
     val control: Square? = target, val promotion: PieceType? = null,
     val mustCapture: Boolean = false, val display: Square = target
 ) {
-
-    companion object {
-        val RED = Material.RED_CONCRETE
-        val GREEN = Material.GREEN_CONCRETE
-        val BLUE = Material.BLUE_CONCRETE
-    }
 
     override fun toString() =
         "MoveCandidate(piece = $piece, target = ${target.pos}, pass = [${pass.joinToString()}], help = [${help.joinToString()}], needed = [${needed.joinToString()}], control = ${control?.pos}, promotion = $promotion, mustCapture = $mustCapture, display = ${display.pos})"
@@ -140,12 +133,10 @@ fun checkForChecks(side: Side, game: ChessGame): String {
     }
 }
 
-fun defaultColor(square: Square) =
-    if (square.piece == null) MoveCandidate.GREEN else MoveCandidate.RED
+fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Floor.CAPTURE
 
 inline fun jumps(piece: Piece, dirs: Collection<Pair<Int, Int>>, f: (Square) -> MoveCandidate) =
-    dirs.map { piece.pos + it }.filter { it.isValid() }
-        .mapNotNull { piece.square.board[it] }.map(f)
+    dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map(f)
 
 inline fun rays(piece: Piece, dirs: Collection<Pair<Int, Int>>, f: (Int, Pair<Int, Int>, Square) -> MoveCandidate) =
     dirs.flatMap { dir ->
@@ -155,7 +146,7 @@ inline fun rays(piece: Piece, dirs: Collection<Pair<Int, Int>>, f: (Int, Pair<In
     }
 
 fun knightMovement(piece: Piece): List<MoveCandidate> {
-    class KnightJump(piece: Piece, target: Square, floor: Material) : MoveCandidate(piece, target, floor, emptyList())
+    class KnightJump(piece: Piece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
 
     return jumps(piece, rotationsOf(2, 1)) {
         KnightJump(piece, it, defaultColor(it))
@@ -163,7 +154,7 @@ fun knightMovement(piece: Piece): List<MoveCandidate> {
 }
 
 fun rookMovement(piece: Piece): List<MoveCandidate> {
-    class RookMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Material)
+    class RookMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
         : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 0)) { index, dir, square ->
@@ -172,7 +163,7 @@ fun rookMovement(piece: Piece): List<MoveCandidate> {
 }
 
 fun bishopMovement(piece: Piece): List<MoveCandidate> {
-    class BishopMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Material)
+    class BishopMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
         : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 1)) { index, dir, square ->
@@ -181,7 +172,7 @@ fun bishopMovement(piece: Piece): List<MoveCandidate> {
 }
 
 fun queenMovement(piece: Piece): List<MoveCandidate> {
-    class QueenMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Material)
+    class QueenMove(piece: Piece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
         : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) { index, dir, square ->
@@ -190,7 +181,7 @@ fun queenMovement(piece: Piece): List<MoveCandidate> {
 }
 
 fun kingMovement(piece: Piece): List<MoveCandidate> {
-    class KingMove(piece: Piece, target: Square, floor: Material) : MoveCandidate(piece, target, floor, emptyList())
+    class KingMove(piece: Piece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
 
     class Castles(
         piece: Piece, target: Square,
@@ -198,7 +189,7 @@ fun kingMovement(piece: Piece): List<MoveCandidate> {
         pass: Collection<Pos>, needed: Collection<Pos>, display: Square
     ) : MoveCandidate(
         piece, target,
-        BLUE, pass, help = listOf(piece, rook), needed = needed,
+        Floor.SPECIAL, pass, help = listOf(piece, rook), needed = needed,
         control = null, display = display
     ) {
         override fun execute(): MoveData {
@@ -264,8 +255,8 @@ fun kingMovement(piece: Piece): List<MoveCandidate> {
 
 fun pawnMovement(piece: Piece): List<MoveCandidate> {
 
-    fun ifProm(promotion: PieceType?, floor: Material) =
-        if (promotion == null) floor else MoveCandidate.BLUE
+    fun ifProm(promotion: PieceType?, floor: Floor) =
+        if (promotion == null) floor else Floor.SPECIAL
 
     fun handlePromotion(pos: Pos, f: (PieceType?) -> Unit) =
         if (pos.rank in listOf(0, 7)) piece.square.game.variant.promotions.forEach(f) else f(null)
@@ -273,19 +264,19 @@ fun pawnMovement(piece: Piece): List<MoveCandidate> {
     class PawnPush(piece: Piece, target: Square, pass: Pos?, promotion: PieceType?)
         : MoveCandidate(
             piece, target,
-            ifProm(promotion, GREEN), listOfNotNull(pass),
+            ifProm(promotion, Floor.MOVE), listOfNotNull(pass),
             control = null, promotion = promotion
         )
 
     class PawnCapture(piece: Piece, target: Square, promotion: PieceType?) :
         MoveCandidate(
             piece, target,
-            ifProm(promotion, RED), emptyList(),
+            ifProm(promotion, Floor.CAPTURE), emptyList(),
             promotion = promotion, mustCapture = true
         )
 
     class EnPassantCapture(piece: Piece, target: Square, control: Square) :
-        MoveCandidate(piece, target, RED, emptyList(), control = control, mustCapture = true) {
+        MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true) {
         override fun execute(): MoveData {
             val base = baseName()
             val standardBase = baseStandardName()

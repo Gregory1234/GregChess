@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.rangeTo
+import gregc.gregchess.*
 import org.bukkit.Material
 
 data class Pos(val file: Int, val rank: Int) {
@@ -91,26 +91,34 @@ class PosSteps(val start: Pos, private val jump: Pair<Int, Int>, override val si
     override fun iterator() = PosIterator(start, jump, size)
 }
 
+enum class Floor {
+    LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END;
+    val path = "Chess.Floor.${name.lowercase().split('_').joinToString("", transform = String::upperFirst)}"
+    val material get() = ConfigManager.getEnum<Material>(path, Material.AIR)
+}
+
 data class Square(val pos: Pos, val game: ChessGame) {
     var piece: Piece? = null
     var bakedMoves: List<MoveCandidate>? = null
     var bakedLegalMoves: List<MoveCandidate>? = null
 
-    private val baseFloor = if ((pos.file + pos.rank) % 2 == 0) Material.SPRUCE_PLANKS else Material.BIRCH_PLANKS
-    var variantMarker: Material? = null
+    private var noRender = false
+
+    private val baseFloor = if ((pos.file + pos.rank) % 2 == 0) Floor.DARK else Floor.LIGHT
+    var variantMarker: Floor? = null
         set(v) {
             field = v
-            render()
+            if (!noRender) render()
         }
-    var previousMoveMarker: Material? = null
+    var previousMoveMarker: Floor? = null
         set(v) {
             field = v
-            render()
+            if (!noRender) render()
         }
-    var moveMarker: Material? = null
+    var moveMarker: Floor? = null
         set(v) {
             field = v
-            render()
+            if (!noRender) render()
         }
     private val floor
         get() = moveMarker ?: previousMoveMarker ?: variantMarker ?: baseFloor
@@ -124,13 +132,20 @@ data class Square(val pos: Pos, val game: ChessGame) {
         game.renderers.forEach { it.fillFloor(pos, floor) }
     }
 
-    fun clear() {
-        piece?.clear()
-        variantMarker = null
+    fun empty() {
+        piece = null
         bakedMoves = null
+        noRender = true
+        variantMarker = null
         previousMoveMarker = null
         moveMarker = null
-        game.renderers.forEach { it.fillFloor(pos, floor) }
+        noRender = false
+    }
+
+    fun clear() {
+        piece?.clear()
+        empty()
+        render()
     }
 
     fun neighbours() = pos.neighbours().mapNotNull { this.board[it] }

@@ -22,9 +22,6 @@ open class View protected constructor(private val rootPath: String = "") {
     val exists
         get() = section != null
 
-    fun String.upperFirst() = replaceFirstChar { it.uppercase() }
-    fun String.lowerFirst() = replaceFirstChar { it.lowercase() }
-
     fun <T> get(
         path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?
     ): T {

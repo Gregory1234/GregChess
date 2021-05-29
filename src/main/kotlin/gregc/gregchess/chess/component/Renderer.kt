@@ -11,11 +11,13 @@ interface Renderer<in T>: Component {
         fun getComponent(game: ChessGame): Renderer<T>
     }
     fun getPos(loc: T): Pos
-    fun renderPiece(pos: Pos, structure: List<Material>)
-    fun renderCapturedPiece(pos: Pair<Int, Int>, by: Side, structure: List<Material>)
-    fun playPieceSound(pos: Pos, sound: Sound)
+    fun renderPiece(pos: Pos, side: Side, type: PieceType)
+    fun clearPiece(pos: Pos)
+    fun renderCapturedPiece(pos: Pair<Int, Int>, by: Side, side: Side, type: PieceType)
+    fun clearCapturedPiece(pos: Pair<Int, Int>, by: Side)
+    fun playPieceSound(pos: Pos, sound: String, type: PieceType)
     fun explosionAt(pos: Pos)
-    fun fillFloor(pos: Pos, floor: Material)
+    fun fillFloor(pos: Pos, floor: Floor)
     fun renderBoardBase()
     fun removeBoard()
 }
@@ -48,11 +50,17 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
         } + settings.offset
     }
 
-    protected abstract fun renderPiece(loc: Loc, structure: List<Material>)
+    protected abstract fun renderPiece(loc: Loc, side: Side, type: PieceType)
 
-    override fun renderPiece(pos: Pos, structure: List<Material>) = renderPiece(getPieceLoc(pos), structure)
+    protected abstract fun clearPiece(loc: Loc)
 
-    override fun renderCapturedPiece(pos: Pair<Int, Int>, by: Side, structure: List<Material>) = renderPiece(getCapturedLoc(pos, by), structure)
+    override fun renderPiece(pos: Pos, side: Side, type: PieceType) = renderPiece(getPieceLoc(pos), side, type)
+
+    override fun clearPiece(pos: Pos) = clearPiece(getPieceLoc(pos))
+
+    override fun renderCapturedPiece(pos: Pair<Int, Int>, by: Side, side: Side, type: PieceType) = renderPiece(getCapturedLoc(pos, by), side, type)
+
+    override fun clearCapturedPiece(pos: Pair<Int, Int>, by: Side) = clearPiece(getCapturedLoc(pos, by))
 }
 
 class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(game, settings) {
@@ -82,15 +90,22 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
 
     private val data = mutableMapOf<UUID, PlayerData>()
 
-    override fun renderPiece(loc: Loc, structure: List<Material>) {
-        structure.forEachIndexed { i, m ->
+    override fun renderPiece(loc: Loc, side: Side, type: PieceType) {
+        type.getStructure(side).forEachIndexed { i, m ->
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
+        }
+    }
+
+    override fun clearPiece(loc: Loc) {
+        (0..10).forEach { i ->
+            fill(FillVolume(world, Material.AIR, loc.copy(y = loc.y + i)))
         }
     }
 
     private fun <R> doAt(pos: Pos, f: (World, Location) -> R) = getPieceLoc(pos).doIn(world, f)
 
-    override fun playPieceSound(pos: Pos, sound: Sound) = doAt(pos) { world, l -> world.playSound(l, sound) }
+    override fun playPieceSound(pos: Pos, sound: String, type: PieceType) =
+        doAt(pos) { world, l -> world.playSound(l, type.getSound(sound)) }
 
     override fun explosionAt(pos: Pos) {
         doAt(pos) { world, l ->
@@ -98,11 +113,11 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
         }
     }
 
-    override fun fillFloor(pos: Pos, floor: Material) {
+    override fun fillFloor(pos: Pos, floor: Floor) {
         val (x, y, z) = getPieceLoc(pos)
         val mi = -settings.lowHalfTile
         val ma = settings.highHalfTile
-        fill(FillVolume(world, floor, Loc(x+mi, y - 1, z+mi), Loc(x+ma, y - 1, z+ma)))
+        fill(FillVolume(world, floor.material, Loc(x+mi, y - 1, z+mi), Loc(x+ma, y - 1, z+ma)))
     }
 
     override fun renderBoardBase() {

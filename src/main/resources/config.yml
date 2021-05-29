@@ -117,6 +117,16 @@ Chess:
       Name: "Black"
       Char: 'b'
       Piece: "&bBlack $1"
+  Floor:
+    Light: BIRCH_PLANKS
+    Dark: SPRUCE_PLANKS
+    Move: GREEN_CONCRETE
+    Capture: RED_CONCRETE
+    Special: BLUE_CONCRETE
+    Nothing: YELLOW_CONCRETE
+    Other: PURPLE_CONCRETE
+    LastStart: BROWN_CONCRETE
+    LastEnd: ORANGE_CONCRETE
   Piece:
     King:
       Name: "King"

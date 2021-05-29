@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.*
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
@@ -54,11 +53,11 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     ) {
 
         fun render() {
-            game.renderers.forEach { it.renderCapturedPiece(pos, by, type.getStructure(side)) }
+            game.renderers.forEach { it.renderCapturedPiece(pos, by, side, type) }
         }
 
         fun hide() {
-            game.renderers.forEach { it.renderCapturedPiece(pos, by, type.getStructure(side).map { Material.AIR }) }
+            game.renderers.forEach { it.clearCapturedPiece(pos, by) }
         }
     }
 
@@ -68,11 +67,11 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
     }
 
     private fun render() {
-        game.renderers.forEach { it.renderPiece(pos, type.getStructure(side)) }
+        game.renderers.forEach { it.renderPiece(pos, side, type) }
     }
 
     private fun hide() {
-        game.renderers.forEach { it.renderPiece(pos, type.getStructure(side).map { Material.AIR }) }
+        game.renderers.forEach { it.clearPiece(pos) }
     }
 
     fun move(target: Square) {
@@ -109,13 +108,13 @@ class Piece(val type: PieceType, val side: Side, initSquare: Square, hasMoved: B
         square.piece = Piece(promotion, side, square)
     }
 
-    private fun playSound(s: Sound) {
-        game.renderers.forEach { it.playPieceSound(pos, s) }
+    private fun playSound(s: String) {
+        game.renderers.forEach { it.playPieceSound(pos, s, type) }
     }
 
-    private fun playPickUpSound() = playSound(type.getSound("PickUp"))
-    private fun playMoveSound() = playSound(type.getSound("Move"))
-    private fun playCaptureSound() = playSound(type.getSound("Capture"))
+    private fun playPickUpSound() = playSound("PickUp")
+    private fun playMoveSound() = playSound("Move")
+    private fun playCaptureSound() = playSound("Capture")
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved

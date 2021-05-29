@@ -3,7 +3,6 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.rangeTo
-import org.bukkit.Material
 
 object KingOfTheHill : ChessVariant("KingOfTheHill") {
 
@@ -12,7 +11,7 @@ object KingOfTheHill : ChessVariant("KingOfTheHill") {
 
     override fun chessboardSetup(board: Chessboard) {
         (Pair(3, 3)..Pair(4, 4)).forEach { (x, y) ->
-            board[Pos(x, y)]?.variantMarker = Material.PURPLE_CONCRETE
+            board[Pos(x, y)]?.variantMarker = Floor.OTHER
             board[Pos(x, y)]?.render()
         }
     }

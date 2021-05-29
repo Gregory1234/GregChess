@@ -173,6 +173,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     fun setFromFEN(fen: FEN) {
         clear()
+        squares.values.forEach(Square::empty)
         render()
         fen.forEachSquare { (pos, t, s, hm) ->
             this += Piece(t, s, this[pos]!!, hm)

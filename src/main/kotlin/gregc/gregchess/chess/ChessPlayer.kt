@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ConfigManager
-import org.bukkit.Material
 
 
 abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game: ChessGame) {
@@ -9,7 +8,7 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
     var held: Piece? = null
         set(v) {
             v?.let {
-                it.square.moveMarker = Material.YELLOW_CONCRETE
+                it.square.moveMarker = Floor.NOTHING
                 it.square.bakedLegalMoves?.forEach(MoveCandidate::render)
                 it.pickUp()
             }

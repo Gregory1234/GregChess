@@ -215,6 +215,9 @@ inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
 
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 
+fun String.upperFirst() = replaceFirstChar { it.uppercase() }
+fun String.lowerFirst() = replaceFirstChar { it.lowercase() }
+
 fun Duration.toTicks(): Long = toMillis() / 50
 
 val Int.seconds: Duration
