@@ -6,14 +6,14 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-enum class Side(private val path: String, val standardName: String, val standardChar: Char, val direction: Int) {
-    WHITE("Chess.Side.White", "White", 'w', 1),
-    BLACK("Chess.Side.Black", "Black", 'b', -1);
+enum class Side(val standardName: String, val standardChar: Char, val direction: Int) {
+    WHITE("White", 'w', 1),
+    BLACK("Black", 'b', -1);
 
     operator fun not(): Side = if (this == WHITE) BLACK else WHITE
     operator fun inc(): Side = not()
 
-    fun getPieceName(name: String) = ConfigManager.getFormatString("$path.Piece", name)
+    fun getPieceName(name: String) = Config.chess.side[this].getPiece(name)
 
     companion object {
         fun parseFromStandardChar(c: Char) =

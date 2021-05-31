@@ -1,7 +1,5 @@
 package gregc.gregchess
 
-object ConfigManager : View("")
-
 open class View protected constructor(private val rootPath: String = "") {
     private val config
         get() = GregInfo.plugin.config
@@ -73,8 +71,6 @@ open class View protected constructor(private val rootPath: String = "") {
 
     fun getDuration(path: String, warnMissing: Boolean = true) =
         get(path, "duration", 0.seconds, warnMissing, ::parseDuration)
-
-    fun getError(name: String) = get("Message.Error.$name", "error", name) { chatColor(it) }
 
     inline fun <reified T : Enum<T>> getEnum(
         path: String,

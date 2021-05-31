@@ -46,7 +46,7 @@ enum class PieceType(
     fun getSound(name: KProperty1<Config.Chess.Piece.PieceData.Sound, Sound>): Sound = name.get(view.sound)
 
     val pieceName
-        get() = view.getString("Name")
+        get() = view.name
     val char
-        get() = view.getChar("Char")
+        get() = view.char
 }

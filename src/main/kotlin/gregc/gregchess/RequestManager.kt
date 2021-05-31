@@ -82,7 +82,7 @@ class RequestType<in T>(
             if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
         )
         request.receiver.sendCommandMessage(
-            view.getFormatString("Received.Request", request.sender.name, printT(request.value)) + " ",
+            view.received.getRequest(request.sender.name, printT(request.value)) + " ",
             Config.request.accept,
             if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
         )
@@ -112,8 +112,8 @@ class RequestType<in T>(
     }
 
     private fun accept(request: Request<T>) {
-        request.sender.sendMessage(view.getFormatString("Sent.Accept", request.receiver.name))
-        request.receiver.sendMessage(view.getFormatString("Received.Accept", request.sender.name))
+        request.sender.sendMessage(view.sent.getAccept(request.receiver.name))
+        request.receiver.sendMessage(view.received.getAccept(request.sender.name))
         requests.remove(request.uniqueId)
         onAccept(request)
         glog.mid("Accepted", request.uniqueId)
@@ -128,8 +128,8 @@ class RequestType<in T>(
     }
 
     private fun cancel(request: Request<T>) {
-        request.sender.sendMessage(view.getFormatString("Sent.Cancel", request.receiver.name))
-        request.receiver.sendMessage(view.getFormatString("Received.Cancel", request.sender.name))
+        request.sender.sendMessage(view.sent.getCancel(request.receiver.name))
+        request.receiver.sendMessage(view.received.getCancel(request.sender.name))
         requests.remove(request.uniqueId)
         onCancel(request)
         glog.mid("Cancelled", request.uniqueId)
@@ -144,8 +144,8 @@ class RequestType<in T>(
     }
 
     private fun expire(request: Request<T>) {
-        request.sender.sendMessage(view.getFormatString("Expired", request.receiver.name))
-        request.receiver.sendMessage(view.getFormatString("Expired", request.sender.name))
+        request.sender.sendMessage(view.getExpired(request.receiver.name))
+        request.receiver.sendMessage(view.getExpired(request.sender.name))
         requests.remove(request.uniqueId)
         onCancel(request)
         glog.mid("Expired", request.uniqueId)

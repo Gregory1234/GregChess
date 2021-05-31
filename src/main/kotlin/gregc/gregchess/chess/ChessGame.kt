@@ -247,12 +247,7 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
         class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.chess.endReason::piecesLost, "normal", winner)
         // @formatter:on
 
-        fun getMessage() = ConfigManager.getFormatString(
-            when (winner) {
-                Side.WHITE -> "Message.GameFinished.WhiteWon"
-                Side.BLACK -> "Message.GameFinished.BlackWon"
-                null -> "Message.GameFinished.ItWasADraw"
-            }, namePath.get())
+        fun getMessage() = Config.message.gameFinished[winner](namePath.get())
     }
 
     class EndEvent(val game: ChessGame) : Event() {

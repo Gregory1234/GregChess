@@ -58,20 +58,20 @@ class ScoreboardManager(private val game: ChessGame): Component {
         var i = l
         gameProperties.forEach {
             it.team = newTeam()
-            it.team?.addEntry(view.getFormatString("GeneralFormat", it.name))
-            objective.getScore(view.getFormatString("GeneralFormat", it.name)).score = i--
+            it.team?.addEntry(view.getGeneralFormat(it.name))
+            objective.getScore(view.getGeneralFormat(it.name)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
             it.teams.white = newTeam()
-            it.teams.white?.addEntry(view.getFormatString("WhiteFormat", it.name))
-            objective.getScore(view.getFormatString("WhiteFormat", it.name)).score = i--
+            it.teams.white?.addEntry(view.getWhiteFormat(it.name))
+            objective.getScore(view.getWhiteFormat(it.name)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
             it.teams.black = newTeam()
-            it.teams.black?.addEntry(view.getFormatString("BlackFormat", it.name))
-            objective.getScore(view.getFormatString("BlackFormat", it.name)).score = i--
+            it.teams.black?.addEntry(view.getBlackFormat(it.name))
+            objective.getScore(view.getBlackFormat(it.name)).score = i--
         }
     }
 

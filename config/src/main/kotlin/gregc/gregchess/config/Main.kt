@@ -46,6 +46,18 @@ class BlockScope(val config: TypeSpec.Builder) {
             .builder(name.replaceFirstChar { it.lowercaseChar() }, String::class.asClassName().copy(nullable = true))
             .getter(FunSpec.getterBuilder().addCode("return getOptionalString(\"$name\")").build()).build())
     }
+    fun addFormatString(name: String, default: String? = null, vararg args: TypeName) {
+        val fn = FunSpec.builder("get$name").returns(String::class)
+        args.forEachIndexed { i, v ->
+            fn.addParameter("a${i+1}", v)
+        }
+        fn.addCode("return getFormatString(\"\"")
+        args.forEachIndexed { i, _ ->
+            fn.addCode(", a${i+1}")
+        }
+        fn.addCode(")")
+        config.addFunction(fn.build())
+    }
     fun addStringList(name: String) {
         config.addProperty(PropertySpec
             .builder(name.replaceFirstChar { it.lowercaseChar() }, List::class.asClassName().parameterizedBy(String::class.asClassName()))
@@ -135,6 +147,28 @@ class BlockScope(val config: TypeSpec.Builder) {
             """.trimIndent(), sideType, sideType)
             .build())
     }
+    fun byOptSidesFormat(white: String, black: String, nulls: String) {
+        val wt = config.funSpecs.first {it.name == "get$white"}
+        val bt = config.funSpecs.first {it.name == "get$black"}
+        val nt = config.funSpecs.first {it.name == "get$nulls"}
+        require(wt.returnType != null)
+        require(wt.returnType == bt.returnType)
+        require(wt.returnType == nt.returnType)
+        require(wt.parameters.map {it.type} == bt.parameters.map {it.type})
+        require(wt.parameters.map {it.type} == nt.parameters.map {it.type})
+        config.addFunction(FunSpec.builder("get")
+            .addModifiers(KModifier.OPERATOR)
+            .returns(LambdaTypeName.get(parameters = wt.parameters, returnType = wt.returnType!!))
+            .addParameter("side", ClassName("gregc.gregchess.chess", "Side").copy(nullable = true))
+            .addCode("""
+                return when (side) { 
+                    %T.WHITE -> ::get$white
+                    %T.BLACK -> ::get$black
+                    null -> ::get$nulls
+                }
+            """.trimIndent(), sideType, sideType)
+            .build())
+    }
     fun byOptSides(white: String, black: String, nulls: String) {
         val wt = config.propertySpecs.first {it.name == white.replaceFirstChar { it.lowercaseChar() }}.type
         val bt = config.propertySpecs.first {it.name == black.replaceFirstChar { it.lowercaseChar() }}.type
@@ -200,19 +234,19 @@ fun main() {
             inlineFiniteBlockList("RequestType", "Duel", "Draw", "Takeback") {
                 addBlock("Sent") {
                     addString("Request")
-                    addString("Cancel")
-                    addString("Accept")
+                    addFormatString("Cancel", null, String::class.asClassName())
+                    addFormatString("Accept", null, String::class.asClassName())
                 }
                 addBlock("Received") {
-                    addString("Request")
-                    addString("Cancel")
-                    addString("Accept")
+                    addFormatString("Request", null, String::class.asClassName(), String::class.asClassName())
+                    addFormatString("Cancel", null, String::class.asClassName())
+                    addFormatString("Accept", null, String::class.asClassName())
                 }
                 addBlock("Error") {
                     addString("NotFound")
                     addString("CannotSend")
                 }
-                addString("Expired")
+                addFormatString("Expired", null, String::class.asClassName())
                 addOptionalDuration("Duration")
             }
             instanceBlock("Duel") {
@@ -284,10 +318,10 @@ fun main() {
                 bySides("White", "Black")
             }
             addBlock("GameFinished") {
-                addString("WhiteWon", "The game has finished! White won by $1.")
-                addString("BlackWon", "The game has finished! Black won by $1.")
-                addString("ItWasADraw", "The game has finished! It was a draw by $1.")
-                byOptSides("WhiteWon", "BlackWon", "ItWasADraw")
+                addFormatString("WhiteWon", "The game has finished! White won by $1.", String::class.asClassName())
+                addFormatString("BlackWon", "The game has finished! Black won by $1.", String::class.asClassName())
+                addFormatString("ItWasADraw", "The game has finished! It was a draw by $1.", String::class.asClassName())
+                byOptSidesFormat("WhiteWon", "BlackWon", "ItWasADraw")
             }
             addBlock("Error") {
                 addString("NoPerms", "&cYou do not have the permission to do that!")
@@ -350,9 +384,19 @@ fun main() {
                 inlineFiniteBlockList("SideData", "White", "Black") {
                     addString("Name")
                     addChar("Char")
-                    addString("Piece")
+                    addFormatString("Piece", null, String::class.asClassName())
                 }
                 bySides("White", "Black")
+                instanceBlock("White") {
+                    addString("Name", "White")
+                    addChar("Char", 'w')
+                    addString("Piece", "&bWhite $1")
+                }
+                instanceBlock("Black") {
+                    addString("Name", "Black")
+                    addChar("Char", 'b')
+                    addString("Piece", "&bBlack $1")
+                }
             }
             val mat: TypeName = ClassName("org.bukkit", "Material")
             val sound: TypeName = ClassName("org.bukkit", "Sound")
@@ -520,9 +564,9 @@ fun main() {
                 addString("Preset", "Preset")
                 addString("Player", "player")
                 addString("PlayerPrefix", "&b")
-                addString("GeneralFormat", "$1: ")
-                addString("WhiteFormat", "White $1: ")
-                addString("BlackFormat", "Black $1: ")
+                addFormatString("GeneralFormat", "$1: ", String::class.asClassName())
+                addFormatString("WhiteFormat", "White $1: ", String::class.asClassName())
+                addFormatString("BlackFormat", "Black $1: ", String::class.asClassName())
             }
             addBlock("Clock") {
                 addString("TimeRemainingSimple", "Time remaining")
