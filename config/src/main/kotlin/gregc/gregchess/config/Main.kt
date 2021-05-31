@@ -362,21 +362,17 @@ fun main(args: Array<String>) {
             }
         }
         addBlock("Settings") {
-            addBlock("Presets") {
-                inlineBlockList("Preset") {
-                    addOptionalString("Variant")
-                    addOptionalString("Board")
-                    addOptionalString("Clock")
-                    addDefaultBool("SimpleCastling", false)
-                    addDefaultInt("TileSize", 3)
-                }
+            addBlockList("Presets") {
+                addOptionalString("Variant")
+                addOptionalString("Board")
+                addOptionalString("Clock")
+                addDefaultBool("SimpleCastling", false)
+                addDefaultInt("TileSize", 3)
             }
-            addBlock("Clock") {
-                inlineBlockList("Preset") {
-                    addEnum("Type", ClassName("gregc.gregchess.chess.component.ChessClock", "Type"), "INCREMENT", false)
-                    addDuration("Initial", null, true)
-                    addDuration("Increment", "0s", true)
-                }
+            addBlockList("Clock") {
+                addEnum("Type", ClassName("gregc.gregchess.chess.component.ChessClock", "Type"), "INCREMENT", false)
+                addDuration("Initial", null, true)
+                addDuration("Increment", "0s", true)
             }
         }
     }

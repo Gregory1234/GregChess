@@ -13,8 +13,7 @@ object SettingsManager {
 
     val settingsChoice: Map<String, GameSettings>
         get() {
-            val presets = Config.settings.presets.presets
-            return presets.mapValues { (key, child) ->
+            return Config.settings.presets.mapValues { (key, child) ->
                 val simpleCastling = child.simpleCastling
                 val variant = ChessVariant[child.variant]
                 val board = Chessboard.Settings[child.board]

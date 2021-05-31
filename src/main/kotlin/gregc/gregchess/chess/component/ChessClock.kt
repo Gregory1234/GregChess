@@ -43,7 +43,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 "none" -> null
                 null -> null
                 else -> {
-                    val settings = Config.settings.clock.presets.mapValues { (_, it) ->
+                    val settings = Config.settings.clock.mapValues { (_, it) ->
                         val t = it.type
                         Settings(t, it.initial, (if (t.usesIncrement) it.increment else null) ?: 0.seconds)
                     }

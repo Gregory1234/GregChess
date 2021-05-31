@@ -18,32 +18,37 @@ annotation class ConfigDSL
 
 @ConfigDSL
 class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
-    fun addBlock(name: String, block: BlockScope.() -> Unit) {
+    private inline fun withBlock(name: String, noinline block: BlockScope.() -> Unit, stuff: (BlockScope) -> Unit) {
         val b = BlockScope(
             TypeSpec.classBuilder(name)
-            .superclass(viewClass)
-            .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
-            .addSuperclassConstructorParameter("path"), YamlBlock(mutableMapOf()))
+                .superclass(viewClass)
+                .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
+                .addSuperclassConstructorParameter("path"), YamlBlock(mutableMapOf()))
         b.block()
-        config.addType(b.config.build())
+        stuff(b)
+    }
+    private fun addBlockProp(typ: String, name: String, path: String) {
         config.addProperty(
             PropertySpec
-            .builder(name.replaceFirstChar { it.lowercaseChar() }, ClassName("", name))
-            .getter(FunSpec.getterBuilder().addCode("return $name(childPath(\"$name\"))").build()).build())
-        if (b.yamlBlock.value.isNotEmpty())
-            yamlBlock.value[name] = b.yamlBlock
+                .builder(name, ClassName("", typ))
+                .getter(FunSpec.getterBuilder().addCode("return $typ(childPath(\"$path\"))").build()).build()
+        )
+    }
+    fun addBlock(name: String, block: BlockScope.() -> Unit) {
+        withBlock(name, block) {
+            config.addType(it.config.build())
+            addBlockProp(name, name.lowerFirst(), name)
+            if (it.yamlBlock.value.isNotEmpty())
+                yamlBlock.value[name] = it.yamlBlock
+        }
     }
     fun instanceBlock(name: String, block: BlockScope.() -> Unit) {
-        val typ = config.propertySpecs.first{ it.name == name.replaceFirstChar { it.lowercaseChar() } }.type
-        val b = BlockScope(
-            TypeSpec.classBuilder(name)
-            .superclass(viewClass)
-            .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
-            .addSuperclassConstructorParameter("path"), YamlBlock(mutableMapOf()))
-        b.block()
-        // TODO: check if matches
-        if (b.yamlBlock.value.isNotEmpty())
-            yamlBlock.value[name] = b.yamlBlock
+        val typ = config.propertySpecs.first{ it.name == name.lowerFirst() }.type
+        withBlock(name, block) {
+            // TODO: check if matches
+            if (it.yamlBlock.value.isNotEmpty())
+                yamlBlock.value[name] = it.yamlBlock
+        }
     }
     fun addFormatString(name: String, default: String? = null, vararg args: TypeName) {
         val fn = FunSpec.builder("get$name").returns(String::class)
@@ -61,7 +66,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     }
     fun add(name: String, typ: TypeName, typName: String, default: String? = null, defaultCode: String? = null, warnMissing: Boolean = true) {
         config.addProperty(
-            PropertySpec.builder(name.replaceFirstChar { it.lowercaseChar() }, typ)
+            PropertySpec.builder(name.lowerFirst(), typ)
             .getter(FunSpec.getterBuilder().addCode("return get$typName(\"$name\", $defaultCode, $warnMissing)").build())
             .build())
         if(default != null)
@@ -75,7 +80,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     fun addDefaultInt(name: String, default: Int) = add(name, Int::class.asTypeName(), "Int", default.toString(), default.toString())
     fun addOptional(name: String, typ: TypeName, typName: String, warnMissing: Boolean = false) {
         config.addProperty(
-            PropertySpec.builder(name.replaceFirstChar { it.lowercaseChar() }, typ.copy(nullable = true))
+            PropertySpec.builder(name.lowerFirst(), typ.copy(nullable = true))
                 .getter(FunSpec.getterBuilder().addCode("return getOptional$typName(\"$name\", $warnMissing)").build())
                 .build())
     }
@@ -84,7 +89,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     fun addList(name: String, typ: TypeName, typName: String, default: List<String>? = null, warnMissing: Boolean = true) {
         config.addProperty(
             PropertySpec
-                .builder(name.replaceFirstChar { it.lowercaseChar() }, List::class.asClassName().parameterizedBy(typ))
+                .builder(name.lowerFirst(), List::class.asClassName().parameterizedBy(typ))
                 .getter(FunSpec.getterBuilder().addCode("return get${typName}List(\"$name\", $warnMissing)").build())
                 .build())
         if(!default.isNullOrEmpty())
@@ -93,108 +98,62 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     fun addStringList(name: String) = addList(name, String::class.asTypeName(), "String")
     fun addEnumList(name: String, typ: TypeName, default: List<String>? = null, warnMissing: Boolean = true) = addList(name, typ, "Enum", default, warnMissing)
     fun inlineBlockList(name: String, block: BlockScope.() -> Unit){
-        val b = BlockScope(
-            TypeSpec.classBuilder(name)
-            .superclass(viewClass)
-            .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
-            .addSuperclassConstructorParameter("path"), YamlBlock(mutableMapOf()))
-        b.block()
-        config.addType(b.config.build())
-        config.addProperty(
-            PropertySpec
-            .builder(name.replaceFirstChar { it.lowercaseChar() }+"s",
-                Map::class.asClassName().parameterizedBy(String::class.asClassName(), ClassName("", name)))
-            .getter(FunSpec.getterBuilder().addCode("return children.mapValues{ $name(childPath(it.key)) }").build()).build())
-    }
-    fun inlineFiniteBlockList(name: String, vararg values: String, block: BlockScope.() -> Unit){
-        val b = BlockScope(
-            TypeSpec.classBuilder(name)
-            .superclass(viewClass)
-            .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
-            .addSuperclassConstructorParameter("path"), YamlBlock(mutableMapOf()))
-        b.block()
-        config.addType(b.config.build())
-        values.forEach { nm ->
+        withBlock(name, block) {
+            config.addType(it.config.build())
             config.addProperty(
                 PropertySpec
-                .builder(nm.replaceFirstChar { it.lowercaseChar() }, ClassName("", name))
-                .getter(FunSpec.getterBuilder().addCode("return $name(childPath(\"$nm\"))").build()).build())
+                .builder(name.lowerFirst()+"s",
+                    Map::class.asClassName().parameterizedBy(String::class.asClassName(), ClassName("", name)))
+                .getter(FunSpec.getterBuilder().addCode("return children.mapValues{ $name(childPath(it.key)) }").build()).build())
         }
     }
-    fun bySides(white: String, black: String) {
-        val wt = config.propertySpecs.first {it.name == white.replaceFirstChar { it.lowercaseChar() }}.type
-        val bt = config.propertySpecs.first {it.name == black.replaceFirstChar { it.lowercaseChar() }}.type
-        require(wt == bt)
-        config.addFunction(
-            FunSpec.builder("get")
-            .addModifiers(KModifier.OPERATOR)
-            .returns(wt)
-            .addParameter("side", sideType)
-            .addCode("""
-                return when (side) { 
-                    %T.WHITE -> ${white.replaceFirstChar { it.lowercaseChar() }}
-                    %T.BLACK -> ${black.replaceFirstChar { it.lowercaseChar() }}
-                }
-            """.trimIndent(), sideType, sideType)
-            .build())
+    fun inlineFiniteBlockList(name: String, vararg values: String, block: BlockScope.() -> Unit){
+        withBlock(name, block) {
+            config.addType(it.config.build())
+            values.forEach { nm ->
+                addBlockProp(name, nm.lowerFirst(), nm)
+            }
+        }
     }
-    fun byOptSidesFormat(white: String, black: String, nulls: String) {
-        val wt = config.funSpecs.first {it.name == "get$white"}
-        val bt = config.funSpecs.first {it.name == "get$black"}
-        val nt = config.funSpecs.first {it.name == "get$nulls"}
-        require(wt.returnType != null)
-        require(wt.returnType == bt.returnType)
-        require(wt.returnType == nt.returnType)
-        require(wt.parameters.map {it.type} == bt.parameters.map {it.type})
-        require(wt.parameters.map {it.type} == nt.parameters.map {it.type})
-        config.addFunction(
-            FunSpec.builder("get")
-            .addModifiers(KModifier.OPERATOR)
-            .returns(LambdaTypeName.get(parameters = wt.parameters, returnType = wt.returnType!!))
-            .addParameter("side", ClassName("gregc.gregchess.chess", "Side").copy(nullable = true))
-            .addCode("""
-                return when (side) { 
-                    %T.WHITE -> ::get$white
-                    %T.BLACK -> ::get$black
-                    null -> ::get$nulls
-                }
-            """.trimIndent(), sideType, sideType)
-            .build())
+    fun addBlockList(name: String, block: BlockScope.() -> Unit){
+        withBlock(name+"Element", block) {
+            config.addType(it.config.build())
+            config.addProperty(
+                PropertySpec
+                    .builder(name.lowerFirst(),
+                        Map::class.asClassName().parameterizedBy(String::class.asClassName(), ClassName("", name+"Element")))
+                    .getter(FunSpec.getterBuilder().addCode("return with(getView(\"$name\")) { children.mapValues{ ${name}Element(childPath(it.key)) } }").build()).build())
+        }
     }
-    fun byOptSides(white: String, black: String, nulls: String) {
-        val wt = config.propertySpecs.first {it.name == white.replaceFirstChar { it.lowercaseChar() }}.type
-        val bt = config.propertySpecs.first {it.name == black.replaceFirstChar { it.lowercaseChar() }}.type
-        val nt = config.propertySpecs.first {it.name == nulls.replaceFirstChar { it.lowercaseChar() }}.type
-        require(wt == bt)
-        require(wt == nt)
-        config.addFunction(
-            FunSpec.builder("get")
-            .addModifiers(KModifier.OPERATOR)
-            .returns(wt)
-            .addParameter("side", ClassName("gregc.gregchess.chess", "Side").copy(nullable = true))
-            .addCode("""
-                return when (side) { 
-                    %T.WHITE -> ${white.replaceFirstChar { it.lowercaseChar() }}
-                    %T.BLACK -> ${black.replaceFirstChar { it.lowercaseChar() }}
-                    null -> ${nulls.replaceFirstChar { it.lowercaseChar() }}
-                }
-            """.trimIndent(), sideType, sideType)
-            .build())
-    }
-    fun byEnum(typ: TypeName, vararg values: String) {
-        val ft = config.propertySpecs.first {it.name == values[0].replaceFirstChar { it.lowercaseChar() }}.type
-        require(values.all { v ->
-            config.propertySpecs.first {it.name == v.replaceFirstChar { it.lowercaseChar() }}.type == ft
-        })
+    private fun by(typ: TypeName, ret: TypeName, values: Map<String, String>, nulls: String? = null) {
         val fn = FunSpec.builder("get")
             .addModifiers(KModifier.OPERATOR)
-            .returns(ft)
-            .addParameter("e", typ)
+            .returns(ret)
+            .addParameter("e", typ.copy(nullable = nulls != null))
             .beginControlFlow("return when (e)")
-        values.forEach { v ->
-            fn.addStatement("%T.${v.camelToUpperSnake()} -> ${v.replaceFirstChar { it.lowercaseChar() }}", typ)
+        values.forEach { (n,v) ->
+            fn.addStatement("%T.$n -> $v", typ)
         }
+        if (nulls != null)
+            fn.addStatement("null -> $nulls", typ)
         config.addFunction(fn.endControlFlow().build())
+    }
+    fun bySides(white: String, black: String) {
+        val ret = config.propertySpecs.first {it.name == white.lowerFirst()}.type
+        by(ClassName("gregc.gregchess.chess", "Side"), ret, mapOf("WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst()))
+    }
+    fun byOptSidesFormat(white: String, black: String, nulls: String) {
+        val ret = config.funSpecs.first {it.name == "get" + white}
+        by(ClassName("gregc.gregchess.chess", "Side"),
+            LambdaTypeName.get(parameters = ret.parameters, returnType = ret.returnType!!), mapOf("WHITE" to "::get$white", "BLACK" to "::get$black"), "::get$nulls")
+    }
+    fun byOptSides(white: String, black: String, nulls: String) {
+        val ret = config.propertySpecs.first {it.name == white.lowerFirst()}.type
+        by(ClassName("gregc.gregchess.chess", "Side"), ret, mapOf("WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst()), nulls.lowerFirst())
+    }
+    fun byEnum(typ: TypeName, vararg values: String) {
+        val ret = config.propertySpecs.first {it.name == values[0].lowerFirst() }.type
+        by(typ, ret, values.associate { it.camelToUpperSnake() to it.lowerFirst() })
     }
 
 }
@@ -212,6 +171,8 @@ fun String.camelToSpaces(): String {
         " ${it.value}"
     }.lowercase()
 }
+
+fun String.lowerFirst() = replaceFirstChar { it.lowercaseChar() }
 
 fun viewExtensions(name: String, typ: TypeName, default: String, parser: CodeBlock): List<FunSpec> = listOf(
     FunSpec.builder("get$name").returns(typ).receiver(viewClass)

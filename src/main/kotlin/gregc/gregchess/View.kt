@@ -8,9 +8,11 @@ open class View protected constructor(private val rootPath: String = "") {
 
     protected fun childPath(path: String) = (if (rootPath == "") path else ("$rootPath.$path"))
 
+    fun getView(path: String) = View(childPath(path))
+
     val children: Map<String, View>
         get() = section?.getKeys(false)?.mapNotNull {
-            val view = View(childPath(it))
+            val view = getView(it)
             if (view.exists) Pair(it, view)
             else null
         }.orEmpty().toMap()
