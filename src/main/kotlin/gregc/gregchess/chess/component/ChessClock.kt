@@ -3,7 +3,6 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.Config
 import gregc.gregchess.chess.BySides
 import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.SettingsManager
 import gregc.gregchess.chess.Side
 import gregc.gregchess.glog
 import gregc.gregchess.minutes
@@ -44,12 +43,9 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 "none" -> null
                 null -> null
                 else -> {
-                    val settings = SettingsManager.parseSettings("Clock") {
-                        val t = it.getEnum("Type", Type.INCREMENT, false)
-                        Settings(
-                            t, it.getDuration("Initial"),
-                            it.getDuration("Increment", t.usesIncrement)
-                        )
+                    val settings = Config.settings.clock.presets.mapValues { (_, it) ->
+                        val t = it.type
+                        Settings(t, it.initial, (if (t.usesIncrement) it.increment else null) ?: 0.seconds)
                     }
                     if (name in settings)
                         settings[name]

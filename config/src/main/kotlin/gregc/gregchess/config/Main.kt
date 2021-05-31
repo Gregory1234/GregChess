@@ -41,6 +41,11 @@ class BlockScope(val config: TypeSpec.Builder) {
             .builder(name.replaceFirstChar { it.lowercaseChar() }, String::class)
             .getter(FunSpec.getterBuilder().addCode("return getString(\"$name\")").build()).build())
     }
+    fun addOptionalString(name: String) {
+        config.addProperty(PropertySpec
+            .builder(name.replaceFirstChar { it.lowercaseChar() }, String::class.asClassName().copy(nullable = true))
+            .getter(FunSpec.getterBuilder().addCode("return getOptionalString(\"$name\")").build()).build())
+    }
     fun addStringList(name: String) {
         config.addProperty(PropertySpec
             .builder(name.replaceFirstChar { it.lowercaseChar() }, List::class.asClassName().parameterizedBy(String::class.asClassName()))
@@ -71,7 +76,7 @@ class BlockScope(val config: TypeSpec.Builder) {
             .getter(FunSpec.getterBuilder().addCode("return getEnumList<%T>(\"$name\", $warnMissing)", typ).build())
             .build())
     }
-    fun addDuration(name: String, default: String, warnMissing: Boolean = false) {
+    fun addDuration(name: String, default: String? = null, warnMissing: Boolean = true) {
         config.addProperty(PropertySpec
             .builder(name.replaceFirstChar { it.lowercaseChar() }, Duration::class)
             .getter(FunSpec.getterBuilder().addCode("return getDuration(\"$name\", $warnMissing)").build())
@@ -81,6 +86,12 @@ class BlockScope(val config: TypeSpec.Builder) {
         config.addProperty(PropertySpec
             .builder(name.replaceFirstChar { it.lowercaseChar() }, Duration::class.asClassName().copy(nullable = true))
             .getter(FunSpec.getterBuilder().addCode("return getOptionalDuration(\"$name\")").build())
+            .build())
+    }
+    fun addDefaultInt(name: String, default: Int, warnMissing: Boolean = true) {
+        config.addProperty(PropertySpec
+            .builder(name.replaceFirstChar { it.lowercaseChar() }, Int::class)
+            .getter(FunSpec.getterBuilder().addCode("return getInt(\"$name\", $default, $warnMissing)").build())
             .build())
     }
     fun inlineBlockList(name: String, block: BlockScope.() -> Unit){
@@ -523,6 +534,24 @@ fun main() {
             }
             addBlock("Simul") {
                 addString("Current", "current game")
+            }
+        }
+        addBlock("Settings") {
+            addBlock("Presets") {
+                inlineBlockList("Preset") {
+                    addOptionalString("Variant")
+                    addOptionalString("Board")
+                    addOptionalString("Clock")
+                    addBool("SimpleCastling", false)
+                    addDefaultInt("TileSize", 3, false)
+                }
+            }
+            addBlock("Clock") {
+                inlineBlockList("Preset") {
+                    addEnum("Type", ClassName("gregc.gregchess.chess.component.ChessClock", "Type"), "INCREMENT", false)
+                    addDuration("Initial", null, true)
+                    addDuration("Increment", "0s", true)
+                }
             }
         }
     }

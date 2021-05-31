@@ -1,6 +1,9 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.Config
+import gregc.gregchess.InventoryPosition
+import gregc.gregchess.Screen
+import gregc.gregchess.ScreenOption
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import org.bukkit.Material
@@ -8,18 +11,15 @@ import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
-    inline fun <T> parseSettings(name: String, parser: (View) -> T) =
-        ConfigManager.getView("Settings.$name").children.mapValues { (_, child) -> parser(child) }
-
     val settingsChoice: Map<String, GameSettings>
         get() {
-            val presets = ConfigManager.getView("Settings.Presets")
-            return presets.children.mapValues { (key, child) ->
-                val simpleCastling = child.getBool("SimpleCastling", false)
-                val variant = ChessVariant[child.getOptionalString("Variant")]
-                val board = Chessboard.Settings[child.getOptionalString("Board")]
-                val clock = ChessClock.Settings[child.getOptionalString("Clock")]
-                val tileSize = child.getInt("TileSize", 3, false)
+            val presets = Config.settings.presets.presets
+            return presets.mapValues { (key, child) ->
+                val simpleCastling = child.simpleCastling
+                val variant = ChessVariant[child.variant]
+                val board = Chessboard.Settings[child.board]
+                val clock = ChessClock.Settings[child.clock]
+                val tileSize = child.tileSize
                 GameSettings(
                     key, simpleCastling, variant,
                     listOfNotNull(board, clock, BukkitRenderer.Settings(tileSize), ScoreboardManager.Settings())
