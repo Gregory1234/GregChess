@@ -55,7 +55,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
         args.forEachIndexed { i, v ->
             fn.addParameter("a${i+1}", v)
         }
-        fn.addCode("return getFormatString(\"\"")
+        fn.addCode("return getFormatString(\"$name\"")
         args.forEachIndexed { i, _ ->
             fn.addCode(", a${i+1}")
         }
@@ -179,7 +179,7 @@ fun viewExtensions(name: String, typ: TypeName, default: String, parser: CodeBlo
         .addParameter("path", String::class)
         .addParameter(ParameterSpec.builder("default", typ.copy(nullable = true)).defaultValue("null").build())
         .addParameter(ParameterSpec.builder("warnMissing", Boolean::class).defaultValue("default == null").build())
-        .addCode("""return get<%T>(path, "${name.camelToSpaces()}", $default, warnMissing, $parser)""", typ).build(),
+        .addCode("""return get<%T>(path, "${name.camelToSpaces()}", default ?: $default, warnMissing, $parser)""", typ).build(),
     FunSpec.builder("getOptional$name").returns(typ.copy(nullable = true)).receiver(viewClass)
         .addParameter("path", String::class)
         .addParameter(ParameterSpec.builder("warnMissing", Boolean::class).defaultValue("false").build())
