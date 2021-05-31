@@ -371,7 +371,7 @@ fun main(args: Array<String>) {
             }
             addBlockList("Clock") {
                 addEnum("Type", ClassName("gregc.gregchess.chess.component.ChessClock", "Type"), "INCREMENT", false)
-                addDuration("Initial", null, true)
+                addDuration("Initial", null)
                 addDuration("Increment", "0s", true)
             }
         }

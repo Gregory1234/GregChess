@@ -64,7 +64,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
         if(default != null)
             yamlBlock.value[name] = YamlText(default)
     }
-    fun add(name: String, typ: TypeName, typName: String, default: String? = null, defaultCode: String? = null, warnMissing: Boolean = true) {
+    fun add(name: String, typ: TypeName, typName: String, default: String? = null, defaultCode: String? = null, warnMissing: Boolean = default == null) {
         config.addProperty(
             PropertySpec.builder(name.lowerFirst(), typ)
             .getter(FunSpec.getterBuilder().addCode("return get$typName(\"$name\", $defaultCode, $warnMissing)").build())
@@ -74,7 +74,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     }
     fun addString(name: String, default: String? = null) = add(name, String::class.asTypeName(), "String", default)
     fun addChar(name: String, default: Char? = null) = add(name, Char::class.asTypeName(), "Char", default?.let {"'$it'"}.toString())
-    fun addDuration(name: String, default: String? = null, warnMissing: Boolean = true) = add(name, Duration::class.asTypeName(), "Duration", default.toString(), null, warnMissing)
+    fun addDuration(name: String, default: String? = null, warnMissing: Boolean = default == null) = add(name, Duration::class.asTypeName(), "Duration", default.toString(), null, warnMissing)
     fun addEnum(name: String, typ: TypeName, default: String, warnMissing: Boolean = true) = add(name, typ, "Enum", default, "$typ.$default", warnMissing)
     fun addDefaultBool(name: String, default: Boolean, warnMissing: Boolean = false) = add(name, Boolean::class.asTypeName(), "Bool", default.toString(), default.toString(), warnMissing)
     fun addDefaultInt(name: String, default: Int) = add(name, Int::class.asTypeName(), "Int", default.toString(), default.toString())
