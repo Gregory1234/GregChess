@@ -27,6 +27,15 @@ class BlockScope(val config: TypeSpec.Builder) {
             .builder(name.replaceFirstChar { it.lowercaseChar() }, ClassName("", name))
             .getter(FunSpec.getterBuilder().addCode("return $name(childPath(\"$name\"))").build()).build())
     }
+    fun instanceBlock(name: String, block: BlockScope.() -> Unit) {
+        val typ = config.propertySpecs.first{ it.name == name.replaceFirstChar { it.lowercaseChar() } }.type
+        val b = BlockScope(TypeSpec.classBuilder(name)
+            .superclass(viewClass)
+            .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
+            .addSuperclassConstructorParameter("path"))
+        b.block()
+        // TODO: check if matches
+    }
     fun addString(name: String, default: String? = null) {
         config.addProperty(PropertySpec
             .builder(name.replaceFirstChar { it.lowercaseChar() }, String::class)
@@ -56,7 +65,7 @@ class BlockScope(val config: TypeSpec.Builder) {
             .getter(FunSpec.getterBuilder().addCode("return getEnum<%T>(\"$name\", %T.$default, $warnMissing)", typ, typ).build())
             .build())
     }
-    fun addEnumList(name: String, typ: TypeName, warnMissing: Boolean = true) {
+    fun addEnumList(name: String, typ: TypeName, default: List<String>? = null, warnMissing: Boolean = true) {
         config.addProperty(PropertySpec
             .builder(name.replaceFirstChar { it.lowercaseChar() }, List::class.asClassName().parameterizedBy(typ))
             .getter(FunSpec.getterBuilder().addCode("return getEnumList<%T>(\"$name\", $warnMissing)", typ).build())
@@ -149,6 +158,7 @@ class BlockScope(val config: TypeSpec.Builder) {
         }
         config.addFunction(fn.endControlFlow().build())
     }
+
 }
 
 fun String.camelToUpperSnake(): String {
@@ -176,7 +186,7 @@ fun main() {
             addString("Accept", "&a[Accept]")
             addString("Cancel", "&c[Cancel]")
             addBool("SelfAccept", true)
-            inlineBlockList("RequestType") {
+            inlineFiniteBlockList("RequestType", "Duel", "Draw", "Takeback") {
                 addBlock("Sent") {
                     addString("Request")
                     addString("Cancel")
@@ -193,6 +203,53 @@ fun main() {
                 }
                 addString("Expired")
                 addOptionalDuration("Duration")
+            }
+            instanceBlock("Duel") {
+                addBlock("Sent") {
+                    addString("Request", "&eDuel request sent.")
+                    addString("Cancel", "&eYou cancelled the duel with $1.")
+                    addString("Accept", "&aYou accepted the duel request.")
+                }
+                addBlock("Received") {
+                    addString("Request", "&e$1 challenges you to a chess game: $2.")
+                    addString("Cancel", "&eDuel with $1 has been cancelled.")
+                    addString("Accept", "&aYour duel request has been accepted.")
+                }
+                addBlock("Error") {
+                    addString("NotFound", "&cDuel request not found.")
+                }
+                addString("Expired", "&eDuel request with $1 has expired.")
+                addDuration("Duration", "5m")
+            }
+            instanceBlock("Draw") {
+                addBlock("Sent") {
+                    addString("Request", "&eDraw offer sent.")
+                    addString("Cancel", "&eYou cancelled the draw offer.")
+                    addString("Accept", "&aYou accepted the draw offer.")
+                }
+                addBlock("Received") {
+                    addString("Request", "&eYour opponent wants a draw.")
+                    addString("Cancel", "&eThe draw offer has been cancelled.")
+                    addString("Accept", "&aThe draw offer has been accepted.")
+                }
+                addBlock("Error") {
+                    addString("CannotSend", "&cIt is your opponent's turn!")
+                }
+            }
+            instanceBlock("Takeback") {
+                addBlock("Sent") {
+                    addString("Request", "&eTakeback request sent.")
+                    addString("Cancel", "&eYou cancelled the takeback request.")
+                    addString("Accept", "&aYou accepted the takeback request.")
+                }
+                addBlock("Received") {
+                    addString("Request", "&eYour opponent wants a takeback.")
+                    addString("Cancel", "&eThe takeback request has been cancelled.")
+                    addString("Accept", "&aThe takeback request has been accepted.")
+                }
+                addBlock("Error") {
+                    addString("CannotSend", "&cIt is your turn!")
+                }
             }
         }
         addBlock("Message") {
@@ -323,6 +380,108 @@ fun main() {
                 }
                 byEnum(ClassName("gregc.gregchess.chess", "PieceType"),
                     "King", "Queen", "Rook", "Bishop", "Knight", "Pawn")
+                instanceBlock("King") {
+                    addString("Name", "King")
+                    addChar("Char", 'k')
+                    addBlock("Item") {
+                        addEnum("White", mat, "WHITE_CONCRETE")
+                        addEnum("Black", mat, "BLACK_CONCRETE")
+                    }
+                    addBlock("Structure") {
+                        addEnumList("White", mat, listOf("WHITE_CONCRETE"))
+                        addEnumList("Black", mat, listOf("BLACK_CONCRETE"))
+                    }
+                    addBlock("Sound") {
+                        addEnum("PickUp", sound, "BLOCK_METAL_HIT")
+                        addEnum("Move", sound, "BLOCK_METAL_STEP")
+                        addEnum("Capture", sound, "ENTITY_ENDER_DRAGON_DEATH")
+                    }
+                }
+                instanceBlock("Queen") {
+                    addString("Name", "Queen")
+                    addChar("Char", 'q')
+                    addBlock("Item") {
+                        addEnum("White", mat, "DIAMOND_BLOCK")
+                        addEnum("Black", mat, "NETHERITE_BLOCK")
+                    }
+                    addBlock("Structure") {
+                        addEnumList("White", mat, listOf("DIAMOND_BLOCK"))
+                        addEnumList("Black", mat, listOf("NETHERITE_BLOCK"))
+                    }
+                    addBlock("Sound") {
+                        addEnum("PickUp", sound, "ENTITY_WITCH_CELEBRATE")
+                        addEnum("Move", sound, "BLOCK_GLASS_STEP")
+                        addEnum("Capture", sound, "ENTITY_WITCH_DEATH")
+                    }
+                }
+                instanceBlock("Rook") {
+                    addString("Name", "Rook")
+                    addChar("Char", 'r')
+                    addBlock("Item") {
+                        addEnum("White", mat, "IRON_BLOCK")
+                        addEnum("Black", mat, "GOLD_BLOCK")
+                    }
+                    addBlock("Structure") {
+                        addEnumList("White", mat, listOf("IRON_BLOCK"))
+                        addEnumList("Black", mat, listOf("GOLD_BLOCK"))
+                    }
+                    addBlock("Sound") {
+                        addEnum("PickUp", sound, "ENTITY_IRON_GOLEM_STEP")
+                        addEnum("Move", sound, "ENTITY_IRON_GOLEM_STEP")
+                        addEnum("Capture", sound, "ENTITY_IRON_GOLEM_DEATH")
+                    }
+                }
+                instanceBlock("Bishop") {
+                    addString("Name", "Bishop")
+                    addChar("Char", 'b')
+                    addBlock("Item") {
+                        addEnum("White", mat, "POLISHED_DIORITE")
+                        addEnum("Black", mat, "POLISHED_BLACKSTONE")
+                    }
+                    addBlock("Structure") {
+                        addEnumList("White", mat, listOf("POLISHED_DIORITE"))
+                        addEnumList("Black", mat, listOf("POLISHED_BLACKSTONE"))
+                    }
+                    addBlock("Sound") {
+                        addEnum("PickUp", sound, "ENTITY_SPIDER_AMBIENT")
+                        addEnum("Move", sound, "ENTITY_SPIDER_STEP")
+                        addEnum("Capture", sound, "ENTITY_SPIDER_DEATH")
+                    }
+                }
+                instanceBlock("Knight") {
+                    addString("Name", "Knight")
+                    addChar("Char", 'n')
+                    addBlock("Item") {
+                        addEnum("White", mat, "END_STONE")
+                        addEnum("Black", mat, "BLACKSTONE")
+                    }
+                    addBlock("Structure") {
+                        addEnumList("White", mat, listOf("END_STONE"))
+                        addEnumList("Black", mat, listOf("BLACKSTONE"))
+                    }
+                    addBlock("Sound") {
+                        addEnum("PickUp", sound, "ENTITY_HORSE_JUMP")
+                        addEnum("Move", sound, "ENTITY_HORSE_STEP")
+                        addEnum("Capture", sound, "ENTITY_HORSE_DEATH")
+                    }
+                }
+                instanceBlock("Pawn") {
+                    addString("Name", "Pawn")
+                    addChar("Char", 'p')
+                    addBlock("Item") {
+                        addEnum("White", mat, "WHITE_CARPET")
+                        addEnum("Black", mat, "BLACK_CARPET")
+                    }
+                    addBlock("Structure") {
+                        addEnumList("White", mat, listOf("WHITE_CARPET"))
+                        addEnumList("Black", mat, listOf("BLACK_CARPET"))
+                    }
+                    addBlock("Sound") {
+                        addEnum("PickUp", sound, "BLOCK_STONE_HIT")
+                        addEnum("Move", sound, "BLOCK_STONE_STEP")
+                        addEnum("Capture", sound, "BLOCK_STONE_BREAK")
+                    }
+                }
             }
             addBlock("EndReason") {
                 addString("Checkmate", "checkmate")

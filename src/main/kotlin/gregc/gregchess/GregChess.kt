@@ -14,19 +14,19 @@ import java.util.*
 class GregChess : JavaPlugin(), Listener {
 
     private val drawRequest = buildRequestType<Unit> {
-        messagesSimple("Draw", "/chess draw", "/chess draw")
+        messagesSimple(Config.request.draw, "/chess draw", "/chess draw")
         validateSender = { it.chess?.hasTurn ?: false }
         onAccept = { (sender, _, _) -> sender.currentGame?.stop(ChessGame.EndReason.DrawAgreement())}
     }
 
     private val takebackRequest = buildRequestType<Unit> {
-        messagesSimple("Takeback", "/chess undo", "/chess undo")
+        messagesSimple(Config.request.takeback, "/chess undo", "/chess undo")
         validateSender = { (it.currentGame?.currentPlayer?.opponent as? HumanChessPlayer)?.player == it }
         onAccept = { (sender, _, _) -> sender.currentGame?.board?.undoLastMove() }
     }
 
     private val duelRequest = buildRequestType<ChessGame>{
-        messagesSimple("Duel", "/chess duel accept", "/chess duel cancel")
+        messagesSimple(Config.request.duel, "/chess duel accept", "/chess duel cancel")
         printT = { it.settings.name }
         onAccept = { (sender, receiver, g) ->
             g.addPlayers {

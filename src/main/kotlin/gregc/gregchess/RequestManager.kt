@@ -37,11 +37,11 @@ class RequestTypeBuilder<T> internal constructor() {
     var onCancel: (Request<T>) -> Unit = {}
 
     fun messagesSimple(
-        root: String,
+        view: Config.Request.RequestType,
         acceptCommand: String,
         cancelCommand: String
     ): RequestTypeBuilder<T> {
-        messages = RequestMessages(root, acceptCommand, cancelCommand)
+        messages = RequestMessages(view, acceptCommand, cancelCommand)
         return this
     }
 }
@@ -60,9 +60,7 @@ class RequestType<in T>(
     private inline val onCancel: (Request<T>) -> Unit
 ) {
     private val requests = mutableMapOf<UUID, Request<T>>()
-    private val root = messages.name
-
-    private val view get() = Config.request.requestTypes[root]!!
+    private val view get() = messages.view
 
     private fun call(request: Request<T>, simple: Boolean) {
         if (!validateSender(request.sender)) {
@@ -158,7 +156,7 @@ class RequestType<in T>(
 
 }
 
-data class RequestMessages(val name: String, val acceptCommand: String, val cancelCommand: String)
+data class RequestMessages(val view: Config.Request.RequestType, val acceptCommand: String, val cancelCommand: String)
 
 data class Request<out T>(val sender: HumanPlayer, val receiver: HumanPlayer, val value: T) {
     val uniqueId: UUID = UUID.randomUUID()
