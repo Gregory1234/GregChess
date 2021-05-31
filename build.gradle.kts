@@ -1,6 +1,5 @@
 
 import org.apache.tools.ant.filters.ReplaceTokens
-import java.io.ByteArrayOutputStream
 import java.net.URI
 
 plugins {
@@ -53,15 +52,7 @@ tasks {
         group = "kotlinpoet"
         main = "gregc.gregchess.config.MainKt"
         classpath = project(":config").sourceSets["main"].runtimeClasspath
-        standardOutput = ByteArrayOutputStream()
-        doLast {
-            val outputDir = File("$generated/gregc/gregchess")
-            val outputFile = File(outputDir, "Config.kt")
-            if(!outputDir.exists()) {
-                outputDir.mkdirs()
-            }
-            outputFile.writeText(standardOutput.toString())
-        }
+        args(generated)
     }
 
     processResources {
@@ -82,6 +73,7 @@ tasks {
         archiveBaseName.set(project.name)
         destinationDirectory.set(file(rootDir))
         from ({ shaded.map { if(it.isDirectory) it else zipTree(it) } })
+        from("$generated/config.yml")
         duplicatesStrategy = DuplicatesStrategy.WARN
     }
 }
