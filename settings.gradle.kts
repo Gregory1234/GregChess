@@ -5,3 +5,4 @@ pluginManagement {
         id("org.jetbrains.kotlin.jvm") version kotlinVersion
     }
 }
+include("config")

@@ -1,5 +1,6 @@
 
 import org.apache.tools.ant.filters.ReplaceTokens
+import java.io.ByteArrayOutputStream
 import java.net.URI
 
 plugins {
@@ -30,9 +31,32 @@ dependencies {
 
     "api"("org.spigotmc:spigot-api:$spigotVersion")
     "shaded"(kotlin("stdlib-jdk8"))
+    implementation(project(":config"))
+}
+
+val generated = "$rootDir/build/generated"
+
+kotlin{
+    sourceSets["main"].kotlin.srcDirs += File(generated)
 }
 
 tasks {
+    register<JavaExec>("regenerateConfig") {
+        dependsOn += project(":config").tasks["build"]
+        group = "kotlinpoet"
+        main = "gregc.gregchess.config.MainKt"
+        classpath = project(":config").sourceSets["main"].runtimeClasspath
+        standardOutput = ByteArrayOutputStream()
+        doLast {
+            val outputDir = File("$generated/gregc/gregchess")
+            val outputFile = File(outputDir, "Config.kt")
+            if(!outputDir.exists()) {
+                outputDir.mkdirs()
+            }
+            outputFile.writeText(standardOutput.toString())
+        }
+    }
+
     processResources {
         from(sourceSets["main"].resources.srcDirs) {
             filter<ReplaceTokens>("tokens" to mapOf("version" to version))
@@ -41,6 +65,7 @@ tasks {
     }
 
     compileKotlin {
+        dependsOn += project.tasks["regenerateConfig"]
         kotlinOptions {
             jvmTarget = "1.8"
             freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.contracts.ExperimentalContracts"

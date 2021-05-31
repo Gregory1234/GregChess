@@ -8,7 +8,7 @@ open class View protected constructor(private val rootPath: String = "") {
     private val section
         get() = config.getConfigurationSection(rootPath)
 
-    private fun childPath(path: String) = (if (rootPath == "") path else ("$rootPath.$path"))
+    protected fun childPath(path: String) = (if (rootPath == "") path else ("$rootPath.$path"))
 
     fun getView(path: String) = View(childPath(path))
 
@@ -105,8 +105,8 @@ open class View protected constructor(private val rootPath: String = "") {
 
     fun getOptionalDuration(path: String) = get(path, "duration", null, false, ::parseDuration)
 
-    fun getBool(path: String, default: Boolean) =
-        get(path, "boolean", default, false) { it.toBooleanStrictOrNull() }
+    fun getBool(path: String, default: Boolean, warnMissing: Boolean = false) =
+        get(path, "boolean", default, warnMissing) { it.toBooleanStrictOrNull() }
 
     fun getStringList(path: String) = getList(path, "string") { chatColor(it) }
 
