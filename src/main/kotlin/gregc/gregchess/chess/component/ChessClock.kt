@@ -1,10 +1,19 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
-import gregc.gregchess.chess.*
-import java.time.*
+import gregc.gregchess.Config
+import gregc.gregchess.chess.BySides
+import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.SettingsManager
+import gregc.gregchess.chess.Side
+import gregc.gregchess.glog
+import gregc.gregchess.minutes
+import gregc.gregchess.seconds
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.*
+import kotlin.math.ceil
+import kotlin.math.max
 
 
 class ChessClock(private val game: ChessGame, private val settings: Settings) : Component {
@@ -62,8 +71,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    private val view
-        get() = ConfigManager.getView("Component.Clock")
+    private val view get() = Config.component.clock
 
     data class Time(
         var diff: Duration,
@@ -102,7 +110,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
     private fun format(time: Duration): String {
-        val formatter = DateTimeFormatter.ofPattern(view.getString("TimeFormat"))
+        val formatter = DateTimeFormatter.ofPattern(view.timeFormat)
         return (LocalTime.ofNanoOfDay(
             max(ceil(time.toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0)
         )).format(formatter)
@@ -112,12 +120,12 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     fun start() {
 
         if (settings.type == Type.FIXED) {
-            game.scoreboard += object : GameProperty(view.getString("TimeRemainingSimple")) {
+            game.scoreboard += object : GameProperty(view.timeRemaining) {
                 override fun invoke() = format(getTimeRemaining(game.currentTurn))
             }
             startTimer()
         } else {
-            game.scoreboard += object : PlayerProperty(view.getString("TimeRemaining")) {
+            game.scoreboard += object : PlayerProperty(view.timeRemaining) {
                 override fun invoke(s: Side) = format(getTimeRemaining(s))
             }
         }

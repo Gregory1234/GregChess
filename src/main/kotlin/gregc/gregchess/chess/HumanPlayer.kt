@@ -1,7 +1,8 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import net.md_5.bungee.api.chat.*
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -32,7 +33,7 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     class PawnPromotionScreen(
         private val moves: List<Pair<Piece, MoveCandidate>>,
         private val player: ChessPlayer?
-    ) : Screen<MoveCandidate>("Message.PawnPromotion") {
+    ) : Screen<MoveCandidate>(Config.message::pawnPromotion) {
         override fun getContent() = moves.mapIndexed { i, (t, m) ->
             ScreenOption(t.item, m, InventoryPosition.fromIndex(i))
         }
@@ -65,7 +66,7 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
     override fun sendPGN(pgn: PGN) {
-        val message = TextComponent(ConfigManager.getString("Message.CopyPGN"))
+        val message = TextComponent(Config.message.copyPGN)
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }

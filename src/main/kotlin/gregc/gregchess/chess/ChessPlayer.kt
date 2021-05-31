@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ConfigManager
+import gregc.gregchess.Config
 
 
 abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game: ChessGame) {
@@ -40,11 +40,11 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 
     private fun announceInCheck() {
         if (!silent) {
-            sendTitle(ConfigManager.getString("Title.YourTurn"), ConfigManager.getString("Title.InCheck"))
-            sendMessage(ConfigManager.getString("Message.InCheck"))
+            sendTitle(Config.title.yourTurn, Config.title.inCheck)
+            sendMessage(Config.message.inCheck)
         } else {
-            sendTitle(ConfigManager.getString("Title.InCheck"))
-            sendMessage(ConfigManager.getString("Message.InCheck"))
+            sendTitle(Config.title.inCheck)
+            sendMessage(Config.message.inCheck)
         }
     }
 
@@ -52,7 +52,7 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 
     open fun startTurn() {
         if (!silent) {
-            sendTitle(ConfigManager.getString("Title.YourTurn"))
+            sendTitle(Config.title.yourTurn)
         }
         if (king?.let { game.variant.isInCheck(it) } == true)
             announceInCheck()

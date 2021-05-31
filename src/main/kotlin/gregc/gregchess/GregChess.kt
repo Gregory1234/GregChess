@@ -1,9 +1,12 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
-import net.md_5.bungee.api.chat.*
-import org.bukkit.event.*
-import org.bukkit.event.inventory.*
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.TextComponent
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.util.*
 
@@ -46,7 +49,7 @@ class GregChess : JavaPlugin(), Listener {
             when (nextArg().lowercase()) {
                 "duel" -> {
                     cPlayer(player)
-                    cRequire(!player.human.isInGame(), "InGame.You")
+                    cRequire(!player.human.isInGame(), errorMsg.inGame::you)
                     when (nextArg().lowercase()) {
                         "accept" -> {
                             cWrongArgument {
@@ -61,7 +64,7 @@ class GregChess : JavaPlugin(), Listener {
                         else -> {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
-                            cRequire(!opponent.human.isInGame(), "InGame.Opponent")
+                            cRequire(!opponent.human.isInGame(), errorMsg.inGame::opponent)
                             player.openScreen(SettingsScreen { settings ->
                                 duelRequest += Request(player.human, opponent.human, ChessGame(Arena.cNext(), settings))
                             })
@@ -71,7 +74,7 @@ class GregChess : JavaPlugin(), Listener {
                 "stockfish" -> {
                     cPlayer(player)
                     endArgs()
-                    cRequire(!player.human.isInGame(), "InGame.You")
+                    cRequire(!player.human.isInGame(), errorMsg.inGame::you)
                     player.openScreen(SettingsScreen { settings ->
                         ChessGame(Arena.cNext(), settings).addPlayers {
                             human(player.human, Side.WHITE, false)
@@ -82,7 +85,7 @@ class GregChess : JavaPlugin(), Listener {
                 "resign" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(player.human.chess, "NotInGame.You")
+                    val p = cNotNull(player.human.chess, errorMsg.notInGame::you)
                     p.game.stop(ChessGame.EndReason.Resignation(!p.side))
                 }
                 "leave" -> {
@@ -93,28 +96,28 @@ class GregChess : JavaPlugin(), Listener {
                 "draw" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(player.human.chess, "NotInGame.You")
-                    val opponent: HumanChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
+                    val p = cNotNull(player.human.chess, errorMsg.notInGame::you)
+                    val opponent: HumanChessPlayer = cCast(p.opponent, errorMsg.notHuman::opponent)
                     drawRequest.simpleCall(Request(player.human, opponent.player, Unit))
                 }
                 "capture" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
-                    val p = cNotNull(player.human.chess, "NotInGame.You")
+                    val p = cNotNull(player.human.chess, errorMsg.notInGame::you)
                     val pos = if (args.size == 1)
-                        cNotNull(p.game.withRenderer<Loc, Pos> { it.getPos(Loc.fromLocation(player.location)) }, "RendererNotFound")
+                        cNotNull(p.game.withRenderer<Loc, Pos> { it.getPos(Loc.fromLocation(player.location)) }, errorMsg::rendererNotFound)
                     else
                         cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()
                     p.game.board[pos]?.piece?.capture(p.side)
                     p.game.board.updateMoves()
-                    player.sendMessage(ConfigManager.getString("Message.BoardOpDone"))
+                    player.sendMessage(Config.message.boardOpDone)
                 }
                 "spawn" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 3, 4)
-                    val p = cNotNull(player.human.chess, "NotInGame.You")
+                    val p = cNotNull(player.human.chess, errorMsg.notInGame::you)
                     val game = p.game
                     cWrongArgument {
                         val square = if (args.size == 3)
@@ -125,44 +128,44 @@ class GregChess : JavaPlugin(), Listener {
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(Piece(piece, Side.valueOf(this[0])), square)
                         game.board.updateMoves()
-                        player.sendMessage(ConfigManager.getString("Message.BoardOpDone"))
+                        player.sendMessage(Config.message.boardOpDone)
                     }
                 }
                 "move" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 3, 3)
-                    val p = cNotNull(player.human.chess, "NotInGame.You")
+                    val p = cNotNull(player.human.chess, errorMsg.notInGame::you)
                     val game = p.game
                     cWrongArgument {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
                         game.board[Pos.parseFromString(this[1])]?.piece?.move(game.board[Pos.parseFromString(this[2])]!!)
                         game.board.updateMoves()
-                        player.sendMessage(ConfigManager.getString("Message.BoardOpDone"))
+                        player.sendMessage(Config.message.boardOpDone)
                     }
                 }
                 "skip" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     endArgs()
-                    val game = cNotNull(player.human.currentGame, "NotInGame.You")
+                    val game = cNotNull(player.human.currentGame, errorMsg.notInGame::you)
                     game.nextTurn()
-                    player.sendMessage(ConfigManager.getString("Message.SkippedTurn"))
+                    player.sendMessage(Config.message.skippedTurn)
                 }
                 "load" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
-                    val game = cNotNull(player.human.currentGame, "NotInGame.You")
+                    val game = cNotNull(player.human.currentGame, errorMsg.notInGame::you)
                     game.board.setFromFEN(
                         FEN.parseFromString(restString())
                     )
-                    player.sendMessage(ConfigManager.getString("Message.LoadedFEN"))
+                    player.sendMessage(Config.message.loadedFEN)
                 }
                 "save" -> {
                     cPlayer(player)
                     endArgs()
-                    val game = cNotNull(player.human.currentGame, "NotInGame.You")
-                    val message = TextComponent(config.getString("Message.CopyFEN"))
+                    val game = cNotNull(player.human.currentGame, errorMsg.notInGame::you)
+                    val message = TextComponent(Config.message.copyFEN)
                     message.clickEvent =
                         ClickEvent(
                             ClickEvent.Action.COPY_TO_CLIPBOARD,
@@ -174,25 +177,25 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     cArgs(args, 4, 4)
-                    val game = cNotNull(player.human.currentGame, "NotInGame.You")
-                    val clock = cNotNull(game.clock, "ClockNotFound")
+                    val game = cNotNull(player.human.currentGame, errorMsg.notInGame::you)
+                    val clock = cNotNull(game.clock, errorMsg::clockNotFound)
                     cWrongArgument {
                         val side = Side.valueOf(nextArg())
-                        val time = cNotNull(parseDuration(this[1]), "WrongArgument")
+                        val time = cNotNull(parseDuration(this[1]), errorMsg::wrongArgument)
                         when (nextArg().lowercase()) {
                             "add" -> clock.addTime(side, time)
                             "set" -> clock.setTime(side, time)
                             else -> cWrongArgument()
                         }
-                        player.sendMessage(ConfigManager.getString("Message.TimeOpDone"))
+                        player.sendMessage(Config.message.timeOpDone)
                     }
                 }
                 "uci" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.admin")
-                    val game = cNotNull(player.human.currentGame, "NotInGame.You")
+                    val game = cNotNull(player.human.currentGame, errorMsg.notInGame::you)
                     val engines = game.players.toList().filterIsInstance<EnginePlayer>()
-                    val engine = cNotNull(engines.firstOrNull(), "EngineNotFound")
+                    val engine = cNotNull(engines.firstOrNull(), errorMsg::engineNotFound)
                     cWrongArgument {
                         when (nextArg().lowercase()) {
                             "set" -> {
@@ -201,23 +204,23 @@ class GregChess : JavaPlugin(), Listener {
                             "send" -> engine.engine.sendCommand(restString())
                             else -> cWrongArgument()
                         }
-                        player.sendMessage(ConfigManager.getString("Message.EngineCommandSent"))
+                        player.sendMessage(Config.message.engineCommandSent)
                     }
                 }
                 "spectate" -> {
                     cPlayer(player)
                     val toSpectate = cServerPlayer(lastArg())
-                    player.human.spectatedGame = cNotNull(toSpectate.human.currentGame, "NotInGame.Player")
+                    player.human.spectatedGame = cNotNull(toSpectate.human.currentGame, errorMsg.notInGame::player)
                 }
                 "reload" -> {
                     cPerms(player, "greg-chess.admin")
                     endArgs()
                     reloadConfig()
                     Arena.reload()
-                    player.sendMessage(ConfigManager.getString("Message.ConfigReloaded"))
+                    player.sendMessage(Config.message.configReloaded)
                 }
                 "dev" -> {
-                    cRequire(server.pluginManager.isPluginEnabled("DevHelpPlugin"), "WrongArgument")
+                    cRequire(server.pluginManager.isPluginEnabled("DevHelpPlugin"), errorMsg::wrongArgument)
                     cPerms(player, "greg-chess.admin")
                     endArgs()
                     server.dispatchCommand(player, "devhelp GregChess ${description.version}")
@@ -225,16 +228,16 @@ class GregChess : JavaPlugin(), Listener {
                 "undo" -> {
                     cPlayer(player)
                     endArgs()
-                    val p = cNotNull(player.human.chess, "NotInGame.You")
-                    cNotNull(p.game.board.lastMove, "NothingToTakeback")
-                    val opponent: HumanChessPlayer = cCast(p.opponent, "NotHuman.Opponent")
+                    val p = cNotNull(player.human.chess, errorMsg.notInGame::you)
+                    cNotNull(p.game.board.lastMove, errorMsg::nothingToTakeback)
+                    val opponent: HumanChessPlayer = cCast(p.opponent, errorMsg.notHuman::opponent)
                     takebackRequest.simpleCall(Request(player.human, opponent.player, Unit))
                 }
                 "debug" -> {
                     cPerms(player, "greg-chess.admin")
                     cWrongArgument {
                         glog.level = GregLogger.Level.valueOf(lastArg())
-                        player.sendMessage(ConfigManager.getString("Message.LevelSet"))
+                        player.sendMessage(Config.message.levelSet)
                     }
                 }
                 "info" -> {
@@ -291,39 +294,39 @@ class GregChess : JavaPlugin(), Listener {
         when (rest().size) {
             0 -> {
                 cPlayer(player)
-                val game = cNotNull(player.human.currentGame, "NotInGame.You")
-                cNotNull(game.board[Loc.fromLocation(player.location)]?.piece, "PieceNotFound")
+                val game = cNotNull(player.human.currentGame, errorMsg.notInGame::you)
+                cNotNull(game.board[Loc.fromLocation(player.location)]?.piece, errorMsg::pieceNotFound)
             }
             1 -> {
                 if (isValidUUID(nextArg())) {
                     cPerms(player, "greg-chess.info")
                     val game = cNotNull(
                         ChessManager.firstGame { UUID.fromString(latestArg()) in it.board },
-                        "PieceNotFound"
+                        errorMsg::pieceNotFound
                     )
                     game.board[UUID.fromString(latestArg())]!!
                 } else {
                     cPlayer(player)
-                    val game = cNotNull(player.human.currentGame, "NotInGame.You")
-                    cNotNull(game.board[Pos.parseFromString(latestArg())]?.piece, "PieceNotFound")
+                    val game = cNotNull(player.human.currentGame, errorMsg.notInGame::you)
+                    cNotNull(game.board[Pos.parseFromString(latestArg())]?.piece, errorMsg::pieceNotFound)
                 }
             }
-            else -> throw CommandException("WrongArgumentsNumber")
+            else -> throw CommandException(errorMsg::wrongArgumentsNumber)
         }
 
     private fun CommandArgs.selectGame() =
         when (rest().size) {
             0 -> {
                 cPlayer(player)
-                cNotNull(player.human.currentGame, "NotInGame.You")
+                cNotNull(player.human.currentGame, errorMsg.notInGame::you)
             }
             1 -> {
                 cWrongArgument {
                     cPerms(player, "greg-chess.info")
-                    cNotNull(ChessManager[UUID.fromString(nextArg())], "GameNotFound")
+                    cNotNull(ChessManager[UUID.fromString(nextArg())], errorMsg::gameNotFound)
                 }
             }
-            else -> throw CommandException("WrongArgumentsNumber")
+            else -> throw CommandException(errorMsg::wrongArgumentsNumber)
         }
 
     override fun onDisable() {

@@ -1,9 +1,16 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.*
-import org.bukkit.*
-import org.bukkit.event.*
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.GameBaseEvent
+import gregc.gregchess.chess.component.GameEvent
+import gregc.gregchess.chess.component.TimeModifier
+import org.bukkit.Difficulty
+import org.bukkit.GameRule
+import org.bukkit.World
+import org.bukkit.WorldCreator
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.generator.ChunkGenerator
@@ -16,12 +23,12 @@ data class Arena(val name: String, var game: ChessGame? = null): Component {
 
         fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
 
-        fun cNext() = cNotNull(next(), "NoArenas")
+        fun cNext() = cNotNull(next(), errorMsg::noArenas)
 
         fun World.isArena(): Boolean = arenas.any {it.name == name}
 
         fun reload() {
-            val newArenas = ConfigManager.getStringList("ChessArenas")
+            val newArenas = Config.chessArenas
             arenas.forEach {
                 if (it.name in newArenas){
                     it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
@@ -33,7 +40,7 @@ data class Arena(val name: String, var game: ChessGame? = null): Component {
 
         fun start() {
             GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
-            arenas.addAll(ConfigManager.getStringList("ChessArenas").map { Arena(it) })
+            arenas.addAll(Config.chessArenas.map { Arena(it) })
         }
 
         @EventHandler

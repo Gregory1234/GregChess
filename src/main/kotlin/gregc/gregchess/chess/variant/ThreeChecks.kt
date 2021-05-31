@@ -1,8 +1,13 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.ConfigManager
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.Config
+import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.MutableBySides
+import gregc.gregchess.chess.Side
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.GameBaseEvent
+import gregc.gregchess.chess.component.GameEvent
+import gregc.gregchess.chess.component.PlayerProperty
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
     class CheckCounter(private val game: ChessGame) : Component {
@@ -15,7 +20,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         @GameEvent(GameBaseEvent.START)
         fun start() {
             game.scoreboard += object :
-                PlayerProperty(ConfigManager.getString("Component.CheckCounter.CheckCounter")) {
+                PlayerProperty(Config.component.checkCounter.checkCounter) {
                 override fun invoke(s: Side): String = checks[s].toString()
             }
         }
@@ -34,8 +39,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         }
     }
 
-    class ThreeChecksEndReason(winner: Side) :
-        ChessGame.EndReason("Chess.EndReason.ThreeChecks", "normal", winner)
+    class ThreeChecksEndReason(winner: Side) : ChessGame.EndReason(Config.chess.endReason::threeChecks, "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

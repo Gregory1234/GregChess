@@ -1,9 +1,12 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.Config
+import gregc.gregchess.chatColor
 import gregc.gregchess.chess.*
+import gregc.gregchess.randomString
 import org.bukkit.Bukkit
-import org.bukkit.scoreboard.*
+import org.bukkit.scoreboard.DisplaySlot
+import org.bukkit.scoreboard.Team
 
 class ScoreboardManager(private val game: ChessGame): Component {
     class Settings: Component.Settings<ScoreboardManager> {
@@ -13,11 +16,11 @@ class ScoreboardManager(private val game: ChessGame): Component {
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 
-    private val view = ConfigManager.getView("Component.Scoreboard")
+    private val view = Config.component.scoreboard
 
     val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
-    private val objective = scoreboard.registerNewObjective("GregChess", "", view.getString("Title"))
+    private val objective = scoreboard.registerNewObjective("GregChess", "", view.title)
 
     operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -38,13 +41,12 @@ class ScoreboardManager(private val game: ChessGame): Component {
     @GameEvent(GameBaseEvent.INIT)
     fun init() {
         this += object :
-            GameProperty(ConfigManager.getString("Component.Scoreboard.Preset")) {
+            GameProperty(view.preset) {
             override fun invoke() = game.settings.name
         }
         this += object :
-            PlayerProperty(ConfigManager.getString("Component.Scoreboard.Player")) {
-            override fun invoke(s: Side) =
-                ConfigManager.getString("Component.Scoreboard.PlayerPrefix") + game[s].name
+            PlayerProperty(view.player) {
+            override fun invoke(s: Side) = view.playerPrefix + game[s].name
         }
     }
 

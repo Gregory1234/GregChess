@@ -2,20 +2,18 @@ package gregc.gregchess
 
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
-import org.bukkit.inventory.*
+import org.bukkit.inventory.InventoryHolder
+import org.bukkit.inventory.ItemStack
+import kotlin.reflect.KProperty0
 
-abstract class Screen<T>(val namePath: String) {
+abstract class Screen<T>(val namePath: KProperty0<String>) {
     abstract fun getContent(): List<ScreenOption<T>>
     abstract fun onClick(v: T)
     abstract fun onCancel()
     fun create() = Holder(this)
     class Holder<T> internal constructor(private val screen: Screen<T>) : InventoryHolder {
         private val content = screen.getContent()
-        private val inv = Bukkit.createInventory(
-            this,
-            content.size - content.size % 9 + 9,
-            ConfigManager.getString(screen.namePath)
-        )
+        private val inv = Bukkit.createInventory(this,content.size - content.size % 9 + 9, screen.namePath.get())
 
         var finished: Boolean = false
 

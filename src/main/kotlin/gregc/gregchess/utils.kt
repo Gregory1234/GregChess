@@ -1,6 +1,7 @@
 package gregc.gregchess
 
-import net.md_5.bungee.api.chat.*
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
@@ -11,11 +12,13 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
 import java.io.File
-import java.time.*
+import java.time.Duration
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.contracts.contract
 import kotlin.math.floor
 import kotlin.math.roundToLong
+import kotlin.reflect.KProperty0
 
 data class PlayerData(
     val location: Location? = null,
@@ -94,7 +97,7 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
-    p.sendMessage(ConfigManager.getError(e.playerMsg))
+    p.sendMessage(e.playerMsg.get())
     err(e)
 }
 
@@ -126,12 +129,14 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
-class CommandException(val playerMsg: String) : Exception() {
+class CommandException(val playerMsg: KProperty0<String>) : Exception() {
     override val message: String
         get() = "Uncaught command error: $playerMsg"
 }
 
-fun cRequire(e: Boolean, msg: String) {
+val errorMsg get() = Config.message.error
+
+fun cRequire(e: Boolean, msg: KProperty0<String>) {
     contract {
         returns() implies e
     }
@@ -139,18 +144,18 @@ fun cRequire(e: Boolean, msg: String) {
 }
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
-    cRequire(args.size in min..max, "WrongArgumentsNumber")
+    cRequire(args.size in min..max, errorMsg::wrongArgumentsNumber)
 }
 
 fun cPerms(p: CommandSender, perm: String) {
-    cRequire(p.hasPermission(perm), "NoPerms")
+    cRequire(p.hasPermission(perm), errorMsg::noPermission)
 }
 
 fun cPlayer(p: CommandSender) {
     contract {
         returns() implies (p is Player)
     }
-    cRequire(p is Player, "NotPlayer")
+    cRequire(p is Player, errorMsg::notPlayer)
 }
 
 inline fun <T> cWrongArgument(block: () -> T): T = try {
@@ -160,13 +165,13 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
     cWrongArgument()
 }
 
-fun cWrongArgument(): Nothing = throw CommandException("WrongArgument")
+fun cWrongArgument(): Nothing = throw CommandException(errorMsg::wrongArgument)
 
-fun <T> cNotNull(p: T?, msg: String): T = p ?: throw CommandException(msg)
+fun <T> cNotNull(p: T?, msg: KProperty0<String>): T = p ?: throw CommandException(msg)
 
-inline fun <reified T, reified R : T> cCast(p: T, msg: String): R = cNotNull(p as? R, msg)
+inline fun <reified T, reified R : T> cCast(p: T, msg: KProperty0<String>): R = cNotNull(p as? R, msg)
 
-fun cServerPlayer(name: String) = cNotNull(GregInfo.server.getPlayer(name), "PlayerNotFound")
+fun cServerPlayer(name: String) = cNotNull(GregInfo.server.getPlayer(name), errorMsg::playerNotFound)
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 

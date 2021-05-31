@@ -1,8 +1,12 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.Config
+import gregc.gregchess.buildTextComponent
+import gregc.gregchess.glog
+import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 import java.util.*
+import kotlin.reflect.KProperty1
 
 data class Piece(val type: PieceType, val side: Side) {
     val standardName
@@ -122,13 +126,13 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         square.piece = BoardPiece(promotion, square)
     }
 
-    private fun playSound(s: String) {
+    private fun playSound(s: KProperty1<Config.Chess.Piece.PieceData.Sound, Sound>) {
         game.renderers.forEach { it.playPieceSound(pos, s, type) }
     }
 
-    private fun playPickUpSound() = playSound("PickUp")
-    private fun playMoveSound() = playSound("Move")
-    private fun playCaptureSound() = playSound("Capture")
+    private fun playPickUpSound() = playSound(Config.Chess.Piece.PieceData.Sound::pickUp)
+    private fun playMoveSound() = playSound(Config.Chess.Piece.PieceData.Sound::move)
+    private fun playCaptureSound() = playSound(Config.Chess.Piece.PieceData.Sound::capture)
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved

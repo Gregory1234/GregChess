@@ -75,6 +75,7 @@ Message:
     BoardNotFound: "&cYour game has no chessboard!"
     ClockNotFound: "&cYour game has no clock!"
     RendererNotFound: "&cYour game has no compatible renderer!"
+    PieceNotFound: "&cPiece was not found!"
     NothingToTakeback: "&cThere are no moves to takeback!"
     WrongDurationFormat: "&cWrong duration format!"
     TeleportFailed: "&cTeleport failed!"

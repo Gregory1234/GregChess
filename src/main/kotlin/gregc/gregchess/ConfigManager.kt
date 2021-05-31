@@ -28,13 +28,14 @@ open class View protected constructor(private val rootPath: String = "") {
         val fullPath = childPath(path)
         val str = config.getString(fullPath)
         if (str == null) {
-            if (warnMissing)
-                glog.warn("Not found $type $fullPath, defaulted to $default!")
+            if (warnMissing) {
+                glog.warn("Not found $type $fullPath, defaulted to $default!", Thread.currentThread().stackTrace.joinToString("\n"))
+            }
             return default
         }
         val ret = parser(str)
         if (ret == null) {
-            glog.warn("${type.upperFirst()} $fullPath is in a wrong format, defaulted to $default!")
+            glog.warn("${type.upperFirst()} $fullPath is in a wrong format, defaulted to $default!", Thread.currentThread().stackTrace.joinToString("\n"))
             return default
         }
         return ret
@@ -46,14 +47,14 @@ open class View protected constructor(private val rootPath: String = "") {
         val fullPath = childPath(path)
         if (fullPath !in config) {
             if (warnMissing)
-                glog.warn("Not found list of $type $fullPath, defaulted to an empty list!")
+                glog.warn("Not found list of $type $fullPath, defaulted to an empty list!", Thread.currentThread().stackTrace.joinToString("\n"))
             return emptyList()
         }
         val str = config.getStringList(fullPath)
         return str.mapNotNull {
             val ret = parser(it)
             if (ret == null) {
-                glog.warn("${type.lowerFirst()} $fullPath is in a wrong format, ignored!")
+                glog.warn("${type.lowerFirst()} $fullPath is in a wrong format, ignored!", Thread.currentThread().stackTrace.joinToString("\n"))
                 null
             } else
                 ret

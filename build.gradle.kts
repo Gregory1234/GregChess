@@ -5,6 +5,7 @@ import java.net.URI
 
 plugins {
     id("org.jetbrains.kotlin.jvm")
+    idea
 }
 
 group = "gregc"
@@ -34,10 +35,16 @@ dependencies {
     implementation(project(":config"))
 }
 
-val generated = "$rootDir/build/generated"
+val generated = "$buildDir/generated"
+val maind = "$rootDir/src/main/kotlin"
 
 kotlin{
-    sourceSets["main"].kotlin.srcDirs += File(generated)
+    sourceSets["main"].kotlin.srcDirs(File(maind),File(generated))
+}
+
+idea.module {
+    sourceDirs.plusAssign(File(maind))
+    generatedSourceDirs.plusAssign(File(generated))
 }
 
 tasks {

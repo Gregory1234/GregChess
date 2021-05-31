@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
-import org.bukkit.Material
+import gregc.gregchess.Config
+import gregc.gregchess.rangeTo
 
 data class Pos(val file: Int, val rank: Int) {
     override fun toString() = "$fileStr$rankStr"
@@ -93,8 +93,7 @@ class PosSteps(val start: Pos, private val jump: Pair<Int, Int>, override val si
 
 enum class Floor {
     LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END;
-    val path = "Chess.Floor.${name.lowercase().split('_').joinToString("", transform = String::upperFirst)}"
-    val material get() = ConfigManager.getEnum<Material>(path, Material.AIR)
+    val material get() = Config.chess.floor[this]
 }
 
 data class Square(val pos: Pos, val game: ChessGame) {

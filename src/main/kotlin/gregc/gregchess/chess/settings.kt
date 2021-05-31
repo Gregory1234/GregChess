@@ -31,7 +31,7 @@ object SettingsManager {
 
 class SettingsScreen(
     private inline val startGame: (GameSettings) -> Unit
-) : Screen<GameSettings>("Message.ChooseSettings") {
+) : Screen<GameSettings>(Config.message::chooseSettings) {
     override fun getContent() =
         SettingsManager.settingsChoice.toList().mapIndexed { index, (name, s) ->
             val item = ItemStack(Material.IRON_BLOCK)

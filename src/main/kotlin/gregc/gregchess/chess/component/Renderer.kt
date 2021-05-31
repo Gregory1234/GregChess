@@ -5,6 +5,7 @@ import gregc.gregchess.chess.*
 import org.bukkit.*
 import java.util.*
 import kotlin.math.floor
+import kotlin.reflect.KProperty1
 
 interface Renderer<in T>: Component {
     interface Settings<in T>: Component.Settings<Renderer<T>>
@@ -13,7 +14,7 @@ interface Renderer<in T>: Component {
     fun clearPiece(pos: Pos)
     fun renderCapturedPiece(pos: CapturedPos, piece: Piece)
     fun clearCapturedPiece(pos: CapturedPos)
-    fun playPieceSound(pos: Pos, sound: String, type: PieceType)
+    fun playPieceSound(pos: Pos, sound: KProperty1<Config.Chess.Piece.PieceData.Sound, Sound>, type: PieceType)
     fun explosionAt(pos: Pos)
     fun fillFloor(pos: Pos, floor: Floor)
     fun renderBoardBase()
@@ -103,7 +104,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
 
     private fun <R> doAt(pos: Pos, f: (World, Location) -> R) = getPieceLoc(pos).doIn(world, f)
 
-    override fun playPieceSound(pos: Pos, sound: String, type: PieceType) =
+    override fun playPieceSound(pos: Pos, sound: KProperty1<Config.Chess.Piece.PieceData.Sound, Sound>, type: PieceType) =
         doAt(pos) { world, l -> world.playSound(l, type.getSound(sound)) }
 
     override fun explosionAt(pos: Pos) {

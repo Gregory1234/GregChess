@@ -134,6 +134,28 @@ class BlockScope(val config: TypeSpec.Builder) {
             """.trimIndent(), sideType, sideType)
             .build())
     }
+    fun byEnum(typ: TypeName, vararg values: String) {
+        val ft = config.propertySpecs.first {it.name == values[0].replaceFirstChar { it.lowercaseChar() }}.type
+        require(values.all { v ->
+            config.propertySpecs.first {it.name == v.replaceFirstChar { it.lowercaseChar() }}.type == ft
+        })
+        val fn = FunSpec.builder("get")
+            .addModifiers(KModifier.OPERATOR)
+            .returns(ft)
+            .addParameter("e", typ)
+            .beginControlFlow("return when (e)")
+        values.forEach { v ->
+            fn.addStatement("%T.${v.camelToUpperSnake()} -> ${v.replaceFirstChar { it.lowercaseChar() }}", typ)
+        }
+        config.addFunction(fn.endControlFlow().build())
+    }
+}
+
+fun String.camelToUpperSnake(): String {
+    val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
+    return camelRegex.replace(this) {
+        "_${it.value}"
+    }.uppercase()
 }
 
 fun config(block: BlockScope.() -> Unit) {
@@ -212,6 +234,7 @@ fun main() {
                 addString("BoardNotFound", "&cYour game has no chessboard!")
                 addString("ClockNotFound", "&cYour game has no clock!")
                 addString("RendererNotFound", "&cYour game has no compatible renderer!")
+                addString("PieceNotFound", "&cPiece was not found!")
                 addString("NothingToTakeback", "&cThere are no moves to takeback!")
                 addString("WrongDurationFormat", "&cWrong duration format!")
                 addString("TeleportFailed", "&cTeleport failed!")
@@ -275,7 +298,8 @@ fun main() {
                 addEnum("Other", mat, "PURPLE_CONCRETE")
                 addEnum("LastStart", mat, "BROWN_CONCRETE")
                 addEnum("LastEnd", mat, "ORANGE_CONCRETE")
-                // TODO: enum `get` gen
+                byEnum(ClassName("gregc.gregchess.chess", "Floor"),
+                    "Light", "Dark", "Move", "Capture", "Special", "Nothing", "Other", "LastStart", "LastEnd")
             }
             addBlock("Piece") {
                 inlineFiniteBlockList("PieceData", "King", "Queen", "Rook", "Bishop", "Knight", "Pawn") {
@@ -297,6 +321,8 @@ fun main() {
                         addEnum("Capture", sound, "BLOCK_STONE_HIT")
                     }
                 }
+                byEnum(ClassName("gregc.gregchess.chess", "PieceType"),
+                    "King", "Queen", "Rook", "Bishop", "Knight", "Pawn")
             }
             addBlock("EndReason") {
                 addString("Checkmate", "checkmate")

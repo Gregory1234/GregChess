@@ -1,15 +1,11 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.*
-import org.bukkit.event.*
+import gregc.gregchess.chess.HumanPlayer
+import gregc.gregchess.chess.human
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
 import java.util.*
-import kotlin.collections.contains
-import kotlin.collections.filter
-import kotlin.collections.firstOrNull
-import kotlin.collections.forEach
-import kotlin.collections.mutableListOf
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 
 object RequestManager : Listener {
@@ -66,15 +62,15 @@ class RequestType<in T>(
     private val requests = mutableMapOf<UUID, Request<T>>()
     private val root = messages.name
 
-    private val view = ConfigManager.getView("Request.$root")
+    private val view get() = Config.request.requestTypes[root]!!
 
     private fun call(request: Request<T>, simple: Boolean) {
         if (!validateSender(request.sender)) {
-            request.sender.sendMessage(view.getString("Error.CannotSend"))
+            request.sender.sendMessage(view.error.cannotSend)
             glog.mid("Invalid sender", request.uniqueId)
             return
         }
-        if ((simple || ConfigManager.getBool("Request.SelfAccept", true))
+        if ((simple || Config.request.selfAccept)
             && request.sender == request.receiver
         ) {
             glog.mid("Self request", request.uniqueId)
@@ -83,16 +79,16 @@ class RequestType<in T>(
         }
         requests[request.uniqueId] = request
         request.sender.sendCommandMessage(
-            view.getString("Sent.Request") + " ",
-            ConfigManager.getString("Request.Cancel"),
+            view.sent.request + " ",
+            Config.request.cancel,
             if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
         )
         request.receiver.sendCommandMessage(
             view.getFormatString("Received.Request", request.sender.name, printT(request.value)) + " ",
-            ConfigManager.getString("Request.Cancel"),
+            Config.request.accept,
             if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
         )
-        val duration = ConfigManager.getOptionalDuration("Request.$root.Duration")
+        val duration = view.duration
         if (duration != null)
             TimeManager.runTaskLater(duration) {
                 if (request.uniqueId in requests)
@@ -128,7 +124,7 @@ class RequestType<in T>(
     fun accept(p: HumanPlayer, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.receiver)
-            p.sendMessage(view.getString("Error.NotFound"))
+            p.sendMessage(view.error.notFound)
         else
             accept(request)
     }
@@ -144,7 +140,7 @@ class RequestType<in T>(
     fun cancel(p: HumanPlayer, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.sender)
-            p.sendMessage(view.getString("Error.NotFound"))
+            p.sendMessage(view.error.notFound)
         else
             cancel(request)
     }

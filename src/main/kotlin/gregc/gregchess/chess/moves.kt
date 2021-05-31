@@ -68,7 +68,7 @@ abstract class MoveCandidate(
         } else if (control != null)
             append(piece.pos.fileStr)
         if (captured != null)
-            append(ConfigManager.getString("Chess.Capture"))
+            append(Config.chess.capture)
         promotion?.let { append(it.type.char.uppercaseChar()) }
         append(target.pos)
     }

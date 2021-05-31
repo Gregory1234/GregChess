@@ -3,11 +3,16 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
-import org.bukkit.event.*
-import org.bukkit.event.block.*
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
+import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.entity.EntityDamageEvent
-import org.bukkit.event.inventory.*
-import org.bukkit.event.player.*
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.event.player.PlayerDropItemEvent
+import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import java.util.*
 
 
@@ -40,7 +45,7 @@ object ChessManager : Listener {
 
     fun leave(player: HumanPlayer) {
         val p = player.games
-        cRequire(p.isNotEmpty() || player.isSpectating(), "InGame.You")
+        cRequire(p.isNotEmpty() || player.isSpectating(), errorMsg.inGame::you)
         p.forEach {
             it.stop(
                 ChessGame.EndReason.Walkover(!it[player]!!.side),
@@ -78,7 +83,7 @@ object ChessManager : Listener {
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
-            val pos = cNotNull(player.game.withRenderer<Loc, Pos> { it.getPos(block.loc) }, "RendererNotFound")
+            val pos = cNotNull(player.game.withRenderer<Loc, Pos> { it.getPos(block.loc) }, errorMsg::rendererNotFound)
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
                 player.pickUp(pos)
             } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {

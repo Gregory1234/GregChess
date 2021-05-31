@@ -1,10 +1,10 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.Config
 import gregc.gregchess.chess.*
 
 object Antichess : ChessVariant("Antichess") {
-    class Stalemate(winner: Side) :
-        ChessGame.EndReason("Chess.EndReason.Stalemate", "normal", winner)
+    class Stalemate(winner: Side) : ChessGame.EndReason(Config.chess.endReason::stalemate, "normal", winner)
 
     override fun getLegality(move: MoveCandidate): MoveLegality {
         if (!Normal.isValid(move))

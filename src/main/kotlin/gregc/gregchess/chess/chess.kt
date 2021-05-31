@@ -2,7 +2,9 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import org.bukkit.Bukkit
-import java.util.concurrent.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 enum class Side(private val path: String, val standardName: String, val standardChar: Char, val direction: Int) {
     WHITE("Chess.Side.White", "White", 'w', 1),
@@ -11,8 +13,7 @@ enum class Side(private val path: String, val standardName: String, val standard
     operator fun not(): Side = if (this == WHITE) BLACK else WHITE
     operator fun inc(): Side = not()
 
-    fun getPieceName(name: String) =
-        ConfigManager.getFormatString("$path.Piece", name)
+    fun getPieceName(name: String) = ConfigManager.getFormatString("$path.Piece", name)
 
     companion object {
         fun parseFromStandardChar(c: Char) =
@@ -85,7 +86,7 @@ class ChessEngine(val name: String) {
     fun setOption(name: String, value: String) {
         when (name) {
             "time" -> {
-                moveTime = cNotNull(parseDuration(value), "WrongDurationFormat")
+                moveTime = cNotNull(parseDuration(value), errorMsg::wrongDurationFormat)
             }
             else -> {
                 glog.io("setoption name $name value $value")
