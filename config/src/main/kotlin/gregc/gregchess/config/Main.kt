@@ -1,24 +1,9 @@
 package gregc.gregchess.config
 
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asClassName
 import java.io.File
-import kotlin.io.path.div
-
-const val PACKAGE_NAME = "gregc.gregchess"
-
-fun config(generatedRoot: File, block: BlockScope.() -> Unit) {
-    val c = BlockScope(TypeSpec.objectBuilder("Config")
-        .superclass(viewClass)
-        .addSuperclassConstructorParameter("\"\""), YamlBlock(mutableMapOf()))
-    c.block()
-    if(!generatedRoot.exists())
-        generatedRoot.createNewFile()
-    FileSpec.builder(PACKAGE_NAME, "Config")
-        .addType(c.config.build())
-        .build()
-        .writeTo(generatedRoot)
-    (generatedRoot.toPath() / "config.yml").toFile().writeText(c.yamlBlock.build())
-}
 
 fun main(args: Array<String>) {
     config(File(args[0])) {
@@ -26,7 +11,7 @@ fun main(args: Array<String>) {
         addBlock("Request") {
             addString("Accept", "&a[Accept]")
             addString("Cancel", "&c[Cancel]")
-            addBool("SelfAccept", true)
+            addDefaultBool("SelfAccept", true)
             inlineFiniteBlockList("RequestType", "Duel", "Draw", "Takeback") {
                 addBlock("Sent") {
                     addString("Request")
@@ -382,8 +367,8 @@ fun main(args: Array<String>) {
                     addOptionalString("Variant")
                     addOptionalString("Board")
                     addOptionalString("Clock")
-                    addBool("SimpleCastling", false)
-                    addDefaultInt("TileSize", 3, false)
+                    addDefaultBool("SimpleCastling", false)
+                    addDefaultInt("TileSize", 3)
                 }
             }
             addBlock("Clock") {
