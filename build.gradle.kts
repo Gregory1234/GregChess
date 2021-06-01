@@ -1,26 +1,13 @@
 
 import org.apache.tools.ant.filters.ReplaceTokens
-import java.net.URI
 
 plugins {
-    id("org.jetbrains.kotlin.jvm")
+    kotlin("jvm")
     idea
 }
 
 group = "gregc"
 version = "1.0"
-
-repositories {
-    mavenCentral()
-    maven {
-        name = "spigotmc-repo"
-        url = URI("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    }
-    maven {
-        name = "sonatype"
-        url = URI("https://oss.sonatype.org/content/groups/public/")
-    }
-}
 
 val shaded: Configuration by configurations.creating
 
@@ -29,25 +16,26 @@ configurations["implementation"].extendsFrom(shaded)
 dependencies {
     val spigotVersion: String by project
 
-    "api"("org.spigotmc:spigot-api:$spigotVersion")
-    "shaded"(kotlin("stdlib-jdk8"))
+    api("org.spigotmc:spigot-api:$spigotVersion")
+    shaded(kotlin("stdlib-jdk8"))
     implementation(project(":config"))
 }
 
 val generated = "$buildDir/generated"
-val maind = "$rootDir/src/main/kotlin"
 
-kotlin{
-    sourceSets["main"].kotlin.srcDirs(File(maind),File(generated))
+kotlin {
+    sourceSets["main"].kotlin.srcDir(File(generated))
 }
 
 idea.module {
-    sourceDirs.plusAssign(File(maind))
     generatedSourceDirs.plusAssign(File(generated))
 }
 
 tasks {
     register<JavaExec>("regenerateConfig") {
+        inputs.files(project(":config").kotlin.sourceSets["main"].kotlin.srcDirs)
+        outputs.dir(generated)
+        outputs.upToDateWhen { true }
         dependsOn += project(":config").tasks["build"]
         group = "kotlinpoet"
         main = "gregc.gregchess.config.MainKt"
@@ -66,13 +54,14 @@ tasks {
         dependsOn += project.tasks["regenerateConfig"]
         kotlinOptions {
             jvmTarget = "1.8"
-            freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.contracts.ExperimentalContracts"
+            freeCompilerArgs = listOf("-Xopt-in=kotlin.contracts.ExperimentalContracts")
         }
     }
     jar {
         archiveBaseName.set(project.name)
         destinationDirectory.set(file(rootDir))
         from ({ shaded.map { if(it.isDirectory) it else zipTree(it) } })
+        exclude { it.file.extension == "kotlin_metadata" }
         from("$generated/config.yml")
         duplicatesStrategy = DuplicatesStrategy.WARN
     }

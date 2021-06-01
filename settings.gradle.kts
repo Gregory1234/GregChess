@@ -2,7 +2,13 @@ rootProject.name = "GregChess"
 pluginManagement {
     val kotlinVersion: String by settings
     plugins {
-        id("org.jetbrains.kotlin.jvm") version kotlinVersion
+        kotlin("jvm") version kotlinVersion
+    }
+}
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     }
 }
 include("config")
