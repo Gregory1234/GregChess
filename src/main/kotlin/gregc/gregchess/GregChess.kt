@@ -16,6 +16,7 @@ class GregChess : JavaPlugin(), Listener {
     private val requestManager = BukkitRequestManager(this)
     private val arenaManager = BukkitArenaManager(this)
     private val timeManager = BukkitTimeManager(this)
+    private val chessManager = BukkitChessGameManager(this)
 
     private val drawRequest = buildRequestType<Unit>(timeManager, requestManager) {
         messagesSimple(Config.request.draw, "/chess draw", "/chess draw")
@@ -46,7 +47,7 @@ class GregChess : JavaPlugin(), Listener {
     override fun onEnable() {
         server.pluginManager.registerEvents(this, this)
         saveDefaultConfig()
-        ChessManager.start()
+        chessManager.start()
         arenaManager.start()
         requestManager.start()
         addCommand("chess") {
@@ -96,7 +97,7 @@ class GregChess : JavaPlugin(), Listener {
                 "leave" -> {
                     cPlayer(player)
                     endArgs()
-                    ChessManager.leave(player.human)
+                    chessManager.leave(player.human)
                 }
                 "draw" -> {
                     cPlayer(player)
@@ -306,7 +307,7 @@ class GregChess : JavaPlugin(), Listener {
                 if (isValidUUID(nextArg())) {
                     cPerms(player, "greg-chess.info")
                     val game = cNotNull(
-                        ChessManager.firstGame { UUID.fromString(latestArg()) in it.board },
+                        chessManager.firstGame { UUID.fromString(latestArg()) in it.board },
                         errorMsg::pieceNotFound
                     )
                     game.board[UUID.fromString(latestArg())]!!
@@ -328,14 +329,14 @@ class GregChess : JavaPlugin(), Listener {
             1 -> {
                 cWrongArgument {
                     cPerms(player, "greg-chess.info")
-                    cNotNull(ChessManager[UUID.fromString(nextArg())], errorMsg::gameNotFound)
+                    cNotNull(chessManager[UUID.fromString(nextArg())], errorMsg::gameNotFound)
                 }
             }
             else -> throw CommandException(errorMsg::wrongArgumentsNumber)
         }
 
     override fun onDisable() {
-        ChessManager.stop()
+        chessManager.stop()
     }
 
     @EventHandler

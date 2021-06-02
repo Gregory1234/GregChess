@@ -14,16 +14,20 @@ import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.plugin.Plugin
 import java.util.*
 
+interface ChessGameManager {
+    fun firstGame(predicate: (ChessGame) -> Boolean): ChessGame?
+    operator fun get(uuid: UUID): ChessGame?
+    fun leave(player: HumanPlayer)
+}
 
-object ChessManager : Listener {
+class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Listener {
 
     private val games = mutableListOf<ChessGame>()
 
-    private fun forEachGame(function: (ChessGame) -> Unit) = games.forEach(function)
-
-    fun firstGame(function: (ChessGame) -> Boolean): ChessGame? = games.firstOrNull(function)
+    override fun firstGame(predicate: (ChessGame) -> Boolean): ChessGame? = games.firstOrNull(predicate)
 
     private fun removeGame(g: ChessGame) {
         games -= g
@@ -33,18 +37,18 @@ object ChessManager : Listener {
         }
     }
 
-    operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uniqueId == uuid }
+    override operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uniqueId == uuid }
 
 
     fun start() {
-        Bukkit.getPluginManager().registerEvents(this, Bukkit.getPluginManager().getPlugin("GregChess")!!)
+        Bukkit.getPluginManager().registerEvents(this, plugin)
     }
 
     fun stop() {
-        forEachGame { it.quickStop(ChessGame.EndReason.PluginRestart()) }
+        games.forEach { it.quickStop(ChessGame.EndReason.PluginRestart()) }
     }
 
-    fun leave(player: HumanPlayer) {
+    override fun leave(player: HumanPlayer) {
         val p = player.games
         cRequire(p.isNotEmpty() || player.isSpectating(), errorMsg.inGame::you)
         p.forEach {
@@ -57,16 +61,7 @@ object ChessManager : Listener {
     }
 
     @EventHandler
-    fun onPlayerLeave(e: PlayerQuitEvent) {
-        val p = e.player.human.games
-        p.forEach {
-            it.stop(
-                ChessGame.EndReason.Walkover(!it[e.player.human]!!.side),
-                BySides(Unit, Unit).mapIndexed { side, _ -> side != it[e.player.human]!!.side }
-            )
-        }
-        e.player.human.spectatedGame = null
-    }
+    fun onPlayerLeave(e: PlayerQuitEvent) = leave(e.player.human)
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
