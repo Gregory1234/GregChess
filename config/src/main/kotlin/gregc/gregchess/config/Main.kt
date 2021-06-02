@@ -212,6 +212,7 @@ fun main(args: Array<String>) {
                         addEnum("PickUp", sound, "BLOCK_STONE_HIT")
                         addEnum("Move", sound, "BLOCK_STONE_HIT")
                         addEnum("Capture", sound, "BLOCK_STONE_HIT")
+                        byEnum(ClassName("gregc.gregchess.chess", "PieceSound"), "PickUp", "Move", "Capture")
                     }
                 }
                 byEnum(ClassName("gregc.gregchess.chess", "PieceType"),

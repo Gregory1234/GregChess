@@ -2,10 +2,12 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import org.bukkit.*
+import org.bukkit.GameMode
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.World
 import java.util.*
 import kotlin.math.floor
-import kotlin.reflect.KProperty1
 
 interface Renderer<in T>: Component {
     interface Settings<in T>: Component.Settings<Renderer<T>>
@@ -14,7 +16,7 @@ interface Renderer<in T>: Component {
     fun clearPiece(pos: Pos)
     fun renderCapturedPiece(pos: CapturedPos, piece: Piece)
     fun clearCapturedPiece(pos: CapturedPos)
-    fun playPieceSound(pos: Pos, sound: KProperty1<Config.Chess.Piece.PieceData.Sound, Sound>, type: PieceType)
+    fun playPieceSound(pos: Pos, sound: PieceSound, type: PieceType)
     fun explosionAt(pos: Pos)
     fun fillFloor(pos: Pos, floor: Floor)
     fun renderBoardBase()
@@ -91,7 +93,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
     private val data = mutableMapOf<UUID, PlayerData>()
 
     override fun renderPiece(loc: Loc, piece: Piece) {
-        piece.type.getStructure(piece.side).forEachIndexed { i, m ->
+        piece.type.view.structure[piece.side].forEachIndexed { i, m ->
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
         }
     }
@@ -104,8 +106,8 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
 
     private fun <R> doAt(pos: Pos, f: (World, Location) -> R) = getPieceLoc(pos).doIn(world, f)
 
-    override fun playPieceSound(pos: Pos, sound: KProperty1<Config.Chess.Piece.PieceData.Sound, Sound>, type: PieceType) =
-        doAt(pos) { world, l -> world.playSound(l, type.getSound(sound)) }
+    override fun playPieceSound(pos: Pos, sound: PieceSound, type: PieceType) =
+        doAt(pos) { world, l -> world.playSound(l, type.view.sound[sound]) }
 
     override fun explosionAt(pos: Pos) {
         doAt(pos) { world, l ->

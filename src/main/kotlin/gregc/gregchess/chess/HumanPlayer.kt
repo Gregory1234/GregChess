@@ -35,7 +35,7 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
         private val player: ChessPlayer?
     ) : Screen<MoveCandidate>(Config.message::pawnPromotion) {
         override fun getContent() = moves.mapIndexed { i, (t, m) ->
-            ScreenOption(t.item, m, InventoryPosition.fromIndex(i))
+            ScreenOption(t.type.getItem(t.side), m, InventoryPosition.fromIndex(i))
         }
 
         override fun onClick(v: MoveCandidate) {
@@ -79,7 +79,7 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     }
 
     override fun setItem(i: Int, piece: Piece?) {
-        player.inventory.setItem(i, piece?.item)
+        player.inventory.setItem(i, piece?.let {it.type.getItem(it.side)})
     }
 
     override fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>) {

@@ -1,19 +1,12 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Config
 import gregc.gregchess.buildTextComponent
 import gregc.gregchess.glog
-import org.bukkit.Sound
-import org.bukkit.inventory.ItemStack
 import java.util.*
-import kotlin.reflect.KProperty1
 
 data class Piece(val type: PieceType, val side: Side) {
     val standardName
         get() = "${side.standardName} ${type.name.lowercase()}"
-
-    val item: ItemStack
-        get() = type.getItem(side)
 
     val standardChar
         get() = when (side) {
@@ -46,6 +39,10 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val side = piece.side
     val standardChar
         get() = piece.standardChar
+}
+
+enum class PieceSound {
+    PICK_UP, MOVE, CAPTURE
 }
 
 class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false) {
@@ -126,13 +123,13 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         square.piece = BoardPiece(promotion, square)
     }
 
-    private fun playSound(s: KProperty1<Config.Chess.Piece.PieceData.Sound, Sound>) {
+    private fun playSound(s: PieceSound) {
         game.renderers.forEach { it.playPieceSound(pos, s, type) }
     }
 
-    private fun playPickUpSound() = playSound(Config.Chess.Piece.PieceData.Sound::pickUp)
-    private fun playMoveSound() = playSound(Config.Chess.Piece.PieceData.Sound::move)
-    private fun playCaptureSound() = playSound(Config.Chess.Piece.PieceData.Sound::capture)
+    private fun playPickUpSound() = playSound(PieceSound.PICK_UP)
+    private fun playMoveSound() = playSound(PieceSound.MOVE)
+    private fun playCaptureSound() = playSound(PieceSound.CAPTURE)
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved

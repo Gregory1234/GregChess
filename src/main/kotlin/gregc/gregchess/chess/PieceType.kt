@@ -2,10 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.Config
 import gregc.gregchess.chatColor
-import org.bukkit.Material
-import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
-import kotlin.reflect.KProperty1
 
 enum class PieceType(
     val standardChar: Char,
@@ -19,11 +16,7 @@ enum class PieceType(
     KNIGHT('n', ::knightMovement, true),
     PAWN('p', ::pawnMovement, false);
 
-    private val view get() = Config.chess.piece[this]
-
-    fun getMaterial(side: Side): Material = view.item[side]
-
-    fun getStructure(side: Side): List<Material> = view.structure[side]
+    val view get() = Config.chess.piece[this]
 
     companion object {
         fun parseFromChar(c: Char) =
@@ -36,14 +29,12 @@ enum class PieceType(
     }
 
     fun getItem(side: Side): ItemStack {
-        val item = ItemStack(getMaterial(side))
+        val item = ItemStack(view.item[side])
         val meta = item.itemMeta!!
         meta.setDisplayName(chatColor(side.getPieceName(pieceName)))
         item.itemMeta = meta
         return item
     }
-
-    fun getSound(name: KProperty1<Config.Chess.Piece.PieceData.Sound, Sound>): Sound = name.get(view.sound)
 
     val pieceName
         get() = view.name
