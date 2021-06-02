@@ -5,7 +5,7 @@ import gregc.gregchess.component6
 data class FEN(
     val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
     val currentTurn: Side = Side.WHITE,
-    val castlingRights: BySides<List<Int>> = BySides(listOf(0, 7), listOf(0, 7)),
+    val castlingRights: BySides<List<Int>> = BySides(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: UInt = 0u,
     val fullmoveClock: UInt = 1u,
@@ -176,7 +176,7 @@ data class FEN(
             val pawns = PieceType.PAWN.standardChar.toString().repeat(8)
             return FEN(
                 BoardState("$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}"),
-                castlingRights = BySides(listOf(r1, r2), listOf(r1, r2)),
+                castlingRights = BySides(listOf(r1, r2)),
                 chess960 = true
             )
         }

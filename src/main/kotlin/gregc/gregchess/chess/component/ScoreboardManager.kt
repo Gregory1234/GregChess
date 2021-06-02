@@ -98,7 +98,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
 }
 
 abstract class PlayerProperty(val name: String) {
-    val teams: MutableBySides<Team?> = MutableBySides(null, null)
+    val teams: MutableBySides<Team?> = MutableBySides(null)
 
     abstract operator fun invoke(s: Side): String
 }

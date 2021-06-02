@@ -49,13 +49,10 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
     }
 
     override fun leave(player: HumanPlayer) {
-        val p = player.games
-        cRequire(p.isNotEmpty() || player.isSpectating(), errorMsg.inGame::you)
-        p.forEach {
-            it.stop(
-                ChessGame.EndReason.Walkover(!it[player]!!.side),
-                BySides(Unit, Unit).mapIndexed { side, _ -> side != it[player]!!.side }
-            )
+        val games = player.games
+        cRequire(games.isNotEmpty() || player.isSpectating(), errorMsg.inGame::you)
+        games.forEach { g ->
+            g.stop(ChessGame.EndReason.Walkover(!g[player]!!.side), BySides{ it != g[player]!!.side })
         }
         player.spectatedGame = null
     }

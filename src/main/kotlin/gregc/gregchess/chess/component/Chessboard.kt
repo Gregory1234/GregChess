@@ -212,7 +212,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         return FEN(
             boardState,
             game.currentTurn,
-            BySides(castling(Side.WHITE), castling(Side.BLACK)),
+            BySides{ castling(it) },
             lastMove?.let {
                 if (it.piece.type == PieceType.PAWN && abs(it.origin.pos.rank - it.target.pos.rank) == 2)
                     it.origin.pos.copy(rank = (it.origin.pos.rank + it.target.pos.rank) / 2)

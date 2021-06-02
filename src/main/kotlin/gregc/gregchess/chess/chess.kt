@@ -23,6 +23,9 @@ enum class Side(val standardName: String, val standardChar: Char, val direction:
 }
 
 data class MutableBySides<T>(var white: T, var black: T) {
+    constructor(block: (Side) -> T): this(block(Side.WHITE), block(Side.BLACK))
+    constructor(v: T): this(v, v)
+
     operator fun get(side: Side) = when (side) {
         Side.WHITE -> white
         Side.BLACK -> black
@@ -46,12 +49,15 @@ data class MutableBySides<T>(var white: T, var black: T) {
         f(Side.WHITE, white)
         f(Side.BLACK, black)
     }
-    inline fun <R> map(f: (T) -> R) = BySides(f(white), f(black))
-    inline fun <R> mapIndexed(f: (Side, T) -> R) = BySides(f(Side.WHITE, white), f(Side.BLACK, black))
+    inline fun <R> map(crossinline f: (T) -> R) = BySides{ f(this[it]) }
+    inline fun <R> mapIndexed(crossinline f: (Side, T) -> R) = BySides{ f(it, this[it]) }
     fun toBySides() = BySides(white, black)
 }
 
 data class BySides<T>(val white: T, val black: T) {
+    constructor(block: (Side) -> T): this(block(Side.WHITE), block(Side.BLACK))
+    constructor(v: T): this(v, v)
+
     operator fun get(side: Side) = when (side) {
         Side.WHITE -> white
         Side.BLACK -> black
@@ -66,8 +72,8 @@ data class BySides<T>(val white: T, val black: T) {
         f(Side.WHITE, white)
         f(Side.BLACK, black)
     }
-    inline fun <R> map(f: (T) -> R) = BySides(f(white), f(black))
-    inline fun <R> mapIndexed(f: (Side, T) -> R) = BySides(f(Side.WHITE, white), f(Side.BLACK, black))
+    inline fun <R> map(crossinline f: (T) -> R) = BySides{ f(this[it]) }
+    inline fun <R> mapIndexed(crossinline f: (Side, T) -> R) = BySides{ f(it, this[it]) }
     fun toMutableBySides() = MutableBySides(white, black)
 }
 

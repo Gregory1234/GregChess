@@ -78,7 +78,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         get() = require<GameState.WithCurrentPlayer>().currentPlayer
 
     inner class AddPlayersScope() {
-        private val players = MutableBySides<ChessPlayer?>(null, null)
+        private val players = MutableBySides<ChessPlayer?>(null)
 
         fun addPlayer(p: ChessPlayer) {
             players[p.side] = p
@@ -267,9 +267,9 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
     val endReason: EndReason?
         get() = (state as? GameState.WithEndReason)?.endReason
 
-    fun quickStop(reason: EndReason) = stop(reason, BySides(white = true, black = true))
+    fun quickStop(reason: EndReason) = stop(reason, BySides(true))
 
-    fun stop(reason: EndReason, quick: BySides<Boolean> = BySides(white = false, black = false)) {
+    fun stop(reason: EndReason, quick: BySides<Boolean> = BySides(false)) {
         val stopping = GameState.Stopping(requireRunning { requireStopping(); return }, reason)
         state = stopping
         try {

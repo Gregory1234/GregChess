@@ -15,7 +15,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
             override fun getComponent(game: ChessGame) = CheckCounter(game)
         }
 
-        private var checks = MutableBySides(0,0)
+        private var checks = MutableBySides(0)
 
         @GameEvent(GameBaseEvent.START)
         fun start() {
