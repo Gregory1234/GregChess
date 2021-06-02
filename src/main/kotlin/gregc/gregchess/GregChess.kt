@@ -13,19 +13,22 @@ import java.util.*
 @Suppress("unused")
 class GregChess : JavaPlugin(), Listener {
 
-    private val drawRequest = buildRequestType<Unit> {
+    private val requestManager = BukkitRequestManager(this)
+    private val arenaManager = BukkitArenaManager(this)
+
+    private val drawRequest = buildRequestType<Unit>(requestManager) {
         messagesSimple(Config.request.draw, "/chess draw", "/chess draw")
         validateSender = { it.chess?.hasTurn ?: false }
         onAccept = { (sender, _, _) -> sender.currentGame?.stop(ChessGame.EndReason.DrawAgreement())}
     }
 
-    private val takebackRequest = buildRequestType<Unit> {
+    private val takebackRequest = buildRequestType<Unit>(requestManager) {
         messagesSimple(Config.request.takeback, "/chess undo", "/chess undo")
         validateSender = { (it.currentGame?.currentPlayer?.opponent as? HumanChessPlayer)?.player == it }
         onAccept = { (sender, _, _) -> sender.currentGame?.board?.undoLastMove() }
     }
 
-    private val duelRequest = buildRequestType<ChessGame>{
+    private val duelRequest = buildRequestType<ChessGame>(requestManager) {
         messagesSimple(Config.request.duel, "/chess duel accept", "/chess duel cancel")
         printT = { it.settings.name }
         onAccept = { (sender, receiver, g) ->
@@ -43,8 +46,8 @@ class GregChess : JavaPlugin(), Listener {
         server.pluginManager.registerEvents(this, this)
         saveDefaultConfig()
         ChessManager.start()
-        Arena.start()
-        RequestManager.start()
+        arenaManager.start()
+        requestManager.start()
         addCommand("chess") {
             when (nextArg().lowercase()) {
                 "duel" -> {
@@ -66,7 +69,7 @@ class GregChess : JavaPlugin(), Listener {
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!opponent.human.isInGame(), errorMsg.inGame::opponent)
                             player.openScreen(SettingsScreen { settings ->
-                                duelRequest += Request(player.human, opponent.human, ChessGame(Arena.cNext(), settings))
+                                duelRequest += Request(player.human, opponent.human, ChessGame(arenaManager.cNext(), settings))
                             })
                         }
                     }
@@ -76,7 +79,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     cRequire(!player.human.isInGame(), errorMsg.inGame::you)
                     player.openScreen(SettingsScreen { settings ->
-                        ChessGame(Arena.cNext(), settings).addPlayers {
+                        ChessGame(arenaManager.cNext(), settings).addPlayers {
                             human(player.human, Side.WHITE, false)
                             engine("stockfish", Side.BLACK)
                         }.start()
@@ -216,7 +219,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.admin")
                     endArgs()
                     reloadConfig()
-                    Arena.reload()
+                    arenaManager.reload()
                     player.sendMessage(Config.message.configReloaded)
                 }
                 "dev" -> {

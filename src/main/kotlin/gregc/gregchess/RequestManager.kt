@@ -2,20 +2,26 @@ package gregc.gregchess
 
 import gregc.gregchess.chess.HumanPlayer
 import gregc.gregchess.chess.human
+import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.plugin.Plugin
 import java.util.*
 import kotlin.collections.set
 
-object RequestManager : Listener {
+interface RequestManager {
+    fun <T> register(requestType: RequestType<T>): RequestType<T>
+}
+
+class BukkitRequestManager(val plugin: Plugin) : Listener, RequestManager {
     private val requestTypes = mutableListOf<RequestType<*>>()
 
     fun start() {
-        GregInfo.registerListener(this)
+        Bukkit.getServer().pluginManager.registerEvents(this, plugin)
     }
 
-    fun <T> register(requestType: RequestType<T>): RequestType<T> {
+    override fun <T> register(requestType: RequestType<T>): RequestType<T> {
         requestTypes.add(requestType)
         return requestType
     }
@@ -46,9 +52,9 @@ class RequestTypeBuilder<T> internal constructor() {
     }
 }
 
-fun <T> buildRequestType(f: RequestTypeBuilder<T>.() -> Unit): RequestType<T> = RequestTypeBuilder<T>().run{
+fun <T> buildRequestType(m: RequestManager, f: RequestTypeBuilder<T>.() -> Unit): RequestType<T> = RequestTypeBuilder<T>().run{
     f()
-    RequestManager.register(RequestType(messages, validateSender, printT, onAccept, onCancel))
+    m.register(RequestType(messages, validateSender, printT, onAccept, onCancel))
 }
 
 

@@ -6,7 +6,6 @@ import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.event.Listener
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
@@ -296,5 +295,4 @@ object GregInfo {
     val plugin
         get() = Bukkit.getPluginManager().getPlugin("GregChess")!!
 
-    fun registerListener(l: Listener) = server.pluginManager.registerEvents(l, plugin)
 }

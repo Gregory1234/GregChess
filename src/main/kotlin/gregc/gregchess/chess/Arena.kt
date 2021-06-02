@@ -5,60 +5,62 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.GameBaseEvent
 import gregc.gregchess.chess.component.GameEvent
 import gregc.gregchess.chess.component.TimeModifier
-import org.bukkit.Difficulty
-import org.bukkit.GameRule
-import org.bukkit.World
-import org.bukkit.WorldCreator
+import org.bukkit.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.generator.ChunkGenerator
+import org.bukkit.plugin.Plugin
 import java.util.*
 
-data class Arena(val name: String, var game: ChessGame? = null): Component {
+interface ArenaManager {
+    fun next(): Arena?
+}
 
-    companion object: Listener {
-        private val arenas = mutableListOf<Arena>()
+fun ArenaManager.cNext() = cNotNull(next(), errorMsg::noArenas)
 
-        fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
+class BukkitArenaManager(val plugin: Plugin) : ArenaManager, Listener {
+    private val arenas = mutableListOf<Arena>()
 
-        fun cNext() = cNotNull(next(), errorMsg::noArenas)
+    override fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
 
-        fun World.isArena(): Boolean = arenas.any {it.name == name}
+    fun World.isArena(): Boolean = arenas.any {it.name == name}
 
-        fun reload() {
-            val newArenas = Config.chessArenas
-            arenas.forEach {
-                if (it.name in newArenas){
-                    it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
-                    arenas.remove(it)
-                }
+    fun reload() {
+        val newArenas = Config.chessArenas
+        arenas.forEach {
+            if (it.name in newArenas){
+                it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
+                arenas.remove(it)
             }
-            arenas.addAll((newArenas - arenas.map {it.name}).map { Arena(it) })
         }
+        arenas.addAll((newArenas - arenas.map {it.name}).map { Arena(it) })
+    }
 
-        fun start() {
-            GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
-            arenas.addAll(Config.chessArenas.map { Arena(it) })
+    fun start() {
+        Bukkit.getServer().pluginManager.registerEvents(this, plugin)
+        arenas.addAll(Config.chessArenas.map { Arena(it) })
+    }
+
+    @EventHandler
+    fun onCreatureSpawn(e: CreatureSpawnEvent) {
+        if (e.location.world?.isArena() == true) {
+            e.isCancelled = true
         }
+    }
 
-        @EventHandler
-        fun onCreatureSpawn(e: CreatureSpawnEvent) {
-            if (e.location.world?.isArena() == true) {
+    @EventHandler
+    fun onWeatherChange(e: WeatherChangeEvent) {
+        if (e.toWeatherState()) {
+            if (e.world.isArena()) {
                 e.isCancelled = true
             }
         }
-
-        @EventHandler
-        fun onWeatherChange(e: WeatherChangeEvent) {
-            if (e.toWeatherState()) {
-                if (e.world.isArena()) {
-                    e.isCancelled = true
-                }
-            }
-        }
     }
+}
+
+data class Arena(val name: String, var game: ChessGame? = null): Component {
 
     object WorldGen : ChunkGenerator() {
         override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid) =
