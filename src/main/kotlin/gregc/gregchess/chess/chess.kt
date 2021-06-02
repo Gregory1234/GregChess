@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.Bukkit
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -121,7 +120,7 @@ class ChessEngine(val timeManager: TimeManager, val name: String) {
     fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
         var move = ""
         var exc: Exception? = null
-        Bukkit.getScheduler().runTaskAsynchronously(GregInfo.plugin, Runnable {
+        timeManager.runTaskAsynchronously {
             try {
                 sendCommand("position fen $fen")
                 sendCommand("go movetime " + moveTime.toMillis())
@@ -137,7 +136,7 @@ class ChessEngine(val timeManager: TimeManager, val name: String) {
                 exc = e
                 throw e
             }
-        })
+        }
         //TODO: this is potentially dangerous!
         timeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks) {
             if (move != "") {

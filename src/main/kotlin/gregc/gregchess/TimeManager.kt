@@ -10,11 +10,12 @@ interface TimeManager {
     }
     fun runTaskLater(delay: Duration, callback: () -> Unit)
     fun runTaskTimer(delay: Duration, period: Duration, callback: CancellableContext.() -> Unit)
+    fun runTaskAsynchronously(callback: () -> Unit)
 }
 
 
 
-class BukkitTimeManager(val plugin: Plugin): TimeManager {
+class BukkitTimeManager(private val plugin: Plugin): TimeManager {
 
     private class BukkitCancellableContext constructor(private val r: BukkitRunnable): TimeManager.CancellableContext {
         override fun cancel() {
@@ -37,5 +38,9 @@ class BukkitTimeManager(val plugin: Plugin): TimeManager {
                 cc.callback()
             }
         }.runTaskTimer(plugin, delay.toTicks(), period.toTicks())
+    }
+
+    override fun runTaskAsynchronously(callback: () -> Unit) {
+        plugin.server.scheduler.runTaskAsynchronously(plugin, callback)
     }
 }

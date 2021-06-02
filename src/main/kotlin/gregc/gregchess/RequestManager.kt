@@ -14,11 +14,11 @@ interface RequestManager {
     fun <T> register(requestType: RequestType<T>): RequestType<T>
 }
 
-class BukkitRequestManager(val plugin: Plugin) : Listener, RequestManager {
+class BukkitRequestManager(private val plugin: Plugin) : Listener, RequestManager {
     private val requestTypes = mutableListOf<RequestType<*>>()
 
     fun start() {
-        Bukkit.getServer().pluginManager.registerEvents(this, plugin)
+        Bukkit.getPluginManager().registerEvents(this, plugin)
     }
 
     override fun <T> register(requestType: RequestType<T>): RequestType<T> {

@@ -3,9 +3,10 @@ package gregc.gregchess
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.logging.Logger
 
 @Suppress("unused")
-class GregLogger(private val logFile: File) {
+class GregLogger(private val logFile: File, private val logger: Logger) {
     enum class Level {
         LOW_DEBUG, MID_DEBUG, HIGH_DEBUG, IO_DEBUG, WARNING, DEBUG
     }
@@ -14,9 +15,9 @@ class GregLogger(private val logFile: File) {
     private fun log(level: Level, vararg vs: Any?) {
         val source = Thread.currentThread().stackTrace[3].className
         if (level == Level.WARNING) {
-            GregInfo.logger.warning("[$source] " + vs.joinToString(" ") { it.toString() })
+            logger.warning("[$source] " + vs.joinToString(" ") { it.toString() })
         } else if (this.level <= level) {
-            GregInfo.logger.info("[$source] " + vs.joinToString(" ") { it.toString() })
+            logger.info("[$source] " + vs.joinToString(" ") { it.toString() })
         }
 
         logFile.appendText(

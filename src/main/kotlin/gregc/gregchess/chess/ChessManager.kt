@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -36,7 +37,7 @@ object ChessManager : Listener {
 
 
     fun start() {
-        GregInfo.server.pluginManager.registerEvents(this, GregInfo.plugin)
+        Bukkit.getPluginManager().registerEvents(this, Bukkit.getPluginManager().getPlugin("GregChess")!!)
     }
 
     fun stop() {

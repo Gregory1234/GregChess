@@ -170,7 +170,7 @@ fun <T> cNotNull(p: T?, msg: KProperty0<String>): T = p ?: throw CommandExceptio
 
 inline fun <reified T, reified R : T> cCast(p: T, msg: KProperty0<String>): R = cNotNull(p as? R, msg)
 
-fun cServerPlayer(name: String) = cNotNull(GregInfo.server.getPlayer(name), errorMsg::playerNotFound)
+fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), errorMsg::playerNotFound)
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 
@@ -277,22 +277,13 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
 }
 
 val glog: GregLogger = run {
-    File(GregInfo.plugin.dataFolder.absolutePath + "/logs").mkdir()
+    val plugin = Bukkit.getPluginManager().getPlugin("GregChess")!!
+    File(plugin.dataFolder.absolutePath + "/logs").mkdir()
     val file = File(
-        GregInfo.plugin.dataFolder.absolutePath + "/logs/GregChess-${
+        plugin.dataFolder.absolutePath + "/logs/GregChess-${
             DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
         }.log"
     )
     file.createNewFile()
-    GregLogger(file)
-}
-
-object GregInfo {
-
-    val server by lazy { Bukkit.getServer() }
-    val logger
-        get() = plugin.logger
-    val plugin
-        get() = Bukkit.getPluginManager().getPlugin("GregChess")!!
-
+    GregLogger(file, Bukkit.getLogger())
 }

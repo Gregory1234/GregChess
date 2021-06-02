@@ -1,10 +1,13 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.Config
+import gregc.gregchess.cNotNull
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.GameBaseEvent
 import gregc.gregchess.chess.component.GameEvent
 import gregc.gregchess.chess.component.TimeModifier
+import gregc.gregchess.errorMsg
+import gregc.gregchess.glog
 import org.bukkit.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -20,12 +23,12 @@ interface ArenaManager {
 
 fun ArenaManager.cNext() = cNotNull(next(), errorMsg::noArenas)
 
-class BukkitArenaManager(val plugin: Plugin) : ArenaManager, Listener {
+class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
     private val arenas = mutableListOf<Arena>()
 
     override fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
 
-    fun World.isArena(): Boolean = arenas.any {it.name == name}
+    private fun World.isArena(): Boolean = arenas.any {it.name == name}
 
     fun reload() {
         val newArenas = Config.chessArenas
@@ -39,7 +42,7 @@ class BukkitArenaManager(val plugin: Plugin) : ArenaManager, Listener {
     }
 
     fun start() {
-        Bukkit.getServer().pluginManager.registerEvents(this, plugin)
+        Bukkit.getPluginManager().registerEvents(this, plugin)
         arenas.addAll(Config.chessArenas.map { Arena(it) })
     }
 
@@ -80,13 +83,13 @@ data class Arena(val name: String, var game: ChessGame? = null): Component {
 
 val Arena.world: World
     get() {
-        val world = GregInfo.server.getWorld(name)
+        val world = Bukkit.getWorld(name)
 
         return (if (world != null) {
             glog.low("World already exists", name)
             world
         } else {
-            val ret = GregInfo.server.createWorld(WorldCreator(name).generator(Arena.WorldGen))!!
+            val ret = Bukkit.createWorld(WorldCreator(name).generator(Arena.WorldGen))!!
             glog.io("Created arena", name)
             ret
         }).apply {

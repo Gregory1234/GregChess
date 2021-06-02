@@ -1,8 +1,10 @@
 package gregc.gregchess
 
+import org.bukkit.Bukkit
+
 open class View protected constructor(private val rootPath: String = "") {
     private val config
-        get() = GregInfo.plugin.config
+        get() = Bukkit.getPluginManager().getPlugin("GregChess")!!.config
     private val section
         get() = config.getConfigurationSection(rootPath)
 
