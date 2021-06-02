@@ -72,7 +72,7 @@ data class BySides<T>(val white: T, val black: T) {
     fun toMutableBySides() = MutableBySides(white, black)
 }
 
-class ChessEngine(val name: String) {
+class ChessEngine(val timeManager: TimeManager, val name: String) {
     private val process: Process = ProcessBuilder("stockfish").start()
 
     private val reader = process.inputStream.bufferedReader()
@@ -139,7 +139,7 @@ class ChessEngine(val name: String) {
             }
         })
         //TODO: this is potentially dangerous!
-        TimeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks) {
+        timeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks) {
             if (move != "") {
                 onSuccess(move)
                 cancel()

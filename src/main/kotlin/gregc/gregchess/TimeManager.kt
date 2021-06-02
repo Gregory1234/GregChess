@@ -1,30 +1,41 @@
 package gregc.gregchess
 
+import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
 
-object TimeManager {
+interface TimeManager {
+    interface CancellableContext{
+        fun cancel()
+    }
+    fun runTaskLater(delay: Duration, callback: () -> Unit)
+    fun runTaskTimer(delay: Duration, period: Duration, callback: CancellableContext.() -> Unit)
+}
 
-    class CancellableContext constructor(private val r: BukkitRunnable) {
-        fun cancel() {
+
+
+class BukkitTimeManager(val plugin: Plugin): TimeManager {
+
+    private class BukkitCancellableContext constructor(private val r: BukkitRunnable): TimeManager.CancellableContext {
+        override fun cancel() {
             r.cancel()
         }
     }
 
-    inline fun runTaskLater(delay: Duration, crossinline callback: () -> Unit) {
+    override fun runTaskLater(delay: Duration, callback: () -> Unit) {
         object : BukkitRunnable() {
             override fun run() {
                 callback()
             }
-        }.runTaskLater(GregInfo.plugin, delay.toTicks())
+        }.runTaskLater(plugin, delay.toTicks())
     }
 
-    inline fun runTaskTimer(delay: Duration, period: Duration, crossinline callback: CancellableContext.() -> Unit) {
+    override fun runTaskTimer(delay: Duration, period: Duration, callback: TimeManager.CancellableContext.() -> Unit) {
         object : BukkitRunnable() {
-            val cc = CancellableContext(this)
+            val cc = BukkitCancellableContext(this)
             override fun run() {
                 cc.callback()
             }
-        }.runTaskTimer(GregInfo.plugin, delay.toTicks(), period.toTicks())
+        }.runTaskTimer(plugin, delay.toTicks(), period.toTicks())
     }
 }

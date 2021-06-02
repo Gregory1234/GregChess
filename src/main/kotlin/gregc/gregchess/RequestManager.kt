@@ -52,13 +52,18 @@ class RequestTypeBuilder<T> internal constructor() {
     }
 }
 
-fun <T> buildRequestType(m: RequestManager, f: RequestTypeBuilder<T>.() -> Unit): RequestType<T> = RequestTypeBuilder<T>().run{
+fun <T> buildRequestType(
+    t: TimeManager,
+    m: RequestManager,
+    f: RequestTypeBuilder<T>.() -> Unit
+): RequestType<T> = RequestTypeBuilder<T>().run{
     f()
-    m.register(RequestType(messages, validateSender, printT, onAccept, onCancel))
+    m.register(RequestType(t, messages, validateSender, printT, onAccept, onCancel))
 }
 
 
 class RequestType<in T>(
+    private val timeManager: TimeManager,
     private val messages: RequestMessages,
     private inline val validateSender: (HumanPlayer) -> Boolean = { true },
     private inline val printT: (T) -> String = { it.toString() },
@@ -94,7 +99,7 @@ class RequestType<in T>(
         )
         val duration = view.duration
         if (duration != null)
-            TimeManager.runTaskLater(duration) {
+            timeManager.runTaskLater(duration) {
                 if (request.uniqueId in requests)
                     expire(request)
             }

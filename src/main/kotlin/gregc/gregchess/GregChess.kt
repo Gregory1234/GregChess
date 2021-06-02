@@ -15,20 +15,21 @@ class GregChess : JavaPlugin(), Listener {
 
     private val requestManager = BukkitRequestManager(this)
     private val arenaManager = BukkitArenaManager(this)
+    private val timeManager = BukkitTimeManager(this)
 
-    private val drawRequest = buildRequestType<Unit>(requestManager) {
+    private val drawRequest = buildRequestType<Unit>(timeManager, requestManager) {
         messagesSimple(Config.request.draw, "/chess draw", "/chess draw")
         validateSender = { it.chess?.hasTurn ?: false }
         onAccept = { (sender, _, _) -> sender.currentGame?.stop(ChessGame.EndReason.DrawAgreement())}
     }
 
-    private val takebackRequest = buildRequestType<Unit>(requestManager) {
+    private val takebackRequest = buildRequestType<Unit>(timeManager, requestManager) {
         messagesSimple(Config.request.takeback, "/chess undo", "/chess undo")
         validateSender = { (it.currentGame?.currentPlayer?.opponent as? HumanChessPlayer)?.player == it }
         onAccept = { (sender, _, _) -> sender.currentGame?.board?.undoLastMove() }
     }
 
-    private val duelRequest = buildRequestType<ChessGame>(requestManager) {
+    private val duelRequest = buildRequestType<ChessGame>(timeManager, requestManager) {
         messagesSimple(Config.request.duel, "/chess duel accept", "/chess duel cancel")
         printT = { it.settings.name }
         onAccept = { (sender, receiver, g) ->
@@ -69,7 +70,8 @@ class GregChess : JavaPlugin(), Listener {
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!opponent.human.isInGame(), errorMsg.inGame::opponent)
                             player.openScreen(SettingsScreen { settings ->
-                                duelRequest += Request(player.human, opponent.human, ChessGame(arenaManager.cNext(), settings))
+                                duelRequest += Request(player.human, opponent.human,
+                                    ChessGame(timeManager, arenaManager.cNext(), settings))
                             })
                         }
                     }
@@ -79,7 +81,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     cRequire(!player.human.isInGame(), errorMsg.inGame::you)
                     player.openScreen(SettingsScreen { settings ->
-                        ChessGame(arenaManager.cNext(), settings).addPlayers {
+                        ChessGame(timeManager, arenaManager.cNext(), settings).addPlayers {
                             human(player.human, Side.WHITE, false)
                             engine("stockfish", Side.BLACK)
                         }.start()

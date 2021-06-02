@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty0
 import kotlin.reflect.safeCast
 
-class ChessGame(val arena: Arena, val settings: GameSettings) {
+class ChessGame(private val timeManager: TimeManager, val arena: Arena, val settings: GameSettings) {
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() = "ChessGame(uniqueId = $uniqueId)"
@@ -77,16 +77,18 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
     val currentPlayer: ChessPlayer
         get() = require<GameState.WithCurrentPlayer>().currentPlayer
 
-    inner class AddPlayersScope(val game: ChessGame) {
+    inner class AddPlayersScope() {
         private val players = MutableBySides<ChessPlayer?>(null, null)
 
         fun addPlayer(p: ChessPlayer) {
             players[p.side] = p
         }
 
-        fun human(p: HumanPlayer, side: Side, silent: Boolean) = addPlayer(HumanChessPlayer(p, side, silent, game))
+        fun human(p: HumanPlayer, side: Side, silent: Boolean) =
+            addPlayer(HumanChessPlayer(p, side, silent, this@ChessGame))
 
-        fun engine(name: String, side: Side) = addPlayer(EnginePlayer(ChessEngine(name), side, game))
+        fun engine(name: String, side: Side) =
+            addPlayer(EnginePlayer(ChessEngine(timeManager, name), side, this@ChessGame))
 
         fun build(): BySides<ChessPlayer> = players.map {
             it ?: throw IllegalStateException("player has not been initialized")
@@ -96,7 +98,7 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
 
     fun addPlayers(init: AddPlayersScope.() -> Unit): ChessGame {
         requireInitial()
-        state = GameState.Ready(AddPlayersScope(this).run {
+        state = GameState.Ready(AddPlayersScope().run {
             init()
             build()
         })
@@ -175,7 +177,7 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
             components.allStart()
             state = GameState.Running(requireStarting())
             glog.mid("Started game", uniqueId)
-            TimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
+            timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
                 if (!running)
                     cancel()
                 else
@@ -284,7 +286,7 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
                     components.allRemovePlayer(it.player)
                 } else {
                     anyLong = true
-                    TimeManager.runTaskLater(3.seconds) {
+                    timeManager.runTaskLater(3.seconds) {
                         components.allRemovePlayer(it.player)
                     }
                 }
@@ -295,7 +297,7 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
                 if (anyLong) {
                     components.allSpectatorLeave(it)
                 } else {
-                    TimeManager.runTaskLater(3.seconds) {
+                    timeManager.runTaskLater(3.seconds) {
                         components.allSpectatorLeave(it)
                     }
                 }
@@ -309,9 +311,9 @@ class ChessGame(val arena: Arena, val settings: GameSettings) {
                 Bukkit.getPluginManager().callEvent(EndEvent(this))
                 return
             }
-            TimeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
+            timeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
                 components.allClear()
-                TimeManager.runTaskLater(1.ticks) {
+                timeManager.runTaskLater(1.ticks) {
                     require<GameState.WithPlayers>().forEachPlayer(ChessPlayer::stop)
                     state = GameState.Stopped(stopping)
                     components.allVeryEnd()
