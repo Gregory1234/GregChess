@@ -8,10 +8,14 @@ import org.bukkit.event.HandlerList
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty0
 import kotlin.reflect.safeCast
 
-class ChessGame(private val timeManager: TimeManager, val arena: Arena, val settings: GameSettings) {
+class ChessGame(
+    private val timeManager: TimeManager,
+    val config: Configurator,
+    val arena: Arena,
+    val settings: GameSettings
+    ) {
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() = "ChessGame(uniqueId = $uniqueId)"
@@ -167,10 +171,10 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             }
             components.allInit()
             requireStarting().apply {
-                black.sendTitle("", Config.title.youArePlayingAs.black)
-                white.sendTitle(Config.title.yourTurn, Config.title.youArePlayingAs.white)
+                black.sendTitle("", Config.title.youArePlayingAs.black.get(config))
+                white.sendTitle(Config.title.yourTurn.get(config), Config.title.youArePlayingAs.white.get(config))
                 players.forEach {
-                    it.sendMessage(Config.message.youArePlayingAs[it.side])
+                    it.sendMessage(Config.message.youArePlayingAs[it.side].get(config))
                 }
             }
             variant.start(this)
@@ -184,7 +188,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
                     components.allUpdate()
             }
         } catch (e: Exception) {
-            players.forEachReal { it.sendMessage(Config.message.error.teleportFailed) }
+            players.forEachReal { it.sendMessage(Config.message.error.teleportFailed.get(config)) }
             panic(e)
             glog.mid("Failed to start game", uniqueId)
             throw e
@@ -224,32 +228,32 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
-    open class EndReason(val namePath: KProperty0<String>, val reasonPGN: String, val winner: Side?) {
+    open class EndReason(val namePath: ConfigPath<String>, val reasonPGN: String, val winner: Side?) {
 
         override fun toString() =
             "EndReason.${javaClass.name.split(".", "$").last()}(winner = $winner)"
 
         // @formatter:off
-        class Checkmate(winner: Side) : EndReason(Config.chess.endReason::checkmate, "normal", winner)
-        class Resignation(winner: Side) : EndReason(Config.chess.endReason::resignation, "abandoned", winner)
-        class Walkover(winner: Side) : EndReason(Config.chess.endReason::walkover, "abandoned", winner)
-        class PluginRestart : EndReason(Config.chess.endReason::pluginRestart, "emergency", null)
-        class ArenaRemoved : EndReason(Config.chess.endReason::arenaRemoved, "emergency", null)
-        class Stalemate : EndReason(Config.chess.endReason::stalemate, "normal", null)
-        class InsufficientMaterial : EndReason(Config.chess.endReason::insufficientMaterial, "normal", null)
-        class FiftyMoves : EndReason(Config.chess.endReason::fiftyMoves, "normal", null)
-        class Repetition : EndReason(Config.chess.endReason::repetition, "normal", null)
-        class DrawAgreement : EndReason(Config.chess.endReason::drawAgreement, "normal", null)
-        class Timeout(winner: Side) : ChessGame.EndReason(Config.chess.endReason::timeout, "time forfeit", winner)
-        class DrawTimeout : ChessGame.EndReason(Config.chess.endReason::drawTimeout, "time forfeit", null)
-        class Error(val e: Exception) : ChessGame.EndReason(Config.chess.endReason::error, "emergency", null) {
+        class Checkmate(winner: Side) : EndReason(Config.chess.endReason.checkmate, "normal", winner)
+        class Resignation(winner: Side) : EndReason(Config.chess.endReason.resignation, "abandoned", winner)
+        class Walkover(winner: Side) : EndReason(Config.chess.endReason.walkover, "abandoned", winner)
+        class PluginRestart : EndReason(Config.chess.endReason.pluginRestart, "emergency", null)
+        class ArenaRemoved : EndReason(Config.chess.endReason.arenaRemoved, "emergency", null)
+        class Stalemate : EndReason(Config.chess.endReason.stalemate, "normal", null)
+        class InsufficientMaterial : EndReason(Config.chess.endReason.insufficientMaterial, "normal", null)
+        class FiftyMoves : EndReason(Config.chess.endReason.fiftyMoves, "normal", null)
+        class Repetition : EndReason(Config.chess.endReason.repetition, "normal", null)
+        class DrawAgreement : EndReason(Config.chess.endReason.drawAgreement, "normal", null)
+        class Timeout(winner: Side) : ChessGame.EndReason(Config.chess.endReason.timeout, "time forfeit", winner)
+        class DrawTimeout : ChessGame.EndReason(Config.chess.endReason.drawTimeout, "time forfeit", null)
+        class Error(val e: Exception) : ChessGame.EndReason(Config.chess.endReason.error, "emergency", null) {
             override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
         }
 
-        class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.chess.endReason::piecesLost, "normal", winner)
+        class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.chess.endReason.piecesLost, "normal", winner)
         // @formatter:on
 
-        fun getMessage() = Config.message.gameFinished[winner](namePath.get())
+        fun getMessage(c: Configurator) = Config.message.gameFinished[winner](namePath.get(c)).get(c)
     }
 
     class EndEvent(val game: ChessGame) : Event() {
@@ -278,10 +282,10 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             players.forEachUnique(currentTurn) {
                 it.sendTitle(
                     Config.title.player.run {
-                        when(reason.winner) {it.side -> youWon; null -> youDrew; else -> youLost} },
-                    reason.namePath.get()
+                        when(reason.winner) {it.side -> youWon; null -> youDrew; else -> youLost} }.get(config),
+                    reason.namePath.get(config)
                 )
-                it.sendMessage(reason.getMessage())
+                it.sendMessage(reason.getMessage(config))
                 if (quick[it.side]) {
                     components.allRemovePlayer(it.player)
                 } else {
@@ -292,8 +296,8 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
                 }
             }
             spectators.forEach {
-                it.sendTitle(Config.title.spectator[reason.winner], reason.namePath.get())
-                it.sendMessage(reason.getMessage())
+                it.sendTitle(Config.title.spectator[reason.winner].get(config), reason.namePath.get(config))
+                it.sendMessage(reason.getMessage(config))
                 if (anyLong) {
                     components.allSpectatorLeave(it)
                 } else {

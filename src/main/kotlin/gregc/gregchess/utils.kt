@@ -17,7 +17,6 @@ import java.time.format.DateTimeFormatter
 import kotlin.contracts.contract
 import kotlin.math.floor
 import kotlin.math.roundToLong
-import kotlin.reflect.KProperty0
 
 data class PlayerData(
     val location: Location? = null,
@@ -93,16 +92,16 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 
 }
 
-inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
+inline fun cTry(p: CommandSender, c: Configurator, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
-    p.sendMessage(e.playerMsg.get())
+    p.sendMessage(e.playerMsg.get(c))
     err(e)
 }
 
-fun JavaPlugin.addCommand(name: String, command: CommandArgs.() -> Unit) {
+fun JavaPlugin.addCommand(name: String, c: Configurator, command: CommandArgs.() -> Unit) {
     getCommand(name)?.setExecutor { sender, _, _, args ->
-        cTry(sender){
+        cTry(sender, c){
             command(CommandArgs(sender, args))
         }
         true
@@ -128,14 +127,14 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
-class CommandException(val playerMsg: KProperty0<String>) : Exception() {
+class CommandException(val playerMsg: ConfigPath<String>) : Exception() {
     override val message: String
-        get() = "Uncaught command error: $playerMsg"
+        get() = "Uncaught command error: ${playerMsg.path}"
 }
 
 val errorMsg get() = Config.message.error
 
-fun cRequire(e: Boolean, msg: KProperty0<String>) {
+fun cRequire(e: Boolean, msg: ConfigPath<String>) {
     contract {
         returns() implies e
     }
@@ -143,18 +142,18 @@ fun cRequire(e: Boolean, msg: KProperty0<String>) {
 }
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
-    cRequire(args.size in min..max, errorMsg::wrongArgumentsNumber)
+    cRequire(args.size in min..max, errorMsg.wrongArgumentsNumber)
 }
 
 fun cPerms(p: CommandSender, perm: String) {
-    cRequire(p.hasPermission(perm), errorMsg::noPermission)
+    cRequire(p.hasPermission(perm), errorMsg.noPermission)
 }
 
 fun cPlayer(p: CommandSender) {
     contract {
         returns() implies (p is Player)
     }
-    cRequire(p is Player, errorMsg::notPlayer)
+    cRequire(p is Player, errorMsg.notPlayer)
 }
 
 inline fun <T> cWrongArgument(block: () -> T): T = try {
@@ -164,13 +163,13 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
     cWrongArgument()
 }
 
-fun cWrongArgument(): Nothing = throw CommandException(errorMsg::wrongArgument)
+fun cWrongArgument(): Nothing = throw CommandException(errorMsg.wrongArgument)
 
-fun <T> cNotNull(p: T?, msg: KProperty0<String>): T = p ?: throw CommandException(msg)
+fun <T> cNotNull(p: T?, msg: ConfigPath<String>): T = p ?: throw CommandException(msg)
 
-inline fun <reified T, reified R : T> cCast(p: T, msg: KProperty0<String>): R = cNotNull(p as? R, msg)
+inline fun <reified T, reified R : T> cCast(p: T, msg: ConfigPath<String>): R = cNotNull(p as? R, msg)
 
-fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), errorMsg::playerNotFound)
+fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), errorMsg.playerNotFound)
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 

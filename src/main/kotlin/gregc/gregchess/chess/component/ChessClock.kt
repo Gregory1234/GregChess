@@ -1,12 +1,9 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.Config
+import gregc.gregchess.*
 import gregc.gregchess.chess.BySides
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Side
-import gregc.gregchess.glog
-import gregc.gregchess.minutes
-import gregc.gregchess.seconds
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -39,13 +36,13 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
 
         companion object {
 
-            operator fun get(name: String?) = when (name) {
+            fun get(config: Configurator, name: String?) = when (name) {
                 "none" -> null
                 null -> null
                 else -> {
-                    val settings = Config.settings.clock.mapValues { (_, it) ->
-                        val t = it.type
-                        Settings(t, it.initial, (if (t.usesIncrement) it.increment else null) ?: 0.seconds)
+                    val settings = Config.settings.clock.get(config).mapValues { (_, it) ->
+                        val t = it.get { type }
+                        Settings(t, it.get { initial }, (if (t.usesIncrement) it.get { increment } else null) ?: 0.seconds)
                     }
                     if (name in settings)
                         settings[name]
@@ -106,7 +103,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
     private fun format(time: Duration): String {
-        val formatter = DateTimeFormatter.ofPattern(view.timeFormat)
+        val formatter = DateTimeFormatter.ofPattern(view.timeFormat.get(game.config))
         return (LocalTime.ofNanoOfDay(
             max(ceil(time.toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0)
         )).format(formatter)

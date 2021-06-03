@@ -21,10 +21,10 @@ abstract class HumanPlayer(val name: String) {
     abstract fun sendTitle(title: String, subtitle: String = "")
     fun isInGame(): Boolean = currentGame != null
     fun isSpectating(): Boolean = spectatedGame != null
-    abstract fun sendPGN(pgn: PGN)
+    abstract fun sendPGN(config: Configurator, pgn: PGN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
-    abstract fun setItem(i: Int, piece: Piece?)
-    abstract fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>)
+    abstract fun setItem(config: Configurator, i: Int, piece: Piece?)
+    abstract fun pawnPromotionScreen(config: Configurator, moves: List<Pair<Piece, MoveCandidate>>)
 }
 
 abstract class MinecraftPlayer(val uniqueId: UUID, name: String): HumanPlayer(name)
@@ -33,9 +33,9 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     class PawnPromotionScreen(
         private val moves: List<Pair<Piece, MoveCandidate>>,
         private val player: ChessPlayer?
-    ) : Screen<MoveCandidate>(Config.message::pawnPromotion) {
-        override fun getContent() = moves.mapIndexed { i, (t, m) ->
-            ScreenOption(t.type.getItem(t.side), m, InventoryPosition.fromIndex(i))
+    ) : Screen<MoveCandidate>(Config.message.pawnPromotion) {
+        override fun getContent(config: Configurator) = moves.mapIndexed { i, (t, m) ->
+            ScreenOption(t.type.getItem(config, t.side), m, InventoryPosition.fromIndex(i))
         }
 
         override fun onClick(v: MoveCandidate) {
@@ -65,8 +65,8 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
 
     override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
-    override fun sendPGN(pgn: PGN) {
-        val message = TextComponent(Config.message.copyPGN)
+    override fun sendPGN(config: Configurator, pgn: PGN) {
+        val message = TextComponent(Config.message.copyPGN.get(config))
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }
@@ -78,12 +78,12 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
         })
     }
 
-    override fun setItem(i: Int, piece: Piece?) {
-        player.inventory.setItem(i, piece?.let {it.type.getItem(it.side)})
+    override fun setItem(config: Configurator, i: Int, piece: Piece?) {
+        player.inventory.setItem(i, piece?.let {it.type.getItem(config, it.side)})
     }
 
-    override fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>) {
-        player.openScreen(PawnPromotionScreen(moves, chess))
+    override fun pawnPromotionScreen(config: Configurator, moves: List<Pair<Piece, MoveCandidate>>) {
+        player.openScreen(config, PawnPromotionScreen(moves, chess))
     }
 }
 

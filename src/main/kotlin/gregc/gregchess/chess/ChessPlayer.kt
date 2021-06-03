@@ -40,11 +40,11 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 
     private fun announceInCheck() {
         if (!silent) {
-            sendTitle(Config.title.yourTurn, Config.title.inCheck)
-            sendMessage(Config.message.inCheck)
+            sendTitle(Config.title.yourTurn.get(game.config), Config.title.inCheck.get(game.config))
+            sendMessage(Config.message.inCheck.get(game.config))
         } else {
-            sendTitle(Config.title.inCheck)
-            sendMessage(Config.message.inCheck)
+            sendTitle(Config.title.inCheck.get(game.config))
+            sendMessage(Config.message.inCheck.get(game.config))
         }
     }
 
@@ -52,7 +52,7 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 
     open fun startTurn() {
         if (!silent) {
-            sendTitle(Config.title.yourTurn)
+            sendTitle(Config.title.yourTurn.get(game.config))
         }
         if (king?.let { game.variant.isInCheck(it) } == true)
             announceInCheck()
@@ -76,7 +76,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
         held = piece
-        player.setItem(0, piece.piece)
+        player.setItem(game.config, 0, piece.piece)
     }
 
     fun makeMove(pos: Pos) {
@@ -86,11 +86,11 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         val moves = piece.square.bakedLegalMoves ?: return
         if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
         held = null
-        player.setItem(0, null)
+        player.setItem(game.config, 0, null)
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1)
-            player.pawnPromotionScreen(chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } })
+            player.pawnPromotionScreen(game.config, chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } })
         else
             game.finishMove(chosenMoves.first())
     }

@@ -4,16 +4,15 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import kotlin.reflect.KProperty0
 
-abstract class Screen<T>(val namePath: KProperty0<String>) {
-    abstract fun getContent(): List<ScreenOption<T>>
+abstract class Screen<T>(val namePath: ConfigPath<String>) {
+    abstract fun getContent(config: Configurator): List<ScreenOption<T>>
     abstract fun onClick(v: T)
     abstract fun onCancel()
-    fun create() = Holder(this)
-    class Holder<T> internal constructor(private val screen: Screen<T>) : InventoryHolder {
-        private val content = screen.getContent()
-        private val inv = Bukkit.createInventory(this,content.size - content.size % 9 + 9, screen.namePath.get())
+    fun create(config: Configurator) = Holder(this, config)
+    class Holder<T> internal constructor(private val screen: Screen<T>, config: Configurator) : InventoryHolder {
+        private val content = screen.getContent(config)
+        private val inv = Bukkit.createInventory(this,content.size - content.size % 9 + 9, screen.namePath.get(config))
 
         var finished: Boolean = false
 
@@ -50,4 +49,4 @@ data class InventoryPosition(val x: Int, val y: Int) {
 
 data class ScreenOption<T>(val item: ItemStack, val value: T, val position: InventoryPosition)
 
-fun Player.openScreen(s: Screen<*>) = openInventory(s.create().inventory)
+fun Player.openScreen(config: Configurator, s: Screen<*>) = openInventory(s.create(config).inventory)

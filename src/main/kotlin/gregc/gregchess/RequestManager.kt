@@ -54,16 +54,18 @@ class RequestTypeBuilder<T> internal constructor() {
 
 fun <T> buildRequestType(
     t: TimeManager,
+    c: Configurator,
     m: RequestManager,
     f: RequestTypeBuilder<T>.() -> Unit
 ): RequestType<T> = RequestTypeBuilder<T>().run{
     f()
-    m.register(RequestType(t, messages, validateSender, printT, onAccept, onCancel))
+    m.register(RequestType(t, c, messages, validateSender, printT, onAccept, onCancel))
 }
 
 
 class RequestType<in T>(
     private val timeManager: TimeManager,
+    private val config: Configurator,
     private val messages: RequestMessages,
     private inline val validateSender: (HumanPlayer) -> Boolean = { true },
     private inline val printT: (T) -> String = { it.toString() },
@@ -75,11 +77,11 @@ class RequestType<in T>(
 
     private fun call(request: Request<T>, simple: Boolean) {
         if (!validateSender(request.sender)) {
-            request.sender.sendMessage(view.error.cannotSend)
+            request.sender.sendMessage(view.error.cannotSend.get(config))
             glog.mid("Invalid sender", request.uniqueId)
             return
         }
-        if ((simple || Config.request.selfAccept)
+        if ((simple || Config.request.selfAccept.get(config))
             && request.sender == request.receiver
         ) {
             glog.mid("Self request", request.uniqueId)
@@ -88,16 +90,16 @@ class RequestType<in T>(
         }
         requests[request.uniqueId] = request
         request.sender.sendCommandMessage(
-            view.sent.request + " ",
-            Config.request.cancel,
+            view.sent.request.get(config) + " ",
+            Config.request.cancel.get(config),
             if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
         )
         request.receiver.sendCommandMessage(
-            view.received.getRequest(request.sender.name, printT(request.value)) + " ",
-            Config.request.accept,
+            view.received.request(request.sender.name, printT(request.value)).get(config) + " ",
+            Config.request.accept.get(config),
             if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
         )
-        val duration = view.duration
+        val duration = view.duration.get(config)
         if (duration != null)
             timeManager.runTaskLater(duration) {
                 if (request.uniqueId in requests)
@@ -123,8 +125,8 @@ class RequestType<in T>(
     }
 
     private fun accept(request: Request<T>) {
-        request.sender.sendMessage(view.sent.getAccept(request.receiver.name))
-        request.receiver.sendMessage(view.received.getAccept(request.sender.name))
+        request.sender.sendMessage(view.sent.accept(request.receiver.name).get(config))
+        request.receiver.sendMessage(view.received.accept(request.sender.name).get(config))
         requests.remove(request.uniqueId)
         onAccept(request)
         glog.mid("Accepted", request.uniqueId)
@@ -133,14 +135,14 @@ class RequestType<in T>(
     fun accept(p: HumanPlayer, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.receiver)
-            p.sendMessage(view.error.notFound)
+            p.sendMessage(view.error.notFound.get(config))
         else
             accept(request)
     }
 
     private fun cancel(request: Request<T>) {
-        request.sender.sendMessage(view.sent.getCancel(request.receiver.name))
-        request.receiver.sendMessage(view.received.getCancel(request.sender.name))
+        request.sender.sendMessage(view.sent.cancel(request.receiver.name).get(config))
+        request.receiver.sendMessage(view.received.cancel(request.sender.name).get(config))
         requests.remove(request.uniqueId)
         onCancel(request)
         glog.mid("Cancelled", request.uniqueId)
@@ -149,14 +151,14 @@ class RequestType<in T>(
     fun cancel(p: HumanPlayer, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.sender)
-            p.sendMessage(view.error.notFound)
+            p.sendMessage(view.error.notFound.get(config))
         else
             cancel(request)
     }
 
     private fun expire(request: Request<T>) {
-        request.sender.sendMessage(view.getExpired(request.receiver.name))
-        request.receiver.sendMessage(view.getExpired(request.sender.name))
+        request.sender.sendMessage(view.expired(request.receiver.name).get(config))
+        request.receiver.sendMessage(view.expired(request.sender.name).get(config))
         requests.remove(request.uniqueId)
         onCancel(request)
         glog.mid("Expired", request.uniqueId)

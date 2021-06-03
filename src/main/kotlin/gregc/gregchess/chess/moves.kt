@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.Config
+import gregc.gregchess.between
+import gregc.gregchess.rotationsOf
 import kotlin.math.abs
 
 class MoveData(
@@ -63,13 +65,13 @@ abstract class MoveCandidate(
 
     open fun baseName() = buildString {
         if (piece.type != PieceType.PAWN) {
-            append(piece.type.char.uppercaseChar())
+            append(piece.type.char.get(game.config).uppercaseChar())
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(piece.pos.fileStr)
         if (captured != null)
             append(Config.chess.capture)
-        promotion?.let { append(it.type.char.uppercaseChar()) }
+        promotion?.let { append(it.type.char.get(game.config).uppercaseChar()) }
         append(target.pos)
     }
 

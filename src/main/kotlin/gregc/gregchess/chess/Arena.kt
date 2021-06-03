@@ -1,13 +1,10 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Config
-import gregc.gregchess.cNotNull
+import gregc.gregchess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.GameBaseEvent
 import gregc.gregchess.chess.component.GameEvent
 import gregc.gregchess.chess.component.TimeModifier
-import gregc.gregchess.errorMsg
-import gregc.gregchess.glog
 import org.bukkit.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -21,9 +18,9 @@ interface ArenaManager {
     fun next(): Arena?
 }
 
-fun ArenaManager.cNext() = cNotNull(next(), errorMsg::noArenas)
+fun ArenaManager.cNext() = cNotNull(next(), errorMsg.noArenas)
 
-class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
+class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) : ArenaManager, Listener {
     private val arenas = mutableListOf<Arena>()
 
     override fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
@@ -31,7 +28,7 @@ class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
     private fun World.isArena(): Boolean = arenas.any {it.name == name}
 
     fun reload() {
-        val newArenas = Config.chessArenas
+        val newArenas = Config.chessArenas.get(config)
         arenas.forEach {
             if (it.name in newArenas){
                 it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
@@ -43,7 +40,7 @@ class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
 
     fun start() {
         Bukkit.getPluginManager().registerEvents(this, plugin)
-        arenas.addAll(Config.chessArenas.map { Arena(it) })
+        arenas.addAll(Config.chessArenas.get(config).map { Arena(it) })
     }
 
     @EventHandler

@@ -19,8 +19,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
 
         @GameEvent(GameBaseEvent.START)
         fun start() {
-            game.scoreboard += object :
-                PlayerProperty(Config.component.checkCounter.checkCounter) {
+            game.scoreboard += object : PlayerProperty(Config.component.checkCounter.checkCounter) {
                 override fun invoke(s: Side): String = checks[s].toString()
             }
         }
@@ -39,7 +38,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         }
     }
 
-    class ThreeChecksEndReason(winner: Side) : ChessGame.EndReason(Config.chess.endReason::threeChecks, "normal", winner)
+    class ThreeChecksEndReason(winner: Side) : ChessGame.EndReason(Config.chess.endReason.threeChecks, "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

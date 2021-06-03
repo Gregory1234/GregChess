@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.Config
+import gregc.gregchess.ConfigPath
 import gregc.gregchess.chatColor
 import gregc.gregchess.chess.*
 import gregc.gregchess.randomString
@@ -20,7 +21,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
-    private val objective = scoreboard.registerNewObjective("GregChess", "", view.title)
+    private val objective = scoreboard.registerNewObjective("GregChess", "", view.title.get(game.config))
 
     operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -46,7 +47,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
         }
         this += object :
             PlayerProperty(view.player) {
-            override fun invoke(s: Side) = view.playerPrefix + game[s].name
+            override fun invoke(s: Side) = view.playerPrefix.get(game.config) + game[s].name
         }
     }
 
@@ -58,20 +59,20 @@ class ScoreboardManager(private val game: ChessGame): Component {
         var i = l
         gameProperties.forEach {
             it.team = newTeam()
-            it.team?.addEntry(view.getGeneralFormat(it.name))
-            objective.getScore(view.getGeneralFormat(it.name)).score = i--
+            it.team?.addEntry(view.generalFormat(it.name.get(game.config)).get(game.config))
+            objective.getScore(view.generalFormat(it.name.get(game.config)).get(game.config)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
             it.teams.white = newTeam()
-            it.teams.white?.addEntry(view.getWhiteFormat(it.name))
-            objective.getScore(view.getWhiteFormat(it.name)).score = i--
+            it.teams.white?.addEntry(view.whiteFormat(it.name.get(game.config)).get(game.config))
+            objective.getScore(view.whiteFormat(it.name.get(game.config)).get(game.config)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
             it.teams.black = newTeam()
-            it.teams.black?.addEntry(view.getBlackFormat(it.name))
-            objective.getScore(view.getBlackFormat(it.name)).score = i--
+            it.teams.black?.addEntry(view.blackFormat(it.name.get(game.config)).get(game.config))
+            objective.getScore(view.blackFormat(it.name.get(game.config)).get(game.config)).score = i--
         }
     }
 
@@ -97,13 +98,13 @@ class ScoreboardManager(private val game: ChessGame): Component {
     }
 }
 
-abstract class PlayerProperty(val name: String) {
+abstract class PlayerProperty(val name: ConfigPath<String>) {
     val teams: MutableBySides<Team?> = MutableBySides(null)
 
     abstract operator fun invoke(s: Side): String
 }
 
-abstract class GameProperty(val name: String) {
+abstract class GameProperty(val name: ConfigPath<String>) {
     var team: Team? = null
 
     abstract operator fun invoke(): String

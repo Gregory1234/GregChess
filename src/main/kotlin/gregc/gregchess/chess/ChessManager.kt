@@ -23,7 +23,7 @@ interface ChessGameManager {
     fun leave(player: HumanPlayer)
 }
 
-class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Listener {
+class BukkitChessGameManager(private val plugin: Plugin, private val config: Configurator) : ChessGameManager, Listener {
 
     private val games = mutableListOf<ChessGame>()
 
@@ -50,7 +50,7 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
 
     override fun leave(player: HumanPlayer) {
         val games = player.games
-        cRequire(games.isNotEmpty() || player.isSpectating(), errorMsg.inGame::you)
+        cRequire(games.isNotEmpty() || player.isSpectating(), errorMsg.inGame.you)
         games.forEach { g ->
             g.stop(ChessGame.EndReason.Walkover(!g[player]!!.side), BySides{ it != g[player]!!.side })
         }
@@ -76,7 +76,7 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
-            val pos = cNotNull(player.game.withRenderer<Loc, Pos> { it.getPos(block.loc) }, errorMsg::rendererNotFound)
+            val pos = cNotNull(player.game.withRenderer<Loc, Pos> { it.getPos(block.loc) }, errorMsg.rendererNotFound)
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
                 player.pickUp(pos)
             } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {
@@ -127,7 +127,7 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
     @EventHandler
     fun onChessGameEnd(e: ChessGame.EndEvent) {
         val pgn = PGN.generate(e.game)
-        e.game.players.forEachReal { it.sendPGN(pgn) }
+        e.game.players.forEachReal { it.sendPGN(config, pgn) }
         removeGame(e.game)
     }
 

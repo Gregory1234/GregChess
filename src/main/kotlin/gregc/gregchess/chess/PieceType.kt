@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Config
+import gregc.gregchess.Configurator
 import gregc.gregchess.chatColor
 import org.bukkit.inventory.ItemStack
 
@@ -19,19 +20,16 @@ enum class PieceType(
     val view get() = Config.chess.piece[this]
 
     companion object {
-        fun parseFromChar(c: Char) =
-            values().firstOrNull { it.char == c.lowercaseChar() }
-                ?: throw IllegalArgumentException(c.toString())
 
         fun parseFromStandardChar(c: Char): PieceType =
             values().firstOrNull { it.standardChar == c.lowercaseChar() }
                 ?: throw IllegalArgumentException(c.toString())
     }
 
-    fun getItem(side: Side): ItemStack {
-        val item = ItemStack(view.item[side])
+    fun getItem(config: Configurator, side: Side): ItemStack {
+        val item = ItemStack(view.item[side].get(config))
         val meta = item.itemMeta!!
-        meta.setDisplayName(chatColor(side.getPieceName(pieceName)))
+        meta.setDisplayName(chatColor(side.getPieceName(config, pieceName.get(config))))
         item.itemMeta = meta
         return item
     }

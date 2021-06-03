@@ -36,7 +36,7 @@ object AtomicChess : ChessVariant("Atomic") {
         }
     }
 
-    class AtomicEndReason(winner: Side) : ChessGame.EndReason(Config.chess.endReason::atomic, "normal", winner)
+    class AtomicEndReason(winner: Side) : ChessGame.EndReason(Config.chess.endReason.atomic, "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<ExplosionManager>()
