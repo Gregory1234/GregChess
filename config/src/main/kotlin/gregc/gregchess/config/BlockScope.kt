@@ -59,7 +59,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     fun addFormatString(name: String, default: String? = null, vararg args: TypeName) {
         config.addProperty(PropertySpec
             .builder(name.lowerFirst(), ClassName(PACKAGE_NAME, "ConfigFormatString${args.size}").parameterizedBy(*args))
-            .getter(FunSpec.getterBuilder().addCode("return ConfigFormatString${args.size}(\"$name\")").build()).build())
+            .getter(FunSpec.getterBuilder().addCode("return ConfigFormatString${args.size}(childPath(\"$name\"))").build()).build())
         if(default != null)
             yamlBlock.value[name] = YamlText(default)
     }
@@ -97,7 +97,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
         config.addProperty(
             PropertySpec
                 .builder(name.lowerFirst(), ClassName(PACKAGE_NAME, "Config${typName}List"))
-                .getter(FunSpec.getterBuilder().addCode("""return Config${typName}List("$name", $warnMissing)""").build())
+                .getter(FunSpec.getterBuilder().addCode("""return Config${typName}List(childPath("$name"), $warnMissing)""").build())
                 .build())
         if(!default.isNullOrEmpty())
             yamlBlock.value[name] = YamlList(default.toMutableList())
@@ -106,7 +106,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     fun addEnumList(name: String, typ: TypeName, default: List<String>? = null, warnMissing: Boolean = true) {
         config.addProperty(
             PropertySpec.builder(name.lowerFirst(), configEnumList.parameterizedBy(typ))
-                .getter(FunSpec.getterBuilder().addCode("""return %T("$name", %T::class, $warnMissing)""",
+                .getter(FunSpec.getterBuilder().addCode("""return %T(childPath("$name"), %T::class, $warnMissing)""",
                     configEnumList, typ).build())
                 .build())
         if(!default.isNullOrEmpty())
@@ -202,7 +202,7 @@ fun FileSpec.Builder.viewExtensions(name: String, typ: TypeName, default: String
         .addSuperclassConstructorParameter("path")
         .addFunction(FunSpec.builder("get").addModifiers(KModifier.OVERRIDE)
             .addParameter("c", configurator).returns(typ)
-            .addCode("""return c.get(path, "${name.lowerFirst().camelToSpaces()}", $default, warnMissing, $parser)""").build())
+            .addCode("""return c.get(path, "${name.lowerFirst().camelToSpaces()}", default ?: $default, warnMissing, $parser)""").build())
         .build())
     addType(TypeSpec.classBuilder("ConfigOptional$name")
         .superclass(configPath.parameterizedBy(typ.copy(nullable = true)))

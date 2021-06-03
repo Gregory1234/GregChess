@@ -6,7 +6,7 @@ import kotlin.reflect.KClass
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
 
 abstract class ConfigPath<out T>(val path: String = ""){
-    fun childPath(path: String) = path addDot path
+    fun childPath(ad: String) = path addDot ad
     abstract fun get(c: Configurator): T
 }
 

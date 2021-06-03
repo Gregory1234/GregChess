@@ -58,7 +58,11 @@ class BukkitChessGameManager(private val plugin: Plugin, private val config: Con
     }
 
     @EventHandler
-    fun onPlayerLeave(e: PlayerQuitEvent) = leave(e.player.human)
+    fun onPlayerLeave(e: PlayerQuitEvent) = try {
+        leave(e.player.human)
+    } catch (ex: CommandException) {
+
+    }
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
