@@ -8,8 +8,14 @@ import kotlin.io.path.div
 
 const val PACKAGE_NAME = "gregc.gregchess"
 
-val viewClass = ClassName("gregc.gregchess", "View")
 val sideType = ClassName("gregc.gregchess.chess", "Side")
+val configurator = ClassName("gregc.gregchess", "Configurator")
+val configPath = ClassName("gregc.gregchess", "ConfigPath")
+val configBlock = ClassName("gregc.gregchess", "ConfigBlock")
+val configBlockList = ClassName("gregc.gregchess", "ConfigBlockList")
+val configFullFormatString = ClassName("gregc.gregchess", "ConfigFullFormatString")
+val configEnum = ClassName("gregc.gregchess", "ConfigEnum")
+val configEnumList = ClassName("gregc.gregchess", "ConfigEnumList")
 
 @DslMarker
 @Retention(AnnotationRetention.SOURCE)
@@ -21,7 +27,7 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     private inline fun withBlock(name: String, noinline block: BlockScope.() -> Unit, stuff: (BlockScope) -> Unit) {
         val b = BlockScope(
             TypeSpec.classBuilder(name)
-                .superclass(viewClass)
+                .superclass(configBlock.parameterizedBy(ClassName("", name)))
                 .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
                 .addSuperclassConstructorParameter("path"), YamlBlock(mutableMapOf()))
         b.block()
@@ -51,60 +57,68 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
         }
     }
     fun addFormatString(name: String, default: String? = null, vararg args: TypeName) {
-        val fn = FunSpec.builder("get$name").returns(String::class)
-        args.forEachIndexed { i, v ->
-            fn.addParameter("a${i+1}", v)
-        }
-        fn.addCode("return getFormatString(\"$name\"")
-        args.forEachIndexed { i, _ ->
-            fn.addCode(", a${i+1}")
-        }
-        fn.addCode(")")
-        config.addFunction(fn.build())
+        config.addProperty(PropertySpec
+            .builder(name.lowerFirst(), ClassName(PACKAGE_NAME, "ConfigFormatString${args.size}").parameterizedBy(*args))
+            .getter(FunSpec.getterBuilder().addCode("return ConfigFormatString${args.size}(\"$name\")").build()).build())
         if(default != null)
             yamlBlock.value[name] = YamlText(default)
     }
-    fun add(name: String, typ: TypeName, typName: String, default: String? = null, defaultCode: String? = null, warnMissing: Boolean = default == null) {
+    fun add(name: String, typName: String, default: String? = null, defaultCode: String? = null, warnMissing: Boolean = default == null) {
         config.addProperty(
-            PropertySpec.builder(name.lowerFirst(), typ)
-            .getter(FunSpec.getterBuilder().addCode("return get$typName(\"$name\", $defaultCode, $warnMissing)").build())
+            PropertySpec.builder(name.lowerFirst(), ClassName(PACKAGE_NAME, "Config$typName"))
+            .getter(FunSpec.getterBuilder()
+                .addCode("""return Config$typName(childPath("$name"), $defaultCode, $warnMissing)""").build())
             .build())
         if(default != null)
             yamlBlock.value[name] = YamlText(default)
     }
-    fun addString(name: String, default: String? = null) = add(name, String::class.asTypeName(), "String", default)
-    fun addChar(name: String, default: Char? = null) = add(name, Char::class.asTypeName(), "Char", default?.let {"'$it'"}.toString())
-    fun addDuration(name: String, default: String? = null, warnMissing: Boolean = default == null) = add(name, Duration::class.asTypeName(), "Duration", default.toString(), null, warnMissing)
-    fun addEnum(name: String, typ: TypeName, default: String, warnMissing: Boolean = true) = add(name, typ, "Enum", default, "$typ.$default", warnMissing)
-    fun addDefaultBool(name: String, default: Boolean, warnMissing: Boolean = false) = add(name, Boolean::class.asTypeName(), "Bool", default.toString(), default.toString(), warnMissing)
-    fun addDefaultInt(name: String, default: Int) = add(name, Int::class.asTypeName(), "Int", default.toString(), default.toString())
-    fun addOptional(name: String, typ: TypeName, typName: String, warnMissing: Boolean = false) {
+    fun addString(name: String, default: String? = null) = add(name, "String", default)
+    fun addChar(name: String, default: Char? = null) = add(name, "Char", default?.let {"'$it'"}.toString())
+    fun addDuration(name: String, default: String? = null, warnMissing: Boolean = default == null) = add(name, "Duration", default.toString(), null, warnMissing)
+    fun addDefaultBool(name: String, default: Boolean, warnMissing: Boolean = false) = add(name, "Bool", default.toString(), default.toString(), warnMissing)
+    fun addDefaultInt(name: String, default: Int) = add(name, "Int", default.toString(), default.toString())
+    fun addEnum(name: String, typ: TypeName, default: String, warnMissing: Boolean = true) {
         config.addProperty(
-            PropertySpec.builder(name.lowerFirst(), typ.copy(nullable = true))
-                .getter(FunSpec.getterBuilder().addCode("return getOptional$typName(\"$name\", $warnMissing)").build())
+            PropertySpec.builder(name.lowerFirst(), configEnum.parameterizedBy(typ))
+                .getter(FunSpec.getterBuilder()
+                    .addCode("""return %T(childPath("$name"), %T.$default, $warnMissing)""", configEnum, typ).build())
+                .build())
+        yamlBlock.value[name] = YamlText(default)
+    }
+    fun addOptional(name: String, typName: String, warnMissing: Boolean = false) {
+        config.addProperty(
+            PropertySpec.builder(name.lowerFirst(), ClassName(PACKAGE_NAME, "ConfigOptional$typName"))
+                .getter(FunSpec.getterBuilder().addCode("""return ConfigOptional$typName(childPath("$name"), $warnMissing)""").build())
                 .build())
     }
-    fun addOptionalString(name: String) = addOptional(name, String::class.asTypeName(), "String")
-    fun addOptionalDuration(name: String) = addOptional(name, Duration::class.asTypeName(), "Duration")
-    fun addList(name: String, typ: TypeName, typName: String, default: List<String>? = null, warnMissing: Boolean = true) {
+    fun addOptionalString(name: String) = addOptional(name, "String")
+    fun addOptionalDuration(name: String) = addOptional(name, "Duration")
+    fun addList(name: String, typName: String, default: List<String>? = null, warnMissing: Boolean = true) {
         config.addProperty(
             PropertySpec
-                .builder(name.lowerFirst(), List::class.asClassName().parameterizedBy(typ))
-                .getter(FunSpec.getterBuilder().addCode("return get${typName}List(\"$name\", $warnMissing)").build())
+                .builder(name.lowerFirst(), ClassName(PACKAGE_NAME, "Config${typName}List"))
+                .getter(FunSpec.getterBuilder().addCode("""return Config${typName}List("$name", $warnMissing)""").build())
                 .build())
         if(!default.isNullOrEmpty())
             yamlBlock.value[name] = YamlList(default.toMutableList())
     }
-    fun addStringList(name: String) = addList(name, String::class.asTypeName(), "String")
-    fun addEnumList(name: String, typ: TypeName, default: List<String>? = null, warnMissing: Boolean = true) = addList(name, typ, "Enum", default, warnMissing)
+    fun addStringList(name: String) = addList(name, "String")
+    fun addEnumList(name: String, typ: TypeName, default: List<String>? = null, warnMissing: Boolean = true) {
+        config.addProperty(
+            PropertySpec.builder(name.lowerFirst(), configEnumList.parameterizedBy(typ))
+                .getter(FunSpec.getterBuilder().addCode("""return %T("$name", %T::class, $warnMissing)""",
+                    configEnumList, typ).build())
+                .build())
+        if(!default.isNullOrEmpty())
+            yamlBlock.value[name] = YamlList(default.toMutableList())
+    }
     fun inlineBlockList(name: String, block: BlockScope.() -> Unit){
         withBlock(name, block) {
             config.addType(it.config.build())
             config.addProperty(
                 PropertySpec
-                .builder(name.lowerFirst()+"s",
-                    Map::class.asClassName().parameterizedBy(String::class.asClassName(), ClassName("", name)))
-                .getter(FunSpec.getterBuilder().addCode("return children.mapValues{ $name(childPath(it.key)) }").build()).build())
+                .builder(name.lowerFirst()+"s", configBlockList.parameterizedBy(ClassName("", name)))
+                .getter(FunSpec.getterBuilder().addCode("""%T<$name>(path) { $name(it.path) }""", configBlockList).build()).build())
         }
     }
     fun inlineFiniteBlockList(name: String, vararg values: String, block: BlockScope.() -> Unit){
@@ -118,11 +132,11 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     fun addBlockList(name: String, block: BlockScope.() -> Unit){
         withBlock(name+"Element", block) {
             config.addType(it.config.build())
-            config.addProperty(
-                PropertySpec
-                    .builder(name.lowerFirst(),
-                        Map::class.asClassName().parameterizedBy(String::class.asClassName(), ClassName("", name+"Element")))
-                    .getter(FunSpec.getterBuilder().addCode("return with(getView(\"$name\")) { children.mapValues{ ${name}Element(childPath(it.key)) } }").build()).build())
+            config.addProperty(PropertySpec
+                .builder(name.lowerFirst(), configBlockList.parameterizedBy(ClassName("", name+"Element")))
+                .getter(FunSpec.getterBuilder()
+                    .addCode("""return %T<${name}Element>(childPath("$name")) { ${name}Element(it.path) }""", configBlockList)
+                    .build()).build())
         }
     }
     private fun by(typ: TypeName, ret: TypeName, values: Map<String, String>, nulls: String? = null) {
@@ -140,16 +154,11 @@ class BlockScope(val config: TypeSpec.Builder, val yamlBlock: YamlBlock) {
     }
     fun bySides(white: String, black: String) {
         val ret = config.propertySpecs.first {it.name == white.lowerFirst()}.type
-        by(ClassName("gregc.gregchess.chess", "Side"), ret, mapOf("WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst()))
-    }
-    fun byOptSidesFormat(white: String, black: String, nulls: String) {
-        val ret = config.funSpecs.first {it.name == "get" + white}
-        by(ClassName("gregc.gregchess.chess", "Side"),
-            LambdaTypeName.get(parameters = ret.parameters, returnType = ret.returnType!!), mapOf("WHITE" to "::get$white", "BLACK" to "::get$black"), "::get$nulls")
+        by(sideType, ret, mapOf("WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst()))
     }
     fun byOptSides(white: String, black: String, nulls: String) {
         val ret = config.propertySpecs.first {it.name == white.lowerFirst()}.type
-        by(ClassName("gregc.gregchess.chess", "Side"), ret, mapOf("WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst()), nulls.lowerFirst())
+        by(sideType, ret, mapOf("WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst()), nulls.lowerFirst())
     }
     fun byEnum(typ: TypeName, vararg values: String) {
         val ret = config.propertySpecs.first {it.name == values[0].lowerFirst() }.type
@@ -174,49 +183,96 @@ fun String.camelToSpaces(): String {
 
 fun String.lowerFirst() = replaceFirstChar { it.lowercaseChar() }
 
-fun viewExtensions(name: String, typ: TypeName, default: String, parser: CodeBlock): List<FunSpec> = listOf(
-    FunSpec.builder("get$name").returns(typ).receiver(viewClass)
-        .addParameter("path", String::class)
-        .addParameter(ParameterSpec.builder("default", typ.copy(nullable = true)).defaultValue("null").build())
-        .addParameter(ParameterSpec.builder("warnMissing", Boolean::class).defaultValue("default == null").build())
-        .addCode("""return get<%T>(path, "${name.camelToSpaces()}", default ?: $default, warnMissing, $parser)""", typ).build(),
-    FunSpec.builder("getOptional$name").returns(typ.copy(nullable = true)).receiver(viewClass)
-        .addParameter("path", String::class)
-        .addParameter(ParameterSpec.builder("warnMissing", Boolean::class).defaultValue("false").build())
-        .addCode("""return get<%T>(path, "${name.camelToSpaces()}", null, warnMissing, $parser)""", typ.copy(nullable = true)).build(),
-    FunSpec.builder("get${name}List").returns(List::class.asTypeName().parameterizedBy(typ)).receiver(viewClass)
-        .addParameter("path", String::class)
-        .addParameter(ParameterSpec.builder("warnMissing", Boolean::class).defaultValue("true").build())
-        .addCode("""return getList<%T>(path, "${name.camelToSpaces()}", warnMissing, $parser)""", typ).build(),
-)
+fun FileSpec.Builder.viewExtensions(name: String, typ: TypeName, default: String, parser: CodeBlock) {
+    addType(TypeSpec.classBuilder("Config$name")
+        .superclass(configPath.parameterizedBy(typ))
+        .primaryConstructor(FunSpec.constructorBuilder()
+            .addParameter("path", String::class)
+            .addParameter(ParameterSpec.builder("default", typ.copy(nullable = true)).defaultValue("null").build())
+            .addParameter(ParameterSpec.builder("warnMissing", Boolean::class).defaultValue("default == null").build())
+            .build())
+        .addProperty(PropertySpec.builder("default", typ.copy(nullable = true))
+            .initializer("default")
+            .addModifiers(KModifier.PRIVATE)
+            .build())
+        .addProperty(PropertySpec.builder("warnMissing", Boolean::class)
+            .initializer("warnMissing")
+            .addModifiers(KModifier.PRIVATE)
+            .build())
+        .addSuperclassConstructorParameter("path")
+        .addFunction(FunSpec.builder("get").addModifiers(KModifier.OVERRIDE)
+            .addParameter("c", configurator).returns(typ)
+            .addCode("""return c.get(path, "${name.lowerFirst().camelToSpaces()}", $default, warnMissing, $parser)""").build())
+        .build())
+    addType(TypeSpec.classBuilder("ConfigOptional$name")
+        .superclass(configPath.parameterizedBy(typ.copy(nullable = true)))
+        .primaryConstructor(FunSpec.constructorBuilder()
+            .addParameter("path", String::class)
+            .addParameter(ParameterSpec.builder("warnMissing", Boolean::class).defaultValue("false").build())
+            .build())
+        .addProperty(PropertySpec.builder("warnMissing", Boolean::class)
+            .initializer("warnMissing")
+            .addModifiers(KModifier.PRIVATE)
+            .build())
+        .addSuperclassConstructorParameter("path")
+        .addFunction(FunSpec.builder("get").addModifiers(KModifier.OVERRIDE)
+            .addParameter("c", configurator).returns(typ.copy(nullable = true))
+            .addCode("""return c.get(path, "${name.lowerFirst().camelToSpaces()}", null, warnMissing, $parser)""").build())
+        .build())
+    addType(TypeSpec.classBuilder("Config${name}List")
+        .superclass(configPath.parameterizedBy(List::class.asClassName().parameterizedBy(typ)))
+        .primaryConstructor(FunSpec.constructorBuilder()
+            .addParameter("path", String::class)
+            .addParameter(ParameterSpec.builder("warnMissing", Boolean::class).defaultValue("true").build())
+            .build())
+        .addProperty(PropertySpec.builder("warnMissing", Boolean::class)
+            .initializer("warnMissing")
+            .addModifiers(KModifier.PRIVATE)
+            .build())
+        .addSuperclassConstructorParameter("path")
+        .addFunction(FunSpec.builder("get").addModifiers(KModifier.OVERRIDE)
+            .addParameter("c", configurator).returns(List::class.asClassName().parameterizedBy(typ))
+            .addCode("""return c.getList(path, "${name.lowerFirst().camelToSpaces()}", warnMissing, $parser)""").build())
+        .build())
+}
+
+fun FileSpec.Builder.formatString(i: Int) {
+    val params = (1..i).map {ParameterSpec("a$it", TypeVariableName("T$it"))}
+    val lam = LambdaTypeName.get(
+        parameters = params,
+        returnType = String::class.asTypeName())
+    val args = (1..i).joinToString { "a$it" }
+    addType(TypeSpec.classBuilder("ConfigFormatString$i")
+        .apply { (1..i).forEach { addTypeVariable(TypeVariableName("T$it")) } }
+        .superclass(configPath.parameterizedBy(lam))
+        .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
+        .addSuperclassConstructorParameter("path")
+        .addFunction(FunSpec.builder("get").addModifiers(KModifier.OVERRIDE)
+            .addParameter("c", configurator).returns(lam)
+            .addCode("""return { $args -> c.getFormatString(path, $args) }""").build())
+        .addFunction(FunSpec.builder("invoke").addModifiers(KModifier.OPERATOR)
+            .addParameters(params).returns(configFullFormatString)
+            .addCode("""return %T(path, $args)""", configFullFormatString).build())
+        .build())
+}
 
 
 
 fun config(generatedRoot: File, block: BlockScope.() -> Unit) {
     val c = BlockScope(TypeSpec.objectBuilder("Config")
-        .superclass(viewClass)
+        .superclass(configBlock.parameterizedBy(ClassName(PACKAGE_NAME, "Config")))
         .addSuperclassConstructorParameter("\"\""), YamlBlock(mutableMapOf()))
     c.block()
     if(!generatedRoot.exists())
         generatedRoot.createNewFile()
     FileSpec.builder(PACKAGE_NAME, "Config")
         .apply {
-            viewExtensions("String", String::class.asTypeName(), "path",
-                CodeBlock.of("::chatColor")).forEach{
-                addFunction(it)
-            }
-            viewExtensions("Bool", Boolean::class.asTypeName(), "true", CodeBlock.of("%T::toBooleanStrictOrNull", String::class)).forEach{
-                addFunction(it)
-            }
-            viewExtensions("Duration", Duration::class.asTypeName(), "0.seconds", CodeBlock.of("::parseDuration")).forEach{
-                addFunction(it)
-            }
-            viewExtensions("Char", Char::class.asTypeName(), "' '", CodeBlock.of("{ if (it.length == 1) it[0] else null }")).forEach{
-                addFunction(it)
-            }
-            viewExtensions("Int", Int::class.asTypeName(), "0", CodeBlock.of("%T::toIntOrNull", String::class)).forEach{
-                addFunction(it)
-            }
+            viewExtensions("String", String::class.asTypeName(), "path", CodeBlock.of("::chatColor"))
+            viewExtensions("Bool", Boolean::class.asTypeName(), "true", CodeBlock.of("%T::toBooleanStrictOrNull", String::class))
+            viewExtensions("Duration", Duration::class.asTypeName(), "0.seconds", CodeBlock.of("::parseDuration"))
+            viewExtensions("Char", Char::class.asTypeName(), "' '", CodeBlock.of("{ if (it.length == 1) it[0] else null }"))
+            viewExtensions("Int", Int::class.asTypeName(), "0", CodeBlock.of("%T::toIntOrNull", String::class))
+            (1..2).forEach(this::formatString)
         }
         .addType(c.config.build())
         .build()

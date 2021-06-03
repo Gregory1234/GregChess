@@ -102,7 +102,7 @@ fun main(args: Array<String>) {
                 addFormatString("WhiteWon", "The game has finished! White won by $1.", String::class.asClassName())
                 addFormatString("BlackWon", "The game has finished! Black won by $1.", String::class.asClassName())
                 addFormatString("ItWasADraw", "The game has finished! It was a draw by $1.", String::class.asClassName())
-                byOptSidesFormat("WhiteWon", "BlackWon", "ItWasADraw")
+                byOptSides("WhiteWon", "BlackWon", "ItWasADraw")
             }
             addBlock("Error") {
                 addString("NoPerms", "&cYou do not have the permission to do that!")
