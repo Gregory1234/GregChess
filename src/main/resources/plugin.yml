@@ -12,7 +12,7 @@ commands:
 permissions:
   greg-chess.admin:
     description: Can use all /chess subcommands
-    default: false
+    default: op
     children:
       greg-chess.debug: true
   greg-chess.debug:

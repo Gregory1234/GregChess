@@ -21,14 +21,14 @@ dependencies {
     implementation(project(":config"))
 }
 
-val generated = "$buildDir/generated"
+val generated = layout.buildDirectory.dir("generated").get()
 
 kotlin {
-    sourceSets["main"].kotlin.srcDir(File(generated))
+    sourceSets["main"].kotlin.srcDir(generated)
 }
 
 idea.module {
-    generatedSourceDirs.plusAssign(File(generated))
+    generatedSourceDirs.plusAssign(generated.asFile)
 }
 
 tasks {
@@ -45,6 +45,7 @@ tasks {
 
     processResources {
         from(sourceSets["main"].resources.srcDirs) {
+            include("**/*.yml")
             filter<ReplaceTokens>("tokens" to mapOf("version" to version))
         }
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -53,7 +54,7 @@ tasks {
     compileKotlin {
         dependsOn += project.tasks["regenerateConfig"]
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "11"
             freeCompilerArgs = listOf("-Xopt-in=kotlin.contracts.ExperimentalContracts")
         }
     }
@@ -62,7 +63,9 @@ tasks {
         destinationDirectory.set(file(rootDir))
         from ({ shaded.map { if(it.isDirectory) it else zipTree(it) } })
         exclude { it.file.extension == "kotlin_metadata" }
-        from("$generated/config.yml")
+        from(generated) {
+            include("**/*.yml")
+        }
         duplicatesStrategy = DuplicatesStrategy.WARN
     }
 }
