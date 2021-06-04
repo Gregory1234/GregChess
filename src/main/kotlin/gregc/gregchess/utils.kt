@@ -10,10 +10,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
-import java.io.File
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import kotlin.contracts.contract
 import kotlin.math.floor
 import kotlin.math.roundToLong
@@ -275,14 +272,4 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
     return if (retNull) null else ret
 }
 
-val glog: GregLogger = run {
-    val plugin = Bukkit.getPluginManager().getPlugin("GregChess")!!
-    File(plugin.dataFolder.absolutePath + "/logs").mkdir()
-    val file = File(
-        plugin.dataFolder.absolutePath + "/logs/GregChess-${
-            DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
-        }.log"
-    )
-    file.createNewFile()
-    GregLogger(file, Bukkit.getLogger())
-}
+val glog = CombinedLogger()

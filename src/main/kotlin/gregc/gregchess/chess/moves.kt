@@ -16,8 +16,7 @@ class MoveData(
     val undo: () -> Unit
 ) {
 
-    override fun toString() =
-        "MoveData(piece = $piece, name = $name, standardName = $standardName)"
+    override fun toString() = "MoveData(piece=$piece, name=$name, standardName=$standardName)"
 
     fun clear() {
         origin.previousMoveMarker = null
@@ -39,7 +38,7 @@ abstract class MoveCandidate(
 ) {
 
     override fun toString() =
-        "MoveCandidate(piece = $piece, target = ${target.pos}, pass = [${pass.joinToString()}], help = [${help.joinToString()}], needed = [${needed.joinToString()}], control = ${control?.pos}, promotion = $promotion, mustCapture = $mustCapture, display = ${display.pos})"
+        "MoveCandidate(piece=$piece, target=${target.pos}, pass=[${pass.joinToString()}], help=[${help.joinToString()}], needed=[${needed.joinToString()}], control=${control?.pos}, promotion=$promotion, mustCapture=$mustCapture, display=${display.pos})"
 
     val origin = piece.square
 

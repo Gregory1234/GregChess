@@ -65,8 +65,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
 
     override val name = player.name
 
-    override fun toString() =
-        "BukkitChessPlayer(name = $name, side = $side, game.uniqueId = ${game.uniqueId})"
+    override fun toString() = "BukkitChessPlayer(name=$name, side=$side, game.uniqueId=${game.uniqueId})"
 
     override fun sendMessage(msg: String) = player.sendMessage(msg)
     override fun sendTitle(title: String, subtitle: String) = player.sendTitle(title, subtitle)
@@ -100,7 +99,7 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : Chess
 
     override val name = engine.name
 
-    override fun toString() = "EnginePlayer(name = $name, side = $side)"
+    override fun toString() = "EnginePlayer(name=$name, side=$side)"
 
     override fun stop() = engine.stop()
 

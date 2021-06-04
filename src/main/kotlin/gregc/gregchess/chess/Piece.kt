@@ -25,6 +25,8 @@ class CapturedPiece(
     val type = piece.type
     val side = piece.side
 
+    override fun toString() = "CapturedPiece(type=$type, side=$side, pos=$pos)"
+
     fun render() {
         game.renderers.forEach { it.renderCapturedPiece(pos, piece) }
     }
@@ -64,8 +66,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     val uniqueId: UUID = UUID.randomUUID()
 
-    override fun toString() =
-        "Piece(uniqueId = $uniqueId, pos = $pos, type = $type, side = $side, hasMoved = $hasMoved)"
+    override fun toString() = "Piece(uniqueId=$uniqueId, pos=$pos, type=$type, side=$side, hasMoved=$hasMoved)"
 
     private val game
         get() = square.game

@@ -8,6 +8,9 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
+import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Suppress("unused")
@@ -47,6 +50,14 @@ class GregChess : JavaPlugin(), Listener {
 
     override fun onEnable() {
         server.pluginManager.registerEvents(this, this)
+        run {
+            glog += JavaGregLogger(logger)
+            File(dataFolder.absolutePath + "/logs").mkdir()
+            val now = DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
+            val file = File(dataFolder.absolutePath + "/logs/GregChess-$now.log")
+            file.createNewFile()
+            glog += FileGregLogger(file)
+        }
         saveDefaultConfig()
         chessManager.start()
         arenaManager.start()
@@ -359,7 +370,7 @@ class GregChess : JavaPlugin(), Listener {
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
         val holder = e.inventory.holder
-        if (holder is Screen.Holder<*>) {
+        if (holder is BukkitScreen<*>) {
             e.isCancelled = true
             cTry(e.whoClicked, configurator, {e.whoClicked.closeInventory()}) {
                 if (!holder.finished)
@@ -372,7 +383,7 @@ class GregChess : JavaPlugin(), Listener {
     @EventHandler
     fun onInventoryClose(e: InventoryCloseEvent) {
         val holder = e.inventory.holder
-        if (holder is Screen.Holder<*>) {
+        if (holder is BukkitScreen<*>) {
             cTry(e.player, configurator) {
                 if (!holder.finished)
                     holder.cancel()

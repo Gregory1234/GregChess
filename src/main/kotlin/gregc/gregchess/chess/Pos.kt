@@ -125,7 +125,7 @@ data class Square(val pos: Pos, val game: ChessGame) {
     val board
         get() = game.board
 
-    override fun toString() = "Square(game.uniqueId = ${game.uniqueId}, pos = $pos, piece = $piece, floor = $floor)"
+    override fun toString() = "Square(game.uniqueId=${game.uniqueId}, pos=$pos, piece=$piece, floor=$floor)"
 
     fun render() {
         game.renderers.forEach { it.fillFloor(pos, floor) }

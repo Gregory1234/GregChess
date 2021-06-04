@@ -18,7 +18,7 @@ class ChessGame(
     ) {
     val uniqueId: UUID = UUID.randomUUID()
 
-    override fun toString() = "ChessGame(uniqueId = $uniqueId)"
+    override fun toString() = "ChessGame(uniqueId=$uniqueId)"
 
     val variant = settings.variant
 
@@ -230,8 +230,7 @@ class ChessGame(
 
     open class EndReason(val namePath: ConfigPath<String>, val reasonPGN: String, val winner: Side?) {
 
-        override fun toString() =
-            "EndReason.${javaClass.name.split(".", "$").last()}(winner = $winner)"
+        override fun toString() = "EndReason.${javaClass.name.split(".", "$").last()}(winner=$winner)"
 
         // @formatter:off
         class Checkmate(winner: Side) : EndReason(Config.chess.endReason.checkmate, "normal", winner)
@@ -247,7 +246,7 @@ class ChessGame(
         class Timeout(winner: Side) : ChessGame.EndReason(Config.chess.endReason.timeout, "time forfeit", winner)
         class DrawTimeout : ChessGame.EndReason(Config.chess.endReason.drawTimeout, "time forfeit", null)
         class Error(val e: Exception) : ChessGame.EndReason(Config.chess.endReason.error, "emergency", null) {
-            override fun toString() = "EndReason.Error(winner = $winner, e = $e)"
+            override fun toString() = "EndReason.Error(winner=$winner, e=$e)"
         }
 
         class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.chess.endReason.piecesLost, "normal", winner)

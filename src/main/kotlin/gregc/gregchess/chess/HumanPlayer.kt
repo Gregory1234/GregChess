@@ -85,6 +85,8 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     override fun pawnPromotionScreen(config: Configurator, moves: List<Pair<Piece, MoveCandidate>>) {
         player.openScreen(config, PawnPromotionScreen(moves, chess))
     }
+
+    override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"
 }
 
 val HumanPlayer.chess get() = this.currentGame?.get(this)
