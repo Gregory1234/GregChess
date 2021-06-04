@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
+import gregc.core.rangeTo
 import gregc.gregchess.Config
-import gregc.gregchess.rangeTo
 
 data class Pos(val file: Int, val rank: Int) {
     override fun toString() = "$fileStr$rankStr"

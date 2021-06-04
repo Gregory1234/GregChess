@@ -1,5 +1,7 @@
 package gregc.gregchess
 
+import gregc.core.ConfigPath
+import gregc.core.Configurator
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder

@@ -1,8 +1,13 @@
 package gregc.gregchess.chess.component
 
+import gregc.core.glog
+import gregc.core.rangeTo
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import java.util.*
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.set
 import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {

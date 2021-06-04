@@ -1,9 +1,8 @@
 package gregc.gregchess.chess
 
+import gregc.core.*
 import gregc.gregchess.*
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 enum class Side(val standardName: String, val standardChar: Char, val direction: Int) {
     WHITE("White", 'w', 1),

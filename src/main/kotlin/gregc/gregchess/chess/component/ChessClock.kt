@@ -1,12 +1,9 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
-import gregc.gregchess.chess.BySides
-import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.Side
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.LocalTime
+import gregc.core.*
+import gregc.gregchess.Config
+import gregc.gregchess.chess.*
+import java.time.*
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 import kotlin.math.max

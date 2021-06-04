@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
+import gregc.core.Configurator
 import gregc.gregchess.Config
-import gregc.gregchess.Configurator
 import gregc.gregchess.chatColor
 import org.bukkit.inventory.ItemStack
 

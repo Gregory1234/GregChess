@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.core.*
 import gregc.gregchess.*
 import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
@@ -11,9 +12,7 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
-import org.bukkit.event.player.PlayerDropItemEvent
-import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.player.*
 import org.bukkit.plugin.Plugin
 import java.util.*
 

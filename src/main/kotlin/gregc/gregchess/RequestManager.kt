@@ -1,5 +1,6 @@
 package gregc.gregchess
 
+import gregc.core.*
 import gregc.gregchess.chess.HumanPlayer
 import gregc.gregchess.chess.human
 import org.bukkit.Bukkit

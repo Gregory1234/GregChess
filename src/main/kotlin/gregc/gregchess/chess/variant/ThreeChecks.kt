@@ -1,13 +1,8 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.Config
-import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.MutableBySides
-import gregc.gregchess.chess.Side
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.GameBaseEvent
-import gregc.gregchess.chess.component.GameEvent
-import gregc.gregchess.chess.component.PlayerProperty
+import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.*
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
     class CheckCounter(private val game: ChessGame) : Component {

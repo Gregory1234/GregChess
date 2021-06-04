@@ -1,6 +1,5 @@
-package gregc.gregchess
+package gregc.core
 
-import org.bukkit.configuration.file.FileConfiguration
 import kotlin.reflect.KClass
 
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
@@ -21,10 +20,6 @@ class ConfigBlockList<out P: ConfigBlock<P>>(path: String, private val mk: (Conf
     operator fun get(s: String): P = mk(ConfigBlock((childPath(s))))
 }
 
-class ConfigFullFormatString(path: String, private vararg val gotten: Any?): ConfigPath<String>(path) {
-    override fun get(c: Configurator): String = c.getFormatString(path, *gotten)
-}
-
 class ConfigEnum<T: Enum<T>>(path: String, private val default: T, private val warnMissing: Boolean = true)
     : ConfigPath<T>(path) {
     override fun get(c: Configurator): T = c.getEnum(path, default, warnMissing)
@@ -41,19 +36,6 @@ interface Configurator {
     fun getChildren(path: String): Set<String>?
     operator fun contains(path: String): Boolean
     fun isSection(path: String): Boolean
-}
-
-class BukkitConfigurator(private val file: FileConfiguration): Configurator {
-    override fun getString(path: String): String? = file.getString(path)
-
-    override fun getStringList(path: String): List<String>? = if (path in file) file.getStringList(path) else null
-
-    override fun getChildren(path: String): Set<String>? = file.getConfigurationSection(path)?.getKeys(false)
-
-    override fun contains(path: String): Boolean = path in file
-
-    override fun isSection(path: String): Boolean = file.getConfigurationSection(path) != null
-
 }
 
 fun <T> Configurator.get(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?): T {
@@ -107,10 +89,6 @@ fun <T: Enum<T>> Configurator.getEnumList(path: String, cl: KClass<T>, warnMissi
             null
         }
     }
-
-fun Configurator.getFormatString(path: String, vararg args: Any?) = get(path, "format string", path) {
-    numberedFormat(it, *args)?.let(::chatColor)
-}
 
 class View<out P: ConfigBlock<P>>(private val path: P, private val config: Configurator) {
     fun <T> get(f: P.() -> ConfigPath<T>): T = path.f().get(config)

@@ -1,19 +1,10 @@
 package gregc.gregchess
 
+import gregc.core.TimeManager
+import gregc.core.toTicks
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
-
-interface TimeManager {
-    interface CancellableContext{
-        fun cancel()
-    }
-    fun runTaskLater(delay: Duration, callback: () -> Unit)
-    fun runTaskTimer(delay: Duration, period: Duration, callback: CancellableContext.() -> Unit)
-    fun runTaskAsynchronously(callback: () -> Unit)
-}
-
-
 
 class BukkitTimeManager(private val plugin: Plugin): TimeManager {
 

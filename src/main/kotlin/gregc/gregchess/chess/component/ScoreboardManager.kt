@@ -1,10 +1,10 @@
 package gregc.gregchess.chess.component
 
+import gregc.core.ConfigPath
+import gregc.core.randomString
 import gregc.gregchess.Config
-import gregc.gregchess.ConfigPath
 import gregc.gregchess.chatColor
 import gregc.gregchess.chess.*
-import gregc.gregchess.randomString
 import org.bukkit.Bukkit
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team

@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
+import gregc.core.glog
 import gregc.gregchess.buildTextComponent
-import gregc.gregchess.glog
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {

@@ -2,6 +2,7 @@ package gregc.gregchess.config
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import gregc.core.*
 import java.io.File
 import java.time.Duration
 import kotlin.io.path.div
@@ -9,13 +10,13 @@ import kotlin.io.path.div
 const val PACKAGE_NAME = "gregc.gregchess"
 
 val sideType = ClassName("gregc.gregchess.chess", "Side")
-val configurator = ClassName("gregc.gregchess", "Configurator")
-val configPath = ClassName("gregc.gregchess", "ConfigPath")
-val configBlock = ClassName("gregc.gregchess", "ConfigBlock")
-val configBlockList = ClassName("gregc.gregchess", "ConfigBlockList")
+val configurator = Configurator::class.asClassName()
+val configPath = ConfigPath::class.asClassName()
+val configBlock = ConfigBlock::class.asClassName()
+val configBlockList = ConfigBlockList::class.asClassName()
 val configFullFormatString = ClassName("gregc.gregchess", "ConfigFullFormatString")
-val configEnum = ClassName("gregc.gregchess", "ConfigEnum")
-val configEnumList = ClassName("gregc.gregchess", "ConfigEnumList")
+val configEnum = ConfigEnum::class.asClassName()
+val configEnumList = ConfigEnumList::class.asClassName()
 
 @DslMarker
 @Retention(AnnotationRetention.SOURCE)
@@ -266,6 +267,8 @@ fun config(generatedRoot: File, block: BlockScope.() -> Unit) {
     if(!generatedRoot.exists())
         generatedRoot.createNewFile()
     FileSpec.builder(PACKAGE_NAME, "Config")
+        .addImport("gregc.core",
+            "get", "getList", "getEnum", "getEnumList", "seconds", "parseDuration")
         .apply {
             viewExtensions("String", String::class.asTypeName(), "path", CodeBlock.of("::chatColor"))
             viewExtensions("Bool", Boolean::class.asTypeName(), "true", CodeBlock.of("%T::toBooleanStrictOrNull", String::class))

@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.core.*
+import gregc.gregchess.Config
+import gregc.gregchess.buildTextComponent
 import gregc.gregchess.chess.component.*
 import org.bukkit.Bukkit
 import org.bukkit.event.Event

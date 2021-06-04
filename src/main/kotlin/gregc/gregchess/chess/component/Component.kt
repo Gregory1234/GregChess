@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.HumanPlayer
 import kotlin.reflect.KClass
 
 interface Component{

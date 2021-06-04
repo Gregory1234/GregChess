@@ -1,5 +1,6 @@
 package gregc.gregchess
 
+import gregc.core.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
@@ -10,10 +11,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
-import java.time.Duration
 import kotlin.contracts.contract
-import kotlin.math.floor
-import kotlin.math.roundToLong
 
 data class PlayerData(
     val location: Location? = null,
@@ -124,19 +122,8 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
-class CommandException(val playerMsg: ConfigPath<String>) : Exception() {
-    override val message: String
-        get() = "Uncaught command error: ${playerMsg.path}"
-}
-
 val errorMsg get() = Config.message.error
 
-fun cRequire(e: Boolean, msg: ConfigPath<String>) {
-    contract {
-        returns() implies e
-    }
-    if (!e) throw CommandException(msg)
-}
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
     cRequire(args.size in min..max, errorMsg.wrongArgumentsNumber)
@@ -170,23 +157,6 @@ fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), errorMsg.play
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 
-fun randomString(size: Int) =
-    String(CharArray(size) { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() })
-
-fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
-    listOf(x to y, x to -y, -x to y, -x to -y, y to x, -y to x, y to -x, -y to -x).distinct()
-
-fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
-
-operator fun <E> List<E>.component6(): E = this[5]
-
-fun isValidUUID(s: String) =
-    Regex("""^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}${'$'}""")
-        .matches(s)
-
-operator fun Pair<Int, Int>.rangeTo(other: Pair<Int, Int>) = (first..other.first).flatMap { i ->
-    (second..other.second).map { j -> Pair(i, j) }
-}
 
 class BuildTextComponentScope {
     val returnValue = TextComponent()
@@ -213,63 +183,10 @@ class BuildTextComponentScope {
 inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
     BuildTextComponentScope().apply(f).returnValue
 
-operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
-
-fun String.upperFirst() = replaceFirstChar { it.uppercase() }
-fun String.lowerFirst() = replaceFirstChar { it.lowercase() }
-
-fun Duration.toTicks(): Long = toMillis() / 50
-
-val Int.seconds: Duration
-    get() = Duration.ofSeconds(toLong())
-val Int.ticks: Duration
-    get() = Duration.ofMillis(toLong() * 50)
-val Long.minutes: Duration
-    get() = Duration.ofMinutes(this)
-val Long.ticks: Duration
-    get() = Duration.ofMillis(this * 50)
-val Double.seconds: Duration
-    get() = Duration.ofNanos(floor(this * 1000000000L).toLong())
-val Double.milliseconds: Duration
-    get() = Duration.ofNanos(floor(this * 1000000L).toLong())
-val Double.minutes: Duration
-    get() = Duration.ofNanos(floor(this * 60000000000L).toLong())
-
-fun parseDuration(s: String): Duration? {
-    val match1 = Regex("""^(-|\+|)(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(s)
-    if (match1 != null) {
-        val amount =
-            (match1.groupValues[2].toDoubleOrNull()
-                ?: return null) * (if (match1.groupValues[1] == "-") -1 else 1)
-        return when (match1.groupValues[3]) {
-            "s" -> amount.seconds
-            "ms" -> amount.milliseconds
-            "t" -> amount.roundToLong().ticks
-            "m" -> amount.minutes
-            else -> null
-        }
-    }
-    val match2 = Regex("""^(-)?(\d+):(\d{2,}(?:\.\d)?)$""").find(s)
-    if (match2 != null) {
-        val sign = (if (match2.groupValues[1] == "-") -1 else 1)
-        val minutes = (match2.groupValues[2].toLongOrNull() ?: return null) * sign
-        val seconds = (match2.groupValues[3].toDoubleOrNull() ?: return null) * sign
-        return minutes.minutes + seconds.seconds
-    }
-    return null
+fun Configurator.getFormatString(path: String, vararg args: Any?) = get(path, "format string", path) {
+    numberedFormat(it, *args)?.let(::chatColor)
 }
 
-fun numberedFormat(s: String, vararg args: Any?): String? {
-    var retNull = false
-    val ret = s.replace(Regex("""\$(?:(\d+)|\{(\d+)})""")) {
-        val i = it.groupValues[1].toIntOrNull()
-        if (i == null || i < 1 || i > args.size) {
-            retNull = true
-            ""
-        } else
-            args[i - 1].toString()
-    }
-    return if (retNull) null else ret
+class ConfigFullFormatString(path: String, private vararg val gotten: Any?): ConfigPath<String>(path) {
+    override fun get(c: Configurator): String = c.getFormatString(path, *gotten)
 }
-
-val glog = CombinedLogger()

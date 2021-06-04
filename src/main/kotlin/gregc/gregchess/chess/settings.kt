@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.core.Configurator
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant

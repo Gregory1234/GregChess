@@ -1,8 +1,6 @@
 package gregc.gregchess.config
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.*
 import java.io.File
 
 fun main(args: Array<String>) {

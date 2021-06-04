@@ -19,6 +19,7 @@ dependencies {
     api("org.spigotmc:spigot-api:$spigotVersion")
     shaded(kotlin("stdlib-jdk8"))
     implementation(project(":config"))
+    shaded(project(":core"))
 }
 
 val generated = layout.buildDirectory.dir("generated").get()

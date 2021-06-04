@@ -1,4 +1,4 @@
-package gregc.gregchess
+package gregc.core
 
 import java.io.File
 import java.time.LocalDateTime

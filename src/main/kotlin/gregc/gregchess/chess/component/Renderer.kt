@@ -2,10 +2,7 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import org.bukkit.GameMode
-import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
 import java.util.*
 import kotlin.math.floor
 

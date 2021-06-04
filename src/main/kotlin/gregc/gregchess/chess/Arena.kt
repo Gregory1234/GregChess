@@ -1,10 +1,9 @@
 package gregc.gregchess.chess
 
+import gregc.core.Configurator
+import gregc.core.glog
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.GameBaseEvent
-import gregc.gregchess.chess.component.GameEvent
-import gregc.gregchess.chess.component.TimeModifier
+import gregc.gregchess.chess.component.*
 import org.bukkit.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
