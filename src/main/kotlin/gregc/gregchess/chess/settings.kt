@@ -17,7 +17,7 @@ object SettingsManager {
             val tileSize = child.get { tileSize }
             GameSettings(
                 key, simpleCastling, variant,
-                listOfNotNull(board, clock, BukkitRenderer.Settings(tileSize), ScoreboardManager.Settings())
+                listOfNotNull(board, clock, BukkitRenderer.Settings(tileSize), BukkitScoreboardManager.Settings())
             )
         }
 

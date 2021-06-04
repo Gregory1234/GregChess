@@ -346,9 +346,12 @@ fun main(args: Array<String>) {
                 addString("Preset", "Preset")
                 addString("Player", "player")
                 addString("PlayerPrefix", "&b")
-                addFormatString("GeneralFormat", "$1: ", String::class.asClassName())
-                addFormatString("WhiteFormat", "White $1: ", String::class.asClassName())
-                addFormatString("BlackFormat", "Black $1: ", String::class.asClassName())
+                addBlock("Format") {
+                    addFormatString("General", "$1: ", String::class.asClassName())
+                    addFormatString("White", "White $1: ", String::class.asClassName())
+                    addFormatString("Black", "Black $1: ", String::class.asClassName())
+                    byOptSides("White", "Black", "General")
+                }
             }
             addBlock("Clock") {
                 addString("TimeRemainingSimple", "Time remaining")
