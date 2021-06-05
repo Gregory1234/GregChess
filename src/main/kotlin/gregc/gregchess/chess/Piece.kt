@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.core.glog
+import gregc.gregchess.glog
 import gregc.gregchess.buildTextComponent
 import java.util.*
 

@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.core.Configurator
+import gregc.gregchess.Configurator
 import gregc.gregchess.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent

@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.core.*
 import gregc.gregchess.*
 import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace

@@ -1,6 +1,6 @@
 package gregc.gregchess
 
-import gregc.core.Configurator
+import gregc.gregchess.Configurator
 import org.bukkit.configuration.file.FileConfiguration
 
 class BukkitConfigurator(private val file: FileConfiguration): Configurator {

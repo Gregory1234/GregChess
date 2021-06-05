@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.core.component6
+import gregc.gregchess.component6
 
 data class FEN(
     val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),

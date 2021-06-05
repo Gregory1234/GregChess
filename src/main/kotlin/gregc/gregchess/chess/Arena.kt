@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.core.Configurator
-import gregc.core.glog
+import gregc.gregchess.Configurator
+import gregc.gregchess.glog
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import org.bukkit.*

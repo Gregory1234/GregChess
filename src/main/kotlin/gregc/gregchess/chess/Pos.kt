@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.core.rangeTo
+import gregc.gregchess.rangeTo
 import gregc.gregchess.Config
 
 data class Pos(val file: Int, val rank: Int) {

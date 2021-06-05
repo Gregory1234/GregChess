@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.core.between
-import gregc.core.rotationsOf
+import gregc.gregchess.between
+import gregc.gregchess.rotationsOf
 import gregc.gregchess.Config
 import kotlin.math.abs
 

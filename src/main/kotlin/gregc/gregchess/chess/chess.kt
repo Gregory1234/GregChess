@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.core.*
 import gregc.gregchess.*
 import java.util.concurrent.*
 

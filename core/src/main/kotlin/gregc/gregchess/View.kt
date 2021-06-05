@@ -1,4 +1,4 @@
-package gregc.core
+package gregc.gregchess
 
 import kotlin.reflect.KClass
 

@@ -1,7 +1,6 @@
 package gregc.gregchess.chess.component
 
-import gregc.core.*
-import gregc.gregchess.Config
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import java.time.*
 import java.time.format.DateTimeFormatter

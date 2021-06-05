@@ -1,7 +1,7 @@
 package gregc.gregchess.chess.component
 
-import gregc.core.ConfigPath
-import gregc.core.randomString
+import gregc.gregchess.ConfigPath
+import gregc.gregchess.randomString
 import gregc.gregchess.Config
 import gregc.gregchess.chatColor
 import gregc.gregchess.chess.*
