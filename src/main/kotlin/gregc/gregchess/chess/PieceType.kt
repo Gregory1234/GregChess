@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Configurator
-import gregc.gregchess.Config
-import gregc.gregchess.chatColor
+import gregc.gregchess.*
 import org.bukkit.inventory.ItemStack
 
 enum class PieceType(
@@ -17,7 +15,7 @@ enum class PieceType(
     KNIGHT('n', ::knightMovement, true),
     PAWN('p', ::pawnMovement, false);
 
-    val view get() = Config.chess.piece[this]
+    val view get() = Config.Chess.Piece[this]
 
     companion object {
 

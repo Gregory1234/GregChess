@@ -34,7 +34,7 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     class PawnPromotionScreen(
         private val moves: List<Pair<Piece, MoveCandidate>>,
         private val player: ChessPlayer?
-    ) : Screen<MoveCandidate>(Config.message.pawnPromotion) {
+    ) : Screen<MoveCandidate>(Config.Message.pawnPromotion) {
         override fun getContent(config: Configurator) = moves.mapIndexed { i, (t, m) ->
             ScreenOption(t.type.getItem(config, t.side), m, InventoryPosition.fromIndex(i))
         }
@@ -67,7 +67,7 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
     override fun sendPGN(config: Configurator, pgn: PGN) {
-        val message = TextComponent(Config.message.copyPGN.get(config))
+        val message = TextComponent(Config.Message.copyPGN.get(config))
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }

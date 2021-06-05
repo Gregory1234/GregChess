@@ -171,10 +171,10 @@ class ChessGame(
             }
             components.allInit()
             requireStarting().apply {
-                black.sendTitle("", Config.title.youArePlayingAs.black.get(config))
-                white.sendTitle(Config.title.yourTurn.get(config), Config.title.youArePlayingAs.white.get(config))
+                black.sendTitle("", Config.Title.YouArePlayingAs.black.get(config))
+                white.sendTitle(Config.Title.yourTurn.get(config), Config.Title.YouArePlayingAs.white.get(config))
                 players.forEach {
-                    it.sendMessage(Config.message.youArePlayingAs[it.side].get(config))
+                    it.sendMessage(Config.Message.YouArePlayingAs[it.side].get(config))
                 }
             }
             variant.start(this)
@@ -188,7 +188,7 @@ class ChessGame(
                     components.allUpdate()
             }
         } catch (e: Exception) {
-            players.forEachReal { it.sendMessage(Config.message.error.teleportFailed.get(config)) }
+            players.forEachReal { it.sendMessage(Config.Message.Error.teleportFailed.get(config)) }
             panic(e)
             glog.mid("Failed to start game", uniqueId)
             throw e
@@ -233,26 +233,26 @@ class ChessGame(
         override fun toString() = "EndReason.${javaClass.name.split(".", "$").last()}(winner=$winner)"
 
         // @formatter:off
-        class Checkmate(winner: Side) : EndReason(Config.chess.endReason.checkmate, "normal", winner)
-        class Resignation(winner: Side) : EndReason(Config.chess.endReason.resignation, "abandoned", winner)
-        class Walkover(winner: Side) : EndReason(Config.chess.endReason.walkover, "abandoned", winner)
-        class PluginRestart : EndReason(Config.chess.endReason.pluginRestart, "emergency", null)
-        class ArenaRemoved : EndReason(Config.chess.endReason.arenaRemoved, "emergency", null)
-        class Stalemate : EndReason(Config.chess.endReason.stalemate, "normal", null)
-        class InsufficientMaterial : EndReason(Config.chess.endReason.insufficientMaterial, "normal", null)
-        class FiftyMoves : EndReason(Config.chess.endReason.fiftyMoves, "normal", null)
-        class Repetition : EndReason(Config.chess.endReason.repetition, "normal", null)
-        class DrawAgreement : EndReason(Config.chess.endReason.drawAgreement, "normal", null)
-        class Timeout(winner: Side) : ChessGame.EndReason(Config.chess.endReason.timeout, "time forfeit", winner)
-        class DrawTimeout : ChessGame.EndReason(Config.chess.endReason.drawTimeout, "time forfeit", null)
-        class Error(val e: Exception) : ChessGame.EndReason(Config.chess.endReason.error, "emergency", null) {
+        class Checkmate(winner: Side) : EndReason(Config.Chess.EndReason.checkmate, "normal", winner)
+        class Resignation(winner: Side) : EndReason(Config.Chess.EndReason.resignation, "abandoned", winner)
+        class Walkover(winner: Side) : EndReason(Config.Chess.EndReason.walkover, "abandoned", winner)
+        class PluginRestart : EndReason(Config.Chess.EndReason.pluginRestart, "emergency", null)
+        class ArenaRemoved : EndReason(Config.Chess.EndReason.arenaRemoved, "emergency", null)
+        class Stalemate : EndReason(Config.Chess.EndReason.stalemate, "normal", null)
+        class InsufficientMaterial : EndReason(Config.Chess.EndReason.insufficientMaterial, "normal", null)
+        class FiftyMoves : EndReason(Config.Chess.EndReason.fiftyMoves, "normal", null)
+        class Repetition : EndReason(Config.Chess.EndReason.repetition, "normal", null)
+        class DrawAgreement : EndReason(Config.Chess.EndReason.drawAgreement, "normal", null)
+        class Timeout(winner: Side) : ChessGame.EndReason(Config.Chess.EndReason.timeout, "time forfeit", winner)
+        class DrawTimeout : ChessGame.EndReason(Config.Chess.EndReason.drawTimeout, "time forfeit", null)
+        class Error(val e: Exception) : ChessGame.EndReason(Config.Chess.EndReason.error, "emergency", null) {
             override fun toString() = "EndReason.Error(winner=$winner, e=$e)"
         }
 
-        class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.chess.endReason.piecesLost, "normal", winner)
+        class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.Chess.EndReason.piecesLost, "normal", winner)
         // @formatter:on
 
-        fun getMessage(c: Configurator) = Config.message.gameFinished[winner](namePath.get(c)).get(c)
+        fun getMessage(c: Configurator) = Config.Message.GameFinished[winner](namePath.get(c)).get(c)
     }
 
     class EndEvent(val game: ChessGame) : Event() {
@@ -280,7 +280,7 @@ class ChessGame(
             var anyLong = false
             players.forEachUnique(currentTurn) {
                 it.sendTitle(
-                    Config.title.player.run {
+                    Config.Title.Player.run {
                         when(reason.winner) {it.side -> youWon; null -> youDrew; else -> youLost} }.get(config),
                     reason.namePath.get(config)
                 )
@@ -295,7 +295,7 @@ class ChessGame(
                 }
             }
             spectators.forEach {
-                it.sendTitle(Config.title.spectator[reason.winner].get(config), reason.namePath.get(config))
+                it.sendTitle(Config.Title.Spectator[reason.winner].get(config), reason.namePath.get(config))
                 it.sendMessage(reason.getMessage(config))
                 if (anyLong) {
                     components.allSpectatorLeave(it)

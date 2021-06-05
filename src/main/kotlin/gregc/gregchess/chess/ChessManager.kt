@@ -48,7 +48,7 @@ class BukkitChessGameManager(private val plugin: Plugin, private val config: Con
 
     override fun leave(player: HumanPlayer) {
         val games = player.games
-        cRequire(games.isNotEmpty() || player.isSpectating(), errorMsg.inGame.you)
+        cRequire(games.isNotEmpty() || player.isSpectating(), Config.Message.Error.InGame.you)
         games.forEach { g ->
             g.stop(ChessGame.EndReason.Walkover(!g[player]!!.side), BySides{ it != g[player]!!.side })
         }
@@ -78,7 +78,7 @@ class BukkitChessGameManager(private val plugin: Plugin, private val config: Con
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
-            val pos = cNotNull(player.game.withRenderer<Loc, Pos> { it.getPos(block.loc) }, errorMsg.rendererNotFound)
+            val pos = cNotNull(player.game.withRenderer<Loc, Pos> { it.getPos(block.loc) }, Config.Message.Error.rendererNotFound)
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
                 player.pickUp(pos)
             } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {

@@ -17,7 +17,7 @@ interface ArenaManager {
     fun next(): Arena?
 }
 
-fun ArenaManager.cNext() = cNotNull(next(), errorMsg.noArenas)
+fun ArenaManager.cNext() = cNotNull(next(), Config.Message.Error.noArenas)
 
 class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) : ArenaManager, Listener {
     private val arenas = mutableListOf<Arena>()

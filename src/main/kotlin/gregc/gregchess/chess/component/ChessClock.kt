@@ -36,7 +36,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 "none" -> null
                 null -> null
                 else -> {
-                    val settings = Config.settings.clock.get(config).mapValues { (_, it) ->
+                    val settings = Config.Settings.clock.get(config).mapValues { (_, it) ->
                         val t = it.get { type }
                         Settings(t, it.get { initial }, (if (t.usesIncrement) it.get { increment } else null) ?: 0.seconds)
                     }
@@ -60,7 +60,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    private val view get() = Config.component.clock
+    private val view get() = Config.Component.Clock
 
     data class Time(
         var diff: Duration,

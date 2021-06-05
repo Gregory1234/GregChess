@@ -10,7 +10,7 @@ enum class Side(val standardName: String, val standardChar: Char, val direction:
     operator fun not(): Side = if (this == WHITE) BLACK else WHITE
     operator fun inc(): Side = not()
 
-    fun getPieceName(config: Configurator, name: String) = Config.chess.side[this].piece(name).get(config)
+    fun getPieceName(config: Configurator, name: String) = Config.Chess.Side[this].piece(name).get(config)
 
     companion object {
         fun parseFromStandardChar(c: Char) =
@@ -89,7 +89,7 @@ class ChessEngine(val timeManager: TimeManager, val name: String) {
     fun setOption(name: String, value: String) {
         when (name) {
             "time" -> {
-                moveTime = cNotNull(parseDuration(value), errorMsg.wrongDurationFormat)
+                moveTime = cNotNull(parseDuration(value), Config.Message.Error.wrongDurationFormat)
             }
             else -> {
                 glog.io("setoption name $name value $value")

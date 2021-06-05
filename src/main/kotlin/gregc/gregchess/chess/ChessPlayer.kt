@@ -40,11 +40,11 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 
     private fun announceInCheck() {
         if (!silent) {
-            sendTitle(Config.title.yourTurn.get(game.config), Config.title.inCheck.get(game.config))
-            sendMessage(Config.message.inCheck.get(game.config))
+            sendTitle(Config.Title.yourTurn.get(game.config), Config.Title.inCheck.get(game.config))
+            sendMessage(Config.Message.inCheck.get(game.config))
         } else {
-            sendTitle(Config.title.inCheck.get(game.config))
-            sendMessage(Config.message.inCheck.get(game.config))
+            sendTitle(Config.Title.inCheck.get(game.config))
+            sendMessage(Config.Message.inCheck.get(game.config))
         }
     }
 
@@ -52,7 +52,7 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 
     open fun startTurn() {
         if (!silent) {
-            sendTitle(Config.title.yourTurn.get(game.config))
+            sendTitle(Config.Title.yourTurn.get(game.config))
         }
         if (king?.let { game.variant.isInCheck(it) } == true)
             announceInCheck()

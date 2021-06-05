@@ -121,22 +121,20 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
-val errorMsg get() = Config.message.error
-
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
-    cRequire(args.size in min..max, errorMsg.wrongArgumentsNumber)
+    cRequire(args.size in min..max, Config.Message.Error.wrongArgumentsNumber)
 }
 
 fun cPerms(p: CommandSender, perm: String) {
-    cRequire(p.hasPermission(perm), errorMsg.noPermission)
+    cRequire(p.hasPermission(perm), Config.Message.Error.noPermission)
 }
 
 fun cPlayer(p: CommandSender) {
     contract {
         returns() implies (p is Player)
     }
-    cRequire(p is Player, errorMsg.notPlayer)
+    cRequire(p is Player, Config.Message.Error.notPlayer)
 }
 
 inline fun <T> cWrongArgument(block: () -> T): T = try {
@@ -146,13 +144,13 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
     cWrongArgument()
 }
 
-fun cWrongArgument(): Nothing = throw CommandException(errorMsg.wrongArgument)
+fun cWrongArgument(): Nothing = throw CommandException(Config.Message.Error.wrongArgument)
 
 fun <T> cNotNull(p: T?, msg: ConfigPath<String>): T = p ?: throw CommandException(msg)
 
 inline fun <reified T, reified R : T> cCast(p: T, msg: ConfigPath<String>): R = cNotNull(p as? R, msg)
 
-fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), errorMsg.playerNotFound)
+fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), Config.Message.Error.playerNotFound)
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 

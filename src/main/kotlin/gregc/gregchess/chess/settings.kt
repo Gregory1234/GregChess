@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack
 object SettingsManager {
 
     fun getSettings(config: Configurator): Map<String, GameSettings> =
-        Config.settings.presets.get(config).mapValues { (key, child) ->
+        Config.Settings.presets.get(config).mapValues { (key, child) ->
             val simpleCastling = child.get { simpleCastling }
             val variant = ChessVariant[child.get { variant }]
             val board = Chessboard.Settings[child.get { board }]
@@ -26,7 +26,7 @@ object SettingsManager {
 
 class SettingsScreen(
     private inline val startGame: (GameSettings) -> Unit
-) : Screen<GameSettings>(Config.message.chooseSettings) {
+) : Screen<GameSettings>(Config.Message.chooseSettings) {
     override fun getContent(config: Configurator) =
         SettingsManager.getSettings(config).toList().mapIndexed { index, (name, s) ->
             val item = ItemStack(Material.IRON_BLOCK)

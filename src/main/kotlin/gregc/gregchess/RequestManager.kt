@@ -81,7 +81,7 @@ class RequestType<in T>(
             glog.mid("Invalid sender", request.uniqueId)
             return
         }
-        if ((simple || Config.request.selfAccept.get(config))
+        if ((simple || Config.Request.selfAccept.get(config))
             && request.sender == request.receiver
         ) {
             glog.mid("Self request", request.uniqueId)
@@ -91,12 +91,12 @@ class RequestType<in T>(
         requests[request.uniqueId] = request
         request.sender.sendCommandMessage(
             view.sent.request.get(config) + " ",
-            Config.request.cancel.get(config),
+            Config.Request.cancel.get(config),
             if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
         )
         request.receiver.sendCommandMessage(
             view.received.request(request.sender.name, printT(request.value)).get(config) + " ",
-            Config.request.accept.get(config),
+            Config.Request.accept.get(config),
             if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
         )
         val duration = view.duration.get(config)
