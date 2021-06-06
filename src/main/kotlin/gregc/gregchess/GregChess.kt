@@ -130,7 +130,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     p.game.board[pos]?.piece?.capture(p.side)
                     p.game.board.updateMoves()
-                    player.sendMessage(Config.Message.boardOpDone.get(configurator))
+                    player.human.sendMessage(Config.Message.boardOpDone)
                 }
                 "spawn" -> {
                     cPlayer(player)
@@ -147,7 +147,7 @@ class GregChess : JavaPlugin(), Listener {
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(Piece(piece, Side.valueOf(this[0])), square)
                         game.board.updateMoves()
-                        player.sendMessage(Config.Message.boardOpDone.get(configurator))
+                        player.human.sendMessage(Config.Message.boardOpDone)
                     }
                 }
                 "move" -> {
@@ -160,7 +160,7 @@ class GregChess : JavaPlugin(), Listener {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
                         game.board[Pos.parseFromString(this[1])]?.piece?.move(game.board[Pos.parseFromString(this[2])]!!)
                         game.board.updateMoves()
-                        player.sendMessage(Config.Message.boardOpDone.get(configurator))
+                        player.human.sendMessage(Config.Message.boardOpDone)
                     }
                 }
                 "skip" -> {
@@ -169,7 +169,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     val game = cNotNull(player.human.currentGame, ErrorMsg.NotInGame.you)
                     game.nextTurn()
-                    player.sendMessage(Config.Message.skippedTurn.get(configurator))
+                    player.human.sendMessage(Config.Message.skippedTurn)
                 }
                 "load" -> {
                     cPlayer(player)
@@ -178,7 +178,7 @@ class GregChess : JavaPlugin(), Listener {
                     game.board.setFromFEN(
                         FEN.parseFromString(restString())
                     )
-                    player.sendMessage(Config.Message.loadedFEN.get(configurator))
+                    player.human.sendMessage(Config.Message.loadedFEN)
                 }
                 "save" -> {
                     cPlayer(player)
@@ -206,7 +206,7 @@ class GregChess : JavaPlugin(), Listener {
                             "set" -> clock.setTime(side, time)
                             else -> cWrongArgument()
                         }
-                        player.sendMessage(Config.Message.timeOpDone.get(configurator))
+                        player.human.sendMessage(Config.Message.timeOpDone)
                     }
                 }
                 "uci" -> {
@@ -223,7 +223,7 @@ class GregChess : JavaPlugin(), Listener {
                             "send" -> engine.engine.sendCommand(restString())
                             else -> cWrongArgument()
                         }
-                        player.sendMessage(Config.Message.engineCommandSent.get(configurator))
+                        player.human.sendMessage(Config.Message.engineCommandSent)
                     }
                 }
                 "spectate" -> {
@@ -235,6 +235,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.admin")
                     endArgs()
                     reloadConfig()
+                    configurator.reload(config)
                     arenaManager.reload()
                     player.sendMessage(Config.Message.configReloaded.get(configurator))
                 }

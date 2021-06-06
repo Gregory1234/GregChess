@@ -26,11 +26,11 @@ class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) :
 
     fun reload() {
         val newArenas = Config.chessArenas.get(config)
-        arenas.forEach {
-            if (it.name in newArenas){
+        arenas.removeIf {
+            if (it.name !in newArenas){
                 it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
-                arenas.remove(it)
-            }
+                true
+            } else false
         }
         arenas.addAll((newArenas - arenas.map {it.name}).map { Arena(it) })
     }
