@@ -12,7 +12,7 @@ fun main(args: Array<String>) {
         val duration = type("Duration", Duration::class.asTypeName(), "0.seconds", "::parseDuration")
         val char = type("Char", Char::class.asTypeName(), "' '", "{ if (it.length == 1) it[0] else null }", true)
         val int = type("Int", Int::class.asTypeName(), "0", "String::toIntOrNull", true)
-        root {
+        root("Config") {
             string.list("ChessArenas")
             block("Request") {
                 string("Accept", "&a[Accept]")
@@ -109,38 +109,6 @@ fun main(args: Array<String>) {
                     formatString("BlackWon", String::class, default = "The game has finished! Black won by $1.")
                     formatString("ItWasADraw", String::class, default = "The game has finished! It was a draw by $1.")
                     byOptSides("WhiteWon", "BlackWon", "ItWasADraw")
-                }
-                block("Error") {
-                    string("NoPerms", "&cYou do not have the permission to do that!")
-                    string("NotPlayer", "&cYou are not a player!")
-                    string("WrongArgumentsNumber", "&cWrong number of arguments!")
-                    string("WrongArgument", "&cWrong argument!")
-                    string("NoPermission", "&cYou do not have permission to do this!")
-                    string("PlayerNotFound", "&cPlayer doesn't exist!")
-                    string("NoArenas", "&cThere are no free arenas!")
-                    string("GameNotFound", "&cGame not found!")
-                    string("EngineNotFound", "&cThere are no engines in this game!")
-                    string("BoardNotFound", "&cYour game has no chessboard!")
-                    string("ClockNotFound", "&cYour game has no clock!")
-                    string("RendererNotFound", "&cYour game has no compatible renderer!")
-                    string("PieceNotFound", "&cPiece was not found!")
-                    string("NothingToTakeback", "&cThere are no moves to takeback!")
-                    string("WrongDurationFormat", "&cWrong duration format!")
-                    string("TeleportFailed", "&cTeleport failed!")
-                    block("NotHuman") {
-                        string("Opponent", "&cYour opponent is not a human!")
-                    }
-                    block("InGame") {
-                        string("You", "&cYou are already in a game!")
-                        string("Opponent", "&cYour opponent is in a game already!")
-                    }
-                    block("NotInGame") {
-                        string("You", "&cYou are not in a game!")
-                        string("Player", "&cThe player isn't in a game!")
-                    }
-                    block("Simul") {
-                        string("Clock", "&cClocks are not supported in simuls.")
-                    }
                 }
             }
             block("Title") {
@@ -386,7 +354,38 @@ fun main(args: Array<String>) {
                 }
             }
         }
-
+        root("ErrorMsg", "Message.Error") {
+            string("NoPerms", "&cYou do not have the permission to do that!")
+            string("NotPlayer", "&cYou are not a player!")
+            string("WrongArgumentsNumber", "&cWrong number of arguments!")
+            string("WrongArgument", "&cWrong argument!")
+            string("NoPermission", "&cYou do not have permission to do this!")
+            string("PlayerNotFound", "&cPlayer doesn't exist!")
+            string("NoArenas", "&cThere are no free arenas!")
+            string("GameNotFound", "&cGame not found!")
+            string("EngineNotFound", "&cThere are no engines in this game!")
+            string("BoardNotFound", "&cYour game has no chessboard!")
+            string("ClockNotFound", "&cYour game has no clock!")
+            string("RendererNotFound", "&cYour game has no compatible renderer!")
+            string("PieceNotFound", "&cPiece was not found!")
+            string("NothingToTakeback", "&cThere are no moves to takeback!")
+            string("WrongDurationFormat", "&cWrong duration format!")
+            string("TeleportFailed", "&cTeleport failed!")
+            block("NotHuman") {
+                string("Opponent", "&cYour opponent is not a human!")
+            }
+            block("InGame") {
+                string("You", "&cYou are already in a game!")
+                string("Opponent", "&cYour opponent is in a game already!")
+            }
+            block("NotInGame") {
+                string("You", "&cYou are not in a game!")
+                string("Player", "&cThe player isn't in a game!")
+            }
+            block("Simul") {
+                string("Clock", "&cClocks are not supported in simuls.")
+            }
+        }
     }
     c.buildKotlin().writeTo(File(args[0]))
     File(args[0] + "/config.yml").writeText(c.buildYaml().build())

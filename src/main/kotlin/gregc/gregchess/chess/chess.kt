@@ -89,7 +89,7 @@ class ChessEngine(val timeManager: TimeManager, val name: String) {
     fun setOption(name: String, value: String) {
         when (name) {
             "time" -> {
-                moveTime = cNotNull(parseDuration(value), Config.Message.Error.wrongDurationFormat)
+                moveTime = cNotNull(parseDuration(value), ErrorMsg.wrongDurationFormat)
             }
             else -> {
                 glog.io("setoption name $name value $value")

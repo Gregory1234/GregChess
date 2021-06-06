@@ -123,18 +123,18 @@ val Block.loc: Loc
 
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
-    cRequire(args.size in min..max, Config.Message.Error.wrongArgumentsNumber)
+    cRequire(args.size in min..max, ErrorMsg.wrongArgumentsNumber)
 }
 
 fun cPerms(p: CommandSender, perm: String) {
-    cRequire(p.hasPermission(perm), Config.Message.Error.noPermission)
+    cRequire(p.hasPermission(perm), ErrorMsg.noPermission)
 }
 
 fun cPlayer(p: CommandSender) {
     contract {
         returns() implies (p is Player)
     }
-    cRequire(p is Player, Config.Message.Error.notPlayer)
+    cRequire(p is Player, ErrorMsg.notPlayer)
 }
 
 inline fun <T> cWrongArgument(block: () -> T): T = try {
@@ -144,13 +144,13 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
     cWrongArgument()
 }
 
-fun cWrongArgument(): Nothing = throw CommandException(Config.Message.Error.wrongArgument)
+fun cWrongArgument(): Nothing = throw CommandException(ErrorMsg.wrongArgument)
 
 fun <T> cNotNull(p: T?, msg: ConfigPath<String>): T = p ?: throw CommandException(msg)
 
 inline fun <reified T, reified R : T> cCast(p: T, msg: ConfigPath<String>): R = cNotNull(p as? R, msg)
 
-fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), Config.Message.Error.playerNotFound)
+fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), ErrorMsg.playerNotFound)
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 

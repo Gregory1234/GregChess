@@ -67,7 +67,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     operator fun get(pos: Pos) = squares[pos]
 
-    operator fun get(loc: Loc) = this[cNotNull(game.withRenderer<Loc, Pos> { it.getPos(loc) }, Config.Message.Error.rendererNotFound)]
+    operator fun get(loc: Loc) = this[cNotNull(game.withRenderer<Loc, Pos> { it.getPos(loc) }, ErrorMsg.rendererNotFound)]
 
     private val moves: MutableList<MoveData> = mutableListOf()
 

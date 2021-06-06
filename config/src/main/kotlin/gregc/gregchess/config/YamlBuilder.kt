@@ -1,5 +1,8 @@
 package gregc.gregchess.config
 
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
+
 const val INDENT: String = "  "
 
 sealed class YamlValue{
@@ -53,5 +56,13 @@ class YamlBlock(val value: MutableMap<String, YamlValue>): YamlValue() {
                 append(it.value.build(name = it.key, indent = indent + 1))
             }
         }
+    }
+    fun with(name: String, function: YamlBlock.() -> Unit) {
+        contract {
+            callsInPlace(function, InvocationKind.EXACTLY_ONCE)
+        }
+        if (name !in value || value[name] !is YamlBlock)
+            value[name] = YamlBlock(mutableMapOf())
+        (value[name] as YamlBlock).function()
     }
 }

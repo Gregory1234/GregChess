@@ -1,7 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Configurator
-import gregc.gregchess.glog
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import org.bukkit.*
@@ -17,7 +15,7 @@ interface ArenaManager {
     fun next(): Arena?
 }
 
-fun ArenaManager.cNext() = cNotNull(next(), Config.Message.Error.noArenas)
+fun ArenaManager.cNext() = cNotNull(next(), ErrorMsg.noArenas)
 
 class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) : ArenaManager, Listener {
     private val arenas = mutableListOf<Arena>()

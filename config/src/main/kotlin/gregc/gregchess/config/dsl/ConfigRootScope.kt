@@ -7,9 +7,11 @@ import gregc.gregchess.config.*
 @ConfigDSL
 class ConfigRootScope(private val state: ConfigGeneralState, private val name: String) {
     constructor(base: String): this(ConfigGeneralState(), base)
-    private val rootBlock = ConfigObjectScope(state, name, "")
+    private val rootBlocks = mutableListOf<ConfigField.ObjectBlock>()
 
-    fun root(block: ConfigObjectScope.() -> Unit) = rootBlock.run(block)
+    fun root(name: String, realPath: String = "", block: ConfigObjectScope.() -> Unit) {
+        rootBlocks += ConfigObjectScope(state, name, realPath).apply(block).build()
+    }
 
     fun buildKotlin(): FileSpec = FileSpec.builder(PACKAGE_NAME, name)
         .apply {
@@ -19,7 +21,9 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
             state.configTypes.forEach {
                 it.kotlinAppend(this)
             }
-            addType(rootBlock.build().toKotlinObject())
+            rootBlocks.forEach {
+                addType(it.toKotlinObject())
+            }
         }.build()
 
     fun type(name: String, typ: TypeName,
@@ -73,5 +77,19 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
             }.build())
     }
 
-    fun buildYaml(): YamlBlock = YamlBlock(mutableMapOf()).apply { rootBlock.build().yamlAppend(this) }
+    fun buildYaml(): YamlBlock = YamlBlock(mutableMapOf()).apply {
+        rootBlocks.forEach {
+            if (it.realPath == "")
+                it.yamlAppend(this)
+            else {
+                var n = this
+                it.realPath.split(".").forEach { s ->
+                    n.with(s) {
+                        n = this
+                    }
+                }
+                it.yamlAppend(n)
+            }
+        }
+    }
 }

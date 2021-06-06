@@ -188,7 +188,7 @@ class ChessGame(
                     components.allUpdate()
             }
         } catch (e: Exception) {
-            players.forEachReal { it.sendMessage(Config.Message.Error.teleportFailed.get(config)) }
+            players.forEachReal { it.sendMessage(ErrorMsg.teleportFailed.get(config)) }
             panic(e)
             glog.mid("Failed to start game", uniqueId)
             throw e

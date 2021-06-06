@@ -128,7 +128,7 @@ sealed class ConfigField {
                     it.yamlAppend(b)
                 }
             } else {
-                b.value[name] = YamlBlock(mutableMapOf()).apply {
+                b.with(name) {
                     fields.forEach {
                         it.yamlAppend(this)
                     }
