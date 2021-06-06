@@ -1,5 +1,8 @@
 package gregc.gregchess
 
+import java.time.Duration
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
 
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
@@ -29,6 +32,18 @@ class ConfigEnum<T: Enum<T>>(path: String, private val default: T, private val w
 class ConfigEnumList<T: Enum<T>>(path: String, private val cl: KClass<T>, private val warnMissing: Boolean = true)
     : ConfigPath<List<T>>(path) {
     override fun get(c: Configurator): List<T> = c.getEnumList(path, cl, warnMissing)
+}
+
+class ConfigTimeFormatFull(path: String, private val time: LocalTime, private val warnMissing: Boolean = true): ConfigPath<String>(path) {
+    override fun get(c: Configurator): String = c.get(path, "time format", path, warnMissing) {
+        time.format(DateTimeFormatter.ofPattern(it))
+    }
+}
+
+class ConfigTimeFormat(path: String, private val warnMissing: Boolean = true): ConfigPath<TimeFormat>(path) {
+    override fun get(c: Configurator): TimeFormat = c.get(path, "time format", TimeFormat(path), warnMissing) { TimeFormat(it) }
+    operator fun invoke(time: LocalTime) = ConfigTimeFormatFull(path, time, warnMissing)
+    operator fun invoke(time: Duration) = ConfigTimeFormatFull(path, time.toLocalTime(), warnMissing)
 }
 
 interface Configurator {

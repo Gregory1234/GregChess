@@ -1,8 +1,6 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
-import net.md_5.bungee.api.chat.ClickEvent
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -83,7 +81,7 @@ class GregChess : JavaPlugin(), Listener {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!opponent.human.isInGame(), ErrorMsg.InGame.opponent)
-                            player.openScreen(configurator, SettingsScreen { settings ->
+                            player.openScreen(SettingsScreen { settings ->
                                 duelRequest += Request(player.human, opponent.human,
                                     ChessGame(timeManager, configurator, arenaManager.cNext(), settings))
                             })
@@ -94,7 +92,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     endArgs()
                     cRequire(!player.human.isInGame(), ErrorMsg.InGame.you)
-                    player.openScreen(configurator, SettingsScreen { settings ->
+                    player.openScreen(SettingsScreen { settings ->
                         ChessGame(timeManager, configurator, arenaManager.cNext(), settings).addPlayers {
                             human(player.human, Side.WHITE, false)
                             engine("stockfish", Side.BLACK)
@@ -175,22 +173,14 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     val game = cNotNull(player.human.currentGame, ErrorMsg.NotInGame.you)
-                    game.board.setFromFEN(
-                        FEN.parseFromString(restString())
-                    )
+                    game.board.setFromFEN(FEN.parseFromString(restString()))
                     player.human.sendMessage(Config.Message.loadedFEN)
                 }
                 "save" -> {
                     cPlayer(player)
                     endArgs()
                     val game = cNotNull(player.human.currentGame, ErrorMsg.NotInGame.you)
-                    val message = TextComponent(Config.Message.copyFEN.get(configurator))
-                    message.clickEvent =
-                        ClickEvent(
-                            ClickEvent.Action.COPY_TO_CLIPBOARD,
-                            game.board.getFEN().toString()
-                        )
-                    player.spigot().sendMessage(message)
+                    player.human.sendFEN(game.board.getFEN())
                 }
                 "time" -> {
                     cPlayer(player)

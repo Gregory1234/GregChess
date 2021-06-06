@@ -1,9 +1,10 @@
 package gregc.gregchess
 
 import java.time.Duration
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.contracts.contract
-import kotlin.math.floor
-import kotlin.math.roundToLong
+import kotlin.math.*
 
 
 class CommandException(val playerMsg: ConfigPath<String>) : Exception() {
@@ -81,6 +82,14 @@ fun parseDuration(s: String): Duration? {
         return minutes.minutes + seconds.seconds
     }
     return null
+}
+
+fun Duration.toLocalTime(): LocalTime = LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
+
+class TimeFormat(private val formatter: DateTimeFormatter) {
+    constructor(format: String): this(DateTimeFormatter.ofPattern(format))
+    operator fun invoke(time: LocalTime): String = time.format(formatter)
+    operator fun invoke(time: Duration): String = time.toLocalTime().format(formatter)
 }
 
 fun numberedFormat(s: String, vararg args: Any?): String? {

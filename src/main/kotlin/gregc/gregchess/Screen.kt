@@ -1,7 +1,6 @@
 package gregc.gregchess
 
-import gregc.gregchess.ConfigPath
-import gregc.gregchess.Configurator
+import gregc.gregchess.chess.human
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
@@ -51,4 +50,4 @@ class BukkitScreen<T> internal constructor(private val screen: Screen<T>, config
     }
 }
 
-fun Player.openScreen(config: Configurator, s: Screen<*>) = openInventory(BukkitScreen(s, config).inventory)
+fun Player.openScreen(s: Screen<*>) = openInventory(BukkitScreen(s, human.config).inventory)

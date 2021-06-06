@@ -76,7 +76,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1)
-            player.pawnPromotionScreen(game.config, chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } })
+            player.pawnPromotionScreen(chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } })
         else
             game.finishMove(chosenMoves.first())
     }

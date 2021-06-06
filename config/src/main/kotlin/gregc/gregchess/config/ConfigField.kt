@@ -72,6 +72,21 @@ sealed class ConfigField {
         }
     }
 
+    data class ValueSpecial(val name: String, val typ: TypeName, val default: String?, val warnMissing: Boolean?): ConfigField() {
+        override fun kotlinAppend(b: TypeSpec.Builder) {
+            b.addProperty(PropertySpec
+                .builder(name.lowerFirst(), typ)
+                .getter(FunSpec.getterBuilder().addCode("""return %T(childPath("$name"), ${warnMissing ?: ""})""", typ).build())
+                .build())
+        }
+
+        override fun yamlAppend(b: YamlBlock) {
+            default?.let {
+                b.value[name] = YamlText(it)
+            }
+        }
+    }
+
     data class EnumString(val name: String, val typ: TypeName, val default: String, val warnMissing: Boolean): ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addProperty(PropertySpec

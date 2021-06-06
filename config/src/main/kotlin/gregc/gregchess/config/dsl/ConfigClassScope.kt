@@ -54,5 +54,9 @@ class ConfigClassScope(val state: ConfigGeneralState, private val name: String) 
         fields += ConfigField.WhenBlock(typ, null, vals.map {it.camelToUpperSnake() to it.lowerFirst()})
     }
 
+    fun special(name: String, typ: TypeName, default: String? = null, warnMissing: Boolean? = null) {
+        fields += ConfigField.ValueSpecial(name, typ, default, warnMissing)
+    }
+
     fun build() = ConfigField.ClassBlock(name, fields)
 }

@@ -31,11 +31,12 @@ abstract class HumanPlayer(val name: String) {
     fun isInGame(): Boolean = currentGame != null
     fun isSpectating(): Boolean = spectatedGame != null
     abstract fun sendPGN(pgn: PGN)
+    abstract fun sendFEN(fen: FEN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
     fun sendCommandMessage(msg: ConfigPath<String>, action: ConfigPath<String>, command: String) =
         sendCommandMessage(msg.get(config), action.get(config), command)
     abstract fun setItem(i: Int, piece: Piece?)
-    abstract fun pawnPromotionScreen(config: Configurator, moves: List<Pair<Piece, MoveCandidate>>)
+    abstract fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>)
 }
 
 abstract class MinecraftPlayer(val uniqueId: UUID, name: String): HumanPlayer(name)
@@ -89,6 +90,12 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
         player.spigot().sendMessage(message)
     }
 
+    override fun sendFEN(fen: FEN) {
+        val message = TextComponent(Config.Message.copyFEN.get(config))
+        message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
+        player.spigot().sendMessage(message)
+    }
+
     override fun sendCommandMessage(msg: String, action: String, command: String) {
         player.spigot().sendMessage(buildTextComponent {
             append(msg)
@@ -101,8 +108,8 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
         player.inventory.setItem(i, piece?.let {it.type.getItem(config, it.side)})
     }
 
-    override fun pawnPromotionScreen(config: Configurator, moves: List<Pair<Piece, MoveCandidate>>) {
-        player.openScreen(config, PawnPromotionScreen(moves, chess))
+    override fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>) {
+        player.openScreen(PawnPromotionScreen(moves, chess))
     }
 
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"

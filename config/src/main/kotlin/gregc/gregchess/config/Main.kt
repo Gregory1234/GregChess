@@ -330,7 +330,7 @@ fun main(args: Array<String>) {
                 block("Clock") {
                     string("TimeRemainingSimple", "Time remaining")
                     string("TimeRemaining", "time")
-                    string("TimeFormat", "mm:ss.S")
+                    special("TimeFormat", ClassName("gregc.gregchess", "ConfigTimeFormat"),"mm:ss.S")
                 }
                 block("CheckCounter") {
                     string("CheckCounter", "check counter")
