@@ -62,6 +62,7 @@ class GregChess : JavaPlugin(), Listener {
         chessManager.start()
         arenaManager.start()
         requestManager.start()
+        BukkitPlayer(configurator)
         addCommand("chess", configurator) {
             when (nextArg().lowercase()) {
                 "duel" -> {

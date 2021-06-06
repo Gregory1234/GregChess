@@ -171,10 +171,10 @@ class ChessGame(
             }
             components.allInit()
             requireStarting().apply {
-                black.sendTitle("", Config.Title.YouArePlayingAs.black.get(config))
-                white.sendTitle(Config.Title.yourTurn.get(config), Config.Title.YouArePlayingAs.white.get(config))
-                players.forEach {
-                    it.sendMessage(Config.Message.YouArePlayingAs[it.side].get(config))
+                (black as? HumanChessPlayer)?.sendTitle("", Config.Title.YouArePlayingAs.black)
+                (white as? HumanChessPlayer)?.sendTitle(Config.Title.yourTurn, Config.Title.YouArePlayingAs.white)
+                forEachUnique {
+                    it.sendMessage(Config.Message.YouArePlayingAs[it.side])
                 }
             }
             variant.start(this)
@@ -188,7 +188,7 @@ class ChessGame(
                     components.allUpdate()
             }
         } catch (e: Exception) {
-            players.forEachReal { it.sendMessage(ErrorMsg.teleportFailed.get(config)) }
+            players.forEachReal { it.sendMessage(ErrorMsg.teleportFailed) }
             panic(e)
             glog.mid("Failed to start game", uniqueId)
             throw e
@@ -252,7 +252,9 @@ class ChessGame(
         class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.Chess.EndReason.piecesLost, "normal", winner)
         // @formatter:on
 
-        fun getMessage(c: Configurator) = Config.Message.GameFinished[winner](namePath).get(c)
+        val message get() = Config.Message.GameFinished[winner](namePath)
+
+        fun getMessage(c: Configurator) = message.get(c)
     }
 
     class EndEvent(val game: ChessGame) : Event() {
@@ -281,10 +283,10 @@ class ChessGame(
             players.forEachUnique(currentTurn) {
                 it.sendTitle(
                     Config.Title.Player.run {
-                        when(reason.winner) {it.side -> youWon; null -> youDrew; else -> youLost} }.get(config),
-                    reason.namePath.get(config)
+                        when(reason.winner) {it.side -> youWon; null -> youDrew; else -> youLost} },
+                    reason.namePath
                 )
-                it.sendMessage(reason.getMessage(config))
+                it.sendMessage(reason.message)
                 if (quick[it.side]) {
                     components.allRemovePlayer(it.player)
                 } else {
@@ -295,8 +297,8 @@ class ChessGame(
                 }
             }
             spectators.forEach {
-                it.sendTitle(Config.Title.Spectator[reason.winner].get(config), reason.namePath.get(config))
-                it.sendMessage(reason.getMessage(config))
+                it.sendTitle(Config.Title.Spectator[reason.winner], reason.namePath)
+                it.sendMessage(reason.message)
                 if (anyLong) {
                     components.allSpectatorLeave(it)
                 } else {

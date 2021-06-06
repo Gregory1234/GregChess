@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Configurator
 import gregc.gregchess.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
@@ -18,13 +17,24 @@ abstract class HumanPlayer(val name: String) {
         }
     val games = mutableListOf<ChessGame>()
 
+    abstract val config: Configurator
+
     abstract fun sendMessage(msg: String)
+    fun sendMessage(msg: ConfigPath<String>) = sendMessage(msg.get(config))
     abstract fun sendTitle(title: String, subtitle: String = "")
+    fun sendTitle(title: ConfigPath<String>, subtitle: ConfigPath<String>) =
+        sendTitle(title.get(config), subtitle.get(config))
+    fun sendTitle(title: String, subtitle: ConfigPath<String>) =
+        sendTitle(title, subtitle.get(config))
+    fun sendTitle(title: ConfigPath<String>, subtitle: String = "") =
+        sendTitle(title.get(config), subtitle)
     fun isInGame(): Boolean = currentGame != null
     fun isSpectating(): Boolean = spectatedGame != null
-    abstract fun sendPGN(config: Configurator, pgn: PGN)
+    abstract fun sendPGN(pgn: PGN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
-    abstract fun setItem(config: Configurator, i: Int, piece: Piece?)
+    fun sendCommandMessage(msg: ConfigPath<String>, action: ConfigPath<String>, command: String) =
+        sendCommandMessage(msg.get(config), action.get(config), command)
+    abstract fun setItem(i: Int, piece: Piece?)
     abstract fun pawnPromotionScreen(config: Configurator, moves: List<Pair<Piece, MoveCandidate>>)
 }
 
@@ -50,8 +60,12 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     }
 
     companion object {
+        private lateinit var config: BukkitConfigurator
         private val bukkitPlayers = mutableMapOf<Player, BukkitPlayer>()
         fun toHuman(p: Player) = bukkitPlayers.getOrPut(p){ BukkitPlayer(p) }
+        operator fun invoke(c: BukkitConfigurator) {
+            config = c
+        }
     }
 
     override var isAdmin = false
@@ -62,11 +76,14 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
             player.teleport(loc)
         }
 
+    override val config: Configurator
+        get() = Companion.config
+
     override fun sendMessage(msg: String) = player.sendMessage(msg)
 
     override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
-    override fun sendPGN(config: Configurator, pgn: PGN) {
+    override fun sendPGN(pgn: PGN) {
         val message = TextComponent(Config.Message.copyPGN.get(config))
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
@@ -75,11 +92,12 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     override fun sendCommandMessage(msg: String, action: String, command: String) {
         player.spigot().sendMessage(buildTextComponent {
             append(msg)
+            append(" ")
             append(action, ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
         })
     }
 
-    override fun setItem(config: Configurator, i: Int, piece: Piece?) {
+    override fun setItem(i: Int, piece: Piece?) {
         player.inventory.setItem(i, piece?.let {it.type.getItem(config, it.side)})
     }
 

@@ -1,9 +1,10 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Config
+import gregc.gregchess.ConfigPath
 
 
-abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game: ChessGame) {
+abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val game: ChessGame) {
 
     var held: BoardPiece? = null
         set(v) {
@@ -24,8 +25,6 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
 
     abstract fun sendMessage(msg: String)
 
-    abstract fun sendTitle(title: String, subtitle: String = "")
-
     val opponent
         get() = game[!side]
 
@@ -38,25 +37,9 @@ abstract class ChessPlayer(val side: Side, private val silent: Boolean, val game
     val king
         get() = game.board.kingOf(side)
 
-    private fun announceInCheck() {
-        if (!silent) {
-            sendTitle(Config.Title.yourTurn.get(game.config), Config.Title.inCheck.get(game.config))
-            sendMessage(Config.Message.inCheck.get(game.config))
-        } else {
-            sendTitle(Config.Title.inCheck.get(game.config))
-            sendMessage(Config.Message.inCheck.get(game.config))
-        }
-    }
-
     open fun stop() {}
 
-    open fun startTurn() {
-        if (!silent) {
-            sendTitle(Config.Title.yourTurn.get(game.config))
-        }
-        if (king?.let { game.variant.isInCheck(it) } == true)
-            announceInCheck()
-    }
+    abstract fun startTurn()
 
 }
 
@@ -68,14 +51,18 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
     override fun toString() = "BukkitChessPlayer(name=$name, side=$side, game.uniqueId=${game.uniqueId})"
 
     override fun sendMessage(msg: String) = player.sendMessage(msg)
-    override fun sendTitle(title: String, subtitle: String) = player.sendTitle(title, subtitle)
+    fun sendMessage(msg: ConfigPath<String>) = player.sendMessage(msg)
+    fun sendTitle(title: String, subtitle: String = "") = player.sendTitle(title, subtitle)
+    fun sendTitle(title: ConfigPath<String>, subtitle: ConfigPath<String>) = player.sendTitle(title, subtitle)
+    fun sendTitle(title: String, subtitle: ConfigPath<String>) = player.sendTitle(title, subtitle)
+    fun sendTitle(title: ConfigPath<String>, subtitle: String = "") = player.sendTitle(title, subtitle)
 
     fun pickUp(pos: Pos) {
         if (!game.running) return
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
         held = piece
-        player.setItem(game.config, 0, piece.piece)
+        player.setItem(0, piece.piece)
     }
 
     fun makeMove(pos: Pos) {
@@ -85,13 +72,31 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         val moves = piece.square.bakedLegalMoves ?: return
         if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
         held = null
-        player.setItem(game.config, 0, null)
+        player.setItem(0, null)
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1)
             player.pawnPromotionScreen(game.config, chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } })
         else
             game.finishMove(chosenMoves.first())
+    }
+
+    private fun announceInCheck() {
+        if (!silent) {
+            sendTitle(Config.Title.yourTurn, Config.Title.inCheck)
+            sendMessage(Config.Message.inCheck)
+        } else {
+            sendTitle(Config.Title.inCheck)
+            sendMessage(Config.Message.inCheck)
+        }
+    }
+
+    override fun startTurn() {
+        if (!silent) {
+            sendTitle(Config.Title.yourTurn)
+        }
+        if (king?.let { game.variant.isInCheck(it) } == true)
+            announceInCheck()
     }
 }
 
@@ -105,19 +110,13 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : Chess
 
     override fun sendMessage(msg: String) {}
 
-    override fun sendTitle(title: String, subtitle: String) {}
-
     override fun startTurn() {
-        super.startTurn()
         engine.getMove(game.board.getFEN(), { str ->
             val origin = Pos.parseFromString(str.take(2))
             val target = Pos.parseFromString(str.drop(2).take(2))
-            val promotion =
-                str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(it) }
-            val move = game.board.getMoves(origin)
-                .first { it.display.pos == target && it.promotion?.type == promotion }
+            val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(it) }
+            val move = game.board.getMoves(origin).first { it.display.pos == target && it.promotion?.type == promotion }
             game.finishMove(move)
         }, { game.stop(ChessGame.EndReason.Error(it)) })
-
     }
 }

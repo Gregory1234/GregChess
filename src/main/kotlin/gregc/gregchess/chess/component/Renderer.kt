@@ -145,7 +145,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
     private fun BukkitPlayer.reset(d: PlayerData = defData) {
         player.playerData = d
         player.teleport(spawnLocation.toLocation(this@BukkitRenderer.world))
-        game[this]?.held?.let { setItem(game.config, 0, it.piece )}
+        game[this]?.held?.let { setItem(0, it.piece )}
     }
 
     @GameEvent(GameBaseEvent.PANIC)

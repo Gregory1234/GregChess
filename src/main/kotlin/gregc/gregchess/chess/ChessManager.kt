@@ -48,7 +48,7 @@ class BukkitChessGameManager(private val plugin: Plugin, private val config: Con
 
     override fun leave(player: HumanPlayer) {
         val games = player.games
-        cRequire(games.isNotEmpty() || player.isSpectating(), ErrorMsg.InGame.you)
+        cRequire(games.isNotEmpty() || player.isSpectating(), ErrorMsg.NotInGame.you)
         games.forEach { g ->
             g.stop(ChessGame.EndReason.Walkover(!g[player]!!.side), BySides{ it != g[player]!!.side })
         }
@@ -129,7 +129,7 @@ class BukkitChessGameManager(private val plugin: Plugin, private val config: Con
     @EventHandler
     fun onChessGameEnd(e: ChessGame.EndEvent) {
         val pgn = PGN.generate(e.game)
-        e.game.players.forEachReal { it.sendPGN(config, pgn) }
+        e.game.players.forEachReal { it.sendPGN(pgn) }
         removeGame(e.game)
     }
 
