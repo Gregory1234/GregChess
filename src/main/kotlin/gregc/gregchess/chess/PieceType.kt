@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.Config
+import gregc.gregchess.Configurator
 import org.bukkit.inventory.ItemStack
 
 enum class PieceType(
@@ -27,7 +28,7 @@ enum class PieceType(
     fun getItem(config: Configurator, side: Side): ItemStack {
         val item = ItemStack(view.item[side].get(config))
         val meta = item.itemMeta!!
-        meta.setDisplayName(chatColor(side.getPieceName(config, pieceName.get(config))))
+        meta.setDisplayName(side.getPieceName(config, pieceName))
         item.itemMeta = meta
         return item
     }

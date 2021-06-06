@@ -252,7 +252,7 @@ class ChessGame(
         class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.Chess.EndReason.piecesLost, "normal", winner)
         // @formatter:on
 
-        fun getMessage(c: Configurator) = Config.Message.GameFinished[winner](namePath.get(c)).get(c)
+        fun getMessage(c: Configurator) = Config.Message.GameFinished[winner](namePath).get(c)
     }
 
     class EndEvent(val game: ChessGame) : Event() {

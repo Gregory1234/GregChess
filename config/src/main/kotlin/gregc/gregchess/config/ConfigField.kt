@@ -114,6 +114,12 @@ sealed class ConfigField {
 
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addType(toKotlinObject())
+            if (path.any {it == '.'})
+                b.addProperty(PropertySpec.builder(name.lowerFirst(), ClassName("", name))
+                    .getter(FunSpec.getterBuilder()
+                        .addCode("""return %T""", ClassName("", name))
+                        .build())
+                    .build())
         }
 
         override fun yamlAppend(b: YamlBlock) {

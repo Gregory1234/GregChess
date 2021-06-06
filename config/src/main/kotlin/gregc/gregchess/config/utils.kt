@@ -30,3 +30,10 @@ fun String.camelToSpaces(): String {
 fun String.lowerFirst() = replaceFirstChar { it.lowercaseChar() }
 
 infix fun String.addDot(other: String) = if (this.isEmpty()) other else "$this.$other"
+
+fun binaryStrings(n: UInt): List<List<Boolean>> {
+    if (n == 0u) return listOf(emptyList())
+    if (n == 1u) return listOf(listOf(false), listOf(true))
+    val prev = binaryStrings(n - 1u)
+    return prev.map {listOf(false) + it} + prev.map {listOf(true) + it}
+}

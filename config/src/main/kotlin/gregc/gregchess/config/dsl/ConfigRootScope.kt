@@ -13,7 +13,7 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
 
     fun buildKotlin(): FileSpec = FileSpec.builder(PACKAGE_NAME, name)
         .apply {
-            (1..2).forEach {
+            (1u..2u).forEach {
                 formatString(this, it)
             }
             state.configTypes.forEach {
@@ -27,26 +27,50 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
         ConfigType(name, typ, defaultCode, parser, defaulted)
     }
 
-    fun formatString(b: FileSpec.Builder, i: Int) {
-        val params = (1..i).map { ParameterSpec("a$it", TypeVariableName("T$it")) }
-        val lam = LambdaTypeName.get(
+    fun formatString(b: FileSpec.Builder, i: UInt) {
+        val params = (1u..i).map { ParameterSpec("a$it", TypeVariableName("T$it")) }
+        val flam = LambdaTypeName.get(
+            receiver = configurator,
             parameters = params,
-            returnType = String::class.asTypeName())
-        val args = (1..i).joinToString { "a$it" }
+            returnType = TypeVariableName("R"))
+        val args = (1u..i).joinToString { "a$it" }
+        b.addType(TypeSpec.classBuilder("ConfigFunction$i")
+            .apply { (1u..i).forEach { addTypeVariable(TypeVariableName("T$it")) } }
+            .addTypeVariable(TypeVariableName("R"))
+            .primaryConstructor(FunSpec.constructorBuilder()
+                .addParameter("c", configurator).addParameter("block", flam).build())
+            .addProperty(PropertySpec.builder("c", configurator, KModifier.PRIVATE).initializer("c").build())
+            .addProperty(PropertySpec.builder("block", flam, KModifier.PRIVATE).initializer("block").build())
+            .apply {
+                binaryStrings(i).forEach { bin ->
+                    addFunction(FunSpec.builder("invoke").addModifiers(KModifier.OPERATOR)
+                        .addParameters(params.zip(bin) { v, b ->
+                            if (b) ParameterSpec(v.name, configPath.parameterizedBy(v.type)) else v
+                        }).returns(TypeVariableName("R"))
+                        .addCode("return c.block(" + ((1u..i).zip(bin).joinToString { (i, b) -> if (b) "a$i.get(c)" else "a$i" }) + ")").build())
+                }
+            }.build())
+        val funi = ClassName(PACKAGE_NAME, "ConfigFunction$i")
+            .parameterizedBy((1u..i).map {TypeVariableName("T$it")} + String::class.asClassName())
         b.addType(TypeSpec.classBuilder("ConfigFormatString$i")
-            .apply { (1..i).forEach { addTypeVariable(TypeVariableName("T$it")) } }
-            .superclass(configPath.parameterizedBy(lam))
+            .apply { (1u..i).forEach { addTypeVariable(TypeVariableName("T$it")) } }
+            .superclass(configPath.parameterizedBy(funi))
             .primaryConstructor(FunSpec.constructorBuilder().addParameter("path", String::class).build())
             .addSuperclassConstructorParameter("path")
             .addFunction(
                 FunSpec.builder("get").addModifiers(KModifier.OVERRIDE)
-                .addParameter("c", configurator).returns(lam)
-                .addCode("""return { $args -> c.getFormatString(path, $args) }""").build())
-            .addFunction(
-                FunSpec.builder("invoke").addModifiers(KModifier.OPERATOR)
-                .addParameters(params).returns(configFullFormatString)
-                .addCode("""return %T(path, $args)""", configFullFormatString).build())
-            .build())
+                .addParameter("c", configurator).returns(funi)
+                .addCode("""return %T(c){ $args -> getFormatString(path, $args) }""", funi).build())
+            .apply {
+                binaryStrings(i).forEach { bin ->
+                    addFunction(FunSpec.builder("invoke").addModifiers(KModifier.OPERATOR)
+                        .addParameters(params.zip(bin) { v, b ->
+                            if (b) ParameterSpec(v.name, configPath.parameterizedBy(v.type)) else v
+                        }).returns(configFullFormatString)
+                        .addCode("return %T(path, $args)", configFullFormatString).build()
+                    )
+                }
+            }.build())
     }
 
     fun buildYaml(): YamlBlock = YamlBlock(mutableMapOf()).apply { rootBlock.build().yamlAppend(this) }

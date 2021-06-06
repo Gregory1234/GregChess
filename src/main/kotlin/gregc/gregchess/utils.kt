@@ -185,5 +185,6 @@ fun Configurator.getFormatString(path: String, vararg args: Any?) = get(path, "f
 }
 
 class ConfigFullFormatString(path: String, private vararg val gotten: Any?): ConfigPath<String>(path) {
-    override fun get(c: Configurator): String = c.getFormatString(path, *gotten)
+    override fun get(c: Configurator): String =
+        c.getFormatString(path, *gotten.map { if (it is ConfigPath<*>) it.get(c) else it }.toTypedArray())
 }

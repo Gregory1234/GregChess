@@ -13,7 +13,8 @@ open class ConfigBlock<out Self: ConfigBlock<Self>>(path: String): ConfigPath<Vi
     override fun get(c: Configurator): View<ConfigBlock<Self>> = View(this, c)
 }
 
-class ConfigBlockList<out P: ConfigBlock<P>>(path: String, private val mk: (ConfigBlock<P>) -> P): ConfigPath<Map<String, View<P>>>(path) {
+class ConfigBlockList<out P: ConfigBlock<P>>(path: String, private val mk: (ConfigBlock<P>) -> P)
+    : ConfigPath<Map<String, View<P>>>(path) {
     override fun get(c: Configurator): Map<String, View<P>> = c.getChildren(path).orEmpty().mapNotNull {
         if (c.isSection(childPath(it))) it to View(mk(ConfigBlock(childPath(it))), c) else null
     }.toMap()

@@ -20,12 +20,14 @@ class BukkitScoreboardManager(private val game: ChessGame): ScoreboardManager {
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 
+    private val view = Config.Component.Scoreboard
+
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     private val gamePropertyTeams = mutableMapOf<GameProperty, Team>()
     private val playerPropertyTeams = mutableMapOf<PlayerProperty, BySides<Team>>()
 
-    private val objective = scoreboard.registerNewObjective("GregChess", "", Config.Component.Scoreboard.title.get(game.config))
+    private val objective = scoreboard.registerNewObjective("GregChess", "", view.title.get(game.config))
 
     override operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -45,13 +47,11 @@ class BukkitScoreboardManager(private val game: ChessGame): ScoreboardManager {
 
     @GameEvent(GameBaseEvent.INIT)
     fun init() {
-        this += object :
-            GameProperty(Config.Component.Scoreboard.preset) {
+        this += object : GameProperty(view.preset) {
             override fun invoke() = game.settings.name
         }
-        this += object :
-            PlayerProperty(Config.Component.Scoreboard.player) {
-            override fun invoke(s: Side) = Config.Component.Scoreboard.playerPrefix.get(game.config) + game[s].name
+        this += object : PlayerProperty(view.player) {
+            override fun invoke(s: Side) = view.playerPrefix.get(game.config) + game[s].name
         }
     }
 
@@ -63,22 +63,22 @@ class BukkitScoreboardManager(private val game: ChessGame): ScoreboardManager {
         var i = l
         gameProperties.forEach {
             gamePropertyTeams[it] = newTeam().apply {
-                addEntry(Config.Component.Scoreboard.Format.general(it.name.get(game.config)).get(game.config))
+                addEntry(view.format.general(it.name).get(game.config))
             }
-            objective.getScore(Config.Component.Scoreboard.Format.general(it.name.get(game.config)).get(game.config)).score = i--
+            objective.getScore(view.format.general(it.name).get(game.config)).score = i--
         }
         playerProperties.forEach {
             playerPropertyTeams[it] = BySides { s ->
-                newTeam().apply { addEntry(Config.Component.Scoreboard.Format[s](it.name.get(game.config)).get(game.config)) }
+                newTeam().apply { addEntry(view.format[s](it.name).get(game.config)) }
             }
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            objective.getScore(Config.Component.Scoreboard.Format.white(it.name.get(game.config)).get(game.config)).score = i--
+            objective.getScore(view.format.white(it.name).get(game.config)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            objective.getScore(Config.Component.Scoreboard.Format.black(it.name.get(game.config)).get(game.config)).score = i--
+            objective.getScore(view.format.black(it.name).get(game.config)).score = i--
         }
     }
 
