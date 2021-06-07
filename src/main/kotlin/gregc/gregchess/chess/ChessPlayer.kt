@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Config
-import gregc.gregchess.ConfigPath
+import gregc.gregchess.*
 
 
 abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val game: ChessGame) {
@@ -43,6 +42,24 @@ abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val ga
 
 }
 
+class PawnPromotionScreen(
+    private val moves: List<Pair<Piece, MoveCandidate>>,
+    private val player: ChessPlayer
+) : Screen<MoveCandidate>(Config.Message.pawnPromotion) {
+    override fun getContent(config: Configurator) = moves.mapIndexed { i, (t, m) ->
+        ScreenOption(t.type.getItem(config, t.side), m, InventoryPosition.fromIndex(i))
+    }
+
+    override fun onClick(v: MoveCandidate) {
+        player.game.finishMove(v)
+    }
+
+    override fun onCancel() {
+        player.game.finishMove(moves.first().second)
+    }
+
+}
+
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(side, silent, game) {
 
@@ -76,7 +93,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1)
-            player.pawnPromotionScreen(chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } })
+            pawnPromotionScreen(chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } })
         else
             game.finishMove(chosenMoves.first())
     }
@@ -98,6 +115,9 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         if (king?.let { game.variant.isInCheck(it) } == true)
             announceInCheck()
     }
+
+    fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>) =
+        player.openScreen(PawnPromotionScreen(moves, this))
 }
 
 class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : ChessPlayer(side, true, game) {

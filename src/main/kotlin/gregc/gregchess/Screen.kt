@@ -1,8 +1,6 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.human
 import org.bukkit.Bukkit
-import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 
@@ -49,5 +47,3 @@ class BukkitScreen<T> internal constructor(private val screen: Screen<T>, config
         screen.onCancel()
     }
 }
-
-fun Player.openScreen(s: Screen<*>) = openInventory(BukkitScreen(s, human.config).inventory)

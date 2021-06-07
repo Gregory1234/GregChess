@@ -36,29 +36,12 @@ abstract class HumanPlayer(val name: String) {
     fun sendCommandMessage(msg: ConfigPath<String>, action: ConfigPath<String>, command: String) =
         sendCommandMessage(msg.get(config), action.get(config), command)
     abstract fun setItem(i: Int, piece: Piece?)
-    abstract fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>)
+    abstract fun openScreen(s: Screen<*>)
 }
 
 abstract class MinecraftPlayer(val uniqueId: UUID, name: String): HumanPlayer(name)
 
 class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(player.uniqueId, player.name) {
-    class PawnPromotionScreen(
-        private val moves: List<Pair<Piece, MoveCandidate>>,
-        private val player: ChessPlayer?
-    ) : Screen<MoveCandidate>(Config.Message.pawnPromotion) {
-        override fun getContent(config: Configurator) = moves.mapIndexed { i, (t, m) ->
-            ScreenOption(t.type.getItem(config, t.side), m, InventoryPosition.fromIndex(i))
-        }
-
-        override fun onClick(v: MoveCandidate) {
-            player?.game?.finishMove(v)
-        }
-
-        override fun onCancel() {
-            player?.game?.finishMove(moves.first().second)
-        }
-
-    }
 
     companion object {
         private lateinit var config: BukkitConfigurator
@@ -108,8 +91,8 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
         player.inventory.setItem(i, piece?.let {it.type.getItem(config, it.side)})
     }
 
-    override fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>) {
-        player.openScreen(PawnPromotionScreen(moves, chess))
+    override fun openScreen(s: Screen<*>) {
+        player.openInventory(BukkitScreen(s, config).inventory)
     }
 
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"

@@ -81,7 +81,7 @@ class GregChess : JavaPlugin(), Listener {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!opponent.human.isInGame(), ErrorMsg.InGame.opponent)
-                            player.openScreen(SettingsScreen { settings ->
+                            player.human.openScreen(SettingsScreen { settings ->
                                 duelRequest += Request(player.human, opponent.human,
                                     ChessGame(timeManager, configurator, arenaManager.cNext(), settings))
                             })
@@ -92,7 +92,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     endArgs()
                     cRequire(!player.human.isInGame(), ErrorMsg.InGame.you)
-                    player.openScreen(SettingsScreen { settings ->
+                    player.human.openScreen(SettingsScreen { settings ->
                         ChessGame(timeManager, configurator, arenaManager.cNext(), settings).addPlayers {
                             human(player.human, Side.WHITE, false)
                             engine("stockfish", Side.BLACK)
