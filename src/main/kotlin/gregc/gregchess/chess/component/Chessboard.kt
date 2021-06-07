@@ -1,7 +1,5 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.glog
-import gregc.gregchess.rangeTo
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import java.util.*

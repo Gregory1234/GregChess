@@ -86,7 +86,8 @@ fun parseDuration(s: String): Duration? {
 
 fun Duration.toLocalTime(): LocalTime = LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
 
-class TimeFormat(private val formatter: DateTimeFormatter) {
+@JvmInline
+value class TimeFormat(private val formatter: DateTimeFormatter) {
     constructor(format: String): this(DateTimeFormatter.ofPattern(format))
     operator fun invoke(time: LocalTime): String = time.format(formatter)
     operator fun invoke(time: Duration): String = time.toLocalTime().format(formatter)

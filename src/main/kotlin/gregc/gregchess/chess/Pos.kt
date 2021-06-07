@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.rangeTo
 import gregc.gregchess.Config
+import gregc.gregchess.rangeTo
 
 data class Pos(val file: Int, val rank: Int) {
     override fun toString() = "$fileStr$rankStr"
@@ -9,8 +9,8 @@ data class Pos(val file: Int, val rank: Int) {
     fun plus(df: Int, dr: Int) = Pos(file + df, rank + dr)
     fun plusF(df: Int) = plus(df, 0)
     fun plusR(dr: Int) = plus(0, dr)
-    val fileStr = "${'a' + file}"
-    val rankStr = (rank + 1).toString()
+    val fileStr get() = "${'a' + file}"
+    val rankStr get() = (rank + 1).toString()
 
     fun neighbours(): List<Pos> =
         (Pair(-1, -1)..Pair(1, 1)).map(::plus).filter { it.isValid() } - this

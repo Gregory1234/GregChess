@@ -109,7 +109,6 @@ data class FEN(
         private fun castlingRightsToString(chess960: Boolean, base: Char, cr: List<Int>) =
             cr.map { base + if (chess960) (if (it < 4) 'q' else 'a') - 'a' else it }.sorted()
                 .joinToString("")
-
         private fun parseCastlingRights(r: String, s: String) = s.lowercase().map { c ->
             when (c) {
                 'k' -> r.indexOfLast { it.lowercaseChar() == 'r' }
@@ -118,7 +117,6 @@ data class FEN(
                 else -> throw IllegalArgumentException(s)
             }
         }
-
         private fun detectChess960(board: String, castling: String): Boolean {
             if (castling.any { it !in "KQkq" })
                 return true
@@ -138,7 +136,6 @@ data class FEN(
             }
             return false
         }
-
         fun parseFromString(fen: String): FEN {
             val parts = fen.split(" ")
             if (parts.size != 6) throw IllegalArgumentException(fen)
@@ -159,7 +156,6 @@ data class FEN(
                 detectChess960(board, castling)
             )
         }
-
         fun generateChess960(): FEN {
             val types = MutableList<Char?>(8) { null }
             types[(0..7).filter { it % 2 == 0 }.random()] = PieceType.BISHOP.standardChar

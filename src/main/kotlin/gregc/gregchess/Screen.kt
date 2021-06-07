@@ -11,7 +11,7 @@ abstract class Screen<T>(val namePath: ConfigPath<String>) {
 }
 
 data class InventoryPosition(val x: Int, val y: Int) {
-    val index = x + y * 9
+    val index get() = x + y * 9
 
     companion object {
         fun fromIndex(index: Int) = InventoryPosition(index % 9, index.div(9))

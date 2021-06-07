@@ -1,9 +1,9 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.rangeTo
 import gregc.gregchess.Config
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.rangeTo
 
 object KingOfTheHill : ChessVariant("KingOfTheHill") {
 

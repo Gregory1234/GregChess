@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.glog
 import gregc.gregchess.buildTextComponent
+import gregc.gregchess.glog
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
@@ -17,11 +17,7 @@ data class Piece(val type: PieceType, val side: Side) {
 
 data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)
 
-class CapturedPiece(
-    val piece: Piece,
-    val pos: CapturedPos,
-    private val game: ChessGame
-) {
+class CapturedPiece(val piece: Piece, val pos: CapturedPos, private val game: ChessGame) {
     val type = piece.type
     val side = piece.side
 
@@ -37,10 +33,9 @@ class CapturedPiece(
 }
 
 data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
-    val type = piece.type
-    val side = piece.side
-    val standardChar
-        get() = piece.standardChar
+    val type get() = piece.type
+    val side get() = piece.side
+    val standardChar get() = piece.standardChar
 }
 
 enum class PieceSound {

@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.between
-import gregc.gregchess.rotationsOf
-import gregc.gregchess.Config
+import gregc.gregchess.*
 import kotlin.math.abs
 
 class MoveData(
