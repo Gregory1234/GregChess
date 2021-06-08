@@ -2,9 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
-import org.bukkit.Bukkit
-import org.bukkit.event.Event
-import org.bukkit.event.HandlerList
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
@@ -81,7 +78,7 @@ class ChessGame(
     val currentPlayer: ChessPlayer
         get() = require<GameState.WithCurrentPlayer>().currentPlayer
 
-    inner class AddPlayersScope() {
+    inner class AddPlayersScope {
         private val players = MutableBySides<ChessPlayer?>(null)
 
         fun addPlayer(p: ChessPlayer) {
@@ -115,17 +112,6 @@ class ChessGame(
     val running: Boolean
         get() = state.running
 
-    class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
-        override fun getHandlers() = handlerList
-
-        companion object {
-            @Suppress("unused")
-            @JvmStatic
-            fun getHandlerList(): HandlerList = handlerList
-            private val handlerList = HandlerList()
-        }
-    }
-
     val players: BySides<ChessPlayer>
         get() = require<GameState.WithPlayers>().players
     val spectators: List<HumanPlayer>
@@ -138,7 +124,6 @@ class ChessGame(
         components.allEndTurn()
         variant.checkForGameEnd(this)
         if (running) {
-            Bukkit.getPluginManager().callEvent(TurnEndEvent(this, currentPlayer))
             currentTurn++
             startTurn()
         }
@@ -149,18 +134,6 @@ class ChessGame(
         components.allPrePreviousTurn()
         currentTurn++
         startPreviousTurn()
-    }
-
-    class StartEvent(val game: ChessGame) : Event() {
-
-        override fun getHandlers() = handlerList
-
-        companion object {
-            @Suppress("unused")
-            @JvmStatic
-            fun getHandlerList(): HandlerList = handlerList
-            private val handlerList = HandlerList()
-        }
     }
 
     fun start(): ChessGame {
@@ -193,7 +166,7 @@ class ChessGame(
             glog.mid("Failed to start game", uniqueId)
             throw e
         }
-        Bukkit.getPluginManager().callEvent(StartEvent(this))
+        components.allBegin()
         startTurn()
         return this
     }
@@ -253,20 +226,6 @@ class ChessGame(
         // @formatter:on
 
         val message get() = Config.Message.GameFinished[winner](namePath)
-
-        fun getMessage(c: Configurator) = message.get(c)
-    }
-
-    class EndEvent(val game: ChessGame) : Event() {
-
-        override fun getHandlers() = handlerList
-
-        companion object {
-            @Suppress("unused")
-            @JvmStatic
-            fun getHandlerList(): HandlerList = handlerList
-            private val handlerList = HandlerList()
-        }
     }
 
     val endReason: EndReason?
@@ -313,7 +272,6 @@ class ChessGame(
                 state = GameState.Stopped(stopping)
                 glog.low("Stopped game", uniqueId, reason)
                 components.allVeryEnd()
-                Bukkit.getPluginManager().callEvent(EndEvent(this))
                 return
             }
             timeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
@@ -323,7 +281,6 @@ class ChessGame(
                     state = GameState.Stopped(stopping)
                     components.allVeryEnd()
                     glog.low("Stopped game", uniqueId, reason)
-                    Bukkit.getPluginManager().callEvent(EndEvent(this))
                 }
             }
         } catch (e: Exception) {
@@ -336,7 +293,6 @@ class ChessGame(
         e.printStackTrace()
         components.allPanic(e)
         state = GameState.Error(state, e)
-        Bukkit.getPluginManager().callEvent(EndEvent(this))
     }
 
     operator fun get(player: HumanPlayer): HumanChessPlayer? = (state as? GameState.WithCurrentPlayer)?.get(player)

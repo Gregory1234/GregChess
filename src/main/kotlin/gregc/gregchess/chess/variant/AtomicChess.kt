@@ -7,7 +7,7 @@ import gregc.gregchess.chess.component.Component
 
 object AtomicChess : ChessVariant("Atomic") {
     class ExplosionManager(private val game: ChessGame) : Component {
-        class Settings: Component.Settings<ExplosionManager> {
+        object Settings: Component.Settings<ExplosionManager> {
             override fun getComponent(game: ChessGame) = ExplosionManager(game)
         }
 
@@ -105,5 +105,5 @@ object AtomicChess : ChessVariant("Atomic") {
     }
 
     override val extraComponents: Collection<Component.Settings<*>>
-        get() = listOf(ExplosionManager.Settings())
+        get() = listOf(ExplosionManager.Settings)
 }

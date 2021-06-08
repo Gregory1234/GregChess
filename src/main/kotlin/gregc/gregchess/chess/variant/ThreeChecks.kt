@@ -6,7 +6,7 @@ import gregc.gregchess.chess.component.*
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
     class CheckCounter(private val game: ChessGame) : Component {
-        class Settings: Component.Settings<CheckCounter> {
+        object Settings: Component.Settings<CheckCounter> {
             override fun getComponent(game: ChessGame) = CheckCounter(game)
         }
 
@@ -45,6 +45,6 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
     }
 
     override val extraComponents: Collection<Component.Settings<*>>
-        get() = listOf(CheckCounter.Settings())
+        get() = listOf(CheckCounter.Settings)
 
 }

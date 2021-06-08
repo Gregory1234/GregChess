@@ -13,7 +13,7 @@ interface ScoreboardManager: Component {
 }
 
 class BukkitScoreboardManager(private val game: ChessGame): ScoreboardManager {
-    class Settings: Component.Settings<BukkitScoreboardManager> {
+    object Settings: Component.Settings<BukkitScoreboardManager> {
         override fun getComponent(game: ChessGame) = BukkitScoreboardManager(game)
     }
 

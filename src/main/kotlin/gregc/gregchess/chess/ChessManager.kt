@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.component.GameEndEvent
+import gregc.gregchess.chess.component.GameStartEvent
 import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
@@ -21,7 +23,7 @@ interface ChessGameManager {
     fun leave(player: HumanPlayer)
 }
 
-class BukkitChessGameManager(private val plugin: Plugin, private val config: Configurator) : ChessGameManager, Listener {
+class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Listener {
 
     private val games = mutableListOf<ChessGame>()
 
@@ -116,7 +118,7 @@ class BukkitChessGameManager(private val plugin: Plugin, private val config: Con
     }
 
     @EventHandler
-    fun onChessGameStart(e: ChessGame.StartEvent) {
+    fun onChessGameStart(e: GameStartEvent) {
         glog.low("Registering game", e.game.uniqueId)
         games += e.game
         e.game.players.forEachReal {
@@ -127,7 +129,7 @@ class BukkitChessGameManager(private val plugin: Plugin, private val config: Con
     }
 
     @EventHandler
-    fun onChessGameEnd(e: ChessGame.EndEvent) {
+    fun onChessGameEnd(e: GameEndEvent) {
         val pgn = PGN.generate(e.game)
         e.game.players.forEachReal { it.sendPGN(pgn) }
         removeGame(e.game)

@@ -69,7 +69,7 @@ data class Arena(val name: String, var game: ChessGame? = null): Component {
         override fun shouldGenerateStructures() = false
     }
 
-    @GameEvent(GameBaseEvent.VERY_END, mod = TimeModifier.LATE)
+    @GameEvent(GameBaseEvent.VERY_END, GameBaseEvent.PANIC, mod = TimeModifier.LATE)
     fun veryEnd() {
         game = null
     }

@@ -12,13 +12,15 @@ object SettingsManager {
         Config.Settings.presets.get(config).mapValues { (key, child) ->
             val simpleCastling = child.get { simpleCastling }
             val variant = ChessVariant[child.get { variant }]
-            val board = Chessboard.Settings[child.get { board }]
-            val clock = ChessClock.Settings.get(config, child.get { clock })
-            val tileSize = child.get { tileSize }
-            GameSettings(
-                key, simpleCastling, variant,
-                listOfNotNull(board, clock, BukkitRenderer.Settings(tileSize), BukkitScoreboardManager.Settings())
-            )
+            val components = buildList {
+                this += Chessboard.Settings[child.get { board }]
+                ChessClock.Settings.get(config, child.get { clock })?.let { this += it }
+                val tileSize = child.get { tileSize }
+                this += BukkitRenderer.Settings(tileSize)
+                this += BukkitScoreboardManager.Settings
+                this += BukkitEventRelay.Settings
+            }
+            GameSettings(key, simpleCastling, variant, components)
         }
 
 }

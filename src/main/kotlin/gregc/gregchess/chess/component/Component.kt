@@ -13,6 +13,7 @@ interface Component{
 enum class GameBaseEvent {
     INIT,
     START,
+    BEGIN,
     UPDATE,
     SPECTATOR_JOIN,
     SPECTATOR_LEAVE,
@@ -71,6 +72,7 @@ private fun Collection<Component>.runGameEvent(value: GameBaseEvent, vararg args
 
 fun Collection<Component>.allInit() = runGameEvent(GameBaseEvent.INIT)
 fun Collection<Component>.allStart() = runGameEvent(GameBaseEvent.START)
+fun Collection<Component>.allBegin() = runGameEvent(GameBaseEvent.BEGIN)
 fun Collection<Component>.allUpdate() = runGameEvent(GameBaseEvent.UPDATE)
 fun Collection<Component>.allSpectatorJoin(p: HumanPlayer) = runGameEvent(GameBaseEvent.SPECTATOR_JOIN, p)
 fun Collection<Component>.allSpectatorLeave(p: HumanPlayer) = runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, p)
