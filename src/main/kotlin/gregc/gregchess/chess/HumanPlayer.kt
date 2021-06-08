@@ -20,20 +20,20 @@ abstract class HumanPlayer(val name: String) {
     abstract val config: Configurator
 
     abstract fun sendMessage(msg: String)
-    fun sendMessage(msg: ConfigPath<String>) = sendMessage(msg.get(config))
+    fun sendMessage(msg: ConfigVal<String>) = sendMessage(msg.get(config))
     abstract fun sendTitle(title: String, subtitle: String = "")
-    fun sendTitle(title: ConfigPath<String>, subtitle: ConfigPath<String>) =
+    fun sendTitle(title: ConfigVal<String>, subtitle: ConfigVal<String>) =
         sendTitle(title.get(config), subtitle.get(config))
-    fun sendTitle(title: String, subtitle: ConfigPath<String>) =
+    fun sendTitle(title: String, subtitle: ConfigVal<String>) =
         sendTitle(title, subtitle.get(config))
-    fun sendTitle(title: ConfigPath<String>, subtitle: String = "") =
+    fun sendTitle(title: ConfigVal<String>, subtitle: String = "") =
         sendTitle(title.get(config), subtitle)
     fun isInGame(): Boolean = currentGame != null
     fun isSpectating(): Boolean = spectatedGame != null
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendFEN(fen: FEN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
-    fun sendCommandMessage(msg: ConfigPath<String>, action: ConfigPath<String>, command: String) =
+    fun sendCommandMessage(msg: ConfigVal<String>, action: ConfigVal<String>, command: String) =
         sendCommandMessage(msg.get(config), action.get(config), command)
     abstract fun setItem(i: Int, piece: Piece?)
     abstract fun openScreen(s: Screen<*>)

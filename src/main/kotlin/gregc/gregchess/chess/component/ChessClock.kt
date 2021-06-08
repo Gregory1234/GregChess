@@ -96,7 +96,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     fun getTimeRemaining(s: Side) =
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
-    private fun format(time: Duration) = view.timeFormat(time).get(game.config)
+    private fun format(time: Duration) = view.timeFormat(time)
 
     @GameEvent(GameBaseEvent.START)
     fun start() {

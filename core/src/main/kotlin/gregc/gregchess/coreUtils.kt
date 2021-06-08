@@ -96,7 +96,7 @@ value class TimeFormat(private val formatter: DateTimeFormatter) {
 fun numberedFormat(s: String, vararg args: Any?): String? {
     var retNull = false
     val ret = s.replace(Regex("""\$(?:(\d+)|\{(\d+)})""")) {
-        val i = it.groupValues[1].toIntOrNull()
+        val i = it.groupValues[1].toIntOrNull() ?: it.groupValues.getOrNull(2)?.toIntOrNull()
         if (i == null || i < 1 || i > args.size) {
             retNull = true
             ""

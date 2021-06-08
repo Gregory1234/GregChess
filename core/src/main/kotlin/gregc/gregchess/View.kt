@@ -7,9 +7,18 @@ import kotlin.reflect.KClass
 
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
 
-abstract class ConfigPath<out T>(val path: String = ""){
+fun interface ConfigVal<out T> {
+    fun get(c: Configurator): T
+}
+
+class ConstVal<out T>(val value: T): ConfigVal<T> {
+    override fun get(c: Configurator): T = value
+}
+
+fun <T,R> ConfigVal<T>.map(f: Configurator.(T) -> R): ConfigVal<R> = ConfigVal { it.f(get(it)) }
+
+abstract class ConfigPath<out T>(val path: String = ""): ConfigVal<T> {
     fun childPath(ad: String) = path addDot ad
-    abstract fun get(c: Configurator): T
 }
 
 open class ConfigBlock<out Self: ConfigBlock<Self>>(path: String): ConfigPath<View<ConfigBlock<Self>>>(path) {

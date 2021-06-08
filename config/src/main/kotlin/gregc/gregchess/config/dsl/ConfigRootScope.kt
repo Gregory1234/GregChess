@@ -49,7 +49,7 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
                 binaryStrings(i).forEach { bin ->
                     addFunction(FunSpec.builder("invoke").addModifiers(KModifier.OPERATOR)
                         .addParameters(params.zip(bin) { v, b ->
-                            if (b) ParameterSpec(v.name, configPath.parameterizedBy(v.type)) else v
+                            if (b) ParameterSpec(v.name, configVal.parameterizedBy(v.type)) else v
                         }).returns(TypeVariableName("R"))
                         .addCode("return c.block(" + ((1u..i).zip(bin).joinToString { (i, b) -> if (b) "a$i.get(c)" else "a$i" }) + ")").build())
                 }
@@ -69,7 +69,7 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
                 binaryStrings(i).forEach { bin ->
                     addFunction(FunSpec.builder("invoke").addModifiers(KModifier.OPERATOR)
                         .addParameters(params.zip(bin) { v, b ->
-                            if (b) ParameterSpec(v.name, configPath.parameterizedBy(v.type)) else v
+                            if (b) ParameterSpec(v.name, configVal.parameterizedBy(v.type)) else v
                         }).returns(configFullFormatString)
                         .addCode("return %T(path, $args)", configFullFormatString).build()
                     )

@@ -7,6 +7,7 @@ const val PACKAGE_NAME: String = "gregc.gregchess"
 val sideType = ClassName("gregc.gregchess.chess", "Side")
 val configurator = ClassName("gregc.gregchess", "Configurator")
 val configPath = ClassName("gregc.gregchess", "ConfigPath")
+val configVal = ClassName("gregc.gregchess", "ConfigVal")
 val configBlock = ClassName("gregc.gregchess", "ConfigBlock")
 val configBlockList = ClassName("gregc.gregchess", "ConfigBlockList")
 val configFullFormatString = ClassName("gregc.gregchess", "ConfigFullFormatString")

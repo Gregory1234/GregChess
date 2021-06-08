@@ -48,10 +48,10 @@ class BukkitScoreboardManager(private val game: ChessGame): ScoreboardManager {
     @GameEvent(GameBaseEvent.INIT)
     fun init() {
         this += object : GameProperty(view.preset) {
-            override fun invoke() = game.settings.name
+            override fun invoke() = ConstVal(game.settings.name)
         }
         this += object : PlayerProperty(view.player) {
-            override fun invoke(s: Side) = view.playerPrefix.get(game.config) + game[s].name
+            override fun invoke(s: Side) = ConstVal(view.playerPrefix.get(game.config) + game[s].name)
         }
     }
 
@@ -90,10 +90,10 @@ class BukkitScoreboardManager(private val game: ChessGame): ScoreboardManager {
     @GameEvent(GameBaseEvent.UPDATE, mod = TimeModifier.LATE)
     fun update() {
         gameProperties.forEach {
-            gamePropertyTeams[it]?.suffix = it()
+            gamePropertyTeams[it]?.suffix = it().get(game.config)
         }
         playerProperties.forEach {
-            playerPropertyTeams[it]?.forEachIndexed { s, t -> t.suffix = it(s) }
+            playerPropertyTeams[it]?.forEachIndexed { s, t -> t.suffix = it(s).get(game.config) }
         }
     }
 
@@ -105,9 +105,9 @@ class BukkitScoreboardManager(private val game: ChessGame): ScoreboardManager {
 }
 
 abstract class PlayerProperty(val name: ConfigPath<String>) {
-    abstract operator fun invoke(s: Side): String
+    abstract operator fun invoke(s: Side): ConfigVal<String>
 }
 
 abstract class GameProperty(val name: ConfigPath<String>) {
-    abstract operator fun invoke(): String
+    abstract operator fun invoke(): ConfigVal<String>
 }

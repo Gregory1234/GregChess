@@ -112,9 +112,15 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         updateMoves()
         val num = "${fullMoveCounter}."
         if (game.currentTurn == Side.BLACK) {
-            val wLast = (if (moves.size <= 1) "" else moves[moves.size - 2].name)
-            val bLast = (lastMove?.name ?: "")
-            game.players.forEachReal { p -> p.sendMessage("$num $wLast  | $bLast") }
+            val wLast = (if (moves.size <= 1) null else moves[moves.size - 2].name)
+            val bLast = lastMove?.name
+            game.players.forEachReal { p -> p.sendMessage(buildMessage {
+                append(num)
+                append(' ')
+                wLast?.let { append(it) }
+                append("  | ")
+                bLast?.let { append(it) }
+            }) }
             fullMoveCounter++
         }
         addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
@@ -124,8 +130,13 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     fun stop() {
         if (game.currentTurn == Side.WHITE) {
             val num = "${fullMoveCounter}."
-            val wLast = (lastMove?.name ?: "")
-            game.players.forEachReal { p -> p.sendMessage("$num $wLast  |") }
+            val wLast = lastMove?.name
+            game.players.forEachReal { p -> p.sendMessage(buildMessage {
+                append(num)
+                append(' ')
+                wLast?.let { append(it) }
+                append("  |")
+            }) }
         }
     }
 
@@ -187,7 +198,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             val target = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
             val piece = target.piece!!
             val origin = this[piece.pos.plusR(-2 * piece.side.direction)]!!
-            lastMove = MoveData(piece.piece, origin, target, "", "", true) {}
+            lastMove = MoveData(piece.piece, origin, target, ConstVal(""), "", true) {}
         }
 
         movesSinceLastCapture = fen.halfmoveClock

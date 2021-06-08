@@ -7,7 +7,7 @@ class MoveData(
     val piece: Piece,
     val origin: Square,
     val target: Square,
-    val name: String,
+    val name: ConfigVal<String>,
     val standardName: String,
     val captured: Boolean,
     val display: Square = target,
@@ -51,7 +51,7 @@ abstract class MoveCandidate(
         val hmc =
             if (piece.type == PieceType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
         val ch = checkForChecks(piece.side, game)
-        return MoveData(piece.piece, origin, target, base + ch, standardBase + ch, ct != null, display) {
+        return MoveData(piece.piece, origin, target, Message("$1$ch", base), standardBase + ch, ct != null, display) {
             hmc()
             promotion?.let { piece.square.piece?.demote(piece) }
             piece.move(origin)
@@ -60,15 +60,15 @@ abstract class MoveCandidate(
         }
     }
 
-    open fun baseName() = buildString {
+    open fun baseName(): ConfigVal<String> = buildMessage {
         if (piece.type != PieceType.PAWN) {
-            append(piece.type.char.get(game.config).uppercaseChar())
+            append(piece.type.char.map{ it.uppercaseChar() })
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(piece.pos.fileStr)
         if (captured != null)
-            append(Config.Chess.capture.get(game.config))
-        promotion?.let { append(it.type.char.get(game.config).uppercaseChar()) }
+            append(Config.Chess.capture)
+        promotion?.let { p -> append(p.type.char.map{ it.uppercaseChar() }) }
         append(target.pos)
     }
 
@@ -192,13 +192,12 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
         control = null, display = display
     ) {
         override fun execute(): MoveData {
-            val base = baseName()
-            val standardBase = baseStandardName()
+            val base = baseStandardName()
             val rookOrigin = rook.square
             BoardPiece.autoMove(mapOf(piece to target, rook to rookTarget))
             val ch = checkForChecks(piece.side, game)
             val hmc = board.increaseMovesSinceLastCapture()
-            return MoveData(piece.piece, origin, target, base + ch, standardBase + ch, false, display) {
+            return MoveData(piece.piece, origin, target, ConstVal(base + ch), base + ch, false, display) {
                 hmc()
                 BoardPiece.autoMove(mapOf(piece to origin, rook to rookOrigin))
                 piece.force(false)
@@ -206,7 +205,7 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
             }
         }
 
-        override fun baseName() = baseStandardName()
+        override fun baseName() = ConstVal(baseStandardName())
 
         override fun baseStandardName() = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
     }
@@ -284,7 +283,7 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
             piece.move(target)
             val ch = checkForChecks(piece.side, game)
             val hmc = board.resetMovesSinceLastCapture()
-            return MoveData(piece.piece, origin, target, "$base$ch e.p.", standardBase + ch,true, display) {
+            return MoveData(piece.piece, origin, target, Message("$1$ch e.p.", base), standardBase + ch,true, display) {
                 hmc()
                 piece.move(origin)
                 ct?.let { captured?.resurrect(it) }

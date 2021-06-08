@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.Config
+import gregc.gregchess.ConstVal
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 
@@ -15,7 +16,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         @GameEvent(GameBaseEvent.START)
         fun start() {
             game.scoreboard += object : PlayerProperty(Config.Component.CheckCounter.checkCounter) {
-                override fun invoke(s: Side): String = checks[s].toString()
+                override fun invoke(s: Side) = ConstVal(checks[s].toString())
             }
         }
 
