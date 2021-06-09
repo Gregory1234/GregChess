@@ -1,5 +1,6 @@
 package gregc.gregchess
 
+import org.bukkit.ChatColor
 import org.bukkit.configuration.file.FileConfiguration
 
 class BukkitConfigurator(private var file: FileConfiguration): Configurator {
@@ -12,6 +13,8 @@ class BukkitConfigurator(private var file: FileConfiguration): Configurator {
     override fun contains(path: String): Boolean = path in file
 
     override fun isSection(path: String): Boolean = file.getConfigurationSection(path) != null
+
+    override fun processString(s: String) = ChatColor.translateAlternateColorCodes('&', s)
 
     fun reload(config: FileConfiguration) {
         file = config

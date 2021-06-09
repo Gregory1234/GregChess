@@ -7,7 +7,7 @@ import java.time.Duration
 
 fun main(args: Array<String>) {
     val c = config {
-        val string = type("String", String::class.asTypeName(), "path", "::chatColor")
+        val string = type("String", String::class.asTypeName(), "path", "c::processString")
         val bool = type("Bool", Boolean::class.asTypeName(), "true", "String::toBooleanStrictOrNull", true)
         val duration = type("Duration", Duration::class.asTypeName(), "0.seconds", "::parseDuration")
         val char = type("Char", Char::class.asTypeName(), "' '", "{ if (it.length == 1) it[0] else null }", true)

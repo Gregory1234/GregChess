@@ -106,4 +106,50 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
     return if (retNull) null else ret
 }
 
+class Message(val format: String, vararg val args: ConfigVal<*>): ConfigVal<String> {
+    constructor(p: ConfigVal<*>): this("$1", p)
+
+    override fun get(c: Configurator): String = numberedFormat(format, *args.map { it.get(c) }.toTypedArray()) ?: run {
+        glog.warn("Bad format ", "\"$format\"", *args.map { it.get(c) }.toTypedArray())
+        format
+    }
+}
+
+class MessageBuilder(
+    private val formatBuilder: StringBuilder = StringBuilder(),
+    private val args: MutableList<ConfigVal<*>> = mutableListOf<ConfigVal<Any?>>(),
+    private var i: UInt = 1u
+) {
+    fun append(str: String) {
+        formatBuilder.append(str)
+    }
+    fun append(i: Int) {
+        formatBuilder.append(i)
+    }
+    fun append(c: Char) {
+        formatBuilder.append(c)
+    }
+    fun append(lng: Long) {
+        formatBuilder.append(lng)
+    }
+    fun append(f: Float) {
+        formatBuilder.append(f)
+    }
+    fun append(d: Double) {
+        formatBuilder.append(d)
+    }
+    fun append(v: ConfigVal<Any?>) {
+        formatBuilder.append("\${$i}")
+        args += v
+        i++
+    }
+    fun append(v: Any?) {
+        formatBuilder.append(v)
+    }
+
+    fun build() = Message(formatBuilder.toString(), *args.toTypedArray())
+}
+
+fun buildMessage(block: MessageBuilder.() -> Unit): Message = MessageBuilder().apply(block).build()
+
 val glog = CombinedLogger()

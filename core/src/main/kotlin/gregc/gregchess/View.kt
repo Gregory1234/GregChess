@@ -61,6 +61,7 @@ interface Configurator {
     fun getChildren(path: String): Set<String>?
     operator fun contains(path: String): Boolean
     fun isSection(path: String): Boolean
+    fun processString(s: String): String
 }
 
 fun <T> Configurator.get(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?): T {
@@ -114,6 +115,16 @@ fun <T: Enum<T>> Configurator.getEnumList(path: String, cl: KClass<T>, warnMissi
             null
         }
     }
+
+
+fun Configurator.getFormatString(path: String, vararg args: Any?) = get(path, "format string", path) {
+    numberedFormat(it, *args)?.let(::processString)
+}
+
+class ConfigFullFormatString(path: String, private vararg val gotten: Any?): ConfigPath<String>(path) {
+    override fun get(c: Configurator): String =
+        c.getFormatString(path, *gotten.map { if (it is ConfigVal<*>) it.get(c) else it }.toTypedArray())
+}
 
 class View<out P: ConfigBlock<P>>(private val path: P, private val config: Configurator) {
     fun <T> get(f: P.() -> ConfigPath<T>): T = path.f().get(config)
