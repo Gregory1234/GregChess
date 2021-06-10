@@ -16,16 +16,17 @@ val configEnumList = ClassName("gregc.gregchess", "ConfigEnumList")
 
 fun String.camelToUpperSnake(): String {
     val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
-    return camelRegex.replace(this) {
-        "_${it.value}"
-    }.uppercase()
+    return camelRegex.replace(this) { "_${it.value}" }.uppercase()
 }
 
 fun String.camelToSpaces(): String {
     val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
-    return camelRegex.replace(this) {
-        " ${it.value}"
-    }.lowercase()
+    return camelRegex.replace(this) { " ${it.value}" }.lowercase()
+}
+
+fun String.upperSnakeToCamel(): String {
+    val snakeRegex = "_[a-zA-Z]".toRegex()
+    return snakeRegex.replace(lowercase()) { it.value.replace("_","").uppercase() }
 }
 
 fun String.lowerFirst() = replaceFirstChar { it.lowercaseChar() }

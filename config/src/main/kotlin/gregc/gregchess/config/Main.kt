@@ -10,8 +10,27 @@ import java.io.File
 import java.time.Duration
 
 @Represents("gregc.gregchess.chess.component.ChessClock", "Type")
+@Suppress("unused")
 enum class ChessClockType {
     FIXED, INCREMENT, BRONSTEIN, SIMPLE
+}
+
+@Represents("gregc.gregchess.chess", "PieceType")
+@Suppress("unused")
+enum class PieceType {
+    KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
+}
+
+@Represents("gregc.gregchess.chess", "Floor")
+@Suppress("unused")
+enum class Floor {
+    LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END
+}
+
+@Represents("gregc.gregchess.chess", "PieceSound")
+@Suppress("unused")
+enum class PieceSound {
+    PICK_UP, MOVE, CAPTURE
 }
 
 fun main(args: Array<String>) {
@@ -201,8 +220,7 @@ fun main(args: Array<String>) {
                     material("Other", Material.PURPLE_CONCRETE)
                     material("LastStart", Material.BROWN_CONCRETE)
                     material("LastEnd", Material.ORANGE_CONCRETE)
-                    byEnum(ClassName("gregc.gregchess.chess", "Floor"),
-                        "Light", "Dark", "Move", "Capture", "Special", "Nothing", "Other", "LastStart", "LastEnd")
+                    byEnum<Floor>()
                 }
                 block("Piece") {
                     val pieceData = inlineFiniteBlockList("PieceData") {
@@ -222,7 +240,7 @@ fun main(args: Array<String>) {
                             sound("PickUp")
                             sound("Move")
                             sound("Capture")
-                            byEnum(ClassName("gregc.gregchess.chess", "PieceSound"), "PickUp", "Move", "Capture")
+                            byEnum<PieceSound>()
                         }
                     }
                     pieceData.addInstance("King") {
@@ -327,8 +345,7 @@ fun main(args: Array<String>) {
                             sound("Capture", Sound.BLOCK_STONE_BREAK)
                         }
                     }
-                    byEnum(ClassName("gregc.gregchess.chess", "PieceType"),
-                        "King", "Queen", "Rook", "Bishop", "Knight", "Pawn")
+                    byEnum<PieceType>()
                 }
                 block("EndReason") {
                     string("Checkmate", "checkmate")

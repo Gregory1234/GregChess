@@ -52,9 +52,12 @@ class ConfigObjectScope(private val state: ConfigGeneralState, private val path:
         fields += ConfigField.WhenBlock(sideType, nulls.lowerFirst(), "WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst())
     }
 
-    fun byEnum(typ: TypeName, vararg vals: String) {
-        fields += ConfigField.WhenBlock(typ, null, vals.map {it.camelToUpperSnake() to it.lowerFirst()})
+    fun <T: Enum<T>> byEnum(cl: KClass<T>) {
+        fields += ConfigField.WhenBlock(cl.asConfigTypeName(), null,
+            cl.java.enumConstants.map { it.toString() to it.toString().upperSnakeToCamel() })
     }
+
+    inline fun <reified T: Enum<T>> byEnum() = byEnum(T::class)
 
     fun special(name: String, typ: TypeName, default: String? = null, warnMissing: Boolean? = null) {
         fields += ConfigField.ValueSpecial(name, typ, default, warnMissing)

@@ -43,9 +43,7 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
 
     inline fun <reified T: Enum<T>> enumType(name: String, def: T) =
         generalType<T>(name, true) {
-            baseType = T::class.annotations.filterIsInstance<Represents>().firstOrNull()?.let {
-                ClassName(it.packageName, it.className)
-            } ?: T::class.asTypeName()
+            baseType = T::class.asConfigTypeName()
             toYaml = { it.toString() }
             toCode = { CodeBlock.of("%T.$it", baseType) }
             default = def
