@@ -7,17 +7,47 @@ import java.time.Duration
 
 fun main(args: Array<String>) {
     val c = config {
-        val string = type("String", String::class.asTypeName(), "path", "c::processString")
-        val bool = type("Bool", Boolean::class.asTypeName(), "true", "String::toBooleanStrictOrNull", true)
-        val duration = type("Duration", Duration::class.asTypeName(), "0.seconds", "::parseDuration")
-        val char = type("Char", Char::class.asTypeName(), "' '", "{ if (it.length == 1) it[0] else null }", true)
-        val int = type("Int", Int::class.asTypeName(), "0", "String::toIntOrNull", true)
+        val string = type<String>("String") {
+            baseClass = String::class
+            toCode = { CodeBlock.of("\"$it\"") }
+            toYaml = { it }
+            defaultCode = CodeBlock.of("path")
+            parser = CodeBlock.of("c::processString")
+        }
+        val bool = defaultType<Boolean>("Bool") {
+            baseClass = Boolean::class
+            toCode = { CodeBlock.of("$it") }
+            toYaml = { "$it" }
+            default = true
+            parser = CodeBlock.of("String::toBooleanStrictOrNull")
+        }
+        val duration = type<String>("Duration") {
+            baseClass = Duration::class
+            toCode = { CodeBlock.of(it) }
+            toYaml = { it }
+            defaultCode = CodeBlock.of("0.seconds")
+            parser = CodeBlock.of("::parseDuration")
+        }
+        val char = defaultType<Char>("Char") {
+            baseClass = Char::class
+            toCode = { CodeBlock.of("'$it'") }
+            toYaml = { "'$it'" }
+            default = ' '
+            parser = CodeBlock.of("{ if (it.length == 1) it[0] else null }")
+        }
+        val int = defaultType<Int>("Int") {
+            baseClass = Int::class
+            toCode = { CodeBlock.of("$it") }
+            toYaml = { "$it" }
+            default = 0
+            parser = CodeBlock.of("String::toIntOrNull")
+        }
         root("Config") {
             string.list("ChessArenas")
             block("Request") {
                 string("Accept", "&a[Accept]")
                 string("Cancel", "&c[Cancel]")
-                bool("SelfAccept", "true")
+                bool("SelfAccept", true)
                 val requestType = inlineFiniteBlockList("RequestType") {
                     block("Sent") {
                         string("Request")
@@ -344,8 +374,8 @@ fun main(args: Array<String>) {
                     string.optional("Variant")
                     string.optional("Board")
                     string.optional("Clock")
-                    bool("SimpleCastling", "false")
-                    int("TileSize", "3")
+                    bool("SimpleCastling", false)
+                    int("TileSize", 3)
                 }
                 blockList("Clock") {
                     enumString("Type", ClassName("gregc.gregchess.chess.component.ChessClock", "Type"), "INCREMENT", false)

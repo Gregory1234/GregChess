@@ -4,10 +4,11 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 class ConfigGeneralState {
-    val configTypes = mutableListOf<ConfigType>()
-    inner class ConfigType(
+    val configTypes = mutableListOf<ConfigType<*>>()
+    inner class ConfigType<T>(
         val name: String, val typ: TypeName,
-        val defaultCode: String, val parser: String, val defaulted: Boolean = false
+        val defaultCode: CodeBlock, val parser: CodeBlock, val defaulted: Boolean = false,
+        val toCode: (T) -> CodeBlock, val toYaml: (T) -> String
     ) {
         override fun toString() = name
         fun toKotlinType(): ClassName = ClassName(PACKAGE_NAME, "Config$name")

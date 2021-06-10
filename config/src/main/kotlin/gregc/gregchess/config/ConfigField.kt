@@ -5,8 +5,8 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 sealed class ConfigField {
 
-    data class Value(val name: String, val type: ConfigGeneralState.ConfigType,
-                     val default: String?, val defaultCode: String?, val warnMissing: Boolean): ConfigField() {
+    data class Value(val name: String, val type: ConfigGeneralState.ConfigType<*>,
+                     val default: String?, val defaultCode: CodeBlock?, val warnMissing: Boolean): ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addProperty(PropertySpec
                 .builder(name.lowerFirst(), type.toKotlinType())
@@ -23,7 +23,7 @@ sealed class ConfigField {
         }
     }
 
-    data class ValueList(val name: String, val type: ConfigGeneralState.ConfigType,
+    data class ValueList(val name: String, val type: ConfigGeneralState.ConfigType<*>,
                          val default: List<String>?, val warnMissing: Boolean): ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addProperty(PropertySpec
@@ -41,7 +41,7 @@ sealed class ConfigField {
         }
     }
 
-    data class ValueOptional(val name: String, val type: ConfigGeneralState.ConfigType, val warnMissing: Boolean): ConfigField() {
+    data class ValueOptional(val name: String, val type: ConfigGeneralState.ConfigType<*>, val warnMissing: Boolean): ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addProperty(PropertySpec
                 .builder(name.lowerFirst(), type.toKotlinOptionalType())

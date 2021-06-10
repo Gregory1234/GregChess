@@ -17,20 +17,15 @@ class ConfigClassScope(val state: ConfigGeneralState, private val name: String) 
         fields += ConfigClassScope(state, name).apply(block).build()
     }
 
-    operator fun ConfigGeneralState.ConfigType.invoke(name: String, default: String? = null, warnMissing: Boolean = defaulted && (default == null)) {
-        fields += ConfigField.Value(name, this, default, if (defaulted) default else null, warnMissing)
+    operator fun <T> ConfigGeneralState.ConfigType<T>.invoke(name: String, default: T? = null, warnMissing: Boolean = defaulted && (default == null)) {
+        fields += ConfigField.Value(name, this, default?.let(toYaml), if (defaulted) default?.let(toCode) else null, warnMissing)
     }
 
-    operator fun ConfigGeneralState.ConfigType.invoke(name: String, defaultc: Char, warnMissing: Boolean = false) {
-        val default = "'$defaultc'"
-        fields += ConfigField.Value(name, this, default, if (defaulted) default else null, warnMissing)
-    }
-
-    fun ConfigGeneralState.ConfigType.optional(name: String, warnMissing: Boolean = false) {
+    fun <T> ConfigGeneralState.ConfigType<T>.optional(name: String, warnMissing: Boolean = false) {
         fields += ConfigField.ValueOptional(name, this, warnMissing)
     }
 
-    fun ConfigGeneralState.ConfigType.list(name: String, default: List<String>? = null, warnMissing: Boolean = true) {
+    fun <T> ConfigGeneralState.ConfigType<T>.list(name: String, default: List<String>? = null, warnMissing: Boolean = true) {
         fields += ConfigField.ValueList(name, this, default, warnMissing)
     }
 
