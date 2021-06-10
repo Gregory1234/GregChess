@@ -8,14 +8,12 @@ import java.time.Duration
 fun main(args: Array<String>) {
     val c = config {
         val string = type<String>("String") {
-            baseClass = String::class
             toCode = { CodeBlock.of("\"$it\"") }
             toYaml = { it }
             defaultCode = CodeBlock.of("path")
             parser = CodeBlock.of("c::processString")
         }
         val bool = defaultType<Boolean>("Bool") {
-            baseClass = Boolean::class
             toCode = { CodeBlock.of("$it") }
             toYaml = { "$it" }
             default = true
@@ -29,14 +27,12 @@ fun main(args: Array<String>) {
             parser = CodeBlock.of("::parseDuration")
         }
         val char = defaultType<Char>("Char") {
-            baseClass = Char::class
             toCode = { CodeBlock.of("'$it'") }
             toYaml = { "'$it'" }
             default = ' '
             parser = CodeBlock.of("{ if (it.length == 1) it[0] else null }")
         }
         val int = defaultType<Int>("Int") {
-            baseClass = Int::class
             toCode = { CodeBlock.of("$it") }
             toYaml = { "$it" }
             default = 0
@@ -51,19 +47,19 @@ fun main(args: Array<String>) {
                 val requestType = inlineFiniteBlockList("RequestType") {
                     block("Sent") {
                         string("Request")
-                        formatString("Cancel", String::class)
-                        formatString("Accept", String::class)
+                        formatString1<String>("Cancel")
+                        formatString1<String>("Accept")
                     }
                     block("Received") {
-                        formatString("Request", String::class, String::class)
-                        formatString("Cancel", String::class)
-                        formatString("Accept", String::class)
+                        formatString2<String, String>("Request")
+                        formatString1<String>("Cancel")
+                        formatString1<String>("Accept")
                     }
                     block("Error") {
                         string("NotFound")
                         string("CannotSend")
                     }
-                    formatString("Expired", String::class)
+                    formatString1<String>("Expired")
                     duration.optional("Duration")
                 }
                 requestType.addInstance("Duel") {
@@ -135,9 +131,9 @@ fun main(args: Array<String>) {
                     bySides("White", "Black")
                 }
                 block("GameFinished") {
-                    formatString("WhiteWon", String::class, default = "The game has finished! White won by $1.")
-                    formatString("BlackWon", String::class, default = "The game has finished! Black won by $1.")
-                    formatString("ItWasADraw", String::class, default = "The game has finished! It was a draw by $1.")
+                    formatString1<String>("WhiteWon", "The game has finished! White won by $1.")
+                    formatString1<String>("BlackWon", "The game has finished! Black won by $1.")
+                    formatString1<String>("ItWasADraw", "The game has finished! It was a draw by $1.")
                     byOptSides("WhiteWon", "BlackWon", "ItWasADraw")
                 }
             }
@@ -169,7 +165,7 @@ fun main(args: Array<String>) {
                     val sideData = inlineFiniteBlockList("SideData") {
                         string("Name")
                         char("Char")
-                        formatString("Piece", String::class)
+                        formatString1<String>("Piece")
                     }
                     sideData.addInstance("White") {
                         string("Name", "White")
@@ -351,9 +347,9 @@ fun main(args: Array<String>) {
                     string("Player", "player")
                     string("PlayerPrefix", "&b")
                     block("Format") {
-                        formatString("General", String::class, default = "$1: ")
-                        formatString("White", String::class, default = "White $1: ")
-                        formatString("Black", String::class, default = "Black $1: ")
+                        formatString1<String>("General", "$1: ")
+                        formatString1<String>("White", "White $1: ")
+                        formatString1<String>("Black", "Black $1: ")
                         byOptSides("White", "Black", "General")
                     }
                 }

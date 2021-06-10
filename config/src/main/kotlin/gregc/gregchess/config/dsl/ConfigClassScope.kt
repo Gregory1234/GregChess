@@ -13,6 +13,12 @@ class ConfigClassScope(val state: ConfigGeneralState, private val name: String) 
         fields += ConfigField.ValueFormat(name, inputs.map {it.asTypeName()}, default, warnMissing)
     }
 
+    inline fun <reified T1> formatString1(name: String, default: String? = null, warnMissing: Boolean = true) =
+        formatString(name, T1::class, default = default, warnMissing = warnMissing)
+
+    inline fun <reified T1, reified T2> formatString2(name: String, default: String? = null, warnMissing: Boolean = true) =
+        formatString(name, T1::class, T2::class, default = default, warnMissing = warnMissing)
+
     fun block(name: String, block: ConfigClassScope.() -> Unit) {
         fields += ConfigClassScope(state, name).apply(block).build()
     }

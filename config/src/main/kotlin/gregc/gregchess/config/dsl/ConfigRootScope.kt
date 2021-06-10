@@ -26,11 +26,20 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
             }
         }.build()
 
-    fun <T> type(name: String, block: ConfigTypeBuilder<T>.() -> Unit) =
-        ConfigTypeBuilder<T>(name, false).apply(block).build(state)
+    fun <T> generalType(name: String, defaulted: Boolean, block: ConfigTypeBuilder<T>.() -> Unit) =
+        ConfigTypeBuilder<T>(name, defaulted).apply(block).build(state)
 
-    fun <T> defaultType(name: String, block: ConfigTypeBuilder<T>.() -> Unit) =
-        ConfigTypeBuilder<T>(name, true).apply(block).build(state)
+    inline fun <reified T> type(name: String, crossinline block: ConfigTypeBuilder<T>.() -> Unit) =
+        generalType<T>(name, false) {
+            baseClass = T::class
+            block()
+        }
+
+    inline fun <reified T> defaultType(name: String, crossinline block: ConfigTypeBuilder<T>.() -> Unit) =
+        generalType<T>(name, true) {
+            baseClass = T::class
+            block()
+        }
 
     fun formatString(b: FileSpec.Builder, i: UInt) {
         val params = (1u..i).map { ParameterSpec("a$it", TypeVariableName("T$it")) }
