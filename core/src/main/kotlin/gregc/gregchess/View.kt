@@ -3,7 +3,6 @@ package gregc.gregchess
 import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlin.reflect.KClass
 
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
 
@@ -31,16 +30,6 @@ class ConfigBlockList<out P: ConfigBlock<P>>(path: String, private val mk: (Conf
         if (c.isSection(childPath(it))) it to View(mk(ConfigBlock(childPath(it))), c) else null
     }.toMap()
     operator fun get(s: String): P = mk(ConfigBlock((childPath(s))))
-}
-
-class ConfigEnum<T: Enum<T>>(path: String, private val default: T, private val warnMissing: Boolean = true)
-    : ConfigPath<T>(path) {
-    override fun get(c: Configurator): T = c.getEnum(path, default, warnMissing)
-}
-
-class ConfigEnumList<T: Enum<T>>(path: String, private val cl: KClass<T>, private val warnMissing: Boolean = true)
-    : ConfigPath<List<T>>(path) {
-    override fun get(c: Configurator): List<T> = c.getEnumList(path, cl, warnMissing)
 }
 
 class ConfigTimeFormatFull(path: String, private val time: LocalTime, private val warnMissing: Boolean = true): ConfigPath<String>(path) {
@@ -97,25 +86,6 @@ fun <T> Configurator.getList(path: String, type: String, warnMissing: Boolean = 
     }
 
 }
-
-fun <T: Enum<T>> Configurator.getEnum(path: String, default: T, warnMissing: Boolean = true) =
-    get(path, default::class.simpleName?.lowerFirst() ?: "enum", default, warnMissing) {
-        try {
-            java.lang.Enum.valueOf(default::class.java, it.uppercase())
-        } catch (e: IllegalArgumentException) {
-            null
-        }
-    }
-
-fun <T: Enum<T>> Configurator.getEnumList(path: String, cl: KClass<T>, warnMissing: Boolean = true) =
-    getList(path, cl.simpleName?.lowerFirst() ?: "enum", warnMissing) {
-        try {
-            java.lang.Enum.valueOf(cl.java, it.uppercase())
-        } catch (e: IllegalArgumentException) {
-            null
-        }
-    }
-
 
 fun Configurator.getFormatString(path: String, vararg args: Any?) = get(path, "format string", path) {
     numberedFormat(it, *args)?.let(::processString)

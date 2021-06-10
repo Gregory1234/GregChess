@@ -1,9 +1,18 @@
 package gregc.gregchess.config
 
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import gregc.gregchess.config.dsl.Represents
 import gregc.gregchess.config.dsl.config
+import org.bukkit.Material
+import org.bukkit.Sound
 import java.io.File
 import java.time.Duration
+
+@Represents("gregc.gregchess.chess.component.ChessClock", "Type")
+enum class ChessClockType {
+    FIXED, INCREMENT, BRONSTEIN, SIMPLE
+}
 
 fun main(args: Array<String>) {
     val c = config {
@@ -38,6 +47,9 @@ fun main(args: Array<String>) {
             default = 0
             parser = CodeBlock.of("String::toIntOrNull")
         }
+        val material = enumType("Material", Material.AIR)
+        val sound = enumType("Sound", Sound.BLOCK_STONE_STEP)
+        val clockType = enumType("ChessClockType", ChessClockType.INCREMENT)
         root("Config") {
             string.list("ChessArenas")
             block("Request") {
@@ -179,18 +191,16 @@ fun main(args: Array<String>) {
                     }
                     bySides("White", "Black")
                 }
-                val mat: TypeName = ClassName("org.bukkit", "Material")
-                val sound: TypeName = ClassName("org.bukkit", "Sound")
                 block("Floor") {
-                    enumString("Light", mat, "BIRCH_PLANKS")
-                    enumString("Dark", mat, "SPRUCE_PLANKS")
-                    enumString("Move", mat, "GREEN_CONCRETE")
-                    enumString("Capture", mat, "RED_CONCRETE")
-                    enumString("Special", mat, "BLUE_CONCRETE")
-                    enumString("Nothing", mat, "YELLOW_CONCRETE")
-                    enumString("Other", mat, "PURPLE_CONCRETE")
-                    enumString("LastStart", mat, "BROWN_CONCRETE")
-                    enumString("LastEnd", mat, "ORANGE_CONCRETE")
+                    material("Light", Material.BIRCH_PLANKS)
+                    material("Dark", Material.SPRUCE_PLANKS)
+                    material("Move", Material.GREEN_CONCRETE)
+                    material("Capture", Material.RED_CONCRETE)
+                    material("Special", Material.BLUE_CONCRETE)
+                    material("Nothing", Material.YELLOW_CONCRETE)
+                    material("Other", Material.PURPLE_CONCRETE)
+                    material("LastStart", Material.BROWN_CONCRETE)
+                    material("LastEnd", Material.ORANGE_CONCRETE)
                     byEnum(ClassName("gregc.gregchess.chess", "Floor"),
                         "Light", "Dark", "Move", "Capture", "Special", "Nothing", "Other", "LastStart", "LastEnd")
                 }
@@ -199,19 +209,19 @@ fun main(args: Array<String>) {
                         string("Name")
                         char("Char")
                         block("Item") {
-                            enumString("White", mat, "AIR")
-                            enumString("Black", mat, "AIR")
+                            material("White")
+                            material("Black")
                             bySides("White", "Black")
                         }
                         block("Structure") {
-                            enumStringList("White", mat)
-                            enumStringList("Black", mat)
+                            material.list("White")
+                            material.list("Black")
                             bySides("White", "Black")
                         }
                         block("Sound") {
-                            enumString("PickUp", sound, "BLOCK_STONE_HIT")
-                            enumString("Move", sound, "BLOCK_STONE_HIT")
-                            enumString("Capture", sound, "BLOCK_STONE_HIT")
+                            sound("PickUp")
+                            sound("Move")
+                            sound("Capture")
                             byEnum(ClassName("gregc.gregchess.chess", "PieceSound"), "PickUp", "Move", "Capture")
                         }
                     }
@@ -219,102 +229,102 @@ fun main(args: Array<String>) {
                         string("Name", "King")
                         char("Char", 'k')
                         block("Item") {
-                            string("White", "WHITE_CONCRETE")
-                            string("Black", "BLACK_CONCRETE")
+                            material("White", Material.WHITE_CONCRETE)
+                            material("Black", Material.BLACK_CONCRETE)
                         }
                         block("Structure") {
-                            string.list("White", listOf("WHITE_CONCRETE"))
-                            string.list("Black", listOf("BLACK_CONCRETE"))
+                            material.list("White", listOf(Material.WHITE_CONCRETE))
+                            material.list("Black", listOf(Material.BLACK_CONCRETE))
                         }
                         block("Sound") {
-                            string("PickUp", "BLOCK_METAL_HIT")
-                            string("Move", "BLOCK_METAL_STEP")
-                            string("Capture", "ENTITY_ENDER_DRAGON_DEATH")
+                            sound("PickUp", Sound.BLOCK_METAL_HIT)
+                            sound("Move", Sound.BLOCK_METAL_STEP)
+                            sound("Capture", Sound.ENTITY_ENDER_DRAGON_DEATH)
                         }
                     }
                     pieceData.addInstance("Queen") {
                         string("Name", "Queen")
                         char("Char", 'q')
                         block("Item") {
-                            string("White", "DIAMOND_BLOCK")
-                            string("Black", "NETHERITE_BLOCK")
+                            material("White", Material.DIAMOND_BLOCK)
+                            material("Black", Material.NETHERITE_BLOCK)
                         }
                         block("Structure") {
-                            string.list("White", listOf("DIAMOND_BLOCK"))
-                            string.list("Black", listOf("NETHERITE_BLOCK"))
+                            material.list("White", listOf(Material.DIAMOND_BLOCK))
+                            material.list("Black", listOf(Material.NETHERITE_BLOCK))
                         }
                         block("Sound") {
-                            string("PickUp", "ENTITY_WITCH_CELEBRATE")
-                            string("Move", "BLOCK_GLASS_STEP")
-                            string("Capture", "ENTITY_WITCH_DEATH")
+                            sound("PickUp", Sound.ENTITY_WITCH_CELEBRATE)
+                            sound("Move", Sound.BLOCK_GLASS_STEP)
+                            sound("Capture", Sound.ENTITY_WITCH_DEATH)
                         }
                     }
                     pieceData.addInstance("Rook") {
                         string("Name", "Rook")
                         char("Char", 'r')
                         block("Item") {
-                            string("White", "IRON_BLOCK")
-                            string("Black", "GOLD_BLOCK")
+                            material("White", Material.IRON_BLOCK)
+                            material("Black", Material.GOLD_BLOCK)
                         }
                         block("Structure") {
-                            string.list("White", listOf("IRON_BLOCK"))
-                            string.list("Black", listOf("GOLD_BLOCK"))
+                            material.list("White", listOf(Material.IRON_BLOCK))
+                            material.list("Black", listOf(Material.GOLD_BLOCK))
                         }
                         block("Sound") {
-                            string("PickUp", "ENTITY_IRON_GOLEM_STEP")
-                            string("Move", "ENTITY_IRON_GOLEM_STEP")
-                            string("Capture", "ENTITY_IRON_GOLEM_DEATH")
+                            sound("PickUp", Sound.ENTITY_IRON_GOLEM_STEP)
+                            sound("Move", Sound.ENTITY_IRON_GOLEM_STEP)
+                            sound("Capture", Sound.ENTITY_IRON_GOLEM_DEATH)
                         }
                     }
                     pieceData.addInstance("Bishop") {
                         string("Name", "Bishop")
                         char("Char", 'b')
                         block("Item") {
-                            string("White", "POLISHED_DIORITE")
-                            string("Black", "POLISHED_BLACKSTONE")
+                            material("White", Material.POLISHED_DIORITE)
+                            material("Black", Material.POLISHED_BLACKSTONE)
                         }
                         block("Structure") {
-                            string.list("White", listOf("POLISHED_DIORITE"))
-                            string.list("Black", listOf("POLISHED_BLACKSTONE"))
+                            material.list("White", listOf(Material.POLISHED_DIORITE))
+                            material.list("Black", listOf(Material.POLISHED_BLACKSTONE))
                         }
                         block("Sound") {
-                            string("PickUp", "ENTITY_SPIDER_AMBIENT")
-                            string("Move", "ENTITY_SPIDER_STEP")
-                            string("Capture", "ENTITY_SPIDER_DEATH")
+                            sound("PickUp", Sound.ENTITY_SPIDER_AMBIENT)
+                            sound("Move", Sound.ENTITY_SPIDER_STEP)
+                            sound("Capture", Sound.ENTITY_SPIDER_DEATH)
                         }
                     }
                     pieceData.addInstance("Knight") {
                         string("Name", "Knight")
                         char("Char", 'n')
                         block("Item") {
-                            string("White", "END_STONE")
-                            string("Black", "BLACKSTONE")
+                            material("White", Material.END_STONE)
+                            material("Black", Material.BLACKSTONE)
                         }
                         block("Structure") {
-                            string.list("White", listOf("END_STONE"))
-                            string.list("Black", listOf("BLACKSTONE"))
+                            material.list("White", listOf(Material.END_STONE))
+                            material.list("Black", listOf(Material.BLACKSTONE))
                         }
                         block("Sound") {
-                            string("PickUp", "ENTITY_HORSE_JUMP")
-                            string("Move", "ENTITY_HORSE_STEP")
-                            string("Capture", "ENTITY_HORSE_DEATH")
+                            sound("PickUp", Sound.ENTITY_HORSE_JUMP)
+                            sound("Move", Sound.ENTITY_HORSE_STEP)
+                            sound("Capture", Sound.ENTITY_HORSE_DEATH)
                         }
                     }
                     pieceData.addInstance("Pawn") {
                         string("Name", "Pawn")
                         char("Char", 'p')
                         block("Item") {
-                            string("White", "WHITE_CARPET")
-                            string("Black", "BLACK_CARPET")
+                            material("White", Material.WHITE_CARPET)
+                            material("Black", Material.BLACK_CARPET)
                         }
                         block("Structure") {
-                            string.list("White", listOf("WHITE_CARPET"))
-                            string.list("Black", listOf("BLACK_CARPET"))
+                            material.list("White", listOf(Material.WHITE_CARPET))
+                            material.list("Black", listOf(Material.BLACK_CARPET))
                         }
                         block("Sound") {
-                            string("PickUp", "BLOCK_STONE_HIT")
-                            string("Move", "BLOCK_STONE_STEP")
-                            string("Capture", "BLOCK_STONE_BREAK")
+                            sound("PickUp", Sound.BLOCK_STONE_HIT)
+                            sound("Move", Sound.BLOCK_STONE_STEP)
+                            sound("Capture", Sound.BLOCK_STONE_BREAK)
                         }
                     }
                     byEnum(ClassName("gregc.gregchess.chess", "PieceType"),
@@ -374,7 +384,7 @@ fun main(args: Array<String>) {
                     int("TileSize", 3)
                 }
                 blockList("Clock") {
-                    enumString("Type", ClassName("gregc.gregchess.chess.component.ChessClock", "Type"), "INCREMENT", false)
+                    clockType("Type", warnMissing = false)
                     duration("Initial", null)
                     duration("Increment", "0s", true)
                 }

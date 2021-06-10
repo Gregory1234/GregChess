@@ -40,16 +40,8 @@ class ConfigObjectScope(private val state: ConfigGeneralState, private val path:
         fields += ConfigField.ValueOptional(name, this, warnMissing)
     }
 
-    fun <T> ConfigGeneralState.ConfigType<T>.list(name: String, default: List<String>? = null, warnMissing: Boolean = true) {
-        fields += ConfigField.ValueList(name, this, default, warnMissing)
-    }
-
-    fun enumString(name: String, typ: TypeName, default: String, warnMissing: Boolean = true) {
-        fields += ConfigField.EnumString(name, typ, default, warnMissing)
-    }
-
-    fun enumStringList(name: String, typ: TypeName, default: List<String>? = null, warnMissing: Boolean = true) {
-        fields += ConfigField.EnumStringList(name, typ, default, warnMissing)
+    fun <T> ConfigGeneralState.ConfigType<T>.list(name: String, default: List<T>? = null, warnMissing: Boolean = true) {
+        fields += ConfigField.ValueList(name, this, default?.map(toYaml), warnMissing)
     }
 
     fun bySides(white: String, black: String) {

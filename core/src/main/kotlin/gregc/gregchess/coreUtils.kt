@@ -5,6 +5,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.contracts.contract
 import kotlin.math.*
+import kotlin.reflect.KClass
 
 
 class CommandException(val playerMsg: ConfigPath<String>) : Exception() {
@@ -27,6 +28,13 @@ fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
     listOf(x to y, x to -y, -x to y, -x to -y, y to x, -y to x, y to -x, -y to -x).distinct()
 
 fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
+
+fun <T: Enum<T>> enumValueOrNull(cl: KClass<T>): (String) -> T? = { s -> try {
+        java.lang.Enum.valueOf(cl.java, s.uppercase())
+    } catch (e : IllegalArgumentException) {
+        null
+    }
+}
 
 operator fun <E> List<E>.component6(): E = this[5]
 

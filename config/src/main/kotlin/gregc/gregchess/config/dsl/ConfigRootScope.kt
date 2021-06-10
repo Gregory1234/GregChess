@@ -41,6 +41,17 @@ class ConfigRootScope(private val state: ConfigGeneralState, private val name: S
             block()
         }
 
+    inline fun <reified T: Enum<T>> enumType(name: String, def: T) =
+        generalType<T>(name, true) {
+            baseType = T::class.annotations.filterIsInstance<Represents>().firstOrNull()?.let {
+                ClassName(it.packageName, it.className)
+            } ?: T::class.asTypeName()
+            toYaml = { it.toString() }
+            toCode = { CodeBlock.of("%T.$it", baseType) }
+            default = def
+            parser = CodeBlock.of("enumValueOrNull(%T::class)", baseType)
+        }
+
     fun formatString(b: FileSpec.Builder, i: UInt) {
         val params = (1u..i).map { ParameterSpec("a$it", TypeVariableName("T$it")) }
         val flam = LambdaTypeName.get(
