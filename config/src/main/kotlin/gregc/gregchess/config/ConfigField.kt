@@ -87,38 +87,6 @@ sealed class ConfigField {
         }
     }
 
-    data class EnumString(val name: String, val typ: TypeName, val default: String, val warnMissing: Boolean): ConfigField() {
-        override fun kotlinAppend(b: TypeSpec.Builder) {
-            b.addProperty(PropertySpec
-                .builder(name.lowerFirst(), configEnum.parameterizedBy(typ))
-                .getter(FunSpec.getterBuilder()
-                    .addCode("""return %T(childPath("$name"), %T.$default, $warnMissing)""", configEnum.parameterizedBy(typ), typ)
-                    .build())
-                .build())
-        }
-
-        override fun yamlAppend(b: YamlBlock) {
-            b.value[name] = YamlText(default)
-        }
-    }
-
-    data class EnumStringList(val name: String, val typ: TypeName, val default: List<String>?, val warnMissing: Boolean): ConfigField() {
-        override fun kotlinAppend(b: TypeSpec.Builder) {
-            b.addProperty(PropertySpec
-                .builder(name.lowerFirst(), configEnumList.parameterizedBy(typ))
-                .getter(FunSpec.getterBuilder()
-                    .addCode("""return %T(childPath("$name"), %T::class, $warnMissing)""", configEnumList.parameterizedBy(typ), typ)
-                    .build())
-                .build())
-        }
-
-        override fun yamlAppend(b: YamlBlock) {
-            default?.let {
-                b.value[name] = YamlList(it.toMutableList())
-            }
-        }
-    }
-
     data class ObjectBlock(val name: String, val path: String, val realPath: String, val fields: List<ConfigField>): ConfigField() {
         fun toKotlinObject(): TypeSpec = TypeSpec.objectBuilder(name)
             .apply {
@@ -128,13 +96,15 @@ sealed class ConfigField {
             }.build()
 
         override fun kotlinAppend(b: TypeSpec.Builder) {
-            b.addType(toKotlinObject())
-            if (path.any {it == '.'})
-                b.addProperty(PropertySpec.builder(name.lowerFirst(), ClassName("", name))
-                    .getter(FunSpec.getterBuilder()
-                        .addCode("""return %T""", ClassName("", name))
+            replaceType(b, fields, name) {
+                b.addType(toKotlinObject())
+                if (path.any {it == '.'})
+                    b.addProperty(PropertySpec.builder(name.lowerFirst(), ClassName("", name))
+                        .getter(FunSpec.getterBuilder()
+                            .addCode("""return %T""", ClassName("", name))
+                            .build())
                         .build())
-                    .build())
+            }
         }
 
         override fun yamlAppend(b: YamlBlock) {
@@ -162,12 +132,14 @@ sealed class ConfigField {
             }.build()
 
         override fun kotlinAppend(b: TypeSpec.Builder) {
-            b.addType(toKotlinClass())
-            b.addProperty(PropertySpec.builder(name.lowerFirst(), ClassName("", name))
-                .getter(FunSpec.getterBuilder()
-                    .addCode("""return %T(childPath("$name"))""", ClassName("", name))
+            replaceType(b, fields, name) {
+                b.addType(toKotlinClass())
+                b.addProperty(PropertySpec.builder(name.lowerFirst(), ClassName("", name))
+                    .getter(FunSpec.getterBuilder()
+                        .addCode("""return %T(childPath("$name"))""", ClassName("", name))
+                        .build())
                     .build())
-                .build())
+            }
         }
 
         override fun yamlAppend(b: YamlBlock) {
@@ -176,13 +148,15 @@ sealed class ConfigField {
 
     data class FiniteBlockList(val pattern: ClassBlock, val instances: List<ObjectBlock>): ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
-            b.addType(pattern.toKotlinClass())
-            b.addProperties(instances.map {
-                PropertySpec.builder(it.name.lowerFirst(), ClassName("", pattern.name))
-                    .getter(FunSpec.getterBuilder()
-                        .addCode("""return %T(childPath("${it.name}"))""", ClassName("", pattern.name))
-                        .build()).build()
-            })
+            replaceType(b, pattern.fields, pattern.name) {
+                b.addType(pattern.toKotlinClass())
+                b.addProperties(instances.map {
+                    PropertySpec.builder(it.name.lowerFirst(), ClassName("", pattern.name))
+                        .getter(FunSpec.getterBuilder()
+                            .addCode("""return %T(childPath("${it.name}"))""", ClassName("", pattern.name))
+                            .build()).build()
+                })
+            }
         }
 
         override fun yamlAppend(b: YamlBlock) {
@@ -194,14 +168,16 @@ sealed class ConfigField {
 
     data class BlockList(val name: String, val pattern: ClassBlock): ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
-            b.addType(pattern.toKotlinClass())
-            b.addProperty(PropertySpec
-                .builder(name.lowerFirst(), configBlockList.parameterizedBy(ClassName("", pattern.name)))
-                .getter(FunSpec.getterBuilder()
-                    .addCode("""return %T(childPath("$name")) { %T(it.path) }""",
-                        configBlockList.parameterizedBy(ClassName("", pattern.name)),
-                        ClassName("", pattern.name)).build())
-                .build())
+            replaceType(b, pattern.fields, name) {
+                b.addType(pattern.toKotlinClass())
+                b.addProperty(PropertySpec
+                    .builder(name.lowerFirst(), configBlockList.parameterizedBy(ClassName("", pattern.name)))
+                    .getter(FunSpec.getterBuilder()
+                        .addCode("""return %T(childPath("$name")) { %T(it.path) }""",
+                            configBlockList.parameterizedBy(ClassName("", pattern.name)),
+                            ClassName("", pattern.name)).build())
+                    .build())
+            }
         }
 
         override fun yamlAppend(b: YamlBlock) {
@@ -236,4 +212,17 @@ sealed class ConfigField {
 
     abstract fun kotlinAppend(b: TypeSpec.Builder)
     abstract fun yamlAppend(b: YamlBlock)
+
+    companion object {
+        private fun replaceType(b: TypeSpec.Builder, fields: List<ConfigField>, name: String, e: () -> Unit) {
+            if (b.typeSpecs.any {it.name == name}) {
+                val g = b.typeSpecs.first {it.name == name}
+                b.typeSpecs.removeIf {it.name == name}
+                b.addType(g.toBuilder().apply {
+                    fields.map { it.kotlinAppend(this) }
+                }.build())
+            } else e()
+        }
+    }
+
 }
