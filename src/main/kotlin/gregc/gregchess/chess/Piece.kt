@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.buildTextComponent
-import gregc.gregchess.glog
+import gregc.gregchess.*
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
@@ -13,6 +12,8 @@ data class Piece(val type: PieceType, val side: Side) {
             Side.WHITE -> type.standardChar.uppercaseChar()
             Side.BLACK -> type.standardChar
         }
+
+    fun getItem(c: Configurator) = type.getItem(c, side)
 }
 
 data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)

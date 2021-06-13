@@ -3,10 +3,12 @@ package gregc.gregchess
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.GameEndEvent
 import gregc.gregchess.chess.component.TurnEndEvent
+import org.bukkit.Material
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 import java.time.LocalDateTime
@@ -63,6 +65,14 @@ class GregChess : JavaPlugin(), Listener {
         arenaManager.start()
         requestManager.start()
         BukkitPlayer(configurator)
+        BukkitScreen.addRenderer<MoveCandidate> { (promotion ?: piece.piece).getItem(it) }
+        BukkitScreen.addRenderer<GameSettings> {
+            ItemStack(Material.IRON_BLOCK).apply {
+                val meta = itemMeta
+                meta?.setDisplayName(this@addRenderer.name)
+                itemMeta = meta
+            }
+        }
         addCommand("chess", configurator) {
             when (nextArg().lowercase()) {
                 "duel" -> {

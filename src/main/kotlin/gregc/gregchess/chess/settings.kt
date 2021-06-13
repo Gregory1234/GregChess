@@ -3,13 +3,11 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
-import org.bukkit.Material
-import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
-    fun getSettings(config: Configurator): Map<String, GameSettings> =
-        Config.Settings.presets.get(config).mapValues { (key, child) ->
+    fun getSettings(config: Configurator): List<GameSettings> =
+        Config.Settings.presets.get(config).map { (key, child) ->
             val simpleCastling = child.get { simpleCastling }
             val variant = ChessVariant[child.get { variant }]
             val components = buildList {
@@ -25,16 +23,11 @@ object SettingsManager {
 
 }
 
-class SettingsScreen(
-    private inline val startGame: (GameSettings) -> Unit
-) : Screen<GameSettings>(Config.Message.chooseSettings) {
+class SettingsScreen(private inline val startGame: (GameSettings) -> Unit)
+    : Screen<GameSettings>(GameSettings::class, Config.Message.chooseSettings) {
     override fun getContent(config: Configurator) =
-        SettingsManager.getSettings(config).toList().mapIndexed { index, (name, s) ->
-            val item = ItemStack(Material.IRON_BLOCK)
-            val meta = item.itemMeta
-            meta?.setDisplayName(name)
-            item.itemMeta = meta
-            ScreenOption(item, s, InventoryPosition.fromIndex(index))
+        SettingsManager.getSettings(config).toList().mapIndexed { index, s ->
+            ScreenOption(s, InventoryPosition.fromIndex(index))
         }
 
     override fun onClick(v: GameSettings) {

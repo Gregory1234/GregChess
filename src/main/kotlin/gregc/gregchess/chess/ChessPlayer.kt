@@ -43,11 +43,11 @@ abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val ga
 }
 
 class PawnPromotionScreen(
-    private val moves: List<Pair<Piece, MoveCandidate>>,
+    private val moves: List<MoveCandidate>,
     private val player: ChessPlayer
-) : Screen<MoveCandidate>(Config.Message.pawnPromotion) {
-    override fun getContent(config: Configurator) = moves.mapIndexed { i, (t, m) ->
-        ScreenOption(t.type.getItem(config, t.side), m, InventoryPosition.fromIndex(i))
+) : Screen<MoveCandidate>(MoveCandidate::class, Config.Message.pawnPromotion) {
+    override fun getContent(config: Configurator) = moves.mapIndexed { i, m ->
+        ScreenOption(m, InventoryPosition.fromIndex(i))
     }
 
     override fun onClick(v: MoveCandidate) {
@@ -55,7 +55,7 @@ class PawnPromotionScreen(
     }
 
     override fun onCancel() {
-        player.game.finishMove(moves.first().second)
+        player.game.finishMove(moves.first())
     }
 
 }
@@ -93,7 +93,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1)
-            pawnPromotionScreen(chosenMoves.mapNotNull { m -> m.promotion?.let { it to m } })
+            pawnPromotionScreen(chosenMoves.filter {it.promotion != null})
         else
             game.finishMove(chosenMoves.first())
     }
@@ -116,7 +116,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
             announceInCheck()
     }
 
-    fun pawnPromotionScreen(moves: List<Pair<Piece, MoveCandidate>>) =
+    fun pawnPromotionScreen(moves: List<MoveCandidate>) =
         player.openScreen(PawnPromotionScreen(moves, this))
 }
 
