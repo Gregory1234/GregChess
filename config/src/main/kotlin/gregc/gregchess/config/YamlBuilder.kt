@@ -5,16 +5,17 @@ import kotlin.contracts.contract
 
 const val INDENT: String = "  "
 
-sealed class YamlValue{
+sealed class YamlValue {
     abstract fun build(name: String? = null, indent: Int = 0): String
 }
-class YamlText(val value: String): YamlValue() {
+
+class YamlText(val value: String) : YamlValue() {
     private fun escape(): String {
         return if (value.length == 3 && value.first() == '\'' && value.last() == '\'')
             value
-        else if (value.all {it.isDigit()})
+        else if (value.all { it.isDigit() })
             value
-        else if (value.all {it.isLetter() && it.isUpperCase() || it == '_'})
+        else if (value.all { it.isLetter() && it.isUpperCase() || it == '_' })
             value
         else if (value[0].isDigit() && value.dropWhile { it.isDigit() }.all { it.isLetter() && it.isLowerCase() })
             value
@@ -23,13 +24,14 @@ class YamlText(val value: String): YamlValue() {
         else
             "\"$value\""
     }
-    override fun build(name: String?, indent: Int) = when(name){
+
+    override fun build(name: String?, indent: Int) = when (name) {
         null -> INDENT.repeat(indent) + "- " + escape() + "\n"
         else -> INDENT.repeat(indent) + name + ": " + escape() + "\n"
     }
 }
 
-class YamlList(val value: MutableList<String>): YamlValue() {
+class YamlList(val value: MutableList<String>) : YamlValue() {
     override fun build(name: String?, indent: Int) = buildString {
         if (name == null) {
             value.forEach {
@@ -44,7 +46,7 @@ class YamlList(val value: MutableList<String>): YamlValue() {
     }
 }
 
-class YamlBlock(val value: MutableMap<String, YamlValue>): YamlValue() {
+class YamlBlock(val value: MutableMap<String, YamlValue>) : YamlValue() {
     override fun build(name: String?, indent: Int) = buildString {
         if (name == null) {
             value.forEach {
@@ -57,6 +59,7 @@ class YamlBlock(val value: MutableMap<String, YamlValue>): YamlValue() {
             }
         }
     }
+
     fun with(name: String, function: YamlBlock.() -> Unit) {
         contract {
             callsInPlace(function, InvocationKind.EXACTLY_ONCE)

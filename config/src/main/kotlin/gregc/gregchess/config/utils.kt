@@ -11,13 +11,6 @@ val configVal = ClassName("gregc.gregchess", "ConfigVal")
 val configBlock = ClassName("gregc.gregchess", "ConfigBlock")
 val configBlockList = ClassName("gregc.gregchess", "ConfigBlockList")
 val configFullFormatString = ClassName("gregc.gregchess", "ConfigFullFormatString")
-val configEnum = ClassName("gregc.gregchess", "ConfigEnum")
-val configEnumList = ClassName("gregc.gregchess", "ConfigEnumList")
-
-fun String.camelToUpperSnake(): String {
-    val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
-    return camelRegex.replace(this) { "_${it.value}" }.uppercase()
-}
 
 fun String.camelToSpaces(): String {
     val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
@@ -26,7 +19,7 @@ fun String.camelToSpaces(): String {
 
 fun String.upperSnakeToCamel(): String {
     val snakeRegex = "_[a-zA-Z]".toRegex()
-    return snakeRegex.replace(lowercase()) { it.value.replace("_","").uppercase() }
+    return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }
 }
 
 fun String.lowerFirst() = replaceFirstChar { it.lowercaseChar() }
@@ -37,5 +30,5 @@ fun binaryStrings(n: UInt): List<List<Boolean>> {
     if (n == 0u) return listOf(emptyList())
     if (n == 1u) return listOf(listOf(false), listOf(true))
     val prev = binaryStrings(n - 1u)
-    return prev.map {listOf(false) + it} + prev.map {listOf(true) + it}
+    return prev.map { listOf(false) + it } + prev.map { listOf(true) + it }
 }

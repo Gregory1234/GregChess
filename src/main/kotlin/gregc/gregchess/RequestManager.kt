@@ -57,7 +57,7 @@ fun <T> buildRequestType(
     c: Configurator,
     m: RequestManager,
     f: RequestTypeBuilder<T>.() -> Unit
-): RequestType<T> = RequestTypeBuilder<T>().run{
+): RequestType<T> = RequestTypeBuilder<T>().run {
     f()
     m.register(RequestType(t, c, messages, validateSender, printT, onAccept, onCancel))
 }

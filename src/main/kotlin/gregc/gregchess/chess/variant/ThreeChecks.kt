@@ -7,7 +7,7 @@ import gregc.gregchess.chess.component.*
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
     class CheckCounter(private val game: ChessGame) : Component {
-        object Settings: Component.Settings<CheckCounter> {
+        object Settings : Component.Settings<CheckCounter> {
             override fun getComponent(game: ChessGame) = CheckCounter(game)
         }
 
@@ -27,7 +27,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         }
 
         fun checkForGameEnd() {
-            checks.forEachIndexed {s, c ->
+            checks.forEachIndexed { s, c ->
                 if (c >= 3)
                     game.stop(ThreeChecksEndReason(!s))
             }

@@ -6,7 +6,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 sealed class ConfigField {
 
     data class Value(val name: String, val type: ConfigGeneralState.ConfigType<*>,
-                     val default: String?, val defaultCode: CodeBlock?, val warnMissing: Boolean): ConfigField() {
+                     val default: String?, val defaultCode: CodeBlock?, val warnMissing: Boolean) : ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addProperty(PropertySpec
                 .builder(name.lowerFirst(), type.toKotlinType())
@@ -24,7 +24,7 @@ sealed class ConfigField {
     }
 
     data class ValueList(val name: String, val type: ConfigGeneralState.ConfigType<*>,
-                         val default: List<String>?, val warnMissing: Boolean): ConfigField() {
+                         val default: List<String>?, val warnMissing: Boolean) : ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addProperty(PropertySpec
                 .builder(name.lowerFirst(), type.toKotlinListType())
@@ -41,7 +41,7 @@ sealed class ConfigField {
         }
     }
 
-    data class ValueOptional(val name: String, val type: ConfigGeneralState.ConfigType<*>, val warnMissing: Boolean): ConfigField() {
+    data class ValueOptional(val name: String, val type: ConfigGeneralState.ConfigType<*>, val warnMissing: Boolean) : ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addProperty(PropertySpec
                 .builder(name.lowerFirst(), type.toKotlinOptionalType())
@@ -56,7 +56,7 @@ sealed class ConfigField {
     }
 
     data class ValueFormat(val name: String, val inputs: Collection<TypeName>,
-                           val default: String?, val warnMissing: Boolean): ConfigField() {
+                           val default: String?, val warnMissing: Boolean) : ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             val typ = ClassName(PACKAGE_NAME, "ConfigFormatString${inputs.size}").parameterizedBy(inputs.toList())
             b.addProperty(PropertySpec
@@ -72,7 +72,7 @@ sealed class ConfigField {
         }
     }
 
-    data class ValueSpecial(val name: String, val typ: TypeName, val default: String?, val warnMissing: Boolean?): ConfigField() {
+    data class ValueSpecial(val name: String, val typ: TypeName, val default: String?, val warnMissing: Boolean?) : ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addProperty(PropertySpec
                 .builder(name.lowerFirst(), typ)
@@ -87,7 +87,7 @@ sealed class ConfigField {
         }
     }
 
-    data class ObjectBlock(val name: String, val path: String, val realPath: String, val fields: List<ConfigField>): ConfigField() {
+    data class ObjectBlock(val name: String, val path: String, val realPath: String, val fields: List<ConfigField>) : ConfigField() {
         fun toKotlinObject(): TypeSpec = TypeSpec.objectBuilder(name)
             .apply {
                 superclass(configBlock.parameterizedBy(ClassName(if (path.none {it == '.'}) PACKAGE_NAME else "", name)))
@@ -98,7 +98,7 @@ sealed class ConfigField {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             replaceType(b, fields, name) {
                 b.addType(toKotlinObject())
-                if (path.any {it == '.'})
+                if (path.any { it == '.' })
                     b.addProperty(PropertySpec.builder(name.lowerFirst(), ClassName("", name))
                         .getter(FunSpec.getterBuilder()
                             .addCode("""return %T""", ClassName("", name))
@@ -108,7 +108,7 @@ sealed class ConfigField {
         }
 
         override fun yamlAppend(b: YamlBlock) {
-            if (path.none {it == '.'}) {
+            if (path.none { it == '.' }) {
                 fields.forEach {
                     it.yamlAppend(b)
                 }
@@ -122,7 +122,7 @@ sealed class ConfigField {
         }
     }
 
-    data class ClassBlock(val name: String, val fields: List<ConfigField>): ConfigField() {
+    data class ClassBlock(val name: String, val fields: List<ConfigField>) : ConfigField() {
         fun toKotlinClass(): TypeSpec = TypeSpec.classBuilder(name)
             .apply {
                 superclass(configBlock.parameterizedBy(ClassName("", name)))
@@ -146,7 +146,7 @@ sealed class ConfigField {
         }
     }
 
-    data class FiniteBlockList(val pattern: ClassBlock, val instances: List<ObjectBlock>): ConfigField() {
+    data class FiniteBlockList(val pattern: ClassBlock, val instances: List<ObjectBlock>) : ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             replaceType(b, pattern.fields, pattern.name) {
                 b.addType(pattern.toKotlinClass())
@@ -160,13 +160,13 @@ sealed class ConfigField {
         }
 
         override fun yamlAppend(b: YamlBlock) {
-            instances.forEach{
+            instances.forEach {
                 it.yamlAppend(b)
             }
         }
     }
 
-    data class BlockList(val name: String, val pattern: ClassBlock): ConfigField() {
+    data class BlockList(val name: String, val pattern: ClassBlock) : ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             replaceType(b, pattern.fields, name) {
                 b.addType(pattern.toKotlinClass())
@@ -184,9 +184,7 @@ sealed class ConfigField {
         }
     }
 
-    data class WhenBlock(val typ: TypeName, val nullInstance: String?, val instances: List<Pair<String, String>>): ConfigField() {
-        constructor(typ: TypeName, vararg instances: Pair<String, String>): this(typ, null, instances.toList())
-        constructor(typ: TypeName, nullInstance: String, vararg instances: Pair<String, String>): this(typ, nullInstance, instances.toList())
+    data class WhenBlock(val typ: TypeName, val addPrefix: Boolean, val nullInstance: String?, val instances: List<Pair<String, String>>): ConfigField() {
         override fun kotlinAppend(b: TypeSpec.Builder) {
             b.addFunction(FunSpec.builder("get")
                 .addParameter("e", typ.copy(nullable = nullInstance != null))
@@ -195,7 +193,7 @@ sealed class ConfigField {
                     .apply {
                         beginControlFlow("return when(e)")
                         instances.forEach { (n, v) ->
-                            addStatement("""%T.$n -> $v""", typ)
+                            addStatement("""${if (addPrefix) "%T." else ""}$n -> $v""", typ)
                         }
                         nullInstance?.let {
                             addStatement("""null -> $it""")
@@ -215,9 +213,9 @@ sealed class ConfigField {
 
     companion object {
         private fun replaceType(b: TypeSpec.Builder, fields: List<ConfigField>, name: String, e: () -> Unit) {
-            if (b.typeSpecs.any {it.name == name}) {
-                val g = b.typeSpecs.first {it.name == name}
-                b.typeSpecs.removeIf {it.name == name}
+            if (b.typeSpecs.any { it.name == name }) {
+                val g = b.typeSpecs.first { it.name == name }
+                b.typeSpecs.removeIf { it.name == name }
                 b.addType(g.toBuilder().apply {
                     fields.map { it.kotlinAppend(this) }
                 }.build())

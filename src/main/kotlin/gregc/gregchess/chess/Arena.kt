@@ -22,17 +22,17 @@ class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) :
 
     override fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
 
-    private fun World.isArena(): Boolean = arenas.any {it.name == name}
+    private fun World.isArena(): Boolean = arenas.any { it.name == name }
 
     fun reload() {
         val newArenas = Config.chessArenas.get(config)
         arenas.removeIf {
-            if (it.name !in newArenas){
+            if (it.name !in newArenas) {
                 it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
                 true
             } else false
         }
-        arenas.addAll((newArenas - arenas.map {it.name}).map { Arena(it) })
+        arenas.addAll((newArenas - arenas.map { it.name }).map { Arena(it) })
     }
 
     fun start() {
@@ -57,7 +57,7 @@ class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) :
     }
 }
 
-data class Arena(val name: String, var game: ChessGame? = null): Component {
+data class Arena(val name: String, var game: ChessGame? = null) : Component {
 
     object WorldGen : ChunkGenerator() {
         override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid) =

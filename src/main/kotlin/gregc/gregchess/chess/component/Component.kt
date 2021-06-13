@@ -2,10 +2,11 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.HumanPlayer
+import java.lang.reflect.Method
 import kotlin.reflect.KClass
 
-interface Component{
-    interface Settings<out T: Component> {
+interface Component {
+    interface Settings<out T : Component> {
         fun getComponent(game: ChessGame): T
     }
 }
@@ -39,26 +40,31 @@ enum class TimeModifier {
 @Target(AnnotationTarget.FUNCTION)
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
-annotation class GameEvent(vararg val value: GameBaseEvent, val mod: TimeModifier = TimeModifier.NORMAL, val relaxed: Boolean = false)
+annotation class GameEvent(
+    vararg val value: GameBaseEvent,
+    val mod: TimeModifier = TimeModifier.NORMAL,
+    val relaxed: Boolean = false
+)
+
 @Target(AnnotationTarget.FUNCTION)
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
 annotation class GameEvents(vararg val events: GameEvent)
 
+private val Method.gameEvents
+    get() = annotations.map { if (it is GameEvents) it.events else it }.filterIsInstance<GameEvent>()
+
 private inline fun <reified T : Component> T.runGameEvent(value: GameBaseEvent, mod: TimeModifier, vararg args: Any?) {
     this::class.java.methods
-        .filter { m ->
-            m.annotations.map { if (it is GameEvents) it.events else it}
-                .any { it is GameEvent && value in it.value && it.mod == mod }
-        }.forEach {
+        .filter { m -> m.gameEvents.any { value in it.value && it.mod == mod } }
+        .forEach { m ->
             try {
-                if (it.parameterCount < args.size)
-                    it.invoke(this, *(args.take(it.parameterCount).toTypedArray()))
+                if (m.parameterCount < args.size)
+                    m.invoke(this, *(args.take(m.parameterCount).toTypedArray()))
                 else
-                    it.invoke(this, *args)
+                    m.invoke(this, *args)
             } catch (e: Exception) {
-                if (it.annotations.map { a -> if (a is GameEvents) a.events else a}
-                        .none { a -> a is GameEvent && value in a.value && a.mod == mod && a.relaxed})
+                if (m.gameEvents.none { value in it.value && it.mod == mod && it.relaxed })
                     e.printStackTrace()
             }
         }
@@ -88,4 +94,4 @@ fun Collection<Component>.allRemovePlayer(p: HumanPlayer) = runGameEvent(GameBas
 fun Collection<Component>.allResetPlayer(p: HumanPlayer) = runGameEvent(GameBaseEvent.RESET_PLAYER, p)
 fun Collection<Component>.allPanic(e: Exception) = runGameEvent(GameBaseEvent.PANIC, e)
 
-class ComponentNotFoundException(cl: KClass<*>): Exception(cl.toString())
+class ComponentNotFoundException(cl: KClass<*>) : Exception(cl.toString())

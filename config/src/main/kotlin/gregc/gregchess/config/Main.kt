@@ -181,6 +181,7 @@ fun main(args: Array<String>) {
                     string("YouWon", "&aYou won")
                     string("YouLost", "&cYou lost")
                     string("YouDrew", "&eYou drew")
+                    byOptBool("YouWon", "YouLost", "YouDrew")
                 }
                 block("Spectator") {
                     string("WhiteWon", "&eWhite won")
@@ -383,7 +384,7 @@ fun main(args: Array<String>) {
                 block("Clock") {
                     string("TimeRemainingSimple", "Time remaining")
                     string("TimeRemaining", "time")
-                    special("TimeFormat", ClassName("gregc.gregchess", "ConfigTimeFormat"),"mm:ss.S")
+                    special("TimeFormat", ClassName("gregc.gregchess", "ConfigTimeFormat"), "mm:ss.S")
                 }
                 block("CheckCounter") {
                     string("CheckCounter", "check counter")

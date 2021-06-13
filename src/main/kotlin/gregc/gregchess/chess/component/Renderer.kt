@@ -6,8 +6,9 @@ import org.bukkit.*
 import java.util.*
 import kotlin.math.floor
 
-interface Renderer<in T>: Component {
-    interface Settings<in T>: Component.Settings<Renderer<T>>
+interface Renderer<in T> : Component {
+    interface Settings<in T> : Component.Settings<Renderer<T>>
+
     fun getPos(loc: T): Pos
     fun renderPiece(pos: Pos, piece: Piece)
     fun clearPiece(pos: Pos)
@@ -20,12 +21,12 @@ interface Renderer<in T>: Component {
     fun removeBoard()
 }
 
-abstract class MinecraftRenderer(protected val game: ChessGame, protected val settings: Settings): Renderer<Loc> {
-    abstract class Settings(val tileSize: Int, val offset: Loc = Loc(0,0,0)): Renderer.Settings<Loc> {
+abstract class MinecraftRenderer(protected val game: ChessGame, protected val settings: Settings) : Renderer<Loc> {
+    abstract class Settings(val tileSize: Int, val offset: Loc = Loc(0, 0, 0)) : Renderer.Settings<Loc> {
         internal val highHalfTile
-            get() = floor(tileSize.toDouble()/2).toInt()
+            get() = floor(tileSize.toDouble() / 2).toInt()
         internal val lowHalfTile
-            get() = floor((tileSize.toDouble()-1)/2).toInt()
+            get() = floor((tileSize.toDouble() - 1) / 2).toInt()
     }
 
     protected companion object {
@@ -44,8 +45,8 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
     protected fun getCapturedLoc(pos: CapturedPos): Loc {
         val p = pos.pos
         return when (pos.by) {
-            Side.WHITE -> Loc((settings.tileSize+1) * 8 - 1 - 2 * p.first, 101, 8 - 3 - 2 * p.second)
-            Side.BLACK -> Loc(8 + 2 * p.first, 101, 8 * (settings.tileSize+1) + 2 + 2 * p.second)
+            Side.WHITE -> Loc((settings.tileSize + 1) * 8 - 1 - 2 * p.first, 101, 8 - 3 - 2 * p.second)
+            Side.BLACK -> Loc(8 + 2 * p.first, 101, 8 * (settings.tileSize + 1) + 2 + 2 * p.second)
         } + settings.offset
     }
 
@@ -62,7 +63,7 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
     override fun clearCapturedPiece(pos: CapturedPos) = clearPiece(getCapturedLoc(pos))
 }
 
-class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(game, settings) {
+class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(game, settings) {
     private companion object {
         val defData = PlayerData(allowFlight = true, isFlying = true)
 
@@ -70,18 +71,18 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
         val adminData = defData.copy(gameMode = GameMode.CREATIVE)
 
         data class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
-            constructor(world: World, mat: Material, loc: Loc): this(world, mat, loc, loc)
+            constructor(world: World, mat: Material, loc: Loc) : this(world, mat, loc, loc)
         }
+
         fun fill(vol: FillVolume) {
             for (i in vol.start.x..vol.stop.x)
                 for (j in vol.start.y..vol.stop.y)
                     for (k in vol.start.z..vol.stop.z)
-                        vol.world.getBlockAt(i,j,k).type = vol.mat
+                        vol.world.getBlockAt(i, j, k).type = vol.mat
         }
     }
 
-    class Settings(tileSize: Int, offset: Loc = Loc(0,0,0))
-        : MinecraftRenderer.Settings(tileSize, offset) {
+    class Settings(tileSize: Int, offset: Loc = Loc(0, 0, 0)) : MinecraftRenderer.Settings(tileSize, offset) {
         override fun getComponent(game: ChessGame) = BukkitRenderer(game, this)
     }
 
@@ -116,7 +117,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
         val (x, y, z) = getPieceLoc(pos)
         val mi = -settings.lowHalfTile
         val ma = settings.highHalfTile
-        fill(FillVolume(world, floor.material.get(game.config), Loc(x+mi, y - 1, z+mi), Loc(x+ma, y - 1, z+ma)))
+        fill(FillVolume(world, floor.material.get(game.config), Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma)))
     }
 
     override fun renderBoardBase() {
@@ -128,14 +129,14 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
         fill(FillVolume(world, Material.AIR, Loc(0,100,0) + settings.offset, Loc(8 * (settings.tileSize+2)-1,105,8 * (settings.tileSize+2)-1) + settings.offset))
     }
 
-    private fun BukkitPlayer.join(d: PlayerData = defData){
+    private fun BukkitPlayer.join(d: PlayerData = defData) {
         if (uniqueId in data)
             throw IllegalStateException("player already teleported")
         data[uniqueId] = player.playerData
         reset(d)
     }
 
-    private fun BukkitPlayer.leave(){
+    private fun BukkitPlayer.leave() {
         if (uniqueId !in data)
             throw IllegalStateException("player data not found")
         player.playerData = data[uniqueId]!!
@@ -145,7 +146,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
     private fun BukkitPlayer.reset(d: PlayerData = defData) {
         player.playerData = d
         player.teleport(spawnLocation.toLocation(this@BukkitRenderer.world))
-        game[this]?.held?.let { setItem(0, it.piece )}
+        game[this]?.held?.let { setItem(0, it.piece) }
     }
 
     @GameEvent(GameBaseEvent.PANIC)
@@ -162,14 +163,17 @@ class BukkitRenderer(game: ChessGame, settings: Settings): MinecraftRenderer(gam
     fun spectatorLeave(p: BukkitPlayer) {
         p.leave()
     }
+
     @GameEvent(GameBaseEvent.REMOVE_PLAYER, relaxed = true)
     fun removePlayer(p: BukkitPlayer) {
         p.leave()
     }
+
     @GameEvent(GameBaseEvent.ADD_PLAYER, relaxed = true)
     fun addPlayer(p: BukkitPlayer) {
         p.join(if (p.isAdmin) adminData else defData)
     }
+
     @GameEvent(GameBaseEvent.RESET_PLAYER, relaxed = true)
     fun resetPlayer(p: BukkitPlayer) {
         p.reset(if (p.isAdmin) adminData else defData)

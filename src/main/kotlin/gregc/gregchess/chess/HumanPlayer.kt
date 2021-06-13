@@ -22,12 +22,9 @@ abstract class HumanPlayer(val name: String) {
     abstract fun sendMessage(msg: String)
     fun sendMessage(msg: ConfigVal<String>) = sendMessage(msg.get(config))
     abstract fun sendTitle(title: String, subtitle: String = "")
-    fun sendTitle(title: ConfigVal<String>, subtitle: ConfigVal<String>) =
-        sendTitle(title.get(config), subtitle.get(config))
-    fun sendTitle(title: String, subtitle: ConfigVal<String>) =
-        sendTitle(title, subtitle.get(config))
-    fun sendTitle(title: ConfigVal<String>, subtitle: String = "") =
-        sendTitle(title.get(config), subtitle)
+    fun sendTitle(title: ConfigVal<String>, subtitle: ConfigVal<String>) = sendTitle(title.get(config), subtitle)
+    fun sendTitle(title: String, subtitle: ConfigVal<String>) = sendTitle(title, subtitle.get(config))
+    fun sendTitle(title: ConfigVal<String>, subtitle: String = "") = sendTitle(title.get(config), subtitle)
     fun isInGame(): Boolean = currentGame != null
     fun isSpectating(): Boolean = spectatedGame != null
     abstract fun sendPGN(pgn: PGN)
@@ -35,18 +32,19 @@ abstract class HumanPlayer(val name: String) {
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
     fun sendCommandMessage(msg: ConfigVal<String>, action: ConfigVal<String>, command: String) =
         sendCommandMessage(msg.get(config), action.get(config), command)
+
     abstract fun setItem(i: Int, piece: Piece?)
     abstract fun openScreen(s: Screen<*>)
 }
 
-abstract class MinecraftPlayer(val uniqueId: UUID, name: String): HumanPlayer(name)
+abstract class MinecraftPlayer(val uniqueId: UUID, name: String) : HumanPlayer(name)
 
-class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(player.uniqueId, player.name) {
+class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(player.uniqueId, player.name) {
 
     companion object {
         private lateinit var config: BukkitConfigurator
         private val bukkitPlayers = mutableMapOf<Player, BukkitPlayer>()
-        fun toHuman(p: Player) = bukkitPlayers.getOrPut(p){ BukkitPlayer(p) }
+        fun toHuman(p: Player) = bukkitPlayers.getOrPut(p) { BukkitPlayer(p) }
         operator fun invoke(c: BukkitConfigurator) {
             config = c
         }
@@ -88,7 +86,7 @@ class BukkitPlayer private constructor(val player: Player): MinecraftPlayer(play
     }
 
     override fun setItem(i: Int, piece: Piece?) {
-        player.inventory.setItem(i, piece?.let {it.type.getItem(config, it.side)})
+        player.inventory.setItem(i, piece?.let { it.type.getItem(config, it.side) })
     }
 
     override fun openScreen(s: Screen<*>) {

@@ -9,8 +9,8 @@ import kotlin.collections.set
 import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
-    data class Settings(val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false)
-        : Component.Settings<Chessboard> {
+    data class Settings(val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) :
+        Component.Settings<Chessboard> {
         override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN(game: ChessGame) = initialFEN ?: game.variant.genFEN(chess960)
@@ -65,7 +65,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     operator fun get(pos: Pos) = squares[pos]
 
-    operator fun get(loc: Loc) = this[cNotNull(game.withRenderer<Loc, Pos> { it.getPos(loc) }, ErrorMsg.rendererNotFound)]
+    operator fun get(loc: Loc) =
+        this[cNotNull(game.withRenderer<Loc, Pos> { it.getPos(loc) }, ErrorMsg.rendererNotFound)]
 
     private val moves: MutableList<MoveData> = mutableListOf()
 
@@ -114,13 +115,15 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         if (game.currentTurn == Side.BLACK) {
             val wLast = (if (moves.size <= 1) null else moves[moves.size - 2].name)
             val bLast = lastMove?.name
-            game.players.forEachReal { p -> p.sendMessage(buildMessage {
-                append(num)
-                append(' ')
-                wLast?.let { append(it) }
-                append("  | ")
-                bLast?.let { append(it) }
-            }) }
+            game.players.forEachReal { p ->
+                p.sendMessage(buildMessage {
+                    append(num)
+                    append(' ')
+                    wLast?.let { append(it) }
+                    append("  | ")
+                    bLast?.let { append(it) }
+                })
+            }
             fullMoveCounter++
         }
         addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
@@ -131,12 +134,14 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         if (game.currentTurn == Side.WHITE) {
             val num = "${fullMoveCounter}."
             val wLast = lastMove?.name
-            game.players.forEachReal { p -> p.sendMessage(buildMessage {
-                append(num)
-                append(' ')
-                wLast?.let { append(it) }
-                append("  |")
-            }) }
+            game.players.forEachReal { p ->
+                p.sendMessage(buildMessage {
+                    append(num)
+                    append(' ')
+                    wLast?.let { append(it) }
+                    append("  |")
+                })
+            }
         }
     }
 
@@ -288,6 +293,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         val cap = capturedPieces.filter { it.pos.by == by }
         return CapturedPos(by,
             if (type == PieceType.PAWN) Pair(cap.count { it.type == PieceType.PAWN }, 1)
-            else Pair(cap.count { it.type != PieceType.PAWN }, 0))
+            else Pair(cap.count { it.type != PieceType.PAWN }, 0)
+        )
     }
 }

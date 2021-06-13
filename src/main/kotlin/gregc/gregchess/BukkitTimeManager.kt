@@ -4,9 +4,9 @@ import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
 
-class BukkitTimeManager(private val plugin: Plugin): TimeManager {
+class BukkitTimeManager(private val plugin: Plugin) : TimeManager {
 
-    private class BukkitCancellableContext constructor(private val r: BukkitRunnable): TimeManager.CancellableContext {
+    private class BukkitCancellableContext constructor(private val r: BukkitRunnable) : TimeManager.CancellableContext {
         override fun cancel() {
             r.cancel()
         }

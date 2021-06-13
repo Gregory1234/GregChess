@@ -6,8 +6,8 @@ import org.bukkit.Bukkit
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 
-class BukkitEventRelay(private val game: ChessGame): Component {
-    object Settings: Component.Settings<BukkitEventRelay> {
+class BukkitEventRelay(private val game: ChessGame) : Component {
+    object Settings : Component.Settings<BukkitEventRelay> {
         override fun getComponent(game: ChessGame) = BukkitEventRelay(game)
     }
 

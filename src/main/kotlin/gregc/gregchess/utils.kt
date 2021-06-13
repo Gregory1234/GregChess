@@ -95,7 +95,7 @@ inline fun cTry(p: CommandSender, c: Configurator, err: (Exception) -> Unit = {}
 
 inline fun JavaPlugin.addCommand(name: String, c: Configurator, crossinline command: CommandArgs.() -> Unit) {
     getCommand(name)?.setExecutor { sender, _, _, args ->
-        cTry(sender, c){
+        cTry(sender, c) {
             command(CommandArgs(sender, args))
         }
         true

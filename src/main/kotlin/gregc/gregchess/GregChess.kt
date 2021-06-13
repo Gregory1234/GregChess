@@ -27,7 +27,7 @@ class GregChess : JavaPlugin(), Listener {
     private val drawRequest = buildRequestType<Unit>(timeManager, configurator, requestManager) {
         messagesSimple(Config.Request.draw, "/chess draw", "/chess draw")
         validateSender = { it.chess?.hasTurn ?: false }
-        onAccept = { (sender, _, _) -> sender.currentGame?.stop(ChessGame.EndReason.DrawAgreement())}
+        onAccept = { (sender, _, _) -> sender.currentGame?.stop(ChessGame.EndReason.DrawAgreement()) }
     }
 
     private val takebackRequest = buildRequestType<Unit>(timeManager, configurator, requestManager) {
@@ -134,7 +134,10 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.debug")
                     val p = cNotNull(player.human.chess, ErrorMsg.NotInGame.you)
                     val pos = if (args.size == 1)
-                        cNotNull(p.game.withRenderer<Loc, Pos> { it.getPos(Loc.fromLocation(player.location)) }, ErrorMsg.rendererNotFound)
+                        cNotNull(
+                            p.game.withRenderer<Loc, Pos> { it.getPos(Loc.fromLocation(player.location)) },
+                            ErrorMsg.rendererNotFound
+                        )
                     else
                         cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()
@@ -376,7 +379,7 @@ class GregChess : JavaPlugin(), Listener {
         val holder = e.inventory.holder
         if (holder is BukkitScreen<*>) {
             e.isCancelled = true
-            cTry(e.whoClicked, configurator, {e.whoClicked.closeInventory()}) {
+            cTry(e.whoClicked, configurator, { e.whoClicked.closeInventory() }) {
                 if (!holder.finished)
                     if (holder.applyEvent(InventoryPosition.fromIndex(e.slot)))
                         e.whoClicked.closeInventory()

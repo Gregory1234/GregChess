@@ -3,7 +3,7 @@ package gregc.gregchess
 import org.bukkit.ChatColor
 import org.bukkit.configuration.file.FileConfiguration
 
-class BukkitConfigurator(private var file: FileConfiguration): Configurator {
+class BukkitConfigurator(private var file: FileConfiguration) : Configurator {
     override fun getString(path: String): String? = file.getString(path)
 
     override fun getStringList(path: String): List<String>? = file.takeIf { path in it }?.getStringList(path)

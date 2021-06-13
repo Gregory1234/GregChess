@@ -12,7 +12,7 @@ data class FEN(
     val chess960: Boolean = false
 ) {
     @JvmInline
-    value class BoardState(private val state: String){
+    value class BoardState(private val state: String) {
         companion object {
             fun fromPieces(pieces: Map<Pos, PieceInfo>): BoardState {
                 val rows = List(8) { ri ->
@@ -38,24 +38,26 @@ data class FEN(
         }
 
         init {
-            if (state.count {it == '/'} != 7)
+            if (state.count { it == '/' } != 7)
                 throw IllegalArgumentException(state)
         }
+
         fun forEachIndexed(block: (Pos, Char?) -> Unit) {
             val rows = state.split('/')
             rows.forEachIndexed { ri, r ->
                 var i = 0
                 r.forEach { c ->
                     if (c in '1'..'8') {
-                        repeat(c.digitToInt()) { j -> block(Pos(i + j, 7-ri), null) }
+                        repeat(c.digitToInt()) { j -> block(Pos(i + j, 7 - ri), null) }
                         i += c.digitToInt()
                     } else {
-                        block(Pos(i, 7-ri), c)
+                        block(Pos(i, 7 - ri), c)
                         i++
                     }
                 }
             }
         }
+
         fun mapIndexed(block: (Int, String) -> String) =
             BoardState(state.split('/').mapIndexed(block).joinToString("/"))
     }
@@ -74,8 +76,7 @@ data class FEN(
         return PieceInfo(p, Piece(type, side), hasMoved)
     }
 
-    fun forEachSquare(f: (PieceInfo) -> Unit)
-        = boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(p))}
+    fun forEachSquare(f: (PieceInfo) -> Unit) = boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(p)) }
 
     override fun toString() = buildString {
         append(boardState)
@@ -109,6 +110,7 @@ data class FEN(
         private fun castlingRightsToString(chess960: Boolean, base: Char, cr: List<Int>) =
             cr.map { base + if (chess960) (if (it < 4) 'q' else 'a') - 'a' else it }.sorted()
                 .joinToString("")
+
         private fun parseCastlingRights(r: String, s: String) = s.lowercase().map { c ->
             when (c) {
                 'k' -> r.indexOfLast { it.lowercaseChar() == 'r' }
@@ -117,6 +119,7 @@ data class FEN(
                 else -> throw IllegalArgumentException(s)
             }
         }
+
         private fun detectChess960(board: String, castling: String): Boolean {
             if (castling.any { it !in "KQkq" })
                 return true
@@ -136,6 +139,7 @@ data class FEN(
             }
             return false
         }
+
         fun parseFromString(fen: String): FEN {
             val parts = fen.split(" ")
             if (parts.size != 6) throw IllegalArgumentException(fen)
@@ -156,6 +160,7 @@ data class FEN(
                 detectChess960(board, castling)
             )
         }
+
         fun generateChess960(): FEN {
             val types = MutableList<Char?>(8) { null }
             types[(0..7).filter { it % 2 == 0 }.random()] = PieceType.BISHOP.standardChar

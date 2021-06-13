@@ -7,13 +7,13 @@ import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 import kotlin.collections.set
 
-interface ScoreboardManager: Component {
+interface ScoreboardManager : Component {
     operator fun plusAssign(p: GameProperty)
     operator fun plusAssign(p: PlayerProperty)
 }
 
-class BukkitScoreboardManager(private val game: ChessGame): ScoreboardManager {
-    object Settings: Component.Settings<BukkitScoreboardManager> {
+class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
+    object Settings : Component.Settings<BukkitScoreboardManager> {
         override fun getComponent(game: ChessGame) = BukkitScoreboardManager(game)
     }
 

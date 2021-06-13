@@ -12,14 +12,15 @@ class ChessGame(
     val config: Configurator,
     val arena: Arena,
     val settings: GameSettings
-    ) {
+) {
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() = "ChessGame(uniqueId=$uniqueId)"
 
     val variant = settings.variant
 
-    private val components = listOf(arena) + (settings.components + variant.extraComponents).map {it.getComponent(this)}
+    private val components =
+        listOf(arena) + (settings.components + variant.extraComponents).map { it.getComponent(this) }
 
     init {
         try {
@@ -42,7 +43,13 @@ class ChessGame(
 
     @Suppress("unchecked_cast")
     fun <T, R> withRenderer(block: (Renderer<T>) -> R): R? =
-        renderers.firstNotNullOfOrNull { try {block(it as Renderer<T>)} catch (e: Exception) { null } }
+        renderers.firstNotNullOfOrNull {
+            try {
+                block(it as Renderer<T>)
+            } catch (e: Exception) {
+                null
+            }
+        }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
@@ -61,13 +68,22 @@ class ChessGame(
         throw e
     }
 
-    private inline fun <reified T> require(fail: () -> Nothing = {wrongState<T>()}): T = (state as? T) ?: fail()
+    private inline fun <reified T> require(fail: () -> Nothing = { wrongState<T>() }): T = (state as? T) ?: fail()
 
-    private inline fun requireInitial(fail: () -> Nothing = {wrongState<GameState.Initial>()}) = require<GameState.Initial>(fail)
-    private inline fun requireReady(fail: () -> Nothing = {wrongState<GameState.Ready>()}) = require<GameState.Ready>(fail)
-    private inline fun requireStarting(fail: () -> Nothing = {wrongState<GameState.Starting>()}) = require<GameState.Starting>(fail)
-    private inline fun requireRunning(fail: () -> Nothing = {wrongState<GameState.Running>()}) = require<GameState.Running>(fail)
-    private inline fun requireStopping(fail: () -> Nothing = {wrongState<GameState.Stopping>()}) = require<GameState.Stopping>(fail)
+    private inline fun requireInitial(fail: () -> Nothing = { wrongState<GameState.Initial>() }) =
+        require<GameState.Initial>(fail)
+
+    private inline fun requireReady(fail: () -> Nothing = { wrongState<GameState.Ready>() }) =
+        require<GameState.Ready>(fail)
+
+    private inline fun requireStarting(fail: () -> Nothing = { wrongState<GameState.Starting>() }) =
+        require<GameState.Starting>(fail)
+
+    private inline fun requireRunning(fail: () -> Nothing = { wrongState<GameState.Running>() }) =
+        require<GameState.Running>(fail)
+
+    private inline fun requireStopping(fail: () -> Nothing = { wrongState<GameState.Stopping>() }) =
+        require<GameState.Stopping>(fail)
 
     var currentTurn: Side
         get() = require<GameState.WithCurrentPlayer>().currentTurn
@@ -238,32 +254,18 @@ class ChessGame(
         state = stopping
         try {
             components.allStop()
-            var anyLong = false
             players.forEachUnique(currentTurn) {
-                it.sendTitle(
-                    Config.Title.Player.run {
-                        when(reason.winner) {it.side -> youWon; null -> youDrew; else -> youLost} },
-                    reason.namePath
-                )
+                it.sendTitle(Config.Title.Player[reason.winner == it.side], reason.namePath)
                 it.sendMessage(reason.message)
-                if (quick[it.side]) {
+                timeManager.runTaskLater((if (quick[it.side]) 0 else 3).seconds) {
                     components.allRemovePlayer(it.player)
-                } else {
-                    anyLong = true
-                    timeManager.runTaskLater(3.seconds) {
-                        components.allRemovePlayer(it.player)
-                    }
                 }
             }
             spectators.forEach {
                 it.sendTitle(Config.Title.Spectator[reason.winner], reason.namePath)
                 it.sendMessage(reason.message)
-                if (anyLong) {
+                timeManager.runTaskLater((if (quick.white && quick.black) 0 else 3).seconds) {
                     components.allSpectatorLeave(it)
-                } else {
-                    timeManager.runTaskLater(3.seconds) {
-                        components.allSpectatorLeave(it)
-                    }
                 }
             }
             if (reason is EndReason.PluginRestart) {
@@ -274,7 +276,7 @@ class ChessGame(
                 components.allVeryEnd()
                 return
             }
-            timeManager.runTaskLater((if (anyLong) 3 else 0).seconds + 1.ticks) {
+            timeManager.runTaskLater((if (quick.white && quick.black) 0 else 3).seconds + 1.ticks) {
                 components.allClear()
                 timeManager.runTaskLater(1.ticks) {
                     require<GameState.WithPlayers>().forEachPlayer(ChessPlayer::stop)

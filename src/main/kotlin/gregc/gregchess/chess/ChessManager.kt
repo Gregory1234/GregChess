@@ -52,7 +52,7 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
         val games = player.games
         cRequire(games.isNotEmpty() || player.isSpectating(), ErrorMsg.NotInGame.you)
         games.forEach { g ->
-            g.stop(ChessGame.EndReason.Walkover(!g[player]!!.side), BySides{ it != g[player]!!.side })
+            g.stop(ChessGame.EndReason.Walkover(!g[player]!!.side), BySides { it != g[player]!!.side })
         }
         player.spectatedGame = null
     }

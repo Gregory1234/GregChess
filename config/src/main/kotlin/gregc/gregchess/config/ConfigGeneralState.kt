@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 class ConfigGeneralState {
     val configTypes = mutableListOf<ConfigType<*>>()
+
     inner class ConfigType<T>(
         val name: String, val typ: TypeName,
         val defaultCode: CodeBlock, val parser: CodeBlock, val defaulted: Boolean = false,

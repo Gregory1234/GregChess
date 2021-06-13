@@ -62,13 +62,13 @@ abstract class MoveCandidate(
 
     open fun baseName(): ConfigVal<String> = buildMessage {
         if (piece.type != PieceType.PAWN) {
-            append(piece.type.char.map{ it.uppercaseChar() })
+            append(piece.type.char.map { it.uppercaseChar() })
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(piece.pos.fileStr)
         if (captured != null)
             append(Config.Chess.capture)
-        promotion?.let { p -> append(p.type.char.map{ it.uppercaseChar() }) }
+        promotion?.let { p -> append(p.type.char.map { it.uppercaseChar() }) }
         append(target.pos)
     }
 
@@ -153,8 +153,8 @@ fun knightMovement(piece: BoardPiece): List<MoveCandidate> {
 }
 
 fun rookMovement(piece: BoardPiece): List<MoveCandidate> {
-    class RookMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
-        : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
+    class RookMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor) :
+        MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 0)) { index, dir, square ->
         RookMove(piece, square, dir, index, defaultColor(square))
@@ -162,8 +162,8 @@ fun rookMovement(piece: BoardPiece): List<MoveCandidate> {
 }
 
 fun bishopMovement(piece: BoardPiece): List<MoveCandidate> {
-    class BishopMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
-        : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
+    class BishopMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor) :
+        MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 1)) { index, dir, square ->
         BishopMove(piece, square, dir, index, defaultColor(square))
@@ -171,8 +171,8 @@ fun bishopMovement(piece: BoardPiece): List<MoveCandidate> {
 }
 
 fun queenMovement(piece: BoardPiece): List<MoveCandidate> {
-    class QueenMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor)
-        : MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
+    class QueenMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor) :
+        MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) { index, dir, square ->
         QueenMove(piece, square, dir, index, defaultColor(square))
@@ -259,19 +259,13 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
     fun handlePromotion(pos: Pos, f: (Piece?) -> Unit) =
         if (pos.rank in listOf(0, 7)) piece.square.game.variant.promotions(piece.piece).orEmpty().forEach(f) else f(null)
 
-    class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotion: Piece?)
-        : MoveCandidate(
-            piece, target,
-            ifProm(promotion, Floor.MOVE), listOfNotNull(pass),
-            control = null, promotion = promotion
-        )
+    class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotion: Piece?) : MoveCandidate(
+        piece, target, ifProm(promotion, Floor.MOVE), listOfNotNull(pass), control = null, promotion = promotion
+    )
 
-    class PawnCapture(piece: BoardPiece, target: Square, promotion: Piece?) :
-        MoveCandidate(
-            piece, target,
-            ifProm(promotion, Floor.CAPTURE), emptyList(),
-            promotion = promotion, mustCapture = true
-        )
+    class PawnCapture(piece: BoardPiece, target: Square, promotion: Piece?) : MoveCandidate(
+        piece, target, ifProm(promotion, Floor.CAPTURE), emptyList(), promotion = promotion, mustCapture = true
+    )
 
     class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
         MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true) {

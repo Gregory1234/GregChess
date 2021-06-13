@@ -93,7 +93,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         if (chosenMoves.size != 1)
-            pawnPromotionScreen(chosenMoves.filter {it.promotion != null})
+            pawnPromotionScreen(chosenMoves.filter { it.promotion != null })
         else
             game.finishMove(chosenMoves.first())
     }

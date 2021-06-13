@@ -10,7 +10,7 @@ class ConfigClassScope(val state: ConfigGeneralState, private val name: String) 
     private val fields = mutableListOf<ConfigField>()
 
     fun formatString(name: String, vararg inputs: KClass<*>, default: String? = null, warnMissing: Boolean = true) {
-        fields += ConfigField.ValueFormat(name, inputs.map {it.asTypeName()}, default, warnMissing)
+        fields += ConfigField.ValueFormat(name, inputs.map { it.asTypeName() }, default, warnMissing)
     }
 
     inline fun <reified T1> formatString1(name: String, default: String? = null, warnMissing: Boolean = true) =
@@ -36,19 +36,26 @@ class ConfigClassScope(val state: ConfigGeneralState, private val name: String) 
     }
 
     fun bySides(white: String, black: String) {
-        fields += ConfigField.WhenBlock(sideType, "WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst())
+        fields += ConfigField.WhenBlock(sideType, true, null,
+            listOf("WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst()))
     }
 
     fun byOptSides(white: String, black: String, nulls: String) {
-        fields += ConfigField.WhenBlock(sideType, nulls.lowerFirst(), "WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst())
+        fields += ConfigField.WhenBlock(sideType, true, nulls.lowerFirst(),
+            listOf("WHITE" to white.lowerFirst(), "BLACK" to black.lowerFirst()))
     }
 
-    fun <T: Enum<T>> byEnum(cl: KClass<T>) {
-        fields += ConfigField.WhenBlock(cl.asConfigTypeName(), null,
+    fun <T : Enum<T>> byEnum(cl: KClass<T>) {
+        fields += ConfigField.WhenBlock(cl.asConfigTypeName(), true, null,
             cl.java.enumConstants.map { it.toString() to it.toString().upperSnakeToCamel() })
     }
 
-    inline fun <reified T: Enum<T>> byEnum() = byEnum(T::class)
+    fun byOptBool(trues: String, falss: String, nulls: String) {
+        fields += ConfigField.WhenBlock(Boolean::class.asTypeName(), false, nulls.lowerFirst(),
+            listOf("true" to trues.lowerFirst(), "false" to falss.lowerFirst()))
+    }
+
+    inline fun <reified T : Enum<T>> byEnum() = byEnum(T::class)
 
     fun special(name: String, typ: TypeName, default: String? = null, warnMissing: Boolean? = null) {
         fields += ConfigField.ValueSpecial(name, typ, default, warnMissing)

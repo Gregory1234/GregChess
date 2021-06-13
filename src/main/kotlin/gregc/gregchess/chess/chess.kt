@@ -21,8 +21,8 @@ enum class Side(val standardName: String, val standardChar: Char, val direction:
 }
 
 data class MutableBySides<T>(var white: T, var black: T) {
-    constructor(block: (Side) -> T): this(block(Side.WHITE), block(Side.BLACK))
-    constructor(v: T): this(v, v)
+    constructor(block: (Side) -> T) : this(block(Side.WHITE), block(Side.BLACK))
+    constructor(v: T) : this(v, v)
 
     operator fun get(side: Side) = when (side) {
         Side.WHITE -> white
@@ -43,18 +43,20 @@ data class MutableBySides<T>(var white: T, var black: T) {
         f(white)
         f(black)
     }
+
     inline fun <R> forEachIndexed(f: (Side, T) -> R) {
         f(Side.WHITE, white)
         f(Side.BLACK, black)
     }
-    inline fun <R> map(crossinline f: (T) -> R) = BySides{ f(this[it]) }
-    inline fun <R> mapIndexed(crossinline f: (Side, T) -> R) = BySides{ f(it, this[it]) }
+
+    inline fun <R> map(crossinline f: (T) -> R) = BySides { f(this[it]) }
+    inline fun <R> mapIndexed(crossinline f: (Side, T) -> R) = BySides { f(it, this[it]) }
     fun toBySides() = BySides(white, black)
 }
 
 data class BySides<T>(val white: T, val black: T) {
-    constructor(block: (Side) -> T): this(block(Side.WHITE), block(Side.BLACK))
-    constructor(v: T): this(v, v)
+    constructor(block: (Side) -> T) : this(block(Side.WHITE), block(Side.BLACK))
+    constructor(v: T) : this(v, v)
 
     operator fun get(side: Side) = when (side) {
         Side.WHITE -> white
@@ -66,12 +68,14 @@ data class BySides<T>(val white: T, val black: T) {
         f(white)
         f(black)
     }
+
     inline fun <R> forEachIndexed(f: (Side, T) -> R) {
         f(Side.WHITE, white)
         f(Side.BLACK, black)
     }
-    inline fun <R> map(crossinline f: (T) -> R) = BySides{ f(this[it]) }
-    inline fun <R> mapIndexed(crossinline f: (Side, T) -> R) = BySides{ f(it, this[it]) }
+
+    inline fun <R> map(crossinline f: (T) -> R) = BySides { f(this[it]) }
+    inline fun <R> mapIndexed(crossinline f: (Side, T) -> R) = BySides { f(it, this[it]) }
     fun toMutableBySides() = MutableBySides(white, black)
 }
 

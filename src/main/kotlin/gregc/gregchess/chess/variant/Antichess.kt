@@ -37,6 +37,6 @@ object Antichess : ChessVariant("Antichess") {
 
     override fun timeout(game: ChessGame, side: Side) = game.stop(ChessGame.EndReason.Timeout(side))
 
-    override fun promotions(piece: Piece): Collection<Piece>?
-        = Normal.promotions(piece)?.plus(Piece(PieceType.KING, piece.side))
+    override fun promotions(piece: Piece): Collection<Piece>? =
+        Normal.promotions(piece)?.plus(Piece(PieceType.KING, piece.side))
 }

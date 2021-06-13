@@ -8,5 +8,6 @@ class ConfigFiniteBlockList(val pattern: ConfigClassScope, val path: String, val
     fun addInstance(name: String, block: ConfigObjectScope.() -> Unit) {
         instances += ConfigObjectScope(pattern.state, path addDot name, realPath addDot name).apply(block).build()
     }
+
     fun build() = ConfigField.FiniteBlockList(pattern.build(), instances)
 }

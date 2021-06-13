@@ -12,9 +12,8 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
 
-    data class Settings(
-        val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds
-    ): Component.Settings<ChessClock> {
+    data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
+        Component.Settings<ChessClock> {
 
         fun getPGN() = buildString {
             if (type == Type.SIMPLE) {
@@ -88,7 +87,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    private val time = BySides{ Time(settings.initialTime) }
+    private val time = BySides { Time(settings.initialTime) }
 
     private var started = false
     private var stopTime: LocalDateTime? = null
