@@ -6,7 +6,7 @@ import org.bukkit.configuration.file.FileConfiguration
 class BukkitConfigurator(private var file: FileConfiguration): Configurator {
     override fun getString(path: String): String? = file.getString(path)
 
-    override fun getStringList(path: String): List<String>? = if (path in file) file.getStringList(path) else null
+    override fun getStringList(path: String): List<String>? = file.takeIf { path in it }?.getStringList(path)
 
     override fun getChildren(path: String): Set<String>? = file.getConfigurationSection(path)?.getKeys(false)
 

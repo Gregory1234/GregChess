@@ -26,9 +26,9 @@ open class ConfigBlock<out Self: ConfigBlock<Self>>(path: String): ConfigPath<Vi
 
 class ConfigBlockList<out P: ConfigBlock<P>>(path: String, private val mk: (ConfigBlock<P>) -> P)
     : ConfigPath<Map<String, View<P>>>(path) {
-    override fun get(c: Configurator): Map<String, View<P>> = c.getChildren(path).orEmpty().mapNotNull {
-        if (c.isSection(childPath(it))) it to View(mk(ConfigBlock(childPath(it))), c) else null
-    }.toMap()
+    override fun get(c: Configurator): Map<String, View<P>> =
+        c.getChildren(path).orEmpty().filter { c.isSection(childPath(it)) }
+            .associateWith { View(mk(ConfigBlock(childPath(it))), c) }
     operator fun get(s: String): P = mk(ConfigBlock((childPath(s))))
 }
 

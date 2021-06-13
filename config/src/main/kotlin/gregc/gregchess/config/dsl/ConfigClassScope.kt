@@ -24,7 +24,7 @@ class ConfigClassScope(val state: ConfigGeneralState, private val name: String) 
     }
 
     operator fun <T> ConfigGeneralState.ConfigType<T>.invoke(name: String, default: T? = null, warnMissing: Boolean = defaulted && (default == null)) {
-        fields += ConfigField.Value(name, this, default?.let(toYaml), if (defaulted) default?.let(toCode) else null, warnMissing)
+        fields += ConfigField.Value(name, this, default?.let(toYaml), default?.takeIf { defaulted }?.let(toCode), warnMissing)
     }
 
     fun <T> ConfigGeneralState.ConfigType<T>.optional(name: String, warnMissing: Boolean = false) {

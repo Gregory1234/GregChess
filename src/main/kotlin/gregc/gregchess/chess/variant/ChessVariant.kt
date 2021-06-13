@@ -149,7 +149,7 @@ abstract class ChessVariant(val name: String) {
 
         override fun promotions(piece: Piece): Collection<Piece>? =
             if (piece.type == PieceType.PAWN)
-                listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map {Piece(it, piece.side)}
+                listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { Piece(it, piece.side) }
             else
                 null
 
