@@ -19,6 +19,7 @@ interface GregLogger {
         val source = Thread.currentThread().stackTrace[5].className
         sendLog(level, source, *vs)
     }
+
     @Deprecated("Don't commit it!")
     fun debug(vararg vs: Any?) = log(Level.DEBUG, *vs)
     fun low(vararg vs: Any?) = log(Level.LOW_DEBUG, *vs)
@@ -28,7 +29,7 @@ interface GregLogger {
     fun warn(vararg vs: Any?) = log(Level.WARNING, *vs)
 }
 
-class JavaGregLogger(private val logger: Logger): GregLogger {
+class JavaGregLogger(private val logger: Logger) : GregLogger {
     override var level = GregLogger.Level.WARNING
 
     override fun sendLog(level: GregLogger.Level, source: String, vararg vs: Any?) {
@@ -40,7 +41,7 @@ class JavaGregLogger(private val logger: Logger): GregLogger {
     }
 }
 
-class FileGregLogger(private val file: File): GregLogger {
+class FileGregLogger(private val file: File) : GregLogger {
     override var level = GregLogger.Level.LOW_DEBUG
     override fun sendLog(level: GregLogger.Level, source: String, vararg vs: Any?) {
         file.appendText("[${LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)} $level][$source]: "
@@ -48,7 +49,7 @@ class FileGregLogger(private val file: File): GregLogger {
     }
 }
 
-class CombinedLogger: GregLogger {
+class CombinedLogger : GregLogger {
     private val loggers = mutableListOf<GregLogger>()
 
     operator fun plusAssign(l: GregLogger) {

@@ -10,36 +10,40 @@ fun interface ConfigVal<out T> {
     fun get(c: Configurator): T
 }
 
-class ConstVal<out T>(val value: T): ConfigVal<T> {
+class ConstVal<out T>(val value: T) : ConfigVal<T> {
     override fun get(c: Configurator): T = value
 }
 
-fun <T,R> ConfigVal<T>.map(f: Configurator.(T) -> R): ConfigVal<R> = ConfigVal { it.f(get(it)) }
+fun <T, R> ConfigVal<T>.map(f: Configurator.(T) -> R): ConfigVal<R> = ConfigVal { it.f(get(it)) }
 
-abstract class ConfigPath<out T>(val path: String = ""): ConfigVal<T> {
+abstract class ConfigPath<out T>(val path: String = "") : ConfigVal<T> {
     fun childPath(ad: String) = path addDot ad
 }
 
-open class ConfigBlock<out Self: ConfigBlock<Self>>(path: String): ConfigPath<View<ConfigBlock<Self>>>(path) {
+open class ConfigBlock<out Self : ConfigBlock<Self>>(path: String) : ConfigPath<View<ConfigBlock<Self>>>(path) {
     override fun get(c: Configurator): View<ConfigBlock<Self>> = View(this, c)
 }
 
-class ConfigBlockList<out P: ConfigBlock<P>>(path: String, private val mk: (ConfigBlock<P>) -> P)
-    : ConfigPath<Map<String, View<P>>>(path) {
+class ConfigBlockList<out P : ConfigBlock<P>>(path: String, private val mk: (ConfigBlock<P>) -> P) :
+    ConfigPath<Map<String, View<P>>>(path) {
     override fun get(c: Configurator): Map<String, View<P>> =
         c.getChildren(path).orEmpty().filter { c.isSection(childPath(it)) }
             .associateWith { View(mk(ConfigBlock(childPath(it))), c) }
+
     operator fun get(s: String): P = mk(ConfigBlock((childPath(s))))
 }
 
-class ConfigTimeFormatFull(path: String, private val time: LocalTime, private val warnMissing: Boolean = true): ConfigPath<String>(path) {
+class ConfigTimeFormatFull(path: String, private val time: LocalTime, private val warnMissing: Boolean = true) :
+    ConfigPath<String>(path) {
     override fun get(c: Configurator): String = c.get(path, "time format", path, warnMissing) {
         time.format(DateTimeFormatter.ofPattern(it))
     }
 }
 
-class ConfigTimeFormat(path: String, private val warnMissing: Boolean = true): ConfigPath<TimeFormat>(path) {
-    override fun get(c: Configurator): TimeFormat = c.get(path, "time format", TimeFormat(path), warnMissing) { TimeFormat(it) }
+class ConfigTimeFormat(path: String, private val warnMissing: Boolean = true) : ConfigPath<TimeFormat>(path) {
+    override fun get(c: Configurator): TimeFormat =
+        c.get(path, "time format", TimeFormat(path), warnMissing) { TimeFormat(it) }
+
     operator fun invoke(time: LocalTime) = ConfigTimeFormatFull(path, time, warnMissing)
     operator fun invoke(time: Duration) = ConfigTimeFormatFull(path, time.toLocalTime(), warnMissing)
 }
@@ -91,11 +95,11 @@ fun Configurator.getFormatString(path: String, vararg args: Any?) = get(path, "f
     numberedFormat(it, *args)?.let(::processString)
 }
 
-class ConfigFullFormatString(path: String, private vararg val gotten: Any?): ConfigPath<String>(path) {
+class ConfigFullFormatString(path: String, private vararg val gotten: Any?) : ConfigPath<String>(path) {
     override fun get(c: Configurator): String =
         c.getFormatString(path, *gotten.map { if (it is ConfigVal<*>) it.get(c) else it }.toTypedArray())
 }
 
-class View<out P: ConfigBlock<P>>(private val path: P, private val config: Configurator) {
+class View<out P : ConfigBlock<P>>(private val path: P, private val config: Configurator) {
     fun <T> get(f: P.() -> ConfigPath<T>): T = path.f().get(config)
 }

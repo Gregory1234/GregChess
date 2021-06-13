@@ -29,9 +29,10 @@ fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
 
 fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
 
-fun <T: Enum<T>> enumValueOrNull(cl: KClass<T>): (String) -> T? = { s -> try {
+fun <T : Enum<T>> enumValueOrNull(cl: KClass<T>): (String) -> T? = { s ->
+    try {
         java.lang.Enum.valueOf(cl.java, s.uppercase())
-    } catch (e : IllegalArgumentException) {
+    } catch (e: IllegalArgumentException) {
         null
     }
 }
@@ -92,11 +93,13 @@ fun parseDuration(s: String): Duration? {
     return null
 }
 
-fun Duration.toLocalTime(): LocalTime = LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
+fun Duration.toLocalTime(): LocalTime =
+    LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
 
 @JvmInline
 value class TimeFormat(private val formatter: DateTimeFormatter) {
-    constructor(format: String): this(DateTimeFormatter.ofPattern(format))
+    constructor(format: String) : this(DateTimeFormatter.ofPattern(format))
+
     operator fun invoke(time: LocalTime): String = time.format(formatter)
     operator fun invoke(time: Duration): String = time.toLocalTime().format(formatter)
 }
@@ -114,8 +117,8 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
     return if (retNull) null else ret
 }
 
-class Message(val format: String, vararg val args: ConfigVal<*>): ConfigVal<String> {
-    constructor(p: ConfigVal<*>): this("$1", p)
+class Message(val format: String, vararg val args: ConfigVal<*>) : ConfigVal<String> {
+    constructor(p: ConfigVal<*>) : this("$1", p)
 
     override fun get(c: Configurator): String = numberedFormat(format, *args.map { it.get(c) }.toTypedArray()) ?: run {
         glog.warn("Bad format ", "\"$format\"", *args.map { it.get(c) }.toTypedArray())
@@ -131,26 +134,33 @@ class MessageBuilder(
     fun append(str: String) {
         formatBuilder.append(str)
     }
+
     fun append(i: Int) {
         formatBuilder.append(i)
     }
+
     fun append(c: Char) {
         formatBuilder.append(c)
     }
+
     fun append(lng: Long) {
         formatBuilder.append(lng)
     }
+
     fun append(f: Float) {
         formatBuilder.append(f)
     }
+
     fun append(d: Double) {
         formatBuilder.append(d)
     }
+
     fun append(v: ConfigVal<Any?>) {
         formatBuilder.append("\${$i}")
         args += v
         i++
     }
+
     fun append(v: Any?) {
         formatBuilder.append(v)
     }
