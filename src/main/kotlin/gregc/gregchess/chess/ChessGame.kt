@@ -7,12 +7,7 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
-class ChessGame(
-    private val timeManager: TimeManager,
-    val config: Configurator,
-    val arena: Arena,
-    val settings: GameSettings
-) {
+class ChessGame(private val timeManager: TimeManager, val arena: Arena, val settings: GameSettings) {
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() = "ChessGame(uniqueId=$uniqueId)"
@@ -160,10 +155,10 @@ class ChessGame(
             }
             components.allInit()
             requireStarting().apply {
-                (black as? HumanChessPlayer)?.sendTitle("", Config.Title.YouArePlayingAs.black)
-                (white as? HumanChessPlayer)?.sendTitle(Config.Title.yourTurn, Config.Title.YouArePlayingAs.white)
+                (black as? HumanChessPlayer)?.sendTitle("", Config.title.youArePlayingAs.black)
+                (white as? HumanChessPlayer)?.sendTitle(Config.title.yourTurn, Config.title.youArePlayingAs.white)
                 forEachUnique {
-                    it.sendMessage(Config.Message.YouArePlayingAs[it.side])
+                    it.sendMessage(Config.message.youArePlayingAs[it.side])
                 }
             }
             variant.start(this)
@@ -177,7 +172,7 @@ class ChessGame(
                     components.allUpdate()
             }
         } catch (e: Exception) {
-            players.forEachReal { it.sendMessage(ErrorMsg.teleportFailed) }
+            players.forEachReal { it.sendMessage(Config.error.teleportFailed) }
             panic(e)
             glog.mid("Failed to start game", uniqueId)
             throw e
@@ -217,31 +212,31 @@ class ChessGame(
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
-    open class EndReason(val namePath: ConfigPath<String>, val reasonPGN: String, val winner: Side?) {
+    open class EndReason(val namePath: ConfigVal<String>, val reasonPGN: String, val winner: Side?) {
 
         override fun toString() = "EndReason.${javaClass.name.split(".", "$").last()}(winner=$winner)"
 
         // @formatter:off
-        class Checkmate(winner: Side) : EndReason(Config.Chess.EndReason.checkmate, "normal", winner)
-        class Resignation(winner: Side) : EndReason(Config.Chess.EndReason.resignation, "abandoned", winner)
-        class Walkover(winner: Side) : EndReason(Config.Chess.EndReason.walkover, "abandoned", winner)
-        class PluginRestart : EndReason(Config.Chess.EndReason.pluginRestart, "emergency", null)
-        class ArenaRemoved : EndReason(Config.Chess.EndReason.arenaRemoved, "emergency", null)
-        class Stalemate : EndReason(Config.Chess.EndReason.stalemate, "normal", null)
-        class InsufficientMaterial : EndReason(Config.Chess.EndReason.insufficientMaterial, "normal", null)
-        class FiftyMoves : EndReason(Config.Chess.EndReason.fiftyMoves, "normal", null)
-        class Repetition : EndReason(Config.Chess.EndReason.repetition, "normal", null)
-        class DrawAgreement : EndReason(Config.Chess.EndReason.drawAgreement, "normal", null)
-        class Timeout(winner: Side) : ChessGame.EndReason(Config.Chess.EndReason.timeout, "time forfeit", winner)
-        class DrawTimeout : ChessGame.EndReason(Config.Chess.EndReason.drawTimeout, "time forfeit", null)
-        class Error(val e: Exception) : ChessGame.EndReason(Config.Chess.EndReason.error, "emergency", null) {
+        class Checkmate(winner: Side) : EndReason(EndReasonConfig::checkmate.path, "normal", winner)
+        class Resignation(winner: Side) : EndReason(EndReasonConfig::resignation.path, "abandoned", winner)
+        class Walkover(winner: Side) : EndReason(EndReasonConfig::walkover.path, "abandoned", winner)
+        class PluginRestart : EndReason(EndReasonConfig::pluginRestart.path, "emergency", null)
+        class ArenaRemoved : EndReason(EndReasonConfig::arenaRemoved.path, "emergency", null)
+        class Stalemate : EndReason(EndReasonConfig::stalemate.path, "normal", null)
+        class InsufficientMaterial : EndReason(EndReasonConfig::insufficientMaterial.path, "normal", null)
+        class FiftyMoves : EndReason(EndReasonConfig::fiftyMoves.path, "normal", null)
+        class Repetition : EndReason(EndReasonConfig::repetition.path, "normal", null)
+        class DrawAgreement : EndReason(EndReasonConfig::drawAgreement.path, "normal", null)
+        class Timeout(winner: Side) : ChessGame.EndReason(EndReasonConfig::timeout.path, "time forfeit", winner)
+        class DrawTimeout : ChessGame.EndReason(EndReasonConfig::drawTimeout.path, "time forfeit", null)
+        class Error(val e: Exception) : ChessGame.EndReason(EndReasonConfig::error.path, "emergency", null) {
             override fun toString() = "EndReason.Error(winner=$winner, e=$e)"
         }
 
-        class AllPiecesLost(winner: Side) : ChessGame.EndReason(Config.Chess.EndReason.piecesLost, "normal", winner)
+        class AllPiecesLost(winner: Side) : ChessGame.EndReason(EndReasonConfig::piecesLost.path, "normal", winner)
         // @formatter:on
 
-        val message get() = Config.Message.GameFinished[winner](namePath)
+        val message get() = with (Config.message) { winner?.let {gameFinished[it] } ?: gameFinishedDraw }(namePath.get())
     }
 
     val endReason: EndReason?
@@ -255,14 +250,15 @@ class ChessGame(
         try {
             components.allStop()
             players.forEachUnique(currentTurn) {
-                it.sendTitle(Config.Title.Player[reason.winner == it.side], reason.namePath)
+                val msg = with (Config.title) { when(reason.winner) { it.side -> youWon; null -> youDrew; else -> youLost} }
+                it.sendTitle(msg, reason.namePath.get())
                 it.sendMessage(reason.message)
                 timeManager.runTaskLater((if (quick[it.side]) 0 else 3).seconds) {
                     components.allRemovePlayer(it.player)
                 }
             }
             spectators.forEach {
-                it.sendTitle(Config.Title.Spectator[reason.winner], reason.namePath)
+                it.sendTitle(with(Config.title) { reason.winner?.let { spectator[it] } ?: spectatorDraw }, reason.namePath.get())
                 it.sendMessage(reason.message)
                 timeManager.runTaskLater((if (quick.white && quick.black) 0 else 3).seconds) {
                     components.allSpectatorLeave(it)

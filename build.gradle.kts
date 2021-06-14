@@ -18,30 +18,11 @@ dependencies {
 
     api("org.spigotmc:spigot-api:$spigotVersion")
     shaded(kotlin("stdlib-jdk8"))
+    shaded(kotlin("reflect"))
     shaded(project(":core"))
 }
 
-val generated = layout.buildDirectory.dir("generated").get()
-
-kotlin {
-    sourceSets["main"].kotlin.srcDir(generated)
-}
-
-idea.module {
-    generatedSourceDirs.plusAssign(generated.asFile)
-}
-
 tasks {
-    register<JavaExec>("regenerateConfig") {
-        inputs.files(project(":config").kotlin.sourceSets["main"].kotlin.srcDirs)
-        outputs.dir(generated)
-        outputs.upToDateWhen { true }
-        dependsOn += project(":config").tasks["build"]
-        group = "kotlinpoet"
-        main = "gregc.gregchess.config.MainKt"
-        classpath = project(":config").sourceSets["main"].runtimeClasspath
-        args(generated)
-    }
 
     processResources {
         from(sourceSets["main"].resources.srcDirs) {
@@ -52,7 +33,6 @@ tasks {
     }
 
     compileKotlin {
-        dependsOn += project.tasks["regenerateConfig"]
         kotlinOptions {
             jvmTarget = "11"
             freeCompilerArgs = listOf(
@@ -65,9 +45,6 @@ tasks {
         destinationDirectory.set(file(rootDir))
         from ({ shaded.map { if(it.isDirectory) it else zipTree(it) } })
         exclude { it.file.extension == "kotlin_metadata" }
-        from(generated) {
-            include("**/*.yml")
-        }
         duplicatesStrategy = DuplicatesStrategy.WARN
     }
 }

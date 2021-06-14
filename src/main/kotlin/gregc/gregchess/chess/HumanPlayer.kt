@@ -17,21 +17,13 @@ abstract class HumanPlayer(val name: String) {
         }
     val games = mutableListOf<ChessGame>()
 
-    abstract val config: Configurator
-
     abstract fun sendMessage(msg: String)
-    fun sendMessage(msg: ConfigVal<String>) = sendMessage(msg.get(config))
     abstract fun sendTitle(title: String, subtitle: String = "")
-    fun sendTitle(title: ConfigVal<String>, subtitle: ConfigVal<String>) = sendTitle(title.get(config), subtitle)
-    fun sendTitle(title: String, subtitle: ConfigVal<String>) = sendTitle(title, subtitle.get(config))
-    fun sendTitle(title: ConfigVal<String>, subtitle: String = "") = sendTitle(title.get(config), subtitle)
     fun isInGame(): Boolean = currentGame != null
     fun isSpectating(): Boolean = spectatedGame != null
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendFEN(fen: FEN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
-    fun sendCommandMessage(msg: ConfigVal<String>, action: ConfigVal<String>, command: String) =
-        sendCommandMessage(msg.get(config), action.get(config), command)
 
     abstract fun setItem(i: Int, piece: Piece?)
     abstract fun openScreen(s: Screen<*>)
@@ -42,12 +34,8 @@ abstract class MinecraftPlayer(val uniqueId: UUID, name: String) : HumanPlayer(n
 class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(player.uniqueId, player.name) {
 
     companion object {
-        private lateinit var config: BukkitConfigurator
         private val bukkitPlayers = mutableMapOf<Player, BukkitPlayer>()
         fun toHuman(p: Player) = bukkitPlayers.getOrPut(p) { BukkitPlayer(p) }
-        operator fun invoke(c: BukkitConfigurator) {
-            config = c
-        }
     }
 
     override var isAdmin = false
@@ -58,21 +46,18 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
             player.teleport(loc)
         }
 
-    override val config: Configurator
-        get() = Companion.config
-
     override fun sendMessage(msg: String) = player.sendMessage(msg)
 
     override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
     override fun sendPGN(pgn: PGN) {
-        val message = TextComponent(Config.Message.copyPGN.get(config))
+        val message = TextComponent(Config.message.copyPGN)
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }
 
     override fun sendFEN(fen: FEN) {
-        val message = TextComponent(Config.Message.copyFEN.get(config))
+        val message = TextComponent(Config.message.copyFEN)
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
         player.spigot().sendMessage(message)
     }
@@ -86,11 +71,11 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     }
 
     override fun setItem(i: Int, piece: Piece?) {
-        player.inventory.setItem(i, piece?.let { it.type.getItem(config, it.side) })
+        player.inventory.setItem(i, piece?.item)
     }
 
     override fun openScreen(s: Screen<*>) {
-        player.openInventory(BukkitScreen(s, config).inventory)
+        player.openInventory(BukkitScreen(s).inventory)
     }
 
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"

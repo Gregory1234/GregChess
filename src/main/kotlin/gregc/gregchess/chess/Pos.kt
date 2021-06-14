@@ -94,7 +94,7 @@ class PosSteps(val start: Pos, private val jump: Pair<Int, Int>, override val si
 enum class Floor {
     LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END;
 
-    val material get() = Config.Chess.Floor[this]
+    val material get() = Config.chess.getFloor(this)
 }
 
 data class Square(val pos: Pos, val game: ChessGame) {

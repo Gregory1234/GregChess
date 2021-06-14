@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Config
-import gregc.gregchess.Configurator
 import org.bukkit.inventory.ItemStack
 
 enum class PieceType(
@@ -16,8 +15,6 @@ enum class PieceType(
     KNIGHT('n', ::knightMovement, true),
     PAWN('p', ::pawnMovement, false);
 
-    val view get() = Config.Chess.Piece[this]
-
     companion object {
 
         fun parseFromStandardChar(c: Char): PieceType =
@@ -25,16 +22,18 @@ enum class PieceType(
                 ?: throw IllegalArgumentException(c.toString())
     }
 
-    fun getItem(config: Configurator, side: Side): ItemStack {
-        val item = ItemStack(view.item[side].get(config))
+    fun getItem(side: Side): ItemStack {
+        val item = ItemStack(itemMaterial[side])
         val meta = item.itemMeta!!
-        meta.setDisplayName(side.getPieceName(config, pieceName))
+        meta.setDisplayName(side.getPieceName(pieceName))
         item.itemMeta = meta
         return item
     }
 
-    val pieceName
-        get() = view.name
-    val char
-        get() = view.char
+    fun getSound(s: PieceSound) = Config.piece.getSound(this, s)
+
+    val pieceName get() = Config.piece.getName(this)
+    val char get() = Config.piece.getChar(this)
+    val itemMaterial get() = Config.piece.getItem(this)
+    val structure get() = Config.piece.getStructure(this)
 }

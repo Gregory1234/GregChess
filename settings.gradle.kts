@@ -11,4 +11,4 @@ dependencyResolutionManagement {
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     }
 }
-include("core", "config")
+include("core")

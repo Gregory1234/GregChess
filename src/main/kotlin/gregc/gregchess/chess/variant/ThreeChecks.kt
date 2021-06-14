@@ -1,11 +1,12 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.Config
-import gregc.gregchess.ConstVal
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
+    private val View.checkCounter get() = getString("CheckCounter")
+
     class CheckCounter(private val game: ChessGame) : Component {
         object Settings : Component.Settings<CheckCounter> {
             override fun getComponent(game: ChessGame) = CheckCounter(game)
@@ -15,8 +16,8 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
 
         @GameEvent(GameBaseEvent.START)
         fun start() {
-            game.scoreboard += object : PlayerProperty(Config.Component.CheckCounter.checkCounter) {
-                override fun invoke(s: Side) = ConstVal(checks[s].toString())
+            game.scoreboard += object : PlayerProperty(Config.component.checkCounter.checkCounter) {
+                override fun invoke(s: Side) = checks[s].toString()
             }
         }
 
@@ -34,7 +35,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         }
     }
 
-    class ThreeChecksEndReason(winner: Side) : ChessGame.EndReason(Config.Chess.EndReason.threeChecks, "normal", winner)
+    class ThreeChecksEndReason(winner: Side) : ChessGame.EndReason(EndReasonConfig::threeChecks.path, "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

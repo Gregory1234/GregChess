@@ -91,7 +91,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
     private val data = mutableMapOf<UUID, PlayerData>()
 
     override fun renderPiece(loc: Loc, piece: Piece) {
-        piece.type.view.structure[piece.side].get(game.config).forEachIndexed { i, m ->
+        piece.type.structure[piece.side].forEachIndexed { i, m ->
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
         }
     }
@@ -105,7 +105,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
     private fun <R> doAt(pos: Pos, f: (World, Location) -> R) = getPieceLoc(pos).doIn(world, f)
 
     override fun playPieceSound(pos: Pos, sound: PieceSound, type: PieceType) =
-        doAt(pos) { world, l -> world.playSound(l, type.view.sound[sound].get(game.config)) }
+        doAt(pos) { world, l -> world.playSound(l, type.getSound(sound)) }
 
     override fun explosionAt(pos: Pos) {
         doAt(pos) { world, l ->
@@ -117,7 +117,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
         val (x, y, z) = getPieceLoc(pos)
         val mi = -settings.lowHalfTile
         val ma = settings.highHalfTile
-        fill(FillVolume(world, floor.material.get(game.config), Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma)))
+        fill(FillVolume(world, floor.material, Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma)))
     }
 
     override fun renderBoardBase() {

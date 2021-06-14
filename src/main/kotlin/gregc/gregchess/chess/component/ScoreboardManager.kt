@@ -20,14 +20,23 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
 
-    private val view = Config.Component.Scoreboard
+    private val view = Config.component.scoreboard
+
+    private val View.title get() = getString("Title")
+    private val View.preset get() = getString("Preset")
+    private val View.player get() = getString("Player")
+    private val View.playerPrefix get() = getString("PlayerPrefix")
+    private fun View.whiteFormat(s: String) = getStringFormat("Format.White", s)
+    private fun View.blackFormat(s: String) = getStringFormat("Format.Black", s)
+    private fun View.generalFormat(s: String) = getStringFormat("Format.General", s)
+    private fun View.format(side: Side, s: String) = getStringFormat("Format.${side.standardName}", s)
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     private val gamePropertyTeams = mutableMapOf<GameProperty, Team>()
     private val playerPropertyTeams = mutableMapOf<PlayerProperty, BySides<Team>>()
 
-    private val objective = scoreboard.registerNewObjective("GregChess", "", view.title.get(game.config))
+    private val objective = scoreboard.registerNewObjective("GregChess", "", view.title)
 
     override operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -48,10 +57,10 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     @GameEvent(GameBaseEvent.INIT)
     fun init() {
         this += object : GameProperty(view.preset) {
-            override fun invoke() = ConstVal(game.settings.name)
+            override fun invoke() = game.settings.name
         }
         this += object : PlayerProperty(view.player) {
-            override fun invoke(s: Side) = ConstVal(view.playerPrefix.get(game.config) + game[s].name)
+            override fun invoke(s: Side) = view.playerPrefix + game[s].name
         }
     }
 
@@ -63,22 +72,22 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         var i = l
         gameProperties.forEach {
             gamePropertyTeams[it] = newTeam().apply {
-                addEntry(view.format.general(it.name).get(game.config))
+                addEntry(view.generalFormat(it.name))
             }
-            objective.getScore(view.format.general(it.name).get(game.config)).score = i--
+            objective.getScore(view.generalFormat(it.name)).score = i--
         }
         playerProperties.forEach {
             playerPropertyTeams[it] = BySides { s ->
-                newTeam().apply { addEntry(view.format[s](it.name).get(game.config)) }
+                newTeam().apply { addEntry(view.format(s, it.name)) }
             }
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            objective.getScore(view.format.white(it.name).get(game.config)).score = i--
+            objective.getScore(view.whiteFormat(it.name)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            objective.getScore(view.format.black(it.name).get(game.config)).score = i--
+            objective.getScore(view.blackFormat(it.name)).score = i--
         }
     }
 
@@ -90,10 +99,10 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     @GameEvent(GameBaseEvent.UPDATE, mod = TimeModifier.LATE)
     fun update() {
         gameProperties.forEach {
-            gamePropertyTeams[it]?.suffix = it().get(game.config)
+            gamePropertyTeams[it]?.suffix = it()
         }
         playerProperties.forEach {
-            playerPropertyTeams[it]?.forEachIndexed { s, t -> t.suffix = it(s).get(game.config) }
+            playerPropertyTeams[it]?.forEachIndexed { s, t -> t.suffix = it(s) }
         }
     }
 
@@ -104,10 +113,10 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     }
 }
 
-abstract class PlayerProperty(val name: ConfigPath<String>) {
-    abstract operator fun invoke(s: Side): ConfigVal<String>
+abstract class PlayerProperty(val name: String) {
+    abstract operator fun invoke(s: Side): String
 }
 
-abstract class GameProperty(val name: ConfigPath<String>) {
-    abstract operator fun invoke(): ConfigVal<String>
+abstract class GameProperty(val name: String) {
+    abstract operator fun invoke(): String
 }

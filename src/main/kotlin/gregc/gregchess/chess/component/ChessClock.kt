@@ -12,6 +12,10 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
 
+    private val View.timeFormat get() = getTimeFormat("TimeFormat")
+    private val View.timeRemaining get() = getString("TimeRemaining")
+
+
     data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
         Component.Settings<ChessClock> {
 
@@ -29,13 +33,13 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
 
         companion object {
 
-            fun get(config: Configurator, name: String?) = when (name) {
+            operator fun get(name: String?) = when (name) {
                 "none" -> null
                 null -> null
                 else -> {
-                    val settings = Config.Settings.clock.get(config).mapValues { (_, it) ->
-                        val t = it.get { type }
-                        Settings(t, it.get { initial }, if (t.usesIncrement) it.get { increment } else 0.seconds)
+                    val settings = Config.settings.clock.mapValues { (_, it) ->
+                        val t = it.getEnum("Type", Type.INCREMENT)
+                        Settings(t, it.getDuration("Initial"), if (t.usesIncrement) it.getDuration("increment") else 0.seconds)
                     }
                     if (name in settings)
                         settings[name]
@@ -57,7 +61,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    private val view get() = Config.Component.Clock
+    private val view get() = Config.component.clock
 
     data class Time(
         var diff: Duration,

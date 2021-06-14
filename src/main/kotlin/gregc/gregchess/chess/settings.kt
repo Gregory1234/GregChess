@@ -6,14 +6,14 @@ import gregc.gregchess.chess.variant.ChessVariant
 
 object SettingsManager {
 
-    fun getSettings(config: Configurator): List<GameSettings> =
-        Config.Settings.presets.get(config).map { (key, child) ->
-            val simpleCastling = child.get { simpleCastling }
-            val variant = ChessVariant[child.get { variant }]
+    fun getSettings(): List<GameSettings> =
+        Config.settings.presets.map { (key, child) ->
+            val simpleCastling = child.getDefaultBoolean("SimpleCastling", false)
+            val variant = ChessVariant[child.getString("Variant")]
             val components = buildList {
-                this += Chessboard.Settings[child.get { board }]
-                ChessClock.Settings.get(config, child.get { clock })?.let { this += it }
-                val tileSize = child.get { tileSize }
+                this += Chessboard.Settings[child.getString("Board")]
+                ChessClock.Settings[child.getString("Clock")]?.let { this += it }
+                val tileSize = child.getDefaultInt("TileSize", 3)
                 this += BukkitRenderer.Settings(tileSize)
                 this += BukkitScoreboardManager.Settings
                 this += BukkitEventRelay.Settings
@@ -24,9 +24,9 @@ object SettingsManager {
 }
 
 class SettingsScreen(private inline val startGame: (GameSettings) -> Unit) :
-    Screen<GameSettings>(GameSettings::class, Config.Message.chooseSettings) {
-    override fun getContent(config: Configurator) =
-        SettingsManager.getSettings(config).toList().mapIndexed { index, s ->
+    Screen<GameSettings>(GameSettings::class, MessageConfig::chooseSettings.path) {
+    override fun getContent() =
+        SettingsManager.getSettings().toList().mapIndexed { index, s ->
             ScreenOption(s, InventoryPosition.fromIndex(index))
         }
 

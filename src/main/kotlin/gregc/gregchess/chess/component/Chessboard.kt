@@ -66,7 +66,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     operator fun get(pos: Pos) = squares[pos]
 
     operator fun get(loc: Loc) =
-        this[cNotNull(game.withRenderer<Loc, Pos> { it.getPos(loc) }, ErrorMsg.rendererNotFound)]
+        this[cNotNull(game.withRenderer<Loc, Pos> { it.getPos(loc) }, Config.error.rendererNotFound)]
 
     private val moves: MutableList<MoveData> = mutableListOf()
 
@@ -116,7 +116,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             val wLast = (if (moves.size <= 1) null else moves[moves.size - 2].name)
             val bLast = lastMove?.name
             game.players.forEachReal { p ->
-                p.sendMessage(buildMessage {
+                p.sendMessage(buildString {
                     append(num)
                     append(' ')
                     wLast?.let { append(it) }
@@ -135,7 +135,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             val num = "${fullMoveCounter}."
             val wLast = lastMove?.name
             game.players.forEachReal { p ->
-                p.sendMessage(buildMessage {
+                p.sendMessage(buildString {
                     append(num)
                     append(' ')
                     wLast?.let { append(it) }
@@ -203,7 +203,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             val target = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
             val piece = target.piece!!
             val origin = this[piece.pos.plusR(-2 * piece.side.direction)]!!
-            lastMove = MoveData(piece.piece, origin, target, ConstVal(""), "", true) {}
+            lastMove = MoveData(piece.piece, origin, target, "", "", true) {}
         }
 
         movesSinceLastCapture = fen.halfmoveClock

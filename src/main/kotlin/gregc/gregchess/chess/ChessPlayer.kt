@@ -45,8 +45,8 @@ abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val ga
 class PawnPromotionScreen(
     private val moves: List<MoveCandidate>,
     private val player: ChessPlayer
-) : Screen<MoveCandidate>(MoveCandidate::class, Config.Message.pawnPromotion) {
-    override fun getContent(config: Configurator) = moves.mapIndexed { i, m ->
+) : Screen<MoveCandidate>(MoveCandidate::class, MessageConfig::pawnPromotion.path) {
+    override fun getContent() = moves.mapIndexed { i, m ->
         ScreenOption(m, InventoryPosition.fromIndex(i))
     }
 
@@ -68,11 +68,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
     override fun toString() = "BukkitChessPlayer(name=$name, side=$side, game.uniqueId=${game.uniqueId})"
 
     override fun sendMessage(msg: String) = player.sendMessage(msg)
-    fun sendMessage(msg: ConfigVal<String>) = player.sendMessage(msg)
     fun sendTitle(title: String, subtitle: String = "") = player.sendTitle(title, subtitle)
-    fun sendTitle(title: ConfigVal<String>, subtitle: ConfigVal<String>) = player.sendTitle(title, subtitle)
-    fun sendTitle(title: String, subtitle: ConfigVal<String>) = player.sendTitle(title, subtitle)
-    fun sendTitle(title: ConfigVal<String>, subtitle: String = "") = player.sendTitle(title, subtitle)
 
     fun pickUp(pos: Pos) {
         if (!game.running) return
@@ -100,17 +96,17 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
 
     private fun announceInCheck() {
         if (!silent) {
-            sendTitle(Config.Title.yourTurn, Config.Title.inCheck)
-            sendMessage(Config.Message.inCheck)
+            sendTitle(Config.title.yourTurn, Config.title.inCheck)
+            sendMessage(Config.message.inCheck)
         } else {
-            sendTitle(Config.Title.inCheck)
-            sendMessage(Config.Message.inCheck)
+            sendTitle(Config.title.inCheck)
+            sendMessage(Config.message.inCheck)
         }
     }
 
     override fun startTurn() {
         if (!silent) {
-            sendTitle(Config.Title.yourTurn)
+            sendTitle(Config.title.yourTurn)
         }
         if (king?.let { game.variant.isInCheck(it) } == true)
             announceInCheck()

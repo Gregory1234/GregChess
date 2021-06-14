@@ -5,8 +5,8 @@ import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import kotlin.reflect.KClass
 
-abstract class Screen<T : Any>(val cl: KClass<T>, val namePath: ConfigPath<String>) {
-    abstract fun getContent(config: Configurator): List<ScreenOption<T>>
+abstract class Screen<T : Any>(val cl: KClass<T>, val namePath: ConfigVal<String>) {
+    abstract fun getContent(): List<ScreenOption<T>>
     abstract fun onClick(v: T)
     abstract fun onCancel()
 }
@@ -21,28 +21,28 @@ data class InventoryPosition(val x: Int, val y: Int) {
 
 data class ScreenOption<T>(val value: T, val position: InventoryPosition)
 
-class BukkitScreen<T : Any> internal constructor(private val screen: Screen<T>, config: Configurator) : InventoryHolder {
+class BukkitScreen<T : Any> internal constructor(private val screen: Screen<T>) : InventoryHolder {
     companion object {
-        private val renderers = mutableMapOf<KClass<*>, Any.(Configurator) -> ItemStack>()
-        private fun <T : Any> render(cl: KClass<T>, c: Configurator, v: T): ItemStack = with(v) { renderers[cl]!!(c) }
-        fun <T : Any> addRendererAny(cl: KClass<T>, r: Any.(Configurator) -> ItemStack) {
+        private val renderers = mutableMapOf<KClass<*>, Any.() -> ItemStack>()
+        private fun <T : Any> render(cl: KClass<T>, v: T): ItemStack = with(v) { renderers[cl]!!() }
+        fun <T : Any> addRendererAny(cl: KClass<T>, r: Any.() -> ItemStack) {
             renderers[cl] = r
         }
 
         @Suppress("unchecked_cast")
-        inline fun <T : Any> addRenderer(cl: KClass<T>, crossinline r: T.(Configurator) -> ItemStack) =
-            addRendererAny(cl) { (this as T).r(it) }
+        inline fun <T : Any> addRenderer(cl: KClass<T>, crossinline r: T.() -> ItemStack) =
+            addRendererAny(cl) { (this as T).r() }
 
-        inline fun <reified T : Any> addRenderer(crossinline r: T.(Configurator) -> ItemStack) = addRenderer(T::class, r)
+        inline fun <reified T : Any> addRenderer(crossinline r: T.() -> ItemStack) = addRenderer(T::class, r)
     }
 
-    private val content = screen.getContent(config)
-    private val inv = Bukkit.createInventory(this, content.size - content.size % 9 + 9, screen.namePath.get(config))
+    private val content = screen.getContent()
+    private val inv = Bukkit.createInventory(this, content.size - content.size % 9 + 9, screen.namePath.get())
 
     var finished: Boolean = false
 
     init {
-        content.forEach { (v, pos) -> inv.setItem(pos.index, render(screen.cl, config, v)) }
+        content.forEach { (v, pos) -> inv.setItem(pos.index, render(screen.cl, v)) }
     }
 
     override fun getInventory() = inv

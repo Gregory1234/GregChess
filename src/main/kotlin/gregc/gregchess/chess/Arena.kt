@@ -15,9 +15,15 @@ interface ArenaManager {
     fun next(): Arena?
 }
 
-fun ArenaManager.cNext() = cNotNull(next(), ErrorMsg.noArenas)
+interface ArenasConfig: ConfigBlock {
+    val chessArenas: List<String>
+}
 
-class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) : ArenaManager, Listener {
+val Config.arenas: ArenasConfig by Config
+
+fun ArenaManager.cNext() = cNotNull(next(), Config.error.noArenas)
+
+class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
     private val arenas = mutableListOf<Arena>()
 
     override fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
@@ -25,7 +31,7 @@ class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) :
     private fun World.isArena(): Boolean = arenas.any { it.name == name }
 
     fun reload() {
-        val newArenas = Config.chessArenas.get(config)
+        val newArenas = Config.arenas.chessArenas
         arenas.removeIf {
             if (it.name !in newArenas) {
                 it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
@@ -37,7 +43,7 @@ class BukkitArenaManager(private val plugin: Plugin, val config: Configurator) :
 
     fun start() {
         Bukkit.getPluginManager().registerEvents(this, plugin)
-        arenas.addAll(Config.chessArenas.get(config).map { Arena(it) })
+        arenas.addAll(Config.arenas.chessArenas.map { Arena(it) })
     }
 
     @EventHandler
