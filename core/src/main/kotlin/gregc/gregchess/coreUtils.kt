@@ -113,6 +113,18 @@ value class TimeFormat(private val formatter: DateTimeFormatter) {
     operator fun invoke(time: Duration): String = time.toLocalTime().format(formatter)
 }
 
+fun String.snakeToPascal(): String {
+    val snakeRegex = "_[a-zA-Z]".toRegex()
+    return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
+}
+
+fun numberedFormatCheck(s: String, num: UInt): Boolean {
+    return Regex("""\$(?:(\d+)|\{(\d+)})""").findAll(s).none {
+        val i = it.groupValues[1].toIntOrNull() ?: it.groupValues.getOrNull(2)?.toIntOrNull()
+        i == null || i < 1 || i.toUInt() > num
+    }
+}
+
 fun numberedFormat(s: String, vararg args: Any?): String? {
     var retNull = false
     val ret = s.replace(Regex("""\$(?:(\d+)|\{(\d+)})""")) {

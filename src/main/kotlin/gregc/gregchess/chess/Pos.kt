@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Config
-import gregc.gregchess.rangeTo
+import gregc.gregchess.*
 
 data class Pos(val file: Int, val rank: Int) {
     override fun toString() = "$fileStr$rankStr"
@@ -95,6 +94,7 @@ enum class Floor {
     LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END;
 
     val material get() = Config.chess.getFloor(this)
+    val standardName get() = name.snakeToPascal()
 }
 
 data class Square(val pos: Pos, val game: ChessGame) {

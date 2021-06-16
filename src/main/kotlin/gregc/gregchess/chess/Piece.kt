@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.buildTextComponent
-import gregc.gregchess.glog
+import gregc.gregchess.*
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
@@ -41,7 +40,9 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 }
 
 enum class PieceSound {
-    PICK_UP, MOVE, CAPTURE
+    PICK_UP, MOVE, CAPTURE;
+
+    val standardName: String = name.snakeToPascal()
 }
 
 class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false) {

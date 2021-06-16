@@ -68,8 +68,11 @@ interface View {
     fun getPureStringList(path: String): List<String>?
     fun processString(s: String): String
     val children: Set<String>?
-    operator fun get(path: String): View?
+    fun getOrNull(path: String): View?
+    operator fun get(path: String): View
 }
+
+val View.childrenViews: Map<String, View>? get() = children?.associateWith { this[it] }
 
 fun <T> View.getVal(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?): T =
     getPureString(path).getVal(path, type, default, warnMissing, parser)
@@ -77,11 +80,30 @@ fun <T> View.getList(path: String, type: String, warnMissing: Boolean = true, pa
     getPureStringList(path).getList(path, type, warnMissing, parser)
 
 fun View.getString(path: String) = getVal(path, "string", path, true, ::processString)
+fun View.getStringList(path: String) = getList(path, "string", true, ::processString)
 fun View.getDefaultBoolean(path: String, def: Boolean) = getVal(path, "duration", def, true, String::toBooleanStrictOrNull)
 fun View.getDefaultInt(path: String, def: Int) = getVal(path, "duration", def, true, String::toIntOrNull)
 fun View.getDuration(path: String) = getVal(path, "duration", 0.seconds, true, ::parseDuration)
+fun View.getOptionalDuration(path: String) = getVal(path, "duration", null, false, ::parseDuration)
+fun View.getChar(path: String) = getVal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
 fun View.getTimeFormat(path: String) = getVal(path, "time format", TimeFormat(""), true, ::TimeFormat)
 fun View.getStringFormat(path: String, vararg vs: Any?) = getVal(path, "string format", path, true) {
     numberedFormat(it, *vs)?.let(::processString)
 }
+fun <T1> View.getStringFormatF1(path: String): (T1) -> String = getVal(path, "string format", { _ -> path }, true) {
+    if (!numberedFormatCheck(it, 1u))
+        null
+    else { a1 ->
+        processString(numberedFormat(it, a1)!!)
+    }
+}
+fun <T1, T2> View.getStringFormatF2(path: String): (T1, T2) -> String = getVal(path, "string format", { _, _ -> path }, true) {
+    if (!numberedFormatCheck(it, 2u))
+        null
+    else { a1, a2 ->
+        processString(numberedFormat(it, a1, a2)!!)
+    }
+}
 fun <T: Enum<T>> View.getEnum(path: String, def: T) = getVal(path, def::class.simpleName ?: "enum", def, true, enumValueOrNull(def::class))
+fun <T: Enum<T>> View.getEnumList(path: String, cl: KClass<T>) = getList(path, cl.simpleName ?: "enum", true, enumValueOrNull(cl))
+inline fun <reified T: Enum<T>> View.getEnumList(path: String) = getEnumList(path, T::class)

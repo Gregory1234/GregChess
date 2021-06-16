@@ -173,23 +173,22 @@ val MessageConfig.gameFinishedDraw get() = getMessage1("GameFinished.ItWasADraw"
 
 interface TitleConfig: ConfigBlock {
     companion object {
-        operator fun getValue(owner: TitleConfig, property: KProperty<*>) = owner.getMessage(property.name.upperFirst())
+        operator fun getValue(owner: TitleConfig, property: KProperty<*>) = owner.getTitle(property.name.upperFirst())
     }
 
-    fun getMessage(s: String): String
-    fun getMessage1(s: String): (String) -> String
+    fun getTitle(s: String): String
 }
 
 val Config.title: TitleConfig by Config
 
 val TitleConfig.inCheck by TitleConfig
-val TitleConfig.youWon get() = getMessage("Player.YouWon")
-val TitleConfig.youDrew get() = getMessage("Player.YouDrew")
-val TitleConfig.youLost get() = getMessage("Player.YouLost")
-val TitleConfig.spectatorDraw get() = getMessage("Spectator.ItWasADraw")
+val TitleConfig.youWon get() = getTitle("Player.YouWon")
+val TitleConfig.youDrew get() = getTitle("Player.YouDrew")
+val TitleConfig.youLost get() = getTitle("Player.YouLost")
+val TitleConfig.spectatorDraw get() = getTitle("Spectator.ItWasADraw")
 
-val TitleConfig.spectator get() = BySides { getMessage("Spectator.${it.standardName}Won") }
-val TitleConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
+val TitleConfig.spectator get() = BySides { getTitle("Spectator.${it.standardName}Won") }
+val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
 val TitleConfig.yourTurn by TitleConfig
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {

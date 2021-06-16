@@ -10,7 +10,6 @@ import org.bukkit.plugin.Plugin
 import java.time.Duration
 import java.util.*
 import kotlin.collections.set
-import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
 
 interface RequestConfig {
@@ -18,7 +17,7 @@ interface RequestConfig {
     val cancel: String
     val selfAccept: Boolean
     fun getExpired(t: String): (String) -> String
-    fun getDuration(t: String): Duration?
+    fun getRequestDuration(t: String): Duration?
     fun getSentRequest(t: String): String
     fun getSentCancel(t: String): (String) -> String
     fun getSentAccept(t: String): (String) -> String
@@ -33,11 +32,11 @@ operator fun RequestConfig.get(t: String) = RequestTypeConfig(t)
 
 class RequestTypeConfig(val name: String) {
 
-    private operator fun <R> (KFunction<R>).getValue(requestTypeConfig: RequestTypeConfig, property: KProperty<*>): R =
-        call(Config.request, name)
+    private operator fun <R> (RequestConfig.(String) -> R).getValue(requestTypeConfig: RequestTypeConfig, property: KProperty<*>): R =
+        invoke(Config.request, name)
 
     val expired by RequestConfig::getExpired
-    val duration by RequestConfig::getDuration
+    val duration by RequestConfig::getRequestDuration
     val sentRequest by RequestConfig::getSentRequest
     val sentCancel by RequestConfig::getSentCancel
     val sentAccept by RequestConfig::getSentAccept

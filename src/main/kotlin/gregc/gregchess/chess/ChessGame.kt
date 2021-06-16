@@ -258,7 +258,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
                 }
             }
             spectators.forEach {
-                it.sendTitle(with(Config.title) { reason.winner?.let { spectator[it] } ?: spectatorDraw }, reason.namePath.get())
+                it.sendTitle(with(Config.title) { reason.winner?.let(spectator::get) ?: spectatorDraw }, reason.namePath.get())
                 it.sendMessage(reason.message)
                 timeManager.runTaskLater((if (quick.white && quick.black) 0 else 3).seconds) {
                     components.allSpectatorLeave(it)

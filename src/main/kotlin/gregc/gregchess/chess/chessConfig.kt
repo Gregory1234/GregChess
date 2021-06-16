@@ -6,17 +6,17 @@ import org.bukkit.Sound
 import kotlin.reflect.KProperty
 
 interface PieceConfig: ConfigBlock {
-    fun getName(t: PieceType): String
-    fun getChar(t: PieceType): Char
-    fun getItem(t: PieceType): BySides<Material>
-    fun getStructure(t: PieceType): BySides<List<Material>>
-    fun getSound(t: PieceType, s: PieceSound): Sound
+    fun getPieceName(t: PieceType): String
+    fun getPieceChar(t: PieceType): Char
+    fun getPieceItem(t: PieceType): BySides<Material>
+    fun getPieceStructure(t: PieceType): BySides<List<Material>>
+    fun getPieceSound(t: PieceType, s: PieceSound): Sound
 }
 
 val Config.piece: PieceConfig by Config
 
 interface SideConfig: ConfigBlock {
-    fun getPieceName(s: Side, n: String): String
+    fun getSidePieceName(s: Side, n: String): String
 }
 
 val Config.side: SideConfig by Config
@@ -30,12 +30,11 @@ val Config.chess: ChessConfig by Config
 
 interface SettingsConfig: ConfigBlock {
     companion object {
-        operator fun getValue(owner: SettingsConfig, property: KProperty<*>) = owner[property.name.upperFirst()]
+        operator fun getValue(owner: SettingsConfig, property: KProperty<*>) = owner.getSettings(property.name.upperFirst())
     }
     val settingsBlocks: Map<String, Map<String, View>>
+    fun getSettings(n: String): Map<String, View>
 }
-
-operator fun SettingsConfig.get(name: String): Map<String, View> = settingsBlocks[name].orEmpty()
 
 val SettingsConfig.clock by SettingsConfig
 val SettingsConfig.presets by SettingsConfig
@@ -44,12 +43,11 @@ val Config.settings: SettingsConfig by Config
 
 interface ComponentsConfig: ConfigBlock {
     companion object {
-        operator fun getValue(owner: ComponentsConfig, property: KProperty<*>) = owner[property.name.upperFirst()]
+        operator fun getValue(owner: ComponentsConfig, property: KProperty<*>) = owner.getComponent(property.name.upperFirst())
     }
     val componentBlocks: Map<String, View>
+    fun getComponent(n: String): View
 }
-
-operator fun ComponentsConfig.get(name: String): View = componentBlocks[name]!!
 
 val Config.component: ComponentsConfig by Config
 

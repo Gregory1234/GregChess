@@ -23,6 +23,10 @@ class GregChess : JavaPlugin(), Listener {
     private val timeManager = BukkitTimeManager(this)
     private val chessManager = BukkitChessGameManager(this)
 
+    init {
+        Config.initBukkit { config }
+    }
+
     private val drawRequest = buildRequestType<Unit>(timeManager, requestManager) {
         messagesSimple(Config.request["draw"], "/chess draw", "/chess draw")
         validateSender = { it.chess?.hasTurn ?: false }
