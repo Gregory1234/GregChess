@@ -10,16 +10,17 @@ group = "gregc"
 version = "1.0"
 
 val shaded: Configuration by configurations.creating
+val unshaded: Configuration by configurations.creating
 
 configurations["implementation"].extendsFrom(shaded)
+shaded.extendsFrom(unshaded)
 
 dependencies {
     val spigotVersion: String by project
 
     api("org.spigotmc:spigot-api:$spigotVersion")
-    api(kotlin("stdlib-jdk8"))
+    unshaded(kotlin("stdlib-jdk8"))
     shaded(project(":core"))
-    shaded.exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
 }
 
 tasks {
@@ -44,7 +45,7 @@ tasks {
     jar {
         archiveBaseName.set(project.name)
         destinationDirectory.set(file(rootDir))
-        from ({ shaded.map { if(it.isDirectory) it else zipTree(it) } })
+        from ({ shaded.filter { it !in unshaded }.map { if(it.isDirectory) it else zipTree(it) } })
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
     }
