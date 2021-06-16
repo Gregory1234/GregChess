@@ -42,22 +42,6 @@ abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val ga
 
 }
 
-class PawnPromotionScreen(private val moves: List<MoveCandidate>) :
-    Screen<MoveCandidate>(MoveCandidate::class, MessageConfig::pawnPromotion) {
-    override fun getContent() = moves.mapIndexed { i, m ->
-        ScreenOption(m, InventoryPosition.fromIndex(i))
-    }
-
-    override fun onClick(v: MoveCandidate) {
-        v.game.finishMove(v)
-    }
-
-    override fun onCancel() {
-        moves.first().let { it.game.finishMove(it) }
-    }
-
-}
-
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(side, silent, game) {
 
@@ -110,8 +94,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
             announceInCheck()
     }
 
-    private fun pawnPromotionScreen(moves: List<MoveCandidate>) =
-        player.openScreen(PawnPromotionScreen(moves))
+    private fun pawnPromotionScreen(moves: List<MoveCandidate>) = player.openPawnPromotionMenu(moves)
 }
 
 class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : ChessPlayer(side, true, game) {

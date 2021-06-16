@@ -3,12 +3,10 @@ package gregc.gregchess
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.GameEndEvent
 import gregc.gregchess.chess.component.TurnEndEvent
-import org.bukkit.Material
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
-import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 import java.time.LocalDateTime
@@ -68,14 +66,6 @@ class GregChess : JavaPlugin(), Listener {
         chessManager.start()
         arenaManager.start()
         requestManager.start()
-        BukkitScreen.addRenderer<MoveCandidate> { (promotion ?: piece.piece).item }
-        BukkitScreen.addRenderer<GameSettings> {
-            ItemStack(Material.IRON_BLOCK).apply {
-                val meta = itemMeta
-                meta?.setDisplayName(this@addRenderer.name)
-                itemMeta = meta
-            }
-        }
         addCommand("chess") {
             when (nextArg().lowercase()) {
                 "duel" -> {
@@ -96,7 +86,7 @@ class GregChess : JavaPlugin(), Listener {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!opponent.human.isInGame(), Config.error.opponentInGame)
-                            player.human.openScreen(SettingsScreen { settings ->
+                            player.openMenu(BukkitSettingsMenu { settings ->
                                 duelRequest += Request(player.human, opponent.human,
                                     ChessGame(timeManager, arenaManager.cNext(), settings))
                             })
@@ -108,7 +98,7 @@ class GregChess : JavaPlugin(), Listener {
                     cRequire(Config.stockfish.hasStockfish, Config.error.stockfishNotFound)
                     endArgs()
                     cRequire(!player.human.isInGame(), Config.error.youInGame)
-                    player.human.openScreen(SettingsScreen { settings ->
+                    player.openMenu(BukkitSettingsMenu { settings ->
                         ChessGame(timeManager, arenaManager.cNext(), settings).addPlayers {
                             human(player.human, Side.WHITE, false)
                             engine(Stockfish(timeManager), Side.BLACK)
@@ -380,7 +370,7 @@ class GregChess : JavaPlugin(), Listener {
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
         val holder = e.inventory.holder
-        if (holder is BukkitScreen<*>) {
+        if (holder is BukkitMenu<*>.BukkitMenuHolder) {
             e.isCancelled = true
             cTry(e.whoClicked, { e.whoClicked.closeInventory() }) {
                 if (!holder.finished)
@@ -393,7 +383,7 @@ class GregChess : JavaPlugin(), Listener {
     @EventHandler
     fun onInventoryClose(e: InventoryCloseEvent) {
         val holder = e.inventory.holder
-        if (holder is BukkitScreen<*>) {
+        if (holder is BukkitMenu<*>.BukkitMenuHolder) {
             cTry(e.player) {
                 if (!holder.finished)
                     holder.cancel()

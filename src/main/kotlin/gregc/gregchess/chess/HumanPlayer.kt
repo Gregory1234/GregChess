@@ -24,9 +24,8 @@ abstract class HumanPlayer(val name: String) {
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendFEN(fen: FEN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
-
     abstract fun setItem(i: Int, piece: Piece?)
-    abstract fun openScreen(s: Screen<*>)
+    abstract fun openPawnPromotionMenu(moves: List<MoveCandidate>)
 }
 
 abstract class MinecraftPlayer(val uniqueId: UUID, name: String) : HumanPlayer(name)
@@ -74,11 +73,24 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         player.inventory.setItem(i, piece?.item)
     }
 
-    override fun openScreen(s: Screen<*>) {
-        player.openInventory(BukkitScreen(s).inventory)
-    }
+    override fun openPawnPromotionMenu(moves: List<MoveCandidate>) = player.openMenu(BukkitPawnPromotionMenu(moves))
 
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"
+}
+
+class BukkitPawnPromotionMenu(private val moves: List<MoveCandidate>) : BukkitMenu<MoveCandidate>(MessageConfig::pawnPromotion) {
+    override fun getContent() = moves.mapIndexed { i, m ->
+        ScreenOption(m.promotion?.item ?: m.piece.piece.item, m, InventoryPosition.fromIndex(i))
+    }
+
+    override fun onClick(v: MoveCandidate) {
+        v.game.finishMove(v)
+    }
+
+    override fun onCancel() {
+        moves.first().let { it.game.finishMove(it) }
+    }
+
 }
 
 val HumanPlayer.chess get() = this.currentGame?.get(this)

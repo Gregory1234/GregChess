@@ -3,6 +3,8 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
+import org.bukkit.Material
+import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
@@ -23,11 +25,11 @@ object SettingsManager {
 
 }
 
-class SettingsScreen(private inline val startGame: (GameSettings) -> Unit) :
-    Screen<GameSettings>(GameSettings::class, MessageConfig::chooseSettings) {
+class BukkitSettingsMenu(private inline val startGame: (GameSettings) -> Unit) :
+    BukkitMenu<GameSettings>(MessageConfig::chooseSettings) {
     override fun getContent() =
         SettingsManager.getSettings().toList().mapIndexed { index, s ->
-            ScreenOption(s, InventoryPosition.fromIndex(index))
+            ScreenOption(ItemStack(Material.IRON_BLOCK), s, InventoryPosition.fromIndex(index))
         }
 
     override fun onClick(v: GameSettings) {
