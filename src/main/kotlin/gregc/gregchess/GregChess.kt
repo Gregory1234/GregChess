@@ -55,15 +55,16 @@ class GregChess : JavaPlugin(), Listener {
 
     override fun onEnable() {
         server.pluginManager.registerEvents(this, this)
+        saveDefaultConfig()
         run {
             glog += JavaGregLogger(logger)
-            File(dataFolder.absolutePath + "/logs").mkdir()
-            val now = DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
-            val file = File(dataFolder.absolutePath + "/logs/GregChess-$now.log")
-            file.createNewFile()
-            glog += FileGregLogger(file)
+            if (File(dataFolder.absolutePath + "/logs").mkdir()) {
+                val now = DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
+                val file = File(dataFolder.absolutePath + "/logs/GregChess-$now.log")
+                file.createNewFile()
+                glog += FileGregLogger(file)
+            }
         }
-        saveDefaultConfig()
         chessManager.start()
         arenaManager.start()
         requestManager.start()

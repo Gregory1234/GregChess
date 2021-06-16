@@ -29,6 +29,8 @@ class BukkitView(val file: BukkitConfigProvider, val root: String): View {
         if (root addDot path in file()) get(path) else null
 
     override fun get(path: String): View = BukkitView(file, root addDot path)
+
+    override fun fullPath(path: String): String = root addDot path
 }
 
 class BukkitConfig(private val rootView: BukkitView):

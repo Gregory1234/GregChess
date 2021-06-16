@@ -13,6 +13,10 @@ class BukkitTimeManager(private val plugin: Plugin) : TimeManager {
     }
 
     override fun runTaskLater(delay: Duration, callback: () -> Unit) {
+        if (delay.isZero) {
+            callback()
+            return
+        }
         object : BukkitRunnable() {
             override fun run() {
                 callback()

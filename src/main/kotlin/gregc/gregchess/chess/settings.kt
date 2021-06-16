@@ -9,10 +9,10 @@ object SettingsManager {
     fun getSettings(): List<GameSettings> =
         Config.settings.presets.map { (key, child) ->
             val simpleCastling = child.getDefaultBoolean("SimpleCastling", false)
-            val variant = ChessVariant[child.getString("Variant")]
+            val variant = ChessVariant[child.getOptionalString("Variant")]
             val components = buildList {
-                this += Chessboard.Settings[child.getString("Board")]
-                ChessClock.Settings[child.getString("Clock")]?.let { this += it }
+                this += Chessboard.Settings[child.getOptionalString("Board")]
+                ChessClock.Settings[child.getOptionalString("Clock")]?.let { this += it }
                 val tileSize = child.getDefaultInt("TileSize", 3)
                 this += BukkitRenderer.Settings(tileSize)
                 this += BukkitScoreboardManager.Settings
