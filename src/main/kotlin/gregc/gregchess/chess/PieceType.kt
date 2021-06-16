@@ -36,6 +36,6 @@ enum class PieceType(
     val standardName: String = name.snakeToPascal()
     val pieceName get() = Config.piece.getPieceName(this)
     val char get() = Config.piece.getPieceChar(this)
-    val itemMaterial get() = Config.piece.getPieceItem(this)
-    val structure get() = Config.piece.getPieceStructure(this)
+    val itemMaterial get() = Config.bukkitPiece.getPieceItem(this)
+    val structure get() = Config.bukkitPiece.getPieceStructure(this)
 }

@@ -93,7 +93,7 @@ class PosSteps(val start: Pos, private val jump: Pair<Int, Int>, override val si
 enum class Floor {
     LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END;
 
-    val material get() = Config.chess.getFloor(this)
+    val material get() = Config.bukkitChess.getFloor(this)
     val standardName get() = name.snakeToPascal()
 }
 

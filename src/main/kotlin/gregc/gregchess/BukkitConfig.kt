@@ -34,7 +34,8 @@ class BukkitView(val file: BukkitConfigProvider, val root: String): View {
 class BukkitConfig(private val rootView: BukkitView):
     ErrorConfig, MessageConfig, TitleConfig,
     RequestConfig, ArenasConfig,
-    ChessConfig, ComponentsConfig, EndReasonConfig, PieceConfig, SettingsConfig, SideConfig, View by rootView {
+    BukkitChessConfig, ComponentsConfig, EndReasonConfig, BukkitPieceConfig, SettingsConfig, SideConfig,
+    View by rootView {
 
     override fun getError(s: String): String = getString("Message.Error.$s")
 
