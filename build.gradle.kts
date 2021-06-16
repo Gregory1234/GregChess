@@ -17,16 +17,18 @@ dependencies {
     val spigotVersion: String by project
 
     api("org.spigotmc:spigot-api:$spigotVersion")
-    shaded(kotlin("stdlib-jdk8"))
+    api(kotlin("stdlib-jdk8"))
     shaded(project(":core"))
+    shaded.exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
 }
 
 tasks {
 
     processResources {
+        val kotlinVersion: String by project
         from(sourceSets["main"].resources.srcDirs) {
             include("**/*.yml")
-            filter<ReplaceTokens>("tokens" to mapOf("version" to version))
+            filter<ReplaceTokens>("tokens" to mapOf("version" to version, "kotlin-version" to kotlinVersion))
         }
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }

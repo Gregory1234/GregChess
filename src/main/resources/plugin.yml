@@ -4,6 +4,8 @@ main: gregc.gregchess.GregChess
 api-version: 1.16
 author: GregC
 description: Chess Plugin
+libraries:
+  - org.jetbrains.kotlin:kotlin-stdlib-jdk8:@kotlin-version@
 commands:
   chess:
     description: Main chess command
