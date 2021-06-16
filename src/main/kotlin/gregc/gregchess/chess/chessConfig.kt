@@ -86,8 +86,8 @@ val EndReasonConfig.repetition by EndReasonConfig
 val EndReasonConfig.drawAgreement by EndReasonConfig
 val EndReasonConfig.timeout by EndReasonConfig
 val EndReasonConfig.drawTimeout by EndReasonConfig
-val EndReasonConfig.error by EndReasonConfig
 val EndReasonConfig.piecesLost by EndReasonConfig
+val EndReasonConfig.error by EndReasonConfig
 val EndReasonConfig.atomic by EndReasonConfig
 val EndReasonConfig.kingOfTheHill by EndReasonConfig
 val EndReasonConfig.threeChecks by EndReasonConfig

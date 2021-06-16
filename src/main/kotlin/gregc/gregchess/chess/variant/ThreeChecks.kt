@@ -35,7 +35,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         }
     }
 
-    class ThreeChecksEndReason(winner: Side) : ChessGame.EndReason(EndReasonConfig::threeChecks.path, "normal", winner)
+    class ThreeChecksEndReason(winner: Side) : EndReason(EndReasonConfig::threeChecks, "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

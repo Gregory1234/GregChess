@@ -45,14 +45,14 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
     }
 
     fun stop() {
-        games.forEach { it.quickStop(ChessGame.EndReason.PluginRestart()) }
+        games.forEach { it.quickStop(EndReason.PluginRestart()) }
     }
 
     override fun leave(player: HumanPlayer) {
         val games = player.games
         cRequire(games.isNotEmpty() || player.isSpectating(), Config.error.youNotInGame)
         games.forEach { g ->
-            g.stop(ChessGame.EndReason.Walkover(!g[player]!!.side), BySides { it != g[player]!!.side })
+            g.stop(EndReason.Walkover(!g[player]!!.side), BySides { it != g[player]!!.side })
         }
         player.spectatedGame = null
     }

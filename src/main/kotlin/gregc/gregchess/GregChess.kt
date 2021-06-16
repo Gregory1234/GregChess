@@ -30,7 +30,7 @@ class GregChess : JavaPlugin(), Listener {
     private val drawRequest = buildRequestType<Unit>(timeManager, requestManager) {
         messagesSimple(Config.request["draw"], "/chess draw", "/chess draw")
         validateSender = { it.chess?.hasTurn ?: false }
-        onAccept = { (sender, _, _) -> sender.currentGame?.stop(ChessGame.EndReason.DrawAgreement()) }
+        onAccept = { (sender, _, _) -> sender.currentGame?.stop(EndReason.DrawAgreement()) }
     }
 
     private val takebackRequest = buildRequestType<Unit>(timeManager, requestManager) {
@@ -118,7 +118,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPlayer(player)
                     endArgs()
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
-                    p.game.stop(ChessGame.EndReason.Resignation(!p.side))
+                    p.game.stop(EndReason.Resignation(!p.side))
                 }
                 "leave" -> {
                     cPlayer(player)

@@ -34,7 +34,7 @@ class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
         val newArenas = Config.arenas.chessArenas
         arenas.removeIf {
             if (it.name !in newArenas) {
-                it.game?.quickStop(ChessGame.EndReason.ArenaRemoved())
+                it.game?.quickStop(EndReason.ArenaRemoved())
                 true
             } else false
         }

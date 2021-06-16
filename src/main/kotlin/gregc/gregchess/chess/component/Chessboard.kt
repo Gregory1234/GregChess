@@ -241,12 +241,12 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     fun checkForRepetition() {
         if (boardHashes[getFEN().copy(currentTurn = !game.currentTurn).hashed()] ?: 0 >= 3)
-            game.stop(ChessGame.EndReason.Repetition())
+            game.stop(EndReason.Repetition())
     }
 
     fun checkForFiftyMoveRule() {
         if (movesSinceLastCapture >= 100u)
-            game.stop(ChessGame.EndReason.FiftyMoves())
+            game.stop(EndReason.FiftyMoves())
     }
 
     private fun addBoardHash(fen: FEN): Int {

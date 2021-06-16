@@ -42,20 +42,18 @@ abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val ga
 
 }
 
-class PawnPromotionScreen(
-    private val moves: List<MoveCandidate>,
-    private val player: ChessPlayer
-) : Screen<MoveCandidate>(MoveCandidate::class, MessageConfig::pawnPromotion.path) {
+class PawnPromotionScreen(private val moves: List<MoveCandidate>) :
+    Screen<MoveCandidate>(MoveCandidate::class, MessageConfig::pawnPromotion) {
     override fun getContent() = moves.mapIndexed { i, m ->
         ScreenOption(m, InventoryPosition.fromIndex(i))
     }
 
     override fun onClick(v: MoveCandidate) {
-        player.game.finishMove(v)
+        v.game.finishMove(v)
     }
 
     override fun onCancel() {
-        player.game.finishMove(moves.first())
+        moves.first().let { it.game.finishMove(it) }
     }
 
 }
@@ -112,8 +110,8 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
             announceInCheck()
     }
 
-    fun pawnPromotionScreen(moves: List<MoveCandidate>) =
-        player.openScreen(PawnPromotionScreen(moves, this))
+    private fun pawnPromotionScreen(moves: List<MoveCandidate>) =
+        player.openScreen(PawnPromotionScreen(moves))
 }
 
 class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : ChessPlayer(side, true, game) {
@@ -133,6 +131,6 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : Chess
             val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(it) }
             val move = game.board.getMoves(origin).first { it.display.pos == target && it.promotion?.type == promotion }
             game.finishMove(move)
-        }, { game.stop(ChessGame.EndReason.Error(it)) })
+        }, { game.stop(EndReason.Error(it)) })
     }
 }

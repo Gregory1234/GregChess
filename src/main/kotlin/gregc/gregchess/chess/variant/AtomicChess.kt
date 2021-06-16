@@ -3,9 +3,9 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.path
 
 object AtomicChess : ChessVariant("Atomic") {
+
     class ExplosionManager(private val game: ChessGame) : Component {
         object Settings : Component.Settings<ExplosionManager> {
             override fun getComponent(game: ChessGame) = ExplosionManager(game)
@@ -36,7 +36,7 @@ object AtomicChess : ChessVariant("Atomic") {
         }
     }
 
-    class AtomicEndReason(winner: Side) : ChessGame.EndReason(EndReasonConfig::atomic.path, "normal", winner)
+    class AtomicEndReason(winner: Side) : EndReason(EndReasonConfig::atomic, "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<ExplosionManager>()

@@ -24,7 +24,7 @@ object SettingsManager {
 }
 
 class SettingsScreen(private inline val startGame: (GameSettings) -> Unit) :
-    Screen<GameSettings>(GameSettings::class, MessageConfig::chooseSettings.path) {
+    Screen<GameSettings>(GameSettings::class, MessageConfig::chooseSettings) {
     override fun getContent() =
         SettingsManager.getSettings().toList().mapIndexed { index, s ->
             ScreenOption(s, InventoryPosition.fromIndex(index))

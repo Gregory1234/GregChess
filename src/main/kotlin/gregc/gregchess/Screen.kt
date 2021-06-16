@@ -4,8 +4,10 @@ import org.bukkit.Bukkit
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 abstract class Screen<T : Any>(val cl: KClass<T>, val namePath: ConfigVal<String>) {
+    constructor(cl: KClass<T>, namePath: KProperty1<MessageConfig, String>): this(cl, namePath.path)
     abstract fun getContent(): List<ScreenOption<T>>
     abstract fun onClick(v: T)
     abstract fun onCancel()

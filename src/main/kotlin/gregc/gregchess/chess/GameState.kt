@@ -22,7 +22,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     }
 
     sealed interface WithEndReason {
-        val endReason: ChessGame.EndReason
+        val endReason: EndReason
     }
 
     object Initial : GameState(false, false, false)
@@ -73,9 +73,9 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
         override val spectators: MutableList<HumanPlayer> = mutableListOf(),
-        override val endReason: ChessGame.EndReason
+        override val endReason: EndReason
     ) : GameState(true, false, false), WithCurrentPlayer, WithStartTime, WithSpectators, WithEndReason {
-        constructor(running: Running, endReason: ChessGame.EndReason) :
+        constructor(running: Running, endReason: EndReason) :
                 this(running.players, running.startTime, running.currentTurn, running.spectators, endReason)
 
         override val white = players.white
@@ -90,7 +90,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
-        override val endReason: ChessGame.EndReason
+        override val endReason: EndReason
     ) : GameState(true, true, false), WithCurrentPlayer, WithStartTime, WithEndReason {
         constructor(stopping: Stopping) :
                 this(stopping.players, stopping.startTime, stopping.currentTurn, stopping.endReason)
@@ -105,8 +105,8 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
 
     data class Error(val state: GameState, val error: Exception) :
         GameState(false, true, false), WithEndReason {
-        override val endReason: ChessGame.EndReason
-            get() = ChessGame.EndReason.Error(error)
+        override val endReason: EndReason
+            get() = EndReason.Error(error)
     }
 
 }

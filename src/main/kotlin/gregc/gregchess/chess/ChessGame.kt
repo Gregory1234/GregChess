@@ -212,33 +212,6 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
-    open class EndReason(val namePath: ConfigVal<String>, val reasonPGN: String, val winner: Side?) {
-
-        override fun toString() = "EndReason.${javaClass.name.split(".", "$").last()}(winner=$winner)"
-
-        // @formatter:off
-        class Checkmate(winner: Side) : EndReason(EndReasonConfig::checkmate.path, "normal", winner)
-        class Resignation(winner: Side) : EndReason(EndReasonConfig::resignation.path, "abandoned", winner)
-        class Walkover(winner: Side) : EndReason(EndReasonConfig::walkover.path, "abandoned", winner)
-        class PluginRestart : EndReason(EndReasonConfig::pluginRestart.path, "emergency", null)
-        class ArenaRemoved : EndReason(EndReasonConfig::arenaRemoved.path, "emergency", null)
-        class Stalemate : EndReason(EndReasonConfig::stalemate.path, "normal", null)
-        class InsufficientMaterial : EndReason(EndReasonConfig::insufficientMaterial.path, "normal", null)
-        class FiftyMoves : EndReason(EndReasonConfig::fiftyMoves.path, "normal", null)
-        class Repetition : EndReason(EndReasonConfig::repetition.path, "normal", null)
-        class DrawAgreement : EndReason(EndReasonConfig::drawAgreement.path, "normal", null)
-        class Timeout(winner: Side) : ChessGame.EndReason(EndReasonConfig::timeout.path, "time forfeit", winner)
-        class DrawTimeout : ChessGame.EndReason(EndReasonConfig::drawTimeout.path, "time forfeit", null)
-        class Error(val e: Exception) : ChessGame.EndReason(EndReasonConfig::error.path, "emergency", null) {
-            override fun toString() = "EndReason.Error(winner=$winner, e=$e)"
-        }
-
-        class AllPiecesLost(winner: Side) : ChessGame.EndReason(EndReasonConfig::piecesLost.path, "normal", winner)
-        // @formatter:on
-
-        val message get() = with (Config.message) { winner?.let {gameFinished[it] } ?: gameFinishedDraw }(namePath.get())
-    }
-
     val endReason: EndReason?
         get() = (state as? GameState.WithEndReason)?.endReason
 

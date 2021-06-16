@@ -1,10 +1,9 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.path
 
 object Antichess : ChessVariant("Antichess") {
-    class Stalemate(winner: Side) : ChessGame.EndReason(EndReasonConfig::stalemate.path, "normal", winner)
+    class Stalemate(winner: Side) : EndReason(EndReasonConfig::stalemate, "normal", winner)
 
     override fun getLegality(move: MoveCandidate): MoveLegality {
         if (!Normal.isValid(move))
@@ -25,7 +24,7 @@ object Antichess : ChessVariant("Antichess") {
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.piecesOf(!game.currentTurn).isEmpty())
-            game.stop(ChessGame.EndReason.AllPiecesLost(!game.currentTurn))
+            game.stop(EndReason.AllPiecesLost(!game.currentTurn))
         if (game.board.piecesOf(!game.currentTurn)
                 .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
         ) {
@@ -35,7 +34,7 @@ object Antichess : ChessVariant("Antichess") {
         game.board.checkForFiftyMoveRule()
     }
 
-    override fun timeout(game: ChessGame, side: Side) = game.stop(ChessGame.EndReason.Timeout(side))
+    override fun timeout(game: ChessGame, side: Side) = game.stop(EndReason.Timeout(side))
 
     override fun promotions(piece: Piece): Collection<Piece>? =
         Normal.promotions(piece)?.plus(Piece(PieceType.KING, piece.side))
