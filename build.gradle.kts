@@ -18,7 +18,6 @@ dependencies {
 
     api("org.spigotmc:spigot-api:$spigotVersion")
     shaded(kotlin("stdlib-jdk8"))
-    shaded(kotlin("reflect"))
     shaded(project(":core"))
 }
 

@@ -29,52 +29,57 @@ interface ChessConfig: ConfigBlock {
 val Config.chess: ChessConfig by Config
 
 interface SettingsConfig: ConfigBlock {
+    companion object {
+        operator fun getValue(owner: SettingsConfig, property: KProperty<*>) = owner[property.name.upperFirst()]
+    }
     val settingsBlocks: Map<String, Map<String, View>>
 }
 
 operator fun SettingsConfig.get(name: String): Map<String, View> = settingsBlocks[name].orEmpty()
 
-val SettingsConfig.clock get() = this["Clock"]
-val SettingsConfig.presets get() = this["Presets"]
+val SettingsConfig.clock by SettingsConfig
+val SettingsConfig.presets by SettingsConfig
 
 val Config.settings: SettingsConfig by Config
 
 interface ComponentsConfig: ConfigBlock {
+    companion object {
+        operator fun getValue(owner: ComponentsConfig, property: KProperty<*>) = owner[property.name.upperFirst()]
+    }
     val componentBlocks: Map<String, View>
 }
 
 operator fun ComponentsConfig.get(name: String): View = componentBlocks[name]!!
-operator fun ComponentsConfig.getValue(owner: ComponentsConfig, property: KProperty<*>) = get(property.name.upperFirst())
 
 val Config.component: ComponentsConfig by Config
 
-val ComponentsConfig.clock by Config.component
-val ComponentsConfig.scoreboard by Config.component
-val ComponentsConfig.checkCounter by Config.component
+val ComponentsConfig.clock by ComponentsConfig
+val ComponentsConfig.scoreboard by ComponentsConfig
+val ComponentsConfig.checkCounter by ComponentsConfig
 
 interface EndReasonConfig: ConfigBlock {
+    companion object {
+        operator fun getValue(owner: EndReasonConfig, property: KProperty<*>) = owner.getEndReason(property.name.upperFirst())
+    }
     fun getEndReason(n: String): String
 }
 
-operator fun EndReasonConfig.getValue(owner: EndReasonConfig, property: KProperty<*>) =
-    getEndReason(property.name.upperFirst())
-
 val Config.endReason: EndReasonConfig by Config
 
-val EndReasonConfig.checkmate by Config.endReason
-val EndReasonConfig.resignation by Config.endReason
-val EndReasonConfig.walkover by Config.endReason
-val EndReasonConfig.pluginRestart by Config.endReason
-val EndReasonConfig.arenaRemoved by Config.endReason
-val EndReasonConfig.stalemate by Config.endReason
-val EndReasonConfig.insufficientMaterial by Config.endReason
-val EndReasonConfig.fiftyMoves by Config.endReason
-val EndReasonConfig.repetition by Config.endReason
-val EndReasonConfig.drawAgreement by Config.endReason
-val EndReasonConfig.timeout by Config.endReason
-val EndReasonConfig.drawTimeout by Config.endReason
-val EndReasonConfig.error by Config.endReason
-val EndReasonConfig.piecesLost by Config.endReason
-val EndReasonConfig.atomic by Config.endReason
-val EndReasonConfig.kingOfTheHill by Config.endReason
-val EndReasonConfig.threeChecks by Config.endReason
+val EndReasonConfig.checkmate by EndReasonConfig
+val EndReasonConfig.resignation by EndReasonConfig
+val EndReasonConfig.walkover by EndReasonConfig
+val EndReasonConfig.pluginRestart by EndReasonConfig
+val EndReasonConfig.arenaRemoved by EndReasonConfig
+val EndReasonConfig.stalemate by EndReasonConfig
+val EndReasonConfig.insufficientMaterial by EndReasonConfig
+val EndReasonConfig.fiftyMoves by EndReasonConfig
+val EndReasonConfig.repetition by EndReasonConfig
+val EndReasonConfig.drawAgreement by EndReasonConfig
+val EndReasonConfig.timeout by EndReasonConfig
+val EndReasonConfig.drawTimeout by EndReasonConfig
+val EndReasonConfig.error by EndReasonConfig
+val EndReasonConfig.piecesLost by EndReasonConfig
+val EndReasonConfig.atomic by EndReasonConfig
+val EndReasonConfig.kingOfTheHill by EndReasonConfig
+val EndReasonConfig.threeChecks by EndReasonConfig

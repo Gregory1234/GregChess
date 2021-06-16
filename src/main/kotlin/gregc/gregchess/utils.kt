@@ -123,20 +123,20 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
-val ErrorConfig.wrongArgumentsNumber by Config.error
-val ErrorConfig.wrongArgument by Config.error
-val ErrorConfig.noPermission by Config.error
-val ErrorConfig.notPlayer by Config.error
-val ErrorConfig.playerNotFound by Config.error
-val ErrorConfig.rendererNotFound by Config.error
-val ErrorConfig.clockNotFound by Config.error
-val ErrorConfig.engineNotFound by Config.error
-val ErrorConfig.pieceNotFound by Config.error
-val ErrorConfig.gameNotFound by Config.error
-val ErrorConfig.noArenas by Config.error
-val ErrorConfig.teleportFailed by Config.error
-val ErrorConfig.nothingToTakeback by Config.error
-val ErrorConfig.wrongDurationFormat by Config.error
+val ErrorConfig.wrongArgumentsNumber by ErrorConfig
+val ErrorConfig.wrongArgument by ErrorConfig
+val ErrorConfig.noPermission by ErrorConfig
+val ErrorConfig.notPlayer by ErrorConfig
+val ErrorConfig.playerNotFound by ErrorConfig
+val ErrorConfig.rendererNotFound by ErrorConfig
+val ErrorConfig.clockNotFound by ErrorConfig
+val ErrorConfig.engineNotFound by ErrorConfig
+val ErrorConfig.pieceNotFound by ErrorConfig
+val ErrorConfig.gameNotFound by ErrorConfig
+val ErrorConfig.noArenas by ErrorConfig
+val ErrorConfig.teleportFailed by ErrorConfig
+val ErrorConfig.nothingToTakeback by ErrorConfig
+val ErrorConfig.wrongDurationFormat by ErrorConfig
 val ErrorConfig.youInGame get() = getError("InGame.You")
 val ErrorConfig.opponentInGame get() = getError("InGame.Opponent")
 val ErrorConfig.youNotInGame get() = getError("NotInGame.You")
@@ -144,44 +144,45 @@ val ErrorConfig.playerNotInGame get() = getError("NotInGame.Player")
 val ErrorConfig.opponentNotHuman get() = getError("NotHuman.Opponent")
 
 interface MessageConfig: ConfigBlock {
+    companion object {
+        operator fun getValue(owner: MessageConfig, property: KProperty<*>) = owner.getMessage(property.name.upperFirst())
+    }
+
     fun getMessage(s: String): String
     fun getMessage1(s: String): (String) -> String
 }
 
-operator fun MessageConfig.getValue(owner: MessageConfig, property: KProperty<*>) = getMessage(property.name.upperFirst())
-
 val Config.message: MessageConfig by Config
 
-// TODO: change delegate into an object!!!
-
-val MessageConfig.boardOpDone by Config.message
-val MessageConfig.skippedTurn by Config.message
-val MessageConfig.timeOpDone by Config.message
-val MessageConfig.engineCommandSent by Config.message
-val MessageConfig.loadedFEN by Config.message
-val MessageConfig.configReloaded by Config.message
-val MessageConfig.levelSet by Config.message
-val MessageConfig.copyFEN by Config.message
-val MessageConfig.copyPGN by Config.message
-val MessageConfig.inCheck by Config.message
-val MessageConfig.pawnPromotion by Config.message
-val MessageConfig.chooseSettings by Config.message
+val MessageConfig.boardOpDone by MessageConfig
+val MessageConfig.skippedTurn by MessageConfig
+val MessageConfig.timeOpDone by MessageConfig
+val MessageConfig.engineCommandSent by MessageConfig
+val MessageConfig.loadedFEN by MessageConfig
+val MessageConfig.configReloaded by MessageConfig
+val MessageConfig.levelSet by MessageConfig
+val MessageConfig.copyFEN by MessageConfig
+val MessageConfig.copyPGN by MessageConfig
+val MessageConfig.inCheck by MessageConfig
+val MessageConfig.pawnPromotion by MessageConfig
+val MessageConfig.chooseSettings by MessageConfig
 
 val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
 val MessageConfig.gameFinished get() = BySides { getMessage1("GameFinished.${it.standardName}Won") }
 val MessageConfig.gameFinishedDraw get() = getMessage1("GameFinished.ItWasADraw")
 
 interface TitleConfig: ConfigBlock {
+    companion object {
+        operator fun getValue(owner: TitleConfig, property: KProperty<*>) = owner.getMessage(property.name.upperFirst())
+    }
+
     fun getMessage(s: String): String
     fun getMessage1(s: String): (String) -> String
 }
 
-operator fun TitleConfig.getValue(owner: TitleConfig, property: KProperty<*>) = getMessage(property.name.upperFirst())
-
 val Config.title: TitleConfig by Config
 
-
-val TitleConfig.inCheck by Config.title
+val TitleConfig.inCheck by TitleConfig
 val TitleConfig.youWon get() = getMessage("Player.YouWon")
 val TitleConfig.youDrew get() = getMessage("Player.YouDrew")
 val TitleConfig.youLost get() = getMessage("Player.YouLost")
@@ -189,7 +190,7 @@ val TitleConfig.spectatorDraw get() = getMessage("Spectator.ItWasADraw")
 
 val TitleConfig.spectator get() = BySides { getMessage("Spectator.${it.standardName}Won") }
 val TitleConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
-val TitleConfig.yourTurn by Config.title
+val TitleConfig.yourTurn by TitleConfig
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
     cRequire(args.size in min..max, Config.error.wrongArgumentsNumber)

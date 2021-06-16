@@ -9,10 +9,12 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 interface ErrorConfig: ConfigBlock {
+    companion object {
+        operator fun getValue(owner: ErrorConfig, property: KProperty<*>) = owner.getError(property.name.upperFirst())
+    }
+
     fun getError(s: String): String
 }
-
-operator fun ErrorConfig.getValue(owner: ErrorConfig, property: KProperty<*>) = getError(property.name.upperFirst())
 
 val Config.error: ErrorConfig by Config
 
