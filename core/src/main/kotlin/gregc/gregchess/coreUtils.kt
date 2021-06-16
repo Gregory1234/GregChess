@@ -18,6 +18,9 @@ interface ErrorConfig: ConfigBlock {
 
 val Config.error: ErrorConfig by Config
 
+val ErrorConfig.wrongArgumentsNumber by ErrorConfig
+val ErrorConfig.wrongArgument by ErrorConfig
+
 class CommandException(val playerMsg: String) : Exception() {
     override val message: String
         get() = "Uncaught command error: $playerMsg"
@@ -29,6 +32,23 @@ fun cRequire(e: Boolean, msg: String) {
     }
     if (!e) throw CommandException(msg)
 }
+
+fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
+    cRequire(args.size in min..max, Config.error.wrongArgumentsNumber)
+}
+
+inline fun <T> cWrongArgument(block: () -> T): T = try {
+    block()
+} catch (e: IllegalArgumentException) {
+    e.printStackTrace()
+    cWrongArgument()
+}
+
+fun cWrongArgument(): Nothing = throw CommandException(Config.error.wrongArgument)
+
+fun <T> cNotNull(p: T?, msg: String): T = p ?: throw CommandException(msg)
+
+inline fun <reified T, reified R : T> cCast(p: T, msg: String): R = cNotNull(p as? R, msg)
 
 fun randomString(size: Int) =
     String(CharArray(size) { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() })

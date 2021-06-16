@@ -123,8 +123,6 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
-val ErrorConfig.wrongArgumentsNumber by ErrorConfig
-val ErrorConfig.wrongArgument by ErrorConfig
 val ErrorConfig.noPermission by ErrorConfig
 val ErrorConfig.notPlayer by ErrorConfig
 val ErrorConfig.playerNotFound by ErrorConfig
@@ -191,10 +189,6 @@ val TitleConfig.spectator get() = BySides { getTitle("Spectator.${it.standardNam
 val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
 val TitleConfig.yourTurn by TitleConfig
 
-fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
-    cRequire(args.size in min..max, Config.error.wrongArgumentsNumber)
-}
-
 fun cPerms(p: CommandSender, perm: String) {
     cRequire(p.hasPermission(perm), Config.error.noPermission)
 }
@@ -205,19 +199,6 @@ fun cPlayer(p: CommandSender) {
     }
     cRequire(p is Player, Config.error.notPlayer)
 }
-
-inline fun <T> cWrongArgument(block: () -> T): T = try {
-    block()
-} catch (e: IllegalArgumentException) {
-    e.printStackTrace()
-    cWrongArgument()
-}
-
-fun cWrongArgument(): Nothing = throw CommandException(Config.error.wrongArgument)
-
-fun <T> cNotNull(p: T?, msg: String): T = p ?: throw CommandException(msg)
-
-inline fun <reified T, reified R : T> cCast(p: T, msg: String): R = cNotNull(p as? R, msg)
 
 fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), Config.error.playerNotFound)
 
