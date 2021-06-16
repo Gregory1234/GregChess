@@ -35,7 +35,7 @@ class BukkitView(val file: BukkitConfigProvider, val root: String): View {
 
 class BukkitConfig(private val rootView: BukkitView):
     ErrorConfig, MessageConfig, TitleConfig,
-    RequestConfig, ArenasConfig,
+    RequestConfig, ArenasConfig, StockfishConfig,
     BukkitChessConfig, ComponentsConfig, EndReasonConfig, BukkitPieceConfig, SettingsConfig, SideConfig,
     View by rootView {
 
@@ -114,5 +114,14 @@ class BukkitConfig(private val rootView: BukkitView):
     override fun getMessage1(s: String): (String) -> String = getStringFormatF1("Message.$s")
 
     override fun getTitle(s: String): String = getString("Title.$s")
+
+    override val hasStockfish: Boolean
+        get() = getDefaultBoolean("Chess.HasStockfish", false)
+
+    override val stockfishCommand: String
+        get() = getString("Chess.Stockfish.Path")
+
+    override val engineName: String
+        get() = getString("Chess.Stockfish.Name")
 
 }

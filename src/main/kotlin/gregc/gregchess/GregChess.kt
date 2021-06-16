@@ -105,12 +105,13 @@ class GregChess : JavaPlugin(), Listener {
                 }
                 "stockfish" -> {
                     cPlayer(player)
+                    cRequire(Config.stockfish.hasStockfish, Config.error.stockfishNotFound)
                     endArgs()
                     cRequire(!player.human.isInGame(), Config.error.youInGame)
                     player.human.openScreen(SettingsScreen { settings ->
                         ChessGame(timeManager, arenaManager.cNext(), settings).addPlayers {
                             human(player.human, Side.WHITE, false)
-                            engine("stockfish", Side.BLACK)
+                            engine(Stockfish(timeManager), Side.BLACK)
                         }.start()
                     })
                 }

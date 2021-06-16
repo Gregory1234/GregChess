@@ -214,6 +214,10 @@ Chess:
         PickUp: BLOCK_STONE_HIT
         Move: BLOCK_STONE_STEP
         Capture: BLOCK_STONE_BREAK
+  HasStockfish: false
+  Stockfish:
+    Path: stockfish
+    Name: stockfish
   EndReason:
     Checkmate: "checkmate"
     Resignation: "resignation"

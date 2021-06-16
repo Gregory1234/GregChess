@@ -129,6 +129,7 @@ val ErrorConfig.playerNotFound by ErrorConfig
 val ErrorConfig.rendererNotFound by ErrorConfig
 val ErrorConfig.clockNotFound by ErrorConfig
 val ErrorConfig.engineNotFound by ErrorConfig
+val ErrorConfig.stockfishNotFound by ErrorConfig
 val ErrorConfig.pieceNotFound by ErrorConfig
 val ErrorConfig.gameNotFound by ErrorConfig
 val ErrorConfig.noArenas by ErrorConfig

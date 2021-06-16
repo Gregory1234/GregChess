@@ -38,6 +38,14 @@ interface BukkitChessConfig: ChessConfig {
 
 val Config.bukkitChess: BukkitChessConfig by Config
 
+interface StockfishConfig: ConfigBlock {
+    val hasStockfish: Boolean
+    val stockfishCommand: String
+    val engineName: String
+}
+
+val Config.stockfish: StockfishConfig by Config
+
 interface SettingsConfig: ConfigBlock {
     companion object {
         operator fun getValue(owner: SettingsConfig, property: KProperty<*>) = owner.getSettings(property.name.upperFirst())

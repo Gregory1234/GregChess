@@ -81,8 +81,16 @@ data class BySides<T>(val white: T, val black: T) {
     fun toMutableBySides() = MutableBySides(white, black)
 }
 
-class ChessEngine(val timeManager: TimeManager, val name: String) {
-    private val process: Process = ProcessBuilder("stockfish").start()
+interface ChessEngine {
+    val name: String
+    fun stop()
+    fun setOption(name: String, value: String)
+    fun sendCommand(command: String)
+    fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit)
+}
+
+class Stockfish(val timeManager: TimeManager, override val name: String = Config.stockfish.engineName): ChessEngine {
+    private val process: Process = ProcessBuilder(Config.stockfish.stockfishCommand).start()
 
     private val reader = process.inputStream.bufferedReader()
 
@@ -90,9 +98,9 @@ class ChessEngine(val timeManager: TimeManager, val name: String) {
 
     private var moveTime = 0.2.seconds
 
-    fun stop() = process.destroy()
+    override fun stop() = process.destroy()
 
-    fun setOption(name: String, value: String) {
+    override fun setOption(name: String, value: String) {
         when (name) {
             "time" -> {
                 moveTime = cNotNull(parseDuration(value), Config.error.wrongDurationFormat)
@@ -105,7 +113,7 @@ class ChessEngine(val timeManager: TimeManager, val name: String) {
         }
     }
 
-    fun sendCommand(command: String) {
+    override fun sendCommand(command: String) {
         glog.io("isready")
         process.outputStream.write("isready\n".toByteArray())
         process.outputStream.flush()
@@ -127,7 +135,7 @@ class ChessEngine(val timeManager: TimeManager, val name: String) {
         readLine()
     }
 
-    fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
+    override fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
         var move = ""
         var exc: Exception? = null
         timeManager.runTaskAsynchronously {

@@ -99,8 +99,8 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         fun human(p: HumanPlayer, side: Side, silent: Boolean) =
             addPlayer(HumanChessPlayer(p, side, silent, this@ChessGame))
 
-        fun engine(name: String, side: Side) =
-            addPlayer(EnginePlayer(ChessEngine(timeManager, name), side, this@ChessGame))
+        fun engine(engine: ChessEngine, side: Side) =
+            addPlayer(EnginePlayer(engine, side, this@ChessGame))
 
         fun build(): BySides<ChessPlayer> = players.map {
             it ?: throw IllegalStateException("player has not been initialized")
