@@ -25,30 +25,18 @@ class GregChess : JavaPlugin(), Listener {
         Config.initBukkit { config }
     }
 
-    private val drawRequest = buildRequestType<Unit>(timeManager, requestManager) {
+    private val drawRequest = buildRequestType(timeManager, requestManager) {
         messagesSimple(Config.request["draw"], "/chess draw", "/chess draw")
         validateSender = { it.chess?.hasTurn ?: false }
-        onAccept = { (sender, _, _) -> sender.currentGame?.stop(EndReason.DrawAgreement()) }
     }
 
-    private val takebackRequest = buildRequestType<Unit>(timeManager, requestManager) {
+    private val takebackRequest = buildRequestType(timeManager, requestManager) {
         messagesSimple(Config.request["takeback"], "/chess undo", "/chess undo")
         validateSender = { (it.currentGame?.currentPlayer?.opponent as? HumanChessPlayer)?.player == it }
-        onAccept = { (sender, _, _) -> sender.currentGame?.board?.undoLastMove() }
     }
 
-    private val duelRequest = buildRequestType<ChessGame>(timeManager, requestManager) {
+    private val duelRequest = buildRequestType(timeManager, requestManager) {
         messagesSimple(Config.request["duel"], "/chess duel accept", "/chess duel cancel")
-        printT = { it.settings.name }
-        onAccept = { (sender, receiver, g) ->
-            g.addPlayers {
-                human(sender, Side.WHITE, sender == receiver)
-                human(receiver, Side.BLACK, sender == receiver)
-            }.start()
-        }
-        onCancel = { (_, _, g) ->
-            g.arena.game = null
-        }
     }
 
     override fun onEnable() {
@@ -88,9 +76,15 @@ class GregChess : JavaPlugin(), Listener {
                             cRequire(!opponent.human.isInGame(), Config.error.opponentInGame)
                             interact {
                                 val settings = player.openSettingsMenu()
-                                if (settings != null)
-                                    duelRequest += Request(player.human, opponent.human,
-                                        ChessGame(timeManager, arenaManager.cNext(), settings))
+                                if (settings != null) {
+                                    val res = duelRequest.call(RequestData(player.human, opponent.human, settings.name))
+                                    if (res == RequestResponse.ACCEPT) {
+                                        ChessGame(timeManager, arenaManager.cNext(), settings).addPlayers {
+                                            human(player.human, Side.WHITE, player == opponent)
+                                            human(opponent.human, Side.BLACK, player == opponent)
+                                        }.start()
+                                    }
+                                }
                             }
                         }
                     }
@@ -125,7 +119,12 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val opponent: HumanChessPlayer = cCast(p.opponent, Config.error.opponentNotHuman)
-                    drawRequest.simpleCall(Request(player.human, opponent.player, Unit))
+                    interact {
+                        val res = drawRequest.call(RequestData(player.human, opponent.player, ""), true)
+                        if (res == RequestResponse.ACCEPT) {
+                            p.game.stop(EndReason.DrawAgreement())
+                        }
+                    }
                 }
                 "capture" -> {
                     cPlayer(player)
@@ -253,7 +252,13 @@ class GregChess : JavaPlugin(), Listener {
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     cNotNull(p.game.board.lastMove, Config.error.nothingToTakeback)
                     val opponent: HumanChessPlayer = cCast(p.opponent, Config.error.opponentNotHuman)
-                    takebackRequest.simpleCall(Request(player.human, opponent.player, Unit))
+                    interact {
+                        val res = takebackRequest.call(RequestData(player.human, opponent.player, ""), true)
+                        if (res == RequestResponse.ACCEPT) {
+                            p.game.board.undoLastMove()
+                        }
+                    }
+
                 }
                 "debug" -> {
                     cPerms(player, "greg-chess.admin")

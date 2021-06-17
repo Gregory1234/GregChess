@@ -10,6 +10,7 @@ import org.bukkit.plugin.Plugin
 import java.time.Duration
 import java.util.*
 import kotlin.collections.set
+import kotlin.coroutines.*
 import kotlin.reflect.KProperty
 
 interface RequestConfig {
@@ -50,17 +51,17 @@ class RequestTypeConfig(val name: String) {
 val Config.request: RequestConfig by Config
 
 interface RequestManager {
-    fun <T> register(requestType: RequestType<T>): RequestType<T>
+    fun register(requestType: RequestType): RequestType
 }
 
 class BukkitRequestManager(private val plugin: Plugin) : Listener, RequestManager {
-    private val requestTypes = mutableListOf<RequestType<*>>()
+    private val requestTypes = mutableListOf<RequestType>()
 
     fun start() {
         Bukkit.getPluginManager().registerEvents(this, plugin)
     }
 
-    override fun <T> register(requestType: RequestType<T>): RequestType<T> {
+    override fun register(requestType: RequestType): RequestType {
         requestTypes.add(requestType)
         return requestType
     }
@@ -74,55 +75,43 @@ class BukkitRequestManager(private val plugin: Plugin) : Listener, RequestManage
 
 }
 
-class RequestTypeBuilder<T> internal constructor() {
+class RequestTypeBuilder internal constructor() {
     lateinit var messages: RequestMessages
     var validateSender: (HumanPlayer) -> Boolean = { true }
-    var printT: (T) -> String = { it.toString() }
-    var onAccept: (Request<T>) -> Unit = {}
-    var onCancel: (Request<T>) -> Unit = {}
 
-    fun messagesSimple(
-        view: RequestTypeConfig,
-        acceptCommand: String,
-        cancelCommand: String
-    ): RequestTypeBuilder<T> {
+    fun messagesSimple(view: RequestTypeConfig, acceptCommand: String, cancelCommand: String): RequestTypeBuilder {
         messages = RequestMessages(view, acceptCommand, cancelCommand)
         return this
     }
 }
 
-fun <T> buildRequestType(
+fun buildRequestType(
     t: TimeManager,
     m: RequestManager,
-    f: RequestTypeBuilder<T>.() -> Unit
-): RequestType<T> = RequestTypeBuilder<T>().run {
+    f: RequestTypeBuilder.() -> Unit
+): RequestType = RequestTypeBuilder().run {
     f()
-    m.register(RequestType(t, messages, validateSender, printT, onAccept, onCancel))
+    m.register(RequestType(t, messages, validateSender))
 }
 
 
-class RequestType<in T>(
+class RequestType(
     private val timeManager: TimeManager,
     private val messages: RequestMessages,
-    private inline val validateSender: (HumanPlayer) -> Boolean = { true },
-    private inline val printT: (T) -> String = { it.toString() },
-    private inline val onAccept: (Request<T>) -> Unit,
-    private inline val onCancel: (Request<T>) -> Unit
+    private inline val validateSender: (HumanPlayer) -> Boolean = { true }
 ) {
-    private val requests = mutableMapOf<UUID, Request<T>>()
+    private val requests = mutableMapOf<UUID, Request>()
     private val view get() = messages.view
 
-    private fun call(request: Request<T>, simple: Boolean) {
+    private fun call(request: Request, simple: Boolean) {
         if (!validateSender(request.sender)) {
-            request.sender.sendMessage(view.cannotSend)
             glog.mid("Invalid sender", request.uniqueId)
+            request.sender.sendMessage(view.cannotSend)
             return
         }
-        if ((simple || Config.request.selfAccept)
-            && request.sender == request.receiver
-        ) {
+        if ((simple || Config.request.selfAccept) && request.sender == request.receiver) {
             glog.mid("Self request", request.uniqueId)
-            onAccept(request)
+            request.cont.resume(RequestResponse.ACCEPT)
             return
         }
         requests[request.uniqueId] = request
@@ -132,7 +121,7 @@ class RequestType<in T>(
             if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
         )
         request.receiver.sendCommandMessage(
-            view.receivedRequest(request.sender.name, printT(request.value)),
+            view.receivedRequest(request.sender.name, request.value),
             Config.request.accept,
             if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
         )
@@ -145,10 +134,18 @@ class RequestType<in T>(
         glog.mid("Sent", request.uniqueId)
     }
 
-    operator fun plusAssign(request: Request<T>) = call(request, false)
+    private operator fun plusAssign(request: Request) = call(request, false)
 
+    suspend fun call(request: RequestData, simple: Boolean = false): RequestResponse = suspendCoroutine {
+        val req = Request(request.sender, request.receiver, request.value, it)
+        if (simple) {
+            simpleCall(req)
+        } else {
+            this += req
+        }
+    }
 
-    fun simpleCall(request: Request<T>) {
+    private fun simpleCall(request: Request) {
         requests.values.firstOrNull { it.sender == request.sender }?.let {
             cancel(it)
             return
@@ -161,12 +158,12 @@ class RequestType<in T>(
         call(request, true)
     }
 
-    private fun accept(request: Request<T>) {
+    private fun accept(request: Request) {
         request.sender.sendMessage(view.sentAccept(request.receiver.name))
         request.receiver.sendMessage(view.receivedAccept(request.sender.name))
         requests.remove(request.uniqueId)
-        onAccept(request)
         glog.mid("Accepted", request.uniqueId)
+        request.cont.resume(RequestResponse.ACCEPT)
     }
 
     fun accept(p: HumanPlayer, uniqueId: UUID) {
@@ -177,12 +174,12 @@ class RequestType<in T>(
             accept(request)
     }
 
-    private fun cancel(request: Request<T>) {
+    private fun cancel(request: Request) {
         request.sender.sendMessage(view.sentCancel(request.receiver.name))
         request.receiver.sendMessage(view.receivedCancel(request.sender.name))
         requests.remove(request.uniqueId)
-        onCancel(request)
         glog.mid("Cancelled", request.uniqueId)
+        request.cont.resume(RequestResponse.CANCEL)
     }
 
     fun cancel(p: HumanPlayer, uniqueId: UUID) {
@@ -193,22 +190,31 @@ class RequestType<in T>(
             cancel(request)
     }
 
-    private fun expire(request: Request<T>) {
+    private fun expire(request: Request) {
         request.sender.sendMessage(view.expired(request.receiver.name))
         request.receiver.sendMessage(view.expired(request.sender.name))
         requests.remove(request.uniqueId)
-        onCancel(request)
         glog.mid("Expired", request.uniqueId)
+        request.cont.resume(RequestResponse.EXPIRED)
     }
 
     fun quietRemove(p: HumanPlayer) = requests.values.filter { it.sender == p || it.receiver == p }
-        .forEach { requests.remove(it.uniqueId) }
+        .forEach {
+            requests.remove(it.uniqueId)
+            glog.mid("Quit", it.uniqueId)
+            it.cont.resume(RequestResponse.QUIT)
+        }
 
 }
 
 data class RequestMessages(val view: RequestTypeConfig, val acceptCommand: String, val cancelCommand: String)
 
-data class Request<out T>(val sender: HumanPlayer, val receiver: HumanPlayer, val value: T) {
+enum class RequestResponse {
+    ACCEPT, CANCEL, EXPIRED, QUIT
+}
+data class RequestData(val sender: HumanPlayer, val receiver: HumanPlayer, val value: String)
+
+class Request(val sender: HumanPlayer, val receiver: HumanPlayer, val value: String, val cont: Continuation<RequestResponse>) {
     val uniqueId: UUID = UUID.randomUUID()
 
     init {
