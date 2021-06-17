@@ -28,4 +28,10 @@ open class EndReason(val namePath: ConfigVal<String>, val reasonPGN: String, val
     }
 
     val message get() = with(Config.message) { winner?.let { gameFinished[it] } ?: gameFinishedDraw }(namePath.get())
+
+    val winnerPGN get() = when (winner) {
+        Side.WHITE -> "1-0"
+        Side.BLACK -> "0-1"
+        null -> "1/2-1/2"
+    }
 }

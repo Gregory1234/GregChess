@@ -89,12 +89,15 @@ interface ChessEngine {
     fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit)
 }
 
-class Stockfish(val timeManager: TimeManager, override val name: String = Config.stockfish.engineName): ChessEngine {
+class Stockfish(private val timeManager: TimeManager, override val name: String = Config.stockfish.engineName) :
+    ChessEngine {
     private val process: Process = ProcessBuilder(Config.stockfish.stockfishCommand).start()
 
     private val reader = process.inputStream.bufferedReader()
 
     private val executor = Executors.newCachedThreadPool()
+
+    private fun <T> runTimeout(block: Callable<T>) = executor.submit(block)[moveTime.seconds / 2 + 3, TimeUnit.SECONDS]
 
     private var moveTime = 0.2.seconds
 
@@ -117,19 +120,19 @@ class Stockfish(val timeManager: TimeManager, override val name: String = Config
         glog.io("isready")
         process.outputStream.write("isready\n".toByteArray())
         process.outputStream.flush()
-        executor.submit(Callable {
+        runTimeout {
             glog.io(reader.readLine())
-        })[moveTime.seconds / 2 + 3, TimeUnit.SECONDS]
+        }
         glog.io(command)
         process.outputStream.write(("$command\n").toByteArray())
         process.outputStream.flush()
     }
 
-    private fun readLine() = executor.submit(Callable {
+    private fun readLine() = runTimeout {
         val a = reader.readLine()
         glog.io(a)
         a
-    })[moveTime.seconds / 2 + 3, TimeUnit.SECONDS]
+    }
 
     init {
         readLine()

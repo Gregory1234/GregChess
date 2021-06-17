@@ -23,10 +23,9 @@ interface Renderer<in T> : Component {
 
 abstract class MinecraftRenderer(protected val game: ChessGame, protected val settings: Settings) : Renderer<Loc> {
     abstract class Settings(val tileSize: Int, val offset: Loc = Loc(0, 0, 0)) : Renderer.Settings<Loc> {
-        internal val highHalfTile
-            get() = floor(tileSize.toDouble() / 2).toInt()
-        internal val lowHalfTile
-            get() = floor((tileSize.toDouble() - 1) / 2).toInt()
+        val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
+        val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
+        val boardSize get() = 8 * tileSize
     }
 
     protected companion object {
@@ -37,16 +36,23 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
         get() = defaultSpawnLocation + settings.offset
 
     override fun getPos(loc: Loc) =
-        Pos(((settings.tileSize+1) * 8 - 1 - loc.x + settings.offset.x).floorDiv(settings.tileSize), (loc.z - settings.offset.z - 8).floorDiv(settings.tileSize))
+        Pos(
+            file = (8 + settings.boardSize - 1 - loc.x + settings.offset.x).floorDiv(settings.tileSize),
+            rank = (loc.z - settings.offset.z - 8).floorDiv(settings.tileSize)
+        )
 
     protected fun getPieceLoc(pos: Pos) =
-        Loc((settings.tileSize+1) * 8 - 1 - settings.highHalfTile - pos.file * settings.tileSize, 102, pos.rank * settings.tileSize + 8 + settings.lowHalfTile) + settings.offset
+        Loc(
+            x = 8 + settings.boardSize - 1 - settings.highHalfTile - pos.file * settings.tileSize,
+            y = 102,
+            z = pos.rank * settings.tileSize + 8 + settings.lowHalfTile
+        ) + settings.offset
 
     protected fun getCapturedLoc(pos: CapturedPos): Loc {
         val p = pos.pos
         return when (pos.by) {
-            Side.WHITE -> Loc((settings.tileSize + 1) * 8 - 1 - 2 * p.first, 101, 8 - 3 - 2 * p.second)
-            Side.BLACK -> Loc(8 + 2 * p.first, 101, 8 * (settings.tileSize + 1) + 2 + 2 * p.second)
+            Side.WHITE -> Loc(8 + settings.boardSize - 1 - 2 * p.first, 101, 8 - 3 - 2 * p.second)
+            Side.BLACK -> Loc(8 + 2 * p.first, 101, 8 + settings.boardSize + 2 + 2 * p.second)
         } + settings.offset
     }
 
@@ -90,6 +96,9 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
 
     private val data = mutableMapOf<UUID, PlayerData>()
 
+    private fun fill(from: Loc, to: Loc, mat: Material) =
+        fill(FillVolume(world, mat, from + settings.offset, to + settings.offset))
+
     override fun renderPiece(loc: Loc, piece: Piece) {
         piece.type.structure[piece.side].forEachIndexed { i, m ->
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
@@ -108,9 +117,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
         doAt(pos) { world, l -> world.playSound(l, type.getSound(sound)) }
 
     override fun explosionAt(pos: Pos) {
-        doAt(pos) { world, l ->
-            world.createExplosion(l, 4.0f, false, false)
-        }
+        doAt(pos) { world, l -> world.createExplosion(l, 4.0f, false, false) }
     }
 
     override fun fillFloor(pos: Pos, floor: Floor) {
@@ -121,12 +128,24 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
     }
 
     override fun renderBoardBase() {
-        fill(FillVolume(world, Material.DARK_OAK_PLANKS, Loc(0,100,0) + settings.offset, Loc(8 * (settings.tileSize+2)-1,100,8 * (settings.tileSize+2)-1) + settings.offset))
-        fill(FillVolume(world, Material.DARK_OAK_PLANKS, Loc(8 - 1,101,8 - 1) + settings.offset, Loc(8 * (settings.tileSize+1),101,8 * (settings.tileSize+1)) + settings.offset))
+        fill(
+            Loc(0, 100, 0),
+            Loc(8 + settings.boardSize + 8 - 1, 100, 8 + settings.boardSize + 8 - 1),
+            Material.DARK_OAK_PLANKS
+        )
+        fill(
+            Loc(8 - 1, 101, 8 - 1),
+            Loc(8 + settings.boardSize, 101, 8 + settings.boardSize),
+            Material.DARK_OAK_PLANKS
+        )
     }
 
     override fun removeBoard() {
-        fill(FillVolume(world, Material.AIR, Loc(0,100,0) + settings.offset, Loc(8 * (settings.tileSize+2)-1,105,8 * (settings.tileSize+2)-1) + settings.offset))
+        fill(
+            Loc(0, 100, 0),
+            Loc(8 + settings.boardSize + 8 - 1, 105, 8 + settings.boardSize + 8 - 1),
+            Material.AIR
+        )
     }
 
     private fun BukkitPlayer.join(d: PlayerData = defData) {

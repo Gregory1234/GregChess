@@ -5,7 +5,7 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import kotlin.reflect.KProperty
 
-interface PieceConfig: ConfigBlock {
+interface PieceConfig : ConfigBlock {
     fun getPieceName(t: PieceType): String
     fun getPieceChar(t: PieceType): Char
     fun getPieceSound(t: PieceType, s: PieceSound): Sound
@@ -13,32 +13,32 @@ interface PieceConfig: ConfigBlock {
 
 val Config.piece: PieceConfig by Config
 
-interface BukkitPieceConfig: PieceConfig {
+interface BukkitPieceConfig : PieceConfig {
     fun getPieceItem(t: PieceType): BySides<Material>
     fun getPieceStructure(t: PieceType): BySides<List<Material>>
 }
 
 val Config.bukkitPiece: BukkitPieceConfig by Config
 
-interface SideConfig: ConfigBlock {
+interface SideConfig : ConfigBlock {
     fun getSidePieceName(s: Side, n: String): String
 }
 
 val Config.side: SideConfig by Config
 
-interface ChessConfig: ConfigBlock {
+interface ChessConfig : ConfigBlock {
     val capture: String
 }
 
 val Config.chess: ChessConfig by Config
 
-interface BukkitChessConfig: ChessConfig {
+interface BukkitChessConfig : ChessConfig {
     fun getFloor(f: Floor): Material
 }
 
 val Config.bukkitChess: BukkitChessConfig by Config
 
-interface StockfishConfig: ConfigBlock {
+interface StockfishConfig : ConfigBlock {
     val hasStockfish: Boolean
     val stockfishCommand: String
     val engineName: String
@@ -46,10 +46,12 @@ interface StockfishConfig: ConfigBlock {
 
 val Config.stockfish: StockfishConfig by Config
 
-interface SettingsConfig: ConfigBlock {
+interface SettingsConfig : ConfigBlock {
     companion object {
-        operator fun getValue(owner: SettingsConfig, property: KProperty<*>) = owner.getSettings(property.name.upperFirst())
+        operator fun getValue(owner: SettingsConfig, property: KProperty<*>) =
+            owner.getSettings(property.name.upperFirst())
     }
+
     val settingsBlocks: Map<String, Map<String, View>>
     fun getSettings(n: String): Map<String, View>
 }
@@ -59,10 +61,12 @@ val SettingsConfig.presets by SettingsConfig
 
 val Config.settings: SettingsConfig by Config
 
-interface ComponentsConfig: ConfigBlock {
+interface ComponentsConfig : ConfigBlock {
     companion object {
-        operator fun getValue(owner: ComponentsConfig, property: KProperty<*>) = owner.getComponent(property.name.upperFirst())
+        operator fun getValue(owner: ComponentsConfig, property: KProperty<*>) =
+            owner.getComponent(property.name.upperFirst())
     }
+
     val componentBlocks: Map<String, View>
     fun getComponent(n: String): View
 }
@@ -73,10 +77,12 @@ val ComponentsConfig.clock by ComponentsConfig
 val ComponentsConfig.scoreboard by ComponentsConfig
 val ComponentsConfig.checkCounter by ComponentsConfig
 
-interface EndReasonConfig: ConfigBlock {
+interface EndReasonConfig : ConfigBlock {
     companion object {
-        operator fun getValue(owner: EndReasonConfig, property: KProperty<*>) = owner.getEndReason(property.name.upperFirst())
+        operator fun getValue(owner: EndReasonConfig, property: KProperty<*>) =
+            owner.getEndReason(property.name.upperFirst())
     }
+
     fun getEndReason(n: String): String
 }
 

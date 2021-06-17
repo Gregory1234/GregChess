@@ -39,10 +39,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    private val squares = (Pair(0, 0)..Pair(7, 7)).associate { (i, j) ->
-        val pos = Pos(i, j)
-        pos to Square(pos, game)
-    }
+    private val squares = (Pair(0, 0)..Pair(7, 7)).map { (i, j) -> Pos(i, j) }.associateWith { Square(it, game) }
 
     private val boardState
         get() = FEN.BoardState.fromPieces(squares.mapNotNull { (p, s) -> s.piece?.info?.let { Pair(p, it) } }.toMap())

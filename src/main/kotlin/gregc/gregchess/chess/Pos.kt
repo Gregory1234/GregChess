@@ -2,17 +2,19 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 
+
+typealias Dir = Pair<Int, Int>
+
 data class Pos(val file: Int, val rank: Int) {
     override fun toString() = "$fileStr$rankStr"
-    operator fun plus(diff: Pair<Int, Int>) = plus(diff.first, diff.second)
+    operator fun plus(diff: Dir) = plus(diff.first, diff.second)
     fun plus(df: Int, dr: Int) = Pos(file + df, rank + dr)
     fun plusF(df: Int) = plus(df, 0)
     fun plusR(dr: Int) = plus(0, dr)
     val fileStr get() = "${'a' + file}"
     val rankStr get() = (rank + 1).toString()
 
-    fun neighbours(): List<Pos> =
-        (Pair(-1, -1)..Pair(1, 1)).map(::plus).filter { it.isValid() } - this
+    fun neighbours(): List<Pos> = (Pair(-1, -1)..Pair(1, 1)).map(::plus).filter { it.isValid() } - this
 
     fun isValid() = file in (0..7) && rank in (0..7)
 
@@ -25,8 +27,8 @@ data class Pos(val file: Int, val rank: Int) {
     }
 }
 
-class PosSteps(val start: Pos, private val jump: Pair<Int, Int>, override val size: Int) : Collection<Pos> {
-    class PosIterator(val start: Pos, private val jump: Pair<Int, Int>, private var remaining: Int) : Iterator<Pos> {
+class PosSteps(val start: Pos, private val jump: Dir, override val size: Int) : Collection<Pos> {
+    class PosIterator(val start: Pos, private val jump: Dir, private var remaining: Int) : Iterator<Pos> {
         private var value = start
 
         override fun hasNext() = remaining > 0
@@ -40,26 +42,24 @@ class PosSteps(val start: Pos, private val jump: Pair<Int, Int>, override val si
     }
 
     companion object {
-        private fun calcSize(start: Pos, jump: Pair<Int, Int>): Int {
+        private fun calcSize(start: Pos, jump: Dir): Int {
             val ret = mutableListOf<Int>()
 
-            if (jump.first > 0) {
+            if (jump.first > 0)
                 ret += (8 - start.file).floorDiv(jump.first)
-            } else if (jump.first < 0) {
-                ret += (start.file + 1).floorDiv(-jump.first)
-            }
+            else if (jump.first < 0)
+                (start.file + 1).floorDiv(-jump.first)
 
-            if (jump.second > 0) {
+            if (jump.second > 0)
                 ret += (8 - start.rank).floorDiv(jump.second)
-            } else if (jump.second < 0) {
+            else if (jump.second < 0)
                 ret += (start.rank + 1).floorDiv(-jump.second)
-            }
 
             return ret.minOrNull() ?: 1
         }
     }
 
-    constructor(start: Pos, jump: Pair<Int, Int>) : this(start, jump, calcSize(start, jump))
+    constructor(start: Pos, jump: Dir) : this(start, jump, calcSize(start, jump))
 
     override fun contains(element: Pos): Boolean {
         if (jump.first == 0) {

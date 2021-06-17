@@ -13,8 +13,7 @@ object Antichess : ChessVariant("Antichess") {
         if (move.captured != null)
             return MoveLegality.LEGAL
         return if (move.board.piecesOf(move.piece.side).none { m ->
-                m.square.bakedMoves.orEmpty().filter { Normal.isValid(it) }
-                    .any { it.captured != null }
+                m.square.bakedMoves.orEmpty().filter { Normal.isValid(it) }.any { it.captured != null }
             }) MoveLegality.LEGAL else MoveLegality.SPECIAL
     }
 
@@ -22,16 +21,13 @@ object Antichess : ChessVariant("Antichess") {
 
     override fun isInCheck(game: ChessGame, side: Side) = false
 
-    override fun checkForGameEnd(game: ChessGame) {
-        if (game.board.piecesOf(!game.currentTurn).isEmpty())
+    override fun checkForGameEnd(game: ChessGame) = with(game.board) {
+        if (piecesOf(!game.currentTurn).isEmpty())
             game.stop(EndReason.AllPiecesLost(!game.currentTurn))
-        if (game.board.piecesOf(!game.currentTurn)
-                .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
-        ) {
+        if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none(game.variant::isLegal) })
             game.stop(Stalemate(!game.currentTurn))
-        }
-        game.board.checkForRepetition()
-        game.board.checkForFiftyMoveRule()
+        checkForRepetition()
+        checkForFiftyMoveRule()
     }
 
     override fun timeout(game: ChessGame, side: Side) = game.stop(EndReason.Timeout(side))

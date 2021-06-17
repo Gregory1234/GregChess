@@ -61,13 +61,13 @@ object AtomicChess : ChessVariant("Atomic") {
             move.game.getComponent<ExplosionManager>()?.explode(move.target.pos)
     }
 
-    override fun getLegality(move: MoveCandidate): MoveLegality = move.run {
+    override fun getLegality(move: MoveCandidate): MoveLegality = with(move) {
 
-        if (!Normal.isValid(move))
+        if (!Normal.isValid(this))
             return MoveLegality.INVALID
 
         if (piece.type == PieceType.KING) {
-            if (move.captured != null)
+            if (captured != null)
                 return MoveLegality.SPECIAL
 
             if ((pass + target.pos).mapNotNull { game.board[it] }.all {
@@ -77,8 +77,8 @@ object AtomicChess : ChessVariant("Atomic") {
 
         val myKing = game.board.kingOf(piece.side) ?: return MoveLegality.IN_CHECK
 
-        if (move.captured != null)
-            if (myKing.pos in move.target.pos.neighbours())
+        if (captured != null)
+            if (myKing.pos in target.pos.neighbours())
                 return MoveLegality.SPECIAL
 
         val checks = checkingMoves(!piece.side, myKing.square)

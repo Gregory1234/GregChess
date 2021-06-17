@@ -134,10 +134,10 @@ fun checkForChecks(side: Side, game: ChessGame): String {
 
 fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Floor.CAPTURE
 
-inline fun jumps(piece: BoardPiece, dirs: Collection<Pair<Int, Int>>, f: (Square) -> MoveCandidate) =
+inline fun jumps(piece: BoardPiece, dirs: Collection<Dir>, f: (Square) -> MoveCandidate) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map(f)
 
-inline fun rays(piece: BoardPiece, dirs: Collection<Pair<Int, Int>>, f: (Int, Pair<Int, Int>, Square) -> MoveCandidate) =
+inline fun rays(piece: BoardPiece, dirs: Collection<Dir>, f: (Int, Dir, Square) -> MoveCandidate) =
     dirs.flatMap { dir ->
         PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
             piece.square.board[pos]?.let { f(index + 1, dir, it) }
@@ -153,7 +153,7 @@ fun knightMovement(piece: BoardPiece): List<MoveCandidate> {
 }
 
 fun rookMovement(piece: BoardPiece): List<MoveCandidate> {
-    class RookMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor) :
+    class RookMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
         MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 0)) { index, dir, square ->
@@ -162,7 +162,7 @@ fun rookMovement(piece: BoardPiece): List<MoveCandidate> {
 }
 
 fun bishopMovement(piece: BoardPiece): List<MoveCandidate> {
-    class BishopMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor) :
+    class BishopMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
         MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 1)) { index, dir, square ->
@@ -171,7 +171,7 @@ fun bishopMovement(piece: BoardPiece): List<MoveCandidate> {
 }
 
 fun queenMovement(piece: BoardPiece): List<MoveCandidate> {
-    class QueenMove(piece: BoardPiece, target: Square, dir: Pair<Int, Int>, amount: Int, floor: Floor) :
+    class QueenMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
         MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
     return rays(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) { index, dir, square ->
@@ -257,7 +257,7 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
         if (promotion == null) floor else Floor.SPECIAL
 
     fun handlePromotion(pos: Pos, f: (Piece?) -> Unit) =
-        if (pos.rank in listOf(0, 7)) piece.square.game.variant.promotions(piece.piece).orEmpty().forEach(f) else f(null)
+        (piece.square.takeIf { pos.rank in listOf(0, 7) }?.game?.variant?.promotions(piece.piece) ?: listOf(null)).forEach(f)
 
     class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotion: Piece?) : MoveCandidate(
         piece, target, ifProm(promotion, Floor.MOVE), listOfNotNull(pass), control = null, promotion = promotion
@@ -277,7 +277,7 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
             piece.move(target)
             val ch = checkForChecks(piece.side, game)
             val hmc = board.resetMovesSinceLastCapture()
-            return MoveData(piece.piece, origin, target, "$base$ch e.p.", standardBase + ch,true, display) {
+            return MoveData(piece.piece, origin, target, "$base$ch e.p.", standardBase + ch, true, display) {
                 hmc()
                 piece.move(origin)
                 ct?.let { captured?.resurrect(it) }

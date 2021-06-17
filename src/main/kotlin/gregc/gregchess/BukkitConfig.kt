@@ -14,7 +14,7 @@ fun interface BukkitConfigProvider {
     operator fun invoke(): FileConfiguration
 }
 
-class BukkitView(val file: BukkitConfigProvider, val root: String): View {
+class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
     override fun getPureString(path: String): String? = file().getString(root addDot path)
 
     override fun getPureStringList(path: String): List<String>? =
@@ -33,7 +33,7 @@ class BukkitView(val file: BukkitConfigProvider, val root: String): View {
     override fun fullPath(path: String): String = root addDot path
 }
 
-class BukkitConfig(private val rootView: BukkitView):
+class BukkitConfig(private val rootView: BukkitView) :
     ErrorConfig, MessageConfig, TitleConfig,
     RequestConfig, ArenasConfig, StockfishConfig,
     BukkitChessConfig, ComponentsConfig, EndReasonConfig, BukkitPieceConfig, SettingsConfig, SideConfig,

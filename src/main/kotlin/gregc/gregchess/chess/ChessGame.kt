@@ -223,15 +223,14 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         try {
             components.allStop()
             players.forEachUnique(currentTurn) {
-                val msg = with (Config.title) { when(reason.winner) { it.side -> youWon; null -> youDrew; else -> youLost} }
-                it.sendTitle(msg, reason.namePath.get())
+                it.sendTitle(Config.title.winner(it.side, reason.winner), reason.namePath.get())
                 it.sendMessage(reason.message)
                 timeManager.runTaskLater((if (quick[it.side]) 0 else 3).seconds) {
                     components.allRemovePlayer(it.player)
                 }
             }
             spectators.forEach {
-                it.sendTitle(with(Config.title) { reason.winner?.let(spectator::get) ?: spectatorDraw }, reason.namePath.get())
+                it.sendTitle(Config.title.spectator(reason.winner), reason.namePath.get())
                 it.sendMessage(reason.message)
                 timeManager.runTaskLater((if (quick.white && quick.black) 0 else 3).seconds) {
                     components.allSpectatorLeave(it)
@@ -239,7 +238,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             }
             if (reason is EndReason.PluginRestart) {
                 components.allClear()
-                require<GameState.WithPlayers>().forEachPlayer(ChessPlayer::stop)
+                players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
                 glog.low("Stopped game", uniqueId, reason)
                 components.allVeryEnd()
@@ -248,10 +247,10 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             timeManager.runTaskLater((if (quick.white && quick.black) 0 else 3).seconds + 1.ticks) {
                 components.allClear()
                 timeManager.runTaskLater(1.ticks) {
-                    require<GameState.WithPlayers>().forEachPlayer(ChessPlayer::stop)
+                    players.forEach(ChessPlayer::stop)
                     state = GameState.Stopped(stopping)
-                    components.allVeryEnd()
                     glog.low("Stopped game", uniqueId, reason)
+                    components.allVeryEnd()
                 }
             }
         } catch (e: Exception) {

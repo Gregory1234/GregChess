@@ -39,7 +39,9 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 else -> {
                     val settings = Config.settings.clock.mapValues { (_, it) ->
                         val t = it.getEnum("Type", Type.INCREMENT, false)
-                        Settings(t, it.getDuration("Initial"), if (t.usesIncrement) it.getDuration("increment") else 0.seconds)
+                        val initial = it.getDuration("Initial")
+                        val increment = if (t.usesIncrement) it.getDuration("increment") else 0.seconds
+                        Settings(t, initial, increment)
                     }
                     if (name in settings)
                         settings[name]

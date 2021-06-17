@@ -33,8 +33,10 @@ operator fun RequestConfig.get(t: String) = RequestTypeConfig(t)
 
 class RequestTypeConfig(val name: String) {
 
-    private operator fun <R> (RequestConfig.(String) -> R).getValue(requestTypeConfig: RequestTypeConfig, property: KProperty<*>): R =
-        invoke(Config.request, name)
+    private operator fun <R> (RequestConfig.(String) -> R).getValue(
+        requestTypeConfig: RequestTypeConfig,
+        property: KProperty<*>
+    ): R = invoke(Config.request, name)
 
     val expired by RequestConfig::getExpired
     val duration by RequestConfig::getRequestDuration
@@ -85,11 +87,7 @@ class RequestTypeBuilder internal constructor() {
     }
 }
 
-fun buildRequestType(
-    t: TimeManager,
-    m: RequestManager,
-    f: RequestTypeBuilder.() -> Unit
-): RequestType = RequestTypeBuilder().run {
+fun buildRequestType(t: TimeManager, m: RequestManager, f: RequestTypeBuilder.() -> Unit) = RequestTypeBuilder().run {
     f()
     m.register(RequestType(t, messages, validateSender))
 }
@@ -212,9 +210,12 @@ data class RequestMessages(val view: RequestTypeConfig, val acceptCommand: Strin
 enum class RequestResponse {
     ACCEPT, CANCEL, EXPIRED, QUIT
 }
+
 data class RequestData(val sender: HumanPlayer, val receiver: HumanPlayer, val value: String)
 
-class Request(val sender: HumanPlayer, val receiver: HumanPlayer, val value: String, val cont: Continuation<RequestResponse>) {
+class Request(
+    val sender: HumanPlayer, val receiver: HumanPlayer, val value: String, val cont: Continuation<RequestResponse>
+) {
     val uniqueId: UUID = UUID.randomUUID()
 
     init {

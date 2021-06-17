@@ -50,13 +50,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
             tags += TagPair("White", game[Side.WHITE].name)
             tags += TagPair("Black", game[Side.BLACK].name)
 
-            val result = game.endReason?.let {
-                when (it.winner) {
-                    Side.WHITE -> "1-0"
-                    Side.BLACK -> "0-1"
-                    null -> "1/2-1/2"
-                }
-            }
+            val result = game.endReason?.winnerPGN
 
             tags += TagPair("Result", result ?: "*")
             tags += TagPair("PlyCount", game.board.moveHistory.size.toString())
@@ -71,30 +65,24 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
                 tags += TagPair("SetUp", "1")
                 tags += TagPair("FEN", game.board.initialFEN.toString())
             }
-            val variant = mutableListOf<String>().apply {
-                if (game.variant != ChessVariant.Normal) {
+            val variant = buildList {
+                if (game.variant != ChessVariant.Normal)
                     this += game.variant.name
-                }
-                if (game.board.chess960) {
+                if (game.board.chess960)
                     this += "Chess960"
-                }
-                if (game.settings.simpleCastling) {
+                if (game.settings.simpleCastling)
                     this += "SimpleCastling"
-                }
             }.joinToString(" ")
 
             if (variant.isNotBlank())
                 tags += TagPair("Variant", variant)
 
-            return PGN(
-                tags,
-                MoveTree(
-                    game.board.initialFEN.currentTurn,
-                    game.board.initialFEN.fullmoveClock,
-                    game.board.moveHistory.filter { it.standardName != "" },
-                    result
-                )
+            val tree = MoveTree(
+                game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveClock,
+                game.board.moveHistory.filter { it.standardName != "" }, result
             )
+
+            return PGN(tags, tree)
         }
     }
 

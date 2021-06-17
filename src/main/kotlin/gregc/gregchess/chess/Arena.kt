@@ -15,7 +15,7 @@ interface ArenaManager {
     fun next(): Arena?
 }
 
-interface ArenasConfig: ConfigBlock {
+interface ArenasConfig : ConfigBlock {
     val chessArenas: List<String>
 }
 

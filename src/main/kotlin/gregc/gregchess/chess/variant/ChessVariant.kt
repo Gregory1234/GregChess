@@ -77,7 +77,7 @@ abstract class ChessVariant(val name: String) {
                     .all { it.side == !m.piece.side && it.type == PieceType.KING || it in m.help }
             }
 
-        fun isValid(move: MoveCandidate): Boolean = move.run {
+        fun isValid(move: MoveCandidate): Boolean = with(move) {
 
             if (needed.any { p -> board[p].let { it?.piece != null && it.piece !in help } })
                 return false
@@ -94,7 +94,7 @@ abstract class ChessVariant(val name: String) {
             return true
         }
 
-        override fun getLegality(move: MoveCandidate): MoveLegality = move.run {
+        override fun getLegality(move: MoveCandidate): MoveLegality = with(move) {
             if (!isValid(move))
                 return MoveLegality.INVALID
 
@@ -117,19 +117,17 @@ abstract class ChessVariant(val name: String) {
         override fun isInCheck(king: BoardPiece): Boolean =
             checkingMoves(!king.side, king.square).isNotEmpty()
 
-        override fun checkForGameEnd(game: ChessGame) {
-            if (game.board.piecesOf(!game.currentTurn)
-                    .all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
-            ) {
+        override fun checkForGameEnd(game: ChessGame) = with(game.board) {
+            if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none(game.variant::isLegal) }) {
                 if (isInCheck(game, !game.currentTurn))
                     game.stop(EndReason.Checkmate(game.currentTurn))
                 else
                     game.stop(EndReason.Stalemate())
             }
-            game.board.checkForRepetition()
-            game.board.checkForFiftyMoveRule()
-            val whitePieces = game.board.piecesOf(Side.WHITE)
-            val blackPieces = game.board.piecesOf(Side.BLACK)
+            checkForRepetition()
+            checkForFiftyMoveRule()
+            val whitePieces = piecesOf(Side.WHITE)
+            val blackPieces = piecesOf(Side.BLACK)
             if (whitePieces.size == 1 && blackPieces.size == 1)
                 game.stop(EndReason.InsufficientMaterial())
             if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
