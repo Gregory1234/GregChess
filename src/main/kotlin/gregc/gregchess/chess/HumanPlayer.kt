@@ -73,25 +73,18 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         player.inventory.setItem(i, piece?.item)
     }
 
-    override fun openPawnPromotionMenu(moves: List<MoveCandidate>) = player.openMenu(BukkitPawnPromotionMenu(moves))
+    override fun openPawnPromotionMenu(moves: List<MoveCandidate>) = interact {
+        val move = player.openPawnPromotionMenu(moves)
+        move.game.finishMove(move)
+    }
 
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"
 }
 
-class BukkitPawnPromotionMenu(private val moves: List<MoveCandidate>) : BukkitMenu<MoveCandidate>(MessageConfig::pawnPromotion) {
-    override fun getContent() = moves.mapIndexed { i, m ->
+suspend fun Player.openPawnPromotionMenu(moves: List<MoveCandidate>) =
+    openMenu(Config.message.pawnPromotion, moves.mapIndexed { i, m ->
         ScreenOption(m.promotion?.item ?: m.piece.piece.item, m, InventoryPosition.fromIndex(i))
-    }
-
-    override fun onClick(v: MoveCandidate) {
-        v.game.finishMove(v)
-    }
-
-    override fun onCancel() {
-        moves.first().let { it.game.finishMove(it) }
-    }
-
-}
+    }) ?: moves[0]
 
 val HumanPlayer.chess get() = this.currentGame?.get(this)
 

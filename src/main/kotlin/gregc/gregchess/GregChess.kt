@@ -86,10 +86,12 @@ class GregChess : JavaPlugin(), Listener {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
                             cRequire(!opponent.human.isInGame(), Config.error.opponentInGame)
-                            player.openMenu(BukkitSettingsMenu { settings ->
-                                duelRequest += Request(player.human, opponent.human,
-                                    ChessGame(timeManager, arenaManager.cNext(), settings))
-                            })
+                            interact {
+                                val settings = player.openSettingsMenu()
+                                if (settings != null)
+                                    duelRequest += Request(player.human, opponent.human,
+                                        ChessGame(timeManager, arenaManager.cNext(), settings))
+                            }
                         }
                     }
                 }
@@ -98,12 +100,14 @@ class GregChess : JavaPlugin(), Listener {
                     cRequire(Config.stockfish.hasStockfish, Config.error.stockfishNotFound)
                     endArgs()
                     cRequire(!player.human.isInGame(), Config.error.youInGame)
-                    player.openMenu(BukkitSettingsMenu { settings ->
-                        ChessGame(timeManager, arenaManager.cNext(), settings).addPlayers {
-                            human(player.human, Side.WHITE, false)
-                            engine(Stockfish(timeManager), Side.BLACK)
-                        }.start()
-                    })
+                    interact {
+                        val settings = player.openSettingsMenu()
+                        if (settings != null)
+                            ChessGame(timeManager, arenaManager.cNext(), settings).addPlayers {
+                                human(player.human, Side.WHITE, false)
+                                engine(Stockfish(timeManager), Side.BLACK)
+                            }.start()
+                    }
                 }
                 "resign" -> {
                     cPlayer(player)
@@ -370,11 +374,11 @@ class GregChess : JavaPlugin(), Listener {
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
         val holder = e.inventory.holder
-        if (holder is BukkitMenu<*>.BukkitMenuHolder) {
+        if (holder is BukkitMenu<*>) {
             e.isCancelled = true
             cTry(e.whoClicked, { e.whoClicked.closeInventory() }) {
                 if (!holder.finished)
-                    if (holder.applyEvent(InventoryPosition.fromIndex(e.slot)))
+                    if (holder.click(InventoryPosition.fromIndex(e.slot)))
                         e.whoClicked.closeInventory()
             }
         }
@@ -383,7 +387,7 @@ class GregChess : JavaPlugin(), Listener {
     @EventHandler
     fun onInventoryClose(e: InventoryCloseEvent) {
         val holder = e.inventory.holder
-        if (holder is BukkitMenu<*>.BukkitMenuHolder) {
+        if (holder is BukkitMenu<*>) {
             cTry(e.player) {
                 if (!holder.finished)
                     holder.cancel()

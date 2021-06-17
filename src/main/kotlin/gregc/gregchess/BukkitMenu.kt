@@ -4,46 +4,44 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import kotlin.reflect.KProperty1
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.suspendCoroutine
 
-abstract class BukkitMenu<T : Any>(val namePath: ConfigVal<String>) {
+suspend fun <T> Player.openMenu(name: String, content: List<ScreenOption<T>>): T? = suspendCoroutine {
+    openMenu(BukkitMenu(name, it, content, null))
+}
 
-    inner class BukkitMenuHolder : InventoryHolder {
+class BukkitMenu<T>(
+    val name: String,
+    private val cont: Continuation<T>,
+    private val content: List<ScreenOption<T>>,
+    private val default: T
+) : InventoryHolder {
+    private val inv = Bukkit.createInventory(this, content.size - content.size % 9 + 9, name)
+    var finished: Boolean = false
+        private set
 
-        private val content = getContent()
-        private val inv = Bukkit.createInventory(this, content.size - content.size % 9 + 9, namePath.get())
-
-        var finished: Boolean = false
-
-        init {
-            content.forEach { (item, _, pos) -> inv.setItem(pos.index, item) }
-        }
-
-        override fun getInventory() = inv
-
-        fun applyEvent(choice: InventoryPosition): Boolean {
-            content.forEach { (_, v, pos) ->
-                if (pos == choice) {
-                    onClick(v)
-                    finished = true
-                }
-            }
-            return finished
-        }
-
-        fun cancel() {
-            finished = true
-            onCancel()
-        }
+    init {
+        content.forEach { (item, _, pos) -> inv.setItem(pos.index, item) }
     }
 
-    constructor(namePath: KProperty1<MessageConfig, String>): this(namePath.path)
-    abstract fun getContent(): List<ScreenOption<T>>
-    abstract fun onClick(v: T)
-    abstract fun onCancel()
+    fun click(choice: InventoryPosition): Boolean {
+        content.firstOrNull { (_, _, pos) -> pos == choice }?.value?.let {
+            finished = true
+            click(it)
+        }
+        return finished
+    }
 
-    fun openFor(p: Player) {
-        p.openInventory(BukkitMenuHolder().inventory)
+    override fun getInventory() = inv
+
+    private fun click(v: T) {
+        cont.resumeWith(Result.success(v))
+    }
+
+    fun cancel() {
+        finished = true
+        cont.resumeWith(Result.success(default))
     }
 }
 
@@ -55,7 +53,7 @@ data class InventoryPosition(val x: Int, val y: Int) {
     }
 }
 
-data class ScreenOption<T>(val item: ItemStack, val value: T, val position: InventoryPosition)
+data class ScreenOption<out T>(val item: ItemStack, val value: T, val position: InventoryPosition)
 
 
-fun Player.openMenu(m: BukkitMenu<*>) = m.openFor(this)
+fun Player.openMenu(m: BukkitMenu<*>) = openInventory(m.inventory)

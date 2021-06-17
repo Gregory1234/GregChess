@@ -4,6 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import org.bukkit.Material
+import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
@@ -25,20 +26,10 @@ object SettingsManager {
 
 }
 
-class BukkitSettingsMenu(private inline val startGame: (GameSettings) -> Unit) :
-    BukkitMenu<GameSettings>(MessageConfig::chooseSettings) {
-    override fun getContent() =
-        SettingsManager.getSettings().toList().mapIndexed { index, s ->
-            ScreenOption(ItemStack(Material.IRON_BLOCK), s, InventoryPosition.fromIndex(index))
-        }
-
-    override fun onClick(v: GameSettings) {
-        startGame(v)
-    }
-
-    override fun onCancel() {
-    }
-}
+suspend fun Player.openSettingsMenu() =
+    openMenu(Config.message.pawnPromotion, SettingsManager.getSettings().toList().mapIndexed { index, s ->
+        ScreenOption(ItemStack(Material.IRON_BLOCK), s, InventoryPosition.fromIndex(index))
+    })
 
 data class GameSettings(
     val name: String,
