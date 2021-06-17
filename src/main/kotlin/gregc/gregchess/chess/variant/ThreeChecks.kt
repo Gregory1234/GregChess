@@ -16,9 +16,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
 
         @GameEvent(GameBaseEvent.START)
         fun start() {
-            game.scoreboard += object : PlayerProperty(Config.component.checkCounter.checkCounter) {
-                override fun invoke(s: Side) = checks[s].toString()
-            }
+            game.scoreboard.player(Config.component.checkCounter.checkCounter) { checks[it].toString() }
         }
 
         @GameEvent(GameBaseEvent.END_TURN)

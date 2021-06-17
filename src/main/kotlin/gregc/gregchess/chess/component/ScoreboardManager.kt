@@ -12,6 +12,18 @@ interface ScoreboardManager : Component {
     operator fun plusAssign(p: PlayerProperty)
 }
 
+inline fun ScoreboardManager.game(name: String, crossinline block: () -> String) {
+    this += object : GameProperty(name) {
+        override fun invoke() = block()
+    }
+}
+
+inline fun ScoreboardManager.player(name: String, crossinline block: (Side) -> String) {
+    this += object : PlayerProperty(name) {
+        override fun invoke(s: Side) = block(s)
+    }
+}
+
 class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     object Settings : Component.Settings<BukkitScoreboardManager> {
         override fun getComponent(game: ChessGame) = BukkitScoreboardManager(game)
@@ -56,12 +68,8 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
 
     @GameEvent(GameBaseEvent.INIT)
     fun init() {
-        this += object : GameProperty(view.preset) {
-            override fun invoke() = game.settings.name
-        }
-        this += object : PlayerProperty(view.player) {
-            override fun invoke(s: Side) = view.playerPrefix + game[s].name
-        }
+        game(view.preset) { game.settings.name }
+        player(view.player) { view.playerPrefix + game[it].name }
     }
 
     @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)

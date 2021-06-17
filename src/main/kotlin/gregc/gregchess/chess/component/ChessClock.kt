@@ -107,14 +107,10 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     fun start() {
 
         if (settings.type == Type.FIXED) {
-            game.scoreboard += object : GameProperty(view.timeRemaining) {
-                override fun invoke() = format(getTimeRemaining(game.currentTurn))
-            }
+            game.scoreboard.game(view.timeRemaining) { format(getTimeRemaining(game.currentTurn)) }
             startTimer()
         } else {
-            game.scoreboard += object : PlayerProperty(view.timeRemaining) {
-                override fun invoke(s: Side) = format(getTimeRemaining(s))
-            }
+            game.scoreboard.player(view.timeRemaining) { format(getTimeRemaining(it)) }
         }
     }
 
