@@ -27,6 +27,10 @@ object SettingsManager {
 }
 
 suspend fun Player.openSettingsMenu() =
-    openMenu(Config.message.chooseSettings, SettingsManager.getSettings().toList().mapIndexed { index, s ->
-        ScreenOption(ItemStack(Material.IRON_BLOCK), s, InventoryPosition.fromIndex(index))
+    openMenu(Config.message.chooseSettings, SettingsManager.getSettings().mapIndexed { index, s ->
+        val item = ItemStack(Material.IRON_BLOCK)
+        val meta = item.itemMeta!!
+        meta.setDisplayName(s.name)
+        item.itemMeta = meta
+        ScreenOption(item, s, InventoryPosition.fromIndex(index))
     })
