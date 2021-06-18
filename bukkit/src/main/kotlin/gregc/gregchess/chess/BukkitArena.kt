@@ -12,6 +12,8 @@ import org.bukkit.plugin.Plugin
 import java.util.*
 
 class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
+    class ArenaRemovedEndReason : EndReason(EndReasonConfig::arenaRemoved, "emergency", quick = true)
+
     private val arenas = mutableListOf<Arena>()
 
     override fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
@@ -22,7 +24,7 @@ class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
         val newArenas = Config.arenas.chessArenas
         arenas.removeIf {
             if (it.name !in newArenas) {
-                it.game?.quickStop(EndReason.ArenaRemoved())
+                it.game?.quickStop(ArenaRemovedEndReason())
                 true
             } else false
         }

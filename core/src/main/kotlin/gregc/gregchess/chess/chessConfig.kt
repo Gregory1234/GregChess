@@ -67,8 +67,6 @@ val Config.endReason: EndReasonConfig by Config
 val EndReasonConfig.checkmate by EndReasonConfig
 val EndReasonConfig.resignation by EndReasonConfig
 val EndReasonConfig.walkover by EndReasonConfig
-val EndReasonConfig.pluginRestart by EndReasonConfig
-val EndReasonConfig.arenaRemoved by EndReasonConfig
 val EndReasonConfig.stalemate by EndReasonConfig
 val EndReasonConfig.insufficientMaterial by EndReasonConfig
 val EndReasonConfig.fiftyMoves by EndReasonConfig

@@ -23,6 +23,8 @@ interface ChessGameManager {
     fun leave(player: HumanPlayer)
 }
 
+class PluginRestartEndReason : EndReason(EndReasonConfig::pluginRestart, "emergency", quick = true)
+
 class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Listener {
 
     private val games = mutableListOf<ChessGame>()
@@ -45,7 +47,7 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
     }
 
     fun stop() {
-        games.forEach { it.quickStop(EndReason.PluginRestart()) }
+        games.forEach { it.quickStop(PluginRestartEndReason()) }
     }
 
     override fun leave(player: HumanPlayer) {

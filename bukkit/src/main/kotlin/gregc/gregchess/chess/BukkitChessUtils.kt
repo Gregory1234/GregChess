@@ -67,3 +67,6 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Variant: ${variant.name}\n")
     append("Components: ${getComponents().joinToString { it.javaClass.simpleName }}")
 }
+
+val EndReasonConfig.pluginRestart by EndReasonConfig
+val EndReasonConfig.arenaRemoved by EndReasonConfig

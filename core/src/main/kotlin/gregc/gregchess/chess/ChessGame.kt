@@ -244,7 +244,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
                     components.allSpectatorLeave(it)
                 }
             }
-            if (reason is EndReason.PluginRestart) {
+            if (reason.quick) {
                 components.allClear()
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
