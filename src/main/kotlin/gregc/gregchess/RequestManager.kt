@@ -53,17 +53,23 @@ class RequestTypeConfig(val name: String) {
 val Config.request: RequestConfig by Config
 
 interface RequestManager {
-    fun register(requestType: RequestType): RequestType
+    fun register(c: RequestTypeConfig, accept: String, cancel: String): RequestType
 }
 
-class BukkitRequestManager(private val plugin: Plugin) : Listener, RequestManager {
+fun RequestManager.register(c: String, accept: String, cancel: String): RequestType =
+    register(Config.request[c], accept, cancel)
+
+class BukkitRequestManager(private val plugin: Plugin, private val timeManager: TimeManager) : Listener,
+    RequestManager {
+
     private val requestTypes = mutableListOf<RequestType>()
 
     fun start() {
         Bukkit.getPluginManager().registerEvents(this, plugin)
     }
 
-    override fun register(requestType: RequestType): RequestType {
+    override fun register(c: RequestTypeConfig, accept: String, cancel: String): RequestType {
+        val requestType = RequestType(timeManager, RequestTypeData(c, accept, cancel))
         requestTypes.add(requestType)
         return requestType
     }
@@ -74,39 +80,24 @@ class BukkitRequestManager(private val plugin: Plugin) : Listener, RequestManage
             it.quietRemove(e.player.human)
         }
     }
-
 }
 
-class RequestTypeBuilder internal constructor() {
-    lateinit var messages: RequestMessages
-    var validateSender: (HumanPlayer) -> Boolean = { true }
-
-    fun messagesSimple(view: RequestTypeConfig, acceptCommand: String, cancelCommand: String): RequestTypeBuilder {
-        messages = RequestMessages(view, acceptCommand, cancelCommand)
-        return this
-    }
-}
-
-fun buildRequestType(t: TimeManager, m: RequestManager, f: RequestTypeBuilder.() -> Unit) = RequestTypeBuilder().run {
-    f()
-    m.register(RequestType(t, messages, validateSender))
-}
-
-
-class RequestType(
-    private val timeManager: TimeManager,
-    private val messages: RequestMessages,
-    private inline val validateSender: (HumanPlayer) -> Boolean = { true }
-) {
+class RequestType(private val timeManager: TimeManager, private val data: RequestTypeData) {
     private val requests = mutableMapOf<UUID, Request>()
-    private val view get() = messages.view
+    private val config get() = data.config
+
+    suspend fun invalidSender(s: HumanPlayer) {
+        glog.mid("Invalid sender", s)
+        s.sendMessage(config.cannotSend)
+        return suspendCoroutine { }
+    }
+
+    suspend inline fun invalidSender(s: HumanPlayer, block: () -> Boolean) {
+        if (block())
+            invalidSender(s)
+    }
 
     private fun call(request: Request, simple: Boolean) {
-        if (!validateSender(request.sender)) {
-            glog.mid("Invalid sender", request.uniqueId)
-            request.sender.sendMessage(view.cannotSend)
-            return
-        }
         if ((simple || Config.request.selfAccept) && request.sender == request.receiver) {
             glog.mid("Self request", request.uniqueId)
             request.cont.resume(RequestResponse.ACCEPT)
@@ -114,16 +105,16 @@ class RequestType(
         }
         requests[request.uniqueId] = request
         request.sender.sendCommandMessage(
-            view.sentRequest,
+            config.sentRequest,
             Config.request.cancel,
-            if (simple) messages.cancelCommand else "${messages.cancelCommand} ${request.uniqueId}"
+            if (simple) data.cancelCommand else "${data.cancelCommand} ${request.uniqueId}"
         )
         request.receiver.sendCommandMessage(
-            view.receivedRequest(request.sender.name, request.value),
+            config.receivedRequest(request.sender.name, request.value),
             Config.request.accept,
-            if (simple) messages.acceptCommand else "${messages.acceptCommand} ${request.uniqueId}"
+            if (simple) data.acceptCommand else "${data.acceptCommand} ${request.uniqueId}"
         )
-        val duration = view.duration
+        val duration = config.duration
         if (duration != null)
             timeManager.runTaskLater(duration) {
                 if (request.uniqueId in requests)
@@ -148,17 +139,16 @@ class RequestType(
             cancel(it)
             return
         }
-        requests.values.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }
-            ?.let {
-                accept(it)
-                return
-            }
+        requests.values.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }?.let {
+            accept(it)
+            return
+        }
         call(request, true)
     }
 
     private fun accept(request: Request) {
-        request.sender.sendMessage(view.sentAccept(request.receiver.name))
-        request.receiver.sendMessage(view.receivedAccept(request.sender.name))
+        request.sender.sendMessage(config.sentAccept(request.receiver.name))
+        request.receiver.sendMessage(config.receivedAccept(request.sender.name))
         requests.remove(request.uniqueId)
         glog.mid("Accepted", request.uniqueId)
         request.cont.resume(RequestResponse.ACCEPT)
@@ -167,14 +157,14 @@ class RequestType(
     fun accept(p: HumanPlayer, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.receiver)
-            p.sendMessage(view.notFound)
+            p.sendMessage(config.notFound)
         else
             accept(request)
     }
 
     private fun cancel(request: Request) {
-        request.sender.sendMessage(view.sentCancel(request.receiver.name))
-        request.receiver.sendMessage(view.receivedCancel(request.sender.name))
+        request.sender.sendMessage(config.sentCancel(request.receiver.name))
+        request.receiver.sendMessage(config.receivedCancel(request.sender.name))
         requests.remove(request.uniqueId)
         glog.mid("Cancelled", request.uniqueId)
         request.cont.resume(RequestResponse.CANCEL)
@@ -183,29 +173,28 @@ class RequestType(
     fun cancel(p: HumanPlayer, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.sender)
-            p.sendMessage(view.notFound)
+            p.sendMessage(config.notFound)
         else
             cancel(request)
     }
 
     private fun expire(request: Request) {
-        request.sender.sendMessage(view.expired(request.receiver.name))
-        request.receiver.sendMessage(view.expired(request.sender.name))
+        request.sender.sendMessage(config.expired(request.receiver.name))
+        request.receiver.sendMessage(config.expired(request.sender.name))
         requests.remove(request.uniqueId)
         glog.mid("Expired", request.uniqueId)
         request.cont.resume(RequestResponse.EXPIRED)
     }
 
-    fun quietRemove(p: HumanPlayer) = requests.values.filter { it.sender == p || it.receiver == p }
-        .forEach {
-            requests.remove(it.uniqueId)
-            glog.mid("Quit", it.uniqueId)
-            it.cont.resume(RequestResponse.QUIT)
-        }
+    fun quietRemove(p: HumanPlayer) = requests.values.filter { it.sender == p || it.receiver == p }.forEach {
+        requests.remove(it.uniqueId)
+        glog.mid("Quit", it.uniqueId)
+        it.cont.resume(RequestResponse.QUIT)
+    }
 
 }
 
-data class RequestMessages(val view: RequestTypeConfig, val acceptCommand: String, val cancelCommand: String)
+data class RequestTypeData(val config: RequestTypeConfig, val acceptCommand: String, val cancelCommand: String)
 
 enum class RequestResponse {
     ACCEPT, CANCEL, EXPIRED, QUIT

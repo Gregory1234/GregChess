@@ -46,6 +46,8 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             }
         }
 
+    fun <T, R> cRequireRenderer(block: (Renderer<T>) -> R): R = cNotNull(withRenderer(block), Config.error.rendererNotFound)
+
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
 
@@ -88,6 +90,9 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
 
     val currentPlayer: ChessPlayer
         get() = require<GameState.WithCurrentPlayer>().currentPlayer
+
+    val currentOpponent: ChessPlayer
+        get() = require<GameState.WithCurrentPlayer>().currentOpponent
 
     inner class AddPlayersScope {
         private val players = MutableBySides<ChessPlayer?>(null)

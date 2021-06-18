@@ -136,6 +136,7 @@ operator fun GameState.WithPlayers.get(s: Side) = players[s]
 operator fun GameState.WithPlayers.contains(p: HumanPlayer) = p in players
 
 val GameState.WithCurrentPlayer.currentPlayer: ChessPlayer get() = this[currentTurn]
+val GameState.WithCurrentPlayer.currentOpponent: ChessPlayer get() = this[!currentTurn]
 operator fun GameState.WithCurrentPlayer.get(p: HumanPlayer) = players[p, currentTurn]
 inline fun GameState.WithCurrentPlayer.forEachUnique(f: (HumanChessPlayer) -> Unit) =
     players.forEachUnique(currentTurn, f)

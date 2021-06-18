@@ -16,28 +16,20 @@ import java.util.*
 @Suppress("unused")
 class GregChess : JavaPlugin(), Listener {
 
-    private val requestManager = BukkitRequestManager(this)
     private val arenaManager = BukkitArenaManager(this)
     private val timeManager = BukkitTimeManager(this)
+    private val requestManager = BukkitRequestManager(this, timeManager)
     private val chessManager = BukkitChessGameManager(this)
 
     init {
         Config.initBukkit { config }
     }
 
-    private val drawRequest = buildRequestType(timeManager, requestManager) {
-        messagesSimple(Config.request["draw"], "/chess draw", "/chess draw")
-        validateSender = { it.chess?.hasTurn ?: false }
-    }
+    private val drawRequest = requestManager.register("draw", "/chess draw", "/chess draw")
 
-    private val takebackRequest = buildRequestType(timeManager, requestManager) {
-        messagesSimple(Config.request["takeback"], "/chess undo", "/chess undo")
-        validateSender = { (it.currentGame?.currentPlayer?.opponent as? HumanChessPlayer)?.player == it }
-    }
+    private val takebackRequest = requestManager.register("takeback", "/chess undo", "/chess undo")
 
-    private val duelRequest = buildRequestType(timeManager, requestManager) {
-        messagesSimple(Config.request["duel"], "/chess duel accept", "/chess duel cancel")
-    }
+    private val duelRequest = requestManager.register("duel", "/chess duel accept", "/chess duel cancel")
 
     override fun onEnable() {
         server.pluginManager.registerEvents(this, this)
@@ -120,6 +112,7 @@ class GregChess : JavaPlugin(), Listener {
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val opponent: HumanChessPlayer = cCast(p.opponent, Config.error.opponentNotHuman)
                     interact {
+                        drawRequest.invalidSender(player.human) { !p.hasTurn }
                         val res = drawRequest.call(RequestData(player.human, opponent.player, ""), true)
                         if (res == RequestResponse.ACCEPT) {
                             p.game.stop(EndReason.DrawAgreement())
@@ -131,10 +124,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.debug")
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val pos = if (args.size == 1)
-                        cNotNull(
-                            p.game.withRenderer<Loc, Pos> { it.getPos(Loc.fromLocation(player.location)) },
-                            Config.error.rendererNotFound
-                        )
+                        p.game.cRequireRenderer<Loc, Pos> { it.getPos(Loc.fromLocation(player.location)) }
                     else
                         cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()
@@ -253,6 +243,9 @@ class GregChess : JavaPlugin(), Listener {
                     cNotNull(p.game.board.lastMove, Config.error.nothingToTakeback)
                     val opponent: HumanChessPlayer = cCast(p.opponent, Config.error.opponentNotHuman)
                     interact {
+                        drawRequest.invalidSender(player.human) {
+                            (p.game.currentOpponent as? HumanChessPlayer)?.player != player.human
+                        }
                         val res = takebackRequest.call(RequestData(player.human, opponent.player, ""), true)
                         if (res == RequestResponse.ACCEPT) {
                             p.game.board.undoLastMove()

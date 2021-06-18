@@ -80,7 +80,7 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
-            val pos = cNotNull(player.game.withRenderer<Loc, Pos> { it.getPos(block.loc) }, Config.error.rendererNotFound)
+            val pos = player.game.cRequireRenderer<Loc, Pos> { it.getPos(block.loc) }
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
                 player.pickUp(pos)
             } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {
