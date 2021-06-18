@@ -59,28 +59,21 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
 
     private var state: GameState = GameState.Initial
 
-    private inline fun <reified T> wrongState(): Nothing {
+    private inline fun <reified T> require(): T = (state as? T) ?: run {
         val e = WrongStateException(state, T::class.java)
         stop(EndReason.Error(e))
         throw e
     }
 
-    private inline fun <reified T> require(fail: () -> Nothing = { wrongState<T>() }): T = (state as? T) ?: fail()
+    private fun requireInitial() = require<GameState.Initial>()
 
-    private inline fun requireInitial(fail: () -> Nothing = { wrongState<GameState.Initial>() }) =
-        require<GameState.Initial>(fail)
+    private fun requireReady() = require<GameState.Ready>()
 
-    private inline fun requireReady(fail: () -> Nothing = { wrongState<GameState.Ready>() }) =
-        require<GameState.Ready>(fail)
+    private fun requireStarting() = require<GameState.Starting>()
 
-    private inline fun requireStarting(fail: () -> Nothing = { wrongState<GameState.Starting>() }) =
-        require<GameState.Starting>(fail)
+    private fun requireRunning() = require<GameState.Running>()
 
-    private inline fun requireRunning(fail: () -> Nothing = { wrongState<GameState.Running>() }) =
-        require<GameState.Running>(fail)
-
-    private inline fun requireStopping(fail: () -> Nothing = { wrongState<GameState.Stopping>() }) =
-        require<GameState.Stopping>(fail)
+    private fun requireStopping() = require<GameState.Stopping>()
 
     var currentTurn: Side
         get() = require<GameState.WithCurrentPlayer>().currentTurn
@@ -223,7 +216,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
     fun quickStop(reason: EndReason) = stop(reason, BySides(true))
 
     fun stop(reason: EndReason, quick: BySides<Boolean> = BySides(false)) {
-        val stopping = GameState.Stopping(requireRunning { requireStopping(); return }, reason)
+        val stopping = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, reason)
         state = stopping
         try {
             components.allStop()

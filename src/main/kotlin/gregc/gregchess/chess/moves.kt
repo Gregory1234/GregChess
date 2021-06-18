@@ -4,14 +4,9 @@ import gregc.gregchess.*
 import kotlin.math.abs
 
 class MoveData(
-    val piece: Piece,
-    val origin: Square,
-    val target: Square,
-    val name: String,
-    val standardName: String,
-    val captured: Boolean,
-    val display: Square = target,
-    val undo: () -> Unit
+    val piece: Piece, val origin: Square, val target: Square,
+    val name: String, val standardName: String,
+    val captured: Boolean, val display: Square = target, val undo: () -> Unit
 ) {
 
     override fun toString() = "MoveData(piece=$piece, name=$name, standardName=$standardName)"
@@ -29,8 +24,7 @@ class MoveData(
 
 abstract class MoveCandidate(
     val piece: BoardPiece, val target: Square, val floor: Floor,
-    val pass: Collection<Pos>, val help: Collection<BoardPiece> = emptyList(),
-    val needed: Collection<Pos> = pass,
+    val pass: Collection<Pos>, val help: Collection<BoardPiece> = emptyList(), val needed: Collection<Pos> = pass,
     val control: Square? = target, val promotion: Piece? = null,
     val mustCapture: Boolean = false, val display: Square = target
 ) {
@@ -134,10 +128,10 @@ fun checkForChecks(side: Side, game: ChessGame): String {
 
 fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Floor.CAPTURE
 
-inline fun jumps(piece: BoardPiece, dirs: Collection<Dir>, f: (Square) -> MoveCandidate) =
+fun jumps(piece: BoardPiece, dirs: Collection<Dir>, f: (Square) -> MoveCandidate) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map(f)
 
-inline fun rays(piece: BoardPiece, dirs: Collection<Dir>, f: (Int, Dir, Square) -> MoveCandidate) =
+fun rays(piece: BoardPiece, dirs: Collection<Dir>, f: (Int, Dir, Square) -> MoveCandidate) =
     dirs.flatMap { dir ->
         PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
             piece.square.board[pos]?.let { f(index + 1, dir, it) }
