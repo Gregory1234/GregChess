@@ -48,7 +48,7 @@ class PosSteps(val start: Pos, private val jump: Dir, override val size: Int) : 
             if (jump.first > 0)
                 ret += (8 - start.file).floorDiv(jump.first)
             else if (jump.first < 0)
-                (start.file + 1).floorDiv(-jump.first)
+                ret += (start.file + 1).floorDiv(-jump.first)
 
             if (jump.second > 0)
                 ret += (8 - start.rank).floorDiv(jump.second)

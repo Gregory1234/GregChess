@@ -27,7 +27,7 @@ object SettingsManager {
 }
 
 suspend fun Player.openSettingsMenu() =
-    openMenu(Config.message.pawnPromotion, SettingsManager.getSettings().toList().mapIndexed { index, s ->
+    openMenu(Config.message.chooseSettings, SettingsManager.getSettings().toList().mapIndexed { index, s ->
         ScreenOption(ItemStack(Material.IRON_BLOCK), s, InventoryPosition.fromIndex(index))
     })
 
