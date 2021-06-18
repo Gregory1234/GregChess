@@ -223,16 +223,18 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         try {
             components.allStop()
             players.forEachUnique(currentTurn) {
-                it.sendTitle(Config.title.winner(it.side, reason.winner), reason.namePath.get())
-                it.sendMessage(reason.message)
-                timeManager.runTaskLater((if (quick[it.side]) 0 else 3).seconds) {
+                interact {
+                    it.sendTitle(Config.title.winner(it.side, reason.winner), reason.namePath.get())
+                    it.sendMessage(reason.message)
+                    timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
                     components.allRemovePlayer(it.player)
                 }
             }
             spectators.forEach {
-                it.sendTitle(Config.title.spectator(reason.winner), reason.namePath.get())
-                it.sendMessage(reason.message)
-                timeManager.runTaskLater((if (quick.white && quick.black) 0 else 3).seconds) {
+                interact {
+                    it.sendTitle(Config.title.spectator(reason.winner), reason.namePath.get())
+                    it.sendMessage(reason.message)
+                    timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
                     components.allSpectatorLeave(it)
                 }
             }
@@ -244,14 +246,14 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
                 components.allVeryEnd()
                 return
             }
-            timeManager.runTaskLater((if (quick.white && quick.black) 0 else 3).seconds + 1.ticks) {
+            interact {
+                timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds + 1.ticks)
                 components.allClear()
-                timeManager.runTaskLater(1.ticks) {
-                    players.forEach(ChessPlayer::stop)
-                    state = GameState.Stopped(stopping)
-                    glog.low("Stopped game", uniqueId, reason)
-                    components.allVeryEnd()
-                }
+                timeManager.wait(1.ticks)
+                players.forEach(ChessPlayer::stop)
+                state = GameState.Stopped(stopping)
+                glog.low("Stopped game", uniqueId, reason)
+                components.allVeryEnd()
             }
         } catch (e: Exception) {
             panic(e)
