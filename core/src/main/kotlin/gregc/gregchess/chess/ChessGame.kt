@@ -75,7 +75,11 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
 
     private fun requireRunning() = require<GameState.Running>()
 
-    private fun requireStopping() = require<GameState.Stopping>()
+    private fun requireStopping() = (state as? GameState.Stopping) ?: run {
+        val e = WrongStateException(state, GameState.Stopping::class.java)
+        panic(e)
+        throw e
+    }
 
     var currentTurn: Side
         get() = require<GameState.WithCurrentPlayer>().currentTurn
@@ -93,6 +97,8 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         private val players = MutableBySides<ChessPlayer?>(null)
 
         fun addPlayer(p: ChessPlayer) {
+            if (players[p.side] != null)
+                throw IllegalStateException("${p.side.standardName} player already added")
             players[p.side] = p
         }
 
