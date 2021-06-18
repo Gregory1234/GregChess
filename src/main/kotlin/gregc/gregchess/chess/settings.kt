@@ -30,12 +30,3 @@ suspend fun Player.openSettingsMenu() =
     openMenu(Config.message.chooseSettings, SettingsManager.getSettings().toList().mapIndexed { index, s ->
         ScreenOption(ItemStack(Material.IRON_BLOCK), s, InventoryPosition.fromIndex(index))
     })
-
-data class GameSettings(
-    val name: String,
-    val simpleCastling: Boolean,
-    val variant: ChessVariant,
-    val components: Collection<Component.Settings<*>>
-) {
-    inline fun <reified T : Component.Settings<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
-}

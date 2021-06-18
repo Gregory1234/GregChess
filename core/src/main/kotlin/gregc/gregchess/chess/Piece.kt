@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.glog
+import gregc.gregchess.snakeToPascal
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
@@ -12,8 +13,6 @@ data class Piece(val type: PieceType, val side: Side) {
             Side.WHITE -> type.standardChar.uppercaseChar()
             Side.BLACK -> type.standardChar
         }
-
-    val item get() = type.getItem(side)
 }
 
 data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)
@@ -165,19 +164,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
                 piece.render()
                 piece.playMoveSound()
             }
-        }
-    }
-
-    fun getInfo() = buildTextComponent {
-        append("Name: $standardName\n")
-        appendCopy("UUID: $uniqueId\n", uniqueId)
-        append("Position: $pos\n")
-        append(if (hasMoved) "Has moved\n" else "Has not moved\n")
-        appendCopy("Game: ${game.uniqueId}\n", game.uniqueId)
-        val moves = square.bakedMoves.orEmpty()
-        append("All moves: ${moves.joinToString { it.baseStandardName() }}")
-        moves.groupBy { m -> game.variant.getLegality(m) }.forEach { (l, m) ->
-            append("\n${l.prettyName}: ${m.joinToString { it.baseStandardName() }}")
         }
     }
 }

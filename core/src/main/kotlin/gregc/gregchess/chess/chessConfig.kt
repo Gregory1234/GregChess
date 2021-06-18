@@ -1,24 +1,14 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import org.bukkit.Material
-import org.bukkit.Sound
 import kotlin.reflect.KProperty
 
 interface PieceConfig : ConfigBlock {
     fun getPieceName(t: PieceType): String
     fun getPieceChar(t: PieceType): Char
-    fun getPieceSound(t: PieceType, s: PieceSound): Sound
 }
 
 val Config.piece: PieceConfig by Config
-
-interface BukkitPieceConfig : PieceConfig {
-    fun getPieceItem(t: PieceType): BySides<Material>
-    fun getPieceStructure(t: PieceType): BySides<List<Material>>
-}
-
-val Config.bukkitPiece: BukkitPieceConfig by Config
 
 interface SideConfig : ConfigBlock {
     fun getSidePieceName(s: Side, n: String): String
@@ -31,20 +21,6 @@ interface ChessConfig : ConfigBlock {
 }
 
 val Config.chess: ChessConfig by Config
-
-interface BukkitChessConfig : ChessConfig {
-    fun getFloor(f: Floor): Material
-}
-
-val Config.bukkitChess: BukkitChessConfig by Config
-
-interface StockfishConfig : ConfigBlock {
-    val hasStockfish: Boolean
-    val stockfishCommand: String
-    val engineName: String
-}
-
-val Config.stockfish: StockfishConfig by Config
 
 interface SettingsConfig : ConfigBlock {
     companion object {

@@ -1,7 +1,5 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.BySides
-import gregc.gregchess.chess.Side
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
@@ -13,7 +11,6 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
 import kotlin.contracts.contract
-import kotlin.reflect.KProperty
 
 data class PlayerData(
     val location: Location? = null,
@@ -111,14 +108,8 @@ inline fun JavaPlugin.addCommandTab(name: String, crossinline tabCompleter: Comm
     }
 }
 
-data class Loc(val x: Int, val y: Int, val z: Int) {
-    fun toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
-    operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
-
-    companion object {
-        fun fromLocation(l: Location) = Loc(l.x.toInt(), l.y.toInt(), l.z.toInt())
-    }
-}
+fun Loc.toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
+fun Location.toLoc() = Loc(x.toInt(), y.toInt(), z.toInt())
 
 fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
@@ -127,14 +118,11 @@ val Block.loc: Loc
 val ErrorConfig.noPermission by ErrorConfig
 val ErrorConfig.notPlayer by ErrorConfig
 val ErrorConfig.playerNotFound by ErrorConfig
-val ErrorConfig.rendererNotFound by ErrorConfig
 val ErrorConfig.clockNotFound by ErrorConfig
 val ErrorConfig.engineNotFound by ErrorConfig
 val ErrorConfig.stockfishNotFound by ErrorConfig
 val ErrorConfig.pieceNotFound by ErrorConfig
 val ErrorConfig.gameNotFound by ErrorConfig
-val ErrorConfig.noArenas by ErrorConfig
-val ErrorConfig.teleportFailed by ErrorConfig
 val ErrorConfig.nothingToTakeback by ErrorConfig
 val ErrorConfig.wrongDurationFormat by ErrorConfig
 val ErrorConfig.youInGame get() = getError("InGame.You")
@@ -142,18 +130,6 @@ val ErrorConfig.opponentInGame get() = getError("InGame.Opponent")
 val ErrorConfig.youNotInGame get() = getError("NotInGame.You")
 val ErrorConfig.playerNotInGame get() = getError("NotInGame.Player")
 val ErrorConfig.opponentNotHuman get() = getError("NotHuman.Opponent")
-
-interface MessageConfig : ConfigBlock {
-    companion object {
-        operator fun getValue(owner: MessageConfig, property: KProperty<*>) =
-            owner.getMessage(property.name.upperFirst())
-    }
-
-    fun getMessage(s: String): String
-    fun getMessage1(s: String): (String) -> String
-}
-
-val Config.message: MessageConfig by Config
 
 val MessageConfig.boardOpDone by MessageConfig
 val MessageConfig.skippedTurn by MessageConfig
@@ -164,41 +140,9 @@ val MessageConfig.configReloaded by MessageConfig
 val MessageConfig.levelSet by MessageConfig
 val MessageConfig.copyFEN by MessageConfig
 val MessageConfig.copyPGN by MessageConfig
-val MessageConfig.inCheck by MessageConfig
 val MessageConfig.pawnPromotion by MessageConfig
 val MessageConfig.chooseSettings by MessageConfig
 
-val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
-val MessageConfig.gameFinished get() = BySides { getMessage1("GameFinished.${it.standardName}Won") }
-val MessageConfig.gameFinishedDraw get() = getMessage1("GameFinished.ItWasADraw")
-
-interface TitleConfig : ConfigBlock {
-    companion object {
-        operator fun getValue(owner: TitleConfig, property: KProperty<*>) = owner.getTitle(property.name.upperFirst())
-    }
-
-    fun getTitle(s: String): String
-}
-
-val Config.title: TitleConfig by Config
-
-
-val TitleConfig.inCheck by TitleConfig
-val TitleConfig.spectatorDraw get() = getTitle("Spectator.ItWasADraw")
-val TitleConfig.spectatorWinner get() = BySides { getTitle("Spectator.${it.standardName}Won") }
-fun TitleConfig.spectator(winner: Side?) = winner?.let(spectatorWinner::get) ?: spectatorDraw
-
-val TitleConfig.youWon get() = getTitle("Player.YouWon")
-val TitleConfig.youDrew get() = getTitle("Player.YouDrew")
-val TitleConfig.youLost get() = getTitle("Player.YouLost")
-fun TitleConfig.winner(you: Side, winner: Side?) = when (winner) {
-    you -> youWon
-    null -> youDrew
-    else -> youLost
-}
-
-val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
-val TitleConfig.yourTurn by TitleConfig
 
 fun cPerms(p: CommandSender, perm: String) {
     cRequire(p.hasPermission(perm), Config.error.noPermission)

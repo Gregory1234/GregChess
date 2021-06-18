@@ -2,7 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.Config
 import gregc.gregchess.snakeToPascal
-import org.bukkit.inventory.ItemStack
+
 
 enum class PieceType(
     val standardChar: Char,
@@ -23,19 +23,7 @@ enum class PieceType(
                 ?: throw IllegalArgumentException(c.toString())
     }
 
-    fun getItem(side: Side): ItemStack {
-        val item = ItemStack(itemMaterial[side])
-        val meta = item.itemMeta!!
-        meta.setDisplayName(side.getPieceName(pieceName))
-        item.itemMeta = meta
-        return item
-    }
-
-    fun getSound(s: PieceSound) = Config.piece.getPieceSound(this, s)
-
     val standardName: String = name.snakeToPascal()
     val pieceName get() = Config.piece.getPieceName(this)
     val char get() = Config.piece.getPieceChar(this)
-    val itemMaterial get() = Config.bukkitPiece.getPieceItem(this)
-    val structure get() = Config.bukkitPiece.getPieceStructure(this)
 }

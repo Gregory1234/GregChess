@@ -1,5 +1,7 @@
 package gregc.gregchess
 
+import gregc.gregchess.chess.BySides
+import gregc.gregchess.chess.Side
 import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -20,6 +22,54 @@ val Config.error: ErrorConfig by Config
 
 val ErrorConfig.wrongArgumentsNumber by ErrorConfig
 val ErrorConfig.wrongArgument by ErrorConfig
+val ErrorConfig.rendererNotFound by ErrorConfig
+val ErrorConfig.teleportFailed by ErrorConfig
+
+interface MessageConfig : ConfigBlock {
+    companion object {
+        operator fun getValue(owner: MessageConfig, property: KProperty<*>) =
+            owner.getMessage(property.name.upperFirst())
+    }
+
+    fun getMessage(s: String): String
+    fun getMessage1(s: String): (String) -> String
+}
+
+val Config.message: MessageConfig by Config
+
+val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
+val MessageConfig.gameFinished get() = BySides { getMessage1("GameFinished.${it.standardName}Won") }
+val MessageConfig.gameFinishedDraw get() = getMessage1("GameFinished.ItWasADraw")
+val MessageConfig.inCheck by MessageConfig
+
+
+interface TitleConfig : ConfigBlock {
+    companion object {
+        operator fun getValue(owner: TitleConfig, property: KProperty<*>) = owner.getTitle(property.name.upperFirst())
+    }
+
+    fun getTitle(s: String): String
+}
+
+val Config.title: TitleConfig by Config
+
+
+val TitleConfig.inCheck by TitleConfig
+val TitleConfig.spectatorDraw get() = getTitle("Spectator.ItWasADraw")
+val TitleConfig.spectatorWinner get() = BySides { getTitle("Spectator.${it.standardName}Won") }
+fun TitleConfig.spectator(winner: Side?) = winner?.let(spectatorWinner::get) ?: spectatorDraw
+
+val TitleConfig.youWon get() = getTitle("Player.YouWon")
+val TitleConfig.youDrew get() = getTitle("Player.YouDrew")
+val TitleConfig.youLost get() = getTitle("Player.YouLost")
+fun TitleConfig.winner(you: Side, winner: Side?) = when (winner) {
+    you -> youWon
+    null -> youDrew
+    else -> youLost
+}
+
+val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
+val TitleConfig.yourTurn by TitleConfig
 
 class CommandException(val playerMsg: String) : Exception() {
     override val message: String
@@ -156,6 +206,10 @@ fun numberedFormat(s: String, vararg args: Any?): String? {
             args[i - 1].toString()
     }
     return if (retNull) null else ret
+}
+
+data class Loc(val x: Int, val y: Int, val z: Int) {
+    operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
 }
 
 val glog = CombinedLogger()

@@ -5,24 +5,6 @@ import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
-import kotlin.collections.set
-
-interface ScoreboardManager : Component {
-    operator fun plusAssign(p: GameProperty)
-    operator fun plusAssign(p: PlayerProperty)
-}
-
-inline fun ScoreboardManager.game(name: String, crossinline block: () -> String) {
-    this += object : GameProperty(name) {
-        override fun invoke() = block()
-    }
-}
-
-inline fun ScoreboardManager.player(name: String, crossinline block: (Side) -> String) {
-    this += object : PlayerProperty(name) {
-        override fun invoke(s: Side) = block(s)
-    }
-}
 
 class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     object Settings : Component.Settings<BukkitScoreboardManager> {
@@ -119,12 +101,4 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         scoreboard.teams.forEach { it.unregister() }
         scoreboard.objectives.forEach { it.unregister() }
     }
-}
-
-abstract class PlayerProperty(val name: String) {
-    abstract operator fun invoke(s: Side): String
-}
-
-abstract class GameProperty(val name: String) {
-    abstract operator fun invoke(): String
 }

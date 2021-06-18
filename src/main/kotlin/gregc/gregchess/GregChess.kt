@@ -124,7 +124,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.debug")
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val pos = if (args.size == 1)
-                        p.game.cRequireRenderer<Loc, Pos> { it.getPos(Loc.fromLocation(player.location)) }
+                        p.game.cRequireRenderer<Loc, Pos> { it.getPos(player.location.toLoc()) }
                     else
                         cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()
@@ -140,7 +140,7 @@ class GregChess : JavaPlugin(), Listener {
                     val game = p.game
                     cWrongArgument {
                         val square = if (args.size == 3)
-                            game.board[Loc.fromLocation(player.location)]!!
+                            game.board[player.location.toLoc()]!!
                         else
                             game.board[Pos.parseFromString(this[2])]!!
                         val piece = PieceType.valueOf(this[1])
@@ -315,7 +315,7 @@ class GregChess : JavaPlugin(), Listener {
             0 -> {
                 cPlayer(player)
                 val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
-                cNotNull(game.board[Loc.fromLocation(player.location)]?.piece, Config.error.pieceNotFound)
+                cNotNull(game.board[player.location.toLoc()]?.piece, Config.error.pieceNotFound)
             }
             1 -> {
                 if (isValidUUID(nextArg())) {

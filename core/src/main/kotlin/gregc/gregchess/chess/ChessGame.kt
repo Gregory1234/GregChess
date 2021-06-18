@@ -17,6 +17,8 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
     private val components =
         listOf(arena) + (settings.components + variant.extraComponents).map { it.getComponent(this) }
 
+    fun getComponents() = components.toList()
+
     init {
         try {
             requireComponent<Chessboard>()
@@ -192,7 +194,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         st.spectators -= p
     }
 
-    fun resetPlayer(p: BukkitPlayer) {
+    fun resetPlayer(p: HumanPlayer) {
         components.allResetPlayer(p)
     }
 
@@ -284,16 +286,6 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         board.lastMove?.render()
         glog.low("Finished move", data)
         nextTurn()
-    }
-
-    fun getInfo() = buildTextComponent {
-        appendCopy("UUID: $uniqueId\n", uniqueId)
-        append("Players: ${players.toList().joinToString { "${it.name} as ${it.side.standardName}" }}\n")
-        append("Spectators: ${spectators.joinToString { it.name }}\n")
-        append("Arena: ${arena.name}\n")
-        append("Preset: ${settings.name}\n")
-        append("Variant: ${variant.name}\n")
-        append("Components: ${components.joinToString { it.javaClass.simpleName }}")
     }
 
 }

@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.Config
+import gregc.gregchess.glog
 import org.bukkit.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -10,18 +10,6 @@ import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.Plugin
 import java.util.*
-
-interface ArenaManager {
-    fun next(): Arena?
-}
-
-interface ArenasConfig : ConfigBlock {
-    val chessArenas: List<String>
-}
-
-val Config.arenas: ArenasConfig by Config
-
-fun ArenaManager.cNext() = cNotNull(next(), Config.error.noArenas)
 
 class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
     private val arenas = mutableListOf<Arena>()
@@ -63,22 +51,14 @@ class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
     }
 }
 
-data class Arena(val name: String, var game: ChessGame? = null) : Component {
+object BukkitArenaWorldGen : ChunkGenerator() {
+    override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid) =
+        createChunkData(world)
 
-    object WorldGen : ChunkGenerator() {
-        override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid) =
-            createChunkData(world)
-
-        override fun shouldGenerateCaves() = false
-        override fun shouldGenerateMobs() = false
-        override fun shouldGenerateDecorations() = false
-        override fun shouldGenerateStructures() = false
-    }
-
-    @GameEvent(GameBaseEvent.VERY_END, GameBaseEvent.PANIC, mod = TimeModifier.LATE)
-    fun veryEnd() {
-        game = null
-    }
+    override fun shouldGenerateCaves() = false
+    override fun shouldGenerateMobs() = false
+    override fun shouldGenerateDecorations() = false
+    override fun shouldGenerateStructures() = false
 }
 
 val Arena.world: World
@@ -89,7 +69,7 @@ val Arena.world: World
             glog.low("World already exists", name)
             world
         } else {
-            val ret = Bukkit.createWorld(WorldCreator(name).generator(Arena.WorldGen))!!
+            val ret = Bukkit.createWorld(WorldCreator(name).generator(BukkitArenaWorldGen))!!
             glog.io("Created arena", name)
             ret
         }).apply {
