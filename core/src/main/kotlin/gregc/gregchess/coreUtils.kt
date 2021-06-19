@@ -10,6 +10,8 @@ import kotlin.math.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
+const val DEFAULT_LANG = "en_US"
+
 interface ErrorConfig: ConfigBlock {
     companion object {
         operator fun getValue(owner: ErrorConfig, property: KProperty<*>) = owner.getError(property.name.upperFirst())

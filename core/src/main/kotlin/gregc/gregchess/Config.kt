@@ -79,27 +79,23 @@ val View.childrenViews: Map<String, View>? get() = children?.associateWith { thi
 
 fun <T> View.getVal(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?): T =
     getPureString(path).getVal(fullPath(path), type, default, warnMissing, parser)
+fun <T> View.getLocal(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?) =
+    Localized { lang ->
+        getPureLocalizedString(path, lang).getVal("$lang/${fullPath(path)}", type, default, warnMissing, parser)
+    }
 fun <T> View.getList(path: String, type: String, warnMissing: Boolean = true, parser: (String) -> T?): List<T> =
     getPureStringList(path).getList(fullPath(path), type, warnMissing, parser)
 
-fun interface LocalizedString {
-    fun get(lang: String): String
+fun interface Localized<T>{
+    fun get(lang: String): T
 }
+
+typealias LocalizedString = Localized<String>
 
 fun View.getString(path: String) = getVal(path, "string", fullPath(path), true, ::processString)
 fun View.getOptionalString(path: String) = getVal(path, "string", null, false, ::processString)
-fun View.getLocalizedString(path: String, vararg args: String?) = LocalizedString { lang ->
-    val s = getPureLocalizedString(path, lang)
-    if (s == null) {
-        glog.warn("Not found string $path in $lang, defaulted to $lang/$path!")
-        return@LocalizedString "$lang/$path!"
-    }
-    val s2 = s.numberedFormat(*args)
-    if (s2 == null) {
-        glog.warn("String $path in $lang is in a wrong format, defaulted to $lang/$path!")
-        return@LocalizedString "$lang/$path!"
-    }
-    s2
+fun View.getLocalizedString(path: String, vararg args: String?) = getLocal(path, "string", fullPath(path), false) {
+    it.numberedFormat(*args)?.let(::processString)
 }
 fun View.getStringList(path: String) = getList(path, "string", true, ::processString)
 fun View.getDefaultBoolean(path: String, def: Boolean, warnMissing: Boolean = false) = getVal(path, "duration", def, warnMissing, String::toBooleanStrictOrNull)
@@ -107,6 +103,7 @@ fun View.getDefaultInt(path: String, def: Int, warnMissing: Boolean = false) = g
 fun View.getDuration(path: String) = getVal(path, "duration", 0.seconds, true, ::parseDuration)
 fun View.getOptionalDuration(path: String) = getVal(path, "duration", null, false, ::parseDuration)
 fun View.getChar(path: String) = getVal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
+fun View.getLocalizedChar(path: String) = getLocal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
 fun View.getTimeFormat(path: String, time: Duration) = getVal(path, "time format", path, true) {
     TimeFormat(it)(time)
 }

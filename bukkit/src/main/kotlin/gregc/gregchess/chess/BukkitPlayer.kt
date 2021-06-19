@@ -45,7 +45,7 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     }
 
     override fun setItem(i: Int, piece: Piece?) {
-        player.inventory.setItem(i, piece?.item)
+        player.inventory.setItem(i, piece?.item?.get(lang))
     }
 
     override fun openPawnPromotionMenu(moves: List<MoveCandidate>) = interact {
@@ -58,7 +58,7 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
 
 suspend fun Player.openPawnPromotionMenu(moves: List<MoveCandidate>) =
     openMenu(Config.message.pawnPromotion, moves.mapIndexed { i, m ->
-        ScreenOption(m.promotion?.item ?: m.piece.piece.item, m, InventoryPosition.fromIndex(i))
+        ScreenOption((m.promotion?.item ?: m.piece.piece.item).get(human.lang), m, InventoryPosition.fromIndex(i))
     }) ?: moves[0]
 
 val HumanPlayer.chess get() = this.currentGame?.get(this)

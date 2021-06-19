@@ -19,12 +19,15 @@ interface RequestTypeConfig {
 
     fun expired(a1: String): LocalizedString
     val duration: Duration?
+
     val sentRequest: LocalizedString
     fun sentCancel(a1: String): LocalizedString
     fun sentAccept(a1: String): LocalizedString
+
     fun receivedRequest(a1: String, a2: String): LocalizedString
     fun receivedCancel(a1: String): LocalizedString
     fun receivedAccept(a1: String): LocalizedString
+
     val notFound: LocalizedString
     val cannotSend: LocalizedString
 }

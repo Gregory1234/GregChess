@@ -1,11 +1,12 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.DEFAULT_LANG
 import gregc.gregchess.LocalizedString
 import java.util.*
 
 abstract class HumanPlayer(val name: String) {
     abstract var isAdmin: Boolean
-    var lang: String = "en_US"
+    var lang: String = DEFAULT_LANG
     var currentGame: ChessGame? = null
     var spectatedGame: ChessGame? = null
         set(v) {

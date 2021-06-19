@@ -167,43 +167,45 @@ class TestView(private val root: String) : View {
     override fun fullPath(path: String): String = root addDot path
 }
 
+class TestSideConfig(override val side: Side, private val rootView: View) : SideConfig, View by rootView {
+    override fun pieceName(n: String): String = getStringFormat("Chess.Side.${side.standardName}.Piece", n)
+}
+
+class TestPieceTypeConfig(override val type: PieceType, private val rootView: View) :
+    PieceTypeConfig, View by rootView {
+
+    override val name get() = getLocalizedString("Name")
+    override val char get() = getLocalizedChar("Char")
+}
+
 class TestConfig(private val rootView: TestView) :
     ErrorConfig, MessageConfig, TitleConfig, ArenasConfig,
-    ChessConfig, ComponentsConfig, EndReasonConfig, PieceConfig, SettingsConfig, SideConfig,
+    ChessConfig, ComponentsConfig, EndReasonConfig, SettingsConfig,
     View by rootView {
     override fun getError(s: String): String = getString("Message.Error.$s")
 
-    override val chessArenas: List<String>
-        get() = getStringList("ChessArenas")
+    override val chessArenas get() = getStringList("ChessArenas")
 
-    private fun piece(t: PieceType) = this["Chess.Piece.${t.standardName}"]
+    override fun getPieceType(p: PieceType) = TestPieceTypeConfig(p, this["Chess.Piece.${p.standardName}"])
 
-    override fun getPieceName(t: PieceType): String = piece(t).getString("Name")
+    override fun getSide(s: Side) = TestSideConfig(s, this["Chess.Side.${s.standardName}"])
 
-    override fun getPieceChar(t: PieceType): Char = piece(t).getChar("Char")
-
-    override fun getSidePieceName(s: Side, n: String): String =
-        getStringFormat("Chess.Side.${s.standardName}.Piece", n)
-
-    override val capture: String
-        get() = getString("Chess.Capture")
+    override val capture get() = getLocalizedString("Chess.Capture")
 
     override val settingsBlocks: Map<String, Map<String, View>>
         get() = this["Settings"].childrenViews.orEmpty().mapValues { it.value.childrenViews.orEmpty() }
 
     override fun getSettings(n: String): Map<String, View> = this["Settings.$n"].childrenViews.orEmpty()
 
-    override val componentBlocks: Map<String, View>
-        get() = this["Component"].childrenViews.orEmpty()
+    override val componentBlocks get() = this["Component"].childrenViews.orEmpty()
+    override fun getComponent(n: String) = this["Component.$n"]
 
-    override fun getComponent(n: String): View = this["Component.$n"]
+    override fun getEndReason(n: String) = getString("Chess.EndReason.$n")
 
-    override fun getEndReason(n: String): String = getString("Chess.EndReason.$n")
-
-    override fun getMessage(s: String, vararg args: Any?): String =
+    override fun getMessage(s: String, vararg args: Any?) =
         if (args.isEmpty()) getString("Message.$s") else getStringFormat("Message.$s", *args)
 
-    override fun getTitle(s: String): String = getString("Title.$s")
+    override fun getTitle(s: String) = getString("Title.$s")
 
 }
 

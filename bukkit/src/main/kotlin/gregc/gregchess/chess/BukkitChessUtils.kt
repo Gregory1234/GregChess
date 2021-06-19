@@ -5,17 +5,15 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
-interface BukkitPieceConfig : PieceConfig {
-    fun getPieceItem(t: PieceType): BySides<Material>
-    fun getPieceStructure(t: PieceType): BySides<List<Material>>
-    fun getPieceSound(t: PieceType, s: PieceSound): Sound
+interface PieceTypeBukkitConfig : PieceTypeConfig {
+    val item: BySides<Material>
+    val structure: BySides<List<Material>>
+    fun sound(s: PieceSound): Sound
 }
-
-val Config.bukkitPiece: BukkitPieceConfig by Config
-
 
 interface BukkitChessConfig : ChessConfig {
     fun getFloor(f: Floor): Material
+    fun getBukkitPieceType(p: PieceType): PieceTypeBukkitConfig
 }
 
 val Config.bukkitChess: BukkitChessConfig by Config
@@ -28,17 +26,19 @@ interface StockfishConfig : ConfigBlock {
 
 val Config.stockfish: StockfishConfig by Config
 
-fun PieceType.getItem(side: Side): ItemStack {
+fun PieceType.getItem(side: Side) = Localized { lang ->
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
-    meta.setDisplayName(side.getPieceName(pieceName))
+    meta.setDisplayName(side.getPieceName(pieceName.get(lang)))
     item.itemMeta = meta
-    return item
+    item
 }
 
-fun PieceType.getSound(s: PieceSound) = Config.bukkitPiece.getPieceSound(this, s)
-val PieceType.itemMaterial get() = Config.bukkitPiece.getPieceItem(this)
-val PieceType.structure get() = Config.bukkitPiece.getPieceStructure(this)
+val PieceType.bukkitConfig get() = Config.bukkitChess.getBukkitPieceType(this)
+
+fun PieceType.getSound(s: PieceSound) = bukkitConfig.sound(s)
+val PieceType.itemMaterial get() = bukkitConfig.item
+val PieceType.structure get() = bukkitConfig.structure
 
 val Piece.item get() = type.getItem(side)
 

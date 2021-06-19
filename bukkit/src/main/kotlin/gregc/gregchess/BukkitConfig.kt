@@ -34,34 +34,43 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
     override fun fullPath(path: String): String = root addDot path
 }
 
-class BukkitRequestTypeConfig(override val name: String, val rootView: View) : RequestTypeConfig, View by rootView {
+class BukkitRequestTypeConfig(override val name: String, private val rootView: View) :
+    RequestTypeConfig, View by rootView {
 
     override fun expired(a1: String) = getLocalizedString("Expired", a1)
-
     override val duration get() = getOptionalDuration("Duration")
 
     override val sentRequest get() = getLocalizedString("Sent.Request")
-
     override fun sentCancel(a1: String) = getLocalizedString("Sent.Cancel", a1)
-
     override fun sentAccept(a1: String) = getLocalizedString("Sent.Accept", a1)
 
     override fun receivedRequest(a1: String, a2: String) = getLocalizedString("Received.Request", a1, a2)
-
     override fun receivedCancel(a1: String) = getLocalizedString("Received.Cancel", a1)
-
     override fun receivedAccept(a1: String) = getLocalizedString("Received.Accept", a1)
 
     override val notFound get() = getLocalizedString("Error.NotFound")
-
     override val cannotSend get() = getLocalizedString("Error.CannotSend")
 
+}
+
+class BukkitSideConfig(override val side: Side, private val rootView: View) : SideConfig, View by rootView {
+    override fun pieceName(n: String): String = getStringFormat("Chess.Side.${side.standardName}.Piece", n)
+}
+
+class BukkitPieceTypeConfig(override val type: PieceType, private val rootView: View) :
+    PieceTypeBukkitConfig, View by rootView {
+
+    override val name get() = getLocalizedString("Name")
+    override val char get() = getLocalizedChar("Char")
+    override val item get() = BySides { getEnum("Item.${it.standardName}", Material.AIR) }
+    override val structure get() = BySides { getEnumList<Material>("Structure.${it.standardName}") }
+    override fun sound(s: PieceSound): Sound = getEnum("Sound.${s.standardName}", Sound.BLOCK_STONE_HIT)
 }
 
 class BukkitConfig(private val rootView: BukkitView) :
     ErrorConfig, MessageConfig, TitleConfig,
     RequestConfig, ArenasConfig, StockfishConfig,
-    BukkitChessConfig, ComponentsConfig, EndReasonConfig, BukkitPieceConfig, SettingsConfig, SideConfig,
+    BukkitChessConfig, ComponentsConfig, EndReasonConfig, SettingsConfig,
     View by rootView {
 
     override fun getError(s: String): String = getString("Message.Error.$s")
@@ -70,58 +79,35 @@ class BukkitConfig(private val rootView: BukkitView) :
     override val cancel get() = getLocalizedString("Request.Cancel")
     override val selfAccept get() = getDefaultBoolean("Request.SelfAccept", true)
 
-    override fun getRequestType(t: String): RequestTypeConfig = BukkitRequestTypeConfig(t, this["Request.$t"])
+    override fun getRequestType(t: String) = BukkitRequestTypeConfig(t, this["Request.$t"])
 
-    override val chessArenas: List<String>
-        get() = getStringList("ChessArenas")
+    override val chessArenas get() = getStringList("ChessArenas")
 
-    private fun piece(t: PieceType) = this["Chess.Piece.${t.standardName}"]
+    override fun getPieceType(p: PieceType) = getBukkitPieceType(p)
+    override fun getBukkitPieceType(p: PieceType) = BukkitPieceTypeConfig(p, this["Chess.Piece.${p.standardName}"])
 
-    override fun getPieceName(t: PieceType): String = piece(t).getString("Name")
+    override fun getSide(s: Side) = BukkitSideConfig(s, this["Chess.Side.${s.standardName}"])
 
-    override fun getPieceChar(t: PieceType): Char = piece(t).getChar("Char")
-
-    override fun getPieceItem(t: PieceType): BySides<Material> =
-        BySides { piece(t).getEnum("Item.${it.standardName}", Material.AIR) }
-
-    override fun getPieceStructure(t: PieceType): BySides<List<Material>> =
-        BySides { piece(t).getEnumList("Structure.${it.standardName}") }
-
-    override fun getPieceSound(t: PieceType, s: PieceSound): Sound =
-        piece(t).getEnum("Sound.${s.standardName}", Sound.BLOCK_STONE_HIT)
-
-    override fun getSidePieceName(s: Side, n: String): String =
-        getStringFormat("Chess.Side.${s.standardName}.Piece", n)
-
-    override val capture: String
-        get() = getString("Chess.Capture")
-
-    override fun getFloor(f: Floor): Material = getEnum("Chess.Floor.${f.standardName}", Material.AIR)
+    override val capture get() = getLocalizedString("Chess.Capture")
+    override fun getFloor(f: Floor) = getEnum<Material>("Chess.Floor.${f.standardName}", Material.AIR)
 
     override val settingsBlocks: Map<String, Map<String, View>>
         get() = this["Settings"].childrenViews.orEmpty().mapValues { it.value.childrenViews.orEmpty() }
 
     override fun getSettings(n: String): Map<String, View> = this["Settings.$n"].childrenViews.orEmpty()
 
-    override val componentBlocks: Map<String, View>
-        get() = this["Component"].childrenViews.orEmpty()
+    override val componentBlocks get() = this["Component"].childrenViews.orEmpty()
+    override fun getComponent(n: String) = this["Component.$n"]
 
-    override fun getComponent(n: String): View = this["Component.$n"]
+    override fun getEndReason(n: String) = getString("Chess.EndReason.$n")
 
-    override fun getEndReason(n: String): String = getString("Chess.EndReason.$n")
-
-    override fun getMessage(s: String, vararg args: Any?): String =
+    override fun getMessage(s: String, vararg args: Any?) =
         if (args.isEmpty()) getString("Message.$s") else getStringFormat("Message.$s", *args)
 
-    override fun getTitle(s: String): String = getString("Title.$s")
+    override fun getTitle(s: String) = getString("Title.$s")
 
-    override val hasStockfish: Boolean
-        get() = getDefaultBoolean("Chess.HasStockfish", false)
-
-    override val stockfishCommand: String
-        get() = getString("Chess.Stockfish.Path")
-
-    override val engineName: String
-        get() = getString("Chess.Stockfish.Name")
+    override val hasStockfish get() = getDefaultBoolean("Chess.HasStockfish", false)
+    override val stockfishCommand get() = getString("Chess.Stockfish.Path")
+    override val engineName get() = getString("Chess.Stockfish.Name")
 
 }

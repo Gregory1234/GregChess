@@ -3,21 +3,21 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import kotlin.reflect.KProperty
 
-interface PieceConfig : ConfigBlock {
-    fun getPieceName(t: PieceType): String
-    fun getPieceChar(t: PieceType): Char
+interface PieceTypeConfig {
+    val type: PieceType
+    val name: LocalizedString
+    val char: Localized<Char>
 }
 
-val Config.piece: PieceConfig by Config
-
-interface SideConfig : ConfigBlock {
-    fun getSidePieceName(s: Side, n: String): String
+interface SideConfig {
+    val side: Side
+    fun pieceName(n: String): String
 }
-
-val Config.side: SideConfig by Config
 
 interface ChessConfig : ConfigBlock {
-    val capture: String
+    val capture: LocalizedString
+    fun getPieceType(p: PieceType): PieceTypeConfig
+    fun getSide(s: Side): SideConfig
 }
 
 val Config.chess: ChessConfig by Config

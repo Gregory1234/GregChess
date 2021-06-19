@@ -23,7 +23,9 @@ enum class PieceType(
                 ?: throw IllegalArgumentException(c.toString())
     }
 
+    val config get() = Config.chess.getPieceType(this)
+
     val standardName: String = name.snakeToPascal()
-    val pieceName get() = Config.piece.getPieceName(this)
-    val char get() = Config.piece.getPieceChar(this)
+    val pieceName get() = config.name
+    val char get() = config.char
 }

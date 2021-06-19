@@ -35,7 +35,7 @@ abstract class MoveCandidate(
     val origin = piece.square
 
     open fun execute(): MoveData {
-        val base = baseName()
+        val base = baseName(DEFAULT_LANG)
         val standardBase = baseStandardName()
         val hasMoved = piece.hasMoved
         val ct = captured?.capture(piece.side)
@@ -54,15 +54,15 @@ abstract class MoveCandidate(
         }
     }
 
-    open fun baseName(): String = buildString {
+    open fun baseName(lang: String): String = buildString {
         if (piece.type != PieceType.PAWN) {
-            append(piece.type.char.uppercaseChar())
+            append(piece.type.char.get(lang).uppercaseChar())
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(piece.pos.fileStr)
         if (captured != null)
             append(Config.chess.capture)
-        promotion?.let { p -> append(p.type.char.uppercaseChar()) }
+        promotion?.let { p -> append(p.type.char.get(lang).uppercaseChar()) }
         append(target.pos)
     }
 
@@ -199,7 +199,7 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
             }
         }
 
-        override fun baseName() = baseStandardName()
+        override fun baseName(lang: String) = baseStandardName()
 
         override fun baseStandardName() = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
     }
@@ -264,7 +264,7 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
     class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
         MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true) {
         override fun execute(): MoveData {
-            val base = baseName()
+            val base = baseName(DEFAULT_LANG)
             val standardBase = baseStandardName()
             val hasMoved = piece.hasMoved
             val ct = captured?.capture(piece.side)
