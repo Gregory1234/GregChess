@@ -16,21 +16,21 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
 
     private val view = Config.component.scoreboard
 
-    private val View.title get() = getString("Title")
-    private val View.preset get() = getString("Preset")
-    private val View.player get() = getString("Player")
+    private val View.title get() = getLocalizedString("Title")
+    private val View.preset get() = getLocalizedString("Preset")
+    private val View.player get() = getLocalizedString("Player")
     private val View.playerPrefix get() = getString("PlayerPrefix")
-    private fun View.whiteFormat(s: String) = getStringFormat("Format.White", s)
-    private fun View.blackFormat(s: String) = getStringFormat("Format.Black", s)
-    private fun View.generalFormat(s: String) = getStringFormat("Format.General", s)
-    private fun View.format(side: Side, s: String) = getStringFormat("Format.${side.standardName}", s)
+    private fun View.whiteFormat(s: String) = getLocalizedString("Format.White", s)
+    private fun View.blackFormat(s: String) = getLocalizedString("Format.Black", s)
+    private fun View.generalFormat(s: String) = getLocalizedString("Format.General", s)
+    private fun View.format(side: Side, s: String) = getLocalizedString("Format.${side.standardName}", s)
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     private val gamePropertyTeams = mutableMapOf<GameProperty, Team>()
     private val playerPropertyTeams = mutableMapOf<PlayerProperty, BySides<Team>>()
 
-    private val objective = scoreboard.registerNewObjective("GregChess", "", view.title)
+    private val objective = scoreboard.registerNewObjective("GregChess", "", view.title.get(DEFAULT_LANG))
 
     override operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -62,22 +62,22 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         var i = l
         gameProperties.forEach {
             gamePropertyTeams[it] = newTeam().apply {
-                addEntry(view.generalFormat(it.name))
+                addEntry(view.generalFormat(it.name).get(DEFAULT_LANG))
             }
-            objective.getScore(view.generalFormat(it.name)).score = i--
+            objective.getScore(view.generalFormat(it.name).get(DEFAULT_LANG)).score = i--
         }
         playerProperties.forEach {
             playerPropertyTeams[it] = BySides { s ->
-                newTeam().apply { addEntry(view.format(s, it.name)) }
+                newTeam().apply { addEntry(view.format(s, it.name).get(DEFAULT_LANG)) }
             }
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            objective.getScore(view.whiteFormat(it.name)).score = i--
+            objective.getScore(view.whiteFormat(it.name).get(DEFAULT_LANG)).score = i--
         }
         objective.getScore(chatColor("&r").repeat(i)).score = i--
         playerProperties.forEach {
-            objective.getScore(view.blackFormat(it.name)).score = i--
+            objective.getScore(view.blackFormat(it.name).get(DEFAULT_LANG)).score = i--
         }
     }
 

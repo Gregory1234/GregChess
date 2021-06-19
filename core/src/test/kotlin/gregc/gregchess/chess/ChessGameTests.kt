@@ -38,6 +38,15 @@ class ChessGameTests {
             }
         }
 
+    fun playerExclude(p: HumanPlayer) {
+        excludeRecords {
+            p.name
+            p.lang
+            @Suppress("UNUSED_EQUALS_EXPRESSION")
+            p == any()
+        }
+    }
+
     @Nested
     inner class Initializing {
         @Test
@@ -74,9 +83,8 @@ class ChessGameTests {
             val a = spyk(humanA)
             val b = spyk(humanB)
             mkGame(players = BySides(a, b))
-            excludeRecords {
-                a.name; b.name; a == any(); b == any()
-            }
+            playerExclude(a)
+            playerExclude(b)
             verify {
                 a wasNot Called
                 b wasNot Called
@@ -118,14 +126,13 @@ class ChessGameTests {
             val a = spyk(humanA)
             val b = spyk(humanB)
             mkGame(players = BySides(a, b)).start()
-            excludeRecords {
-                a.name; b.name; a == any(); b == any()
-            }
+            playerExclude(a)
+            playerExclude(b)
             verifyAll {
                 a.sendTitle(any(), any())
                 b.sendTitle(any(), any())
-                a.sendMessage(any<String>())
-                b.sendMessage(any<String>())
+                a.sendMessage(any())
+                b.sendMessage(any())
             }
         }
 

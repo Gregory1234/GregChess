@@ -25,13 +25,13 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
     override fun sendPGN(pgn: PGN) {
-        val message = TextComponent(Config.message.copyPGN)
+        val message = TextComponent(Config.message.copyPGN.get(lang))
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }
 
     override fun sendFEN(fen: FEN) {
-        val message = TextComponent(Config.message.copyFEN)
+        val message = TextComponent(Config.message.copyFEN.get(lang))
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
         player.spigot().sendMessage(message)
     }

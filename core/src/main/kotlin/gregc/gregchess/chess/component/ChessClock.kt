@@ -13,7 +13,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     }
 
     private fun View.timeFormat(time: Duration) = getTimeFormat("TimeFormat", time)
-    private val View.timeRemaining get() = getString("TimeRemaining")
+    private val View.timeRemaining get() = getLocalizedString("TimeRemaining")
 
 
     data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :

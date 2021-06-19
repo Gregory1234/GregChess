@@ -23,7 +23,7 @@ interface ChessGameManager {
     fun leave(player: HumanPlayer)
 }
 
-class PluginRestartEndReason : EndReason(EndReasonConfig::pluginRestart, "emergency", quick = true)
+class PluginRestartEndReason : EndReason(Config.endReason.pluginRestart, "emergency", quick = true)
 
 class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Listener {
 

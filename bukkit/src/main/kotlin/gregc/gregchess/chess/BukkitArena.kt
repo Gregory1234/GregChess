@@ -12,7 +12,7 @@ import org.bukkit.plugin.Plugin
 import java.util.*
 
 class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
-    class ArenaRemovedEndReason : EndReason(EndReasonConfig::arenaRemoved, "emergency", quick = true)
+    class ArenaRemovedEndReason : EndReason(Config.endReason.arenaRemoved, "emergency", quick = true)
 
     private val arenas = mutableListOf<Arena>()
 

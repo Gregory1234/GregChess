@@ -146,7 +146,7 @@ class TestVariant: ChessVariant("test")
 
 val EndReasonConfig.test by EndReasonConfig
 
-class TestEndReason(winner: Side? = null): EndReason(EndReasonConfig::test, "emergency", winner)
+class TestEndReason(winner: Side? = null): EndReason(Config.endReason.test, "emergency", winner)
 
 class TestView(private val root: String) : View {
     override fun getPureString(path: String): String? = null
@@ -168,7 +168,7 @@ class TestView(private val root: String) : View {
 }
 
 class TestSideConfig(override val side: Side, private val rootView: View) : SideConfig, View by rootView {
-    override fun pieceName(n: String): String = getStringFormat("Chess.Side.${side.standardName}.Piece", n)
+    override fun pieceName(n: String) = getLocalizedString("Chess.Side.${side.standardName}.Piece", n)
 }
 
 class TestPieceTypeConfig(override val type: PieceType, private val rootView: View) :
@@ -182,7 +182,7 @@ class TestConfig(private val rootView: TestView) :
     ErrorConfig, MessageConfig, TitleConfig, ArenasConfig,
     ChessConfig, ComponentsConfig, EndReasonConfig, SettingsConfig,
     View by rootView {
-    override fun getError(s: String): String = getString("Message.Error.$s")
+    override fun getError(s: String) = getLocalizedString("Message.Error.$s")
 
     override val chessArenas get() = getStringList("ChessArenas")
 
@@ -200,12 +200,11 @@ class TestConfig(private val rootView: TestView) :
     override val componentBlocks get() = this["Component"].childrenViews.orEmpty()
     override fun getComponent(n: String) = this["Component.$n"]
 
-    override fun getEndReason(n: String) = getString("Chess.EndReason.$n")
+    override fun getEndReason(n: String) = getLocalizedString("Chess.EndReason.$n")
 
-    override fun getMessage(s: String, vararg args: Any?) =
-        if (args.isEmpty()) getString("Message.$s") else getStringFormat("Message.$s", *args)
+    override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
 
-    override fun getTitle(s: String) = getString("Title.$s")
+    override fun getTitle(s: String) = getLocalizedString("Title.$s")
 
 }
 

@@ -11,7 +11,7 @@ interface PieceTypeConfig {
 
 interface SideConfig {
     val side: Side
-    fun pieceName(n: String): String
+    fun pieceName(n: String): LocalizedString
 }
 
 interface ChessConfig : ConfigBlock {
@@ -59,7 +59,7 @@ interface EndReasonConfig : ConfigBlock {
             owner.getEndReason(property.name.upperFirst())
     }
 
-    fun getEndReason(n: String): String
+    fun getEndReason(n: String): LocalizedString
 }
 
 val Config.endReason: EndReasonConfig by Config

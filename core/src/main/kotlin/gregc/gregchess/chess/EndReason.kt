@@ -1,36 +1,32 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import kotlin.reflect.KProperty1
 
 open class EndReason(
-    val namePath: ConfigVal<String>, val reasonPGN: String, val winner: Side? = null, val quick: Boolean = false
+    val name: LocalizedString, val reasonPGN: String, val winner: Side? = null, val quick: Boolean = false
 ) {
-
-    constructor(
-        namePath: KProperty1<EndReasonConfig, String>, reasonPGN: String, winner: Side? = null, quick: Boolean = false
-    ) : this(namePath.path, reasonPGN, winner, quick)
 
     override fun toString() = "EndReason.${javaClass.name.split(".", "$").last()}(winner=$winner)"
 
-    class Checkmate(winner: Side) : EndReason(EndReasonConfig::checkmate, "normal", winner)
-    class Resignation(winner: Side) : EndReason(EndReasonConfig::resignation, "abandoned", winner)
-    class Walkover(winner: Side) : EndReason(EndReasonConfig::walkover, "abandoned", winner)
-    class Stalemate : EndReason(EndReasonConfig::stalemate, "normal")
-    class InsufficientMaterial : EndReason(EndReasonConfig::insufficientMaterial, "normal")
-    class FiftyMoves : EndReason(EndReasonConfig::fiftyMoves, "normal")
-    class Repetition : EndReason(EndReasonConfig::repetition, "normal")
-    class DrawAgreement : EndReason(EndReasonConfig::drawAgreement, "normal")
-    class Timeout(winner: Side) : EndReason(EndReasonConfig::timeout, "time forfeit", winner)
-    class DrawTimeout : EndReason(EndReasonConfig::drawTimeout, "time forfeit")
-    class AllPiecesLost(winner: Side) : EndReason(EndReasonConfig::piecesLost, "normal", winner)
-    class Error(val e: Exception) : EndReason(EndReasonConfig::error, "emergency") {
+    class Checkmate(winner: Side) : EndReason(Config.endReason.checkmate, "normal", winner)
+    class Resignation(winner: Side) : EndReason(Config.endReason.resignation, "abandoned", winner)
+    class Walkover(winner: Side) : EndReason(Config.endReason.walkover, "abandoned", winner)
+    class Stalemate : EndReason(Config.endReason.stalemate, "normal")
+    class InsufficientMaterial : EndReason(Config.endReason.insufficientMaterial, "normal")
+    class FiftyMoves : EndReason(Config.endReason.fiftyMoves, "normal")
+    class Repetition : EndReason(Config.endReason.repetition, "normal")
+    class DrawAgreement : EndReason(Config.endReason.drawAgreement, "normal")
+    class Timeout(winner: Side) : EndReason(Config.endReason.timeout, "time forfeit", winner)
+    class DrawTimeout : EndReason(Config.endReason.drawTimeout, "time forfeit")
+    class AllPiecesLost(winner: Side) : EndReason(Config.endReason.piecesLost, "normal", winner)
+    class Error(val e: Exception) : EndReason(Config.endReason.error, "emergency") {
         override fun toString() = "EndReason.Error(winner=$winner, e=$e)"
     }
 
     val message
-        get() = with(Config.message) {
-            winner?.let { gameFinished(namePath.get())[it] } ?: gameFinishedDraw(namePath.get())
+        get() = LocalizedString { lang ->
+            winner?.let { Config.message.gameFinished(name.get(lang))[it].get(lang) }
+                ?: Config.message.gameFinishedDraw(name.get(lang)).get(lang)
         }
 
     val winnerPGN

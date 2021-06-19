@@ -1,6 +1,6 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.HumanPlayer
+import gregc.gregchess.chess.*
 import java.time.Duration
 import java.util.*
 import kotlin.collections.set

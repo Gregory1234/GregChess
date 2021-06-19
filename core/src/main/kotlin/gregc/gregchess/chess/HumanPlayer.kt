@@ -17,18 +17,25 @@ abstract class HumanPlayer(val name: String) {
     val games = mutableListOf<ChessGame>()
 
     abstract fun sendMessage(msg: String)
-    fun local(msg: LocalizedString): String = msg.get(lang)
-    fun sendMessage(msg: LocalizedString) = sendMessage(local(msg))
     abstract fun sendTitle(title: String, subtitle: String = "")
     fun isInGame(): Boolean = currentGame != null
     fun isSpectating(): Boolean = spectatedGame != null
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendFEN(fen: FEN)
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
-    fun sendCommandMessage(msg: LocalizedString, action: LocalizedString, command: String) =
-        sendCommandMessage(local(msg), local(action), command)
     abstract fun setItem(i: Int, piece: Piece?)
     abstract fun openPawnPromotionMenu(moves: List<MoveCandidate>)
 }
+
+fun HumanPlayer.local(msg: LocalizedString): String = msg.get(lang)
+
+fun HumanPlayer.sendMessage(msg: LocalizedString) = sendMessage(local(msg))
+
+fun HumanPlayer.sendTitle(title: String, subtitle: LocalizedString) = sendTitle(title, local(subtitle))
+fun HumanPlayer.sendTitle(title: LocalizedString, subtitle: String = "") = sendTitle(local(title), subtitle)
+fun HumanPlayer.sendTitle(title: LocalizedString, subtitle: LocalizedString) = sendTitle(local(title), local(subtitle))
+
+fun HumanPlayer.sendCommandMessage(msg: LocalizedString, action: LocalizedString, command: String) =
+    sendCommandMessage(local(msg), local(action), command)
 
 abstract class MinecraftPlayer(val uniqueId: UUID, name: String) : HumanPlayer(name)

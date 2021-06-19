@@ -1,5 +1,7 @@
 package gregc.gregchess.chess.component
 
+import gregc.gregchess.DEFAULT_LANG
+import gregc.gregchess.LocalizedString
 import gregc.gregchess.chess.Side
 
 interface ScoreboardManager : Component {
@@ -7,14 +9,14 @@ interface ScoreboardManager : Component {
     operator fun plusAssign(p: PlayerProperty)
 }
 
-inline fun ScoreboardManager.game(name: String, crossinline block: () -> String) {
-    this += object : GameProperty(name) {
+inline fun ScoreboardManager.game(name: LocalizedString, crossinline block: () -> String) {
+    this += object : GameProperty(name.get(DEFAULT_LANG)) {
         override fun invoke() = block()
     }
 }
 
-inline fun ScoreboardManager.player(name: String, crossinline block: (Side) -> String) {
-    this += object : PlayerProperty(name) {
+inline fun ScoreboardManager.player(name: LocalizedString, crossinline block: (Side) -> String) {
+    this += object : PlayerProperty(name.get(DEFAULT_LANG)) {
         override fun invoke(s: Side) = block(s)
     }
 }

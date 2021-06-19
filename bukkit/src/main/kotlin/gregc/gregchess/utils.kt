@@ -1,5 +1,6 @@
 package gregc.gregchess
 
+import gregc.gregchess.chess.human
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
@@ -89,7 +90,7 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
-    p.sendMessage(e.playerMsg)
+    p.sendMessage(e.playerMsg.get(p.lang))
     err(e)
 }
 
@@ -184,3 +185,5 @@ class BuildTextComponentScope {
 
 inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
     BuildTextComponentScope().apply(f).returnValue
+
+val CommandSender.lang get() = (this as? Player)?.human?.lang ?: DEFAULT_LANG

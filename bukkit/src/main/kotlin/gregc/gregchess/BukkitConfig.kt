@@ -54,7 +54,7 @@ class BukkitRequestTypeConfig(override val name: String, private val rootView: V
 }
 
 class BukkitSideConfig(override val side: Side, private val rootView: View) : SideConfig, View by rootView {
-    override fun pieceName(n: String): String = getStringFormat("Chess.Side.${side.standardName}.Piece", n)
+    override fun pieceName(n: String) = getLocalizedString("Chess.Side.${side.standardName}.Piece", n)
 }
 
 class BukkitPieceTypeConfig(override val type: PieceType, private val rootView: View) :
@@ -73,7 +73,7 @@ class BukkitConfig(private val rootView: BukkitView) :
     BukkitChessConfig, ComponentsConfig, EndReasonConfig, SettingsConfig,
     View by rootView {
 
-    override fun getError(s: String): String = getString("Message.Error.$s")
+    override fun getError(s: String) = getLocalizedString("Message.Error.$s")
 
     override val accept get() = getLocalizedString("Request.Accept")
     override val cancel get() = getLocalizedString("Request.Cancel")
@@ -99,12 +99,11 @@ class BukkitConfig(private val rootView: BukkitView) :
     override val componentBlocks get() = this["Component"].childrenViews.orEmpty()
     override fun getComponent(n: String) = this["Component.$n"]
 
-    override fun getEndReason(n: String) = getString("Chess.EndReason.$n")
+    override fun getEndReason(n: String) = getLocalizedString("Chess.EndReason.$n")
 
-    override fun getMessage(s: String, vararg args: Any?) =
-        if (args.isEmpty()) getString("Message.$s") else getStringFormat("Message.$s", *args)
+    override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
 
-    override fun getTitle(s: String) = getString("Title.$s")
+    override fun getTitle(s: String) = getLocalizedString("Title.$s")
 
     override val hasStockfish get() = getDefaultBoolean("Chess.HasStockfish", false)
     override val stockfishCommand get() = getString("Chess.Stockfish.Path")

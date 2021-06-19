@@ -29,7 +29,7 @@ val Config.stockfish: StockfishConfig by Config
 fun PieceType.getItem(side: Side) = Localized { lang ->
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
-    meta.setDisplayName(side.getPieceName(pieceName.get(lang)))
+    meta.setDisplayName(side.getPieceName(pieceName.get(lang)).get(lang))
     item.itemMeta = meta
     item
 }

@@ -17,7 +17,7 @@ interface ErrorConfig: ConfigBlock {
         operator fun getValue(owner: ErrorConfig, property: KProperty<*>) = owner.getError(property.name.upperFirst())
     }
 
-    fun getError(s: String): String
+    fun getError(s: String): LocalizedString
 }
 
 val Config.error: ErrorConfig by Config
@@ -33,7 +33,7 @@ interface MessageConfig : ConfigBlock {
             owner.getMessage(property.name.upperFirst())
     }
 
-    fun getMessage(s: String, vararg args: Any?): String
+    fun getMessage(s: String, vararg args: Any?): LocalizedString
 }
 
 val Config.message: MessageConfig by Config
@@ -49,7 +49,7 @@ interface TitleConfig : ConfigBlock {
         operator fun getValue(owner: TitleConfig, property: KProperty<*>) = owner.getTitle(property.name.upperFirst())
     }
 
-    fun getTitle(s: String): String
+    fun getTitle(s: String): LocalizedString
 }
 
 val Config.title: TitleConfig by Config
@@ -72,12 +72,12 @@ fun TitleConfig.winner(you: Side, winner: Side?) = when (winner) {
 val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
 val TitleConfig.yourTurn by TitleConfig
 
-class CommandException(val playerMsg: String) : Exception() {
+class CommandException(val playerMsg: LocalizedString) : Exception() {
     override val message: String
-        get() = "Uncaught command error: $playerMsg"
+        get() = "Uncaught command error: ${playerMsg.get(DEFAULT_LANG)}"
 }
 
-fun cRequire(e: Boolean, msg: String) {
+fun cRequire(e: Boolean, msg: LocalizedString) {
     contract {
         returns() implies e
     }
@@ -97,9 +97,9 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
 
 fun cWrongArgument(): Nothing = throw CommandException(Config.error.wrongArgument)
 
-fun <T> cNotNull(p: T?, msg: String): T = p ?: throw CommandException(msg)
+fun <T> cNotNull(p: T?, msg: LocalizedString): T = p ?: throw CommandException(msg)
 
-inline fun <reified T, reified R : T> cCast(p: T, msg: String): R = cNotNull(p as? R, msg)
+inline fun <reified T, reified R : T> cCast(p: T, msg: LocalizedString): R = cNotNull(p as? R, msg)
 
 fun randomString(size: Int) =
     String(CharArray(size) { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() })

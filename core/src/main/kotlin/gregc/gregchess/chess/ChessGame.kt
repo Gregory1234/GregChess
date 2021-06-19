@@ -230,7 +230,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             components.allStop()
             players.forEachUnique(currentTurn) {
                 interact {
-                    it.sendTitle(Config.title.winner(it.side, reason.winner), reason.namePath.get())
+                    it.sendTitle(Config.title.winner(it.side, reason.winner), reason.name)
                     it.sendMessage(reason.message)
                     timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
                     components.allRemovePlayer(it.player)
@@ -238,7 +238,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             }
             spectators.forEach {
                 interact {
-                    it.sendTitle(Config.title.spectator(reason.winner), reason.namePath.get())
+                    it.sendTitle(Config.title.spectator(reason.winner), reason.name)
                     it.sendMessage(reason.message)
                     timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
                     components.allSpectatorLeave(it)

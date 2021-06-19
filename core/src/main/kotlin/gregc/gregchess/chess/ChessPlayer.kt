@@ -50,7 +50,11 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
     override fun toString() = "BukkitChessPlayer(name=$name, side=$side, game.uniqueId=${game.uniqueId})"
 
     override fun sendMessage(msg: String) = player.sendMessage(msg)
+    fun sendMessage(msg: LocalizedString) = player.sendMessage(msg)
     fun sendTitle(title: String, subtitle: String = "") = player.sendTitle(title, subtitle)
+    fun sendTitle(title: String, subtitle: LocalizedString) = player.sendTitle(title, subtitle)
+    fun sendTitle(title: LocalizedString, subtitle: String = "") = player.sendTitle(title, subtitle)
+    fun sendTitle(title: LocalizedString, subtitle: LocalizedString) = player.sendTitle(title, subtitle)
 
     fun pickUp(pos: Pos) {
         if (!game.running) return

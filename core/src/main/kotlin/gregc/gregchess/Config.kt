@@ -94,7 +94,7 @@ typealias LocalizedString = Localized<String>
 
 fun View.getString(path: String) = getVal(path, "string", fullPath(path), true, ::processString)
 fun View.getOptionalString(path: String) = getVal(path, "string", null, false, ::processString)
-fun View.getLocalizedString(path: String, vararg args: String?) = getLocal(path, "string", fullPath(path), false) {
+fun View.getLocalizedString(path: String, vararg args: Any?) = getLocal(path, "string", fullPath(path), false) {
     it.numberedFormat(*args)?.let(::processString)
 }
 fun View.getStringList(path: String) = getList(path, "string", true, ::processString)
@@ -106,9 +106,6 @@ fun View.getChar(path: String) = getVal(path, "char", ' ', true) { if (it.length
 fun View.getLocalizedChar(path: String) = getLocal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
 fun View.getTimeFormat(path: String, time: Duration) = getVal(path, "time format", path, true) {
     TimeFormat(it)(time)
-}
-fun View.getStringFormat(path: String, vararg vs: Any?) = getVal(path, "string format", fullPath(path), true) {
-    it.numberedFormat(*vs)?.let(::processString)
 }
 fun <T: Enum<T>> View.getEnum(path: String, def: T, warnMissing: Boolean = true) = getVal(path, def::class.simpleName ?: "enum", def, warnMissing, enumValueOrNull(def::class))
 fun <T: Enum<T>> View.getEnumList(path: String, cl: KClass<T>) = getList(path, cl.simpleName ?: "enum", true, enumValueOrNull(cl))

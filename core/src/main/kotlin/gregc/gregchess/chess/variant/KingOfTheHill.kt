@@ -1,12 +1,13 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.Config
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.rangeTo
 
 object KingOfTheHill : ChessVariant("KingOfTheHill") {
 
-    class KingOfTheHillEndReason(winner: Side) : EndReason(EndReasonConfig::kingOfTheHill, "normal", winner)
+    class KingOfTheHillEndReason(winner: Side) : EndReason(Config.endReason.kingOfTheHill, "normal", winner)
 
     override fun chessboardSetup(board: Chessboard) {
         (Pair(3, 3)..Pair(4, 4)).forEach { (x, y) ->

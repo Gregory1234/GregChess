@@ -130,7 +130,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     p.game.board[pos]?.piece?.capture(p.side)
                     p.game.board.updateMoves()
-                    player.sendMessage(Config.message.boardOpDone)
+                    player.human.sendMessage(Config.message.boardOpDone)
                 }
                 "spawn" -> {
                     cPlayer(player)
@@ -147,7 +147,7 @@ class GregChess : JavaPlugin(), Listener {
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(Piece(piece, Side.valueOf(this[0])), square)
                         game.board.updateMoves()
-                        player.sendMessage(Config.message.boardOpDone)
+                        player.human.sendMessage(Config.message.boardOpDone)
                     }
                 }
                 "move" -> {
@@ -160,7 +160,7 @@ class GregChess : JavaPlugin(), Listener {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
                         game.board[Pos.parseFromString(this[1])]?.piece?.move(game.board[Pos.parseFromString(this[2])]!!)
                         game.board.updateMoves()
-                        player.sendMessage(Config.message.boardOpDone)
+                        player.human.sendMessage(Config.message.boardOpDone)
                     }
                 }
                 "skip" -> {
@@ -169,14 +169,14 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                     game.nextTurn()
-                    player.sendMessage(Config.message.skippedTurn)
+                    player.human.sendMessage(Config.message.skippedTurn)
                 }
                 "load" -> {
                     cPlayer(player)
                     cPerms(player, "greg-chess.debug")
                     val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                     game.board.setFromFEN(FEN.parseFromString(restString()))
-                    player.sendMessage(Config.message.loadedFEN)
+                    player.human.sendMessage(Config.message.loadedFEN)
                 }
                 "save" -> {
                     cPlayer(player)
@@ -198,7 +198,7 @@ class GregChess : JavaPlugin(), Listener {
                             "set" -> clock.setTime(side, time)
                             else -> cWrongArgument()
                         }
-                        player.sendMessage(Config.message.timeOpDone)
+                        player.human.sendMessage(Config.message.timeOpDone)
                     }
                 }
                 "uci" -> {
@@ -215,7 +215,7 @@ class GregChess : JavaPlugin(), Listener {
                             "send" -> engine.engine.sendCommand(restString())
                             else -> cWrongArgument()
                         }
-                        player.sendMessage(Config.message.engineCommandSent)
+                        player.human.sendMessage(Config.message.engineCommandSent)
                     }
                 }
                 "spectate" -> {
@@ -228,7 +228,7 @@ class GregChess : JavaPlugin(), Listener {
                     endArgs()
                     reloadConfig()
                     arenaManager.reload()
-                    player.sendMessage(Config.message.configReloaded)
+                    player.sendMessage(Config.message.configReloaded.get(player.lang))
                 }
                 "dev" -> {
                     cRequire(server.pluginManager.isPluginEnabled("DevHelpPlugin"), Config.error.wrongArgument)
@@ -257,7 +257,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.admin")
                     cWrongArgument {
                         glog.level = GregLogger.Level.valueOf(lastArg())
-                        player.sendMessage(Config.message.levelSet)
+                        player.sendMessage(Config.message.levelSet.get(player.lang))
                     }
                 }
                 "info" -> {
