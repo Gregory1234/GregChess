@@ -187,16 +187,9 @@ fun String.snakeToPascal(): String {
     return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
 }
 
-fun numberedFormatCheck(s: String, num: UInt): Boolean {
-    return Regex("""\$(?:(\d+)|\{(\d+)})""").findAll(s).none {
-        val i = it.groupValues[1].toIntOrNull() ?: it.groupValues.getOrNull(2)?.toIntOrNull()
-        i == null || i < 1 || i.toUInt() > num
-    }
-}
-
-fun numberedFormat(s: String, vararg args: Any?): String? {
+fun String.numberedFormat(vararg args: Any?): String? {
     var retNull = false
-    val ret = s.replace(Regex("""\$(?:(\d+)|\{(\d+)})""")) {
+    val ret = replace(Regex("""\$(?:(\d+)|\{(\d+)})""")) {
         val i = it.groupValues[1].toIntOrNull() ?: it.groupValues.getOrNull(2)?.toIntOrNull()
         if (i == null || i < 1 || i > args.size) {
             retNull = true

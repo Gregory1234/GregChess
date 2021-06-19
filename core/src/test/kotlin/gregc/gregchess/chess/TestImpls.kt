@@ -151,6 +151,8 @@ class TestEndReason(winner: Side? = null): EndReason(EndReasonConfig::test, "eme
 class TestView(private val root: String) : View {
     override fun getPureString(path: String): String? = null
 
+    override fun getPureLocalizedString(path: String, lang: String): String? = null
+
     override fun getPureStringList(path: String): List<String>? = null
 
     override fun processString(s: String): String = s

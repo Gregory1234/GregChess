@@ -66,6 +66,7 @@ fun <T> List<String>?.getList(path: String, type: String, warnMissing: Boolean =
 
 interface View {
     fun getPureString(path: String): String?
+    fun getPureLocalizedString(path: String, lang: String): String?
     fun getPureStringList(path: String): List<String>?
     fun processString(s: String): String
     val children: Set<String>?
@@ -81,8 +82,25 @@ fun <T> View.getVal(path: String, type: String, default: T, warnMissing: Boolean
 fun <T> View.getList(path: String, type: String, warnMissing: Boolean = true, parser: (String) -> T?): List<T> =
     getPureStringList(path).getList(fullPath(path), type, warnMissing, parser)
 
+fun interface LocalizedString {
+    fun get(lang: String): String
+}
+
 fun View.getString(path: String) = getVal(path, "string", fullPath(path), true, ::processString)
 fun View.getOptionalString(path: String) = getVal(path, "string", null, false, ::processString)
+fun View.getLocalizedString(path: String, vararg args: String?) = LocalizedString { lang ->
+    val s = getPureLocalizedString(path, lang)
+    if (s == null) {
+        glog.warn("Not found string $path in $lang, defaulted to $lang/$path!")
+        return@LocalizedString "$lang/$path!"
+    }
+    val s2 = s.numberedFormat(*args)
+    if (s2 == null) {
+        glog.warn("String $path in $lang is in a wrong format, defaulted to $lang/$path!")
+        return@LocalizedString "$lang/$path!"
+    }
+    s2
+}
 fun View.getStringList(path: String) = getList(path, "string", true, ::processString)
 fun View.getDefaultBoolean(path: String, def: Boolean, warnMissing: Boolean = false) = getVal(path, "duration", def, warnMissing, String::toBooleanStrictOrNull)
 fun View.getDefaultInt(path: String, def: Int, warnMissing: Boolean = false) = getVal(path, "duration", def, warnMissing, String::toIntOrNull)
@@ -93,7 +111,7 @@ fun View.getTimeFormat(path: String, time: Duration) = getVal(path, "time format
     TimeFormat(it)(time)
 }
 fun View.getStringFormat(path: String, vararg vs: Any?) = getVal(path, "string format", fullPath(path), true) {
-    numberedFormat(it, *vs)?.let(::processString)
+    it.numberedFormat(*vs)?.let(::processString)
 }
 fun <T: Enum<T>> View.getEnum(path: String, def: T, warnMissing: Boolean = true) = getVal(path, def::class.simpleName ?: "enum", def, warnMissing, enumValueOrNull(def::class))
 fun <T: Enum<T>> View.getEnumList(path: String, cl: KClass<T>) = getList(path, cl.simpleName ?: "enum", true, enumValueOrNull(cl))

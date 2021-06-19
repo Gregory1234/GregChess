@@ -4,7 +4,6 @@ import gregc.gregchess.chess.*
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.configuration.file.FileConfiguration
-import java.time.Duration
 
 fun Config.initBukkit(c: BukkitConfigProvider) {
     this += BukkitConfig(BukkitView(c, ""))
@@ -16,6 +15,8 @@ fun interface BukkitConfigProvider {
 
 class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
     override fun getPureString(path: String): String? = file().getString(root addDot path)
+
+    override fun getPureLocalizedString(path: String, lang: String): String? = file().getString(root addDot path)
 
     override fun getPureStringList(path: String): List<String>? =
         if (root addDot path in file()) file().getStringList(root addDot path) else null
@@ -35,28 +36,25 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
 
 class BukkitRequestTypeConfig(override val name: String, val rootView: View) : RequestTypeConfig, View by rootView {
 
-    override fun expired(a1: String): String = getStringFormat("Expired", a1)
+    override fun expired(a1: String) = getLocalizedString("Expired", a1)
 
-    override val duration: Duration?
-        get() = getOptionalDuration("Duration")
-    override val sentRequest: String
-        get() = getString("Sent.Request")
+    override val duration get() = getOptionalDuration("Duration")
 
-    override fun sentCancel(a1: String): String = getStringFormat("Sent.Cancel", a1)
+    override val sentRequest get() = getLocalizedString("Sent.Request")
 
-    override fun sentAccept(a1: String): String = getStringFormat("Sent.Accept", a1)
+    override fun sentCancel(a1: String) = getLocalizedString("Sent.Cancel", a1)
 
-    override fun receivedRequest(a1: String, a2: String): String = getStringFormat("Received.Request", a1, a2)
+    override fun sentAccept(a1: String) = getLocalizedString("Sent.Accept", a1)
 
-    override fun receivedCancel(a1: String): String = getStringFormat("Received.Cancel", a1)
+    override fun receivedRequest(a1: String, a2: String) = getLocalizedString("Received.Request", a1, a2)
 
-    override fun receivedAccept(a1: String): String = getStringFormat("Received.Accept", a1)
+    override fun receivedCancel(a1: String) = getLocalizedString("Received.Cancel", a1)
 
-    override val notFound: String
-        get() = getString("Error.NotFound")
+    override fun receivedAccept(a1: String) = getLocalizedString("Received.Accept", a1)
 
-    override val cannotSend: String
-        get() = getString("Error.CannotSend")
+    override val notFound get() = getLocalizedString("Error.NotFound")
+
+    override val cannotSend get() = getLocalizedString("Error.CannotSend")
 
 }
 
@@ -68,12 +66,9 @@ class BukkitConfig(private val rootView: BukkitView) :
 
     override fun getError(s: String): String = getString("Message.Error.$s")
 
-    override val accept: String
-        get() = getString("Request.Accept")
-    override val cancel: String
-        get() = getString("Request.Cancel")
-    override val selfAccept: Boolean
-        get() = getDefaultBoolean("Request.SelfAccept", true)
+    override val accept get() = getLocalizedString("Request.Accept")
+    override val cancel get() = getLocalizedString("Request.Cancel")
+    override val selfAccept get() = getDefaultBoolean("Request.SelfAccept", true)
 
     override fun getRequestType(t: String): RequestTypeConfig = BukkitRequestTypeConfig(t, this["Request.$t"])
 

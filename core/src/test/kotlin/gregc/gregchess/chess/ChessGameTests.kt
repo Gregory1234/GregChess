@@ -124,8 +124,8 @@ class ChessGameTests {
             verifyAll {
                 a.sendTitle(any(), any())
                 b.sendTitle(any(), any())
-                a.sendMessage(any())
-                b.sendMessage(any())
+                a.sendMessage(any<String>())
+                b.sendMessage(any<String>())
             }
         }
 

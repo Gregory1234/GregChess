@@ -7,8 +7,8 @@ import kotlin.collections.set
 import kotlin.coroutines.*
 
 interface RequestConfig {
-    val accept: String
-    val cancel: String
+    val accept: LocalizedString
+    val cancel: LocalizedString
     val selfAccept: Boolean
     fun getRequestType(t: String): RequestTypeConfig
 }
@@ -17,16 +17,16 @@ interface RequestTypeConfig {
 
     val name: String
 
-    fun expired(a1: String): String
+    fun expired(a1: String): LocalizedString
     val duration: Duration?
-    val sentRequest: String
-    fun sentCancel(a1: String): String
-    fun sentAccept(a1: String): String
-    fun receivedRequest(a1: String, a2: String): String
-    fun receivedCancel(a1: String): String
-    fun receivedAccept(a1: String): String
-    val notFound: String
-    val cannotSend: String
+    val sentRequest: LocalizedString
+    fun sentCancel(a1: String): LocalizedString
+    fun sentAccept(a1: String): LocalizedString
+    fun receivedRequest(a1: String, a2: String): LocalizedString
+    fun receivedCancel(a1: String): LocalizedString
+    fun receivedAccept(a1: String): LocalizedString
+    val notFound: LocalizedString
+    val cannotSend: LocalizedString
 }
 
 val Config.request: RequestConfig by Config
