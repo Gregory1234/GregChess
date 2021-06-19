@@ -5,43 +5,28 @@ import java.time.Duration
 import java.util.*
 import kotlin.collections.set
 import kotlin.coroutines.*
-import kotlin.reflect.KProperty
 
 interface RequestConfig {
     val accept: String
     val cancel: String
     val selfAccept: Boolean
-    fun getExpired(t: String): (String) -> String
-    fun getRequestDuration(t: String): Duration?
-    fun getSentRequest(t: String): String
-    fun getSentCancel(t: String): (String) -> String
-    fun getSentAccept(t: String): (String) -> String
-    fun getReceivedRequest(t: String): (String, String) -> String
-    fun getReceivedCancel(t: String): (String) -> String
-    fun getReceivedAccept(t: String): (String) -> String
-    fun getNotFound(t: String): String
-    fun getCannotSend(t: String): String
+    fun getRequestType(t: String): RequestTypeConfig
 }
 
-operator fun RequestConfig.get(t: String) = RequestTypeConfig(t)
+interface RequestTypeConfig {
 
-class RequestTypeConfig(val name: String) {
+    val name: String
 
-    private operator fun <R> (RequestConfig.(String) -> R).getValue(
-        requestTypeConfig: RequestTypeConfig,
-        property: KProperty<*>
-    ): R = invoke(Config.request, name)
-
-    val expired by RequestConfig::getExpired
-    val duration by RequestConfig::getRequestDuration
-    val sentRequest by RequestConfig::getSentRequest
-    val sentCancel by RequestConfig::getSentCancel
-    val sentAccept by RequestConfig::getSentAccept
-    val receivedRequest by RequestConfig::getReceivedRequest
-    val receivedCancel by RequestConfig::getReceivedCancel
-    val receivedAccept by RequestConfig::getReceivedAccept
-    val notFound by RequestConfig::getNotFound
-    val cannotSend by RequestConfig::getCannotSend
+    fun expired(a1: String): String
+    val duration: Duration?
+    val sentRequest: String
+    fun sentCancel(a1: String): String
+    fun sentAccept(a1: String): String
+    fun receivedRequest(a1: String, a2: String): String
+    fun receivedCancel(a1: String): String
+    fun receivedAccept(a1: String): String
+    val notFound: String
+    val cannotSend: String
 }
 
 val Config.request: RequestConfig by Config
@@ -51,7 +36,7 @@ interface RequestManager {
 }
 
 fun RequestManager.register(c: String, accept: String, cancel: String): RequestType =
-    register(Config.request[c], accept, cancel)
+    register(Config.request.getRequestType(c), accept, cancel)
 
 
 class RequestType(private val timeManager: TimeManager, private val data: RequestTypeData) {

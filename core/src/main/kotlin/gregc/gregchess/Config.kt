@@ -1,5 +1,6 @@
 package gregc.gregchess
 
+import java.time.Duration
 import kotlin.reflect.*
 
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
@@ -88,23 +89,11 @@ fun View.getDefaultInt(path: String, def: Int, warnMissing: Boolean = false) = g
 fun View.getDuration(path: String) = getVal(path, "duration", 0.seconds, true, ::parseDuration)
 fun View.getOptionalDuration(path: String) = getVal(path, "duration", null, false, ::parseDuration)
 fun View.getChar(path: String) = getVal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
-fun View.getTimeFormat(path: String) = getVal(path, "time format", TimeFormat(""), true, ::TimeFormat)
+fun View.getTimeFormat(path: String, time: Duration) = getVal(path, "time format", path, true) {
+    TimeFormat(it)(time)
+}
 fun View.getStringFormat(path: String, vararg vs: Any?) = getVal(path, "string format", fullPath(path), true) {
     numberedFormat(it, *vs)?.let(::processString)
-}
-fun <T1> View.getStringFormatF1(path: String): (T1) -> String = getVal(path, "string format", { _ -> fullPath(path) }, true) {
-    if (!numberedFormatCheck(it, 1u))
-        null
-    else { a1 ->
-        processString(numberedFormat(it, a1)!!)
-    }
-}
-fun <T1, T2> View.getStringFormatF2(path: String): (T1, T2) -> String = getVal(path, "string format", { _, _ -> fullPath(path) }, true) {
-    if (!numberedFormatCheck(it, 2u))
-        null
-    else { a1, a2 ->
-        processString(numberedFormat(it, a1, a2)!!)
-    }
 }
 fun <T: Enum<T>> View.getEnum(path: String, def: T, warnMissing: Boolean = true) = getVal(path, def::class.simpleName ?: "enum", def, warnMissing, enumValueOrNull(def::class))
 fun <T: Enum<T>> View.getEnumList(path: String, cl: KClass<T>) = getList(path, cl.simpleName ?: "enum", true, enumValueOrNull(cl))

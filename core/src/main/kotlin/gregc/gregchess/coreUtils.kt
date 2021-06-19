@@ -31,15 +31,14 @@ interface MessageConfig : ConfigBlock {
             owner.getMessage(property.name.upperFirst())
     }
 
-    fun getMessage(s: String): String
-    fun getMessage1(s: String): (String) -> String
+    fun getMessage(s: String, vararg args: Any?): String
 }
 
 val Config.message: MessageConfig by Config
 
 val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
-val MessageConfig.gameFinished get() = BySides { getMessage1("GameFinished.${it.standardName}Won") }
-val MessageConfig.gameFinishedDraw get() = getMessage1("GameFinished.ItWasADraw")
+fun MessageConfig.gameFinished(a: String) = BySides { getMessage("GameFinished.${it.standardName}Won", a) }
+fun MessageConfig.gameFinishedDraw(a: String) = getMessage("GameFinished.ItWasADraw", a)
 val MessageConfig.inCheck by MessageConfig
 
 

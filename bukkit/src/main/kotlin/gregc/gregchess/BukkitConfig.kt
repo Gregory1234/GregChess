@@ -33,6 +33,33 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
     override fun fullPath(path: String): String = root addDot path
 }
 
+class BukkitRequestTypeConfig(override val name: String, val rootView: View) : RequestTypeConfig, View by rootView {
+
+    override fun expired(a1: String): String = getStringFormat("Expired", a1)
+
+    override val duration: Duration?
+        get() = getOptionalDuration("Duration")
+    override val sentRequest: String
+        get() = getString("Sent.Request")
+
+    override fun sentCancel(a1: String): String = getStringFormat("Sent.Cancel", a1)
+
+    override fun sentAccept(a1: String): String = getStringFormat("Sent.Accept", a1)
+
+    override fun receivedRequest(a1: String, a2: String): String = getStringFormat("Received.Request", a1, a2)
+
+    override fun receivedCancel(a1: String): String = getStringFormat("Received.Cancel", a1)
+
+    override fun receivedAccept(a1: String): String = getStringFormat("Received.Accept", a1)
+
+    override val notFound: String
+        get() = getString("Error.NotFound")
+
+    override val cannotSend: String
+        get() = getString("Error.CannotSend")
+
+}
+
 class BukkitConfig(private val rootView: BukkitView) :
     ErrorConfig, MessageConfig, TitleConfig,
     RequestConfig, ArenasConfig, StockfishConfig,
@@ -48,28 +75,7 @@ class BukkitConfig(private val rootView: BukkitView) :
     override val selfAccept: Boolean
         get() = getDefaultBoolean("Request.SelfAccept", true)
 
-    private fun request(t: String) = this["Request.$t"]
-
-    override fun getExpired(t: String): (String) -> String = request(t).getStringFormatF1("Expired")
-
-    override fun getRequestDuration(t: String): Duration? = request(t).getOptionalDuration("Duration")
-
-    override fun getSentRequest(t: String): String = request(t).getString("Sent.Request")
-
-    override fun getSentCancel(t: String): (String) -> String = request(t).getStringFormatF1("Sent.Cancel")
-
-    override fun getSentAccept(t: String): (String) -> String = request(t).getStringFormatF1("Sent.Accept")
-
-    override fun getReceivedRequest(t: String): (String, String) -> String =
-        request(t).getStringFormatF2("Received.Request")
-
-    override fun getReceivedCancel(t: String): (String) -> String = request(t).getStringFormatF1("Received.Cancel")
-
-    override fun getReceivedAccept(t: String): (String) -> String = request(t).getStringFormatF1("Received.Accept")
-
-    override fun getNotFound(t: String): String = request(t).getString("Error.NotFound")
-
-    override fun getCannotSend(t: String): String = request(t).getString("Error.CannotSend")
+    override fun getRequestType(t: String): RequestTypeConfig = BukkitRequestTypeConfig(t, this["Request.$t"])
 
     override val chessArenas: List<String>
         get() = getStringList("ChessArenas")
@@ -109,9 +115,8 @@ class BukkitConfig(private val rootView: BukkitView) :
 
     override fun getEndReason(n: String): String = getString("Chess.EndReason.$n")
 
-    override fun getMessage(s: String): String = getString("Message.$s")
-
-    override fun getMessage1(s: String): (String) -> String = getStringFormatF1("Message.$s")
+    override fun getMessage(s: String, vararg args: Any?): String =
+        if (args.isEmpty()) getString("Message.$s") else getStringFormat("Message.$s", *args)
 
     override fun getTitle(s: String): String = getString("Title.$s")
 

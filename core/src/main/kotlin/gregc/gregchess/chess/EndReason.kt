@@ -28,7 +28,10 @@ open class EndReason(
         override fun toString() = "EndReason.Error(winner=$winner, e=$e)"
     }
 
-    val message get() = with(Config.message) { winner?.let { gameFinished[it] } ?: gameFinishedDraw }(namePath.get())
+    val message
+        get() = with(Config.message) {
+            winner?.let { gameFinished(namePath.get())[it] } ?: gameFinishedDraw(namePath.get())
+        }
 
     val winnerPGN
         get() = when (winner) {

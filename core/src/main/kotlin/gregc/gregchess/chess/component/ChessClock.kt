@@ -12,7 +12,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
 
-    private val View.timeFormat get() = getTimeFormat("TimeFormat")
+    private fun View.timeFormat(time: Duration) = getTimeFormat("TimeFormat", time)
     private val View.timeRemaining get() = getString("TimeRemaining")
 
 

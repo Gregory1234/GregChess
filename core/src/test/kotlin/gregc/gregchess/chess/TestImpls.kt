@@ -97,9 +97,11 @@ class TestComponent : Component {
     fun update() {}
 
     @GameEvent(GameBaseEvent.SPECTATOR_JOIN)
+    @Suppress("UNUSED_PARAMETER")
     fun spectatorJoin(p: HumanPlayer) {}
 
     @GameEvent(GameBaseEvent.SPECTATOR_LEAVE)
+    @Suppress("UNUSED_PARAMETER")
     fun spectatorLeave(p: HumanPlayer) {}
 
     @GameEvent(GameBaseEvent.STOP)
@@ -124,12 +126,15 @@ class TestComponent : Component {
     fun startPreviousTurn() {}
 
     @GameEvent(GameBaseEvent.ADD_PLAYER)
+    @Suppress("UNUSED_PARAMETER")
     fun addPlayer(p: HumanPlayer) {}
 
     @GameEvent(GameBaseEvent.REMOVE_PLAYER)
+    @Suppress("UNUSED_PARAMETER")
     fun removePlayer(p: HumanPlayer) {}
 
     @GameEvent(GameBaseEvent.RESET_PLAYER)
+    @Suppress("UNUSED_PARAMETER")
     fun resetPlayer(p: HumanPlayer) {}
 
     @GameEvent(GameBaseEvent.PANIC)
@@ -161,12 +166,10 @@ class TestView(private val root: String) : View {
 }
 
 class TestConfig(private val rootView: TestView) :
-    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, RequestConfig,
+    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig,
     ChessConfig, ComponentsConfig, EndReasonConfig, PieceConfig, SettingsConfig, SideConfig,
     View by rootView {
     override fun getError(s: String): String = getString("Message.Error.$s")
-
-    private fun request(t: String) = this["Request.$t"]
 
     override val chessArenas: List<String>
         get() = getStringList("ChessArenas")
@@ -195,39 +198,10 @@ class TestConfig(private val rootView: TestView) :
 
     override fun getEndReason(n: String): String = getString("Chess.EndReason.$n")
 
-    override fun getMessage(s: String): String = getString("Message.$s")
-
-    override fun getMessage1(s: String): (String) -> String = getStringFormatF1("Message.$s")
+    override fun getMessage(s: String, vararg args: Any?): String =
+        if (args.isEmpty()) getString("Message.$s") else getStringFormat("Message.$s", *args)
 
     override fun getTitle(s: String): String = getString("Title.$s")
-
-    override val accept: String
-        get() = getString("Request.Accept")
-    override val cancel: String
-        get() = getString("Request.Cancel")
-    override val selfAccept: Boolean
-        get() = getDefaultBoolean("Request.SelfAccept", true)
-
-    override fun getExpired(t: String): (String) -> String = request(t).getStringFormatF1("Expired")
-
-    override fun getRequestDuration(t: String): Duration? = request(t).getOptionalDuration("Duration")
-
-    override fun getSentRequest(t: String): String = request(t).getString("Sent.Request")
-
-    override fun getSentCancel(t: String): (String) -> String = request(t).getStringFormatF1("Sent.Cancel")
-
-    override fun getSentAccept(t: String): (String) -> String = request(t).getStringFormatF1("Sent.Accept")
-
-    override fun getReceivedRequest(t: String): (String, String) -> String =
-        request(t).getStringFormatF2("Received.Request")
-
-    override fun getReceivedCancel(t: String): (String) -> String = request(t).getStringFormatF1("Received.Cancel")
-
-    override fun getReceivedAccept(t: String): (String) -> String = request(t).getStringFormatF1("Received.Accept")
-
-    override fun getNotFound(t: String): String = request(t).getString("Error.NotFound")
-
-    override fun getCannotSend(t: String): String = request(t).getString("Error.CannotSend")
 
 }
 
