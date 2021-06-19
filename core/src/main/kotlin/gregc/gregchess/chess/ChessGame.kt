@@ -171,12 +171,6 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             components.allStart()
             state = GameState.Running(requireStarting())
             glog.mid("Started game", uniqueId)
-            timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
-                if (!running)
-                    cancel()
-                else
-                    components.allUpdate()
-            }
         } catch (e: Exception) {
             players.forEachReal { it.sendMessage(Config.error.teleportFailed) }
             panic(e)
@@ -184,6 +178,12 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             throw e
         }
         components.allBegin()
+        timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
+            if (!running)
+                cancel()
+            else
+                components.allUpdate()
+        }
         startTurn()
         return this
     }

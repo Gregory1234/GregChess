@@ -1,8 +1,8 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Config
-import io.mockk.spyk
-import io.mockk.verify
+import gregc.gregchess.chess.variant.ChessVariant
+import io.mockk.*
 import org.junit.jupiter.api.*
 import kotlin.test.assertEquals
 
@@ -11,9 +11,12 @@ class ChessGameTests {
 
     init {
         Config.initTest()
+        ChessVariant += spyk(TestVariant())
     }
 
     val basicSettings = testSettings("basic")
+    val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
+    val spyVariantSettings get() = testSettings("spy variant", variant = "test")
 
     val humanA = TestHuman("a")
     val humanB = TestHuman("b")
@@ -65,6 +68,41 @@ class ChessGameTests {
                 }
             }
         }
+
+        @Test
+        fun `doesn't call players`() {
+            val a = spyk(humanA)
+            val b = spyk(humanB)
+            mkGame(players = BySides(a, b))
+            excludeRecords {
+                a.name; b.name; a == any(); b == any()
+            }
+            verify {
+                a wasNot Called
+                b wasNot Called
+            }
+        }
+
+        @Test
+        fun `doesn't call components`() {
+            val g = mkGame(spyComponentSettings)
+            val c = g.getComponent<TestComponent>()!!
+            verify {
+                c wasNot Called
+            }
+        }
+
+        @Test
+        fun `only gets extra components and fen from variant`() {
+            val g = mkGame(spyVariantSettings)
+            excludeRecords {
+                g.variant.name
+            }
+            verifyAll {
+                g.variant.extraComponents
+                g.variant.genFEN(any())
+            }
+        }
     }
 
     @Nested
@@ -80,10 +118,29 @@ class ChessGameTests {
             val a = spyk(humanA)
             val b = spyk(humanB)
             mkGame(players = BySides(a, b)).start()
-            verify {
+            excludeRecords {
+                a.name; b.name; a == any(); b == any()
+            }
+            verifyAll {
                 a.sendTitle(any(), any())
                 b.sendTitle(any(), any())
                 a.sendMessage(any())
+                b.sendMessage(any())
+            }
+        }
+
+        @Test
+        fun `starts components`() {
+            val g = mkGame(spyComponentSettings).start()
+            val c = g.getComponent<TestComponent>()!!
+            verifySequence {
+                c.addPlayer(humanA)
+                c.addPlayer(humanB)
+                c.init()
+                c.start()
+                c.begin()
+                c.update()
+                c.startTurn()
             }
         }
 
@@ -108,6 +165,14 @@ class ChessGameTests {
                 val reason = TestEndReason(Side.WHITE)
                 g.stop(reason)
                 g.start()
+            }
+        }
+
+        @Test
+        fun `starts variant`() {
+            val g = mkGame(spyVariantSettings).start()
+            verify {
+                g.variant.start(g)
             }
         }
     }
@@ -139,6 +204,21 @@ class ChessGameTests {
                 val reason = TestEndReason(Side.WHITE)
                 g.stop(reason)
                 g.stop(reason)
+            }
+        }
+
+        @Test
+        fun `stops components`() {
+            val g = mkGame(spyComponentSettings).start()
+            val c = g.getComponent<TestComponent>()!!
+            clearRecords(c)
+            g.stop(TestEndReason(Side.WHITE))
+            verifySequence {
+                c.stop()
+                c.removePlayer(humanA)
+                c.removePlayer(humanB)
+                c.clear()
+                c.veryEnd()
             }
         }
     }

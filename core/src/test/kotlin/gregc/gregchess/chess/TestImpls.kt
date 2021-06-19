@@ -3,6 +3,8 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
+import io.mockk.clearMocks
+import io.mockk.spyk
 import java.time.Duration
 
 class TestTimeManager : TimeManager {
@@ -24,7 +26,7 @@ class TestTimeManager : TimeManager {
 }
 
 class TestScoreboard: ScoreboardManager {
-    class Settings: Component.Settings<TestScoreboard> {
+    object Settings: Component.Settings<TestScoreboard> {
         override fun getComponent(game: ChessGame) = TestScoreboard()
 
     }
@@ -37,11 +39,15 @@ class TestScoreboard: ScoreboardManager {
 
 }
 
-fun testSettings(name: String, board: String? = null, clock: String? = null, variant: String? = null): GameSettings {
+fun testSettings(
+    name: String, board: String? = null, clock: String? = null, variant: String? = null,
+    extra: List<Component.Settings<*>> = emptyList()
+): GameSettings {
     val components = buildList {
         this += Chessboard.Settings[board]
         ChessClock.Settings[clock]?.let { this += it }
-        this += TestScoreboard.Settings()
+        this += TestScoreboard.Settings
+        this.addAll(extra)
     }
     return GameSettings(name, false, ChessVariant[variant], components)
 }
@@ -71,6 +77,67 @@ class TestHuman(name: String): HumanPlayer(name) {
     }
 
 }
+
+class TestComponent : Component {
+
+    object Settings : Component.Settings<TestComponent> {
+        override fun getComponent(game: ChessGame): TestComponent = spyk(TestComponent())
+    }
+
+    @GameEvent(GameBaseEvent.INIT)
+    fun init() {}
+
+    @GameEvent(GameBaseEvent.START)
+    fun start() {}
+
+    @GameEvent(GameBaseEvent.BEGIN)
+    fun begin() {}
+
+    @GameEvent(GameBaseEvent.UPDATE)
+    fun update() {}
+
+    @GameEvent(GameBaseEvent.SPECTATOR_JOIN)
+    fun spectatorJoin(p: HumanPlayer) {}
+
+    @GameEvent(GameBaseEvent.SPECTATOR_LEAVE)
+    fun spectatorLeave(p: HumanPlayer) {}
+
+    @GameEvent(GameBaseEvent.STOP)
+    fun stop() {}
+
+    @GameEvent(GameBaseEvent.CLEAR)
+    fun clear() {}
+
+    @GameEvent(GameBaseEvent.VERY_END)
+    fun veryEnd() {}
+
+    @GameEvent(GameBaseEvent.START_TURN)
+    fun startTurn() {}
+
+    @GameEvent(GameBaseEvent.END_TURN)
+    fun endTurn() {}
+
+    @GameEvent(GameBaseEvent.PRE_PREVIOUS_TURN)
+    fun prePreviousTurn() {}
+
+    @GameEvent(GameBaseEvent.START_PREVIOUS_TURN)
+    fun startPreviousTurn() {}
+
+    @GameEvent(GameBaseEvent.ADD_PLAYER)
+    fun addPlayer(p: HumanPlayer) {}
+
+    @GameEvent(GameBaseEvent.REMOVE_PLAYER)
+    fun removePlayer(p: HumanPlayer) {}
+
+    @GameEvent(GameBaseEvent.RESET_PLAYER)
+    fun resetPlayer(p: HumanPlayer) {}
+
+    @GameEvent(GameBaseEvent.PANIC)
+    fun panic() {}
+
+}
+
+class TestVariant: ChessVariant("test")
 
 val EndReasonConfig.test by EndReasonConfig
 
@@ -167,3 +234,5 @@ class TestConfig(private val rootView: TestView) :
 fun Config.initTest() {
     this += TestConfig(TestView(""))
 }
+
+fun clearRecords(m: Any) = clearMocks(m, answers = false)
