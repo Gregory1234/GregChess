@@ -187,6 +187,12 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     @GameEvent(GameBaseEvent.START, mod = TimeModifier.EARLY)
     fun start() = setFromFEN(settings.genFEN(game))
 
+    @GameEvent(GameBaseEvent.STOP)
+    fun sendPGN() {
+        val pgn = PGN.generate(game)
+        game.players.forEachReal { it.sendPGN(pgn) }
+    }
+
     fun setFromFEN(fen: FEN) {
         clear()
         squares.values.forEach(Square::empty)

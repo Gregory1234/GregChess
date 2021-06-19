@@ -131,10 +131,6 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
     }
 
     @EventHandler
-    fun onChessGameEnd(e: GameEndEvent) {
-        val pgn = PGN.generate(e.game)
-        e.game.players.forEachReal { it.sendPGN(pgn) }
-        removeGame(e.game)
-    }
+    fun onChessGameEnd(e: GameEndEvent) = removeGame(e.game)
 
 }

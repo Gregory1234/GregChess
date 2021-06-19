@@ -94,7 +94,7 @@ class TestView(private val root: String) : View {
 }
 
 class TestConfig(private val rootView: TestView) :
-    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig,
+    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, RequestConfig,
     ChessConfig, ComponentsConfig, EndReasonConfig, PieceConfig, SettingsConfig, SideConfig,
     View by rootView {
     override fun getError(s: String): String = getString("Message.Error.$s")
@@ -133,6 +133,34 @@ class TestConfig(private val rootView: TestView) :
     override fun getMessage1(s: String): (String) -> String = getStringFormatF1("Message.$s")
 
     override fun getTitle(s: String): String = getString("Title.$s")
+
+    override val accept: String
+        get() = getString("Request.Accept")
+    override val cancel: String
+        get() = getString("Request.Cancel")
+    override val selfAccept: Boolean
+        get() = getDefaultBoolean("Request.SelfAccept", true)
+
+    override fun getExpired(t: String): (String) -> String = request(t).getStringFormatF1("Expired")
+
+    override fun getRequestDuration(t: String): Duration? = request(t).getOptionalDuration("Duration")
+
+    override fun getSentRequest(t: String): String = request(t).getString("Sent.Request")
+
+    override fun getSentCancel(t: String): (String) -> String = request(t).getStringFormatF1("Sent.Cancel")
+
+    override fun getSentAccept(t: String): (String) -> String = request(t).getStringFormatF1("Sent.Accept")
+
+    override fun getReceivedRequest(t: String): (String, String) -> String =
+        request(t).getStringFormatF2("Received.Request")
+
+    override fun getReceivedCancel(t: String): (String) -> String = request(t).getStringFormatF1("Received.Cancel")
+
+    override fun getReceivedAccept(t: String): (String) -> String = request(t).getStringFormatF1("Received.Accept")
+
+    override fun getNotFound(t: String): String = request(t).getString("Error.NotFound")
+
+    override fun getCannotSend(t: String): String = request(t).getString("Error.CannotSend")
 
 }
 
