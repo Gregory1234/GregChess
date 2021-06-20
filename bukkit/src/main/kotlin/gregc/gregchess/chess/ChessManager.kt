@@ -3,7 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.GameEndEvent
 import gregc.gregchess.chess.component.GameStartEvent
-import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -14,7 +13,6 @@ import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.*
-import org.bukkit.plugin.Plugin
 import java.util.*
 
 interface ChessGameManager {
@@ -25,7 +23,7 @@ interface ChessGameManager {
 
 class PluginRestartEndReason : EndReason(Config.endReason.pluginRestart, "emergency", quick = true)
 
-class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Listener {
+object BukkitChessGameManager : ChessGameManager, Listener {
 
     private val games = mutableListOf<ChessGame>()
 
@@ -43,7 +41,7 @@ class BukkitChessGameManager(private val plugin: Plugin) : ChessGameManager, Lis
 
 
     fun start() {
-        Bukkit.getPluginManager().registerEvents(this, plugin)
+        registerEvents()
     }
 
     fun stop() {

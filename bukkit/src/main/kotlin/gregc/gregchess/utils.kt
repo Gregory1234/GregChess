@@ -7,6 +7,7 @@ import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.event.Listener
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
@@ -187,3 +188,5 @@ inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
     BuildTextComponentScope().apply(f).returnValue
 
 val CommandSender.lang get() = (this as? Player)?.human?.lang ?: DEFAULT_LANG
+
+fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.INSTANCE)

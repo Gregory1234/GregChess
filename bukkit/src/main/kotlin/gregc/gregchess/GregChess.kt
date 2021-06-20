@@ -16,23 +16,24 @@ import java.util.*
 @Suppress("unused")
 class GregChess : JavaPlugin(), Listener {
 
-    private val arenaManager = BukkitArenaManager(this)
-    private val timeManager = BukkitTimeManager(this)
-    private val requestManager = BukkitRequestManager(this, timeManager)
-    private val chessManager = BukkitChessGameManager(this)
+    companion object {
+        lateinit var INSTANCE: GregChess
+            private set
+    }
 
     init {
+        INSTANCE = this
         Config.initBukkit { config }
     }
 
-    private val drawRequest = requestManager.register("draw", "/chess draw", "/chess draw")
+    private val drawRequest = BukkitRequestManager.register("draw", "/chess draw", "/chess draw")
 
-    private val takebackRequest = requestManager.register("takeback", "/chess undo", "/chess undo")
+    private val takebackRequest = BukkitRequestManager.register("takeback", "/chess undo", "/chess undo")
 
-    private val duelRequest = requestManager.register("duel", "/chess duel accept", "/chess duel cancel")
+    private val duelRequest = BukkitRequestManager.register("duel", "/chess duel accept", "/chess duel cancel")
 
     override fun onEnable() {
-        server.pluginManager.registerEvents(this, this)
+        registerEvents()
         saveDefaultConfig()
         run {
             glog += JavaGregLogger(logger)
@@ -43,9 +44,9 @@ class GregChess : JavaPlugin(), Listener {
                 glog += FileGregLogger(file)
             }
         }
-        chessManager.start()
-        arenaManager.start()
-        requestManager.start()
+        BukkitChessGameManager.start()
+        BukkitArenaManager.start()
+        BukkitRequestManager.start()
         addCommand("chess") {
             when (nextArg().lowercase()) {
                 "duel" -> {
@@ -71,7 +72,7 @@ class GregChess : JavaPlugin(), Listener {
                                 if (settings != null) {
                                     val res = duelRequest.call(RequestData(player.human, opponent.human, settings.name))
                                     if (res == RequestResponse.ACCEPT) {
-                                        ChessGame(timeManager, arenaManager.cNext(), settings).addPlayers {
+                                        ChessGame(BukkitTimeManager, BukkitArenaManager.cNext(), settings).addPlayers {
                                             human(player.human, Side.WHITE, player == opponent)
                                             human(opponent.human, Side.BLACK, player == opponent)
                                         }.start()
@@ -89,9 +90,9 @@ class GregChess : JavaPlugin(), Listener {
                     interact {
                         val settings = player.openSettingsMenu()
                         if (settings != null)
-                            ChessGame(timeManager, arenaManager.cNext(), settings).addPlayers {
+                            ChessGame(BukkitTimeManager, BukkitArenaManager.cNext(), settings).addPlayers {
                                 human(player.human, Side.WHITE, false)
-                                engine(Stockfish(timeManager), Side.BLACK)
+                                engine(Stockfish(), Side.BLACK)
                             }.start()
                     }
                 }
@@ -104,7 +105,7 @@ class GregChess : JavaPlugin(), Listener {
                 "leave" -> {
                     cPlayer(player)
                     endArgs()
-                    chessManager.leave(player.human)
+                    BukkitChessGameManager.leave(player.human)
                 }
                 "draw" -> {
                     cPlayer(player)
@@ -227,7 +228,7 @@ class GregChess : JavaPlugin(), Listener {
                     cPerms(player, "greg-chess.admin")
                     endArgs()
                     reloadConfig()
-                    arenaManager.reload()
+                    BukkitArenaManager.reload()
                     player.sendMessage(Config.message.configReloaded.get(player.lang))
                 }
                 "dev" -> {
@@ -321,7 +322,7 @@ class GregChess : JavaPlugin(), Listener {
                 if (isValidUUID(nextArg())) {
                     cPerms(player, "greg-chess.info")
                     val game = cNotNull(
-                        chessManager.firstGame { UUID.fromString(latestArg()) in it.board },
+                        BukkitChessGameManager.firstGame { UUID.fromString(latestArg()) in it.board },
                         Config.error.pieceNotFound
                     )
                     game.board[UUID.fromString(latestArg())]!!
@@ -343,14 +344,14 @@ class GregChess : JavaPlugin(), Listener {
             1 -> {
                 cWrongArgument {
                     cPerms(player, "greg-chess.info")
-                    cNotNull(chessManager[UUID.fromString(nextArg())], Config.error.gameNotFound)
+                    cNotNull(BukkitChessGameManager[UUID.fromString(nextArg())], Config.error.gameNotFound)
                 }
             }
             else -> throw CommandException(Config.error.wrongArgumentsNumber)
         }
 
     override fun onDisable() {
-        chessManager.stop()
+        BukkitChessGameManager.stop()
     }
 
     @EventHandler

@@ -1,10 +1,10 @@
 package gregc.gregchess
 
-import org.bukkit.plugin.Plugin
+import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
 
-class BukkitTimeManager(private val plugin: Plugin) : TimeManager {
+object BukkitTimeManager : TimeManager {
 
     private class BukkitCancellableContext constructor(private val r: BukkitRunnable) : TimeManager.CancellableContext {
         override fun cancel() {
@@ -21,7 +21,7 @@ class BukkitTimeManager(private val plugin: Plugin) : TimeManager {
             override fun run() {
                 callback()
             }
-        }.runTaskLater(plugin, delay.toTicks())
+        }.runTaskLater(GregChess.INSTANCE, delay.toTicks())
     }
 
     override fun runTaskTimer(delay: Duration, period: Duration, callback: TimeManager.CancellableContext.() -> Unit) {
@@ -30,10 +30,10 @@ class BukkitTimeManager(private val plugin: Plugin) : TimeManager {
             override fun run() {
                 cc.callback()
             }
-        }.runTaskTimer(plugin, delay.toTicks(), period.toTicks())
+        }.runTaskTimer(GregChess.INSTANCE, delay.toTicks(), period.toTicks())
     }
 
     override fun runTaskAsynchronously(callback: () -> Unit) {
-        plugin.server.scheduler.runTaskAsynchronously(plugin, callback)
+        Bukkit.getScheduler().runTaskAsynchronously(GregChess.INSTANCE, callback)
     }
 }

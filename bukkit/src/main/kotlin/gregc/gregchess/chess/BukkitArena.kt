@@ -1,17 +1,15 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Config
-import gregc.gregchess.glog
+import gregc.gregchess.*
 import org.bukkit.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.generator.ChunkGenerator
-import org.bukkit.plugin.Plugin
 import java.util.*
 
-class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
+object BukkitArenaManager : ArenaManager, Listener {
     class ArenaRemovedEndReason : EndReason(Config.endReason.arenaRemoved, "emergency", quick = true)
 
     private val arenas = mutableListOf<Arena>()
@@ -32,7 +30,7 @@ class BukkitArenaManager(private val plugin: Plugin) : ArenaManager, Listener {
     }
 
     fun start() {
-        Bukkit.getPluginManager().registerEvents(this, plugin)
+        registerEvents()
         arenas.addAll(Config.arenas.chessArenas.map { Arena(it) })
     }
 

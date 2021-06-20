@@ -3,8 +3,8 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import java.util.concurrent.*
 
-class Stockfish(private val timeManager: TimeManager, override val name: String = Config.stockfish.engineName) :
-    ChessEngine {
+class Stockfish(override val name: String = Config.stockfish.engineName) : ChessEngine {
+
     private val process: Process = ProcessBuilder(Config.stockfish.stockfishCommand).start()
 
     private val reader = process.inputStream.bufferedReader()
@@ -55,7 +55,7 @@ class Stockfish(private val timeManager: TimeManager, override val name: String 
     override fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
         var move = ""
         var exc: Exception? = null
-        timeManager.runTaskAsynchronously {
+        BukkitTimeManager.runTaskAsynchronously {
             try {
                 sendCommand("position fen $fen")
                 sendCommand("go movetime " + moveTime.toMillis())
@@ -73,7 +73,7 @@ class Stockfish(private val timeManager: TimeManager, override val name: String 
             }
         }
         //TODO: this is potentially dangerous!
-        timeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks) {
+        BukkitTimeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks) {
             if (move != "") {
                 onSuccess(move)
                 cancel()

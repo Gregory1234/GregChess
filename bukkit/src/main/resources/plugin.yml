@@ -1,7 +1,7 @@
 name: GregChess
 version: @version@
 main: gregc.gregchess.GregChess
-api-version: 1.16
+api-version: @minecraft-version@
 author: GregC
 description: Chess Plugin
 libraries:
