@@ -9,6 +9,8 @@ import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
+    private val SettingsConfig.presets by SettingsConfig
+
     fun getSettings(): List<GameSettings> =
         Config.settings.presets.map { (key, child) ->
             val simpleCastling = child.getDefaultBoolean("SimpleCastling", false)
@@ -25,6 +27,8 @@ object SettingsManager {
         }
 
 }
+
+val MessageConfig.chooseSettings by MessageConfig
 
 suspend fun Player.openSettingsMenu() =
     openMenu(Config.message.chooseSettings, SettingsManager.getSettings().mapIndexed { index, s ->

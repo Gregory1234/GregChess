@@ -19,6 +19,20 @@ class GregChess : JavaPlugin(), Listener {
     companion object {
         lateinit var INSTANCE: GregChess
             private set
+        private val ErrorConfig.clockNotFound by ErrorConfig
+        private val ErrorConfig.engineNotFound by ErrorConfig
+        private val ErrorConfig.stockfishNotFound by ErrorConfig
+        private val ErrorConfig.pieceNotFound by ErrorConfig
+        private val ErrorConfig.gameNotFound by ErrorConfig
+        private val ErrorConfig.nothingToTakeback by ErrorConfig
+
+        private val MessageConfig.boardOpDone by MessageConfig
+        private val MessageConfig.skippedTurn by MessageConfig
+        private val MessageConfig.timeOpDone by MessageConfig
+        private val MessageConfig.engineCommandSent by MessageConfig
+        private val MessageConfig.loadedFEN by MessageConfig
+        private val MessageConfig.configReloaded by MessageConfig
+        private val MessageConfig.levelSet by MessageConfig
     }
 
     init {

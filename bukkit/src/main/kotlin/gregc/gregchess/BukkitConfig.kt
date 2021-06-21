@@ -83,13 +83,12 @@ class BukkitConfig(private val rootView: BukkitView) :
 
     override val chessArenas get() = getStringList("ChessArenas")
 
-    override fun getPieceType(p: PieceType) = getBukkitPieceType(p)
     override fun getBukkitPieceType(p: PieceType) = BukkitPieceTypeConfig(p, this["Chess.Piece.${p.standardName}"])
 
     override fun getSide(s: Side) = BukkitSideConfig(s, this["Chess.Side.${s.standardName}"])
 
     override val capture get() = getLocalizedString("Chess.Capture")
-    override fun getFloor(f: Floor) = getEnum<Material>("Chess.Floor.${f.standardName}", Material.AIR)
+    override fun floor(f: Floor) = getEnum<Material>("Chess.Floor.${f.standardName}", Material.AIR)
 
     override val settingsBlocks: Map<String, Map<String, View>>
         get() = this["Settings"].childrenViews.orEmpty().mapValues { it.value.childrenViews.orEmpty() }

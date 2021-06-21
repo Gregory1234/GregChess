@@ -2,10 +2,42 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.variant.ChessVariant
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
+
+val ErrorConfig.rendererNotFound by ErrorConfig
+val ErrorConfig.teleportFailed by ErrorConfig
+
+val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
+
+val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
+val TitleConfig.yourTurn by TitleConfig
+
+val TitleConfig.spectatorDraw get() = getTitle("Spectator.ItWasADraw")
+val TitleConfig.spectatorWinner get() = BySides { getTitle("Spectator.${it.standardName}Won") }
+fun TitleConfig.spectator(winner: Side?) = winner?.let(spectatorWinner::get) ?: spectatorDraw
+
+val TitleConfig.youWon get() = getTitle("Player.YouWon")
+val TitleConfig.youDrew get() = getTitle("Player.YouDrew")
+val TitleConfig.youLost get() = getTitle("Player.YouLost")
+fun TitleConfig.winner(you: Side, winner: Side?) = when (winner) {
+    you -> youWon
+    null -> youDrew
+    else -> youLost
+}
+
+
+data class GameSettings(
+    val name: String,
+    val simpleCastling: Boolean,
+    val variant: ChessVariant,
+    val components: Collection<Component.Settings<*>>
+) {
+    inline fun <reified T : Component.Settings<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
+}
 
 class ChessGame(private val timeManager: TimeManager, val arena: Arena, val settings: GameSettings) {
     val uniqueId: UUID = UUID.randomUUID()
@@ -277,13 +309,6 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
 
     operator fun get(side: Side): ChessPlayer = require<GameState.WithPlayers>()[side]
 
-    fun <E> tryOrStopNull(expr: E?): E = try {
-        expr!!
-    } catch (e: NullPointerException) {
-        stop(EndReason.Error(e))
-        throw e
-    }
-
     fun finishMove(move: MoveCandidate) {
         requireRunning()
         val data = move.execute()
@@ -294,4 +319,11 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         nextTurn()
     }
 
+}
+
+fun <E> ChessGame.tryOrStopNull(expr: E?): E = try {
+    expr!!
+} catch (e: NullPointerException) {
+    stop(EndReason.Error(e))
+    throw e
 }

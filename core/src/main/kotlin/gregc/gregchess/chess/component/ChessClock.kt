@@ -12,8 +12,11 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
 
-    private fun View.timeFormat(time: Duration) = getTimeFormat("TimeFormat", time)
-    private val View.timeRemaining get() = getLocalizedString("TimeRemaining")
+    companion object {
+        private fun View.timeFormat(time: Duration) = getTimeFormat("TimeFormat", time)
+        private val View.timeRemaining get() = getLocalizedString("TimeRemaining")
+        private val ComponentsConfig.clock by ComponentsConfig
+    }
 
 
     data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
@@ -32,6 +35,8 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         override fun getComponent(game: ChessGame) = ChessClock(game, this)
 
         companion object {
+
+            private val SettingsConfig.clock by SettingsConfig
 
             operator fun get(name: String?) = when (name) {
                 "none" -> null

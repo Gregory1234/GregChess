@@ -120,30 +120,12 @@ val Block.loc: Loc
 val ErrorConfig.noPermission by ErrorConfig
 val ErrorConfig.notPlayer by ErrorConfig
 val ErrorConfig.playerNotFound by ErrorConfig
-val ErrorConfig.clockNotFound by ErrorConfig
-val ErrorConfig.engineNotFound by ErrorConfig
-val ErrorConfig.stockfishNotFound by ErrorConfig
-val ErrorConfig.pieceNotFound by ErrorConfig
-val ErrorConfig.gameNotFound by ErrorConfig
-val ErrorConfig.nothingToTakeback by ErrorConfig
 val ErrorConfig.wrongDurationFormat by ErrorConfig
 val ErrorConfig.youInGame get() = getError("InGame.You")
 val ErrorConfig.opponentInGame get() = getError("InGame.Opponent")
 val ErrorConfig.youNotInGame get() = getError("NotInGame.You")
 val ErrorConfig.playerNotInGame get() = getError("NotInGame.Player")
 val ErrorConfig.opponentNotHuman get() = getError("NotHuman.Opponent")
-
-val MessageConfig.boardOpDone by MessageConfig
-val MessageConfig.skippedTurn by MessageConfig
-val MessageConfig.timeOpDone by MessageConfig
-val MessageConfig.engineCommandSent by MessageConfig
-val MessageConfig.loadedFEN by MessageConfig
-val MessageConfig.configReloaded by MessageConfig
-val MessageConfig.levelSet by MessageConfig
-val MessageConfig.copyFEN by MessageConfig
-val MessageConfig.copyPGN by MessageConfig
-val MessageConfig.pawnPromotion by MessageConfig
-val MessageConfig.chooseSettings by MessageConfig
 
 
 fun cPerms(p: CommandSender, perm: String) {

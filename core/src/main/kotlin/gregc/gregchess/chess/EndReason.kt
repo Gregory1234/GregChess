@@ -2,6 +2,22 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 
+fun MessageConfig.gameFinished(w: Side?, a: String) =
+    getMessage("GameFinished." + (w?.standardName?.plus("Won") ?: "ItWasADraw"), a)
+
+val EndReasonConfig.checkmate by EndReasonConfig
+val EndReasonConfig.resignation by EndReasonConfig
+val EndReasonConfig.walkover by EndReasonConfig
+val EndReasonConfig.stalemate by EndReasonConfig
+val EndReasonConfig.insufficientMaterial by EndReasonConfig
+val EndReasonConfig.fiftyMoves by EndReasonConfig
+val EndReasonConfig.repetition by EndReasonConfig
+val EndReasonConfig.drawAgreement by EndReasonConfig
+val EndReasonConfig.timeout by EndReasonConfig
+val EndReasonConfig.drawTimeout by EndReasonConfig
+val EndReasonConfig.piecesLost by EndReasonConfig
+val EndReasonConfig.error by EndReasonConfig
+
 open class EndReason(
     val name: LocalizedString, val reasonPGN: String, val winner: Side? = null, val quick: Boolean = false
 ) {
@@ -24,10 +40,7 @@ open class EndReason(
     }
 
     val message
-        get() = LocalizedString { lang ->
-            winner?.let { Config.message.gameFinished(name.get(lang))[it].get(lang) }
-                ?: Config.message.gameFinishedDraw(name.get(lang)).get(lang)
-        }
+        get() = Localized { Config.message.gameFinished(winner, name.get(it)).get(it) }
 
     val winnerPGN
         get() = when (winner) {

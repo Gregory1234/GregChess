@@ -42,6 +42,10 @@ abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val ga
 
 }
 
+val MessageConfig.inCheck by MessageConfig
+
+val TitleConfig.inCheck by TitleConfig
+
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(side, silent, game) {
 

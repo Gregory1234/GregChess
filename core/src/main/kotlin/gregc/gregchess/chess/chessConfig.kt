@@ -32,9 +32,6 @@ interface SettingsConfig : ConfigBlock {
     fun getSettings(n: String): Map<String, View>
 }
 
-val SettingsConfig.clock by SettingsConfig
-val SettingsConfig.presets by SettingsConfig
-
 val Config.settings: SettingsConfig by Config
 
 interface ComponentsConfig : ConfigBlock {
@@ -49,10 +46,6 @@ interface ComponentsConfig : ConfigBlock {
 
 val Config.component: ComponentsConfig by Config
 
-val ComponentsConfig.clock by ComponentsConfig
-val ComponentsConfig.scoreboard by ComponentsConfig
-val ComponentsConfig.checkCounter by ComponentsConfig
-
 interface EndReasonConfig : ConfigBlock {
     companion object {
         operator fun getValue(owner: EndReasonConfig, property: KProperty<*>) =
@@ -63,19 +56,3 @@ interface EndReasonConfig : ConfigBlock {
 }
 
 val Config.endReason: EndReasonConfig by Config
-
-val EndReasonConfig.checkmate by EndReasonConfig
-val EndReasonConfig.resignation by EndReasonConfig
-val EndReasonConfig.walkover by EndReasonConfig
-val EndReasonConfig.stalemate by EndReasonConfig
-val EndReasonConfig.insufficientMaterial by EndReasonConfig
-val EndReasonConfig.fiftyMoves by EndReasonConfig
-val EndReasonConfig.repetition by EndReasonConfig
-val EndReasonConfig.drawAgreement by EndReasonConfig
-val EndReasonConfig.timeout by EndReasonConfig
-val EndReasonConfig.drawTimeout by EndReasonConfig
-val EndReasonConfig.piecesLost by EndReasonConfig
-val EndReasonConfig.error by EndReasonConfig
-val EndReasonConfig.atomic by EndReasonConfig
-val EndReasonConfig.kingOfTheHill by EndReasonConfig
-val EndReasonConfig.threeChecks by EndReasonConfig

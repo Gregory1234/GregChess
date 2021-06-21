@@ -1,7 +1,5 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.BySides
-import gregc.gregchess.chess.Side
 import java.time.Duration
 import java.time.LocalTime
 import java.util.*
@@ -24,8 +22,6 @@ val Config.error: ErrorConfig by Config
 
 val ErrorConfig.wrongArgumentsNumber by ErrorConfig
 val ErrorConfig.wrongArgument by ErrorConfig
-val ErrorConfig.rendererNotFound by ErrorConfig
-val ErrorConfig.teleportFailed by ErrorConfig
 
 interface MessageConfig : ConfigBlock {
     companion object {
@@ -38,11 +34,6 @@ interface MessageConfig : ConfigBlock {
 
 val Config.message: MessageConfig by Config
 
-val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
-fun MessageConfig.gameFinished(a: String) = BySides { getMessage("GameFinished.${it.standardName}Won", a) }
-fun MessageConfig.gameFinishedDraw(a: String) = getMessage("GameFinished.ItWasADraw", a)
-val MessageConfig.inCheck by MessageConfig
-
 
 interface TitleConfig : ConfigBlock {
     companion object {
@@ -54,23 +45,6 @@ interface TitleConfig : ConfigBlock {
 
 val Config.title: TitleConfig by Config
 
-
-val TitleConfig.inCheck by TitleConfig
-val TitleConfig.spectatorDraw get() = getTitle("Spectator.ItWasADraw")
-val TitleConfig.spectatorWinner get() = BySides { getTitle("Spectator.${it.standardName}Won") }
-fun TitleConfig.spectator(winner: Side?) = winner?.let(spectatorWinner::get) ?: spectatorDraw
-
-val TitleConfig.youWon get() = getTitle("Player.YouWon")
-val TitleConfig.youDrew get() = getTitle("Player.YouDrew")
-val TitleConfig.youLost get() = getTitle("Player.YouLost")
-fun TitleConfig.winner(you: Side, winner: Side?) = when (winner) {
-    you -> youWon
-    null -> youDrew
-    else -> youLost
-}
-
-val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
-val TitleConfig.yourTurn by TitleConfig
 
 class CommandException(val playerMsg: LocalizedString) : Exception() {
     override val message: String

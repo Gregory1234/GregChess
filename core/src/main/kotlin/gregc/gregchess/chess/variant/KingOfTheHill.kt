@@ -7,6 +7,8 @@ import gregc.gregchess.rangeTo
 
 object KingOfTheHill : ChessVariant("KingOfTheHill") {
 
+    private val EndReasonConfig.kingOfTheHill by EndReasonConfig
+
     class KingOfTheHillEndReason(winner: Side) : EndReason(Config.endReason.kingOfTheHill, "normal", winner)
 
     override fun chessboardSetup(board: Chessboard) {

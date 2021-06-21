@@ -5,7 +5,9 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
+    private val EndReasonConfig.threeChecks by EndReasonConfig
     private val View.checkCounter get() = getLocalizedString("CheckCounter")
+    private val ComponentsConfig.checkCounter by ComponentsConfig
 
     class CheckCounter(private val game: ChessGame) : Component {
         object Settings : Component.Settings<CheckCounter> {

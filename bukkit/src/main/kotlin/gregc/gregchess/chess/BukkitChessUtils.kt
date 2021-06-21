@@ -12,8 +12,9 @@ interface PieceTypeBukkitConfig : PieceTypeConfig {
 }
 
 interface BukkitChessConfig : ChessConfig {
-    fun getFloor(f: Floor): Material
+    fun floor(f: Floor): Material
     fun getBukkitPieceType(p: PieceType): PieceTypeBukkitConfig
+    override fun getPieceType(p: PieceType): PieceTypeConfig = getBukkitPieceType(p)
 }
 
 val Config.bukkitChess: BukkitChessConfig by Config
@@ -42,7 +43,7 @@ val PieceType.structure get() = bukkitConfig.structure
 
 val Piece.item get() = type.getItem(side)
 
-val Floor.material get() = Config.bukkitChess.getFloor(this)
+val Floor.material get() = Config.bukkitChess.floor(this)
 
 fun BoardPiece.getInfo() = buildTextComponent {
     append("Name: $standardName\n")
@@ -67,6 +68,3 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Variant: ${variant.name}\n")
     append("Components: ${getComponents().joinToString { it.javaClass.simpleName }}")
 }
-
-val EndReasonConfig.pluginRestart by EndReasonConfig
-val EndReasonConfig.arenaRemoved by EndReasonConfig

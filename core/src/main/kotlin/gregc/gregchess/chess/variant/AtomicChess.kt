@@ -7,6 +7,9 @@ import gregc.gregchess.chess.component.Component
 
 object AtomicChess : ChessVariant("Atomic") {
 
+
+    private val EndReasonConfig.atomic by EndReasonConfig
+
     class ExplosionManager(private val game: ChessGame) : Component {
         object Settings : Component.Settings<ExplosionManager> {
             override fun getComponent(game: ChessGame) = ExplosionManager(game)

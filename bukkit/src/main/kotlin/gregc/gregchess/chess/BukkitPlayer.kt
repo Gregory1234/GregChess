@@ -10,6 +10,8 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     companion object {
         private val bukkitPlayers = mutableMapOf<Player, BukkitPlayer>()
         fun toHuman(p: Player) = bukkitPlayers.getOrPut(p) { BukkitPlayer(p) }
+        private val MessageConfig.copyFEN by MessageConfig
+        private val MessageConfig.copyPGN by MessageConfig
     }
 
     override var isAdmin = false
@@ -55,6 +57,8 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
 
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"
 }
+
+val MessageConfig.pawnPromotion by MessageConfig
 
 suspend fun Player.openPawnPromotionMenu(moves: List<MoveCandidate>) =
     openMenu(Config.message.pawnPromotion, moves.mapIndexed { i, m ->
