@@ -168,7 +168,7 @@ class TestView(private val root: String) : View {
 }
 
 class TestSideConfig(override val side: Side, private val rootView: View) : SideConfig, View by rootView {
-    override fun pieceName(n: String) = getLocalizedString("Chess.Side.${side.standardName}.Piece", n)
+    override fun pieceName(n: String) = getLocalizedString("Piece", n)
 }
 
 class TestPieceTypeConfig(override val type: PieceType, private val rootView: View) :

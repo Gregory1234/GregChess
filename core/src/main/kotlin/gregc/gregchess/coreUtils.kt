@@ -4,7 +4,7 @@ import gregc.gregchess.chess.BySides
 import gregc.gregchess.chess.Side
 import java.time.Duration
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import java.util.*
 import kotlin.contracts.contract
 import kotlin.math.*
 import kotlin.reflect.KClass
@@ -176,30 +176,15 @@ fun parseDuration(s: String): Duration? {
 fun Duration.toLocalTime(): LocalTime =
     LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
 
-@JvmInline
-value class TimeFormat(private val formatter: DateTimeFormatter) {
-    constructor(format: String) : this(DateTimeFormatter.ofPattern(format))
-
-    operator fun invoke(time: LocalTime): String = time.format(formatter)
-    operator fun invoke(time: Duration): String = time.toLocalTime().format(formatter)
-}
-
 fun String.snakeToPascal(): String {
     val snakeRegex = "_[a-zA-Z]".toRegex()
     return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
 }
 
-fun String.numberedFormat(vararg args: Any?): String? {
-    var retNull = false
-    val ret = replace(Regex("""\$(?:(\d+)|\{(\d+)})""")) {
-        val i = it.groupValues[1].toIntOrNull() ?: it.groupValues.getOrNull(2)?.toIntOrNull()
-        if (i == null || i < 1 || i > args.size) {
-            retNull = true
-            ""
-        } else
-            args[i - 1].toString()
-    }
-    return if (retNull) null else ret
+fun String.formatOrNull(vararg args: Any?): String? = try {
+    format(*args)
+} catch (e: IllegalFormatException) {
+    null
 }
 
 data class Loc(val x: Int, val y: Int, val z: Int) {

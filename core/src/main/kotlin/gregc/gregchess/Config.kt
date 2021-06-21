@@ -1,6 +1,7 @@
 package gregc.gregchess
 
 import java.time.Duration
+import java.time.format.DateTimeFormatter
 import kotlin.reflect.*
 
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
@@ -95,7 +96,7 @@ typealias LocalizedString = Localized<String>
 fun View.getString(path: String) = getVal(path, "string", fullPath(path), true, ::processString)
 fun View.getOptionalString(path: String) = getVal(path, "string", null, false, ::processString)
 fun View.getLocalizedString(path: String, vararg args: Any?) = getLocal(path, "string", fullPath(path), false) {
-    it.numberedFormat(*args)?.let(::processString)
+    it.formatOrNull(*args)?.let(::processString)
 }
 fun View.getStringList(path: String) = getList(path, "string", true, ::processString)
 fun View.getDefaultBoolean(path: String, def: Boolean, warnMissing: Boolean = false) = getVal(path, "duration", def, warnMissing, String::toBooleanStrictOrNull)
@@ -105,7 +106,7 @@ fun View.getOptionalDuration(path: String) = getVal(path, "duration", null, fals
 fun View.getChar(path: String) = getVal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
 fun View.getLocalizedChar(path: String) = getLocal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
 fun View.getTimeFormat(path: String, time: Duration) = getVal(path, "time format", path, true) {
-    TimeFormat(it)(time)
+    DateTimeFormatter.ofPattern(it).format(time.toLocalTime())
 }
 fun <T: Enum<T>> View.getEnum(path: String, def: T, warnMissing: Boolean = true) = getVal(path, def::class.simpleName ?: "enum", def, warnMissing, enumValueOrNull(def::class))
 fun <T: Enum<T>> View.getEnumList(path: String, cl: KClass<T>) = getList(path, cl.simpleName ?: "enum", true, enumValueOrNull(cl))

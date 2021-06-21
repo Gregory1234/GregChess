@@ -8,15 +8,15 @@ Request:
   Duel:
     Sent:
       Request: "&eDuel request sent."
-      Cancel: "&eYou cancelled the duel with $1."
+      Cancel: "&eYou cancelled the duel with %s."
       Accept: "&aYou accepted the duel request."
     Received:
-      Request: "&e$1 challenges you to a chess game: $2."
-      Cancel: "&eDuel with $1 has been cancelled."
+      Request: "&e%1$s challenges you to a chess game: %2$s."
+      Cancel: "&eDuel with %s has been cancelled."
       Accept: "&aYour duel request has been accepted."
     Error:
       NotFound: "&cDuel request not found."
-    Expired: "&eDuel request with $1 has expired."
+    Expired: "&eDuel request with %s has expired."
     Duration: 5m
   Draw:
     Sent:
@@ -41,7 +41,7 @@ Request:
     Error:
       CannotSend: "&cIt is your turn!"
 Message:
-  Teleported: "&eTeleported to $1."
+  Teleported: "&eTeleported to %s."
   Teleporting: "&eTeleporting..."
   CopyFEN: "Copy FEN"
   CopyPGN: "Copy PGN"
@@ -59,9 +59,9 @@ Message:
     White: "&eYou are playing with the white pieces"
     Black: "&eYou are playing with the black pieces"
   GameFinished:
-    WhiteWon: "The game has finished! White won by $1."
-    BlackWon: "The game has finished! Black won by $1."
-    ItWasADraw: "The game has finished! It was a draw by $1."
+    WhiteWon: "The game has finished! White won by %s."
+    BlackWon: "The game has finished! Black won by %s."
+    ItWasADraw: "The game has finished! It was a draw by %s."
   Error:
     NoPerms: "&cYou do not have the permission to do that!"
     NotPlayer: "&cYou are not a player!"
@@ -93,7 +93,7 @@ Title:
   YouArePlayingAs:
     White: "&eYou are playing with the white pieces"
     Black: "&eYou are playing with the black pieces"
-  YouArePlayingAgainst: "&eYou are playing against &c$1"
+  YouArePlayingAgainst: "&eYou are playing against &c%s"
   Player:
     YouWon: "&aYou won"
     YouLost: "&cYou lost"
@@ -108,11 +108,11 @@ Chess:
     White:
       Name: "White"
       Char: 'w'
-      Piece: "&bWhite $1"
+      Piece: "&bWhite %s"
     Black:
       Name: "Black"
       Char: 'b'
-      Piece: "&bBlack $1"
+      Piece: "&bBlack %s"
   Floor:
     Light: BIRCH_PLANKS
     Dark: SPRUCE_PLANKS
@@ -243,9 +243,9 @@ Component:
     Player: "player"
     PlayerPrefix: "&b"
     Format:
-      General: "$1: "
-      White: "White $1: "
-      Black: "Black $1: "
+      General: "%s: "
+      White: "White %s: "
+      Black: "Black %s: "
   Clock:
     TimeRemainingSimple: "Time remaining"
     TimeRemaining: "time"
