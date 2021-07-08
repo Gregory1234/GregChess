@@ -83,14 +83,6 @@ fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
 
 fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
 
-fun <T : Enum<T>> enumValueOrNull(cl: KClass<T>): (String) -> T? = { s ->
-    try {
-        java.lang.Enum.valueOf(cl.java, s.uppercase())
-    } catch (e: IllegalArgumentException) {
-        null
-    }
-}
-
 operator fun <E> List<E>.component6(): E = this[5]
 
 fun isValidUUID(s: String) =

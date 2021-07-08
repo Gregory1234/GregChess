@@ -108,6 +108,9 @@ fun View.getLocalizedChar(path: String) = getLocal(path, "char", ' ', true) { if
 fun View.getTimeFormat(path: String, time: Duration) = getVal(path, "time format", path, true) {
     DateTimeFormatter.ofPattern(it).format(time.toLocalTime())
 }
-fun <T: Enum<T>> View.getEnum(path: String, def: T, warnMissing: Boolean = true) = getVal(path, def::class.simpleName ?: "enum", def, warnMissing, enumValueOrNull(def::class))
-fun <T: Enum<T>> View.getEnumList(path: String, cl: KClass<T>) = getList(path, cl.simpleName ?: "enum", true, enumValueOrNull(cl))
-inline fun <reified T: Enum<T>> View.getEnumList(path: String) = getEnumList(path, T::class)
+inline fun <reified T: Enum<T>> View.getEnum(path: String, def: T, warnMissing: Boolean = true) = getVal(path, def::class.simpleName ?: "enum", def, warnMissing) {
+    enumValueOf(it)
+}
+inline fun <reified T: Enum<T>> View.getEnumList(path: String) = getList(path, T::class.simpleName ?: "enum", true) {
+    enumValueOf<T>(it)
+}

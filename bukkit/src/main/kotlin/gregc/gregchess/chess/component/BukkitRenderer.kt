@@ -99,8 +99,8 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
     }
 
     private fun BukkitPlayer.reset(d: PlayerData = defData) {
-        player.playerData = d
         player.teleport(spawnLocation.toLocation(this@BukkitRenderer.world))
+        player.playerData = d
         game[this]?.held?.let { setItem(0, it.piece) }
     }
 

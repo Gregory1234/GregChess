@@ -61,7 +61,7 @@ abstract class MoveCandidate(
         } else if (control != null)
             append(piece.pos.fileStr)
         if (captured != null)
-            append(Config.chess.capture)
+            append(Config.chess.capture.get(lang))
         promotion?.let { p -> append(p.type.char.get(lang).uppercaseChar()) }
         append(target.pos)
     }
