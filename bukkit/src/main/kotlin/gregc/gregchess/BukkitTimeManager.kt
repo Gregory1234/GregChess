@@ -21,7 +21,7 @@ object BukkitTimeManager : TimeManager {
             override fun run() {
                 callback()
             }
-        }.runTaskLater(GregChess.INSTANCE, delay.toTicks())
+        }.runTaskLater(GregChess.plugin, delay.toTicks())
     }
 
     override fun runTaskTimer(delay: Duration, period: Duration, callback: TimeManager.CancellableContext.() -> Unit) {
@@ -30,10 +30,10 @@ object BukkitTimeManager : TimeManager {
             override fun run() {
                 cc.callback()
             }
-        }.runTaskTimer(GregChess.INSTANCE, delay.toTicks(), period.toTicks())
+        }.runTaskTimer(GregChess.plugin, delay.toTicks(), period.toTicks())
     }
 
     override fun runTaskAsynchronously(callback: () -> Unit) {
-        Bukkit.getScheduler().runTaskAsynchronously(GregChess.INSTANCE, callback)
+        Bukkit.getScheduler().runTaskAsynchronously(GregChess.plugin, callback)
     }
 }

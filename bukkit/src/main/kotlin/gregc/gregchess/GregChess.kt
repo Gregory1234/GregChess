@@ -3,6 +3,7 @@ package gregc.gregchess
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.GameEndEvent
 import gregc.gregchess.chess.component.TurnEndEvent
+import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -13,32 +14,44 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-@Suppress("unused")
-class GregChess : JavaPlugin(), Listener {
+object GregChess : Listener {
+    class Plugin : JavaPlugin() {
+        companion object {
+            lateinit var INSTANCE: Plugin
+                private set
+        }
 
-    companion object {
-        lateinit var INSTANCE: GregChess
-            private set
-        private val ErrorConfig.clockNotFound by ErrorConfig
-        private val ErrorConfig.engineNotFound by ErrorConfig
-        private val ErrorConfig.stockfishNotFound by ErrorConfig
-        private val ErrorConfig.pieceNotFound by ErrorConfig
-        private val ErrorConfig.gameNotFound by ErrorConfig
-        private val ErrorConfig.nothingToTakeback by ErrorConfig
+        init {
+            INSTANCE = this
+            Config.initBukkit { config }
+        }
 
-        private val MessageConfig.boardOpDone by MessageConfig
-        private val MessageConfig.skippedTurn by MessageConfig
-        private val MessageConfig.timeOpDone by MessageConfig
-        private val MessageConfig.engineCommandSent by MessageConfig
-        private val MessageConfig.loadedFEN by MessageConfig
-        private val MessageConfig.configReloaded by MessageConfig
-        private val MessageConfig.levelSet by MessageConfig
+        override fun onEnable() {
+            GregChess.onEnable()
+        }
+
+        override fun onDisable() {
+            GregChess.onDisable()
+        }
     }
 
-    init {
-        INSTANCE = this
-        Config.initBukkit { config }
-    }
+    val plugin
+        get() = Plugin.INSTANCE
+
+    private val ErrorConfig.clockNotFound by ErrorConfig
+    private val ErrorConfig.engineNotFound by ErrorConfig
+    private val ErrorConfig.stockfishNotFound by ErrorConfig
+    private val ErrorConfig.pieceNotFound by ErrorConfig
+    private val ErrorConfig.gameNotFound by ErrorConfig
+    private val ErrorConfig.nothingToTakeback by ErrorConfig
+
+    private val MessageConfig.boardOpDone by MessageConfig
+    private val MessageConfig.skippedTurn by MessageConfig
+    private val MessageConfig.timeOpDone by MessageConfig
+    private val MessageConfig.engineCommandSent by MessageConfig
+    private val MessageConfig.loadedFEN by MessageConfig
+    private val MessageConfig.configReloaded by MessageConfig
+    private val MessageConfig.levelSet by MessageConfig
 
     private val drawRequest = BukkitRequestManager.register("draw", "/chess draw", "/chess draw")
 
@@ -46,10 +59,10 @@ class GregChess : JavaPlugin(), Listener {
 
     private val duelRequest = BukkitRequestManager.register("duel", "/chess duel accept", "/chess duel cancel")
 
-    override fun onEnable() {
+    fun onEnable() {
         registerEvents()
-        saveDefaultConfig()
-        run {
+        plugin.saveDefaultConfig()
+        with (plugin) {
             glog += JavaGregLogger(logger)
             if (File(dataFolder.absolutePath + "/logs").mkdir()) {
                 val now = DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
@@ -61,7 +74,7 @@ class GregChess : JavaPlugin(), Listener {
         BukkitChessGameManager.start()
         BukkitArenaManager.start()
         BukkitRequestManager.start()
-        addCommand("chess") {
+        plugin.addCommand("chess") {
             when (nextArg().lowercase()) {
                 "duel" -> {
                     cPlayer(player)
@@ -241,15 +254,15 @@ class GregChess : JavaPlugin(), Listener {
                 "reload" -> {
                     cPerms(player, "greg-chess.admin")
                     endArgs()
-                    reloadConfig()
+                    plugin.reloadConfig()
                     BukkitArenaManager.reload()
                     player.sendMessage(Config.message.configReloaded.get(player.lang))
                 }
                 "dev" -> {
-                    cRequire(server.pluginManager.isPluginEnabled("DevHelpPlugin"), Config.error.wrongArgument)
+                    cRequire(Bukkit.getPluginManager().isPluginEnabled("DevHelpPlugin"), Config.error.wrongArgument)
                     cPerms(player, "greg-chess.admin")
                     endArgs()
-                    server.dispatchCommand(player, "devhelp GregChess ${description.version}")
+                    Bukkit.dispatchCommand(player, "devhelp GregChess ${plugin.description.version}")
                 }
                 "undo" -> {
                     cPlayer(player)
@@ -293,7 +306,7 @@ class GregChess : JavaPlugin(), Listener {
                 else -> cWrongArgument()
             }
         }
-        addCommandTab("chess") {
+        plugin.addCommandTab("chess") {
             fun <T> ifPermission(perm: String, vararg list: T) =
                 if (player.hasPermission(perm)) list.map { it.toString() } else emptyList()
 
@@ -364,7 +377,7 @@ class GregChess : JavaPlugin(), Listener {
             else -> throw CommandException(Config.error.wrongArgumentsNumber)
         }
 
-    override fun onDisable() {
+    fun onDisable() {
         BukkitChessGameManager.stop()
     }
 

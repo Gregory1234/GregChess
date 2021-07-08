@@ -171,4 +171,4 @@ inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
 
 val CommandSender.lang get() = (this as? Player)?.human?.lang ?: DEFAULT_LANG
 
-fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.INSTANCE)
+fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
