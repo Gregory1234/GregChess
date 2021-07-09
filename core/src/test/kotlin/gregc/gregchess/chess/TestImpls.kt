@@ -171,30 +171,12 @@ class TestView(private val root: String) : View {
     override fun fullPath(path: String): String = root addDot path
 }
 
-class TestSideConfig(override val side: Side, private val rootView: View) : SideConfig, View by rootView {
-    override fun pieceName(n: String) = getLocalizedString("Piece", n)
-}
-
-class TestPieceTypeConfig(override val type: PieceType, private val rootView: View) :
-    PieceTypeConfig, View by rootView {
-
-    override val name get() = getLocalizedString("Name")
-    override val char get() = getLocalizedChar("Char")
-}
-
 class TestConfig(private val rootView: TestView) :
-    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig,
-    ChessConfig, ComponentsConfig, SettingsConfig,
+    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, ComponentsConfig, SettingsConfig,
     View by rootView {
     override fun getError(s: String) = getLocalizedString("Message.Error.$s")
 
     override val chessArenas get() = getStringList("ChessArenas")
-
-    override fun getPieceType(p: PieceType) = TestPieceTypeConfig(p, this["Chess.Piece.${p.standardName}"])
-
-    override fun getSide(s: Side) = TestSideConfig(s, this["Chess.Side.${s.standardName}"])
-
-    override val capture get() = getLocalizedString("Chess.Capture")
 
     override val settingsBlocks: Map<String, Map<String, View>>
         get() = this["Settings"].childrenViews.orEmpty().mapValues { it.value.childrenViews.orEmpty() }

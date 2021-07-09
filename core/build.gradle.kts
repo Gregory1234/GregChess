@@ -5,7 +5,7 @@ plugins {
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
-    testImplementation("io.mockk:mockk:1.11.0")
+    testImplementation("io.mockk:mockk:1.12.0")
 }
 
 tasks {
