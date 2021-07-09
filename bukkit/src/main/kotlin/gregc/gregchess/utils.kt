@@ -170,5 +170,15 @@ inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
     BuildTextComponentScope().apply(f).returnValue
 
 val CommandSender.lang get() = (this as? Player)?.human?.lang ?: DEFAULT_LANG
+fun CommandSender.sendMessage(s: LocalizedString) = sendMessage(s.get(lang))
+fun CommandSender.sendCommandMessage(msg: String, action: String, command: String) {
+    spigot().sendMessage(buildTextComponent {
+        append(msg)
+        append(" ")
+        append(action, ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
+    })
+}
+fun CommandSender.sendCommandMessage(msg: LocalizedString, action: LocalizedString, command: String) =
+    sendCommandMessage(msg.get(lang), action.get(lang), command)
 
 fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)

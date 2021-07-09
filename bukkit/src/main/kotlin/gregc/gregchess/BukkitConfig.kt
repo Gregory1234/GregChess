@@ -32,38 +32,11 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
     override fun fullPath(path: String): String = root addDot path
 }
 
-class BukkitRequestTypeConfig(override val name: String, private val rootView: View) :
-    RequestTypeConfig, View by rootView {
-
-    override fun expired(a1: String) = getLocalizedString("Expired", a1)
-    override val duration get() = getOptionalDuration("Duration")
-
-    override val sentRequest get() = getLocalizedString("Sent.Request")
-    override fun sentCancel(a1: String) = getLocalizedString("Sent.Cancel", a1)
-    override fun sentAccept(a1: String) = getLocalizedString("Sent.Accept", a1)
-
-    override fun receivedRequest(a1: String, a2: String) = getLocalizedString("Received.Request", a1, a2)
-    override fun receivedCancel(a1: String) = getLocalizedString("Received.Cancel", a1)
-    override fun receivedAccept(a1: String) = getLocalizedString("Received.Accept", a1)
-
-    override val notFound get() = getLocalizedString("Error.NotFound")
-    override val cannotSend get() = getLocalizedString("Error.CannotSend")
-
-}
-
 class BukkitConfig(private val rootView: BukkitView) :
-    ErrorConfig, MessageConfig, TitleConfig,
-    RequestConfig, ArenasConfig, StockfishConfig,
-    ComponentsConfig, SettingsConfig,
+    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, StockfishConfig, ComponentsConfig, SettingsConfig,
     View by rootView {
 
     override fun getError(s: String) = getLocalizedString("Message.Error.$s")
-
-    override val accept get() = getLocalizedString("Request.Accept")
-    override val cancel get() = getLocalizedString("Request.Cancel")
-    override val selfAccept get() = getDefaultBoolean("Request.SelfAccept", true)
-
-    override fun getRequestType(t: String) = BukkitRequestTypeConfig(t, this["Request.$t"])
 
     override val chessArenas get() = getStringList("ChessArenas")
 

@@ -84,3 +84,5 @@ suspend fun Player.openPawnPromotionMenu(moves: List<MoveCandidate>) =
 val HumanPlayer.chess get() = this.currentGame?.get(this)
 
 val Player.human get() = BukkitPlayer.toHuman(this)
+
+val HumanPlayer.bukkit get() = (this as BukkitPlayer).player

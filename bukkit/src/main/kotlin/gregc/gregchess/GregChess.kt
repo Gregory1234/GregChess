@@ -53,11 +53,11 @@ object GregChess : Listener {
     private val MessageConfig.configReloaded by MessageConfig
     private val MessageConfig.levelSet by MessageConfig
 
-    private val drawRequest = BukkitRequestManager.register("draw", "/chess draw", "/chess draw")
+    private val drawRequest = RequestManager.register("Draw", "/chess draw", "/chess draw")
 
-    private val takebackRequest = BukkitRequestManager.register("takeback", "/chess undo", "/chess undo")
+    private val takebackRequest = RequestManager.register("Takeback", "/chess undo", "/chess undo")
 
-    private val duelRequest = BukkitRequestManager.register("duel", "/chess duel accept", "/chess duel cancel")
+    private val duelRequest = RequestManager.register("Duel", "/chess duel accept", "/chess duel cancel")
 
     private fun CommandArgs.perms(c: String = latestArg().lowercase()) = cPerms(player, "greg-chess.chess.$c")
 
@@ -75,7 +75,7 @@ object GregChess : Listener {
         }
         BukkitChessGameManager.start()
         BukkitArenaManager.start()
-        BukkitRequestManager.start()
+        RequestManager.start()
         plugin.addCommand("chess") {
             when (nextArg().lowercase()) {
                 "duel" -> {
@@ -85,12 +85,12 @@ object GregChess : Listener {
                     when (nextArg().lowercase()) {
                         "accept" -> {
                             cWrongArgument {
-                                duelRequest.accept(player.human, UUID.fromString(lastArg()))
+                                duelRequest.accept(player, UUID.fromString(lastArg()))
                             }
                         }
                         "cancel" -> {
                             cWrongArgument {
-                                duelRequest.cancel(player.human, UUID.fromString(lastArg()))
+                                duelRequest.cancel(player, UUID.fromString(lastArg()))
                             }
                         }
                         else -> {
@@ -100,7 +100,7 @@ object GregChess : Listener {
                             interact {
                                 val settings = player.openSettingsMenu()
                                 if (settings != null) {
-                                    val res = duelRequest.call(RequestData(player.human, opponent.human, settings.name))
+                                    val res = duelRequest.call(RequestData(player, opponent, settings.name))
                                     if (res == RequestResponse.ACCEPT) {
                                         ChessGame(BukkitTimeManager, BukkitArenaManager.cNext(), settings).addPlayers {
                                             human(player.human, Side.WHITE, player == opponent)
@@ -147,8 +147,8 @@ object GregChess : Listener {
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val opponent: HumanChessPlayer = cCast(p.opponent, Config.error.opponentNotHuman)
                     interact {
-                        drawRequest.invalidSender(player.human) { !p.hasTurn }
-                        val res = drawRequest.call(RequestData(player.human, opponent.player, ""), true)
+                        drawRequest.invalidSender(player) { !p.hasTurn }
+                        val res = drawRequest.call(RequestData(player, opponent.player.bukkit, ""), true)
                         if (res == RequestResponse.ACCEPT) {
                             p.game.stop(EndReason.DrawAgreement())
                         }
@@ -281,10 +281,10 @@ object GregChess : Listener {
                     cNotNull(p.game.board.lastMove, Config.error.nothingToTakeback)
                     val opponent: HumanChessPlayer = cCast(p.opponent, Config.error.opponentNotHuman)
                     interact {
-                        drawRequest.invalidSender(player.human) {
+                        drawRequest.invalidSender(player) {
                             (p.game.currentOpponent as? HumanChessPlayer)?.player != player.human
                         }
-                        val res = takebackRequest.call(RequestData(player.human, opponent.player, ""), true)
+                        val res = takebackRequest.call(RequestData(player, opponent.player.bukkit, ""), true)
                         if (res == RequestResponse.ACCEPT) {
                             p.game.board.undoLastMove()
                         }
@@ -398,16 +398,16 @@ object GregChess : Listener {
     @EventHandler
     fun onTurnEnd(e: TurnEndEvent) {
         if (e.player is HumanChessPlayer) {
-            drawRequest.quietRemove(e.player.player)
-            takebackRequest.quietRemove(e.player.player)
+            drawRequest.quietRemove(e.player.player.bukkit)
+            takebackRequest.quietRemove(e.player.player.bukkit)
         }
     }
 
     @EventHandler
     fun onGameEnd(e: GameEndEvent) {
         e.game.players.forEachReal {
-            drawRequest.quietRemove(it)
-            takebackRequest.quietRemove(it)
+            drawRequest.quietRemove(it.bukkit)
+            takebackRequest.quietRemove(it.bukkit)
         }
     }
 
