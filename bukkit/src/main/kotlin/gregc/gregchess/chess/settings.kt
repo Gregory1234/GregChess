@@ -9,15 +9,21 @@ import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
-    private val SettingsConfig.presets by SettingsConfig
+    fun getClockSettings(): Map<String, ChessClock.Settings> =
+        config["Settings.Clock"].childrenViews.orEmpty().mapValues { (_, it) ->
+            val t = it.getEnum("Type", ChessClock.Type.INCREMENT, false)
+            val initial = it.getDuration("Initial")
+            val increment = if (t.usesIncrement) it.getDuration("increment") else 0.seconds
+            ChessClock.Settings(t, initial, increment)
+        }
 
     fun getSettings(): List<GameSettings> =
-        Config.settings.presets.map { (key, child) ->
+        config["Settings.Presets"].childrenViews.orEmpty().map { (key, child) ->
             val simpleCastling = child.getDefaultBoolean("SimpleCastling", false)
             val variant = ChessVariant[child.getOptionalString("Variant")]
             val components = buildList {
                 this += Chessboard.Settings[child.getOptionalString("Board")]
-                ChessClock.Settings[child.getOptionalString("Clock")]?.let { this += it }
+                ChessClock.Settings.get(getClockSettings(), child.getOptionalString("Clock"))?.let { this += it }
                 val tileSize = child.getDefaultInt("TileSize", 3)
                 this += BukkitRenderer.Settings(tileSize)
                 this += BukkitScoreboardManager.Settings

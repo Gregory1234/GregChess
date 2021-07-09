@@ -1,12 +1,9 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
-    private val View.checkCounter get() = getLocalizedString("CheckCounter")
-    private val ComponentsConfig.checkCounter by ComponentsConfig
 
     class CheckCounter(private val game: ChessGame) : Component {
         object Settings : Component.Settings<CheckCounter> {
@@ -17,7 +14,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
 
         @GameEvent(GameBaseEvent.START)
         fun start() {
-            game.scoreboard.player(Config.component.checkCounter.checkCounter) { checks[it].toString() }
+            game.scoreboard.player("CheckCounter") { checks[it].toString() }
         }
 
         @GameEvent(GameBaseEvent.END_TURN)

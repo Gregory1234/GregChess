@@ -1,7 +1,9 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.ArenasConfig
+import gregc.gregchess.chess.StockfishConfig
 import org.bukkit.configuration.file.FileConfiguration
+import java.time.Duration
 
 fun Config.initBukkit(c: BukkitConfigProvider) {
     this += BukkitConfig(BukkitView(c, ""))
@@ -33,20 +35,11 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
 }
 
 class BukkitConfig(private val rootView: BukkitView) :
-    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, StockfishConfig, ComponentsConfig, SettingsConfig,
-    View by rootView {
+    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, StockfishConfig, TimeFormatConfig, View by rootView {
 
     override fun getError(s: String) = getLocalizedString("Message.Error.$s")
 
     override val chessArenas get() = getStringList("ChessArenas")
-
-    override val settingsBlocks: Map<String, Map<String, View>>
-        get() = this["Settings"].childrenViews.orEmpty().mapValues { it.value.childrenViews.orEmpty() }
-
-    override fun getSettings(n: String): Map<String, View> = this["Settings.$n"].childrenViews.orEmpty()
-
-    override val componentBlocks get() = this["Component"].childrenViews.orEmpty()
-    override fun getComponent(n: String) = this["Component.$n"]
 
     override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
 
@@ -55,6 +48,8 @@ class BukkitConfig(private val rootView: BukkitView) :
     override val hasStockfish get() = getDefaultBoolean("Chess.HasStockfish", false)
     override val stockfishCommand get() = getString("Chess.Stockfish.Path")
     override val engineName get() = getString("Chess.Stockfish.Name")
+
+    override fun formatTime(time: Duration) = getTimeFormat("TimeFormat", time)
 
 }
 

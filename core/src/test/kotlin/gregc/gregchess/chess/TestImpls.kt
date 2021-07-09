@@ -45,7 +45,7 @@ fun testSettings(
 ): GameSettings {
     val components = buildList {
         this += Chessboard.Settings[board]
-        ChessClock.Settings[clock]?.let { this += it }
+        ChessClock.Settings.get(emptyMap(), clock)?.let { this += it }
         this += TestScoreboard.Settings
         this.addAll(extra)
     }
@@ -172,19 +172,10 @@ class TestView(private val root: String) : View {
 }
 
 class TestConfig(private val rootView: TestView) :
-    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, ComponentsConfig, SettingsConfig,
-    View by rootView {
+    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, View by rootView {
     override fun getError(s: String) = getLocalizedString("Message.Error.$s")
 
     override val chessArenas get() = getStringList("ChessArenas")
-
-    override val settingsBlocks: Map<String, Map<String, View>>
-        get() = this["Settings"].childrenViews.orEmpty().mapValues { it.value.childrenViews.orEmpty() }
-
-    override fun getSettings(n: String): Map<String, View> = this["Settings.$n"].childrenViews.orEmpty()
-
-    override val componentBlocks get() = this["Component"].childrenViews.orEmpty()
-    override fun getComponent(n: String) = this["Component.$n"]
 
     override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
 

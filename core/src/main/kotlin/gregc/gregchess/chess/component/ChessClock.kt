@@ -12,12 +12,6 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
 
-    companion object {
-        private fun View.timeFormat(time: Duration) = getTimeFormat("TimeFormat", time)
-        private val View.timeRemaining get() = getLocalizedString("TimeRemaining")
-        private val ComponentsConfig.clock by ComponentsConfig
-    }
-
 
     data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
         Component.Settings<ChessClock> {
@@ -36,18 +30,10 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
 
         companion object {
 
-            private val SettingsConfig.clock by SettingsConfig
-
-            operator fun get(name: String?) = when (name) {
+            fun get(settings: Map<String, Settings>, name: String?) = when (name) {
                 "none" -> null
                 null -> null
                 else -> {
-                    val settings = Config.settings.clock.mapValues { (_, it) ->
-                        val t = it.getEnum("Type", Type.INCREMENT, false)
-                        val initial = it.getDuration("Initial")
-                        val increment = if (t.usesIncrement) it.getDuration("increment") else 0.seconds
-                        Settings(t, initial, increment)
-                    }
                     if (name in settings)
                         settings[name]
                     else {
@@ -67,8 +53,6 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
             }
         }
     }
-
-    private val view get() = Config.component.clock
 
     data class Time(
         var diff: Duration,
@@ -106,16 +90,16 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     fun getTimeRemaining(s: Side) =
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
-    private fun format(time: Duration) = view.timeFormat(time)
+    private fun format(time: Duration) = Config.time.formatTime(time)
 
     @GameEvent(GameBaseEvent.START)
     fun start() {
 
         if (settings.type == Type.FIXED) {
-            game.scoreboard.game(view.timeRemaining) { format(getTimeRemaining(game.currentTurn)) }
+            game.scoreboard.game("TimeRemainingSimple") { format(getTimeRemaining(game.currentTurn)) }
             startTimer()
         } else {
-            game.scoreboard.player(view.timeRemaining) { format(getTimeRemaining(it)) }
+            game.scoreboard.player("TimeRemaining") { format(getTimeRemaining(it)) }
         }
     }
 

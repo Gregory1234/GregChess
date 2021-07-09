@@ -5,7 +5,6 @@ import java.time.LocalTime
 import java.util.*
 import kotlin.contracts.contract
 import kotlin.math.*
-import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 const val DEFAULT_LANG = "en_US"
@@ -97,6 +96,12 @@ operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 
 fun String.upperFirst() = replaceFirstChar { it.uppercase() }
 fun String.lowerFirst() = replaceFirstChar { it.lowercase() }
+
+interface TimeFormatConfig: ConfigBlock {
+    fun formatTime(time: Duration): String
+}
+
+val Config.time: TimeFormatConfig by Config
 
 fun Duration.toTicks(): Long = toMillis() / 50
 

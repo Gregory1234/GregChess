@@ -1,5 +1,6 @@
 ChessArenas:
   arena1
+TimeFormat: "mm:ss.S"
 
 Request:
   Accept: "&a[Accept]"
@@ -235,19 +236,16 @@ Chess:
     KingOfTheHill: "king of the hill"
     Atomic: "explosion"
     PiecesLost: "all pieces lost"
-Component:
-  Scoreboard:
-    Title: "GregChess game"
-    Preset: "Preset"
-    Player: "player"
-    PlayerPrefix: "&b"
-    Format:
-      General: "%s: "
-      White: "White %s: "
-      Black: "Black %s: "
-  Clock:
-    TimeRemainingSimple: "Time remaining"
-    TimeRemaining: "time"
-    TimeFormat: "mm:ss.S"
-  CheckCounter:
-    CheckCounter: "check counter"
+
+Scoreboard:
+  Title: "GregChess game"
+  Preset: "Preset"
+  Player: "player"
+  PlayerPrefix: "&b"
+  Format:
+    General: "%s: "
+    White: "White %s: "
+    Black: "Black %s: "
+  CheckCounter: "check counter"
+  TimeRemaining: "time"
+  TimeRemainingSimple: "Time remaining"
