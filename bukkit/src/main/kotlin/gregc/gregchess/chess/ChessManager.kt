@@ -54,7 +54,7 @@ object BukkitChessGameManager : ChessGameManager, Listener {
         val games = player.games
         cRequire(games.isNotEmpty() || player.isSpectating(), Config.error.youNotInGame)
         games.forEach { g ->
-            g.stop(EndReason.Walkover(!g[player]!!.side), BySides { it != g[player]!!.side })
+            g.stop(EndReason.Walkover(!g[player]!!.side), BySides { it == g[player]!!.side })
         }
         player.spectatedGame = null
     }
