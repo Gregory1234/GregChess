@@ -16,19 +16,6 @@ val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.
 val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
 val TitleConfig.yourTurn by TitleConfig
 
-val TitleConfig.spectatorDraw get() = getTitle("Spectator.ItWasADraw")
-val TitleConfig.spectatorWinner get() = BySides { getTitle("Spectator.${it.standardName}Won") }
-fun TitleConfig.spectator(winner: Side?) = winner?.let(spectatorWinner::get) ?: spectatorDraw
-
-val TitleConfig.youWon get() = getTitle("Player.YouWon")
-val TitleConfig.youDrew get() = getTitle("Player.YouDrew")
-val TitleConfig.youLost get() = getTitle("Player.YouLost")
-fun TitleConfig.winner(you: Side, winner: Side?) = when (winner) {
-    you -> youWon
-    null -> youDrew
-    else -> youLost
-}
-
 
 data class GameSettings(
     val name: String,
@@ -262,16 +249,14 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             components.allStop()
             players.forEachUnique(currentTurn) {
                 interact {
-                    it.sendTitle(Config.title.winner(it.side, reason.winner), reason.name)
-                    it.sendMessage(reason.message)
+                    it.player.showEndReason(it.side, reason)
                     timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
                     components.allRemovePlayer(it.player)
                 }
             }
             spectators.forEach {
                 interact {
-                    it.sendTitle(Config.title.spectator(reason.winner), reason.name)
-                    it.sendMessage(reason.message)
+                    it.showEndReason(reason)
                     timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
                     components.allSpectatorLeave(it)
                 }

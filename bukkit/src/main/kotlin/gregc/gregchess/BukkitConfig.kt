@@ -70,7 +70,7 @@ class BukkitPieceTypeConfig(override val type: PieceType, private val rootView: 
 class BukkitConfig(private val rootView: BukkitView) :
     ErrorConfig, MessageConfig, TitleConfig,
     RequestConfig, ArenasConfig, StockfishConfig,
-    BukkitChessConfig, ComponentsConfig, EndReasonConfig, SettingsConfig,
+    BukkitChessConfig, ComponentsConfig, SettingsConfig,
     View by rootView {
 
     override fun getError(s: String) = getLocalizedString("Message.Error.$s")
@@ -98,8 +98,6 @@ class BukkitConfig(private val rootView: BukkitView) :
     override val componentBlocks get() = this["Component"].childrenViews.orEmpty()
     override fun getComponent(n: String) = this["Component.$n"]
 
-    override fun getEndReason(n: String) = getLocalizedString("Chess.EndReason.$n")
-
     override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
 
     override fun getTitle(s: String) = getLocalizedString("Title.$s")
@@ -109,3 +107,6 @@ class BukkitConfig(private val rootView: BukkitView) :
     override val engineName get() = getString("Chess.Stockfish.Name")
 
 }
+
+val config: BukkitConfig
+    get() = Config.get()!!

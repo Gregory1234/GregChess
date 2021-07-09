@@ -5,7 +5,6 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
-    private val EndReasonConfig.threeChecks by EndReasonConfig
     private val View.checkCounter get() = getLocalizedString("CheckCounter")
     private val ComponentsConfig.checkCounter by ComponentsConfig
 
@@ -35,7 +34,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         }
     }
 
-    class ThreeChecksEndReason(winner: Side) : EndReason(Config.endReason.threeChecks, "normal", winner)
+    class ThreeChecksEndReason(winner: Side) : EndReason("ThreeChecks", "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

@@ -80,9 +80,11 @@ val View.childrenViews: Map<String, View>? get() = children?.associateWith { thi
 
 fun <T> View.getVal(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?): T =
     getPureString(path).getVal(fullPath(path), type, default, warnMissing, parser)
-fun <T> View.getLocal(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?) =
+fun <T> View.getLocal(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String, String) -> T?) =
     Localized { lang ->
-        getPureLocalizedString(path, lang).getVal("$lang/${fullPath(path)}", type, default, warnMissing, parser)
+        getPureLocalizedString(path, lang).getVal("$lang/${fullPath(path)}", type, default, warnMissing) {
+            parser(it, lang)
+        }
     }
 fun <T> View.getList(path: String, type: String, warnMissing: Boolean = true, parser: (String) -> T?): List<T> =
     getPureStringList(path).getList(fullPath(path), type, warnMissing, parser)
@@ -95,8 +97,8 @@ typealias LocalizedString = Localized<String>
 
 fun View.getString(path: String) = getVal(path, "string", fullPath(path), true, ::processString)
 fun View.getOptionalString(path: String) = getVal(path, "string", null, false, ::processString)
-fun View.getLocalizedString(path: String, vararg args: Any?) = getLocal(path, "string", fullPath(path), false) {
-    it.formatOrNull(*args)?.let(::processString)
+fun View.getLocalizedString(path: String, vararg args: Any?) = getLocal(path, "string", fullPath(path), false) { t, lang ->
+    t.formatOrNull(*args.map {if (it is Localized<*>) it.get(lang) else it}.toTypedArray())?.let(::processString)
 }
 fun View.getStringList(path: String) = getList(path, "string", true, ::processString)
 fun View.getDefaultBoolean(path: String, def: Boolean, warnMissing: Boolean = false) = getVal(path, "duration", def, warnMissing, String::toBooleanStrictOrNull)
@@ -104,7 +106,7 @@ fun View.getDefaultInt(path: String, def: Int, warnMissing: Boolean = false) = g
 fun View.getDuration(path: String) = getVal(path, "duration", 0.seconds, true, ::parseDuration)
 fun View.getOptionalDuration(path: String) = getVal(path, "duration", null, false, ::parseDuration)
 fun View.getChar(path: String) = getVal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
-fun View.getLocalizedChar(path: String) = getLocal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
+fun View.getLocalizedChar(path: String) = getLocal(path, "char", ' ', true) { t, _ -> if (t.length == 1) t[0] else null }
 fun View.getTimeFormat(path: String, time: Duration) = getVal(path, "time format", path, true) {
     DateTimeFormatter.ofPattern(it).format(time.toLocalTime())
 }

@@ -68,3 +68,10 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Variant: ${variant.name}\n")
     append("Components: ${getComponents().joinToString { it.javaClass.simpleName }}")
 }
+
+val EndReason.name
+    get() = config.getLocalizedString("Chess.EndReason.$standardName")
+
+val EndReason.message
+    get() = config.getLocalizedString(
+        "Message.GameFinished." + (winner?.standardName?.plus("Won") ?: "ItWasADraw"), name)

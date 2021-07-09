@@ -76,6 +76,12 @@ class TestHuman(name: String): HumanPlayer(name) {
     override fun openPawnPromotionMenu(moves: List<MoveCandidate>) {
     }
 
+    override fun showEndReason(side: Side, reason: EndReason) {
+    }
+
+    override fun showEndReason(reason: EndReason) {
+    }
+
 }
 
 class TestComponent : Component {
@@ -144,9 +150,7 @@ class TestComponent : Component {
 
 class TestVariant: ChessVariant("test")
 
-val EndReasonConfig.test by EndReasonConfig
-
-class TestEndReason(winner: Side? = null): EndReason(Config.endReason.test, "emergency", winner)
+class TestEndReason(winner: Side? = null): EndReason("Test", "emergency", winner)
 
 class TestView(private val root: String) : View {
     override fun getPureString(path: String): String? = null
@@ -180,7 +184,7 @@ class TestPieceTypeConfig(override val type: PieceType, private val rootView: Vi
 
 class TestConfig(private val rootView: TestView) :
     ErrorConfig, MessageConfig, TitleConfig, ArenasConfig,
-    ChessConfig, ComponentsConfig, EndReasonConfig, SettingsConfig,
+    ChessConfig, ComponentsConfig, SettingsConfig,
     View by rootView {
     override fun getError(s: String) = getLocalizedString("Message.Error.$s")
 
@@ -199,8 +203,6 @@ class TestConfig(private val rootView: TestView) :
 
     override val componentBlocks get() = this["Component"].childrenViews.orEmpty()
     override fun getComponent(n: String) = this["Component.$n"]
-
-    override fun getEndReason(n: String) = getLocalizedString("Chess.EndReason.$n")
 
     override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
 

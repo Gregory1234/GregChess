@@ -25,6 +25,8 @@ abstract class HumanPlayer(val name: String) {
     abstract fun sendCommandMessage(msg: String, action: String, command: String)
     abstract fun setItem(i: Int, piece: Piece?)
     abstract fun openPawnPromotionMenu(moves: List<MoveCandidate>)
+    abstract fun showEndReason(side: Side, reason: EndReason)
+    abstract fun showEndReason(reason: EndReason)
 }
 
 fun HumanPlayer.local(msg: LocalizedString): String = msg.get(lang)

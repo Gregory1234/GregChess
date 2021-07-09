@@ -21,9 +21,7 @@ interface ChessGameManager {
     fun leave(player: HumanPlayer)
 }
 
-private val EndReasonConfig.pluginRestart by EndReasonConfig
-
-class PluginRestartEndReason : EndReason(Config.endReason.pluginRestart, "emergency", quick = true)
+class PluginRestartEndReason : EndReason("PluginRestart", "emergency", quick = true)
 
 object BukkitChessGameManager : ChessGameManager, Listener {
 

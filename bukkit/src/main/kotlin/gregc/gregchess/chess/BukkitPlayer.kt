@@ -55,6 +55,22 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         move.game.finishMove(move)
     }
 
+    override fun showEndReason(side: Side, reason: EndReason) {
+        val wld = when(reason.winner) {
+            side -> "Won"
+            null -> "Drew"
+            else -> "Lost"
+        }
+        sendTitle(config.getLocalizedString("Title.Player.You$wld"), reason.name)
+        sendMessage(reason.message)
+    }
+
+    override fun showEndReason(reason: EndReason) {
+        val winner = reason.winner?.standardName?.plus("Won") ?: "ItWasADraw"
+        sendTitle(config.getLocalizedString("Title.Spectator.$winner"), reason.name)
+        sendMessage(reason.message)
+    }
+
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"
 }
 

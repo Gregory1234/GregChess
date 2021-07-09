@@ -1,6 +1,5 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.Config
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 
@@ -9,8 +8,6 @@ object AtomicChess : ChessVariant("Atomic") {
     data class RendererExplosion(val pos: Pos): ExtraRendererFunction<Unit>()
 
     private fun Renderer<*>.explosionAt(pos: Pos) = execute(RendererExplosion(pos))
-
-    private val EndReasonConfig.atomic by EndReasonConfig
 
     class ExplosionManager(private val game: ChessGame) : Component {
         object Settings : Component.Settings<ExplosionManager> {
@@ -42,7 +39,7 @@ object AtomicChess : ChessVariant("Atomic") {
         }
     }
 
-    class AtomicEndReason(winner: Side) : EndReason(Config.endReason.atomic, "normal", winner)
+    class AtomicEndReason(winner: Side) : EndReason("Atomic", "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<ExplosionManager>()

@@ -45,14 +45,3 @@ interface ComponentsConfig : ConfigBlock {
 }
 
 val Config.component: ComponentsConfig by Config
-
-interface EndReasonConfig : ConfigBlock {
-    companion object {
-        operator fun getValue(owner: EndReasonConfig, property: KProperty<*>) =
-            owner.getEndReason(property.name.upperFirst())
-    }
-
-    fun getEndReason(n: String): LocalizedString
-}
-
-val Config.endReason: EndReasonConfig by Config

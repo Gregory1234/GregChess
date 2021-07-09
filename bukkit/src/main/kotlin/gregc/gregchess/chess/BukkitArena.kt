@@ -10,9 +10,7 @@ import org.bukkit.generator.ChunkGenerator
 import java.util.*
 
 object BukkitArenaManager : ArenaManager, Listener {
-    private val EndReasonConfig.arenaRemoved by EndReasonConfig
-
-    class ArenaRemovedEndReason : EndReason(Config.endReason.arenaRemoved, "emergency", quick = true)
+    class ArenaRemovedEndReason : EndReason("ArenaRemoved", "emergency", quick = true)
 
     private val arenas = mutableListOf<Arena>()
 
