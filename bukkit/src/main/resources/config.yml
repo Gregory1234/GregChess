@@ -63,7 +63,6 @@ Message:
     BlackWon: "The game has finished! Black won by %s."
     ItWasADraw: "The game has finished! It was a draw by %s."
   Error:
-    NoPerms: "&cYou do not have the permission to do that!"
     NotPlayer: "&cYou are not a player!"
     WrongArgumentsNumber: "&cWrong number of arguments!"
     WrongArgument: "&cWrong argument!"

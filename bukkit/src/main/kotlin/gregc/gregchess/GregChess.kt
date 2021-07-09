@@ -59,6 +59,8 @@ object GregChess : Listener {
 
     private val duelRequest = BukkitRequestManager.register("duel", "/chess duel accept", "/chess duel cancel")
 
+    private fun CommandArgs.perms(c: String = latestArg().lowercase()) = cPerms(player, "greg-chess.chess.$c")
+
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
@@ -78,6 +80,7 @@ object GregChess : Listener {
             when (nextArg().lowercase()) {
                 "duel" -> {
                     cPlayer(player)
+                    perms()
                     cRequire(!player.human.isInGame(), Config.error.youInGame)
                     when (nextArg().lowercase()) {
                         "accept" -> {
@@ -111,6 +114,7 @@ object GregChess : Listener {
                 }
                 "stockfish" -> {
                     cPlayer(player)
+                    perms()
                     cRequire(Config.stockfish.hasStockfish, Config.error.stockfishNotFound)
                     endArgs()
                     cRequire(!player.human.isInGame(), Config.error.youInGame)
@@ -125,17 +129,20 @@ object GregChess : Listener {
                 }
                 "resign" -> {
                     cPlayer(player)
+                    perms()
                     endArgs()
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     p.game.stop(EndReason.Resignation(!p.side))
                 }
                 "leave" -> {
                     cPlayer(player)
+                    perms()
                     endArgs()
                     BukkitChessGameManager.leave(player.human)
                 }
                 "draw" -> {
                     cPlayer(player)
+                    perms()
                     endArgs()
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val opponent: HumanChessPlayer = cCast(p.opponent, Config.error.opponentNotHuman)
@@ -149,7 +156,7 @@ object GregChess : Listener {
                 }
                 "capture" -> {
                     cPlayer(player)
-                    cPerms(player, "greg-chess.debug")
+                    perms()
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val pos = if (args.size == 1)
                         p.game.cRequireRenderer<Loc, Pos> { it.getPos(player.location.toLoc()) }
@@ -162,7 +169,7 @@ object GregChess : Listener {
                 }
                 "spawn" -> {
                     cPlayer(player)
-                    cPerms(player, "greg-chess.debug")
+                    perms()
                     cArgs(args, 3, 4)
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val game = p.game
@@ -180,7 +187,7 @@ object GregChess : Listener {
                 }
                 "move" -> {
                     cPlayer(player)
-                    cPerms(player, "greg-chess.debug")
+                    perms()
                     cArgs(args, 3, 3)
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     val game = p.game
@@ -193,7 +200,7 @@ object GregChess : Listener {
                 }
                 "skip" -> {
                     cPlayer(player)
-                    cPerms(player, "greg-chess.debug")
+                    perms()
                     endArgs()
                     val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                     game.nextTurn()
@@ -201,20 +208,21 @@ object GregChess : Listener {
                 }
                 "load" -> {
                     cPlayer(player)
-                    cPerms(player, "greg-chess.debug")
+                    perms()
                     val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                     game.board.setFromFEN(FEN.parseFromString(restString()))
                     player.human.sendMessage(Config.message.loadedFEN)
                 }
                 "save" -> {
                     cPlayer(player)
+                    perms()
                     endArgs()
                     val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                     player.human.sendFEN(game.board.getFEN())
                 }
                 "time" -> {
                     cPlayer(player)
-                    cPerms(player, "greg-chess.debug")
+                    perms()
                     cArgs(args, 4, 4)
                     val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                     val clock = cNotNull(game.clock, Config.error.clockNotFound)
@@ -231,7 +239,7 @@ object GregChess : Listener {
                 }
                 "uci" -> {
                     cPlayer(player)
-                    cPerms(player, "greg-chess.admin")
+                    perms()
                     val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                     val engines = game.players.toList().filterIsInstance<EnginePlayer>()
                     val engine = cNotNull(engines.firstOrNull(), Config.error.engineNotFound)
@@ -248,11 +256,12 @@ object GregChess : Listener {
                 }
                 "spectate" -> {
                     cPlayer(player)
+                    perms()
                     val toSpectate = cServerPlayer(lastArg())
                     player.human.spectatedGame = cNotNull(toSpectate.human.currentGame, Config.error.playerNotInGame)
                 }
                 "reload" -> {
-                    cPerms(player, "greg-chess.admin")
+                    perms()
                     endArgs()
                     plugin.reloadConfig()
                     BukkitArenaManager.reload()
@@ -260,12 +269,13 @@ object GregChess : Listener {
                 }
                 "dev" -> {
                     cRequire(Bukkit.getPluginManager().isPluginEnabled("DevHelpPlugin"), Config.error.wrongArgument)
-                    cPerms(player, "greg-chess.admin")
+                    perms()
                     endArgs()
                     Bukkit.dispatchCommand(player, "devhelp GregChess ${plugin.description.version}")
                 }
                 "undo" -> {
                     cPlayer(player)
+                    perms()
                     endArgs()
                     val p = cNotNull(player.human.chess, Config.error.youNotInGame)
                     cNotNull(p.game.board.lastMove, Config.error.nothingToTakeback)
@@ -282,7 +292,7 @@ object GregChess : Listener {
 
                 }
                 "debug" -> {
-                    cPerms(player, "greg-chess.admin")
+                    perms()
                     cWrongArgument {
                         glog.level = GregLogger.Level.valueOf(lastArg())
                         player.sendMessage(Config.message.levelSet.get(player.lang))
@@ -299,7 +309,7 @@ object GregChess : Listener {
                 }
                 "admin" -> {
                     cPlayer(player)
-                    cPerms(player, "greg-chess.admin")
+                    perms()
                     endArgs()
                     player.human.isAdmin = !player.human.isAdmin
                 }
@@ -307,30 +317,31 @@ object GregChess : Listener {
             }
         }
         plugin.addCommandTab("chess") {
-            fun <T> ifPermission(perm: String, vararg list: T) =
-                if (player.hasPermission(perm)) list.map { it.toString() } else emptyList()
+            fun ifPermission(perm: String): List<String>? =
+                if (player.hasPermission("greg-chess.chess.$perm")) null else emptyList()
+            fun <T> ifPermission(perm: String, list: Array<T>) =
+                if (player.hasPermission("greg-chess.chess.$perm")) list.map { it.toString() } else emptyList()
+            fun <T> ifPermissionPrefix(vararg list: T) =
+                list.map { it.toString() }.filter { player.hasPermission("greg-chess.chess.$it") }
+            fun <T> ifInfo(vararg list: T) =
+                if (player.hasPermission("greg-chess.chess.info.ingame") || player.hasPermission("greg-chess.info.chess.remote")) list.map { it.toString() } else emptyList()
 
             when (args.size) {
-                1 -> listOf(
-                    "duel", "stockfish", "resign", "leave", "draw", "save", "spectate",
-                    "undo", "info"
-                ) + ifPermission(
-                    "greg-chess.debug", "capture", "spawn", "move", "skip", "load", "time"
-                ) + ifPermission(
-                    "greg-chess.admin", "uci", "reload", "dev", "debug", "admin"
-                )
+                1 -> ifPermissionPrefix("duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move",
+                    "skip", "load", "save", "time", "uci", "spectate", "reload", "dev", "undo", "debug", "admin") +
+                        ifInfo("info")
                 2 -> when (args[0]) {
-                    "duel" -> null
-                    "spawn" -> ifPermission("greg-chess.debug", *Side.values())
-                    "time" -> ifPermission("greg-chess.debug", *Side.values())
-                    "uci" -> ifPermission("greg-chess.admin", "set", "send")
-                    "spectate" -> null
-                    "info" -> listOf("game", "piece")
+                    "duel" -> ifPermission("duel")
+                    "spawn" -> ifPermission("spawn", Side.values())
+                    "time" -> ifPermission("time", Side.values())
+                    "uci" -> ifPermission("uci", arrayOf("set", "send"))
+                    "spectate" -> ifPermission("spectate")
+                    "info" -> ifInfo("game", "piece")
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("greg-chess.debug", *PieceType.values())
-                    "time" -> ifPermission("greg-chess.admin", "add", "set")
+                    "spawn" -> ifPermission("spawn", PieceType.values())
+                    "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }
                 else -> listOf()
@@ -342,12 +353,13 @@ object GregChess : Listener {
         when (rest().size) {
             0 -> {
                 cPlayer(player)
+                perms("info.ingame")
                 val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                 cNotNull(game.board[player.location.toLoc()]?.piece, Config.error.pieceNotFound)
             }
             1 -> {
                 if (isValidUUID(nextArg())) {
-                    cPerms(player, "greg-chess.info")
+                    perms("info.remote")
                     val game = cNotNull(
                         BukkitChessGameManager.firstGame { UUID.fromString(latestArg()) in it.board },
                         Config.error.pieceNotFound
@@ -355,6 +367,7 @@ object GregChess : Listener {
                     game.board[UUID.fromString(latestArg())]!!
                 } else {
                     cPlayer(player)
+                    perms("info.ingame")
                     val game = cNotNull(player.human.currentGame, Config.error.youNotInGame)
                     cNotNull(game.board[Pos.parseFromString(latestArg())]?.piece, Config.error.pieceNotFound)
                 }
@@ -366,11 +379,12 @@ object GregChess : Listener {
         when (rest().size) {
             0 -> {
                 cPlayer(player)
+                perms("info.ingame")
                 cNotNull(player.human.currentGame, Config.error.youNotInGame)
             }
             1 -> {
                 cWrongArgument {
-                    cPerms(player, "greg-chess.info")
+                    perms("info.remote")
                     cNotNull(BukkitChessGameManager[UUID.fromString(nextArg())], Config.error.gameNotFound)
                 }
             }
