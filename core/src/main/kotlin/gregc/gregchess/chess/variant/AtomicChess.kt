@@ -2,11 +2,13 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.Config
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.*
 
 object AtomicChess : ChessVariant("Atomic") {
 
+    data class RendererExplosion(val pos: Pos): ExtraRendererFunction<Unit>()
+
+    private fun Renderer<*>.explosionAt(pos: Pos) = execute(RendererExplosion(pos))
 
     private val EndReasonConfig.atomic by EndReasonConfig
 

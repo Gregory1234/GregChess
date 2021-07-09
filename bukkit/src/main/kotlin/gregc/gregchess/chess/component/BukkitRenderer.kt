@@ -7,6 +7,8 @@ import java.util.*
 
 class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(game, settings) {
     private companion object {
+        val extraFunctionProviders: List<(ExtraRendererFunction<*>) -> Optional<Any?>> = emptyList()
+
         val defData = PlayerData(allowFlight = true, isFlying = true)
 
         val spectatorData = defData.copy(gameMode = GameMode.SPECTATOR)
@@ -82,6 +84,15 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
             Loc(8 + settings.boardSize + 8 - 1, 105, 8 + settings.boardSize + 8 - 1),
             Material.AIR
         )
+    }
+
+    override fun <R> executeAny(f: ExtraRendererFunction<R>): Any? {
+        extraFunctionProviders.forEach {
+            val v = it(f)
+            if (v.isPresent)
+                return v.orElseThrow()
+        }
+        return super.executeAny(f)
     }
 
     private fun BukkitPlayer.join(d: PlayerData = defData) {

@@ -2,7 +2,12 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.variant.AtomicChess
 import kotlin.math.floor
+
+abstract class ExtraRendererFunction<R>
+
+class UnsupportedExtraRendererFunction(val f: ExtraRendererFunction<*>): Exception(f.toString())
 
 interface Renderer<in T> : Component {
     interface Settings<in T> : Component.Settings<Renderer<T>>
@@ -13,11 +18,13 @@ interface Renderer<in T> : Component {
     fun renderCapturedPiece(pos: CapturedPos, piece: Piece)
     fun clearCapturedPiece(pos: CapturedPos)
     fun playPieceSound(pos: Pos, sound: PieceSound, type: PieceType)
-    fun explosionAt(pos: Pos)
     fun fillFloor(pos: Pos, floor: Floor)
     fun renderBoardBase()
     fun removeBoard()
+    fun <R> executeAny(f: ExtraRendererFunction<R>): Any? = throw UnsupportedExtraRendererFunction(f)
 }
+
+inline fun <reified R> Renderer<*>.execute(f: ExtraRendererFunction<R>): R = executeAny(f) as R
 
 abstract class MinecraftRenderer(protected val game: ChessGame, protected val settings: Settings) : Renderer<Loc> {
     abstract class Settings(val tileSize: Int, val offset: Loc = Loc(0, 0, 0)) : Renderer.Settings<Loc> {
@@ -65,4 +72,12 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
     override fun renderCapturedPiece(pos: CapturedPos, piece: Piece) = renderPiece(getCapturedLoc(pos), piece)
 
     override fun clearCapturedPiece(pos: CapturedPos) = clearPiece(getCapturedLoc(pos))
+
+    abstract fun explosionAt(pos: Pos)
+
+    override fun <R> executeAny(f: ExtraRendererFunction<R>): Any? =
+        if (f is AtomicChess.RendererExplosion)
+            explosionAt(f.pos)
+        else
+            super.executeAny(f)
 }
