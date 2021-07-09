@@ -109,8 +109,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         updateMoves()
         val num = "${fullMoveCounter}."
         if (game.currentTurn == Side.BLACK) {
-            val wLast = (if (moves.size <= 1) null else moves[moves.size - 2].name)
-            val bLast = lastMove?.name
+            val wLast = (if (moves.size <= 1) null else moves[moves.size - 2].standardName)
+            val bLast = lastMove?.standardName
             game.players.forEachReal { p ->
                 p.sendMessage(buildString {
                     append(num)
@@ -129,7 +129,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     fun stop() {
         if (game.currentTurn == Side.WHITE) {
             val num = "${fullMoveCounter}."
-            val wLast = lastMove?.name
+            val wLast = lastMove?.standardName
             game.players.forEachReal { p ->
                 p.sendMessage(buildString {
                     append(num)
@@ -205,7 +205,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             val target = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
             val piece = target.piece!!
             val origin = this[piece.pos.plusR(-2 * piece.side.direction)]!!
-            lastMove = MoveData(piece.piece, origin, target, "", "", true) {}
+            lastMove = MoveData(piece.piece, origin, target, "", true) {}
         }
 
         movesSinceLastCapture = fen.halfmoveClock

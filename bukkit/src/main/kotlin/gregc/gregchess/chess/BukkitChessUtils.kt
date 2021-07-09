@@ -5,20 +5,6 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
-interface PieceTypeBukkitConfig : PieceTypeConfig {
-    val item: BySides<Material>
-    val structure: BySides<List<Material>>
-    fun sound(s: PieceSound): Sound
-}
-
-interface BukkitChessConfig : ChessConfig {
-    fun floor(f: Floor): Material
-    fun getBukkitPieceType(p: PieceType): PieceTypeBukkitConfig
-    override fun getPieceType(p: PieceType): PieceTypeConfig = getBukkitPieceType(p)
-}
-
-val Config.bukkitChess: BukkitChessConfig by Config
-
 interface StockfishConfig : ConfigBlock {
     val hasStockfish: Boolean
     val stockfishCommand: String
@@ -30,20 +16,20 @@ val Config.stockfish: StockfishConfig by Config
 fun PieceType.getItem(side: Side) = Localized { lang ->
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
-    meta.setDisplayName(side.getPieceName(pieceName.get(lang)).get(lang))
+    meta.setDisplayName(config.getLocalizedString("Chess.Side.${side.standardName}.Piece", pieceName).get(lang))
     item.itemMeta = meta
     item
 }
 
-val PieceType.bukkitConfig get() = Config.bukkitChess.getBukkitPieceType(this)
-
-fun PieceType.getSound(s: PieceSound) = bukkitConfig.sound(s)
-val PieceType.itemMaterial get() = bukkitConfig.item
-val PieceType.structure get() = bukkitConfig.structure
+val PieceType.view get() = config["Chess.Piece.$standardName"]
+val PieceType.pieceName get() = view.getLocalizedString("Name")
+fun PieceType.getSound(s: PieceSound): Sound = view.getEnum("Sound.${s.standardName}", Sound.BLOCK_STONE_HIT)
+val PieceType.itemMaterial get() = BySides { view.getEnum("Item.${it.standardName}", Material.AIR) }
+val PieceType.structure get() = BySides { view.getEnumList<Material>("Structure.${it.standardName}") }
 
 val Piece.item get() = type.getItem(side)
 
-val Floor.material get() = Config.bukkitChess.floor(this)
+val Floor.material get() = config.getEnum<Material>("Chess.Floor.${standardName}", Material.AIR)
 
 fun BoardPiece.getInfo() = buildTextComponent {
     append("Name: $standardName\n")

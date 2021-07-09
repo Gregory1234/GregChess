@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Config
 import gregc.gregchess.snakeToPascal
 
 enum class Side(val standardChar: Char, val direction: Int) {
@@ -11,8 +10,6 @@ enum class Side(val standardChar: Char, val direction: Int) {
 
     operator fun not(): Side = if (this == WHITE) BLACK else WHITE
     operator fun inc(): Side = not()
-
-    fun getPieceName(name: String) = Config.chess.getSide(this).pieceName(name)
 
     companion object {
         fun parseFromStandardChar(c: Char) =

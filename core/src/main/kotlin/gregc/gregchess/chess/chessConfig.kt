@@ -3,25 +3,6 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import kotlin.reflect.KProperty
 
-interface PieceTypeConfig {
-    val type: PieceType
-    val name: LocalizedString
-    val char: Localized<Char>
-}
-
-interface SideConfig {
-    val side: Side
-    fun pieceName(n: String): LocalizedString
-}
-
-interface ChessConfig : ConfigBlock {
-    val capture: LocalizedString
-    fun getPieceType(p: PieceType): PieceTypeConfig
-    fun getSide(s: Side): SideConfig
-}
-
-val Config.chess: ChessConfig by Config
-
 interface SettingsConfig : ConfigBlock {
     companion object {
         operator fun getValue(owner: SettingsConfig, property: KProperty<*>) =

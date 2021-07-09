@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Config
 import gregc.gregchess.snakeToPascal
 
 
@@ -23,9 +22,5 @@ enum class PieceType(
                 ?: throw IllegalArgumentException(c.toString())
     }
 
-    val config get() = Config.chess.getPieceType(this)
-
     val standardName: String = name.snakeToPascal()
-    val pieceName get() = config.name
-    val char get() = config.char
 }

@@ -1,8 +1,6 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
-import org.bukkit.Material
-import org.bukkit.Sound
 import org.bukkit.configuration.file.FileConfiguration
 
 fun Config.initBukkit(c: BukkitConfigProvider) {
@@ -53,24 +51,10 @@ class BukkitRequestTypeConfig(override val name: String, private val rootView: V
 
 }
 
-class BukkitSideConfig(override val side: Side, private val rootView: View) : SideConfig, View by rootView {
-    override fun pieceName(n: String) = getLocalizedString("Piece", n)
-}
-
-class BukkitPieceTypeConfig(override val type: PieceType, private val rootView: View) :
-    PieceTypeBukkitConfig, View by rootView {
-
-    override val name get() = getLocalizedString("Name")
-    override val char get() = getLocalizedChar("Char")
-    override val item get() = BySides { getEnum("Item.${it.standardName}", Material.AIR) }
-    override val structure get() = BySides { getEnumList<Material>("Structure.${it.standardName}") }
-    override fun sound(s: PieceSound): Sound = getEnum("Sound.${s.standardName}", Sound.BLOCK_STONE_HIT)
-}
-
 class BukkitConfig(private val rootView: BukkitView) :
     ErrorConfig, MessageConfig, TitleConfig,
     RequestConfig, ArenasConfig, StockfishConfig,
-    BukkitChessConfig, ComponentsConfig, SettingsConfig,
+    ComponentsConfig, SettingsConfig,
     View by rootView {
 
     override fun getError(s: String) = getLocalizedString("Message.Error.$s")
@@ -82,13 +66,6 @@ class BukkitConfig(private val rootView: BukkitView) :
     override fun getRequestType(t: String) = BukkitRequestTypeConfig(t, this["Request.$t"])
 
     override val chessArenas get() = getStringList("ChessArenas")
-
-    override fun getBukkitPieceType(p: PieceType) = BukkitPieceTypeConfig(p, this["Chess.Piece.${p.standardName}"])
-
-    override fun getSide(s: Side) = BukkitSideConfig(s, this["Chess.Side.${s.standardName}"])
-
-    override val capture get() = getLocalizedString("Chess.Capture")
-    override fun floor(f: Floor) = getEnum<Material>("Chess.Floor.${f.standardName}", Material.AIR)
 
     override val settingsBlocks: Map<String, Map<String, View>>
         get() = this["Settings"].childrenViews.orEmpty().mapValues { it.value.childrenViews.orEmpty() }

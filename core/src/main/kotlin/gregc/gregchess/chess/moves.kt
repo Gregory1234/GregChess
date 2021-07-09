@@ -1,15 +1,15 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.between
+import gregc.gregchess.rotationsOf
 import kotlin.math.abs
 
 class MoveData(
-    val piece: Piece, val origin: Square, val target: Square,
-    val name: String, val standardName: String,
+    val piece: Piece, val origin: Square, val target: Square, val standardName: String,
     val captured: Boolean, val display: Square = target, val undo: () -> Unit
 ) {
 
-    override fun toString() = "MoveData(piece=$piece, name=$name, standardName=$standardName)"
+    override fun toString() = "MoveData(piece=$piece, standardName=$standardName)"
 
     fun clear() {
         origin.previousMoveMarker = null
@@ -35,7 +35,6 @@ abstract class MoveCandidate(
     val origin = piece.square
 
     open fun execute(): MoveData {
-        val base = baseName(DEFAULT_LANG)
         val standardBase = baseStandardName()
         val hasMoved = piece.hasMoved
         val ct = captured?.capture(piece.side)
@@ -45,25 +44,13 @@ abstract class MoveCandidate(
         val hmc =
             if (piece.type == PieceType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
         val ch = checkForChecks(piece.side, game)
-        return MoveData(piece.piece, origin, target, base + ch, standardBase + ch, ct != null, display) {
+        return MoveData(piece.piece, origin, target, standardBase + ch, ct != null, display) {
             hmc()
             promotion?.let { piece.square.piece?.demote(piece) }
             piece.move(origin)
             ct?.let { captured?.resurrect(it) }
             piece.force(hasMoved)
         }
-    }
-
-    open fun baseName(lang: String): String = buildString {
-        if (piece.type != PieceType.PAWN) {
-            append(piece.type.char.get(lang).uppercaseChar())
-            append(getUniquenessCoordinate(piece, target))
-        } else if (control != null)
-            append(piece.pos.fileStr)
-        if (captured != null)
-            append(Config.chess.capture.get(lang))
-        promotion?.let { p -> append(p.type.char.get(lang).uppercaseChar()) }
-        append(target.pos)
     }
 
     open fun baseStandardName() = buildString {
@@ -191,15 +178,13 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
             BoardPiece.autoMove(mapOf(piece to target, rook to rookTarget))
             val ch = checkForChecks(piece.side, game)
             val hmc = board.increaseMovesSinceLastCapture()
-            return MoveData(piece.piece, origin, target, base + ch, base + ch, false, display) {
+            return MoveData(piece.piece, origin, target, base + ch, false, display) {
                 hmc()
                 BoardPiece.autoMove(mapOf(piece to origin, rook to rookOrigin))
                 piece.force(false)
                 rook.force(false)
             }
         }
-
-        override fun baseName(lang: String) = baseStandardName()
 
         override fun baseStandardName() = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
     }
@@ -264,14 +249,13 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
     class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
         MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true) {
         override fun execute(): MoveData {
-            val base = baseName(DEFAULT_LANG)
             val standardBase = baseStandardName()
             val hasMoved = piece.hasMoved
             val ct = captured?.capture(piece.side)
             piece.move(target)
             val ch = checkForChecks(piece.side, game)
             val hmc = board.resetMovesSinceLastCapture()
-            return MoveData(piece.piece, origin, target, "$base$ch e.p.", standardBase + ch, true, display) {
+            return MoveData(piece.piece, origin, target, standardBase + ch, true, display) {
                 hmc()
                 piece.move(origin)
                 ct?.let { captured?.resurrect(it) }
