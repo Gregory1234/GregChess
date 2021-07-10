@@ -30,25 +30,13 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
 
         companion object {
 
-            fun get(settings: Map<String, Settings>, name: String?) = when (name) {
+            fun parse(name: String): Settings? = when (name) {
                 "none" -> null
-                null -> null
-                else -> {
-                    if (name in settings)
-                        settings[name]
-                    else {
-                        val match = Regex("""(\d+)\+(\d+)""").find(name)
-                        if (match != null) {
-                            Settings(
-                                Type.INCREMENT,
-                                match.groupValues[1].toLong().minutes,
-                                match.groupValues[2].toInt().seconds
-                            )
-                        } else {
-                            glog.warn("Invalid chessboard configuration $name, defaulted to none!")
-                            null
-                        }
-                    }
+                else -> Regex("""(\d+)\+(\d+)""").find(name)?.let {
+                    Settings(Type.INCREMENT, it.groupValues[1].toLong().minutes, it.groupValues[2].toInt().seconds)
+                } ?: run {
+                    glog.warn("Invalid chessboard configuration $name, defaulted to none!")
+                    null
                 }
             }
         }

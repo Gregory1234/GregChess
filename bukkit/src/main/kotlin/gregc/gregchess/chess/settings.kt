@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
-    fun getClockSettings(): Map<String, ChessClock.Settings> =
+    private fun getClockSettings(): Map<String, ChessClock.Settings> =
         config["Settings.Clock"].childrenViews.orEmpty().mapValues { (_, it) ->
             val t = it.getEnum("Type", ChessClock.Type.INCREMENT, false)
             val initial = it.getDuration("Initial")
@@ -17,15 +17,20 @@ object SettingsManager {
             ChessClock.Settings(t, initial, increment)
         }
 
+    private fun <T,R> chooseOrParse(opts: Map<T,R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
+
+    private fun <T> MutableCollection<T>.addMaybe(v: T?) {
+        v?.let { this += it }
+    }
+
     fun getSettings(): List<GameSettings> =
         config["Settings.Presets"].childrenViews.orEmpty().map { (key, child) ->
             val simpleCastling = child.getDefaultBoolean("SimpleCastling", false)
             val variant = ChessVariant[child.getOptionalString("Variant")]
-            val components = buildList {
+            val components = buildList<Component.Settings<*>> {
                 this += Chessboard.Settings[child.getOptionalString("Board")]
-                ChessClock.Settings.get(getClockSettings(), child.getOptionalString("Clock"))?.let { this += it }
-                val tileSize = child.getDefaultInt("TileSize", 3)
-                this += BukkitRenderer.Settings(tileSize)
+                addMaybe(chooseOrParse(getClockSettings(), child.getOptionalString("Clock"), ChessClock.Settings::parse))
+                this += BukkitRenderer.Settings(child.getDefaultInt("TileSize", 3))
                 this += BukkitScoreboardManager.Settings
                 this += BukkitEventRelay.Settings
             }
