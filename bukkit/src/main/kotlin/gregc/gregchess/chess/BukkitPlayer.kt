@@ -14,7 +14,9 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         private val MessageConfig.copyPGN by MessageConfig
     }
 
-    override var isAdmin = false
+    var lang: String = DEFAULT_LANG
+
+    var isAdmin = false
         set(value) {
             field = value
             val loc = player.location
@@ -36,14 +38,6 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         val message = TextComponent(Config.message.copyFEN.get(lang))
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
         player.spigot().sendMessage(message)
-    }
-
-    override fun sendCommandMessage(msg: String, action: String, command: String) {
-        player.spigot().sendMessage(buildTextComponent {
-            append(msg)
-            append(" ")
-            append(action, ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
-        })
     }
 
     override fun setItem(i: Int, piece: Piece?) {
@@ -72,6 +66,8 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     }
 
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"
+
+    override fun local(msg: LocalizedString): String = msg.get(lang)
 }
 
 val MessageConfig.pawnPromotion by MessageConfig

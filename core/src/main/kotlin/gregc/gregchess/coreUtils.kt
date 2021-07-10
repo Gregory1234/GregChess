@@ -7,8 +7,6 @@ import kotlin.contracts.contract
 import kotlin.math.*
 import kotlin.reflect.KProperty
 
-const val DEFAULT_LANG = "en_US"
-
 @JvmInline
 value class ErrorMsg(val standardName: String) {
     companion object {

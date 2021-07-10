@@ -14,6 +14,8 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
 import kotlin.contracts.contract
 
+const val DEFAULT_LANG = "en_US"
+
 data class PlayerData(
     val location: Location? = null,
     val inventory: List<ItemStack?> = List(41) { null },
