@@ -12,6 +12,7 @@ interface Component {
 }
 
 enum class GameBaseEvent {
+    PRE_INIT,
     INIT,
     START,
     BEGIN,
@@ -76,6 +77,7 @@ private fun Collection<Component>.runGameEvent(value: GameBaseEvent, vararg args
     forEach { it.runGameEvent(value, TimeModifier.LATE, *args) }
 }
 
+fun Collection<Component>.allPreInit() = runGameEvent(GameBaseEvent.PRE_INIT)
 fun Collection<Component>.allInit() = runGameEvent(GameBaseEvent.INIT)
 fun Collection<Component>.allStart() = runGameEvent(GameBaseEvent.START)
 fun Collection<Component>.allBegin() = runGameEvent(GameBaseEvent.BEGIN)

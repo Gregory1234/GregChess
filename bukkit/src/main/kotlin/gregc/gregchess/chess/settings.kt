@@ -9,6 +9,8 @@ import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
+    private val NO_ARENAS = ErrorMsg("NoArenas")
+
     private fun getClockSettings(): Map<String, ChessClock.Settings> =
         config["Settings.Clock"].childrenViews.orEmpty().mapValues { (_, it) ->
             val t = it.getEnum("Type", ChessClock.Type.INCREMENT, false)
@@ -28,6 +30,7 @@ object SettingsManager {
             val simpleCastling = child.getDefaultBoolean("SimpleCastling", false)
             val variant = ChessVariant[child.getOptionalString("Variant")]
             val components = buildList<Component.Settings<*>> {
+                this += cNotNull(ArenaManager.freeAreas.firstOrNull(), NO_ARENAS)
                 this += Chessboard.Settings[child.getOptionalString("Board")]
                 addMaybe(chooseOrParse(getClockSettings(), child.getOptionalString("Clock"), ChessClock.Settings::parse))
                 this += BukkitRenderer.Settings(child.getDefaultInt("TileSize", 3))

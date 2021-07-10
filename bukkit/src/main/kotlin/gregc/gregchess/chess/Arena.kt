@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.GameEvent
 import org.bukkit.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -9,17 +11,17 @@ import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.generator.ChunkGenerator
 import java.util.*
 
-object BukkitArenaManager : ArenaManager, Listener {
+object ArenaManager : Listener {
     class ArenaRemovedEndReason : EndReason("ArenaRemoved", "emergency", quick = true)
 
     private val arenas = mutableListOf<Arena>()
 
-    override fun next(): Arena? = arenas.firstOrNull { (_, game) -> game == null }
+    val freeAreas get() = arenas.filter { it.game == null }
 
     private fun World.isArena(): Boolean = arenas.any { it.name == name }
 
     fun reload() {
-        val newArenas = Config.arenas.chessArenas
+        val newArenas = config.getStringList("ChessArenas")
         arenas.removeIf {
             if (it.name !in newArenas) {
                 it.game?.quickStop(ArenaRemovedEndReason())
@@ -31,7 +33,7 @@ object BukkitArenaManager : ArenaManager, Listener {
 
     fun start() {
         registerEvents()
-        arenas.addAll(Config.arenas.chessArenas.map { Arena(it) })
+        reload()
     }
 
     @EventHandler
@@ -61,11 +63,24 @@ object BukkitArenaWorldGen : ChunkGenerator() {
     override fun shouldGenerateStructures() = false
 }
 
-val Arena.world: World
-    get() {
+data class Arena(val name: String, var game: ChessGame? = null): Component.Settings<Arena.Usage> {
+    class Usage(val arena: Arena, private val game: ChessGame): Component {
+        @GameEvent(GameBaseEvent.PRE_INIT, mod = TimeModifier.EARLY)
+        fun addGame() {
+            arena.game = game
+        }
+        @GameEvent(GameBaseEvent.VERY_END, mod = TimeModifier.LATE)
+        fun removeGame() {
+            arena.game = null
+        }
+    }
+
+    override fun getComponent(game: ChessGame): Usage = Usage(this, game)
+
+    val world: World by lazy {
         val world = Bukkit.getWorld(name)
 
-        return (if (world != null) {
+        (if (world != null) {
             glog.low("World already exists", name)
             world
         } else {
@@ -78,3 +93,6 @@ val Arena.world: World
             difficulty = Difficulty.PEACEFUL
         }
     }
+}
+
+val ChessGame.arena get() = requireComponent<Arena.Usage>().arena

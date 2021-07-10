@@ -74,7 +74,7 @@ object GregChess : Listener {
             }
         }
         BukkitChessGameManager.start()
-        BukkitArenaManager.start()
+        ArenaManager.start()
         RequestManager.start()
         plugin.addCommand("chess") {
             when (nextArg().lowercase()) {
@@ -102,7 +102,7 @@ object GregChess : Listener {
                                 if (settings != null) {
                                     val res = duelRequest.call(RequestData(player, opponent, settings.name))
                                     if (res == RequestResponse.ACCEPT) {
-                                        ChessGame(BukkitTimeManager, BukkitArenaManager.cNext(), settings).addPlayers {
+                                        ChessGame(BukkitTimeManager, settings).addPlayers {
                                             human(player.human, Side.WHITE, player == opponent)
                                             human(opponent.human, Side.BLACK, player == opponent)
                                         }.start()
@@ -121,7 +121,7 @@ object GregChess : Listener {
                     interact {
                         val settings = player.openSettingsMenu()
                         if (settings != null)
-                            ChessGame(BukkitTimeManager, BukkitArenaManager.cNext(), settings).addPlayers {
+                            ChessGame(BukkitTimeManager, settings).addPlayers {
                                 human(player.human, Side.WHITE, false)
                                 engine(Stockfish(), Side.BLACK)
                             }.start()
@@ -264,7 +264,7 @@ object GregChess : Listener {
                     perms()
                     endArgs()
                     plugin.reloadConfig()
-                    BukkitArenaManager.reload()
+                    ArenaManager.reload()
                     player.sendMessage(Config.message.configReloaded.get(player.lang))
                 }
                 "dev" -> {

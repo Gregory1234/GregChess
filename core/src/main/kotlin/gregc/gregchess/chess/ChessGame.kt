@@ -23,7 +23,7 @@ data class GameSettings(
     inline fun <reified T : Component.Settings<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
 }
 
-class ChessGame(private val timeManager: TimeManager, val arena: Arena, val settings: GameSettings) {
+class ChessGame(private val timeManager: TimeManager, val settings: GameSettings) {
     companion object {
         private val TELEPORT_FAILED = ErrorMsg("TeleportFailed")
         private val RENDERER_NOT_FOUND = ErrorMsg("RendererNotFound")
@@ -35,8 +35,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
 
     val variant = settings.variant
 
-    private val components =
-        listOf(arena) + (settings.components + variant.extraComponents).map { it.getComponent(this) }
+    private val components = (settings.components + variant.extraComponents).map { it.getComponent(this) }
 
     fun getComponents() = components.toList()
 
@@ -44,11 +43,11 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
         try {
             requireComponent<Chessboard>()
             requireComponent<ScoreboardManager>()
+            components.allPreInit()
         } catch (e: Exception) {
             panic(e)
             throw e
         }
-        arena.game = this
     }
 
     val board: Chessboard = requireComponent()

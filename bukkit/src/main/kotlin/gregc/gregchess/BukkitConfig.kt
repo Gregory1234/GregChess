@@ -1,6 +1,5 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.ArenasConfig
 import gregc.gregchess.chess.StockfishConfig
 import org.bukkit.configuration.file.FileConfiguration
 import java.time.Duration
@@ -35,9 +34,7 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
 }
 
 class BukkitConfig(private val rootView: BukkitView) :
-    MessageConfig, TitleConfig, ArenasConfig, StockfishConfig, TimeFormatConfig, View by rootView {
-
-    override val chessArenas get() = getStringList("ChessArenas")
+    MessageConfig, TitleConfig, StockfishConfig, TimeFormatConfig, View by rootView {
 
     override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
 

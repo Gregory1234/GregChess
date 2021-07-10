@@ -30,7 +30,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
         override fun getComponent(game: ChessGame) = BukkitRenderer(game, this)
     }
 
-    private val world = game.arena.world
+    private val world get() = game.arena.world
 
     private val data = mutableMapOf<UUID, PlayerData>()
 
@@ -113,6 +113,11 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
         player.teleport(spawnLocation.toLocation(this@BukkitRenderer.world))
         player.playerData = d
         game[this]?.held?.let { setItem(0, it.piece) }
+    }
+
+    @GameEvent(GameBaseEvent.PRE_INIT)
+    fun validate() {
+        game.requireComponent<Arena.Usage>()
     }
 
     @GameEvent(GameBaseEvent.PANIC)
