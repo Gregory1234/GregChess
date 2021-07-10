@@ -3,7 +3,7 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 
 
-abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val game: ChessGame) {
+abstract class ChessPlayer(val name: String, val side: Side, protected val silent: Boolean, val game: ChessGame) {
 
     var held: BoardPiece? = null
         set(v) {
@@ -20,10 +20,6 @@ abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val ga
             field = v
         }
 
-    abstract val name: String
-
-    abstract fun sendMessage(msg: String)
-
     val opponent
         get() = game[!side]
 
@@ -36,29 +32,23 @@ abstract class ChessPlayer(val side: Side, protected val silent: Boolean, val ga
     val king
         get() = game.board.kingOf(side)
 
+    open fun init() {}
     open fun stop() {}
-
-    abstract fun startTurn()
+    open fun startTurn() {}
 
 }
 
 val MessageConfig.inCheck by MessageConfig
+val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
 
 val TitleConfig.inCheck by TitleConfig
+val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
+val TitleConfig.yourTurn by TitleConfig
 
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
-    ChessPlayer(side, silent, game) {
-
-    override val name = player.name
+    ChessPlayer(player.name, side, silent, game) {
 
     override fun toString() = "BukkitChessPlayer(name=$name, side=$side, game.uniqueId=${game.uniqueId})"
-
-    override fun sendMessage(msg: String) = player.sendMessage(msg)
-    fun sendMessage(msg: LocalizedString) = player.sendMessage(msg)
-    fun sendTitle(title: String, subtitle: String = "") = player.sendTitle(title, subtitle)
-    fun sendTitle(title: String, subtitle: LocalizedString) = player.sendTitle(title, subtitle)
-    fun sendTitle(title: LocalizedString, subtitle: String = "") = player.sendTitle(title, subtitle)
-    fun sendTitle(title: LocalizedString, subtitle: LocalizedString) = player.sendTitle(title, subtitle)
 
     fun pickUp(pos: Pos) {
         if (!game.running) return
@@ -86,34 +76,39 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
 
     private fun announceInCheck() {
         if (!silent) {
-            sendTitle(Config.title.yourTurn, Config.title.inCheck)
-            sendMessage(Config.message.inCheck)
+            player.sendTitle(Config.title.yourTurn, Config.title.inCheck)
+            player.sendMessage(Config.message.inCheck)
         } else {
-            sendTitle(Config.title.inCheck)
-            sendMessage(Config.message.inCheck)
+            player.sendTitle(Config.title.inCheck)
+            player.sendMessage(Config.message.inCheck)
         }
     }
 
     override fun startTurn() {
         if (!silent) {
-            sendTitle(Config.title.yourTurn)
+            player.sendTitle(Config.title.yourTurn)
         }
         if (king?.let { game.variant.isInCheck(it) } == true)
             announceInCheck()
     }
 
+    override fun init() {
+        if (hasTurn)
+            player.sendTitle(Config.title.yourTurn, Config.title.youArePlayingAs[side])
+        else
+            player.sendTitle("", Config.title.youArePlayingAs[side])
+        player.sendMessage(Config.message.youArePlayingAs[side])
+    }
+
     private fun pawnPromotionScreen(moves: List<MoveCandidate>) = player.openPawnPromotionMenu(moves)
 }
 
-class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : ChessPlayer(side, true, game) {
-
-    override val name = engine.name
+class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
+    ChessPlayer(engine.name, side, true, game) {
 
     override fun toString() = "EnginePlayer(name=$name, side=$side)"
 
     override fun stop() = engine.stop()
-
-    override fun sendMessage(msg: String) {}
 
     override fun startTurn() {
         engine.getMove(game.board.getFEN(), { str ->

@@ -8,11 +8,6 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
-val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
-
-val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
-val TitleConfig.yourTurn by TitleConfig
-
 
 data class GameSettings(
     val name: String,
@@ -180,13 +175,8 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
                 components.allAddPlayer(it)
             }
             components.allInit()
-            requireStarting().apply {
-                (black as? HumanChessPlayer)?.sendTitle("", Config.title.youArePlayingAs.black)
-                (white as? HumanChessPlayer)?.sendTitle(Config.title.yourTurn, Config.title.youArePlayingAs.white)
-                forEachUnique {
-                    it.sendMessage(Config.message.youArePlayingAs[it.side])
-                }
-            }
+            requireStarting()
+            players.forEach { it.init() }
             variant.start(this)
             components.allStart()
             state = GameState.Running(requireStarting())
