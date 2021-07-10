@@ -13,12 +13,12 @@ abstract class ChessVariant(val name: String) {
         private val variants = mutableMapOf<String, ChessVariant>()
 
         init {
-            this += Normal
-            this += ThreeChecks
-            this += KingOfTheHill
-            this += AtomicChess
-            this += Antichess
-            this += HordeChess
+            Normal.init()
+            ThreeChecks.init()
+            KingOfTheHill.init()
+            AtomicChess.init()
+            Antichess.init()
+            HordeChess.init()
         }
 
         operator fun get(name: String?) = when (name) {
@@ -28,10 +28,6 @@ abstract class ChessVariant(val name: String) {
                 normal
             }
         }
-
-        operator fun plusAssign(variant: ChessVariant) {
-            variants[variant.name] = variant
-        }
     }
 
     enum class MoveLegality(val prettyName: String) {
@@ -40,6 +36,10 @@ abstract class ChessVariant(val name: String) {
         PINNED("Moves blocked by pins"),
         SPECIAL("Moves blocked for other reasons"),
         LEGAL("Legal moves")
+    }
+
+    fun init() {
+        variants[name] = this
     }
 
     open fun start(game: ChessGame) {}

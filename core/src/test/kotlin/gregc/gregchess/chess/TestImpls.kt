@@ -145,7 +145,7 @@ class TestComponent : Component {
 
 }
 
-class TestVariant: ChessVariant("test")
+object TestVariant: ChessVariant("test")
 
 class TestEndReason(winner: Side? = null): EndReason("Test", "emergency", winner)
 

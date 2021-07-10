@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Config
-import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.*
 import org.junit.jupiter.api.*
 import kotlin.test.assertEquals
@@ -11,7 +10,12 @@ class ChessGameTests {
 
     init {
         Config.initTest()
-        ChessVariant += spyk(TestVariant())
+        val variant = spyk(TestVariant)
+        variant.init()
+        excludeRecords {
+            variant.name
+            variant.init()
+        }
     }
 
     val basicSettings = testSettings("basic")
@@ -103,9 +107,6 @@ class ChessGameTests {
         @Test
         fun `only gets extra components and fen from variant`() {
             val g = mkGame(spyVariantSettings)
-            excludeRecords {
-                g.variant.name
-            }
             verifyAll {
                 g.variant.extraComponents
                 g.variant.genFEN(any())
