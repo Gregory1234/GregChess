@@ -25,14 +25,14 @@ class ChessGameTests {
     fun mkGame(
         settings: GameSettings = basicSettings,
         players: List<Pair<HumanPlayer, Side>> = listOf(humanA to Side.WHITE, humanB to Side.BLACK)
-    ) = ChessGame(TestTimeManager(), Arena("arena"), settings).addPlayers {
+    ) = ChessGame(TestTimeManager(), settings).addPlayers {
         players.forEach { (h, s) ->
             human(h, s, false)
         }
     }
 
     fun mkGame(settings: GameSettings = basicSettings, players: BySides<HumanPlayer>) =
-        ChessGame(TestTimeManager(), Arena("arena"), settings).addPlayers {
+        ChessGame(TestTimeManager(), settings).addPlayers {
             players.forEachIndexed { s, h ->
                 human(h, s, false)
             }
@@ -41,7 +41,7 @@ class ChessGameTests {
     fun playerExclude(p: HumanPlayer) {
         excludeRecords {
             p.name
-            p.lang
+            p.local(any())
             @Suppress("UNUSED_EQUALS_EXPRESSION")
             p == any()
         }
@@ -154,7 +154,7 @@ class ChessGameTests {
         @Test
         fun `throws when not initialized`() {
             assertThrows<WrongStateException> {
-                ChessGame(TestTimeManager(), Arena("arena"), basicSettings).start()
+                ChessGame(TestTimeManager(), basicSettings).start()
             }
         }
 

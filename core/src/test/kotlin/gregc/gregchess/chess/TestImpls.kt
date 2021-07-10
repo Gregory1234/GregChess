@@ -40,12 +40,11 @@ class TestScoreboard: ScoreboardManager {
 }
 
 fun testSettings(
-    name: String, board: String? = null, clock: String? = null, variant: String? = null,
+    name: String, board: String? = null, variant: String? = null,
     extra: List<Component.Settings<*>> = emptyList()
 ): GameSettings {
     val components = buildList {
         this += Chessboard.Settings[board]
-        ChessClock.Settings.get(emptyMap(), clock)?.let { this += it }
         this += TestScoreboard.Settings
         this.addAll(extra)
     }
@@ -53,7 +52,6 @@ fun testSettings(
 }
 
 class TestHuman(name: String): HumanPlayer(name) {
-    override var isAdmin: Boolean = false
 
     override fun sendMessage(msg: String) {
     }
@@ -67,9 +65,6 @@ class TestHuman(name: String): HumanPlayer(name) {
     override fun sendFEN(fen: FEN) {
     }
 
-    override fun sendCommandMessage(msg: String, action: String, command: String) {
-    }
-
     override fun setItem(i: Int, piece: Piece?) {
     }
 
@@ -81,6 +76,8 @@ class TestHuman(name: String): HumanPlayer(name) {
 
     override fun showEndReason(reason: EndReason) {
     }
+
+    override fun local(msg: LocalizedString): String = msg.get("en_US")
 
 }
 
@@ -171,11 +168,7 @@ class TestView(private val root: String) : View {
     override fun fullPath(path: String): String = root addDot path
 }
 
-class TestConfig(private val rootView: TestView) :
-    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, View by rootView {
-    override fun getError(s: String) = getLocalizedString("Message.Error.$s")
-
-    override val chessArenas get() = getStringList("ChessArenas")
+class TestConfig(private val rootView: TestView) : MessageConfig, TitleConfig, View by rootView {
 
     override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
 
