@@ -9,18 +9,15 @@ import kotlin.reflect.KProperty
 
 const val DEFAULT_LANG = "en_US"
 
-interface ErrorConfig: ConfigBlock {
+@JvmInline
+value class ErrorMsg(val standardName: String) {
     companion object {
-        operator fun getValue(owner: ErrorConfig, property: KProperty<*>) = owner.getError(property.name.upperFirst())
+        private val errors = mutableListOf<ErrorMsg>()
     }
-
-    fun getError(s: String): LocalizedString
+    init {
+        errors += this
+    }
 }
-
-val Config.error: ErrorConfig by Config
-
-val ErrorConfig.wrongArgumentsNumber by ErrorConfig
-val ErrorConfig.wrongArgument by ErrorConfig
 
 interface MessageConfig : ConfigBlock {
     companion object {
@@ -45,34 +42,22 @@ interface TitleConfig : ConfigBlock {
 val Config.title: TitleConfig by Config
 
 
-class CommandException(val playerMsg: LocalizedString) : Exception() {
+class CommandException(val error: ErrorMsg, cause: Throwable? = null) : Exception(cause) {
+
     override val message: String
-        get() = "Uncaught command error: ${playerMsg.get(DEFAULT_LANG)}"
+        get() = "Uncaught command error: ${error.standardName}"
 }
 
-fun cRequire(e: Boolean, msg: LocalizedString) {
+fun cRequire(e: Boolean, msg: ErrorMsg) {
     contract {
         returns() implies e
     }
     if (!e) throw CommandException(msg)
 }
 
-fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
-    cRequire(args.size in min..max, Config.error.wrongArgumentsNumber)
-}
+fun <T> cNotNull(p: T?, msg: ErrorMsg): T = p ?: throw CommandException(msg)
 
-inline fun <T> cWrongArgument(block: () -> T): T = try {
-    block()
-} catch (e: IllegalArgumentException) {
-    e.printStackTrace()
-    cWrongArgument()
-}
-
-fun cWrongArgument(): Nothing = throw CommandException(Config.error.wrongArgument)
-
-fun <T> cNotNull(p: T?, msg: LocalizedString): T = p ?: throw CommandException(msg)
-
-inline fun <reified T, reified R : T> cCast(p: T, msg: LocalizedString): R = cNotNull(p as? R, msg)
+inline fun <reified T, reified R : T> cCast(p: T, msg: ErrorMsg): R = cNotNull(p as? R, msg)
 
 fun randomString(size: Int) =
     String(CharArray(size) { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() })

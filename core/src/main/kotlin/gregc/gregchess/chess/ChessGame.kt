@@ -8,9 +8,6 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
-val ErrorConfig.rendererNotFound by ErrorConfig
-val ErrorConfig.teleportFailed by ErrorConfig
-
 val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
 
 val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
@@ -27,6 +24,11 @@ data class GameSettings(
 }
 
 class ChessGame(private val timeManager: TimeManager, val arena: Arena, val settings: GameSettings) {
+    companion object {
+        private val TELEPORT_FAILED = ErrorMsg("TeleportFailed")
+        private val RENDERER_NOT_FOUND = ErrorMsg("RendererNotFound")
+    }
+
     val uniqueId: UUID = UUID.randomUUID()
 
     override fun toString() = "ChessGame(uniqueId=$uniqueId)"
@@ -67,7 +69,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             }
         }
 
-    fun <T, R> cRequireRenderer(block: (Renderer<T>) -> R): R = cNotNull(withRenderer(block), Config.error.rendererNotFound)
+    fun <T, R> cRequireRenderer(block: (Renderer<T>) -> R): R = cNotNull(withRenderer(block), RENDERER_NOT_FOUND)
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
@@ -191,8 +193,7 @@ class ChessGame(private val timeManager: TimeManager, val arena: Arena, val sett
             state = GameState.Running(requireStarting())
             glog.mid("Started game", uniqueId)
         } catch (e: Exception) {
-            players.forEachReal { it.sendMessage(Config.error.teleportFailed) }
-            panic(e)
+            panic(CommandException(TELEPORT_FAILED, e))
             glog.mid("Failed to start game", uniqueId)
             throw e
         }

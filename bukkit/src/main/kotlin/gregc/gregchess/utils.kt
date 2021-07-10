@@ -88,10 +88,12 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 
 }
 
+val ErrorMsg.msg get() = config.getLocalizedString("Message.Error.$standardName")
+
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
-    p.sendMessage(e.playerMsg.get(p.lang))
+    p.sendMessage(e.error.msg.get(p.lang))
     err(e)
 }
 
@@ -117,29 +119,44 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
-val ErrorConfig.noPermission by ErrorConfig
-val ErrorConfig.notPlayer by ErrorConfig
-val ErrorConfig.playerNotFound by ErrorConfig
-val ErrorConfig.wrongDurationFormat by ErrorConfig
-val ErrorConfig.youInGame get() = getError("InGame.You")
-val ErrorConfig.opponentInGame get() = getError("InGame.Opponent")
-val ErrorConfig.youNotInGame get() = getError("NotInGame.You")
-val ErrorConfig.playerNotInGame get() = getError("NotInGame.Player")
-val ErrorConfig.opponentNotHuman get() = getError("NotHuman.Opponent")
+val WRONG_ARGUMENTS_NUMBER = ErrorMsg("WrongArgumentsNumber")
+val WRONG_ARGUMENT = ErrorMsg("WrongArgument")
+val NO_PERMISSION = ErrorMsg("NoPermission")
+val NOT_PLAYER = ErrorMsg("NotPlayer")
+val PLAYER_NOT_FOUND = ErrorMsg("PlayerNotFound")
+val WRONG_DURATION_FORMAT = ErrorMsg("WrongDurationFormat")
+val YOU_IN_GAME = ErrorMsg("InGame.You")
+val OPPONENT_IN_GAME = ErrorMsg("InGame.Opponent")
+val YOU_NOT_IN_GAME = ErrorMsg("NotInGame.You")
+val PLAYER_NOT_IN_GAME = ErrorMsg("NotInGame.Player")
+val OPPONENT_NOT_HUMAN = ErrorMsg("NotHuman.Opponent")
 
 
 fun cPerms(p: CommandSender, perm: String) {
-    cRequire(p.hasPermission(perm), Config.error.noPermission)
+    cRequire(p.hasPermission(perm), NO_PERMISSION)
 }
 
 fun cPlayer(p: CommandSender) {
     contract {
         returns() implies (p is Player)
     }
-    cRequire(p is Player, Config.error.notPlayer)
+    cRequire(p is Player, NOT_PLAYER)
 }
 
-fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), Config.error.playerNotFound)
+fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), PLAYER_NOT_FOUND)
+
+fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
+    cRequire(args.size in min..max, WRONG_ARGUMENTS_NUMBER)
+}
+
+inline fun <T> cWrongArgument(block: () -> T): T = try {
+    block()
+} catch (e: IllegalArgumentException) {
+    e.printStackTrace()
+    cWrongArgument()
+}
+
+fun cWrongArgument(): Nothing = throw CommandException(WRONG_ARGUMENT)
 
 fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
 

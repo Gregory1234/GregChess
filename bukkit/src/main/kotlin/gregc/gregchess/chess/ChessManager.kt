@@ -50,7 +50,7 @@ object BukkitChessGameManager : ChessGameManager, Listener {
 
     override fun leave(player: HumanPlayer) {
         val games = player.games
-        cRequire(games.isNotEmpty() || player.isSpectating(), Config.error.youNotInGame)
+        cRequire(games.isNotEmpty() || player.isSpectating(), YOU_NOT_IN_GAME)
         games.forEach { g ->
             g.stop(EndReason.Walkover(!g[player]!!.side), BySides { it == g[player]!!.side })
         }

@@ -35,9 +35,7 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
 }
 
 class BukkitConfig(private val rootView: BukkitView) :
-    ErrorConfig, MessageConfig, TitleConfig, ArenasConfig, StockfishConfig, TimeFormatConfig, View by rootView {
-
-    override fun getError(s: String) = getLocalizedString("Message.Error.$s")
+    MessageConfig, TitleConfig, ArenasConfig, StockfishConfig, TimeFormatConfig, View by rootView {
 
     override val chessArenas get() = getStringList("ChessArenas")
 

@@ -4,7 +4,13 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 
 interface ArenaManager {
+    companion object {
+        val NO_ARENAS = ErrorMsg("NoArenas")
+    }
+
     fun next(): Arena?
+
+    fun cNext() = cNotNull(next(), NO_ARENAS)
 }
 
 interface ArenasConfig : ConfigBlock {
@@ -12,10 +18,6 @@ interface ArenasConfig : ConfigBlock {
 }
 
 val Config.arenas: ArenasConfig by Config
-
-val ErrorConfig.noArenas by ErrorConfig
-
-fun ArenaManager.cNext() = cNotNull(next(), Config.error.noArenas)
 
 data class Arena(val name: String, var game: ChessGame? = null) : Component {
 

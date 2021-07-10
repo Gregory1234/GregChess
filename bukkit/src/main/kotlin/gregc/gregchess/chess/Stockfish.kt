@@ -20,7 +20,7 @@ class Stockfish(override val name: String = Config.stockfish.engineName) : Chess
     override fun setOption(name: String, value: String) {
         when (name) {
             "time" -> {
-                moveTime = cNotNull(parseDuration(value), Config.error.wrongDurationFormat)
+                moveTime = cNotNull(parseDuration(value), WRONG_DURATION_FORMAT)
             }
             else -> {
                 glog.io("setoption name $name value $value")
