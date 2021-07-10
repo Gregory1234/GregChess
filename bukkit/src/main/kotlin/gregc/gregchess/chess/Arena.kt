@@ -53,29 +53,92 @@ object ArenaManager : Listener {
     }
 }
 
-object BukkitArenaWorldGen : ChunkGenerator() {
-    override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid) =
-        createChunkData(world)
-
-    override fun shouldGenerateCaves() = false
-    override fun shouldGenerateMobs() = false
-    override fun shouldGenerateDecorations() = false
-    override fun shouldGenerateStructures() = false
-}
 
 data class Arena(val name: String, var game: ChessGame? = null): Component.Settings<Arena.Usage> {
+    private companion object {
+        val defData = PlayerData(allowFlight = true, isFlying = true)
+
+        val spectatorData = defData.copy(gameMode = GameMode.SPECTATOR)
+        val adminData = defData.copy(gameMode = GameMode.CREATIVE)
+    }
+
     class Usage(val arena: Arena, private val game: ChessGame): Component {
+
+        private val data = mutableMapOf<UUID, PlayerData>()
+
+        private fun BukkitPlayer.join(d: PlayerData = defData) {
+            if (uniqueId in data)
+                throw IllegalStateException("player already teleported")
+            data[uniqueId] = player.playerData
+            reset(d)
+        }
+
+        private fun BukkitPlayer.leave() {
+            if (uniqueId !in data)
+                throw IllegalStateException("player data not found")
+            player.playerData = data[uniqueId]!!
+            data.remove(uniqueId)
+        }
+
+        private fun BukkitPlayer.reset(d: PlayerData = defData) {
+            player.teleport(game.requireComponent<BukkitRenderer>().spawnLocation.toLocation(arena.world))
+            player.playerData = d
+            game[this]?.held?.let { setItem(0, it.piece) }
+        }
+
         @GameEvent(GameBaseEvent.PRE_INIT, mod = TimeModifier.EARLY)
         fun addGame() {
+            game.requireComponent<BukkitRenderer>()
             arena.game = game
         }
+
         @GameEvent(GameBaseEvent.VERY_END, mod = TimeModifier.LATE)
         fun removeGame() {
             arena.game = null
         }
+
+        @GameEvent(GameBaseEvent.PANIC)
+        fun evacuate() {
+            game.players.forEachReal { (it as? BukkitPlayer)?.leave() }
+        }
+
+        @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY, relaxed = true)
+        fun spectatorJoin(p: BukkitPlayer) {
+            p.join(spectatorData)
+        }
+
+        @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, mod = TimeModifier.LATE, relaxed = true)
+        fun spectatorLeave(p: BukkitPlayer) {
+            p.leave()
+        }
+
+        @GameEvent(GameBaseEvent.REMOVE_PLAYER, relaxed = true)
+        fun removePlayer(p: BukkitPlayer) {
+            p.leave()
+        }
+
+        @GameEvent(GameBaseEvent.ADD_PLAYER, relaxed = true)
+        fun addPlayer(p: BukkitPlayer) {
+            p.join(if (p.isAdmin) adminData else defData)
+        }
+
+        @GameEvent(GameBaseEvent.RESET_PLAYER, relaxed = true)
+        fun resetPlayer(p: BukkitPlayer) {
+            p.reset(if (p.isAdmin) adminData else defData)
+        }
     }
 
     override fun getComponent(game: ChessGame): Usage = Usage(this, game)
+
+    object WorldGen : ChunkGenerator() {
+        override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid) =
+            createChunkData(world)
+
+        override fun shouldGenerateCaves() = false
+        override fun shouldGenerateMobs() = false
+        override fun shouldGenerateDecorations() = false
+        override fun shouldGenerateStructures() = false
+    }
 
     val world: World by lazy {
         val world = Bukkit.getWorld(name)
@@ -84,7 +147,7 @@ data class Arena(val name: String, var game: ChessGame? = null): Component.Setti
             glog.low("World already exists", name)
             world
         } else {
-            val ret = Bukkit.createWorld(WorldCreator(name).generator(BukkitArenaWorldGen))!!
+            val ret = Bukkit.createWorld(WorldCreator(name).generator(WorldGen))!!
             glog.io("Created arena", name)
             ret
         }).apply {

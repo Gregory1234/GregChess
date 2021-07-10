@@ -9,11 +9,6 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
     private companion object {
         val extraFunctionProviders: List<(ExtraRendererFunction<*>) -> Optional<Any?>> = emptyList()
 
-        val defData = PlayerData(allowFlight = true, isFlying = true)
-
-        val spectatorData = defData.copy(gameMode = GameMode.SPECTATOR)
-        val adminData = defData.copy(gameMode = GameMode.CREATIVE)
-
         data class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
             constructor(world: World, mat: Material, loc: Loc) : this(world, mat, loc, loc)
         }
@@ -31,8 +26,6 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
     }
 
     private val world get() = game.arena.world
-
-    private val data = mutableMapOf<UUID, PlayerData>()
 
     private fun fill(from: Loc, to: Loc, mat: Material) =
         fill(FillVolume(world, mat, from + settings.offset, to + settings.offset))
@@ -95,58 +88,8 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
         return super.executeAny(f)
     }
 
-    private fun BukkitPlayer.join(d: PlayerData = defData) {
-        if (uniqueId in data)
-            throw IllegalStateException("player already teleported")
-        data[uniqueId] = player.playerData
-        reset(d)
-    }
-
-    private fun BukkitPlayer.leave() {
-        if (uniqueId !in data)
-            throw IllegalStateException("player data not found")
-        player.playerData = data[uniqueId]!!
-        data.remove(uniqueId)
-    }
-
-    private fun BukkitPlayer.reset(d: PlayerData = defData) {
-        player.teleport(spawnLocation.toLocation(this@BukkitRenderer.world))
-        player.playerData = d
-        game[this]?.held?.let { setItem(0, it.piece) }
-    }
-
     @GameEvent(GameBaseEvent.PRE_INIT)
     fun validate() {
         game.requireComponent<Arena.Usage>()
-    }
-
-    @GameEvent(GameBaseEvent.PANIC)
-    fun evacuate() {
-        game.players.forEachReal { (it as? BukkitPlayer)?.leave() }
-    }
-
-    @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY, relaxed = true)
-    fun spectatorJoin(p: BukkitPlayer) {
-        p.join(spectatorData)
-    }
-
-    @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, mod = TimeModifier.LATE, relaxed = true)
-    fun spectatorLeave(p: BukkitPlayer) {
-        p.leave()
-    }
-
-    @GameEvent(GameBaseEvent.REMOVE_PLAYER, relaxed = true)
-    fun removePlayer(p: BukkitPlayer) {
-        p.leave()
-    }
-
-    @GameEvent(GameBaseEvent.ADD_PLAYER, relaxed = true)
-    fun addPlayer(p: BukkitPlayer) {
-        p.join(if (p.isAdmin) adminData else defData)
-    }
-
-    @GameEvent(GameBaseEvent.RESET_PLAYER, relaxed = true)
-    fun resetPlayer(p: BukkitPlayer) {
-        p.reset(if (p.isAdmin) adminData else defData)
     }
 }
