@@ -6,7 +6,7 @@ import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
     val standardName
-        get() = "${side.standardName} ${type.name.lowercase()}"
+        get() = "${side.standardName} ${type.standardName.lowercase()}"
 
     val standardChar
         get() = when (side) {
