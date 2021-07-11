@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.Chessboard
 
 object HordeChess : ChessVariant("Horde") {
 
@@ -8,6 +9,12 @@ object HordeChess : ChessVariant("Horde") {
         override fun canDouble(piece: PieceInfo): Boolean = when (piece.side) {
             Side.WHITE -> piece.pos.rank <= 1
             Side.BLACK -> piece.pos.rank >= 6
+        }
+    }
+
+    override fun chessboardSetup(board: Chessboard) {
+        board.piecesOf(Side.WHITE, PieceType.PAWN).forEach {
+            it.force(false)
         }
     }
 

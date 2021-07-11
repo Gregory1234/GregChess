@@ -65,14 +65,7 @@ data class FEN(
     private fun Char.toPiece(p: Pos): PieceInfo {
         val type = PieceType.parseFromStandardChar(this)
         val side = if (isUpperCase()) Side.WHITE else Side.BLACK
-        val hasMoved = when (type) {
-            PieceType.PAWN -> when (side) {
-                Side.WHITE -> p.rank != 1
-                Side.BLACK -> p.rank != 6
-            }
-            PieceType.ROOK -> p.file !in castlingRights[side]
-            else -> false
-        }
+        val hasMoved = type.hasMoved(this@FEN, p, side)
         return PieceInfo(p, Piece(type, side), hasMoved)
     }
 
