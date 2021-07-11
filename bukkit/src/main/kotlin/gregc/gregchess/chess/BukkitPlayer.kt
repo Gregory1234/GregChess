@@ -5,12 +5,6 @@ import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.entity.Player
 
-val MessageConfig.inCheck by MessageConfig
-val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
-
-val TitleConfig.inCheck by TitleConfig
-val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
-val TitleConfig.yourTurn by TitleConfig
 
 data class BukkitGamePlayerStatus(
     val original: GamePlayerStatus,
@@ -24,8 +18,14 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     companion object {
         private val bukkitPlayers = mutableMapOf<Player, BukkitPlayer>()
         fun toHuman(p: Player) = bukkitPlayers.getOrPut(p) { BukkitPlayer(p) }
-        private val MessageConfig.copyFEN by MessageConfig
-        private val MessageConfig.copyPGN by MessageConfig
+        private val COPY_FEN = message("CopyFEN")
+        private val COPY_PGN = message("CopyPGN")
+        private val IN_CHECK_MSG = message("InCheck")
+        private val YOU_ARE_PLAYING_AS_MSG = BySides { message("YouArePlayingAs.${it.standardName}") }
+
+        private val IN_CHECK_TITLE = title("InCheck")
+        private val YOU_ARE_PLAYING_AS_TITLE get() = BySides { title("YouArePlayingAs.${it.standardName}") }
+        private val YOUR_TURN = title("YourTurn")
     }
 
     var lang: String = DEFAULT_LANG
@@ -44,13 +44,13 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     private fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
     override fun sendPGN(pgn: PGN) {
-        val message = TextComponent(Config.message.copyPGN.get(lang))
+        val message = TextComponent(COPY_PGN.get(lang))
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }
 
     override fun sendFEN(fen: FEN) {
-        val message = TextComponent(Config.message.copyFEN.get(lang))
+        val message = TextComponent(COPY_FEN.get(lang))
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
         player.spigot().sendMessage(message)
     }
@@ -90,11 +90,9 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         val values = status.map {
             when(it) {
                 GamePlayerStatus.START ->
-                    BukkitGamePlayerStatus(it,
-                        Config.title.youArePlayingAs[side],
-                        Config.message.youArePlayingAs[side], true)
-                GamePlayerStatus.IN_CHECK -> BukkitGamePlayerStatus(it, Config.title.inCheck, Config.message.inCheck)
-                GamePlayerStatus.TURN -> BukkitGamePlayerStatus(it, Config.title.yourTurn)
+                    BukkitGamePlayerStatus(it, YOU_ARE_PLAYING_AS_TITLE[side], YOU_ARE_PLAYING_AS_MSG[side], true)
+                GamePlayerStatus.IN_CHECK -> BukkitGamePlayerStatus(it, IN_CHECK_TITLE, IN_CHECK_MSG)
+                GamePlayerStatus.TURN -> BukkitGamePlayerStatus(it, YOUR_TURN)
             }
         }
         if (values.size == 1) {
@@ -124,10 +122,10 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     }
 }
 
-val MessageConfig.pawnPromotion by MessageConfig
+private val PAWN_PROMOTION = message("PawnPromotion")
 
 suspend fun Player.openPawnPromotionMenu(moves: List<MoveCandidate>) =
-    openMenu(Config.message.pawnPromotion, moves.mapIndexed { i, m ->
+    openMenu(PAWN_PROMOTION, moves.mapIndexed { i, m ->
         ScreenOption((m.promotion?.item ?: m.piece.piece.item).get(human.lang), m, InventoryPosition.fromIndex(i))
     }) ?: moves[0]
 

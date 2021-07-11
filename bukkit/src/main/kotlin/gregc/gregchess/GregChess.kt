@@ -45,13 +45,13 @@ object GregChess : Listener {
     private val GAME_NOT_FOUND = ErrorMsg("GameNotFound")
     private val NOTHING_TO_TAKEBACK = ErrorMsg("NothingToTakeback")
 
-    private val MessageConfig.boardOpDone by MessageConfig
-    private val MessageConfig.skippedTurn by MessageConfig
-    private val MessageConfig.timeOpDone by MessageConfig
-    private val MessageConfig.engineCommandSent by MessageConfig
-    private val MessageConfig.loadedFEN by MessageConfig
-    private val MessageConfig.configReloaded by MessageConfig
-    private val MessageConfig.levelSet by MessageConfig
+    private val BOARD_OP_DONE = message("BoardOpDone")
+    private val SKIPPED_TURN = message("SkippedTurn")
+    private val TIME_OP_DONE = message("TimeOpDone")
+    private val ENGINE_COMMAND_SENT = message("EngineCommandSent")
+    private val LOADED_FEN = message("LoadedFEN")
+    private val CONFIG_RELOADED = message("ConfigReloaded")
+    private val LEVEL_SET = message("LevelSet")
 
     private val drawRequest = RequestManager.register("Draw", "/chess draw", "/chess draw")
 
@@ -165,7 +165,7 @@ object GregChess : Listener {
                     endArgs()
                     p.game.board[pos]?.piece?.capture(p.side)
                     p.game.board.updateMoves()
-                    player.human.sendMessage(Config.message.boardOpDone)
+                    player.human.sendMessage(BOARD_OP_DONE)
                 }
                 "spawn" -> {
                     cPlayer(player)
@@ -182,7 +182,7 @@ object GregChess : Listener {
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(Piece(piece, Side.valueOf(this[0])), square)
                         game.board.updateMoves()
-                        player.human.sendMessage(Config.message.boardOpDone)
+                        player.human.sendMessage(BOARD_OP_DONE)
                     }
                 }
                 "move" -> {
@@ -195,7 +195,7 @@ object GregChess : Listener {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
                         game.board[Pos.parseFromString(this[1])]?.piece?.move(game.board[Pos.parseFromString(this[2])]!!)
                         game.board.updateMoves()
-                        player.human.sendMessage(Config.message.boardOpDone)
+                        player.human.sendMessage(BOARD_OP_DONE)
                     }
                 }
                 "skip" -> {
@@ -204,14 +204,14 @@ object GregChess : Listener {
                     endArgs()
                     val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
                     game.nextTurn()
-                    player.human.sendMessage(Config.message.skippedTurn)
+                    player.human.sendMessage(SKIPPED_TURN)
                 }
                 "load" -> {
                     cPlayer(player)
                     perms()
                     val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
                     game.board.setFromFEN(FEN.parseFromString(restString()))
-                    player.human.sendMessage(Config.message.loadedFEN)
+                    player.human.sendMessage(LOADED_FEN)
                 }
                 "save" -> {
                     cPlayer(player)
@@ -234,7 +234,7 @@ object GregChess : Listener {
                             "set" -> clock.setTime(side, time)
                             else -> cWrongArgument()
                         }
-                        player.human.sendMessage(Config.message.timeOpDone)
+                        player.human.sendMessage(TIME_OP_DONE)
                     }
                 }
                 "uci" -> {
@@ -251,7 +251,7 @@ object GregChess : Listener {
                             "send" -> engine.engine.sendCommand(restString())
                             else -> cWrongArgument()
                         }
-                        player.human.sendMessage(Config.message.engineCommandSent)
+                        player.human.sendMessage(ENGINE_COMMAND_SENT)
                     }
                 }
                 "spectate" -> {
@@ -265,7 +265,7 @@ object GregChess : Listener {
                     endArgs()
                     plugin.reloadConfig()
                     ArenaManager.reload()
-                    player.sendMessage(Config.message.configReloaded.get(player.lang))
+                    player.sendMessage(CONFIG_RELOADED.get(player.lang))
                 }
                 "dev" -> {
                     cRequire(Bukkit.getPluginManager().isPluginEnabled("DevHelpPlugin"), WRONG_ARGUMENTS_NUMBER)
@@ -295,7 +295,7 @@ object GregChess : Listener {
                     perms()
                     cWrongArgument {
                         glog.level = GregLogger.Level.valueOf(lastArg())
-                        player.sendMessage(Config.message.levelSet.get(player.lang))
+                        player.sendMessage(LEVEL_SET.get(player.lang))
                     }
                 }
                 "info" -> {

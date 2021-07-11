@@ -133,6 +133,9 @@ val YOU_NOT_IN_GAME = ErrorMsg("NotInGame.You")
 val PLAYER_NOT_IN_GAME = ErrorMsg("NotInGame.Player")
 val OPPONENT_NOT_HUMAN = ErrorMsg("NotHuman.Opponent")
 
+fun message(n: String) = config.getLocalizedString("Message.$n")
+fun title(n: String) = config.getLocalizedString("Title.$n")
+
 
 fun cPerms(p: CommandSender, perm: String) {
     cRequire(p.hasPermission(perm), NO_PERMISSION)

@@ -5,7 +5,6 @@ import java.time.LocalTime
 import java.util.*
 import kotlin.contracts.contract
 import kotlin.math.*
-import kotlin.reflect.KProperty
 
 @JvmInline
 value class ErrorMsg(val standardName: String) {
@@ -16,29 +15,6 @@ value class ErrorMsg(val standardName: String) {
         errors += this
     }
 }
-
-interface MessageConfig : ConfigBlock {
-    companion object {
-        operator fun getValue(owner: MessageConfig, property: KProperty<*>) =
-            owner.getMessage(property.name.upperFirst())
-    }
-
-    fun getMessage(s: String, vararg args: Any?): LocalizedString
-}
-
-val Config.message: MessageConfig by Config
-
-
-interface TitleConfig : ConfigBlock {
-    companion object {
-        operator fun getValue(owner: TitleConfig, property: KProperty<*>) = owner.getTitle(property.name.upperFirst())
-    }
-
-    fun getTitle(s: String): LocalizedString
-}
-
-val Config.title: TitleConfig by Config
-
 
 class CommandException(val error: ErrorMsg, cause: Throwable? = null) : Exception(cause) {
 

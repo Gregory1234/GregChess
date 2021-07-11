@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.TimeManager
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
@@ -146,36 +146,5 @@ class TestComponent : Component {
 object TestVariant: ChessVariant("test")
 
 class TestEndReason(winner: Side? = null): EndReason("Test", "emergency", winner)
-
-class TestView(private val root: String) : View {
-    override fun getPureString(path: String): String? = null
-
-    override fun getPureLocalizedString(path: String, lang: String): String? = null
-
-    override fun getPureStringList(path: String): List<String>? = null
-
-    override fun processString(s: String): String = s
-
-    override val children: Set<String>?
-        get() = null
-
-    override fun getOrNull(path: String): View? = null
-
-    override fun get(path: String): View = TestView(root addDot path)
-
-    override fun fullPath(path: String): String = root addDot path
-}
-
-class TestConfig(private val rootView: TestView) : MessageConfig, TitleConfig, View by rootView {
-
-    override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
-
-    override fun getTitle(s: String) = getLocalizedString("Title.$s")
-
-}
-
-fun Config.initTest() {
-    this += TestConfig(TestView(""))
-}
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)

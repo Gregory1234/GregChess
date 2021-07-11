@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Config
 import io.mockk.*
 import org.junit.jupiter.api.*
 import kotlin.test.assertEquals
@@ -9,7 +8,6 @@ import kotlin.test.assertEquals
 class ChessGameTests {
 
     init {
-        Config.initTest()
         val variant = spyk(TestVariant)
         variant.init()
         excludeRecords {

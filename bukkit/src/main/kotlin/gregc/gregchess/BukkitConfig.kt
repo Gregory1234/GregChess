@@ -33,12 +33,7 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
     override fun fullPath(path: String): String = root addDot path
 }
 
-class BukkitConfig(private val rootView: BukkitView) :
-    MessageConfig, TitleConfig, StockfishConfig, TimeFormatConfig, View by rootView {
-
-    override fun getMessage(s: String, vararg args: Any?) = getLocalizedString("Message.$s", *args)
-
-    override fun getTitle(s: String) = getLocalizedString("Title.$s")
+class BukkitConfig(private val rootView: BukkitView) : StockfishConfig, TimeFormatConfig, View by rootView {
 
     override val hasStockfish get() = getDefaultBoolean("Chess.HasStockfish", false)
     override val stockfishCommand get() = getString("Chess.Stockfish.Path")

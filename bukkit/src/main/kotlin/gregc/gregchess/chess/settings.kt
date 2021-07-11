@@ -42,10 +42,10 @@ object SettingsManager {
 
 }
 
-val MessageConfig.chooseSettings by MessageConfig
+private val CHOOSE_SETTINGS = message("ChooseSettings")
 
 suspend fun Player.openSettingsMenu() =
-    openMenu(Config.message.chooseSettings, SettingsManager.getSettings().mapIndexed { index, s ->
+    openMenu(CHOOSE_SETTINGS, SettingsManager.getSettings().mapIndexed { index, s ->
         val item = ItemStack(Material.IRON_BLOCK)
         val meta = item.itemMeta!!
         meta.setDisplayName(s.name)
