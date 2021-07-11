@@ -36,7 +36,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
 
     suspend fun invalidSender(s: Player) {
         glog.mid("Invalid sender", s)
-        s.sendMessage(view.getLocalizedString("CannotSend").get(s.lang))
+        s.sendMessage(LocalizedString(view, "CannotSend"))
         return suspendCoroutine { }
     }
 
@@ -53,13 +53,13 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         }
         requests[request.uniqueId] = request
         request.sender.sendCommandMessage(
-            view.getLocalizedString("Sent.Request"),
-            config.getLocalizedString("Request.Cancel"),
+            LocalizedString(view, "Sent.Request"),
+            LocalizedString(config, "Request.Cancel"),
             if (simple) cancelCommand else "$cancelCommand ${request.uniqueId}"
         )
         request.receiver.sendCommandMessage(
-            view.getLocalizedString("Received.Request", request.sender.name, request.value),
-            config.getLocalizedString("Request.Accept"),
+            LocalizedString(view, "Received.Request", request.sender.name, request.value),
+            LocalizedString(config, "Request.Accept"),
             if (simple) acceptCommand else "$acceptCommand ${request.uniqueId}"
         )
         val duration = view.getOptionalDuration("Duration")
@@ -95,8 +95,8 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     }
 
     private fun accept(request: Request) {
-        request.sender.sendMessage(view.getLocalizedString("Sent.Accept", request.receiver.name))
-        request.receiver.sendMessage(view.getLocalizedString("Received.Accept", request.sender.name))
+        request.sender.sendMessage(LocalizedString(view, "Sent.Accept", request.receiver.name))
+        request.receiver.sendMessage(LocalizedString(view, "Received.Accept", request.sender.name))
         requests.remove(request.uniqueId)
         glog.mid("Accepted", request.uniqueId)
         request.cont.resume(RequestResponse.ACCEPT)
@@ -105,14 +105,14 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     fun accept(p: Player, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.receiver)
-            p.sendMessage(view.getLocalizedString("Error.NotFound"))
+            p.sendMessage(LocalizedString(view, "Error.NotFound"))
         else
             accept(request)
     }
 
     private fun cancel(request: Request) {
-        request.sender.sendMessage(view.getLocalizedString("Sent.Cancel", request.receiver.name))
-        request.receiver.sendMessage(view.getLocalizedString("Received.Cancel", request.sender.name))
+        request.sender.sendMessage(LocalizedString(view, "Sent.Cancel", request.receiver.name))
+        request.receiver.sendMessage(LocalizedString(view, "Received.Cancel", request.sender.name))
         requests.remove(request.uniqueId)
         glog.mid("Cancelled", request.uniqueId)
         request.cont.resume(RequestResponse.CANCEL)
@@ -121,14 +121,14 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     fun cancel(p: Player, uniqueId: UUID) {
         val request = requests[uniqueId]
         if (request == null || p != request.sender)
-            p.sendMessage(view.getLocalizedString("Error.NotFound"))
+            p.sendMessage(LocalizedString(view, "Error.NotFound"))
         else
             cancel(request)
     }
 
     private fun expire(request: Request) {
-        request.sender.sendMessage(view.getLocalizedString("Expired", request.receiver.name))
-        request.receiver.sendMessage(view.getLocalizedString("Expired", request.sender.name))
+        request.sender.sendMessage(LocalizedString(view, "Expired", request.receiver.name))
+        request.receiver.sendMessage(LocalizedString(view, "Expired", request.sender.name))
         requests.remove(request.uniqueId)
         glog.mid("Expired", request.uniqueId)
         request.cont.resume(RequestResponse.EXPIRED)

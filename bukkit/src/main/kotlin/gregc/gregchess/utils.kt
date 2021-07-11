@@ -90,7 +90,7 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 
 }
 
-val ErrorMsg.msg get() = config.getLocalizedString("Message.Error.$standardName")
+val ErrorMsg.msg get() = LocalizedString(config, "Message.Error.$standardName")
 
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
@@ -133,8 +133,8 @@ val YOU_NOT_IN_GAME = ErrorMsg("NotInGame.You")
 val PLAYER_NOT_IN_GAME = ErrorMsg("NotInGame.Player")
 val OPPONENT_NOT_HUMAN = ErrorMsg("NotHuman.Opponent")
 
-fun message(n: String) = config.getLocalizedString("Message.$n")
-fun title(n: String) = config.getLocalizedString("Title.$n")
+fun message(n: String) = LocalizedString(config, "Message.$n")
+fun title(n: String) = LocalizedString(config, "Title.$n")
 
 
 fun cPerms(p: CommandSender, perm: String) {

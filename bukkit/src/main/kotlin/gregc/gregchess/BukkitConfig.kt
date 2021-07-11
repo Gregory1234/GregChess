@@ -15,8 +15,6 @@ fun interface BukkitConfigProvider {
 class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
     override fun getPureString(path: String): String? = file().getString(root addDot path)
 
-    override fun getPureLocalizedString(path: String, lang: String): String? = file().getString(root addDot path)
-
     override fun getPureStringList(path: String): List<String>? =
         if (root addDot path in file()) file().getStringList(root addDot path) else null
 
@@ -45,3 +43,10 @@ class BukkitConfig(private val rootView: BukkitView) : StockfishConfig, TimeForm
 
 val config: BukkitConfig
     get() = Config.get()!!
+
+class LocalizedString(private val view: View, private val path: String, private vararg val args: Any?) {
+    fun get(lang: String): String =
+        view.getVal(path, "string", lang + "/" + view.fullPath(path), true) { s ->
+            view.processString(s.format(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray()))
+        }
+}

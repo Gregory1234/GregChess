@@ -26,6 +26,13 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         private val IN_CHECK_TITLE = title("InCheck")
         private val YOU_ARE_PLAYING_AS_TITLE get() = BySides { title("YouArePlayingAs.${it.standardName}") }
         private val YOUR_TURN = title("YourTurn")
+
+        private val YOU_WON = title("Player.YouWon")
+        private val YOU_LOST = title("Player.YouLost")
+        private val YOU_DREW = title("Player.YouDrew")
+
+        private val SPECTATOR_WINNER = BySides { title("Spectator.${it.standardName}Won") }
+        private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")
     }
 
     var lang: String = DEFAULT_LANG
@@ -56,7 +63,7 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     }
 
     override fun setItem(i: Int, piece: Piece?) {
-        player.inventory.setItem(i, piece?.item?.get(lang))
+        player.inventory.setItem(i, piece?.getItem(lang))
     }
 
     override fun openPawnPromotionMenu(moves: List<MoveCandidate>) = interact {
@@ -66,17 +73,16 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
 
     override fun showEndReason(side: Side, reason: EndReason) {
         val wld = when (reason.winner) {
-            side -> "Won"
-            null -> "Drew"
-            else -> "Lost"
+            side -> YOU_WON
+            null -> YOU_DREW
+            else -> YOU_LOST
         }
-        sendTitle(config.getLocalizedString("Title.Player.You$wld").get(lang), reason.name.get(lang))
+        sendTitle(wld.get(lang), reason.name.get(lang))
         sendMessage(reason.message)
     }
 
     override fun showEndReason(reason: EndReason) {
-        val winner = reason.winner?.standardName?.plus("Won") ?: "ItWasADraw"
-        sendTitle(config.getLocalizedString("Title.Spectator.$winner").get(lang), reason.name.get(lang))
+        sendTitle((reason.winner?.let { SPECTATOR_WINNER[it] } ?: SPECTATOR_DRAW).get(lang), reason.name.get(lang))
         sendMessage(reason.message)
     }
 
@@ -126,7 +132,7 @@ private val PAWN_PROMOTION = message("PawnPromotion")
 
 suspend fun Player.openPawnPromotionMenu(moves: List<MoveCandidate>) =
     openMenu(PAWN_PROMOTION, moves.mapIndexed { i, m ->
-        ScreenOption((m.promotion?.item ?: m.piece.piece.item).get(human.lang), m, InventoryPosition.fromIndex(i))
+        ScreenOption((m.promotion ?: m.piece.piece).getItem(human.lang), m, InventoryPosition.fromIndex(i))
     }) ?: moves[0]
 
 val HumanPlayer.chess get() = this.currentGame?.get(this)

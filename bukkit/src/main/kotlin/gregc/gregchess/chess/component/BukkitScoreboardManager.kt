@@ -11,22 +11,28 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         override fun getComponent(game: ChessGame) = BukkitScoreboardManager(game)
     }
 
+    companion object {
+        private val TITLE = LocalizedString(config, "Scoreboard.Title")
+        private fun whiteFormat(s: String) = LocalizedString(config, "Scoreboard.Format.White", s)
+        private fun blackFormat(s: String) = LocalizedString(config, "Scoreboard.Format.Black", s)
+        private fun generalFormat(s: String) = LocalizedString(config, "Scoreboard.Format.General", s)
+        private fun format(side: Side, s: String) = LocalizedString(config, "Scoreboard.Format.${side.standardName}", s)
+
+        private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")
+
+        private val GameProperty.name get() = LocalizedString(config, "Scoreboard.$standardName").get(DEFAULT_LANG)
+        private val PlayerProperty.name get() = LocalizedString(config, "Scoreboard.$standardName").get(DEFAULT_LANG)
+    }
+
     private val gameProperties = mutableListOf<GameProperty>()
     private val playerProperties = mutableListOf<PlayerProperty>()
-
-    private val title get() = config.getLocalizedString("Scoreboard.Title")
-    private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")
-    private fun whiteFormat(s: String) = config.getLocalizedString("Scoreboard.Format.White", s)
-    private fun blackFormat(s: String) = config.getLocalizedString("Scoreboard.Format.Black", s)
-    private fun generalFormat(s: String) = config.getLocalizedString("Scoreboard.Format.General", s)
-    private fun format(side: Side, s: String) = config.getLocalizedString("Scoreboard.Format.${side.standardName}", s)
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     private val gamePropertyTeams = mutableMapOf<GameProperty, Team>()
     private val playerPropertyTeams = mutableMapOf<PlayerProperty, BySides<Team>>()
 
-    private val objective = scoreboard.registerNewObjective("GregChess", "", title.get(DEFAULT_LANG))
+    private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get(DEFAULT_LANG))
 
     override operator fun plusAssign(p: GameProperty) {
         gameProperties += p
@@ -43,9 +49,6 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         } while (scoreboard.getTeam(s) != null)
         return scoreboard.registerNewTeam(s)
     }
-
-    private val GameProperty.name get() = config.getLocalizedString("Scoreboard.$standardName").get(DEFAULT_LANG)
-    private val PlayerProperty.name get() = config.getLocalizedString("Scoreboard.$standardName").get(DEFAULT_LANG)
 
     @GameEvent(GameBaseEvent.INIT)
     fun init() {

@@ -13,21 +13,21 @@ interface StockfishConfig : ConfigBlock {
 
 val Config.stockfish: StockfishConfig by Config
 
-fun PieceType.getItem(side: Side) = Localized { lang ->
+fun PieceType.getItem(side: Side, lang: String): ItemStack {
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
-    meta.setDisplayName(config.getLocalizedString("Chess.Side.${side.standardName}.Piece", pieceName).get(lang))
+    meta.setDisplayName(LocalizedString(config, "Chess.Side.${side.standardName}.Piece", pieceName).get(lang))
     item.itemMeta = meta
-    item
+    return item
 }
 
 val PieceType.view get() = config["Chess.Piece.$standardName"]
-val PieceType.pieceName get() = view.getLocalizedString("Name")
+val PieceType.pieceName get() = LocalizedString(view, "Name")
 fun PieceType.getSound(s: PieceSound): Sound = view.getEnum("Sound.${s.standardName}", Sound.BLOCK_STONE_HIT)
 val PieceType.itemMaterial get() = BySides { view.getEnum("Item.${it.standardName}", Material.AIR) }
 val PieceType.structure get() = BySides { view.getEnumList<Material>("Structure.${it.standardName}") }
 
-val Piece.item get() = type.getItem(side)
+fun Piece.getItem(lang: String) = type.getItem(side, lang)
 
 val Floor.material get() = config.getEnum<Material>("Chess.Floor.${standardName}", Material.AIR)
 
@@ -56,8 +56,8 @@ fun ChessGame.getInfo() = buildTextComponent {
 }
 
 val EndReason.name
-    get() = config.getLocalizedString("Chess.EndReason.$standardName")
+    get() = LocalizedString(config, "Chess.EndReason.$standardName")
 
 val EndReason.message
-    get() = config.getLocalizedString(
+    get() = LocalizedString(config,
         "Message.GameFinished." + (winner?.standardName?.plus("Won") ?: "ItWasADraw"), name)
