@@ -1,6 +1,5 @@
 ChessArenas:
   arena1
-TimeFormat: "mm:ss.S"
 
 Request:
   Accept: "&a[Accept]"
@@ -249,3 +248,6 @@ Scoreboard:
   CheckCounter: "check counter"
   TimeRemaining: "time"
   TimeRemainingSimple: "Time remaining"
+
+Clock:
+  TimeFormat: "mm:ss.S"

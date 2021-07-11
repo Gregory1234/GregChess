@@ -14,7 +14,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
 
 
     data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
-        Component.Settings<ChessClock> {
+        Component.Settings<ChessClock>, Config by ComponentConfig.require<ChessClock, Config>() {
 
         fun getPGN() = buildString {
             if (type == Type.SIMPLE) {
@@ -40,6 +40,10 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 }
             }
         }
+    }
+
+    interface Config {
+        val timeFormat: String
     }
 
     data class Time(
@@ -78,16 +82,18 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     fun getTimeRemaining(s: Side) =
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
-    private fun format(time: Duration) = Config.time.formatTime(time)
-
     @GameEvent(GameBaseEvent.START)
     fun start() {
 
         if (settings.type == Type.FIXED) {
-            game.scoreboard.game("TimeRemainingSimple") { format(getTimeRemaining(game.currentTurn)) }
+            game.scoreboard.game("TimeRemainingSimple") {
+                getTimeRemaining(game.currentTurn).format(settings.timeFormat) ?: settings.timeFormat
+            }
             startTimer()
         } else {
-            game.scoreboard.player("TimeRemaining") { format(getTimeRemaining(it)) }
+            game.scoreboard.player("TimeRemaining") {
+                getTimeRemaining(it).format(settings.timeFormat) ?: settings.timeFormat
+            }
         }
     }
 

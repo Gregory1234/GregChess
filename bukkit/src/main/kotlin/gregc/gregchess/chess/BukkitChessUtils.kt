@@ -5,13 +5,6 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
-interface StockfishConfig : ConfigBlock {
-    val hasStockfish: Boolean
-    val stockfishCommand: String
-    val engineName: String
-}
-
-val Config.stockfish: StockfishConfig by Config
 
 fun PieceType.getItem(side: Side, lang: String): ItemStack {
     val item = ItemStack(itemMaterial[side])

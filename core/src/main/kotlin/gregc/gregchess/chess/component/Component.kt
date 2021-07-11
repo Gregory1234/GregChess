@@ -96,4 +96,19 @@ fun Collection<Component>.allRemovePlayer(p: HumanPlayer) = runGameEvent(GameBas
 fun Collection<Component>.allResetPlayer(p: HumanPlayer) = runGameEvent(GameBaseEvent.RESET_PLAYER, p)
 fun Collection<Component>.allPanic(e: Exception) = runGameEvent(GameBaseEvent.PANIC, e)
 
-class ComponentNotFoundException(cl: KClass<*>) : Exception(cl.toString())
+class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
+class ComponentConfigNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
+
+object ComponentConfig {
+    private val values = mutableMapOf<KClass<out Component>, Any>()
+
+    fun <T : Component> getAny(cl: KClass<T>) = values[cl]
+    inline fun <reified T : Component> getAny() = getAny(T::class)
+    fun <T : Component> requireAny(cl: KClass<T>) = getAny(cl) ?: throw ComponentConfigNotFoundException(cl)
+    inline fun <reified T : Component> requireAny() = requireAny(T::class)
+    inline fun <reified T : Component, reified R : Any> get() = getAny<T>() as? R
+    inline fun <reified T : Component, reified R : Any> require() = requireAny<T>() as R
+    operator fun set(cl: KClass<out Component>, v: Any) {
+        values[cl] = v
+    }
+}

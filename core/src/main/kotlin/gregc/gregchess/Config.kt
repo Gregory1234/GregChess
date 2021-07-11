@@ -1,37 +1,6 @@
 package gregc.gregchess
 
-import java.time.Duration
-import java.time.format.DateTimeFormatter
-import kotlin.reflect.*
-
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
-
-fun interface ConfigVal<T> {
-    fun get(): T
-}
-
-fun <R: ConfigBlock, T> KProperty1<R, T>.toPath(cl: KClass<R>) = ConfigVal { this.get(Config.get(cl)!!) }
-
-val <reified R: ConfigBlock, T> KProperty1<R, T>.path inline get() = toPath(R::class)
-
-inline operator fun <reified R: ConfigBlock, T> KProperty1<R, T>.getValue(owner: Any?, property: KProperty<*>) = path.get()
-operator fun <T> ConfigVal<T>.getValue(owner: Any?, property: KProperty<*>) = get()
-
-interface ConfigBlock
-
-object Config {
-    private val blocks = mutableListOf<ConfigBlock>()
-
-    operator fun plusAssign(b: ConfigBlock) {
-        blocks += b
-    }
-
-    fun <T: ConfigBlock> get(cl: KClass<T>) = blocks.filterIsInstance(cl.java).firstOrNull()
-
-    inline fun <reified T: ConfigBlock> get() = get(T::class)
-
-    inline operator fun <reified T: ConfigBlock> getValue(owner: Config, property: KProperty<*>): T = get()!!
-}
 
 fun <T> String?.getVal(path: String, type: String, default: T, warnMissing: Boolean = true, parser: (String) -> T?): T {
     if (this == null) {
@@ -90,9 +59,6 @@ fun View.getDefaultInt(path: String, def: Int, warnMissing: Boolean = false) = g
 fun View.getDuration(path: String) = getVal(path, "duration", 0.seconds, true, ::parseDuration)
 fun View.getOptionalDuration(path: String) = getVal(path, "duration", null, false, ::parseDuration)
 fun View.getChar(path: String) = getVal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
-fun View.getTimeFormat(path: String, time: Duration) = getVal(path, "time format", path, true) {
-    DateTimeFormatter.ofPattern(it).format(time.toLocalTime())
-}
 inline fun <reified T: Enum<T>> View.getEnum(path: String, def: T, warnMissing: Boolean = true) = getVal(path, def::class.simpleName ?: "enum", def, warnMissing) {
     enumValueOf(it)
 }

@@ -23,7 +23,7 @@ object GregChess : Listener {
 
         init {
             INSTANCE = this
-            Config.initBukkit { config }
+            initBukkitConfig { config }
         }
 
         override fun onEnable() {
@@ -115,7 +115,7 @@ object GregChess : Listener {
                 "stockfish" -> {
                     cPlayer(player)
                     perms()
-                    cRequire(Config.stockfish.hasStockfish, STOCKFISH_NOT_FOUND)
+                    cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     endArgs()
                     cRequire(!player.human.isInGame(), YOU_IN_GAME)
                     interact {

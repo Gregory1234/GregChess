@@ -1,7 +1,7 @@
 package gregc.gregchess
 
-import java.time.Duration
-import java.time.LocalTime
+import java.time.*
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.contracts.contract
 import kotlin.math.*
@@ -56,12 +56,6 @@ operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 fun String.upperFirst() = replaceFirstChar { it.uppercase() }
 fun String.lowerFirst() = replaceFirstChar { it.lowercase() }
 
-interface TimeFormatConfig: ConfigBlock {
-    fun formatTime(time: Duration): String
-}
-
-val Config.time: TimeFormatConfig by Config
-
 fun Duration.toTicks(): Long = toMillis() / 50
 
 val Int.seconds: Duration
@@ -105,6 +99,12 @@ fun parseDuration(s: String): Duration? {
 
 fun Duration.toLocalTime(): LocalTime =
     LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
+
+fun Duration.format(formatString: String): String? = try {
+    DateTimeFormatter.ofPattern(formatString).format(toLocalTime())
+} catch (e: DateTimeException) {
+    null
+}
 
 fun String.snakeToPascal(): String {
     val snakeRegex = "_[a-zA-Z]".toRegex()

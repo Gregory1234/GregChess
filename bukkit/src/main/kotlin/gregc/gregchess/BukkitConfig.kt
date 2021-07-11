@@ -1,11 +1,12 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.StockfishConfig
+import gregc.gregchess.chess.component.ChessClock
+import gregc.gregchess.chess.component.ComponentConfig
 import org.bukkit.configuration.file.FileConfiguration
-import java.time.Duration
 
-fun Config.initBukkit(c: BukkitConfigProvider) {
-    this += BukkitConfig(BukkitView(c, ""))
+fun initBukkitConfig(c: BukkitConfigProvider) {
+    config = BukkitView(c, "")
+    ComponentConfig[ChessClock::class] = BukkitClockConfig
 }
 
 fun interface BukkitConfigProvider {
@@ -31,22 +32,18 @@ class BukkitView(val file: BukkitConfigProvider, val root: String) : View {
     override fun fullPath(path: String): String = root addDot path
 }
 
-class BukkitConfig(private val rootView: BukkitView) : StockfishConfig, TimeFormatConfig, View by rootView {
+lateinit var config: BukkitView
+    private set
 
-    override val hasStockfish get() = getDefaultBoolean("Chess.HasStockfish", false)
-    override val stockfishCommand get() = getString("Chess.Stockfish.Path")
-    override val engineName get() = getString("Chess.Stockfish.Name")
-
-    override fun formatTime(time: Duration) = getTimeFormat("TimeFormat", time)
-
+object BukkitClockConfig: ChessClock.Config {
+    override val timeFormat: String
+        get() = config.getString("Clock.TimeFormat")
 }
-
-val config: BukkitConfig
-    get() = Config.get()!!
 
 class LocalizedString(private val view: View, private val path: String, private vararg val args: Any?) {
     fun get(lang: String): String =
         view.getVal(path, "string", lang + "/" + view.fullPath(path), true) { s ->
-            view.processString(s.format(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray()))
+            val f = s.formatOrNull(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray())
+            f?.let(view::processString)
         }
 }

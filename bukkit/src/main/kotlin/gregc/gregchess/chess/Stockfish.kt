@@ -3,9 +3,15 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import java.util.concurrent.*
 
-class Stockfish(override val name: String = Config.stockfish.engineName) : ChessEngine {
+class Stockfish(override val name: String = Config.engineName) : ChessEngine {
 
-    private val process: Process = ProcessBuilder(Config.stockfish.stockfishCommand).start()
+    object Config {
+        val hasStockfish get() = config.getDefaultBoolean("Chess.HasStockfish", false)
+        val stockfishCommand get() = config.getString("Chess.Stockfish.Path")
+        val engineName get() = config.getString("Chess.Stockfish.Name")
+    }
+
+    private val process: Process = ProcessBuilder(Config.stockfishCommand).start()
 
     private val reader = process.inputStream.bufferedReader()
 
