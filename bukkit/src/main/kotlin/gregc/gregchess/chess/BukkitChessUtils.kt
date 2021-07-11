@@ -49,7 +49,7 @@ fun ChessGame.getInfo() = buildTextComponent {
 }
 
 val EndReason.name
-    get() = LocalizedString(config, "Chess.EndReason.$standardName")
+    get() = LocalizedString(config, "Chess.EndReason.$standardName", *args.toTypedArray())
 
 val EndReason.message
     get() = LocalizedString(config,

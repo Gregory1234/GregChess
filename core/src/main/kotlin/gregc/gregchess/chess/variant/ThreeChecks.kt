@@ -27,12 +27,12 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         fun checkForGameEnd() {
             checks.forEachIndexed { s, c ->
                 if (c >= limit)
-                    game.stop(CheckLimitEndReason(!s))
+                    game.stop(CheckLimitEndReason(!s, limit))
             }
         }
     }
 
-    class CheckLimitEndReason(winner: Side) : EndReason("CheckLimit", "normal", winner)
+    class CheckLimitEndReason(winner: Side, limit: UInt) : EndReason("CheckLimit", "normal", winner, args = listOf(limit))
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-open class EndReason(val standardName: String, val reasonPGN: String, val winner: Side? = null, val quick: Boolean = false) {
+open class EndReason(val standardName: String, val reasonPGN: String, val winner: Side? = null, val quick: Boolean = false, val args: List<Any?> = emptyList()) {
 
     override fun toString() = standardName
 

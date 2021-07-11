@@ -231,7 +231,7 @@ Chess:
     Timeout: "timeout"
     DrawTimeout: "timeout vs insufficient material"
     Error: "error"
-    CheckLimit: "check limit reached"
+    CheckLimit: "check limit reached (%s)"
     KingOfTheHill: "king of the hill"
     Atomic: "explosion"
     PiecesLost: "all pieces lost"
