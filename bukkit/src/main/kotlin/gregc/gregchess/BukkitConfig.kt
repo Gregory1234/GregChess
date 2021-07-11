@@ -1,15 +1,23 @@
 package gregc.gregchess
 
+import gregc.gregchess.chess.ArenaManager
 import gregc.gregchess.chess.SettingsManager
-import gregc.gregchess.chess.component.ChessClock
-import gregc.gregchess.chess.component.ComponentConfig
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.AtomicChess
 import gregc.gregchess.chess.variant.ThreeChecks
 import org.bukkit.configuration.file.FileConfiguration
 
+private val NO_ARENAS = ErrorMsg("NoArenas")
+
 fun initBukkitConfig(c: BukkitConfigProvider) {
     config = BukkitView(c, "")
     ComponentConfig[ChessClock::class] = BukkitClockConfig
+    SettingsManager += { cNotNull(ArenaManager.freeAreas.firstOrNull(), NO_ARENAS) }
+    SettingsManager += { Chessboard.Settings[it.getOptionalString("Board")] }
+    SettingsManager += { SettingsManager.chooseOrParse(SettingsManager.clockSettings, it.getOptionalString("Clock"), ChessClock.Settings::parse) }
+    SettingsManager += { BukkitRenderer.Settings(it.getDefaultInt("TileSize", 3)) }
+    SettingsManager += { BukkitScoreboardManager.Settings }
+    SettingsManager += { BukkitEventRelay.Settings }
     SettingsManager += { ThreeChecks.CheckCounter.Settings(it.getDefaultInt("CheckLimit", 3).toUInt()) }
     SettingsManager += { AtomicChess.ExplosionManager.Settings }
 }
