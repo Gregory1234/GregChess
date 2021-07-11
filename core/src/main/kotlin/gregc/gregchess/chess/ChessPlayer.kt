@@ -1,7 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
-
 
 abstract class ChessPlayer(val name: String, val side: Side, protected val silent: Boolean, val game: ChessGame) {
 
@@ -38,13 +36,6 @@ abstract class ChessPlayer(val name: String, val side: Side, protected val silen
 
 }
 
-val MessageConfig.inCheck by MessageConfig
-val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
-
-val TitleConfig.inCheck by TitleConfig
-val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
-val TitleConfig.yourTurn by TitleConfig
-
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(player.name, side, silent, game) {
 
@@ -74,30 +65,27 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
             game.finishMove(chosenMoves.first())
     }
 
-    private fun announceInCheck() {
-        if (!silent) {
-            player.sendTitle(Config.title.yourTurn, Config.title.inCheck)
-            player.sendMessage(Config.message.inCheck)
-        } else {
-            player.sendTitle(Config.title.inCheck)
-            player.sendMessage(Config.message.inCheck)
-        }
-    }
+    private var firstTurn = true
 
     override fun startTurn() {
-        if (!silent) {
-            player.sendTitle(Config.title.yourTurn)
+        if (firstTurn) {
+            firstTurn = false
+            return
         }
-        if (king?.let { game.variant.isInCheck(it) } == true)
-            announceInCheck()
+        player.sendGameUpdate(side, buildList {
+            if (king?.let { game.variant.isInCheck(it) } == true)
+                this += GamePlayerStatus.IN_CHECK
+            if (!silent)
+                this += GamePlayerStatus.TURN
+        })
     }
 
     override fun init() {
-        if (hasTurn)
-            player.sendTitle(Config.title.yourTurn, Config.title.youArePlayingAs[side])
-        else
-            player.sendTitle("", Config.title.youArePlayingAs[side])
-        player.sendMessage(Config.message.youArePlayingAs[side])
+        player.sendGameUpdate(side, buildList {
+            this += GamePlayerStatus.START
+            if (hasTurn)
+                this += GamePlayerStatus.TURN
+        })
     }
 
     private fun pawnPromotionScreen(moves: List<MoveCandidate>) = player.openPawnPromotionMenu(moves)

@@ -107,18 +107,11 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     @GameEvent(GameBaseEvent.END_TURN)
     fun endTurn() {
         updateMoves()
-        val num = "${fullMoveCounter}."
         if (game.currentTurn == Side.BLACK) {
-            val wLast = (if (moves.size <= 1) null else moves[moves.size - 2].standardName)
-            val bLast = lastMove?.standardName
+            val wLast = (if (moves.size <= 1) null else moves[moves.size - 2])
+            val bLast = lastMove
             game.players.forEachReal { p ->
-                p.sendMessage(buildString {
-                    append(num)
-                    append(' ')
-                    wLast?.let { append(it) }
-                    append("  | ")
-                    bLast?.let { append(it) }
-                })
+                p.sendLastMoves(fullMoveCounter, wLast, bLast)
             }
             fullMoveCounter++
         }
@@ -128,15 +121,9 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     @GameEvent(GameBaseEvent.STOP)
     fun stop() {
         if (game.currentTurn == Side.WHITE) {
-            val num = "${fullMoveCounter}."
-            val wLast = lastMove?.standardName
+            val wLast = lastMove
             game.players.forEachReal { p ->
-                p.sendMessage(buildString {
-                    append(num)
-                    append(' ')
-                    wLast?.let { append(it) }
-                    append("  |")
-                })
+                p.sendLastMoves(fullMoveCounter, wLast, null)
             }
         }
     }

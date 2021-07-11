@@ -53,12 +53,6 @@ fun testSettings(
 
 class TestHuman(name: String): HumanPlayer(name) {
 
-    override fun sendMessage(msg: String) {
-    }
-
-    override fun sendTitle(title: String, subtitle: String) {
-    }
-
     override fun sendPGN(pgn: PGN) {
     }
 
@@ -77,7 +71,11 @@ class TestHuman(name: String): HumanPlayer(name) {
     override fun showEndReason(reason: EndReason) {
     }
 
-    override fun local(msg: LocalizedString): String = msg.get("en_US")
+    override fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>) {
+    }
+
+    override fun sendLastMoves(num: UInt, wLast: MoveData?, bLast: MoveData?) {
+    }
 
 }
 

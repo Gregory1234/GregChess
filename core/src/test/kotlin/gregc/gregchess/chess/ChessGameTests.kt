@@ -45,7 +45,6 @@ class ChessGameTests {
     fun playerExclude(p: HumanPlayer) {
         excludeRecords {
             p.name
-            p.local(any())
             @Suppress("UNUSED_EQUALS_EXPRESSION")
             p == any()
         }
@@ -130,10 +129,8 @@ class ChessGameTests {
             playerExclude(a)
             playerExclude(b)
             verifyAll {
-                a.sendTitle(any(), any())
-                b.sendTitle(any(), any())
-                a.sendMessage(any())
-                b.sendMessage(any())
+                a.sendGameUpdate(Side.WHITE, listOf(GamePlayerStatus.START, GamePlayerStatus.TURN))
+                b.sendGameUpdate(Side.BLACK, listOf(GamePlayerStatus.START))
             }
         }
 

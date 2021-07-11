@@ -5,6 +5,20 @@ import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.entity.Player
 
+val MessageConfig.inCheck by MessageConfig
+val MessageConfig.youArePlayingAs get() = BySides { getMessage("YouArePlayingAs.${it.standardName}") }
+
+val TitleConfig.inCheck by TitleConfig
+val TitleConfig.youArePlayingAs get() = BySides { getTitle("YouArePlayingAs.${it.standardName}") }
+val TitleConfig.yourTurn by TitleConfig
+
+data class BukkitGamePlayerStatus(
+    val original: GamePlayerStatus,
+    val title: LocalizedString,
+    val msg: LocalizedString? = null,
+    val minor: Boolean = false
+)
+
 class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(player.uniqueId, player.name) {
 
     companion object {
@@ -24,9 +38,10 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
             player.teleport(loc)
         }
 
-    override fun sendMessage(msg: String) = player.sendMessage(msg)
+    fun sendMessage(msg: String) = player.sendMessage(msg)
+    fun sendMessage(msg: LocalizedString) = sendMessage(msg.get(lang))
 
-    override fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
+    private fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
 
     override fun sendPGN(pgn: PGN) {
         val message = TextComponent(Config.message.copyPGN.get(lang))
@@ -50,24 +65,63 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     }
 
     override fun showEndReason(side: Side, reason: EndReason) {
-        val wld = when(reason.winner) {
+        val wld = when (reason.winner) {
             side -> "Won"
             null -> "Drew"
             else -> "Lost"
         }
-        sendTitle(config.getLocalizedString("Title.Player.You$wld"), reason.name)
+        sendTitle(config.getLocalizedString("Title.Player.You$wld").get(lang), reason.name.get(lang))
         sendMessage(reason.message)
     }
 
     override fun showEndReason(reason: EndReason) {
         val winner = reason.winner?.standardName?.plus("Won") ?: "ItWasADraw"
-        sendTitle(config.getLocalizedString("Title.Spectator.$winner"), reason.name)
+        sendTitle(config.getLocalizedString("Title.Spectator.$winner").get(lang), reason.name.get(lang))
         sendMessage(reason.message)
     }
 
     override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"
 
-    override fun local(msg: LocalizedString): String = msg.get(lang)
+    override fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>) {
+        if (status.isEmpty())
+            return
+        if (status.size > 2)
+            throw IllegalArgumentException(status.toString())
+        val values = status.map {
+            when(it) {
+                GamePlayerStatus.START ->
+                    BukkitGamePlayerStatus(it,
+                        Config.title.youArePlayingAs[side],
+                        Config.message.youArePlayingAs[side], true)
+                GamePlayerStatus.IN_CHECK -> BukkitGamePlayerStatus(it, Config.title.inCheck, Config.message.inCheck)
+                GamePlayerStatus.TURN -> BukkitGamePlayerStatus(it, Config.title.yourTurn)
+            }
+        }
+        if (values.size == 1) {
+            if (values[0].minor)
+                sendTitle("", values[0].title.get(lang))
+            else
+                sendTitle(values[0].title.get(lang), "")
+        } else {
+            if (values[0].minor && !values[1].minor)
+                sendTitle(values[1].title.get(lang), values[0].title.get(lang))
+            else
+                sendTitle(values[0].title.get(lang), values[1].title.get(lang))
+        }
+        values.forEach {
+            it.msg?.let(::sendMessage)
+        }
+    }
+
+    override fun sendLastMoves(num: UInt, wLast: MoveData?, bLast: MoveData?) {
+        sendMessage(buildString {
+            append(num)
+            append(". ")
+            wLast?.let { append(it.standardName) }
+            append("  | ")
+            bLast?.let { append(it.standardName) }
+        })
+    }
 }
 
 val MessageConfig.pawnPromotion by MessageConfig
