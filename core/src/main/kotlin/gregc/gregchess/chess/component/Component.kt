@@ -97,6 +97,7 @@ fun Collection<Component>.allResetPlayer(p: HumanPlayer) = runGameEvent(GameBase
 fun Collection<Component>.allPanic(e: Exception) = runGameEvent(GameBaseEvent.PANIC, e)
 
 class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
+class ComponentSettingsNotFoundException(cl: KClass<out Component.Settings<*>>) : Exception(cl.toString())
 class ComponentConfigNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
 
 object ComponentConfig {

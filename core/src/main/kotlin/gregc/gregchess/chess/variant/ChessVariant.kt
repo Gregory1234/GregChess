@@ -4,6 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.glog
+import kotlin.reflect.KClass
 
 abstract class ChessVariant(val name: String) {
 
@@ -61,8 +62,11 @@ abstract class ChessVariant(val name: String) {
     open fun genFEN(chess960: Boolean): FEN = Normal.genFEN(chess960)
     open fun promotions(piece: Piece): Collection<Piece>? = Normal.promotions(piece)
 
-    open val extraComponents: Collection<Component.Settings<*>>
-        get() = Normal.extraComponents
+    open val requiredComponents: Collection<KClass<out Component.Settings<*>>>
+        get() = Normal.requiredComponents
+
+    open val optionalComponents: Collection<KClass<out Component.Settings<*>>>
+        get() = Normal.optionalComponents
 
     protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { board.getMoves(it.pos) }
 
@@ -153,7 +157,10 @@ abstract class ChessVariant(val name: String) {
 
         override fun genFEN(chess960: Boolean) = if (!chess960) FEN() else FEN.generateChess960()
 
-        override val extraComponents: Collection<Component.Settings<*>>
+        override val requiredComponents: Collection<KClass<out Component.Settings<*>>>
+            get() = emptyList()
+
+        override val optionalComponents: Collection<KClass<out Component.Settings<*>>>
             get() = emptyList()
     }
 

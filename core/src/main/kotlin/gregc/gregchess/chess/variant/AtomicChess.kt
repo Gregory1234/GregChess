@@ -2,6 +2,7 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
+import kotlin.reflect.KClass
 
 object AtomicChess : ChessVariant("Atomic") {
 
@@ -107,6 +108,6 @@ object AtomicChess : ChessVariant("Atomic") {
         move.undo()
     }
 
-    override val extraComponents: Collection<Component.Settings<*>>
-        get() = listOf(ExplosionManager.Settings)
+    override val requiredComponents: Collection<KClass<out Component.Settings<*>>>
+        get() = listOf(ExplosionManager.Settings::class)
 }

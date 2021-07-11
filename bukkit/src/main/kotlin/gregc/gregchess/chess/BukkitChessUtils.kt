@@ -45,7 +45,7 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Arena: ${arena.name}\n")
     append("Preset: ${settings.name}\n")
     append("Variant: ${variant.name}\n")
-    append("Components: ${getComponents().joinToString { it.javaClass.simpleName }}")
+    append("Components: ${components.joinToString { it.javaClass.simpleName }}")
 }
 
 val EndReason.name

@@ -102,10 +102,10 @@ class ChessGameTests {
         }
 
         @Test
-        fun `only gets extra components and fen from variant`() {
+        fun `only gets required components and fen from variant`() {
             val g = mkGame(spyVariantSettings)
             verifyAll {
-                g.variant.extraComponents
+                g.variant.requiredComponents
                 g.variant.genFEN(any())
             }
         }

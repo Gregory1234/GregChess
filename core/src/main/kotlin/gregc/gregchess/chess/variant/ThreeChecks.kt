@@ -2,15 +2,16 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
+import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
 
-    class CheckCounter(private val game: ChessGame) : Component {
-        object Settings : Component.Settings<CheckCounter> {
-            override fun getComponent(game: ChessGame) = CheckCounter(game)
+    class CheckCounter(private val game: ChessGame, private val limit: UInt) : Component {
+        data class Settings(val limit: UInt) : Component.Settings<CheckCounter> {
+            override fun getComponent(game: ChessGame) = CheckCounter(game, limit)
         }
 
-        private var checks = MutableBySides(0)
+        private var checks = MutableBySides(0u)
 
         @GameEvent(GameBaseEvent.START)
         fun start() {
@@ -25,13 +26,13 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
 
         fun checkForGameEnd() {
             checks.forEachIndexed { s, c ->
-                if (c >= 3)
-                    game.stop(ThreeChecksEndReason(!s))
+                if (c >= limit)
+                    game.stop(CheckLimitEndReason(!s))
             }
         }
     }
 
-    class ThreeChecksEndReason(winner: Side) : EndReason("ThreeChecks", "normal", winner)
+    class CheckLimitEndReason(winner: Side) : EndReason("CheckLimit", "normal", winner)
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()
@@ -42,7 +43,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         Normal.checkForGameEnd(game)
     }
 
-    override val extraComponents: Collection<Component.Settings<*>>
-        get() = listOf(CheckCounter.Settings)
+    override val requiredComponents: Collection<KClass<out Component.Settings<*>>>
+        get() = listOf(CheckCounter.Settings::class)
 
 }

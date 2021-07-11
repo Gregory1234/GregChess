@@ -6,6 +6,7 @@ import gregc.gregchess.chess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import kotlin.reflect.KClass
 
 object SettingsManager {
 
@@ -25,6 +26,16 @@ object SettingsManager {
         v?.let { this += it }
     }
 
+    private val componentParsers = mutableMapOf<KClass<out Component.Settings<*>>, (View) -> Component.Settings<*>>()
+
+    operator fun <T: Component.Settings<*>> set(cl: KClass<T>, f: (View) -> T) {
+        componentParsers[cl] = f
+    }
+
+    inline operator fun <reified T: Component.Settings<*>> plusAssign(noinline f: (View) -> T) {
+        this[T::class] = f
+    }
+
     fun getSettings(): List<GameSettings> =
         config["Settings.Presets"].childrenViews.orEmpty().map { (key, child) ->
             val simpleCastling = child.getDefaultBoolean("SimpleCastling", false)
@@ -36,6 +47,9 @@ object SettingsManager {
                 this += BukkitRenderer.Settings(child.getDefaultInt("TileSize", 3))
                 this += BukkitScoreboardManager.Settings
                 this += BukkitEventRelay.Settings
+                (variant.requiredComponents + variant.requiredComponents).mapNotNull { componentParsers[it] }.forEach {
+                    this += it(child)
+                }
             }
             GameSettings(key, simpleCastling, variant, components)
         }

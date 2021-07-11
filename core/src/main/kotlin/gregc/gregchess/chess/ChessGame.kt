@@ -30,14 +30,15 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     val variant = settings.variant
 
-    private val components = (settings.components + variant.extraComponents).map { it.getComponent(this) }
-
-    fun getComponents() = components.toList()
+    val components = settings.components.map { it.getComponent(this) }
 
     init {
         try {
             requireComponent<Chessboard>()
             requireComponent<ScoreboardManager>()
+            variant.requiredComponents.forEach {
+                settings.components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentSettingsNotFoundException(it)
+            }
             components.allPreInit()
         } catch (e: Exception) {
             panic(e)

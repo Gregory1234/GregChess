@@ -1,12 +1,17 @@
 package gregc.gregchess
 
+import gregc.gregchess.chess.SettingsManager
 import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.component.ComponentConfig
+import gregc.gregchess.chess.variant.AtomicChess
+import gregc.gregchess.chess.variant.ThreeChecks
 import org.bukkit.configuration.file.FileConfiguration
 
 fun initBukkitConfig(c: BukkitConfigProvider) {
     config = BukkitView(c, "")
     ComponentConfig[ChessClock::class] = BukkitClockConfig
+    SettingsManager += { ThreeChecks.CheckCounter.Settings(it.getDefaultInt("CheckLimit", 3).toUInt()) }
+    SettingsManager += { AtomicChess.ExplosionManager.Settings }
 }
 
 fun interface BukkitConfigProvider {
