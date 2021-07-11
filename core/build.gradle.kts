@@ -21,14 +21,19 @@ tasks {
             jvmTarget = jvmVersion
             freeCompilerArgs = listOf(
                 "-Xopt-in=kotlin.ExperimentalStdlibApi",
-                "-Xopt-in=kotlin.contracts.ExperimentalContracts")
+                "-Xopt-in=kotlin.contracts.ExperimentalContracts",
+                "-Xjvm-default=all",
+                "-progressive")
         }
     }
     compileTestKotlin {
         kotlinOptions {
             val jvmVersion: String by project
             jvmTarget = jvmVersion
-            freeCompilerArgs = listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
+            freeCompilerArgs = listOf(
+                "-Xopt-in=kotlin.ExperimentalStdlibApi",
+                "-Xjvm-default=all",
+                "-progressive")
         }
     }
 }

@@ -1,19 +1,19 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
 
 object HordeChess : ChessVariant("Horde") {
-    override fun chessboardSetup(board: Chessboard) {
-        board.piecesOf(Side.WHITE).filter { it.pos.rank == 0 }.forEach {
-            it.force(false)
+
+    object HordePawnConfig : PawnMovementConfig {
+        override fun canDouble(piece: PieceInfo): Boolean = when (piece.side) {
+            Side.WHITE -> piece.pos.rank <= 1
+            Side.BLACK -> piece.pos.rank >= 6
         }
     }
 
-    override fun finishMove(move: MoveCandidate) {
-        if (move.piece.type == PieceType.PAWN && move.target.pos.rank == 1) {
-            move.piece.force(false)
-        }
+    override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when(piece.type) {
+        PieceType.PAWN -> pawnMovement(HordePawnConfig)(piece)
+        else -> Normal.getPieceMoves(piece)
     }
 
     override fun getLegality(move: MoveCandidate): MoveLegality = when {

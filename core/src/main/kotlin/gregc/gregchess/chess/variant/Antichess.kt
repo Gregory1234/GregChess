@@ -5,6 +5,17 @@ import gregc.gregchess.chess.*
 object Antichess : ChessVariant("Antichess") {
     class Stalemate(winner: Side) : EndReason("Stalemate", "normal", winner)
 
+    object AntichessPawnConfig : PawnMovementConfig {
+        override fun promotions(piece: PieceInfo): List<Piece> =
+            listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
+                .map { Piece(it, piece.side) }
+    }
+
+    override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when(piece.type) {
+        PieceType.PAWN -> pawnMovement(AntichessPawnConfig)(piece)
+        else -> Normal.getPieceMoves(piece)
+    }
+
     override fun getLegality(move: MoveCandidate): MoveLegality {
         if (!Normal.isValid(move))
             return MoveLegality.INVALID
@@ -31,7 +42,4 @@ object Antichess : ChessVariant("Antichess") {
     }
 
     override fun timeout(game: ChessGame, side: Side) = game.stop(EndReason.Timeout(side))
-
-    override fun promotions(piece: Piece): Collection<Piece>? =
-        Normal.promotions(piece)?.plus(Piece(PieceType.KING, piece.side))
 }

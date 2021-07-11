@@ -230,13 +230,24 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
     } + castles
 }
 
-fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
+interface PawnMovementConfig {
+    fun canDouble(piece: PieceInfo): Boolean = DefaultPawnConfig.canDouble(piece)
+    fun promotions(piece: PieceInfo): List<Piece> = DefaultPawnConfig.promotions(piece)
+}
+
+object DefaultPawnConfig : PawnMovementConfig {
+    override fun canDouble(piece: PieceInfo): Boolean = !piece.hasMoved
+    override fun promotions(piece: PieceInfo): List<Piece> =
+        listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { Piece(it, piece.side) }
+}
+
+fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCandidate> = { piece ->
 
     fun ifProm(promotion: Piece?, floor: Floor) =
         if (promotion == null) floor else Floor.SPECIAL
 
     fun handlePromotion(pos: Pos, f: (Piece?) -> Unit) =
-        (piece.square.takeIf { pos.rank in listOf(0, 7) }?.game?.variant?.promotions(piece.piece) ?: listOf(null)).forEach(f)
+        (piece.info.takeIf { pos.rank in listOf(0, 7) }?.let { config.promotions(piece.info) } ?: listOf(null)).forEach(f)
 
     class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotion: Piece?) : MoveCandidate(
         piece, target, ifProm(promotion, Floor.MOVE), listOfNotNull(pass), control = null, promotion = promotion
@@ -264,31 +275,31 @@ fun pawnMovement(piece: BoardPiece): List<MoveCandidate> {
         }
     }
 
-    val ret = mutableListOf<MoveCandidate>()
-    piece.square.board[piece.pos.plusR(piece.side.direction)]?.let { t ->
-        handlePromotion(t.pos) {
-            ret += PawnPush(piece, t, null, it)
+    buildList {
+        piece.square.board[piece.pos.plusR(piece.side.direction)]?.let { t ->
+            handlePromotion(t.pos) {
+                this += PawnPush(piece, t, null, it)
+            }
+        }
+        if (config.canDouble(piece.info))
+            piece.square.board[piece.pos.plusR(2 * piece.side.direction)]?.let { t ->
+                handlePromotion(t.pos) {
+                    this += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), it)
+                }
+            }
+        for (s in listOf(-1, 1)) {
+            piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let { t ->
+                handlePromotion(t.pos) {
+                    this += PawnCapture(piece, t, it)
+                }
+            }
+            val p = piece.square.board[piece.pos.plusF(s)]?.piece
+            val lm = piece.square.board.lastMove
+            if (p?.type == PieceType.PAWN && lm?.piece == p.piece && abs(lm.origin.pos.rank - lm.target.pos.rank) == 2) {
+                piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let {
+                    this += EnPassantCapture(piece, it, p.square)
+                }
+            }
         }
     }
-    if (!piece.hasMoved)
-        piece.square.board[piece.pos.plusR(2 * piece.side.direction)]?.let { t ->
-            handlePromotion(t.pos) {
-                ret += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), it)
-            }
-        }
-    for (s in listOf(-1, 1)) {
-        piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let { t ->
-            handlePromotion(t.pos) {
-                ret += PawnCapture(piece, t, it)
-            }
-        }
-        val p = piece.square.board[piece.pos.plusF(s)]?.piece
-        val lm = piece.square.board.lastMove
-        if (p?.type == PieceType.PAWN && lm?.piece == p.piece && abs(lm.origin.pos.rank - lm.target.pos.rank) == 2) {
-            piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let {
-                ret += EnPassantCapture(piece, it, p.square)
-            }
-        }
-    }
-    return ret
 }

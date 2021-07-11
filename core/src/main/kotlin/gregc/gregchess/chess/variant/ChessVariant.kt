@@ -51,6 +51,7 @@ abstract class ChessVariant(val name: String) {
     open fun checkForGameEnd(game: ChessGame) = Normal.checkForGameEnd(game)
     open fun timeout(game: ChessGame, side: Side) = Normal.timeout(game, side)
     open fun undoLastMove(move: MoveData) = Normal.undoLastMove(move)
+    open fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = Normal.getPieceMoves(piece)
 
     open fun isInCheck(game: ChessGame, side: Side): Boolean {
         val king = game.board.kingOf(side)
@@ -60,7 +61,6 @@ abstract class ChessVariant(val name: String) {
     fun isLegal(move: MoveCandidate) = getLegality(move) == MoveLegality.LEGAL
 
     open fun genFEN(chess960: Boolean): FEN = Normal.genFEN(chess960)
-    open fun promotions(piece: Piece): Collection<Piece>? = Normal.promotions(piece)
 
     open val requiredComponents: Collection<KClass<out Component.Settings<*>>>
         get() = Normal.requiredComponents
@@ -149,11 +149,7 @@ abstract class ChessVariant(val name: String) {
 
         override fun undoLastMove(move: MoveData) = move.undo()
 
-        override fun promotions(piece: Piece): Collection<Piece>? =
-            if (piece.type == PieceType.PAWN)
-                listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { Piece(it, piece.side) }
-            else
-                null
+        override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = piece.type.moveScheme(piece)
 
         override fun genFEN(chess960: Boolean) = if (!chess960) FEN() else FEN.generateChess960()
 

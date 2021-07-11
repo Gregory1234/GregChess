@@ -42,7 +42,9 @@ tasks {
             jvmTarget = jvmVersion
             freeCompilerArgs = listOf(
                 "-Xopt-in=kotlin.ExperimentalStdlibApi",
-                "-Xopt-in=kotlin.contracts.ExperimentalContracts")
+                "-Xopt-in=kotlin.contracts.ExperimentalContracts",
+                "-Xjvm-default=all",
+                "-progressive")
         }
     }
     jar {

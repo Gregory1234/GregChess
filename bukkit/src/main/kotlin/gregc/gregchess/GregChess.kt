@@ -340,7 +340,7 @@ object GregChess : Listener {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("spawn", PieceType.values())
+                    "spawn" -> ifPermission("spawn", PieceType.values().map { it.standardName }.toTypedArray())
                     "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }

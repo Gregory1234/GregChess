@@ -15,14 +15,14 @@ data class PieceType(
 
         private val values = mutableListOf<PieceType>()
 
-        fun values() = values.toTypedArray()
+        fun values() = values
 
         val KING = PieceType("King", 'k', ::kingMovement, false)
         val QUEEN = PieceType("Queen", 'q', ::queenMovement, false)
         val ROOK = PieceType("Rook", 'r', ::rookMovement, false)
         val BISHOP = PieceType("Bishop", 'b', ::bishopMovement, true)
         val KNIGHT = PieceType("Knight", 'n', ::knightMovement, true)
-        val PAWN = PieceType("Pawn", 'p', ::pawnMovement, false)
+        val PAWN = PieceType("Pawn", 'p', pawnMovement(DefaultPawnConfig), false)
 
         fun parseFromStandardChar(c: Char): PieceType =
             values.firstOrNull { it.standardChar == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())
