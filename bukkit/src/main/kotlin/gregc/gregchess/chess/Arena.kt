@@ -55,11 +55,11 @@ object ArenaManager : Listener {
 
 
 data class Arena(val name: String, var game: ChessGame? = null): Component.Settings<Arena.Usage> {
-    private companion object {
-        val defData = PlayerData(allowFlight = true, isFlying = true)
+    companion object {
+        private val defData = PlayerData(allowFlight = true, isFlying = true)
 
-        val spectatorData = defData.copy(gameMode = GameMode.SPECTATOR)
-        val adminData = defData.copy(gameMode = GameMode.CREATIVE)
+        private val spectatorData = defData.copy(gameMode = GameMode.SPECTATOR)
+        private val adminData = defData.copy(gameMode = GameMode.CREATIVE)
     }
 
     class Usage(val arena: Arena, private val game: ChessGame): Component {

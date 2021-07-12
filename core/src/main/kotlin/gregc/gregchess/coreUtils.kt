@@ -6,8 +6,7 @@ import java.util.*
 import kotlin.contracts.contract
 import kotlin.math.*
 
-@JvmInline
-value class ErrorMsg(val standardName: String) {
+data class ErrorMsg(val standardName: String) {
     companion object {
         private val errors = mutableListOf<ErrorMsg>()
     }

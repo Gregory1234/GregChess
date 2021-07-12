@@ -6,11 +6,10 @@ import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.entity.Player
 
 
-data class BukkitGamePlayerStatus(
-    val original: GamePlayerStatus,
-    val title: LocalizedString,
-    val msg: LocalizedString? = null,
-    val minor: Boolean = false
+private class BukkitGamePlayerStatus(
+    @JvmField val title: LocalizedString,
+    @JvmField val msg: LocalizedString? = null,
+    @JvmField val minor: Boolean = false
 )
 
 class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(player.uniqueId, player.name) {
@@ -96,9 +95,9 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         val values = status.map {
             when(it) {
                 GamePlayerStatus.START ->
-                    BukkitGamePlayerStatus(it, YOU_ARE_PLAYING_AS_TITLE[side], YOU_ARE_PLAYING_AS_MSG[side], true)
-                GamePlayerStatus.IN_CHECK -> BukkitGamePlayerStatus(it, IN_CHECK_TITLE, IN_CHECK_MSG)
-                GamePlayerStatus.TURN -> BukkitGamePlayerStatus(it, YOUR_TURN)
+                    BukkitGamePlayerStatus(YOU_ARE_PLAYING_AS_TITLE[side], YOU_ARE_PLAYING_AS_MSG[side], true)
+                GamePlayerStatus.IN_CHECK -> BukkitGamePlayerStatus(IN_CHECK_TITLE, IN_CHECK_MSG)
+                GamePlayerStatus.TURN -> BukkitGamePlayerStatus(YOUR_TURN)
             }
         }
         if (values.size == 1) {

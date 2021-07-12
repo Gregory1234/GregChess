@@ -27,12 +27,17 @@ data class PieceType(
             Side.WHITE -> p.rank != 1
             Side.BLACK -> p.rank != 6
         }
-
+        @JvmField
         val KING = PieceType("King", 'k', ::kingMovement, ::assumeNotMoved, false)
+        @JvmField
         val QUEEN = PieceType("Queen", 'q', ::queenMovement, ::assumeNotMoved, false)
+        @JvmField
         val ROOK = PieceType("Rook", 'r', ::rookMovement, ::rookHasMoved, false)
+        @JvmField
         val BISHOP = PieceType("Bishop", 'b', ::bishopMovement, ::assumeNotMoved, true)
+        @JvmField
         val KNIGHT = PieceType("Knight", 'n', ::knightMovement, ::assumeNotMoved, true)
+        @JvmField
         val PAWN = PieceType("Pawn", 'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
 
         fun parseFromStandardChar(c: Char): PieceType =

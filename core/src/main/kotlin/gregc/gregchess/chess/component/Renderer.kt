@@ -33,8 +33,9 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
         val boardSize get() = 8 * tileSize
     }
 
-    protected companion object {
-        val defaultSpawnLocation = Loc(4, 101, 4)
+    companion object {
+        @JvmField
+        protected val defaultSpawnLocation = Loc(4, 101, 4)
     }
 
     val spawnLocation

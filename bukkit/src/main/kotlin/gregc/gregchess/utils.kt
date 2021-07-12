@@ -61,7 +61,6 @@ fun Player.sendDefTitle(title: String, subtitle: String = "") = sendTitle(title,
 
 class CommandArgs(val player: CommandSender, val args: Array<String>) {
     var index = 0
-    val size = args.size
 
     fun nextArg(): String {
         cArgs(args, ++index)
@@ -121,16 +120,27 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
+@JvmField
 val WRONG_ARGUMENTS_NUMBER = ErrorMsg("WrongArgumentsNumber")
+@JvmField
 val WRONG_ARGUMENT = ErrorMsg("WrongArgument")
+@JvmField
 val NO_PERMISSION = ErrorMsg("NoPermission")
+@JvmField
 val NOT_PLAYER = ErrorMsg("NotPlayer")
+@JvmField
 val PLAYER_NOT_FOUND = ErrorMsg("PlayerNotFound")
+@JvmField
 val WRONG_DURATION_FORMAT = ErrorMsg("WrongDurationFormat")
+@JvmField
 val YOU_IN_GAME = ErrorMsg("InGame.You")
+@JvmField
 val OPPONENT_IN_GAME = ErrorMsg("InGame.Opponent")
+@JvmField
 val YOU_NOT_IN_GAME = ErrorMsg("NotInGame.You")
+@JvmField
 val PLAYER_NOT_IN_GAME = ErrorMsg("NotInGame.Player")
+@JvmField
 val OPPONENT_NOT_HUMAN = ErrorMsg("NotHuman.Opponent")
 
 fun message(n: String) = LocalizedString(config, "Message.$n")

@@ -6,14 +6,15 @@ import org.bukkit.*
 import java.util.*
 
 class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(game, settings) {
-    private companion object {
-        val extraFunctionProviders: List<(ExtraRendererFunction<*>) -> Optional<Any?>> = emptyList()
+    companion object {
 
-        data class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
+        private val extraFunctionProviders: List<(ExtraRendererFunction<*>) -> Optional<Any?>> = emptyList()
+
+        private data class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
             constructor(world: World, mat: Material, loc: Loc) : this(world, mat, loc, loc)
         }
 
-        fun fill(vol: FillVolume) {
+        private fun fill(vol: FillVolume) {
             for (i in vol.start.x..vol.stop.x)
                 for (j in vol.start.y..vol.stop.y)
                     for (k in vol.start.z..vol.stop.z)
