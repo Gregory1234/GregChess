@@ -140,7 +140,7 @@ data class Arena(val name: String, var game: ChessGame? = null): Component.Setti
         override fun shouldGenerateStructures() = false
     }
 
-    val world: World by lazy {
+    val world: World = run {
         val world = Bukkit.getWorld(name)
 
         (if (world != null) {

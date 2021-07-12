@@ -16,7 +16,7 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
 
         private fun fill(vol: FillVolume) {
             for (i in vol.start.x..vol.stop.x)
-                for (j in vol.start.y..vol.stop.y)
+                for (j in (vol.start.y..vol.stop.y).reversed())
                     for (k in vol.start.z..vol.stop.z)
                         vol.world.getBlockAt(i, j, k).type = vol.mat
         }

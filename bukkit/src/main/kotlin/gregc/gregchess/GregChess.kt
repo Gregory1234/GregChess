@@ -63,13 +63,11 @@ object GregChess : Listener {
         registerEvents()
         plugin.saveDefaultConfig()
         with (plugin) {
-            glog += JavaGregLogger(logger)
-            if (File(dataFolder.absolutePath + "/logs").mkdir()) {
-                val now = DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
-                val file = File(dataFolder.absolutePath + "/logs/GregChess-$now.log")
-                file.createNewFile()
-                glog += FileGregLogger(file)
-            }
+            File(dataFolder.absolutePath + "/logs").mkdir()
+            val now = DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
+            val file = File(dataFolder.absolutePath + "/logs/GregChess-$now.log")
+            file.createNewFile()
+            glog = GregLogger(logger, file)
         }
         BukkitChessGameManager.start()
         ArenaManager.start()

@@ -176,8 +176,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
                 components.allAddPlayer(it)
             }
             components.allInit()
-            requireStarting()
-            players.forEach { it.init() }
+            requireStarting().forEachUnique { it.init() }
             variant.start(this)
             components.allStart()
             state = GameState.Running(requireStarting())
@@ -241,14 +240,16 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
             players.forEachUnique(currentTurn) {
                 interact {
                     it.player.showEndReason(it.side, reason)
-                    timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
+                    if (!reason.quick)
+                        timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
                     components.allRemovePlayer(it.player)
                 }
             }
             spectators.forEach {
                 interact {
                     it.showEndReason(reason)
-                    timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
+                    if (!reason.quick)
+                        timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
                     components.allSpectatorLeave(it)
                 }
             }
