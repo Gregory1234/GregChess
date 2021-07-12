@@ -1,8 +1,7 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.GameEndEvent
-import gregc.gregchess.chess.component.TurnEndEvent
+import gregc.gregchess.chess.component.*
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -23,7 +22,6 @@ object GregChess : Listener {
 
         init {
             INSTANCE = this
-            initBukkitConfig { config }
         }
 
         override fun onEnable() {
@@ -76,6 +74,9 @@ object GregChess : Listener {
         BukkitChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()
+        SettingsManager.start()
+        ComponentConfig.initBukkit()
+
         plugin.addCommand("chess") {
             when (nextArg().lowercase()) {
                 "duel" -> {

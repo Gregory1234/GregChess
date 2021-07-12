@@ -2,7 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.chess.variant.*
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
 
 object SettingsManager {
 
-    val clockSettings: Map<String, ChessClock.Settings>
+    private val clockSettings: Map<String, ChessClock.Settings>
         get() = config["Settings.Clock"].childrenViews.orEmpty().mapValues { (_, it) ->
             val t = it.getEnum("Type", ChessClock.Type.INCREMENT, false)
             val initial = it.getDuration("Initial")
@@ -21,6 +21,19 @@ object SettingsManager {
     fun <T, R> chooseOrParse(opts: Map<T, R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
 
     private val componentParsers = mutableMapOf<KClass<out Component.Settings<*>>, (View) -> Component.Settings<*>?>()
+
+    private val NO_ARENAS = ErrorMsg("NoArenas")
+
+    fun start() {
+        this += { cNotNull(ArenaManager.freeAreas.firstOrNull(), NO_ARENAS) }
+        this += { Chessboard.Settings[it.getOptionalString("Board")] }
+        this += { chooseOrParse(clockSettings, it.getOptionalString("Clock"), ChessClock.Settings::parse) }
+        this += { BukkitRenderer.Settings(it.getDefaultInt("TileSize", 3)) }
+        this += { BukkitScoreboardManager.Settings }
+        this += { BukkitEventRelay.Settings }
+        this += { ThreeChecks.CheckCounter.Settings(it.getDefaultInt("CheckLimit", 3).toUInt()) }
+        this += { AtomicChess.ExplosionManager.Settings }
+    }
 
     operator fun <T : Component.Settings<*>> set(cl: KClass<T>, f: (View) -> T?) {
         componentParsers[cl] = f
