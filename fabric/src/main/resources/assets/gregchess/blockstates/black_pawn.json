@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "gregchess:block/black_pawn"
+    }
+  }
+}

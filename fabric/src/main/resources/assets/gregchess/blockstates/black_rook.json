@@ -1,0 +1,10 @@
+{
+	"variants": {
+		"half=lower": {
+			"model": "gregchess:block/black_rook"
+		},
+		"half=upper": {
+			"model": "gregchess:block/black_rook_top"
+		}
+	}
+}

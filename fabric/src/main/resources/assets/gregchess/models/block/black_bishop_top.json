@@ -1,0 +1,7 @@
+{
+	"parent": "gregchess:piece/big_bishop_top",
+	"textures": {
+		"main": "minecraft:block/black_concrete",
+		"opposite": "minecraft:block/white_concrete"
+	}
+}

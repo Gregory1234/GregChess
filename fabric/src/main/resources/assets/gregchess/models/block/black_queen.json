@@ -1,0 +1,6 @@
+{
+	"parent": "gregchess:piece/big_queen",
+	"textures": {
+		"main": "minecraft:block/black_concrete"
+	}
+}

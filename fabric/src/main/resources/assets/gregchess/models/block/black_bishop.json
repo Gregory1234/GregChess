@@ -1,0 +1,6 @@
+{
+	"parent": "gregchess:piece/big_bishop",
+	"textures": {
+		"main": "minecraft:block/black_concrete"
+	}
+}

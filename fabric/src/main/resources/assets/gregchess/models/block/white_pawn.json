@@ -1,0 +1,6 @@
+{
+    "parent": "gregchess:piece/big_pawn",
+	"textures": {
+		"main": "minecraft:block/white_concrete"
+	}
+}

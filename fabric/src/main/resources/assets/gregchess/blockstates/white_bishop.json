@@ -1,0 +1,10 @@
+{
+	"variants": {
+		"half=lower": {
+			"model": "gregchess:block/white_bishop"
+		},
+		"half=upper": {
+			"model": "gregchess:block/white_bishop_top"
+		}
+	}
+}
