@@ -1,8 +1,14 @@
 rootProject.name = "GregChess"
 pluginManagement {
-    val kotlinVersion: String by settings
+    repositories {
+        maven("https://maven.fabricmc.net") { name = "Fabric" }
+        gradlePluginPortal()
+    }
     plugins {
+        val kotlinVersion: String by settings
         kotlin("jvm") version kotlinVersion
+        val loomVersion: String by settings
+        id("fabric-loom").version(loomVersion)
     }
 }
 dependencyResolutionManagement {
@@ -11,4 +17,4 @@ dependencyResolutionManagement {
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     }
 }
-include("core", "bukkit")
+include("core", "bukkit", "fabric")

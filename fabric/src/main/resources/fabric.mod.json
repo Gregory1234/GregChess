@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "gregchess",
+  "version": "@version@",
+  "name": "Greg Chess",
+  "description": "Chess Mod",
+  "authors": [
+    "GregC"
+  ],
+  "icon": "assets/gregchess/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "gregc.gregchess.GregChess"
+      }
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=@loader-version@",
+    "fabric": "*",
+    "fabric-language-kotlin": ">=@fabric-kotlin-version@",
+    "minecraft": "@minecraft-version@",
+    "java": ">=@java-min-version@"
+  }
+}

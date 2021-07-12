@@ -17,8 +17,6 @@ data class PieceType(
 
         private val values = mutableListOf<PieceType>()
 
-        fun values() = values
-
         @Suppress("UNUSED_PARAMETER")
         private fun assumeNotMoved(fen: FEN, p: Pos, s: Side) = false
         private fun rookHasMoved(fen: FEN, p: Pos, s: Side) = p.file !in fen.castlingRights[s]
@@ -39,6 +37,8 @@ data class PieceType(
         val KNIGHT = PieceType("Knight", 'n', ::knightMovement, ::assumeNotMoved, true)
         @JvmField
         val PAWN = PieceType("Pawn", 'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
+
+        fun values() = values
 
         fun parseFromStandardChar(c: Char): PieceType =
             values.firstOrNull { it.standardChar == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())

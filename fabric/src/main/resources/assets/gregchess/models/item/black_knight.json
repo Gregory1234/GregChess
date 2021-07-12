@@ -1,0 +1,7 @@
+{
+    "parent": "gregchess:piece/small_knight",
+	"textures": {
+		"main": "minecraft:block/black_concrete",
+		"opposite": "minecraft:block/white_concrete"
+	}
+}
