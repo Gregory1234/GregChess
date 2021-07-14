@@ -1,23 +1,87 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf
+import net.minecraft.client.item.TooltipContext
+import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.Properties
+import net.minecraft.text.LiteralText
+import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.*
+import java.util.*
+
+class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.PIECE_ENTITY_TYPE, pos, state) {
+    private var gameUniqueId: UUID? = null
+    val isGameless get() = gameUniqueId == null
+    override fun writeNbt(nbt: NbtCompound): NbtCompound {
+        return nbt.apply {
+            this.putUuid("GameUUID", gameUniqueId)
+        }
+    }
+    override fun readNbt(nbt: NbtCompound?) {
+        try {
+            gameUniqueId = nbt?.getUuid("GameUUID")
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+        }
+    }
+}
+
+abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEntity(settings) {
+    override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
+
+    override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity? = PieceBlockEntity(pos, state)
+    override fun getOutlineShape(state: BlockState?, view: BlockView?, pos: BlockPos?, context: ShapeContext?): VoxelShape? =
+        VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
 
 
-class PieceBlock(settings: Settings?) : Block(settings) {
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState?, player: PlayerEntity) {
+        val blockEntity = world.getBlockEntity(pos)
+        if (blockEntity is PieceBlockEntity) {
+            if (!world.isClient && player.isCreative && !blockEntity.isGameless) {
+                val itemStack = ItemStack(piece.block)
+                val nbtCompound = blockEntity.writeNbt(NbtCompound())
+                if (!nbtCompound.isEmpty) {
+                    itemStack.setSubNbt("BlockEntityTag", nbtCompound)
+                }
+                val itemEntity = ItemEntity(
+                    world, pos.x.toDouble() + 0.5, pos.y.toDouble() + 0.5, pos.z.toDouble() + 0.5, itemStack
+                )
+                itemEntity.setToDefaultPickupDelay()
+                world.spawnEntity(itemEntity)
+            }
+        }
+        super.onBreak(world, pos, state, player)
+    }
+
+    override fun appendTooltip(stack: ItemStack, world: BlockView?, tooltip: MutableList<Text>, options: TooltipContext?) {
+        val data = stack.getSubNbt("BlockEntityTag")
+        try {
+            data?.getUuid("GameUUID")?.let {
+                tooltip += LiteralText("Game: $it")
+            }
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+        }
+    }
+}
+
+class PawnBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings)
+
+class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
 
     companion object {
         @JvmField
@@ -70,33 +134,8 @@ class PieceBlock(settings: Settings?) : Block(settings) {
             blockState.isOf(this) && blockState.get(HALF) == DoubleBlockHalf.LOWER
         }
 
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
-        if (!world.isClient) {
-            if (state.get(HALF) == DoubleBlockHalf.UPPER) {
-                if (player.isCreative) {
-
-                    val blockPos = pos.down()
-                    val blockState = world.getBlockState(blockPos)
-                    if (blockState.isOf(state.block) && blockState.get(HALF) == DoubleBlockHalf.LOWER) {
-                        world.setBlockState(blockPos, Blocks.AIR.defaultState, 35)
-                        world.syncWorldEvent(player, 2001, blockPos, getRawIdFromState(blockState))
-                    }
-                } else {
-                    dropStacks(state, world, pos, null as BlockEntity?, player, player.mainHandStack)
-                }
-            }
-        }
-        super.onBreak(world, pos, state, player)
-    }
-
-    override fun getOutlineShape(
-        state: BlockState?,
-        view: BlockView?,
-        pos: BlockPos?,
-        context: ShapeContext?
-    ): VoxelShape? {
-        return VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
-    }
+    override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity? =
+        if (state?.get(HALF) == DoubleBlockHalf.LOWER) super.createBlockEntity(pos, state) else null
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         builder.add(HALF)

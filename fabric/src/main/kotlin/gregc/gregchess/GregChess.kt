@@ -6,35 +6,54 @@ import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks
-import net.minecraft.item.BlockItem
-import net.minecraft.item.TallBlockItem
+import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.datafixer.TypeReferences
+import net.minecraft.item.*
 import net.minecraft.util.Rarity
+import net.minecraft.util.Util
 import net.minecraft.util.registry.Registry
 import java.util.logging.Logger
 
 
 object GregChess : ModInitializer {
-    val PIECES = FabricItemGroupBuilder.build(ident("pieces")) {
-        Registry.ITEM[Piece(PieceType.PAWN, Side.WHITE).id].defaultStack
+    val PIECES_GROUP: ItemGroup = FabricItemGroupBuilder.build(ident("pieces")) {
+        PIECE_ITEMS[Piece(PieceType.PAWN, Side.WHITE)]?.defaultStack
     }
+
+    val PIECE_BLOCKS = PieceType.values().flatMap { t -> Side.values().map { s ->
+        val piece = Piece(t, s)
+        val block =
+            if (t == PieceType.PAWN) PawnBlock(piece, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
+            else TallPieceBlock(piece, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
+        piece to block
+    } }.toMap()
+
+    val PIECE_ITEMS = PieceType.values().flatMap { t -> Side.values().map { s ->
+        val piece = Piece(t, s)
+        val block = piece.block
+        val item =
+            if (t == PieceType.PAWN) BlockItem(block, FabricItemSettings().group(PIECES_GROUP))
+            else TallBlockItem(block, FabricItemSettings().group(PIECES_GROUP).rarity(when {
+                t.minor -> Rarity.UNCOMMON
+                t == PieceType.KING -> Rarity.EPIC
+                else -> Rarity.RARE
+            }))
+        piece to item
+    } }.toMap()
+
+    val PIECE_ENTITY_TYPE: BlockEntityType<*> =
+        BlockEntityType.Builder.create({ a, b -> PieceBlockEntity(a, b) }, *PIECE_BLOCKS.values.toTypedArray()).build(
+            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
 
     override fun onInitialize() {
         glog = GregLogger(Logger.getLogger(MOD_NAME))
         PieceType.values().forEach { t ->
             Side.values().forEach { s ->
-                if (t == PieceType.PAWN) {
-                    val block = Registry.register(Registry.BLOCK, Piece(t, s).id,
-                        PawnBlock(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)))
-                    Registry.register(Registry.ITEM, Piece(t, s).id, BlockItem(block, FabricItemSettings().group(PIECES)))
-                } else {
-                    val block = Registry.register(Registry.BLOCK, Piece(t, s).id,
-                        PieceBlock(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)))
-                    Registry.register(Registry.ITEM, Piece(t, s).id, TallBlockItem(block, FabricItemSettings().group(PIECES).rarity(when {
-                        t.minor -> Rarity.UNCOMMON
-                        t == PieceType.KING -> Rarity.EPIC
-                        else -> Rarity.RARE
-                    })))
-                }
+                val piece = Piece(t, s)
+                val block = piece.block
+                Registry.register(Registry.BLOCK, piece.id, block)
+                val item = piece.item
+                Registry.register(Registry.ITEM, piece.id, item)
             }
         }
     }
