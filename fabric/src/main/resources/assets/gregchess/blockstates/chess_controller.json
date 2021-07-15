@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "gregchess:block/chess_controller"
+    }
+  }
+}

@@ -9,6 +9,10 @@ minecraft.runConfigs.forEach {
     it.runDir = "fabric/" + it.runDir
 }
 
+repositories {
+    maven ("https://server.bbkr.space/artifactory/libs-release")
+}
+
 dependencies {
     val fabricMinecraftVersion: String by project
     minecraft("com.mojang:minecraft:$fabricMinecraftVersion")
@@ -20,6 +24,9 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
     val fabricKotlinVersion: String by project
     modImplementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
+    val fabricLibGuiVersion: String by project
+    modImplementation("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
+    include("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
     implementation(project(":core"))
     include(project(":core"))
 }

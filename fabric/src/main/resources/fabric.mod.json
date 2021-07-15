@@ -15,6 +15,12 @@
         "adapter": "kotlin",
         "value": "gregc.gregchess.GregChess"
       }
+    ],
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "gregc.gregchess.GregChessClient"
+      }
     ]
   },
   "depends": {

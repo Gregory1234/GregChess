@@ -1,6 +1,7 @@
 {
   "itemGroup.gregchess.chess": "Chess",
   "block.gregchess.chessboard_floor": "Chessboard Floor",
+  "block.gregchess.chess_controller": "Chess Controller",
   "block.gregchess.white_pawn": "White Pawn",
   "block.gregchess.black_pawn": "Black Pawn",
   "block.gregchess.white_king": "White King",

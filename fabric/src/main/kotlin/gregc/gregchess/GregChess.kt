@@ -4,10 +4,13 @@ import gregc.gregchess.chess.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.datafixer.TypeReferences
 import net.minecraft.item.*
+import net.minecraft.screen.ScreenHandlerContext
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.util.Rarity
 import net.minecraft.util.Util
 import net.minecraft.util.registry.Registry
@@ -47,6 +50,16 @@ object GregChess : ModInitializer {
     val CHESSBOARD_FLOOR_BLOCK: Block = ChessboardFloorBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
     val CHESSBOARD_FLOOR_BLOCK_ITEM: Item = BlockItem(CHESSBOARD_FLOOR_BLOCK, FabricItemSettings().group(CHESS_GROUP))
 
+    val CHESS_CONTROLLER_BLOCK: Block = ChessControllerBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
+    val CHESS_CONTROLLER_ITEM: Item = BlockItem(CHESS_CONTROLLER_BLOCK, FabricItemSettings().group(CHESS_GROUP))
+
+    val CHESS_CONTROLLER_ENTITY_TYPE: BlockEntityType<*> =
+        BlockEntityType.Builder.create({ a, b -> ChessControllerBlockEntity(a, b) }, CHESS_CONTROLLER_BLOCK).build(
+            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chess_controller"))
+
+    lateinit var CHESS_CONTROLLER_SCREEN_HANDLER_TYPE: ScreenHandlerType<ChessControllerGuiDescription>
+        private set
+
     override fun onInitialize() {
         glog = GregLogger(Logger.getLogger(MOD_NAME))
         PieceType.values().forEach { t ->
@@ -58,7 +71,14 @@ object GregChess : ModInitializer {
                 Registry.register(Registry.ITEM, piece.id, item)
             }
         }
+        Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)
         Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
         Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)
+        Registry.register(Registry.BLOCK, ident("chess_controller"), CHESS_CONTROLLER_BLOCK)
+        Registry.register(Registry.ITEM, ident("chess_controller"), CHESS_CONTROLLER_ITEM)
+        Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("chess_controller"), CHESS_CONTROLLER_ENTITY_TYPE)
+        CHESS_CONTROLLER_SCREEN_HANDLER_TYPE = ScreenHandlerRegistry.registerSimple(ident("chess_controller")) {
+                syncId, inventory -> ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY)
+        }
     }
 }
