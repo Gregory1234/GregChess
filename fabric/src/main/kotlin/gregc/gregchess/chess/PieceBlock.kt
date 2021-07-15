@@ -28,7 +28,8 @@ class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChe
     val isGameless get() = gameUniqueId == null
     override fun writeNbt(nbt: NbtCompound): NbtCompound {
         return nbt.apply {
-            this.putUuid("GameUUID", gameUniqueId)
+            if (gameUniqueId != null)
+                this.putUuid("GameUUID", gameUniqueId)
         }
     }
     override fun readNbt(nbt: NbtCompound?) {
@@ -46,7 +47,6 @@ abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEnti
     override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity? = PieceBlockEntity(pos, state)
     override fun getOutlineShape(state: BlockState?, view: BlockView?, pos: BlockPos?, context: ShapeContext?): VoxelShape? =
         VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
-
 
     override fun onBreak(world: World, pos: BlockPos, state: BlockState?, player: PlayerEntity) {
         val blockEntity = world.getBlockEntity(pos)
@@ -85,7 +85,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
 
     companion object {
         @JvmField
-        val HALF: EnumProperty<DoubleBlockHalf>? = Properties.DOUBLE_BLOCK_HALF
+        val HALF: EnumProperty<DoubleBlockHalf> = Properties.DOUBLE_BLOCK_HALF
     }
 
     init {
@@ -124,8 +124,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
     }
 
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
-        val blockPos = pos.up()
-        world.setBlockState(blockPos, defaultState.with(HALF, DoubleBlockHalf.UPPER), 3)
+        world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), 3)
     }
 
     override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos) =

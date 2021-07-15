@@ -1,5 +1,6 @@
 {
-  "itemGroup.gregchess.pieces": "Chess Pieces",
+  "itemGroup.gregchess.chess": "Chess",
+  "block.gregchess.chessboard_floor": "Chessboard Floor",
   "block.gregchess.white_pawn": "White Pawn",
   "block.gregchess.black_pawn": "Black Pawn",
   "block.gregchess.white_king": "White King",

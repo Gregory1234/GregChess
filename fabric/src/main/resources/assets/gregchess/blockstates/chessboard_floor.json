@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "floor=inactive": {
+      "model": "gregchess:block/chessboard_floor_inactive"
+    },
+    "floor=light": {
+      "model": "gregchess:block/chessboard_floor_light"
+    },
+    "floor=dark": {
+      "model": "gregchess:block/chessboard_floor_dark"
+    },
+    "floor=move": {
+      "model": "gregchess:block/chessboard_floor_move"
+    },
+    "floor=capture": {
+      "model": "gregchess:block/chessboard_floor_capture"
+    },
+    "floor=special": {
+      "model": "gregchess:block/chessboard_floor_special"
+    },
+    "floor=nothing": {
+      "model": "gregchess:block/chessboard_floor_nothing"
+    },
+    "floor=other": {
+      "model": "gregchess:block/chessboard_floor_other"
+    },
+    "floor=last_start": {
+      "model": "gregchess:block/chessboard_floor_last_start"
+    },
+    "floor=last_end": {
+      "model": "gregchess:block/chessboard_floor_last_end"
+    }
+  }
+}

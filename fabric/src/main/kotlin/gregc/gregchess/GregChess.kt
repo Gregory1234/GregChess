@@ -4,8 +4,7 @@ import gregc.gregchess.chess.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Blocks
+import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.datafixer.TypeReferences
 import net.minecraft.item.*
@@ -16,8 +15,8 @@ import java.util.logging.Logger
 
 
 object GregChess : ModInitializer {
-    val PIECES_GROUP: ItemGroup = FabricItemGroupBuilder.build(ident("pieces")) {
-        PIECE_ITEMS[Piece(PieceType.PAWN, Side.WHITE)]?.defaultStack
+    val CHESS_GROUP: ItemGroup = FabricItemGroupBuilder.build(ident("chess")) {
+        Piece(PieceType.PAWN, Side.WHITE).item.defaultStack
     }
 
     val PIECE_BLOCKS = PieceType.values().flatMap { t -> Side.values().map { s ->
@@ -32,8 +31,8 @@ object GregChess : ModInitializer {
         val piece = Piece(t, s)
         val block = piece.block
         val item =
-            if (t == PieceType.PAWN) BlockItem(block, FabricItemSettings().group(PIECES_GROUP))
-            else TallBlockItem(block, FabricItemSettings().group(PIECES_GROUP).rarity(when {
+            if (t == PieceType.PAWN) BlockItem(block, FabricItemSettings().group(CHESS_GROUP))
+            else TallBlockItem(block, FabricItemSettings().group(CHESS_GROUP).rarity(when {
                 t.minor -> Rarity.UNCOMMON
                 t == PieceType.KING -> Rarity.EPIC
                 else -> Rarity.RARE
@@ -44,6 +43,9 @@ object GregChess : ModInitializer {
     val PIECE_ENTITY_TYPE: BlockEntityType<*> =
         BlockEntityType.Builder.create({ a, b -> PieceBlockEntity(a, b) }, *PIECE_BLOCKS.values.toTypedArray()).build(
             Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
+
+    val CHESSBOARD_FLOOR_BLOCK: Block = ChessboardFloorBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
+    val CHESSBOARD_FLOOR_BLOCK_ITEM: Item = BlockItem(CHESSBOARD_FLOOR_BLOCK, FabricItemSettings().group(CHESS_GROUP))
 
     override fun onInitialize() {
         glog = GregLogger(Logger.getLogger(MOD_NAME))
@@ -56,5 +58,7 @@ object GregChess : ModInitializer {
                 Registry.register(Registry.ITEM, piece.id, item)
             }
         }
+        Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
+        Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)
     }
 }
