@@ -1,7 +1,9 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.EndReason
 import java.lang.reflect.Method
+import kotlin.collections.set
 import kotlin.reflect.KClass
 
 interface Component {
@@ -23,9 +25,6 @@ enum class GameBaseEvent {
     END_TURN,
     PRE_PREVIOUS_TURN,
     START_PREVIOUS_TURN,
-    ADD_PLAYER,
-    REMOVE_PLAYER,
-    RESET_PLAYER,
     PANIC
 }
 
@@ -86,9 +85,6 @@ fun Collection<Component>.allStartTurn() = runGameEvent(GameBaseEvent.START_TURN
 fun Collection<Component>.allEndTurn() = runGameEvent(GameBaseEvent.END_TURN)
 fun Collection<Component>.allPrePreviousTurn() = runGameEvent(GameBaseEvent.PRE_PREVIOUS_TURN)
 fun Collection<Component>.allStartPreviousTurn() = runGameEvent(GameBaseEvent.START_PREVIOUS_TURN)
-fun Collection<Component>.allAddPlayer(p: HumanPlayer) = runGameEvent(GameBaseEvent.ADD_PLAYER, p)
-fun Collection<Component>.allRemovePlayer(p: HumanPlayer) = runGameEvent(GameBaseEvent.REMOVE_PLAYER, p)
-fun Collection<Component>.allResetPlayer(p: HumanPlayer) = runGameEvent(GameBaseEvent.RESET_PLAYER, p)
 fun Collection<Component>.allPanic(e: Exception) = runGameEvent(GameBaseEvent.PANIC, e)
 
 class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())

@@ -41,7 +41,7 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         set(value) {
             field = value
             val loc = player.location
-            currentGame?.resetPlayer(this)
+            currentGame?.arenaUsage?.resetPlayer(this)
             player.teleport(loc)
         }
 

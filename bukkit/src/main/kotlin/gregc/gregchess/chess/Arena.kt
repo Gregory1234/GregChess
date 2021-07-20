@@ -103,26 +103,24 @@ data class Arena(val name: String, var game: ChessGame? = null): Component.Setti
         }
 
         @ChessEventHandler
-        fun spectatorJoin(p: SpectatorJoinEvent) {
-            p.player.join(spectatorData)
+        fun handleSpectator(p: SpectatorEvent) {
+            when(p.dir) {
+                PlayerDirection.JOIN -> p.human.join(spectatorData)
+                PlayerDirection.LEAVE -> p.human.leave()
+            }
+
         }
 
         @ChessEventHandler
-        fun spectatorLeave(p: SpectatorLeaveEvent) {
-            p.player.leave()
+        fun handlePlayer(p: HumanPlayerEvent) {
+            (p.human as? BukkitPlayer)?.let {
+                when (p.dir) {
+                    PlayerDirection.JOIN -> it.join(if (it.isAdmin) adminData else defData)
+                    PlayerDirection.LEAVE -> it.leave()
+                }
+            }
         }
 
-        @GameEvent(GameBaseEvent.REMOVE_PLAYER, relaxed = true)
-        fun removePlayer(p: BukkitPlayer) {
-            p.leave()
-        }
-
-        @GameEvent(GameBaseEvent.ADD_PLAYER, relaxed = true)
-        fun addPlayer(p: BukkitPlayer) {
-            p.join(if (p.isAdmin) adminData else defData)
-        }
-
-        @GameEvent(GameBaseEvent.RESET_PLAYER, relaxed = true)
         fun resetPlayer(p: BukkitPlayer) {
             p.reset(if (p.isAdmin) adminData else defData)
         }
@@ -158,4 +156,5 @@ data class Arena(val name: String, var game: ChessGame? = null): Component.Setti
     }
 }
 
-val ChessGame.arena get() = requireComponent<Arena.Usage>().arena
+val ChessGame.arena get() = arenaUsage.arena
+val ChessGame.arenaUsage get() = requireComponent<Arena.Usage>()

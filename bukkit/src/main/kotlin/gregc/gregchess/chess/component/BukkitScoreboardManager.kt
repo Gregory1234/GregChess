@@ -84,8 +84,9 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     }
 
     @ChessEventHandler
-    fun spectatorJoin(p: SpectatorJoinEvent) {
-        p.player.player.scoreboard = scoreboard
+    fun spectatorJoin(p: SpectatorEvent) {
+        if (p.dir == PlayerDirection.JOIN)
+            p.player.scoreboard = scoreboard
     }
 
     @GameEvent(GameBaseEvent.UPDATE, mod = TimeModifier.LATE)

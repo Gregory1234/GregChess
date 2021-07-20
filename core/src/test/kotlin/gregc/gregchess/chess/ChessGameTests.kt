@@ -137,8 +137,8 @@ class ChessGameTests {
             val g = mkGame(spyComponentSettings).start()
             val c = g.getComponent<TestComponent>()!!
             verifySequence {
-                c.addPlayer(humanA)
-                c.addPlayer(humanB)
+                c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.JOIN))
+                c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.JOIN))
                 c.init()
                 c.start()
                 c.begin()
@@ -218,8 +218,8 @@ class ChessGameTests {
             g.stop(TestEndReason(Side.WHITE))
             verifySequence {
                 c.stop()
-                c.removePlayer(humanA)
-                c.removePlayer(humanB)
+                c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.LEAVE))
+                c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.LEAVE))
                 c.clear()
                 c.veryEnd()
             }

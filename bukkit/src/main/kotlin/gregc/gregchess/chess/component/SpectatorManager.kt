@@ -1,11 +1,15 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
+import org.bukkit.entity.Player
 
-data class SpectatorJoinEvent(val player: BukkitPlayer) : ChessEvent
-data class SpectatorLeaveEvent(val player: BukkitPlayer) : ChessEvent
+data class SpectatorEvent(val human: BukkitPlayer, val dir: PlayerDirection) : ChessEvent {
+    val player: Player get() = human.player
+}
 
-class SpectatorNotFoundException(val player: BukkitPlayer) : Exception(player.name)
+class SpectatorNotFoundException(val human: BukkitPlayer) : Exception(human.name) {
+    val player: Player get() = human.player
+}
 
 class SpectatorManager(private val game: ChessGame) : Component {
 
@@ -19,14 +23,14 @@ class SpectatorManager(private val game: ChessGame) : Component {
 
     operator fun plusAssign(p: BukkitPlayer) {
         spectatorList += p
-        game.components.callEvent(SpectatorJoinEvent(p))
+        game.components.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
     operator fun minusAssign(p: BukkitPlayer) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
         spectatorList -= p
-        game.components.callEvent(SpectatorLeaveEvent(p))
+        game.components.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
 
     @GameEvent(GameBaseEvent.STOP)
@@ -41,7 +45,7 @@ class SpectatorManager(private val game: ChessGame) : Component {
         val s = spectators
         spectatorList.clear()
         s.forEach {
-            game.components.callEvent(SpectatorLeaveEvent(it))
+            game.components.callEvent(SpectatorEvent(it, PlayerDirection.LEAVE))
         }
     }
 }

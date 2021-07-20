@@ -18,6 +18,12 @@ data class GameSettings(
     inline fun <reified T : Component.Settings<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
 }
 
+enum class PlayerDirection {
+    JOIN, LEAVE
+}
+
+data class HumanPlayerEvent(val human: HumanPlayer, val dir: PlayerDirection): ChessEvent
+
 class ChessGame(private val timeManager: TimeManager, val settings: GameSettings) {
 
     val uniqueId: UUID = UUID.randomUUID()
@@ -155,7 +161,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         try {
             state = GameState.Starting(requireReady())
             players.forEachReal {
-                components.allAddPlayer(it)
+                components.callEvent(HumanPlayerEvent(it, PlayerDirection.JOIN))
             }
             components.allInit()
             requireStarting().forEachUnique { it.init() }
@@ -177,10 +183,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         }
         startTurn()
         return this
-    }
-
-    fun resetPlayer(p: HumanPlayer) {
-        components.allResetPlayer(p)
     }
 
     private fun startTurn() {
@@ -212,7 +214,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
                     it.player.showEndReason(it.side, reason)
                     if (!reason.quick)
                         timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
-                    components.allRemovePlayer(it.player)
+                    components.callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
                 }
             }
             if (reason.quick) {

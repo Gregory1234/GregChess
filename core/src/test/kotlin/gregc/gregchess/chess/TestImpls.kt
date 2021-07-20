@@ -118,17 +118,9 @@ class TestComponent : Component {
     @GameEvent(GameBaseEvent.START_PREVIOUS_TURN)
     fun startPreviousTurn() {}
 
-    @GameEvent(GameBaseEvent.ADD_PLAYER)
+    @ChessEventHandler
     @Suppress("UNUSED_PARAMETER")
-    fun addPlayer(p: HumanPlayer) {}
-
-    @GameEvent(GameBaseEvent.REMOVE_PLAYER)
-    @Suppress("UNUSED_PARAMETER")
-    fun removePlayer(p: HumanPlayer) {}
-
-    @GameEvent(GameBaseEvent.RESET_PLAYER)
-    @Suppress("UNUSED_PARAMETER")
-    fun resetPlayer(p: HumanPlayer) {}
+    fun handlePlayer(p: HumanPlayerEvent) {}
 
     @GameEvent(GameBaseEvent.PANIC)
     fun panic() {}

@@ -62,7 +62,7 @@ object ChessGameManager : Listener {
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.entity as? Player ?: return
         val game = ent.human.currentGame ?: return
-        game.resetPlayer(ent.human)
+        game.arenaUsage.resetPlayer(ent.human)
         e.isCancelled = true
     }
 
