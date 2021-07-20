@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.component.BukkitRenderer
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
@@ -54,3 +55,5 @@ val EndReason.name
 val EndReason.message
     get() = LocalizedString(config,
         "Message.GameFinished." + (winner?.standardName?.plus("Won") ?: "ItWasADraw"), name)
+
+val ChessGame.renderer get() = requireComponent<BukkitRenderer>()

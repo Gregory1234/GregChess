@@ -1,4 +1,8 @@
 
+plugins {
+    kotlin("jvm") apply false
+}
+
 allprojects {
     group = "gregc"
     version = "1.0"
@@ -13,7 +17,7 @@ tasks {
             copy {
                 from(project(":bukkit").getTasksByName("jar", true))
                 into(rootDir)
-                rename { _ ->
+                rename {
                     "${rootProject.name}-$version.jar"
                 }
             }

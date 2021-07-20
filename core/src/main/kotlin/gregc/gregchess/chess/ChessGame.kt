@@ -19,10 +19,6 @@ data class GameSettings(
 }
 
 class ChessGame(private val timeManager: TimeManager, val settings: GameSettings) {
-    companion object {
-        private val TELEPORT_FAILED = ErrorMsg("TeleportFailed")
-        private val RENDERER_NOT_FOUND = ErrorMsg("RendererNotFound")
-    }
 
     val uniqueId: UUID = UUID.randomUUID()
 
@@ -46,25 +42,13 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         }
     }
 
-    val board: Chessboard = requireComponent()
+    val board get() = requireComponent<Chessboard>()
 
-    val clock: ChessClock? = getComponent()
+    val clock get() = getComponent<ChessClock>()
 
-    val renderers: List<Renderer<*>> = components.mapNotNull { Renderer::class.safeCast(it) }
+    val renderers get() = components.filterIsInstance<Renderer>()
 
-    val scoreboard: ScoreboardManager = requireComponent()
-
-    @Suppress("unchecked_cast")
-    fun <T, R> withRenderer(block: (Renderer<T>) -> R): R? =
-        renderers.firstNotNullOfOrNull {
-            try {
-                block(it as Renderer<T>)
-            } catch (e: Exception) {
-                null
-            }
-        }
-
-    fun <T, R> cRequireRenderer(block: (Renderer<T>) -> R): R = cNotNull(withRenderer(block), RENDERER_NOT_FOUND)
+    val scoreboard get() = requireComponent<ScoreboardManager>()
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()
@@ -182,7 +166,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
             state = GameState.Running(requireStarting())
             glog.mid("Started game", uniqueId)
         } catch (e: Exception) {
-            panic(CommandException(TELEPORT_FAILED, e))
+            panic(e)
             glog.mid("Failed to start game", uniqueId)
             throw e
         }

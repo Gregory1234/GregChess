@@ -1,7 +1,8 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.glog
+import gregc.gregchess.rangeTo
 import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -61,8 +62,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     operator fun get(pos: Pos) = squares[pos]
-
-    operator fun get(loc: Loc) = this[game.cRequireRenderer<Loc, Pos> { it.getPos(loc) }]
 
     private val moves: MutableList<MoveData> = mutableListOf()
 

@@ -8,7 +8,7 @@ object AtomicChess : ChessVariant("Atomic") {
 
     data class RendererExplosion(val pos: Pos): ExtraRendererFunction<Unit>()
 
-    private fun Renderer<*>.explosionAt(pos: Pos) = execute(RendererExplosion(pos))
+    private fun Renderer.explosionAt(pos: Pos) = execute(RendererExplosion(pos))
 
     class ExplosionManager(private val game: ChessGame) : Component {
         object Settings : Component.Settings<ExplosionManager> {

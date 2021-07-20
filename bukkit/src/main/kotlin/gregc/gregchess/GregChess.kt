@@ -158,7 +158,7 @@ object GregChess : Listener {
                     perms()
                     val p = cNotNull(player.human.chess, YOU_NOT_IN_GAME)
                     val pos = if (args.size == 1)
-                        p.game.cRequireRenderer<Loc, Pos> { it.getPos(player.location.toLoc()) }
+                        p.game.renderer.getPos(player.location.toLoc())
                     else
                         cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()
@@ -174,7 +174,7 @@ object GregChess : Listener {
                     val game = p.game
                     cWrongArgument {
                         val square = if (args.size == 3)
-                            game.board[player.location.toLoc()]!!
+                            game.board[game.renderer.getPos(player.location.toLoc())]!!
                         else
                             game.board[Pos.parseFromString(this[2])]!!
                         val piece = PieceType.valueOf(this[1])
@@ -354,7 +354,7 @@ object GregChess : Listener {
                 cPlayer(player)
                 perms("info.ingame")
                 val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
-                cNotNull(game.board[player.location.toLoc()]?.piece, PIECE_NOT_FOUND)
+                cNotNull(game.board[game.renderer.getPos(player.location.toLoc())]?.piece, PIECE_NOT_FOUND)
             }
             1 -> {
                 if (isValidUUID(nextArg())) {

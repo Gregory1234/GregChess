@@ -9,10 +9,9 @@ abstract class ExtraRendererFunction<R>
 
 class UnsupportedExtraRendererFunction(val f: ExtraRendererFunction<*>): Exception(f.toString())
 
-interface Renderer<in T> : Component {
-    interface Settings<in T> : Component.Settings<Renderer<T>>
+interface Renderer : Component {
+    interface Settings : Component.Settings<Renderer>
 
-    fun getPos(loc: T): Pos
     fun renderPiece(pos: Pos, piece: Piece)
     fun clearPiece(pos: Pos)
     fun renderCapturedPiece(pos: CapturedPos, piece: Piece)
@@ -24,10 +23,10 @@ interface Renderer<in T> : Component {
     fun <R> executeAny(f: ExtraRendererFunction<R>): Any? = throw UnsupportedExtraRendererFunction(f)
 }
 
-inline fun <reified R> Renderer<*>.execute(f: ExtraRendererFunction<R>): R = executeAny(f) as R
+inline fun <reified R> Renderer.execute(f: ExtraRendererFunction<R>): R = executeAny(f) as R
 
-abstract class MinecraftRenderer(protected val game: ChessGame, protected val settings: Settings) : Renderer<Loc> {
-    abstract class Settings(val tileSize: Int, val offset: Loc = Loc(0, 0, 0)) : Renderer.Settings<Loc> {
+abstract class MinecraftRenderer(protected val game: ChessGame, protected val settings: Settings) : Renderer {
+    abstract class Settings(val tileSize: Int, val offset: Loc = Loc(0, 0, 0)) : Renderer.Settings {
         val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
         val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
         val boardSize get() = 8 * tileSize
@@ -41,7 +40,7 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
     val spawnLocation
         get() = defaultSpawnLocation + settings.offset
 
-    override fun getPos(loc: Loc) =
+    fun getPos(loc: Loc) =
         Pos(
             file = (8 + settings.boardSize - 1 - loc.x + settings.offset.x).floorDiv(settings.tileSize),
             rank = (loc.z - settings.offset.z - 8).floorDiv(settings.tileSize)
