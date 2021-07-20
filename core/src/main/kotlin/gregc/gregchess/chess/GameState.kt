@@ -17,10 +17,6 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         val startTime: LocalDateTime
     }
 
-    sealed interface WithSpectators {
-        val spectators: List<HumanPlayer>
-    }
-
     sealed interface WithEndReason {
         val endReason: EndReason
     }
@@ -55,9 +51,8 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     data class Running(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
-        override var currentTurn: Side,
-        override val spectators: MutableList<HumanPlayer> = mutableListOf()
-    ) : GameState(true, false, true), WithCurrentPlayer, WithStartTime, WithSpectators {
+        override var currentTurn: Side
+    ) : GameState(true, false, true), WithCurrentPlayer, WithStartTime {
         constructor(starting: Starting) : this(starting.players, starting.startTime, starting.currentTurn)
 
         override val white = players.white
@@ -72,11 +67,9 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
-        override val spectators: MutableList<HumanPlayer> = mutableListOf(),
         override val endReason: EndReason
-    ) : GameState(true, false, false), WithCurrentPlayer, WithStartTime, WithSpectators, WithEndReason {
-        constructor(running: Running, endReason: EndReason) :
-                this(running.players, running.startTime, running.currentTurn, running.spectators, endReason)
+    ) : GameState(true, false, false), WithCurrentPlayer, WithStartTime, WithEndReason {
+        constructor(running: Running, endReason: EndReason) : this(running.players, running.startTime, running.currentTurn, endReason)
 
         override val white = players.white
         override val black = players.black
@@ -143,7 +136,5 @@ inline fun GameState.WithCurrentPlayer.forEachUnique(f: (HumanChessPlayer) -> Un
 
 inline fun GameState.WithCurrentPlayer.forEachRealIndexed(f: (Side, HumanPlayer) -> Unit) =
     players.forEachRealIndexed(currentTurn, f)
-
-inline fun GameState.WithSpectators.forEachSpectator(f: (HumanPlayer) -> Unit) = spectators.forEach(f)
 
 class WrongStateException(s: GameState, cls: Class<*>) : Exception("expected ${cls.name}, got $s")

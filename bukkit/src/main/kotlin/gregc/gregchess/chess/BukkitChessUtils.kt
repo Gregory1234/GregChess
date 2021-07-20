@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.BukkitRenderer
+import gregc.gregchess.chess.component.spectators
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
@@ -42,7 +43,7 @@ fun BoardPiece.getInfo() = buildTextComponent {
 fun ChessGame.getInfo() = buildTextComponent {
     appendCopy("UUID: $uniqueId\n", uniqueId)
     append("Players: ${players.toList().joinToString { "${it.name} as ${it.side.standardName}" }}\n")
-    append("Spectators: ${spectators.joinToString { it.name }}\n")
+    append("Spectators: ${spectators.spectators.joinToString { it.name }}\n")
     append("Arena: ${arena.name}\n")
     append("Preset: ${settings.name}\n")
     append("Variant: ${variant.name}\n")

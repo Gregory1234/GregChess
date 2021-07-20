@@ -69,7 +69,7 @@ object GregChess : Listener {
             file.createNewFile()
             glog = GregLogger(logger, file)
         }
-        BukkitChessGameManager.start()
+        ChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()
         SettingsManager.start()
@@ -80,7 +80,7 @@ object GregChess : Listener {
                 "duel" -> {
                     cPlayer(player)
                     perms()
-                    cRequire(!player.human.isInGame(), YOU_IN_GAME)
+                    cRequire(!player.human.isInGame, YOU_IN_GAME)
                     when (nextArg().lowercase()) {
                         "accept" -> {
                             cWrongArgument {
@@ -95,7 +95,7 @@ object GregChess : Listener {
                         else -> {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
-                            cRequire(!opponent.human.isInGame(), OPPONENT_IN_GAME)
+                            cRequire(!opponent.human.isInGame, OPPONENT_IN_GAME)
                             interact {
                                 val settings = player.openSettingsMenu()
                                 if (settings != null) {
@@ -116,7 +116,7 @@ object GregChess : Listener {
                     perms()
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     endArgs()
-                    cRequire(!player.human.isInGame(), YOU_IN_GAME)
+                    cRequire(!player.human.isInGame, YOU_IN_GAME)
                     interact {
                         val settings = player.openSettingsMenu()
                         if (settings != null)
@@ -137,7 +137,7 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    BukkitChessGameManager.leave(player.human)
+                    ChessGameManager.leave(player.human)
                 }
                 "draw" -> {
                     cPlayer(player)
@@ -360,7 +360,7 @@ object GregChess : Listener {
                 if (isValidUUID(nextArg())) {
                     perms("info.remote")
                     val game = cNotNull(
-                        BukkitChessGameManager.firstGame { UUID.fromString(latestArg()) in it.board },
+                        ChessGameManager.firstGame { UUID.fromString(latestArg()) in it.board },
                         PIECE_NOT_FOUND
                     )
                     game.board[UUID.fromString(latestArg())]!!
@@ -384,14 +384,14 @@ object GregChess : Listener {
             1 -> {
                 cWrongArgument {
                     perms("info.remote")
-                    cNotNull(BukkitChessGameManager[UUID.fromString(nextArg())], GAME_NOT_FOUND)
+                    cNotNull(ChessGameManager[UUID.fromString(nextArg())], GAME_NOT_FOUND)
                 }
             }
             else -> throw CommandException(WRONG_ARGUMENTS_NUMBER)
         }
 
     fun onDisable() {
-        BukkitChessGameManager.stop()
+        ChessGameManager.stop()
     }
 
     @EventHandler

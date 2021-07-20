@@ -102,14 +102,14 @@ data class Arena(val name: String, var game: ChessGame? = null): Component.Setti
             game.players.forEachReal { (it as? BukkitPlayer)?.leave() }
         }
 
-        @GameEvent(GameBaseEvent.SPECTATOR_JOIN, mod = TimeModifier.EARLY, relaxed = true)
-        fun spectatorJoin(p: BukkitPlayer) {
-            p.join(spectatorData)
+        @ChessEventHandler
+        fun spectatorJoin(p: SpectatorJoinEvent) {
+            p.player.join(spectatorData)
         }
 
-        @GameEvent(GameBaseEvent.SPECTATOR_LEAVE, mod = TimeModifier.LATE, relaxed = true)
-        fun spectatorLeave(p: BukkitPlayer) {
-            p.leave()
+        @ChessEventHandler
+        fun spectatorLeave(p: SpectatorLeaveEvent) {
+            p.player.leave()
         }
 
         @GameEvent(GameBaseEvent.REMOVE_PLAYER, relaxed = true)

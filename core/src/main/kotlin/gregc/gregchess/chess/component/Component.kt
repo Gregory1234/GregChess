@@ -1,7 +1,6 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.HumanPlayer
+import gregc.gregchess.chess.*
 import java.lang.reflect.Method
 import kotlin.reflect.KClass
 
@@ -17,8 +16,6 @@ enum class GameBaseEvent {
     START,
     BEGIN,
     UPDATE,
-    SPECTATOR_JOIN,
-    SPECTATOR_LEAVE,
     STOP,
     CLEAR,
     VERY_END,
@@ -82,9 +79,7 @@ fun Collection<Component>.allInit() = runGameEvent(GameBaseEvent.INIT)
 fun Collection<Component>.allStart() = runGameEvent(GameBaseEvent.START)
 fun Collection<Component>.allBegin() = runGameEvent(GameBaseEvent.BEGIN)
 fun Collection<Component>.allUpdate() = runGameEvent(GameBaseEvent.UPDATE)
-fun Collection<Component>.allSpectatorJoin(p: HumanPlayer) = runGameEvent(GameBaseEvent.SPECTATOR_JOIN, p)
-fun Collection<Component>.allSpectatorLeave(p: HumanPlayer) = runGameEvent(GameBaseEvent.SPECTATOR_LEAVE, p)
-fun Collection<Component>.allStop() = runGameEvent(GameBaseEvent.STOP)
+fun Collection<Component>.allStop(reason: EndReason) = runGameEvent(GameBaseEvent.STOP, reason)
 fun Collection<Component>.allClear() = runGameEvent(GameBaseEvent.CLEAR)
 fun Collection<Component>.allVeryEnd() = runGameEvent(GameBaseEvent.VERY_END)
 fun Collection<Component>.allStartTurn() = runGameEvent(GameBaseEvent.START_TURN)

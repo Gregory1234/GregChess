@@ -8,16 +8,9 @@ enum class GamePlayerStatus {
 
 abstract class HumanPlayer(val name: String) {
     var currentGame: ChessGame? = null
-    var spectatedGame: ChessGame? = null
-        set(v) {
-            field?.spectatorLeave(this)
-            field = v
-            field?.spectate(this)
-        }
     val games = mutableListOf<ChessGame>()
 
-    fun isInGame(): Boolean = currentGame != null
-    fun isSpectating(): Boolean = spectatedGame != null
+    val isInGame get() = currentGame != null
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendFEN(fen: FEN)
     abstract fun setItem(i: Int, piece: Piece?)

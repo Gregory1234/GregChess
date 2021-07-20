@@ -6,6 +6,7 @@ author: GregC
 description: Chess Plugin
 libraries:
   - org.jetbrains.kotlin:kotlin-stdlib-jdk8:@kotlin-version@
+  - org.jetbrains.kotlin:kotlin-reflect:@kotlin-version@
 commands:
   chess:
     description: Main chess command

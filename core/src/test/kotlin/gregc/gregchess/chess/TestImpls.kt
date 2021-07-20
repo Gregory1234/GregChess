@@ -97,14 +97,6 @@ class TestComponent : Component {
     @GameEvent(GameBaseEvent.UPDATE)
     fun update() {}
 
-    @GameEvent(GameBaseEvent.SPECTATOR_JOIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun spectatorJoin(p: HumanPlayer) {}
-
-    @GameEvent(GameBaseEvent.SPECTATOR_LEAVE)
-    @Suppress("UNUSED_PARAMETER")
-    fun spectatorLeave(p: HumanPlayer) {}
-
     @GameEvent(GameBaseEvent.STOP)
     fun stop() {}
 

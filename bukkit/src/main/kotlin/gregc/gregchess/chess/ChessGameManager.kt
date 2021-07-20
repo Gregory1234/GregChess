@@ -15,19 +15,13 @@ import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.*
 import java.util.*
 
-interface ChessGameManager {
-    fun firstGame(predicate: (ChessGame) -> Boolean): ChessGame?
-    operator fun get(uuid: UUID): ChessGame?
-    fun leave(player: HumanPlayer)
-}
+object ChessGameManager : Listener {
 
-class PluginRestartEndReason : EndReason("PluginRestart", "emergency", quick = true)
-
-object BukkitChessGameManager : ChessGameManager, Listener {
+    class PluginRestartEndReason : EndReason("PluginRestart", "emergency", quick = true)
 
     private val games = mutableListOf<ChessGame>()
 
-    override fun firstGame(predicate: (ChessGame) -> Boolean): ChessGame? = games.firstOrNull(predicate)
+    fun firstGame(predicate: (ChessGame) -> Boolean): ChessGame? = games.firstOrNull(predicate)
 
     private fun removeGame(g: ChessGame) {
         games -= g
@@ -37,7 +31,7 @@ object BukkitChessGameManager : ChessGameManager, Listener {
         }
     }
 
-    override operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uniqueId == uuid }
+    operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uniqueId == uuid }
 
 
     fun start() {
@@ -48,9 +42,9 @@ object BukkitChessGameManager : ChessGameManager, Listener {
         games.forEach { it.quickStop(PluginRestartEndReason()) }
     }
 
-    override fun leave(player: HumanPlayer) {
+    fun leave(player: BukkitPlayer) {
         val games = player.games
-        cRequire(games.isNotEmpty() || player.isSpectating(), YOU_NOT_IN_GAME)
+        cRequire(games.isNotEmpty() || player.isSpectating, YOU_NOT_IN_GAME)
         games.forEach { g ->
             g.stop(EndReason.Walkover(!g[player]!!.side), BySides { it == g[player]!!.side })
         }
@@ -75,7 +69,7 @@ object BukkitChessGameManager : ChessGameManager, Listener {
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
         val player = e.player.human.chess ?: return
-        if (!e.player.human.isInGame() || e.player.human.isAdmin)
+        if (!e.player.human.isInGame || e.player.human.isAdmin)
             return
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
@@ -91,28 +85,28 @@ object BukkitChessGameManager : ChessGameManager, Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (e.player.human.isInGame() && !e.player.human.isAdmin) {
+        if (e.player.human.isInGame && !e.player.human.isAdmin) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.whoClicked.let { it is Player && it.human.isInGame() && !it.human.isAdmin }) {
+        if (e.whoClicked.let { it is Player && it.human.isInGame && !it.human.isAdmin }) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        if (e.whoClicked.let { it is Player && it.human.isInGame() && !it.human.isAdmin }) {
+        if (e.whoClicked.let { it is Player && it.human.isInGame && !it.human.isAdmin }) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (e.player.human.isInGame() && !e.player.human.isAdmin) {
+        if (e.player.human.isInGame && !e.player.human.isAdmin) {
             e.isCancelled = true
         }
     }

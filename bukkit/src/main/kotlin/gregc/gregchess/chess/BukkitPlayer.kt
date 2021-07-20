@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.component.spectators
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.entity.Player
@@ -43,6 +44,15 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
             currentGame?.resetPlayer(this)
             player.teleport(loc)
         }
+
+    var spectatedGame: ChessGame? = null
+        set(v) {
+            field?.let { it.spectators -= this }
+            field = v
+            field?.let { it.spectators += this }
+        }
+
+    val isSpectating get() = spectatedGame != null
 
     fun sendMessage(msg: String) = player.sendMessage(msg)
     fun sendMessage(msg: LocalizedString) = sendMessage(msg.get(lang))

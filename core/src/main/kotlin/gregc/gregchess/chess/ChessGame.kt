@@ -131,8 +131,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     val players: BySides<ChessPlayer>
         get() = require<GameState.WithPlayers>().players
-    val spectators: List<HumanPlayer>
-        get() = (state as? GameState.WithSpectators)?.spectators.orEmpty()
 
     operator fun contains(p: HumanPlayer): Boolean = require<GameState.WithPlayers>().contains(p)
 
@@ -181,18 +179,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         return this
     }
 
-    fun spectate(p: HumanPlayer) {
-        val st = requireRunning()
-        components.allSpectatorJoin(p)
-        st.spectators += p
-    }
-
-    fun spectatorLeave(p: HumanPlayer) {
-        val st = requireRunning()
-        components.allSpectatorLeave(p)
-        st.spectators -= p
-    }
-
     fun resetPlayer(p: HumanPlayer) {
         components.allResetPlayer(p)
     }
@@ -220,21 +206,13 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         val stopping = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, reason)
         state = stopping
         try {
-            components.allStop()
+            components.allStop(reason)
             players.forEachUnique(currentTurn) {
                 interact {
                     it.player.showEndReason(it.side, reason)
                     if (!reason.quick)
                         timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
                     components.allRemovePlayer(it.player)
-                }
-            }
-            spectators.forEach {
-                interact {
-                    it.showEndReason(reason)
-                    if (!reason.quick)
-                        timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
-                    components.allSpectatorLeave(it)
                 }
             }
             if (reason.quick) {
