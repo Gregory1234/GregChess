@@ -8,6 +8,8 @@ import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
 
+val Side.standardName get() = name.snakeToPascal()
+
 fun PieceType.getItem(side: Side, lang: String): ItemStack {
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
@@ -16,7 +18,7 @@ fun PieceType.getItem(side: Side, lang: String): ItemStack {
     return item
 }
 
-val PieceType.view get() = config.getConfigurationSection("Chess.Piece.$standardName")!!
+val PieceType.view get() = config.getConfigurationSection("Chess.Piece.${id.path.snakeToPascal()}")!!
 val PieceType.pieceName get() = view.getLocalizedString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(view.getString("Sound.$s")!!)
 val PieceType.itemMaterial get() = BySides { Material.valueOf(view.getString("Item.${it.standardName}")!!) }
@@ -27,7 +29,7 @@ fun Piece.getItem(lang: String) = type.getItem(side, lang)
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${standardName}")!!)
 
 fun BoardPiece.getInfo() = buildTextComponent {
-    append("Name: $standardName\n")
+    append("Id: $id\n")
     appendCopy("UUID: $uniqueId\n", uniqueId)
     append("Position: $pos\n")
     append(if (hasMoved) "Has moved\n" else "Has not moved\n")

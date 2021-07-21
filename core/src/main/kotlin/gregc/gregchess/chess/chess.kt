@@ -1,12 +1,8 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.snakeToPascal
-
 enum class Side(val standardChar: Char, val direction: Int) {
     WHITE('w', 1),
     BLACK('b', -1);
-
-    val standardName = name.snakeToPascal()
 
     operator fun not(): Side = if (this == WHITE) BLACK else WHITE
     operator fun inc(): Side = not()

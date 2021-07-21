@@ -118,7 +118,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
         fun addPlayer(p: ChessPlayer) {
             if (players[p.side] != null)
-                throw IllegalStateException("${p.side.standardName} player already added")
+                throw IllegalStateException("${p.side.name.lowercase().upperFirst()} player already added")
             players[p.side] = p
         }
 

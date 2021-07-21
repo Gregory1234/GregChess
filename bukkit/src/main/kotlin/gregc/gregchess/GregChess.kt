@@ -177,7 +177,7 @@ object GregChess : Listener {
                             game.board[game.renderer.getPos(player.location.toLoc())]!!
                         else
                             game.board[Pos.parseFromString(this[2])]!!
-                        val piece = PieceType.valueOf(this[1])
+                        val piece = PieceType.get(this[1].asIdent())
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(Piece(piece, Side.valueOf(this[0])), square)
                         game.board.updateMoves()
@@ -339,7 +339,7 @@ object GregChess : Listener {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("spawn", PieceType.values().map { it.standardName }.toTypedArray())
+                    "spawn" -> ifPermission("spawn", PieceType.values().map { it.id }.toTypedArray())
                     "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }

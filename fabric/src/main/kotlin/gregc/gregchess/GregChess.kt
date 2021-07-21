@@ -66,9 +66,9 @@ object GregChess : ModInitializer {
             Side.values().forEach { s ->
                 val piece = Piece(t, s)
                 val block = piece.block
-                Registry.register(Registry.BLOCK, piece.id, block)
+                Registry.register(Registry.BLOCK, piece.id.fabric, block)
                 val item = piece.item
-                Registry.register(Registry.ITEM, piece.id, item)
+                Registry.register(Registry.ITEM, piece.id.fabric, item)
             }
         }
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)

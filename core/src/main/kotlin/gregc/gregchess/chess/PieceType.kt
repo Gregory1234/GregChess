@@ -1,8 +1,11 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.Identifier
+import gregc.gregchess.asIdent
+
 
 data class PieceType(
-    val standardName: String,
+    val id: Identifier,
     val standardChar: Char,
     val moveScheme: (BoardPiece) -> List<MoveCandidate>,
     val hasMoved: (FEN, Pos, Side) -> Boolean,
@@ -26,22 +29,22 @@ data class PieceType(
             Side.BLACK -> p.rank != 6
         }
         @JvmField
-        val KING = PieceType("King", 'k', ::kingMovement, ::assumeNotMoved, false)
+        val KING = PieceType("king".asIdent(), 'k', ::kingMovement, ::assumeNotMoved, false)
         @JvmField
-        val QUEEN = PieceType("Queen", 'q', ::queenMovement, ::assumeNotMoved, false)
+        val QUEEN = PieceType("queen".asIdent(), 'q', ::queenMovement, ::assumeNotMoved, false)
         @JvmField
-        val ROOK = PieceType("Rook", 'r', ::rookMovement, ::rookHasMoved, false)
+        val ROOK = PieceType("rook".asIdent(), 'r', ::rookMovement, ::rookHasMoved, false)
         @JvmField
-        val BISHOP = PieceType("Bishop", 'b', ::bishopMovement, ::assumeNotMoved, true)
+        val BISHOP = PieceType("bishop".asIdent(), 'b', ::bishopMovement, ::assumeNotMoved, true)
         @JvmField
-        val KNIGHT = PieceType("Knight", 'n', ::knightMovement, ::assumeNotMoved, true)
+        val KNIGHT = PieceType("knight".asIdent(), 'n', ::knightMovement, ::assumeNotMoved, true)
         @JvmField
-        val PAWN = PieceType("Pawn", 'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
+        val PAWN = PieceType("pawn".asIdent(), 'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
 
         fun values() = values
 
         fun parseFromStandardChar(c: Char): PieceType =
             values.firstOrNull { it.standardChar == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())
-        fun valueOf(n: String) = values.firstOrNull { it.standardName == n } ?: throw IllegalArgumentException(n)
+        fun get(id: Identifier) = values.firstOrNull { it.id == id } ?: throw IllegalArgumentException(id.toString())
     }
 }

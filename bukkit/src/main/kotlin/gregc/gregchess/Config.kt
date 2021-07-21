@@ -9,8 +9,9 @@ val config: ConfigurationSection get() = GregChess.plugin.config
 fun ConfigurationSection.getLocalizedString(path: String, vararg args: Any?) = LocalizedString(this, path, *args)
 
 class LocalizedString(private val section: ConfigurationSection, private val path: String, private vararg val args: Any?) {
-    @Suppress("UNUSED_PARAMETER")
-    fun get(lang: String): String = section.getString(path)!!.format(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray())
+    fun get(lang: String): String =
+        (section.getString(path) ?: throw IllegalArgumentException(lang + "/" + section.currentPath + "." + path))
+        .format(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray())
 }
 
 fun ComponentConfig.initBukkit() {
