@@ -11,20 +11,20 @@ import org.bukkit.inventory.ItemStack
 fun PieceType.getItem(side: Side, lang: String): ItemStack {
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
-    meta.setDisplayName(LocalizedString(config, "Chess.Side.${side.standardName}.Piece", pieceName).get(lang))
+    meta.setDisplayName(config.getLocalizedString("Chess.Side.${side.standardName}.Piece", pieceName).get(lang).chatColor())
     item.itemMeta = meta
     return item
 }
 
-val PieceType.view get() = config["Chess.Piece.$standardName"]
-val PieceType.pieceName get() = LocalizedString(view, "Name")
-fun PieceType.getSound(s: String) = view.getEnum<Sound>("Sound.$s", Sound.BLOCK_STONE_HIT)
-val PieceType.itemMaterial get() = BySides { view.getEnum("Item.${it.standardName}", Material.AIR) }
-val PieceType.structure get() = BySides { view.getEnumList<Material>("Structure.${it.standardName}") }
+val PieceType.view get() = config.getConfigurationSection("Chess.Piece.$standardName")!!
+val PieceType.pieceName get() = view.getLocalizedString("Name")
+fun PieceType.getSound(s: String) = Sound.valueOf(view.getString("Sound.$s")!!)
+val PieceType.itemMaterial get() = BySides { Material.valueOf(view.getString("Item.${it.standardName}")!!) }
+val PieceType.structure get() = BySides { view.getStringList("Structure.${it.standardName}").map { m -> Material.valueOf(m) } }
 
 fun Piece.getItem(lang: String) = type.getItem(side, lang)
 
-val Floor.material get() = config.getEnum<Material>("Chess.Floor.${standardName}", Material.AIR)
+val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${standardName}")!!)
 
 fun BoardPiece.getInfo() = buildTextComponent {
     append("Name: $standardName\n")
@@ -51,10 +51,9 @@ fun ChessGame.getInfo() = buildTextComponent {
 }
 
 val EndReason.name
-    get() = LocalizedString(config, "Chess.EndReason.$standardName", *args.toTypedArray())
+    get() = config.getLocalizedString("Chess.EndReason.$standardName", *args.toTypedArray())
 
 val EndReason.message
-    get() = LocalizedString(config,
-        "Message.GameFinished." + (winner?.standardName?.plus("Won") ?: "ItWasADraw"), name)
+    get() = config.getLocalizedString("Message.GameFinished." + (winner?.standardName?.plus("Won") ?: "ItWasADraw"), name)
 
 val ChessGame.renderer get() = requireComponent<BukkitRenderer>()

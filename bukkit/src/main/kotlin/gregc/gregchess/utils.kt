@@ -127,7 +127,7 @@ data class ErrorMsg(val standardName: String) {
         errors += this
     }
 
-    val msg get() = LocalizedString(config, "Message.Error.$standardName")
+    val msg get() = config.getLocalizedString("Message.Error.$standardName")
 }
 
 @JvmField
@@ -153,8 +153,8 @@ val PLAYER_NOT_IN_GAME = ErrorMsg("NotInGame.Player")
 @JvmField
 val OPPONENT_NOT_HUMAN = ErrorMsg("NotHuman.Opponent")
 
-fun message(n: String) = LocalizedString(config, "Message.$n")
-fun title(n: String) = LocalizedString(config, "Title.$n")
+fun message(n: String) = config.getLocalizedString( "Message.$n")
+fun title(n: String) = config.getLocalizedString( "Title.$n")
 
 
 class CommandException(val error: ErrorMsg, cause: Throwable? = null) : Exception(cause) {
@@ -230,12 +230,12 @@ inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
     BuildTextComponentScope().apply(f).returnValue
 
 val CommandSender.lang get() = (this as? Player)?.human?.lang ?: DEFAULT_LANG
-fun CommandSender.sendMessage(s: LocalizedString) = sendMessage(s.get(lang))
+fun CommandSender.sendMessage(s: LocalizedString) = sendMessage(s.get(lang).chatColor())
 fun CommandSender.sendCommandMessage(msg: String, action: String, command: String) {
     spigot().sendMessage(buildTextComponent {
-        append(msg)
+        append(msg.chatColor())
         append(" ")
-        append(action, ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
+        append(action.chatColor(), ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
     })
 }
 fun CommandSender.sendCommandMessage(msg: LocalizedString, action: LocalizedString, command: String) =

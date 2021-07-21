@@ -12,16 +12,16 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     }
 
     companion object {
-        private val TITLE = LocalizedString(config, "Scoreboard.Title")
-        private fun whiteFormat(s: String) = LocalizedString(config, "Scoreboard.Format.White", s)
-        private fun blackFormat(s: String) = LocalizedString(config, "Scoreboard.Format.Black", s)
-        private fun generalFormat(s: String) = LocalizedString(config, "Scoreboard.Format.General", s)
-        private fun format(side: Side, s: String) = LocalizedString(config, "Scoreboard.Format.${side.standardName}", s)
+        private val TITLE = config.getLocalizedString("Scoreboard.Title")
+        private fun whiteFormat(s: String) = config.getLocalizedString("Scoreboard.Format.White", s)
+        private fun blackFormat(s: String) = config.getLocalizedString("Scoreboard.Format.Black", s)
+        private fun generalFormat(s: String) = config.getLocalizedString("Scoreboard.Format.General", s)
+        private fun format(side: Side, s: String) = config.getLocalizedString("Scoreboard.Format.${side.standardName}", s)
 
-        private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")
+        private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")!!
 
-        private val GameProperty.name get() = LocalizedString(config, "Scoreboard.$standardName").get(DEFAULT_LANG)
-        private val PlayerProperty.name get() = LocalizedString(config, "Scoreboard.$standardName").get(DEFAULT_LANG)
+        private val GameProperty.name get() = config.getLocalizedString("Scoreboard.$standardName").get(DEFAULT_LANG)
+        private val PlayerProperty.name get() = config.getLocalizedString("Scoreboard.$standardName").get(DEFAULT_LANG)
     }
 
     private val gameProperties = mutableListOf<GameProperty>()
@@ -71,22 +71,22 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         var i = l
         gameProperties.forEach {
             gamePropertyTeams[it] = newTeam().apply {
-                addEntry(generalFormat(it.name).get(DEFAULT_LANG))
+                addEntry(generalFormat(it.name).get(DEFAULT_LANG).chatColor())
             }
-            objective.getScore(generalFormat(it.name).get(DEFAULT_LANG)).score = i--
+            objective.getScore(generalFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
         }
         playerProperties.forEach {
             playerPropertyTeams[it] = BySides { s ->
-                newTeam().apply { addEntry(format(s, it.name).get(DEFAULT_LANG)) }
+                newTeam().apply { addEntry(format(s, it.name).get(DEFAULT_LANG).chatColor()) }
             }
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.forEach {
-            objective.getScore(whiteFormat(it.name).get(DEFAULT_LANG)).score = i--
+            objective.getScore(whiteFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.forEach {
-            objective.getScore(blackFormat(it.name).get(DEFAULT_LANG)).score = i--
+            objective.getScore(blackFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
         }
     }
 
@@ -98,10 +98,10 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
 
     private fun update() {
         gameProperties.forEach {
-            gamePropertyTeams[it]?.suffix = it()
+            gamePropertyTeams[it]?.suffix = it().chatColor()
         }
         playerProperties.forEach {
-            playerPropertyTeams[it]?.forEachIndexed { s, t -> t.suffix = it(s) }
+            playerPropertyTeams[it]?.forEachIndexed { s, t -> t.suffix = it(s).chatColor() }
         }
     }
 

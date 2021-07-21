@@ -6,9 +6,9 @@ import java.util.concurrent.*
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
 
     object Config {
-        val hasStockfish get() = config.getDefaultBoolean("Chess.HasStockfish", false)
-        val stockfishCommand get() = config.getString("Chess.Stockfish.Path")
-        val engineName get() = config.getString("Chess.Stockfish.Name")
+        val hasStockfish get() = config.getBoolean("Chess.HasStockfish", false)
+        val stockfishCommand get() = config.getString("Chess.Stockfish.Path")!!
+        val engineName get() = config.getString("Chess.Stockfish.Name")!!
     }
 
     private val process: Process = ProcessBuilder(Config.stockfishCommand).start()

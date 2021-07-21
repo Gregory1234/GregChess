@@ -54,19 +54,19 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
 
     val isSpectating get() = spectatedGame != null
 
-    fun sendMessage(msg: String) = player.sendMessage(msg)
+    fun sendMessage(msg: String) = player.sendMessage(msg.chatColor())
     fun sendMessage(msg: LocalizedString) = sendMessage(msg.get(lang))
 
-    private fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title, subtitle)
+    private fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title.chatColor(), subtitle.chatColor())
 
     override fun sendPGN(pgn: PGN) {
-        val message = TextComponent(COPY_PGN.get(lang))
+        val message = TextComponent(COPY_PGN.get(lang).chatColor())
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }
 
     override fun sendFEN(fen: FEN) {
-        val message = TextComponent(COPY_FEN.get(lang))
+        val message = TextComponent(COPY_FEN.get(lang).chatColor())
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
         player.spigot().sendMessage(message)
     }
