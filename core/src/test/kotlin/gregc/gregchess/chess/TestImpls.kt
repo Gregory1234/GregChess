@@ -106,17 +106,9 @@ class TestComponent : Component {
     @GameEvent(GameBaseEvent.VERY_END)
     fun veryEnd() {}
 
-    @GameEvent(GameBaseEvent.START_TURN)
-    fun startTurn() {}
-
-    @GameEvent(GameBaseEvent.END_TURN)
-    fun endTurn() {}
-
-    @GameEvent(GameBaseEvent.PRE_PREVIOUS_TURN)
-    fun prePreviousTurn() {}
-
-    @GameEvent(GameBaseEvent.START_PREVIOUS_TURN)
-    fun startPreviousTurn() {}
+    @ChessEventHandler
+    @Suppress("UNUSED_PARAMETER")
+    fun handleTurn(e: TurnEvent) {}
 
     @ChessEventHandler
     @Suppress("UNUSED_PARAMETER")

@@ -143,7 +143,7 @@ class ChessGameTests {
                 c.start()
                 c.begin()
                 c.update()
-                c.startTurn()
+                c.handleTurn(TurnEvent.START)
             }
         }
 

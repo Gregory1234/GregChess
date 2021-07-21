@@ -98,23 +98,21 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                 moves.clear()
         }
 
-    @GameEvent(GameBaseEvent.PRE_PREVIOUS_TURN, mod = TimeModifier.EARLY)
-    fun previousTurn() {
-        updateMoves()
-    }
-
-    @GameEvent(GameBaseEvent.END_TURN)
-    fun endTurn() {
-        updateMoves()
-        if (game.currentTurn == Side.BLACK) {
-            val wLast = (if (moves.size <= 1) null else moves[moves.size - 2])
-            val bLast = lastMove
-            game.players.forEachReal { p ->
-                p.sendLastMoves(fullMoveCounter, wLast, bLast)
+    @ChessEventHandler
+    fun endTurn(e: TurnEvent) {
+        if (e.ending)
+            updateMoves()
+        if (e == TurnEvent.END) {
+            if (game.currentTurn == Side.BLACK) {
+                val wLast = (if (moves.size <= 1) null else moves[moves.size - 2])
+                val bLast = lastMove
+                game.players.forEachReal { p ->
+                    p.sendLastMoves(fullMoveCounter, wLast, bLast)
+                }
+                fullMoveCounter++
             }
-            fullMoveCounter++
+            addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
         }
-        addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
     }
 
     @GameEvent(GameBaseEvent.STOP)

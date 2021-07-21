@@ -109,8 +109,10 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     @GameEvent(GameBaseEvent.UPDATE)
     fun update() = Side.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
 
-    @GameEvent(GameBaseEvent.END_TURN)
-    fun endTurn() {
+    @ChessEventHandler
+    fun endTurn(e: TurnEvent) {
+        if (e != TurnEvent.END)
+            return
         val increment = if (started) settings.increment else 0.seconds
         if (!started)
             startTimer()

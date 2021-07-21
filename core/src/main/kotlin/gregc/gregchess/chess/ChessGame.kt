@@ -24,6 +24,10 @@ enum class PlayerDirection {
 
 data class HumanPlayerEvent(val human: HumanPlayer, val dir: PlayerDirection): ChessEvent
 
+enum class TurnEvent(val ending: Boolean): ChessEvent {
+    START(false), END(true), UNDO(true)
+}
+
 class ChessGame(private val timeManager: TimeManager, val settings: GameSettings) {
 
     val uniqueId: UUID = UUID.randomUUID()
@@ -142,7 +146,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     fun nextTurn() {
         requireRunning()
-        components.allEndTurn()
+        components.callEvent(TurnEvent.END)
         variant.checkForGameEnd(this)
         if (running) {
             currentTurn++
@@ -152,7 +156,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     fun previousTurn() {
         requireRunning()
-        components.allPrePreviousTurn()
+        components.callEvent(TurnEvent.UNDO)
         currentTurn++
         startPreviousTurn()
     }
@@ -187,14 +191,14 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     private fun startTurn() {
         requireRunning()
-        components.allStartTurn()
+        components.callEvent(TurnEvent.START)
         currentPlayer.startTurn()
         glog.low("Started turn", uniqueId, currentTurn)
     }
 
     private fun startPreviousTurn() {
         requireRunning()
-        components.allStartPreviousTurn()
+        components.callEvent(TurnEvent.START)
         currentPlayer.startTurn()
         glog.low("Started previous turn", uniqueId, currentTurn)
     }

@@ -18,10 +18,11 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
             game.scoreboard.player("CheckCounter") { checks[it].toString() }
         }
 
-        @GameEvent(GameBaseEvent.END_TURN)
-        fun endTurn() {
-            if (game.variant.isInCheck(game, !game.currentTurn))
-                checks[!game.currentTurn]++
+        @ChessEventHandler
+        fun endTurn(e: TurnEvent) {
+            if (e == TurnEvent.END)
+                if (game.variant.isInCheck(game, !game.currentTurn))
+                    checks[!game.currentTurn]++
         }
 
         fun checkForGameEnd() {

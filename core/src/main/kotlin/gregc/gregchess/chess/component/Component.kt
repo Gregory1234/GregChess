@@ -21,10 +21,6 @@ enum class GameBaseEvent {
     STOP,
     CLEAR,
     VERY_END,
-    START_TURN,
-    END_TURN,
-    PRE_PREVIOUS_TURN,
-    START_PREVIOUS_TURN,
     PANIC
 }
 
@@ -81,10 +77,6 @@ fun Collection<Component>.allUpdate() = runGameEvent(GameBaseEvent.UPDATE)
 fun Collection<Component>.allStop(reason: EndReason) = runGameEvent(GameBaseEvent.STOP, reason)
 fun Collection<Component>.allClear() = runGameEvent(GameBaseEvent.CLEAR)
 fun Collection<Component>.allVeryEnd() = runGameEvent(GameBaseEvent.VERY_END)
-fun Collection<Component>.allStartTurn() = runGameEvent(GameBaseEvent.START_TURN)
-fun Collection<Component>.allEndTurn() = runGameEvent(GameBaseEvent.END_TURN)
-fun Collection<Component>.allPrePreviousTurn() = runGameEvent(GameBaseEvent.PRE_PREVIOUS_TURN)
-fun Collection<Component>.allStartPreviousTurn() = runGameEvent(GameBaseEvent.START_PREVIOUS_TURN)
 fun Collection<Component>.allPanic(e: Exception) = runGameEvent(GameBaseEvent.PANIC, e)
 
 class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
