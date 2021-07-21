@@ -1,9 +1,10 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
 
 object Antichess : ChessVariant("Antichess") {
-    class Stalemate(winner: Side) : EndReason("Stalemate", "normal", winner)
+    class Stalemate(winner: Side) : EndReason("stalemate".asIdent(), Type.NORMAL, winner)
 
     object AntichessPawnConfig : PawnMovementConfig {
         override fun promotions(piece: PieceInfo): List<Piece> =

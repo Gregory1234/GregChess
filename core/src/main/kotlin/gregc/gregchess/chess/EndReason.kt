@@ -1,23 +1,30 @@
 package gregc.gregchess.chess
 
-open class EndReason(val standardName: String, val reasonPGN: String, val winner: Side? = null, val quick: Boolean = false, val args: List<Any?> = emptyList()) {
+import gregc.gregchess.Identifier
+import gregc.gregchess.asIdent
 
-    override fun toString() = standardName
+open class EndReason(val id: Identifier, val type: Type, val winner: Side? = null, val quick: Boolean = false, val args: List<Any?> = emptyList()) {
 
-    class Checkmate(winner: Side) : EndReason("Checkmate", "normal", winner)
-    class Resignation(winner: Side) : EndReason("Resignation", "abandoned", winner)
-    class Walkover(winner: Side) : EndReason("Walkover", "abandoned", winner)
-    class Stalemate : EndReason("Stalemate", "normal")
-    class InsufficientMaterial : EndReason("InsufficientMaterial", "normal")
-    class FiftyMoves : EndReason("FiftyMoves", "normal")
-    class Repetition : EndReason("Repetition", "normal")
-    class DrawAgreement : EndReason("DrawAgreement", "normal")
-    class Timeout(winner: Side) : EndReason("Timeout", "time forfeit", winner)
-    class DrawTimeout : EndReason("DrawTimeout", "time forfeit")
-    class AllPiecesLost(winner: Side) : EndReason("PiecesLost", "normal", winner)
-    class Error(val e: Exception) : EndReason("Error", "emergency") {
-        override fun toString() = "EndReason.Error(winner=$winner, e=$e)"
+    enum class Type(val pgn: String) {
+        NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
     }
+
+    override fun toString() = id.toString()
+
+    class Checkmate(winner: Side) : EndReason("checkmate".asIdent(), Type.NORMAL, winner)
+    class Resignation(winner: Side) : EndReason("resignation".asIdent(), Type.ABANDONED, winner)
+    class Walkover(winner: Side) : EndReason("walkover".asIdent(), Type.ABANDONED, winner)
+    class Stalemate : EndReason("stalemate".asIdent(), Type.NORMAL)
+    class InsufficientMaterial : EndReason("insufficient_material".asIdent(), Type.NORMAL)
+    class FiftyMoves : EndReason("fifty_moves".asIdent(), Type.NORMAL)
+    class Repetition : EndReason("repetition".asIdent(), Type.NORMAL)
+    class DrawAgreement : EndReason("draw_agreement".asIdent(), Type.NORMAL)
+    class Timeout(winner: Side) : EndReason("timeout".asIdent(), Type.TIME_FORFEIT, winner)
+    class DrawTimeout : EndReason("draw_timeout".asIdent(), Type.TIME_FORFEIT)
+    class AllPiecesLost(winner: Side) : EndReason("pieces_lost".asIdent(), Type.NORMAL, winner)
+    class Error(val e: Exception) : EndReason("error".asIdent(), Type.EMERGENCY, args = listOf(e))
+
+    val reasonPGN = type.pgn
 
     val winnerPGN
         get() = when (winner) {

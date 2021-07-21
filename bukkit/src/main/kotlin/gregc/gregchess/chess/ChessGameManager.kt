@@ -17,7 +17,7 @@ import java.util.*
 
 object ChessGameManager : Listener {
 
-    class PluginRestartEndReason : EndReason("PluginRestart", "emergency", quick = true)
+    class PluginRestartEndReason : EndReason("plugin_restart".asIdent(), Type.EMERGENCY, quick = true)
 
     private val games = mutableListOf<ChessGame>()
 

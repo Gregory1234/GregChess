@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.TimeManager
+import gregc.gregchess.asIdent
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
@@ -105,6 +106,6 @@ class TestComponent : Component {
 
 object TestVariant: ChessVariant("test")
 
-class TestEndReason(winner: Side? = null): EndReason("Test", "emergency", winner)
+class TestEndReason(winner: Side? = null): EndReason("test".asIdent(), Type.EMERGENCY, winner)
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)

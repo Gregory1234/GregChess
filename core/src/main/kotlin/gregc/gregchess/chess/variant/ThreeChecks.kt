@@ -1,5 +1,6 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.player
@@ -35,7 +36,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         }
     }
 
-    class CheckLimitEndReason(winner: Side, limit: UInt) : EndReason("CheckLimit", "normal", winner, args = listOf(limit))
+    class CheckLimitEndReason(winner: Side, limit: UInt) : EndReason("check_limit".asIdent(), Type.NORMAL, winner, args = listOf(limit))
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

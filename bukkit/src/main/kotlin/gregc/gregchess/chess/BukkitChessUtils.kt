@@ -53,7 +53,7 @@ fun ChessGame.getInfo() = buildTextComponent {
 }
 
 val EndReason.name
-    get() = config.getLocalizedString("Chess.EndReason.$standardName", *args.toTypedArray())
+    get() = config.getLocalizedString("Chess.EndReason.${id.path.snakeToPascal()}", *args.toTypedArray())
 
 val EndReason.message
     get() = config.getLocalizedString("Message.GameFinished." + (winner?.standardName?.plus("Won") ?: "ItWasADraw"), name)
