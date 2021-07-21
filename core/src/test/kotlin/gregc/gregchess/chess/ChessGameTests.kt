@@ -48,6 +48,12 @@ class ChessGameTests {
         }
     }
 
+    fun componentExclude(c: TestComponent) {
+        excludeRecords {
+            c.handleEvents(GameBaseEvent.PRE_INIT)
+        }
+    }
+
     @Nested
     inner class Initializing {
         @Test
@@ -96,6 +102,7 @@ class ChessGameTests {
         fun `doesn't call components`() {
             val g = mkGame(spyComponentSettings)
             val c = g.getComponent<TestComponent>()!!
+            componentExclude(c)
             verify {
                 c wasNot Called
             }
@@ -137,12 +144,13 @@ class ChessGameTests {
             val g = mkGame(spyComponentSettings).start()
             val c = g.getComponent<TestComponent>()!!
             verifySequence {
+                c.handleEvents(GameBaseEvent.PRE_INIT)
                 c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.JOIN))
                 c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.JOIN))
-                c.init()
-                c.start()
-                c.begin()
-                c.update()
+                c.handleEvents(GameBaseEvent.INIT)
+                c.handleEvents(GameBaseEvent.START)
+                c.handleEvents(GameBaseEvent.BEGIN)
+                c.handleEvents(GameBaseEvent.UPDATE)
                 c.handleTurn(TurnEvent.START)
             }
         }
@@ -217,11 +225,11 @@ class ChessGameTests {
             clearRecords(c)
             g.stop(TestEndReason(Side.WHITE))
             verifySequence {
-                c.stop()
+                c.handleEvents(GameBaseEvent.STOP)
                 c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.LEAVE))
                 c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.LEAVE))
-                c.clear()
-                c.veryEnd()
+                c.handleEvents(GameBaseEvent.CLEAR)
+                c.handleEvents(GameBaseEvent.VERY_END)
             }
         }
     }

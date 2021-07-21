@@ -28,6 +28,18 @@ enum class TurnEvent(val ending: Boolean): ChessEvent {
     START(false), END(true), UNDO(true)
 }
 
+enum class GameBaseEvent: ChessEvent {
+    PRE_INIT,
+    INIT,
+    START,
+    BEGIN,
+    UPDATE,
+    STOP,
+    CLEAR,
+    VERY_END,
+    PANIC
+}
+
 class ChessGame(private val timeManager: TimeManager, val settings: GameSettings) {
 
     val uniqueId: UUID = UUID.randomUUID()
@@ -45,7 +57,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
             variant.requiredComponents.forEach {
                 settings.components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentSettingsNotFoundException(it)
             }
-            components.allPreInit()
+            components.callEvent(GameBaseEvent.PRE_INIT)
         } catch (e: Exception) {
             panic(e)
             throw e
@@ -167,10 +179,10 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
             players.forEachReal {
                 components.callEvent(HumanPlayerEvent(it, PlayerDirection.JOIN))
             }
-            components.allInit()
+            components.callEvent(GameBaseEvent.INIT)
             requireStarting().forEachUnique { it.init() }
             variant.start(this)
-            components.allStart()
+            components.callEvent(GameBaseEvent.START)
             state = GameState.Running(requireStarting())
             glog.mid("Started game", uniqueId)
         } catch (e: Exception) {
@@ -178,12 +190,12 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
             glog.mid("Failed to start game", uniqueId)
             throw e
         }
-        components.allBegin()
+        components.callEvent(GameBaseEvent.BEGIN)
         timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
             if (!running)
                 cancel()
             else
-                components.allUpdate()
+                components.callEvent(GameBaseEvent.UPDATE)
         }
         startTurn()
         return this
@@ -212,7 +224,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         val stopping = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, reason)
         state = stopping
         try {
-            components.allStop(reason)
+            components.callEvent(GameBaseEvent.STOP)
             players.forEachUnique(currentTurn) {
                 interact {
                     it.player.showEndReason(it.side, reason)
@@ -222,21 +234,21 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
                 }
             }
             if (reason.quick) {
-                components.allClear()
+                components.callEvent(GameBaseEvent.CLEAR)
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
                 glog.low("Stopped game", uniqueId, reason)
-                components.allVeryEnd()
+                components.callEvent(GameBaseEvent.VERY_END)
                 return
             }
             interact {
                 timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds + 1.ticks)
-                components.allClear()
+                components.callEvent(GameBaseEvent.CLEAR)
                 timeManager.wait(1.ticks)
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
                 glog.low("Stopped game", uniqueId, reason)
-                components.allVeryEnd()
+                components.callEvent(GameBaseEvent.VERY_END)
             }
         } catch (e: Exception) {
             panic(e)
@@ -246,7 +258,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     private fun panic(e: Exception) {
         e.printStackTrace()
-        components.allPanic(e)
+        components.callEvent(GameBaseEvent.PANIC)
         state = GameState.Error(state, e)
     }
 

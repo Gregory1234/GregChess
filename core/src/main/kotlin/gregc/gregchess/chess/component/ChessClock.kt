@@ -79,11 +79,18 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     private var started = false
     private var stopTime: LocalDateTime? = null
 
-    fun getTimeRemaining(s: Side) =
+    private fun getTimeRemaining(s: Side) =
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
-    @GameEvent(GameBaseEvent.START)
-    fun start() {
+    @ChessEventHandler
+    fun handleEvents(e: GameBaseEvent) = when (e) {
+        GameBaseEvent.START -> start()
+        GameBaseEvent.STOP -> stop()
+        GameBaseEvent.UPDATE -> update()
+        else -> {}
+    }
+
+    private fun start() {
 
         if (settings.type == Type.FIXED) {
             game.scoreboard.game("TimeRemainingSimple") {
@@ -106,8 +113,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         started = true
     }
 
-    @GameEvent(GameBaseEvent.UPDATE)
-    fun update() = Side.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
+    private fun update() = Side.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
 
     @ChessEventHandler
     fun endTurn(e: TurnEvent) {
@@ -147,8 +153,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    @GameEvent(GameBaseEvent.STOP, GameBaseEvent.PANIC)
-    fun stop() {
+    private fun stop() {
         stopTime = LocalDateTime.now()
     }
 

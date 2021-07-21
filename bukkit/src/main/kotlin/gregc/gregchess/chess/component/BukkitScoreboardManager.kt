@@ -50,14 +50,21 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         return scoreboard.registerNewTeam(s)
     }
 
-    @GameEvent(GameBaseEvent.INIT)
-    fun init() {
+    @ChessEventHandler
+    fun handleEvents(e: GameBaseEvent) = when (e) {
+        GameBaseEvent.INIT -> init()
+        GameBaseEvent.START -> start()
+        GameBaseEvent.CLEAR, GameBaseEvent.PANIC -> stop()
+        GameBaseEvent.UPDATE -> update()
+        else -> {}
+    }
+
+    private fun init() {
         game("Preset") { game.settings.name }
         player("Player") { playerPrefix + game[it].name }
     }
 
-    @GameEvent(GameBaseEvent.START, mod = TimeModifier.LATE)
-    fun start() {
+    private fun start() {
         game.players.forEachReal { (it as? BukkitPlayer)?.player?.scoreboard = scoreboard }
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
@@ -89,8 +96,7 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
             p.player.scoreboard = scoreboard
     }
 
-    @GameEvent(GameBaseEvent.UPDATE, mod = TimeModifier.LATE)
-    fun update() {
+    private fun update() {
         gameProperties.forEach {
             gamePropertyTeams[it]?.suffix = it()
         }
@@ -99,8 +105,7 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         }
     }
 
-    @GameEvent(GameBaseEvent.CLEAR, GameBaseEvent.PANIC)
-    fun stop() {
+    private fun stop() {
         scoreboard.teams.forEach { it.unregister() }
         scoreboard.objectives.forEach { it.unregister() }
     }

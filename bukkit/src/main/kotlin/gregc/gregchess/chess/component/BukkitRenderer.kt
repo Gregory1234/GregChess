@@ -89,8 +89,9 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
         return super.executeAny(f)
     }
 
-    @GameEvent(GameBaseEvent.PRE_INIT)
-    fun validate() {
-        game.requireComponent<Arena.Usage>()
+    @ChessEventHandler
+    fun validate(e: GameBaseEvent) {
+        if (e == GameBaseEvent.PRE_INIT)
+            game.requireComponent<Arena.Usage>()
     }
 }

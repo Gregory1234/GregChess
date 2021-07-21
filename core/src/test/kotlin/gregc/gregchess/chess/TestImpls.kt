@@ -85,26 +85,9 @@ class TestComponent : Component {
         override fun getComponent(game: ChessGame): TestComponent = spyk(TestComponent())
     }
 
-    @GameEvent(GameBaseEvent.INIT)
-    fun init() {}
-
-    @GameEvent(GameBaseEvent.START)
-    fun start() {}
-
-    @GameEvent(GameBaseEvent.BEGIN)
-    fun begin() {}
-
-    @GameEvent(GameBaseEvent.UPDATE)
-    fun update() {}
-
-    @GameEvent(GameBaseEvent.STOP)
-    fun stop() {}
-
-    @GameEvent(GameBaseEvent.CLEAR)
-    fun clear() {}
-
-    @GameEvent(GameBaseEvent.VERY_END)
-    fun veryEnd() {}
+    @ChessEventHandler
+    @Suppress("UNUSED_PARAMETER")
+    fun handleEvents(e: GameBaseEvent) {}
 
     @ChessEventHandler
     @Suppress("UNUSED_PARAMETER")
@@ -113,9 +96,6 @@ class TestComponent : Component {
     @ChessEventHandler
     @Suppress("UNUSED_PARAMETER")
     fun handlePlayer(p: HumanPlayerEvent) {}
-
-    @GameEvent(GameBaseEvent.PANIC)
-    fun panic() {}
 
 }
 

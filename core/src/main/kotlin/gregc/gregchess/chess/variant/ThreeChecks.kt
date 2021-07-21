@@ -1,7 +1,8 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.player
 import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
@@ -13,9 +14,10 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
 
         private var checks = MutableBySides(0u)
 
-        @GameEvent(GameBaseEvent.START)
-        fun start() {
-            game.scoreboard.player("CheckCounter") { checks[it].toString() }
+        @ChessEventHandler
+        fun init(e: GameBaseEvent) {
+            if (e == GameBaseEvent.INIT)
+                game.scoreboard.player("CheckCounter") { checks[it].toString() }
         }
 
         @ChessEventHandler

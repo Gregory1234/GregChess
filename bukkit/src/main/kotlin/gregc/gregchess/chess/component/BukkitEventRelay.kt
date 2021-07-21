@@ -10,14 +10,12 @@ class BukkitEventRelay(private val game: ChessGame) : Component {
         override fun getComponent(game: ChessGame) = BukkitEventRelay(game)
     }
 
-    @GameEvent(GameBaseEvent.BEGIN)
-    fun sendStartEvent() {
-        Bukkit.getPluginManager().callEvent(GameStartEvent(game))
-    }
-
-    @GameEvent(GameBaseEvent.VERY_END, GameBaseEvent.PANIC, mod = TimeModifier.LATE)
-    fun sendEndEvent() {
-        Bukkit.getPluginManager().callEvent(GameEndEvent(game))
+    @ChessEventHandler
+    fun sendStartEvent(e: GameBaseEvent) {
+        if (e == GameBaseEvent.BEGIN)
+            Bukkit.getPluginManager().callEvent(GameStartEvent(game))
+        if (e == GameBaseEvent.VERY_END)
+            Bukkit.getPluginManager().callEvent(GameEndEvent(game))
     }
 
     @ChessEventHandler

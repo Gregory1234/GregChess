@@ -33,15 +33,20 @@ class SpectatorManager(private val game: ChessGame) : Component {
         game.components.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
 
-    @GameEvent(GameBaseEvent.STOP)
-    fun stop(reason: EndReason) {
+    @ChessEventHandler
+    fun handleEvents(e: GameBaseEvent) = when (e) {
+        GameBaseEvent.STOP -> stop()
+        GameBaseEvent.CLEAR -> clear()
+        else -> {}
+    }
+
+    private fun stop() {
         spectators.forEach {
-            it.showEndReason(reason)
+            it.showEndReason(game.endReason!!)
         }
     }
 
-    @GameEvent(GameBaseEvent.CLEAR)
-    fun clear() {
+    private fun clear() {
         val s = spectators
         spectatorList.clear()
         s.forEach {

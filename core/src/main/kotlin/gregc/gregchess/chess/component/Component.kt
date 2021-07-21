@@ -1,8 +1,6 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.EndReason
-import java.lang.reflect.Method
 import kotlin.collections.set
 import kotlin.reflect.KClass
 
@@ -12,72 +10,6 @@ interface Component {
     }
 }
 
-enum class GameBaseEvent {
-    PRE_INIT,
-    INIT,
-    START,
-    BEGIN,
-    UPDATE,
-    STOP,
-    CLEAR,
-    VERY_END,
-    PANIC
-}
-
-enum class TimeModifier {
-    EARLY,
-    NORMAL,
-    LATE
-}
-
-@Target(AnnotationTarget.FUNCTION)
-@MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
-annotation class GameEvent(
-    vararg val value: GameBaseEvent,
-    val mod: TimeModifier = TimeModifier.NORMAL,
-    val relaxed: Boolean = false
-)
-
-@Target(AnnotationTarget.FUNCTION)
-@MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
-annotation class GameEvents(vararg val events: GameEvent)
-
-private val Method.gameEvents
-    get() = annotations.map { if (it is GameEvents) it.events else it }.filterIsInstance<GameEvent>()
-
-private inline fun <reified T : Component> T.runGameEvent(value: GameBaseEvent, mod: TimeModifier, vararg args: Any?) {
-    this::class.java.methods
-        .filter { m -> m.gameEvents.any { value in it.value && it.mod == mod } }
-        .forEach { m ->
-            try {
-                if (m.parameterCount < args.size)
-                    m.invoke(this, *(args.take(m.parameterCount).toTypedArray()))
-                else
-                    m.invoke(this, *args)
-            } catch (e: Exception) {
-                if (m.gameEvents.none { value in it.value && it.mod == mod && it.relaxed })
-                    e.printStackTrace()
-            }
-        }
-}
-
-private fun Collection<Component>.runGameEvent(value: GameBaseEvent, vararg args: Any?) {
-    forEach { it.runGameEvent(value, TimeModifier.EARLY, *args) }
-    forEach { it.runGameEvent(value, TimeModifier.NORMAL, *args) }
-    forEach { it.runGameEvent(value, TimeModifier.LATE, *args) }
-}
-
-fun Collection<Component>.allPreInit() = runGameEvent(GameBaseEvent.PRE_INIT)
-fun Collection<Component>.allInit() = runGameEvent(GameBaseEvent.INIT)
-fun Collection<Component>.allStart() = runGameEvent(GameBaseEvent.START)
-fun Collection<Component>.allBegin() = runGameEvent(GameBaseEvent.BEGIN)
-fun Collection<Component>.allUpdate() = runGameEvent(GameBaseEvent.UPDATE)
-fun Collection<Component>.allStop(reason: EndReason) = runGameEvent(GameBaseEvent.STOP, reason)
-fun Collection<Component>.allClear() = runGameEvent(GameBaseEvent.CLEAR)
-fun Collection<Component>.allVeryEnd() = runGameEvent(GameBaseEvent.VERY_END)
-fun Collection<Component>.allPanic(e: Exception) = runGameEvent(GameBaseEvent.PANIC, e)
 
 class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
 class ComponentSettingsNotFoundException(cl: KClass<out Component.Settings<*>>) : Exception(cl.toString())

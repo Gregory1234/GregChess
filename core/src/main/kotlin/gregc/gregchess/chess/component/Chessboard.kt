@@ -115,8 +115,18 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    @GameEvent(GameBaseEvent.STOP)
-    fun stop() {
+    @ChessEventHandler
+    fun handleEvents(e: GameBaseEvent) = when (e) {
+        GameBaseEvent.START -> setFromFEN(settings.genFEN(game))
+        GameBaseEvent.STOP -> {
+            stop()
+            sendPGN()
+        }
+        GameBaseEvent.CLEAR, GameBaseEvent.PANIC -> clear()
+        else -> {}
+    }
+
+    private fun stop() {
         if (game.currentTurn == Side.WHITE) {
             val wLast = lastMove
             game.players.forEachReal { p ->
@@ -131,8 +141,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         glog.mid("Rendered chessboard", game.uniqueId)
     }
 
-    @GameEvent(GameBaseEvent.CLEAR, GameBaseEvent.PANIC)
-    fun clear() {
+    private fun clear() {
         game.renderers.forEach { it.removeBoard() }
         glog.mid("Cleared chessboard", game.uniqueId)
     }
@@ -168,11 +177,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    @GameEvent(GameBaseEvent.START, mod = TimeModifier.EARLY)
-    fun start() = setFromFEN(settings.genFEN(game))
-
-    @GameEvent(GameBaseEvent.STOP)
-    fun sendPGN() {
+    private fun sendPGN() {
         val pgn = PGN.generate(game)
         game.players.forEachReal { it.sendPGN(pgn) }
     }

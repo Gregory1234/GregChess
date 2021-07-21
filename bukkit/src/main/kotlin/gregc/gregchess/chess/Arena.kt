@@ -2,7 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.component.GameEvent
 import org.bukkit.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -86,19 +85,24 @@ data class Arena(val name: String, var game: ChessGame? = null): Component.Setti
             game[this]?.held?.let { setItem(0, it.piece) }
         }
 
-        @GameEvent(GameBaseEvent.PRE_INIT, mod = TimeModifier.EARLY)
-        fun addGame() {
+        @ChessEventHandler
+        fun handleEvents(e: GameBaseEvent) = when (e) {
+            GameBaseEvent.PRE_INIT -> addGame()
+            GameBaseEvent.VERY_END -> removeGame()
+            GameBaseEvent.PANIC -> evacuate()
+            else -> {}
+        }
+
+        private fun addGame() {
             game.requireComponent<BukkitRenderer>()
             arena.game = game
         }
 
-        @GameEvent(GameBaseEvent.VERY_END, mod = TimeModifier.LATE)
-        fun removeGame() {
+        private fun removeGame() {
             arena.game = null
         }
 
-        @GameEvent(GameBaseEvent.PANIC)
-        fun evacuate() {
+        private fun evacuate() {
             game.players.forEachReal { (it as? BukkitPlayer)?.leave() }
         }
 
