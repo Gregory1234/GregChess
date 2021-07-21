@@ -10,12 +10,19 @@ interface TimeManager {
     }
 
     fun runTaskLater(delay: Duration, callback: () -> Unit)
+    fun runTaskNextTick(callback: () -> Unit)
     fun runTaskTimer(delay: Duration, period: Duration, callback: CancellableContext.() -> Unit)
     fun runTaskAsynchronously(callback: () -> Unit)
 }
 
 suspend fun TimeManager.wait(delay: Duration) = suspendCoroutine<Unit> {
     runTaskLater(delay) {
+        it.resume(Unit)
+    }
+}
+
+suspend fun TimeManager.waitTick() = suspendCoroutine<Unit> {
+    runTaskNextTick {
         it.resume(Unit)
     }
 }

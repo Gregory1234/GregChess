@@ -2,6 +2,7 @@ package gregc.gregchess
 
 import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.component.ComponentConfig
+import java.util.*
 import kotlin.reflect.KClass
 
 infix fun String.addDot(other: String) = if (isNotEmpty() && other.isNotEmpty()) "$this.$other" else "$this$other"
@@ -53,13 +54,13 @@ class View(private val root: String) {
     }
 }
 
-fun View.getString(path: String) = getVal(path, "string", fullPath(path), true, ::chatColor)
-fun View.getOptionalString(path: String) = getVal(path, "string", null, false, ::chatColor)
-fun View.getStringList(path: String) = getList(path, "string", true, ::chatColor)
+fun View.getString(path: String) = getVal(path, "string", fullPath(path), true, String::chatColor)
+fun View.getOptionalString(path: String) = getVal(path, "string", null, false, String::chatColor)
+fun View.getStringList(path: String) = getList(path, "string", true, String::chatColor)
 fun View.getDefaultBoolean(path: String, def: Boolean, warnMissing: Boolean = false) = getVal(path, "duration", def, warnMissing, String::toBooleanStrictOrNull)
 fun View.getDefaultInt(path: String, def: Int, warnMissing: Boolean = false) = getVal(path, "duration", def, warnMissing, String::toIntOrNull)
-fun View.getDuration(path: String) = getVal(path, "duration", 0.seconds, true, ::parseDuration)
-fun View.getOptionalDuration(path: String) = getVal(path, "duration", null, false, ::parseDuration)
+fun View.getDuration(path: String) = getVal(path, "duration", 0.seconds, true, String::asDurationOrNull)
+fun View.getOptionalDuration(path: String) = getVal(path, "duration", null, false, String::asDurationOrNull)
 fun View.getChar(path: String) = getVal(path, "char", ' ', true) { if (it.length == 1) it[0] else null }
 
 private fun <T: Enum<T>> parseEnum(cl: KClass<T>, s: String): T? = try {
@@ -78,11 +79,17 @@ inline fun <reified T: Enum<T>> View.getEnumList(path: String, warnMissing: Bool
 @JvmField
 val config: View = View("")
 
+private fun String.formatOrNull(vararg args: Any?): String? = try {
+    format(*args)
+} catch (e: IllegalFormatException) {
+    null
+}
+
 class LocalizedString(private val view: View, private val path: String, private vararg val args: Any?) {
     fun get(lang: String): String =
         view.getVal(path, "string", lang + "/" + view.fullPath(path), true) { s ->
             val f = s.formatOrNull(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray())
-            f?.let(::chatColor)
+            f?.chatColor()
         }
 }
 

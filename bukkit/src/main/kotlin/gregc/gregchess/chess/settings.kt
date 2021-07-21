@@ -25,7 +25,7 @@ object SettingsManager {
     private val NO_ARENAS = ErrorMsg("NoArenas")
 
     fun start() {
-        this += { cNotNull(ArenaManager.freeAreas.firstOrNull(), NO_ARENAS) }
+        this += { ArenaManager.freeAreas.firstOrNull().cNotNull(NO_ARENAS) }
         this += { Chessboard.Settings[it.getOptionalString("Board")] }
         this += { chooseOrParse(clockSettings, it.getOptionalString("Clock"), ChessClock.Settings::parse) }
         this += { BukkitRenderer.Settings(it.getDefaultInt("TileSize", 3)) }

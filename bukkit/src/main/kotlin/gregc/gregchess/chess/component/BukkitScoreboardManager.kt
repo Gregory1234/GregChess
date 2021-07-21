@@ -80,11 +80,11 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
                 newTeam().apply { addEntry(format(s, it.name).get(DEFAULT_LANG)) }
             }
         }
-        objective.getScore(chatColor("&r").repeat(i)).score = i--
+        objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.forEach {
             objective.getScore(whiteFormat(it.name).get(DEFAULT_LANG)).score = i--
         }
-        objective.getScore(chatColor("&r").repeat(i)).score = i--
+        objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.forEach {
             objective.getScore(blackFormat(it.name).get(DEFAULT_LANG)).score = i--
         }

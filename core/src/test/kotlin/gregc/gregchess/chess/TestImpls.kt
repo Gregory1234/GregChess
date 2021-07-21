@@ -12,6 +12,10 @@ class TestTimeManager : TimeManager {
         callback()
     }
 
+    override fun runTaskNextTick(callback: () -> Unit) {
+        callback()
+    }
+
     override fun runTaskTimer(delay: Duration, period: Duration, callback: TimeManager.CancellableContext.() -> Unit) {
         (object : TimeManager.CancellableContext {
             override fun cancel() {

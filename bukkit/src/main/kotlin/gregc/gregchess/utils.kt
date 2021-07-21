@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
+import java.time.Duration
 import kotlin.contracts.contract
 
 const val DEFAULT_LANG = "en_US"
@@ -89,8 +90,6 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 
 }
 
-val ErrorMsg.msg get() = LocalizedString(config, "Message.Error.$standardName")
-
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
@@ -120,6 +119,17 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
+data class ErrorMsg(val standardName: String) {
+    companion object {
+        private val errors = mutableListOf<ErrorMsg>()
+    }
+    init {
+        errors += this
+    }
+
+    val msg get() = LocalizedString(config, "Message.Error.$standardName")
+}
+
 @JvmField
 val WRONG_ARGUMENTS_NUMBER = ErrorMsg("WrongArgumentsNumber")
 @JvmField
@@ -147,6 +157,24 @@ fun message(n: String) = LocalizedString(config, "Message.$n")
 fun title(n: String) = LocalizedString(config, "Title.$n")
 
 
+class CommandException(val error: ErrorMsg, cause: Throwable? = null) : Exception(cause) {
+
+    override val message: String
+        get() = "Uncaught command error: ${error.standardName}"
+}
+
+fun cRequire(e: Boolean, msg: ErrorMsg) {
+    contract {
+        returns() implies e
+    }
+    if (!e) throw CommandException(msg)
+}
+
+fun <T> T?.cNotNull(msg: ErrorMsg): T = this ?: throw CommandException(msg)
+
+inline fun <reified T, reified R : T> T.cCast(msg: ErrorMsg): R = (this as? R).cNotNull(msg)
+
+
 fun cPerms(p: CommandSender, perm: String) {
     cRequire(p.hasPermission(perm), NO_PERMISSION)
 }
@@ -158,7 +186,7 @@ fun cPlayer(p: CommandSender) {
     cRequire(p is Player, NOT_PLAYER)
 }
 
-fun cServerPlayer(name: String) = cNotNull(Bukkit.getPlayer(name), PLAYER_NOT_FOUND)
+fun cServerPlayer(name: String) = Bukkit.getPlayer(name).cNotNull(PLAYER_NOT_FOUND)
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
     cRequire(args.size in min..max, WRONG_ARGUMENTS_NUMBER)
@@ -173,7 +201,7 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
 
 fun cWrongArgument(): Nothing = throw CommandException(WRONG_ARGUMENT)
 
-fun chatColor(s: String): String = ChatColor.translateAlternateColorCodes('&', s)
+fun String.chatColor(): String = ChatColor.translateAlternateColorCodes('&', this)
 
 
 class BuildTextComponentScope {
@@ -214,3 +242,8 @@ fun CommandSender.sendCommandMessage(msg: LocalizedString, action: LocalizedStri
     sendCommandMessage(msg.get(lang), action.get(lang), command)
 
 fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
+
+fun Duration.toTicks(): Long = toMillis() / 50
+
+val Int.ticks: Duration
+    get() = Duration.ofMillis(toLong() * 50)

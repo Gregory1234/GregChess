@@ -2,35 +2,7 @@ package gregc.gregchess
 
 import java.time.*
 import java.time.format.DateTimeFormatter
-import java.util.*
-import kotlin.contracts.contract
 import kotlin.math.*
-
-data class ErrorMsg(val standardName: String) {
-    companion object {
-        private val errors = mutableListOf<ErrorMsg>()
-    }
-    init {
-        errors += this
-    }
-}
-
-class CommandException(val error: ErrorMsg, cause: Throwable? = null) : Exception(cause) {
-
-    override val message: String
-        get() = "Uncaught command error: ${error.standardName}"
-}
-
-fun cRequire(e: Boolean, msg: ErrorMsg) {
-    contract {
-        returns() implies e
-    }
-    if (!e) throw CommandException(msg)
-}
-
-fun <T> cNotNull(p: T?, msg: ErrorMsg): T = p ?: throw CommandException(msg)
-
-inline fun <reified T, reified R : T> cCast(p: T, msg: ErrorMsg): R = cNotNull(p as? R, msg)
 
 fun randomString(size: Int) =
     String(CharArray(size) { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() })
@@ -55,12 +27,8 @@ operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 fun String.upperFirst() = replaceFirstChar { it.uppercase() }
 fun String.lowerFirst() = replaceFirstChar { it.lowercase() }
 
-fun Duration.toTicks(): Long = toMillis() / 50
-
 val Int.seconds: Duration
     get() = Duration.ofSeconds(toLong())
-val Int.ticks: Duration
-    get() = Duration.ofMillis(toLong() * 50)
 val Long.minutes: Duration
     get() = Duration.ofMinutes(this)
 val Long.ticks: Duration
@@ -72,8 +40,8 @@ val Double.milliseconds: Duration
 val Double.minutes: Duration
     get() = Duration.ofNanos(floor(this * 60000000000L).toLong())
 
-fun parseDuration(s: String): Duration? {
-    val match1 = Regex("""^(-|\+|)(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(s)
+fun String.asDurationOrNull(): Duration? {
+    val match1 = Regex("""^(-|\+|)(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(this)
     if (match1 != null) {
         val amount =
             (match1.groupValues[2].toDoubleOrNull()
@@ -86,7 +54,7 @@ fun parseDuration(s: String): Duration? {
             else -> null
         }
     }
-    val match2 = Regex("""^(-)?(\d+):(\d{2,}(?:\.\d)?)$""").find(s)
+    val match2 = Regex("""^(-)?(\d+):(\d{2,}(?:\.\d)?)$""").find(this)
     if (match2 != null) {
         val sign = (if (match2.groupValues[1] == "-") -1 else 1)
         val minutes = (match2.groupValues[2].toLongOrNull() ?: return null) * sign
@@ -108,12 +76,6 @@ fun Duration.format(formatString: String): String? = try {
 fun String.snakeToPascal(): String {
     val snakeRegex = "_[a-zA-Z]".toRegex()
     return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
-}
-
-fun String.formatOrNull(vararg args: Any?): String? = try {
-    format(*args)
-} catch (e: IllegalFormatException) {
-    null
 }
 
 data class Loc(val x: Int, val y: Int, val z: Int) {

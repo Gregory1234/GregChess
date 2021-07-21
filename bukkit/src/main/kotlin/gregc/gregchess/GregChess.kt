@@ -130,7 +130,7 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val p = cNotNull(player.human.chess, YOU_NOT_IN_GAME)
+                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
                     p.game.stop(EndReason.Resignation(!p.side))
                 }
                 "leave" -> {
@@ -143,8 +143,8 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val p = cNotNull(player.human.chess, YOU_NOT_IN_GAME)
-                    val opponent: HumanChessPlayer = cCast(p.opponent, OPPONENT_NOT_HUMAN)
+                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
+                    val opponent: HumanChessPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
                     interact {
                         drawRequest.invalidSender(player) { !p.hasTurn }
                         val res = drawRequest.call(RequestData(player, opponent.player.bukkit, ""), true)
@@ -156,7 +156,7 @@ object GregChess : Listener {
                 "capture" -> {
                     cPlayer(player)
                     perms()
-                    val p = cNotNull(player.human.chess, YOU_NOT_IN_GAME)
+                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
                     val pos = if (args.size == 1)
                         p.game.renderer.getPos(player.location.toLoc())
                     else
@@ -170,7 +170,7 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     cArgs(args, 3, 4)
-                    val p = cNotNull(player.human.chess, YOU_NOT_IN_GAME)
+                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
                     val game = p.game
                     cWrongArgument {
                         val square = if (args.size == 3)
@@ -188,7 +188,7 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     cArgs(args, 3, 3)
-                    val p = cNotNull(player.human.chess, YOU_NOT_IN_GAME)
+                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
                     val game = p.game
                     cWrongArgument {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
@@ -201,14 +201,14 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
+                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     game.nextTurn()
                     player.human.sendMessage(SKIPPED_TURN)
                 }
                 "load" -> {
                     cPlayer(player)
                     perms()
-                    val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
+                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     game.board.setFromFEN(FEN.parseFromString(restString()))
                     player.human.sendMessage(LOADED_FEN)
                 }
@@ -216,18 +216,18 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
+                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     player.human.sendFEN(game.board.getFEN())
                 }
                 "time" -> {
                     cPlayer(player)
                     perms()
                     cArgs(args, 4, 4)
-                    val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
-                    val clock = cNotNull(game.clock, CLOCK_NOT_FOUND)
+                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    val clock = game.clock.cNotNull(CLOCK_NOT_FOUND)
                     cWrongArgument {
                         val side = Side.valueOf(nextArg())
-                        val time = cNotNull(parseDuration(this[1]), WRONG_ARGUMENT)
+                        val time = this[1].asDurationOrNull().cNotNull(WRONG_ARGUMENT)
                         when (nextArg().lowercase()) {
                             "add" -> clock.addTime(side, time)
                             "set" -> clock.setTime(side, time)
@@ -239,9 +239,9 @@ object GregChess : Listener {
                 "uci" -> {
                     cPlayer(player)
                     perms()
-                    val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
+                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     val engines = game.players.toList().filterIsInstance<EnginePlayer>()
-                    val engine = cNotNull(engines.firstOrNull(), ENGINE_NOT_FOUND)
+                    val engine = engines.firstOrNull().cNotNull(ENGINE_NOT_FOUND)
                     cWrongArgument {
                         when (nextArg().lowercase()) {
                             "set" -> {
@@ -257,7 +257,7 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     val toSpectate = cServerPlayer(lastArg())
-                    player.human.spectatedGame = cNotNull(toSpectate.human.currentGame, PLAYER_NOT_IN_GAME)
+                    player.human.spectatedGame = toSpectate.human.currentGame.cNotNull(PLAYER_NOT_IN_GAME)
                 }
                 "reload" -> {
                     perms()
@@ -276,9 +276,9 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val p = cNotNull(player.human.chess, YOU_NOT_IN_GAME)
-                    cNotNull(p.game.board.lastMove, NOTHING_TO_TAKEBACK)
-                    val opponent: HumanChessPlayer = cCast(p.opponent, OPPONENT_NOT_HUMAN)
+                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
+                    p.game.board.lastMove.cNotNull(NOTHING_TO_TAKEBACK)
+                    val opponent: HumanChessPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
                     interact {
                         drawRequest.invalidSender(player) {
                             (p.game.currentOpponent as? HumanChessPlayer)?.player != player.human
@@ -353,22 +353,20 @@ object GregChess : Listener {
             0 -> {
                 cPlayer(player)
                 perms("info.ingame")
-                val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
-                cNotNull(game.board[game.renderer.getPos(player.location.toLoc())]?.piece, PIECE_NOT_FOUND)
+                val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                game.board[game.renderer.getPos(player.location.toLoc())]?.piece.cNotNull(PIECE_NOT_FOUND)
             }
             1 -> {
                 if (isValidUUID(nextArg())) {
                     perms("info.remote")
-                    val game = cNotNull(
-                        ChessGameManager.firstGame { UUID.fromString(latestArg()) in it.board },
-                        PIECE_NOT_FOUND
-                    )
+                    val game = ChessGameManager.firstGame { UUID.fromString(latestArg()) in it.board }
+                        .cNotNull(PIECE_NOT_FOUND)
                     game.board[UUID.fromString(latestArg())]!!
                 } else {
                     cPlayer(player)
                     perms("info.ingame")
-                    val game = cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
-                    cNotNull(game.board[Pos.parseFromString(latestArg())]?.piece, PIECE_NOT_FOUND)
+                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    game.board[Pos.parseFromString(latestArg())]?.piece.cNotNull(PIECE_NOT_FOUND)
                 }
             }
             else -> throw CommandException(WRONG_ARGUMENTS_NUMBER)
@@ -379,12 +377,12 @@ object GregChess : Listener {
             0 -> {
                 cPlayer(player)
                 perms("info.ingame")
-                cNotNull(player.human.currentGame, YOU_NOT_IN_GAME)
+                player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
             }
             1 -> {
                 cWrongArgument {
                     perms("info.remote")
-                    cNotNull(ChessGameManager[UUID.fromString(nextArg())], GAME_NOT_FOUND)
+                    ChessGameManager[UUID.fromString(nextArg())].cNotNull(GAME_NOT_FOUND)
                 }
             }
             else -> throw CommandException(WRONG_ARGUMENTS_NUMBER)

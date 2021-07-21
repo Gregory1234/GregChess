@@ -242,9 +242,10 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
                 return
             }
             interact {
-                timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds + 1.ticks)
+                timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
+                timeManager.waitTick()
                 components.callEvent(GameBaseEvent.CLEAR)
-                timeManager.wait(1.ticks)
+                timeManager.waitTick()
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
                 glog.low("Stopped game", uniqueId, reason)

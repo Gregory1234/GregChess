@@ -24,6 +24,8 @@ object BukkitTimeManager : TimeManager {
         }.runTaskLater(GregChess.plugin, delay.toTicks())
     }
 
+    override fun runTaskNextTick(callback: () -> Unit) = runTaskLater(1.ticks, callback)
+
     override fun runTaskTimer(delay: Duration, period: Duration, callback: TimeManager.CancellableContext.() -> Unit) {
         object : BukkitRunnable() {
             val cc = BukkitCancellableContext(this)
