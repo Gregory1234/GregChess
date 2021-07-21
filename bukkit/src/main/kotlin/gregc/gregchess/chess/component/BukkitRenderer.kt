@@ -114,22 +114,31 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
 
     @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) {
-        val loc = e.piece.pos.loc
+        val pos = e.piece.pos
+        val loc = pos.loc
         val piece = e.piece.piece
         when(e) {
             is PieceEvent.Created -> piece.render(loc)
             is PieceEvent.Cleared -> clearPiece(loc)
             is PieceEvent.Action -> when(e.type) {
-                PieceEvent.ActionType.PICK_UP -> clearPiece(loc)
-                PieceEvent.ActionType.PLACE_DOWN -> piece.render(loc)
+                PieceEvent.ActionType.PICK_UP -> {
+                    clearPiece(loc)
+                    playPieceSound(pos, "PickUp", piece.type)
+                }
+                PieceEvent.ActionType.PLACE_DOWN -> {
+                    piece.render(loc)
+                    playPieceSound(pos, "Move", piece.type)
+                }
             }
             is PieceEvent.Moved -> {
                 clearPiece(e.from.loc)
                 piece.render(loc)
+                playPieceSound(pos, "Move", piece.type)
             }
             is PieceEvent.Captured -> {
                 clearPiece(loc)
                 piece.render(e.captured.pos.loc)
+                playPieceSound(pos, "Capture", piece.type)
             }
             is PieceEvent.Promoted -> {
                 clearPiece(loc)
@@ -138,6 +147,7 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
             is PieceEvent.Resurrected -> {
                 piece.render(loc)
                 clearPiece(e.captured.pos.loc)
+                playPieceSound(pos, "Move", piece.type)
             }
             is PieceEvent.MultiMoved -> {
                 e.moves.forEach { (_, f) ->
@@ -145,6 +155,7 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
                 }
                 e.moves.forEach { (p, _) ->
                     p.piece.render(p.pos.loc)
+                    playPieceSound(p.pos, "Move", p.type)
                 }
             }
         }
