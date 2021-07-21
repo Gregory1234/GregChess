@@ -10,6 +10,8 @@ import kotlin.collections.set
 import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
+    data class SetFenEvent(val FEN: FEN): ChessEvent
+
     data class Settings(val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) :
         Component.Settings<Chessboard> {
         override fun getComponent(game: ChessGame) = Chessboard(game, this)
@@ -122,7 +124,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             stop()
             sendPGN()
         }
-        GameBaseEvent.CLEAR, GameBaseEvent.PANIC -> clear()
         else -> {}
     }
 
@@ -133,17 +134,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                 p.sendLastMoves(fullMoveCounter, wLast, null)
             }
         }
-    }
-
-    private fun render() {
-        game.renderers.forEach { it.renderBoardBase() }
-        squares.values.forEach { it.render() }
-        glog.mid("Rendered chessboard", game.uniqueId)
-    }
-
-    private fun clear() {
-        game.renderers.forEach { it.removeBoard() }
-        glog.mid("Cleared chessboard", game.uniqueId)
     }
 
     operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uniqueId == pieceUniqueId }
@@ -181,9 +171,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     fun setFromFEN(fen: FEN) {
-        clear()
         squares.values.forEach(Square::empty)
-        render()
         fen.forEachSquare { (pos, p, hm) ->
             this += BoardPiece(p, this[pos]!!, hm)
         }
@@ -207,6 +195,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         boardHashes.clear()
         addBoardHash(fen)
         game.variant.chessboardSetup(this)
+        game.components.callEvent(SetFenEvent(fen))
+        squares.values.forEach(Square::update)
     }
 
     fun getFEN(): FEN {

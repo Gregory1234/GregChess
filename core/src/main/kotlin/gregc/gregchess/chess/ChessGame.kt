@@ -68,8 +68,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     val clock get() = getComponent<ChessClock>()
 
-    val renderers get() = components.filterIsInstance<Renderer>()
-
     val scoreboard get() = requireComponent<ScoreboardManager>()
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =

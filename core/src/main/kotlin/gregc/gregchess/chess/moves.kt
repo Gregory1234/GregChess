@@ -70,12 +70,10 @@ abstract class MoveCandidate(
 
     fun render() {
         display.moveMarker = floor
-        display.render()
     }
 
     fun clear() {
         display.moveMarker = null
-        display.render()
     }
 
     val board = origin.board

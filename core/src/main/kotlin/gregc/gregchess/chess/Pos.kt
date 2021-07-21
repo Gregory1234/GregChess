@@ -97,28 +97,31 @@ enum class Floor {
     val standardName get() = name.snakeToPascal()
 }
 
+data class FloorUpdateEvent(val pos: Pos, val floor: Floor): ChessEvent
+
 data class Square(val pos: Pos, val game: ChessGame) {
     var piece: BoardPiece? = null
     var bakedMoves: List<MoveCandidate>? = null
     var bakedLegalMoves: List<MoveCandidate>? = null
 
-    private var noRender = false
-
     private val baseFloor = if ((pos.file + pos.rank) % 2 == 0) Floor.DARK else Floor.LIGHT
     var variantMarker: Floor? = null
         set(v) {
+            val old = floor
             field = v
-            if (!noRender) render()
+            if (old != floor) update()
         }
     var previousMoveMarker: Floor? = null
         set(v) {
+            val old = floor
             field = v
-            if (!noRender) render()
+            if (old != floor) update()
         }
     var moveMarker: Floor? = null
         set(v) {
+            val old = floor
             field = v
-            if (!noRender) render()
+            if (old != floor) update()
         }
     private val floor
         get() = moveMarker ?: previousMoveMarker ?: variantMarker ?: baseFloor
@@ -126,26 +129,18 @@ data class Square(val pos: Pos, val game: ChessGame) {
     val board
         get() = game.board
 
-    override fun toString() = "Square(game.uniqueId=${game.uniqueId}, pos=$pos, piece=$piece, floor=$floor)"
-
-    fun render() {
-        game.renderers.forEach { it.fillFloor(pos, floor) }
+    fun update() {
+        game.components.callEvent(FloorUpdateEvent(pos, floor))
     }
+
+    override fun toString() = "Square(game.uniqueId=${game.uniqueId}, pos=$pos, piece=$piece, floor=$floor)"
 
     fun empty() {
         piece = null
         bakedMoves = null
-        noRender = true
         variantMarker = null
         previousMoveMarker = null
         moveMarker = null
-        noRender = false
-    }
-
-    fun clear() {
-        piece?.clear()
-        empty()
-        render()
     }
 
     fun neighbours() = pos.neighbours().mapNotNull { this.board[it] }

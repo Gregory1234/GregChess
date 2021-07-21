@@ -11,7 +11,6 @@ object KingOfTheHill : ChessVariant("KingOfTheHill") {
     override fun chessboardSetup(board: Chessboard) {
         (Pair(3, 3)..Pair(4, 4)).forEach { (x, y) ->
             board[Pos(x, y)]?.variantMarker = Floor.OTHER
-            board[Pos(x, y)]?.render()
         }
     }
 
