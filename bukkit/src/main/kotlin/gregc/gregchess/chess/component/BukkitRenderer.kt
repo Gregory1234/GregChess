@@ -3,12 +3,9 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import org.bukkit.*
-import java.util.*
 
 class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(game, settings) {
     companion object {
-
-        private val extraFunctionProviders: List<(ExtraRendererFunction<*>) -> Optional<Any?>> = emptyList()
 
         private data class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
             constructor(world: World, mat: Material, loc: Loc) : this(world, mat, loc, loc)
@@ -78,15 +75,6 @@ class BukkitRenderer(game: ChessGame, settings: Settings) : MinecraftRenderer(ga
             Loc(8 + settings.boardSize + 8 - 1, 105, 8 + settings.boardSize + 8 - 1),
             Material.AIR
         )
-    }
-
-    override fun <R> executeAny(f: ExtraRendererFunction<R>): Any? {
-        extraFunctionProviders.forEach {
-            val v = it(f)
-            if (v.isPresent)
-                return v.orElseThrow()
-        }
-        return super.executeAny(f)
     }
 
     @ChessEventHandler

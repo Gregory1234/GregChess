@@ -1,14 +1,13 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.Component
 import kotlin.reflect.KClass
 
 object AtomicChess : ChessVariant("Atomic") {
 
-    data class RendererExplosion(val pos: Pos): ExtraRendererFunction<Unit>()
-
-    private fun Renderer.explosionAt(pos: Pos) = execute(RendererExplosion(pos))
+    data class ExplosionEvent(val pos: Pos): ChessEvent
 
     class ExplosionManager(private val game: ChessGame) : Component {
         object Settings : Component.Settings<ExplosionManager> {
@@ -28,7 +27,7 @@ object AtomicChess : ChessVariant("Atomic") {
                 if (it.piece?.type != PieceType.PAWN)
                     it.piece?.let(::helper)
             }
-            game.renderers.forEach { it.explosionAt(pos) }
+            game.renderers.forEach { game.components.callEvent(ExplosionEvent(pos)) }
             explosions += exp
         }
 

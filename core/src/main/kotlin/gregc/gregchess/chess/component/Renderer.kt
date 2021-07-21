@@ -5,10 +5,6 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.variant.AtomicChess
 import kotlin.math.floor
 
-abstract class ExtraRendererFunction<R>
-
-class UnsupportedExtraRendererFunction(val f: ExtraRendererFunction<*>): Exception(f.toString())
-
 interface Renderer : Component {
     interface Settings : Component.Settings<Renderer>
 
@@ -20,10 +16,7 @@ interface Renderer : Component {
     fun fillFloor(pos: Pos, floor: Floor)
     fun renderBoardBase()
     fun removeBoard()
-    fun <R> executeAny(f: ExtraRendererFunction<R>): Any? = throw UnsupportedExtraRendererFunction(f)
 }
-
-inline fun <reified R> Renderer.execute(f: ExtraRendererFunction<R>): R = executeAny(f) as R
 
 abstract class MinecraftRenderer(protected val game: ChessGame, protected val settings: Settings) : Renderer {
     abstract class Settings(val tileSize: Int, val offset: Loc = Loc(0, 0, 0)) : Renderer.Settings {
@@ -73,11 +66,8 @@ abstract class MinecraftRenderer(protected val game: ChessGame, protected val se
 
     override fun clearCapturedPiece(pos: CapturedPos) = clearPiece(getCapturedLoc(pos))
 
-    abstract fun explosionAt(pos: Pos)
+    @ChessEventHandler
+    fun handleExplosion(e: AtomicChess.ExplosionEvent) = explosionAt(e.pos)
 
-    override fun <R> executeAny(f: ExtraRendererFunction<R>): Any? =
-        if (f is AtomicChess.RendererExplosion)
-            explosionAt(f.pos)
-        else
-            super.executeAny(f)
+    abstract fun explosionAt(pos: Pos)
 }
