@@ -155,14 +155,12 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     fun kingOf(side: Side) = piecesOf(side).firstOrNull { it.type == PieceType.KING }
 
     operator fun plusAssign(captured: CapturedPiece) {
-        captured.render()
         capturedPieces += captured
         glog.low("Added captured", game.uniqueId, captured)
     }
 
     operator fun minusAssign(captured: CapturedPiece) {
         capturedPieces -= captured
-        captured.hide()
         glog.low("Removed captured", game.uniqueId, captured)
     }
 

@@ -18,7 +18,7 @@ fun PieceType.getItem(side: Side, lang: String): ItemStack {
 
 val PieceType.view get() = config["Chess.Piece.$standardName"]
 val PieceType.pieceName get() = LocalizedString(view, "Name")
-fun PieceType.getSound(s: PieceSound): Sound = view.getEnum("Sound.${s.standardName}", Sound.BLOCK_STONE_HIT)
+fun PieceType.getSound(s: String) = view.getEnum<Sound>("Sound.$s", Sound.BLOCK_STONE_HIT)
 val PieceType.itemMaterial get() = BySides { view.getEnum("Item.${it.standardName}", Material.AIR) }
 val PieceType.structure get() = BySides { view.getEnumList<Material>("Structure.${it.standardName}") }
 

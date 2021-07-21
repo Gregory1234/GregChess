@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.glog
-import gregc.gregchess.snakeToPascal
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
@@ -22,14 +21,6 @@ class CapturedPiece(val piece: Piece, val pos: CapturedPos, private val game: Ch
     val side = piece.side
 
     override fun toString() = "CapturedPiece(type=$type, side=$side, pos=$pos)"
-
-    fun render() {
-        game.renderers.forEach { it.renderCapturedPiece(pos, piece) }
-    }
-
-    fun hide() {
-        game.renderers.forEach { it.clearCapturedPiece(pos) }
-    }
 }
 
 data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
@@ -38,11 +29,24 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val standardChar get() = piece.standardChar
 }
 
-enum class PieceSound {
-    PICK_UP, MOVE, CAPTURE;
+sealed class PieceEvent(val piece: BoardPiece) : ChessEvent {
+    class Created(piece: BoardPiece) : PieceEvent(piece)
+    class Cleared(piece: BoardPiece) : PieceEvent(piece)
 
-    val standardName: String = name.snakeToPascal()
+    enum class ActionType {
+        PICK_UP, PLACE_DOWN
+    }
+
+    class Action(piece: BoardPiece, val type: ActionType) : PieceEvent(piece)
+
+    class Moved(piece: BoardPiece, val from: Pos) : PieceEvent(piece)
+    class Captured(piece: BoardPiece, val captured: CapturedPiece) : PieceEvent(piece)
+    class Promoted(piece: BoardPiece, val promotion: BoardPiece) : PieceEvent(piece)
+    class Resurrected(piece: BoardPiece, val captured: CapturedPiece) : PieceEvent(piece)
+    class MultiMoved(val moves: Map<BoardPiece, Pos>) : PieceEvent(moves.keys.first())
 }
+
+class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
 
 class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false) {
     val standardName
@@ -51,11 +55,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     val side = piece.side
 
     var square: Square = initSquare
-        private set(v) {
-            hide()
-            field = v
-            render()
-        }
+        private set
     val pos
         get() = square.pos
     var hasMoved = hasMoved
@@ -75,95 +75,79 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         get() = PieceInfo(pos, piece, hasMoved)
 
     init {
-        render()
+        game.components.callEvent(PieceEvent.Created(this))
         glog.low("Piece created", game.uniqueId, uniqueId, pos, type, side)
-    }
-
-    private fun render() {
-        game.renderers.forEach { it.renderPiece(pos, piece) }
-    }
-
-    private fun hide() {
-        game.renderers.forEach { it.clearPiece(pos) }
     }
 
     fun move(target: Square) {
         glog.mid("Moved", type, "from", pos, "to", target.pos)
+        target.piece?.let {
+            throw PieceAlreadyOccupiesSquareException(it.piece, target.pos)
+        }
         target.piece = this
         square.piece = null
+        val from = square.pos
         square = target
         hasMoved = true
-        playMoveSound()
+        game.components.callEvent(PieceEvent.Moved(this, from))
     }
 
-    fun pickUp() {
-        hide()
-        playPickUpSound()
-    }
+    fun pickUp() = game.components.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
 
-    fun placeDown() {
-        render()
-        playMoveSound()
-    }
+    fun placeDown() = game.components.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
 
     fun capture(by: Side): CapturedPiece {
         glog.mid("Captured", type, "at", pos)
         clear()
         val captured = CapturedPiece(piece, board.nextCapturedPos(type, by), game)
         board += captured
-        playCaptureSound()
+        game.components.callEvent(PieceEvent.Captured(this, captured))
         return captured
     }
 
     fun promote(promotion: Piece) {
         glog.mid("Promoted", type, "at", pos, "into", promotion)
-        hide()
         square.piece = BoardPiece(promotion, square)
+        game.components.callEvent(PieceEvent.Promoted(this, square.piece!!))
     }
-
-    private fun playSound(s: PieceSound) {
-        game.renderers.forEach { it.playPieceSound(pos, s, type) }
-    }
-
-    private fun playPickUpSound() = playSound(PieceSound.PICK_UP)
-    private fun playMoveSound() = playSound(PieceSound.MOVE)
-    private fun playCaptureSound() = playSound(PieceSound.CAPTURE)
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved
     }
 
     fun demote(piece: BoardPiece) {
-        piece.render()
-        hide()
+        game.components.callEvent(PieceEvent.Promoted(this, square.piece!!))
         square.piece = piece
     }
 
     fun resurrect(captured: CapturedPiece) {
         board -= captured
-        render()
         square.piece = this
-        playMoveSound()
+        game.components.callEvent(PieceEvent.Resurrected(this, captured))
     }
 
     fun clear() {
-        hide()
+        game.components.callEvent(PieceEvent.Cleared(this))
         square.piece = null
     }
 
     companion object {
         fun autoMove(moves: Map<BoardPiece, Square>) {
+            val org = moves.mapValues { (p, _) -> p.pos }
             moves.forEach { (piece, target) ->
                 glog.mid("Auto-moved", piece.type, "from", piece.pos, "to", target.pos)
                 piece.hasMoved = true
+                target.piece?.let { p ->
+                    if (moves.keys.none {it.square == target})
+                        throw PieceAlreadyOccupiesSquareException(p.piece, target.pos)
+                }
                 piece.square.piece = null
                 piece.square = target
             }
             moves.forEach { (piece, target) ->
                 target.piece = piece
-                piece.render()
-                piece.playMoveSound()
             }
+            org.keys.firstOrNull()?.game?.components?.callEvent(PieceEvent.MultiMoved(org))
         }
     }
 }
