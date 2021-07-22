@@ -34,17 +34,17 @@ object HordeChess : ChessVariant("Horde") {
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(Side.BLACK).all { getMoves(it.pos).none(game.variant::isLegal) }) {
             if (isInCheck(game, Side.BLACK))
-                game.stop(EndReason.Checkmate(Side.WHITE))
+                game.stop(EndReason.CHECKMATE.of(Side.WHITE))
             else
-                game.stop(EndReason.Stalemate())
+                game.stop(EndReason.STALEMATE.of())
         }
         if (piecesOf(Side.WHITE).isEmpty())
-            game.stop(EndReason.AllPiecesLost(Side.BLACK))
+            game.stop(EndReason.ALL_PIECES_LOST.of(Side.BLACK))
         checkForRepetition()
         checkForFiftyMoveRule()
     }
 
-    override fun timeout(game: ChessGame, side: Side) = game.stop(EndReason.Timeout(side))
+    override fun timeout(game: ChessGame, side: Side) = game.stop(EndReason.TIMEOUT.of(side))
 
     override fun genFEN(chess960: Boolean): FEN {
         val base = Normal.genFEN(chess960)

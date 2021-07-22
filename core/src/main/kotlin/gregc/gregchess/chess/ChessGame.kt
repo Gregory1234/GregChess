@@ -82,9 +82,8 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
     private var state: GameState = GameState.Initial
 
     private inline fun <reified T> require(): T = (state as? T) ?: run {
-        val e = WrongStateException(state, T::class.java)
-        stop(EndReason.Error(e))
-        throw e
+        stop(EndReason.ERROR.of())
+        throw WrongStateException(state, T::class.java)
     }
 
     private fun requireInitial() = require<GameState.Initial>()
@@ -213,12 +212,12 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         glog.low("Started previous turn", uniqueId, currentTurn)
     }
 
-    val endReason: EndReason?
-        get() = (state as? GameState.WithEndReason)?.endReason
+    val end: GameEnd<*>?
+        get() = (state as? GameState.Ended)?.end
 
-    fun quickStop(reason: EndReason) = stop(reason, BySides(true))
+    fun quickStop(reason: GameEnd<*>) = stop(reason, BySides(true))
 
-    fun stop(reason: EndReason, quick: BySides<Boolean> = BySides(false)) {
+    fun stop(reason: GameEnd<*>, quick: BySides<Boolean> = BySides(false)) {
         val stopping = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, reason)
         state = stopping
         try {
@@ -226,12 +225,12 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
             players.forEachUnique(currentTurn) {
                 interact {
                     it.player.showEndReason(it.side, reason)
-                    if (!reason.quick)
+                    if (!reason.reason.quick)
                         timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
                     components.callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
                 }
             }
-            if (reason.quick) {
+            if (reason.reason.quick) {
                 components.callEvent(GameBaseEvent.CLEAR)
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
@@ -280,6 +279,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 fun <E> ChessGame.tryOrStopNull(expr: E?): E = try {
     expr!!
 } catch (e: NullPointerException) {
-    stop(EndReason.Error(e))
+    stop(EndReason.ERROR.of())
     throw e
 }

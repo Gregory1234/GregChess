@@ -40,7 +40,7 @@ object AtomicChess : ChessVariant("Atomic") {
         }
     }
 
-    class AtomicEndReason(winner: Side) : EndReason("atomic".asIdent(), Type.NORMAL, winner)
+    private val ATOMIC = DetEndReason("atomic".asIdent(), EndReason.Type.NORMAL)
 
     override fun start(game: ChessGame) {
         game.requireComponent<ExplosionManager>()
@@ -98,7 +98,7 @@ object AtomicChess : ChessVariant("Atomic") {
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.kingOf(!game.currentTurn) == null)
-            game.stop(AtomicEndReason(game.currentTurn))
+            game.stop(ATOMIC.of(game.currentTurn))
         Normal.checkForGameEnd(game)
     }
 

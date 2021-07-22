@@ -4,7 +4,7 @@ import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
 
 object Antichess : ChessVariant("Antichess") {
-    class Stalemate(winner: Side) : EndReason("stalemate".asIdent(), Type.NORMAL, winner)
+    private val STALEMATE_VICTORY = DetEndReason("stalemate_victory".asIdent(), EndReason.Type.NORMAL)
 
     object AntichessPawnConfig : PawnMovementConfig {
         override fun promotions(piece: PieceInfo): List<Piece> =
@@ -35,12 +35,12 @@ object Antichess : ChessVariant("Antichess") {
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(!game.currentTurn).isEmpty())
-            game.stop(EndReason.AllPiecesLost(!game.currentTurn))
+            game.stop(EndReason.ALL_PIECES_LOST.of(!game.currentTurn))
         if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none(game.variant::isLegal) })
-            game.stop(Stalemate(!game.currentTurn))
+            game.stop(STALEMATE_VICTORY.of(!game.currentTurn))
         checkForRepetition()
         checkForFiftyMoveRule()
     }
 
-    override fun timeout(game: ChessGame, side: Side) = game.stop(EndReason.Timeout(side))
+    override fun timeout(game: ChessGame, side: Side) = game.stop(EndReason.TIMEOUT.of(side))
 }

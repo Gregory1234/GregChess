@@ -70,10 +70,10 @@ class TestHuman(name: String): HumanPlayer(name) {
     override fun openPawnPromotionMenu(moves: List<MoveCandidate>) {
     }
 
-    override fun showEndReason(side: Side, reason: EndReason) {
+    override fun showEndReason(side: Side, reason: GameEnd<*>) {
     }
 
-    override fun showEndReason(reason: EndReason) {
+    override fun showEndReason(reason: GameEnd<*>) {
     }
 
     override fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>) {
@@ -106,6 +106,7 @@ class TestComponent : Component {
 
 object TestVariant: ChessVariant("test")
 
-class TestEndReason(winner: Side? = null): EndReason("test".asIdent(), Type.EMERGENCY, winner)
+@JvmField
+val TEST_END_REASON = DetEndReason("test".asIdent(), EndReason.Type.EMERGENCY)
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)

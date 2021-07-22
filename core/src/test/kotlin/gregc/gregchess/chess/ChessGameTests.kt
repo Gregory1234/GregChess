@@ -173,7 +173,7 @@ class ChessGameTests {
         fun `throws when stopped`() {
             assertThrows<WrongStateException> {
                 val g = mkGame().start()
-                val reason = TestEndReason(Side.WHITE)
+                val reason = TEST_END_REASON.of(Side.WHITE)
                 g.stop(reason)
                 g.start()
             }
@@ -193,9 +193,9 @@ class ChessGameTests {
         @Test
         fun `saves end reason`() {
             val g = mkGame().start()
-            val reason = TestEndReason(Side.WHITE)
+            val reason = TEST_END_REASON.of(Side.WHITE)
             g.stop(reason)
-            assertEquals(reason, g.endReason)
+            assertEquals(reason, g.end)
             assert(!g.running)
         }
 
@@ -203,7 +203,7 @@ class ChessGameTests {
         fun `throws when not running`() {
             assertThrows<WrongStateException> {
                 val g = mkGame()
-                val reason = TestEndReason(Side.WHITE)
+                val reason = TEST_END_REASON.of(Side.WHITE)
                 g.stop(reason)
             }
         }
@@ -212,7 +212,7 @@ class ChessGameTests {
         fun `throws when not stopped`() {
             assertThrows<WrongStateException> {
                 val g = mkGame().start()
-                val reason = TestEndReason(Side.WHITE)
+                val reason = TEST_END_REASON.of(Side.WHITE)
                 g.stop(reason)
                 g.stop(reason)
             }
@@ -223,7 +223,7 @@ class ChessGameTests {
             val g = mkGame(spyComponentSettings).start()
             val c = g.getComponent<TestComponent>()!!
             clearRecords(c)
-            g.stop(TestEndReason(Side.WHITE))
+            g.stop(TEST_END_REASON.of(Side.WHITE))
             verifySequence {
                 c.handleEvents(GameBaseEvent.STOP)
                 c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.LEAVE))

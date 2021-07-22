@@ -105,6 +105,6 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
             val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(it) }
             val move = game.board.getMoves(origin).first { it.display.pos == target && it.promotion?.type == promotion }
             game.finishMove(move)
-        }, { game.stop(EndReason.Error(it)) })
+        }, { game.stop(EndReason.ERROR.of()) })
     }
 }

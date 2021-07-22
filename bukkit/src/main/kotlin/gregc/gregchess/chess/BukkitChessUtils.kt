@@ -52,10 +52,15 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Components: ${components.joinToString { it.javaClass.simpleName }}")
 }
 
-val EndReason.name
-    get() = config.getLocalizedString("Chess.EndReason.${id.path.snakeToPascal()}", *args.toTypedArray())
+val GameEnd<*>.name
+    get() = config.getLocalizedString("Chess.EndReason.${reason.id.path.snakeToPascal()}", *args.toTypedArray())
 
-val EndReason.message
-    get() = config.getLocalizedString("Message.GameFinished." + (winner?.standardName?.plus("Won") ?: "ItWasADraw"), name)
+val GameEnd<*>.message
+    get() = result.let {
+        when(it) {
+            is EndResults.Draw -> config.getLocalizedString("Message.GameFinished.ItWasADraw", name)
+            is EndResults.Victory -> config.getLocalizedString("Message.GameFinished." + it.winner.standardName + "Won", name)
+        }
+    }
 
 val ChessGame.renderer get() = requireComponent<BukkitRenderer>()

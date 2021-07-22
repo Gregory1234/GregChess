@@ -15,8 +15,8 @@ abstract class HumanPlayer(val name: String) {
     abstract fun sendFEN(fen: FEN)
     abstract fun setItem(i: Int, piece: Piece?)
     abstract fun openPawnPromotionMenu(moves: List<MoveCandidate>)
-    abstract fun showEndReason(side: Side, reason: EndReason)
-    abstract fun showEndReason(reason: EndReason)
+    abstract fun showEndReason(side: Side, reason: GameEnd<*>)
+    abstract fun showEndReason(reason: GameEnd<*>)
     abstract fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>)
     abstract fun sendLastMoves(num:UInt, wLast: MoveData?, bLast: MoveData?)
 }

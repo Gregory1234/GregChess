@@ -224,6 +224,7 @@ Chess:
     PluginRestart: "the plugin restarting"
     ArenaRemoved: "the arena getting removed"
     Stalemate: "stalemate"
+    StalemateVictory: "stalemate"
     InsufficientMaterial: "insufficient material"
     FiftyMoves: "the 50-move rule"
     Repetition: "repetition"

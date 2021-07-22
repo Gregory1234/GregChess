@@ -17,8 +17,8 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         val startTime: LocalDateTime
     }
 
-    sealed interface WithEndReason {
-        val endReason: EndReason
+    sealed interface Ended {
+        val end: GameEnd<*>
     }
 
     object Initial : GameState(false, false, false)
@@ -67,9 +67,9 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
-        override val endReason: EndReason
-    ) : GameState(true, false, false), WithCurrentPlayer, WithStartTime, WithEndReason {
-        constructor(running: Running, endReason: EndReason) : this(running.players, running.startTime, running.currentTurn, endReason)
+        override val end: GameEnd<*>
+    ) : GameState(true, false, false), WithCurrentPlayer, WithStartTime, Ended {
+        constructor(running: Running, end: GameEnd<*>) : this(running.players, running.startTime, running.currentTurn, end)
 
         override val white = players.white
         override val black = players.black
@@ -83,10 +83,10 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
-        override val endReason: EndReason
-    ) : GameState(true, true, false), WithCurrentPlayer, WithStartTime, WithEndReason {
+        override val end: GameEnd<*>
+    ) : GameState(true, true, false), WithCurrentPlayer, WithStartTime, Ended {
         constructor(stopping: Stopping) :
-                this(stopping.players, stopping.startTime, stopping.currentTurn, stopping.endReason)
+                this(stopping.players, stopping.startTime, stopping.currentTurn, stopping.end)
 
         override val white = players.white
         override val black = players.black
@@ -97,9 +97,8 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     }
 
     data class Error(val state: GameState, val error: Exception) :
-        GameState(false, true, false), WithEndReason {
-        override val endReason: EndReason
-            get() = EndReason.Error(error)
+        GameState(false, true, false), Ended {
+        override val end: GameEnd<*> = EndReason.ERROR.of()
     }
 
 }

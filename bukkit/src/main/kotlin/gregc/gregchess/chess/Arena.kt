@@ -11,7 +11,7 @@ import org.bukkit.generator.ChunkGenerator
 import java.util.*
 
 object ArenaManager : Listener {
-    class ArenaRemovedEndReason : EndReason("arena_removed".asIdent(), Type.EMERGENCY, quick = true)
+    private val ARENA_REMOVED = DrawEndReason("arena_removed".asIdent(), EndReason.Type.EMERGENCY, quick = true)
 
     private val arenas = mutableListOf<Arena>()
 
@@ -23,7 +23,7 @@ object ArenaManager : Listener {
         val newArenas = config.getStringList("ChessArenas")
         arenas.removeIf {
             if (it.name !in newArenas) {
-                it.game?.quickStop(ArenaRemovedEndReason())
+                it.game?.quickStop(ARENA_REMOVED.of())
                 true
             } else false
         }

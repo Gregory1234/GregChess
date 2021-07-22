@@ -17,7 +17,7 @@ import java.util.*
 
 object ChessGameManager : Listener {
 
-    class PluginRestartEndReason : EndReason("plugin_restart".asIdent(), Type.EMERGENCY, quick = true)
+    private val PLUGIN_RESTART = DrawEndReason("plugin_restart".asIdent(), EndReason.Type.EMERGENCY, quick = true)
 
     private val games = mutableListOf<ChessGame>()
 
@@ -39,14 +39,14 @@ object ChessGameManager : Listener {
     }
 
     fun stop() {
-        games.forEach { it.quickStop(PluginRestartEndReason()) }
+        games.forEach { it.quickStop(PLUGIN_RESTART.of()) }
     }
 
     fun leave(player: BukkitPlayer) {
         val games = player.games
         cRequire(games.isNotEmpty() || player.isSpectating, YOU_NOT_IN_GAME)
         games.forEach { g ->
-            g.stop(EndReason.Walkover(!g[player]!!.side), BySides { it == g[player]!!.side })
+            g.stop(EndReason.WALKOVER.of(!g[player]!!.side), BySides { it == g[player]!!.side })
         }
         player.spectatedGame = null
     }

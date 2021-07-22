@@ -80,18 +80,18 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         move.game.finishMove(move)
     }
 
-    override fun showEndReason(side: Side, reason: EndReason) {
-        val wld = when (reason.winner) {
-            side -> YOU_WON
-            null -> YOU_DREW
+    override fun showEndReason(side: Side, reason: GameEnd<*>) {
+        val wld = when (reason.result) {
+            EndResults.Victory(side) -> YOU_WON
+            EndResults.Draw -> YOU_DREW
             else -> YOU_LOST
         }
         sendTitle(wld.get(lang), reason.name.get(lang))
         sendMessage(reason.message)
     }
 
-    override fun showEndReason(reason: EndReason) {
-        sendTitle((reason.winner?.let { SPECTATOR_WINNER[it] } ?: SPECTATOR_DRAW).get(lang), reason.name.get(lang))
+    override fun showEndReason(reason: GameEnd<*>) {
+        sendTitle(reason.result.let { if (it is EndResults.Victory) SPECTATOR_WINNER[it.winner] else SPECTATOR_DRAW }.get(lang), reason.name.get(lang))
         sendMessage(reason.message)
     }
 

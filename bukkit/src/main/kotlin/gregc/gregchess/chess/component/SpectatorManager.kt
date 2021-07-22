@@ -42,7 +42,7 @@ class SpectatorManager(private val game: ChessGame) : Component {
 
     private fun stop() {
         spectators.forEach {
-            it.showEndReason(game.endReason!!)
+            it.showEndReason(game.end!!)
         }
     }
 
