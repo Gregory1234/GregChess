@@ -48,7 +48,7 @@ sealed class PieceEvent(val piece: BoardPiece) : ChessEvent {
 
 class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
 
-class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false) {
+class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false, val uuid: UUID = UUID.randomUUID()) {
     val id
         get() = piece.id
     val type = piece.type
@@ -61,9 +61,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     var hasMoved = hasMoved
         private set
 
-    val uniqueId: UUID = UUID.randomUUID()
-
-    override fun toString() = "Piece(uniqueId=$uniqueId, pos=$pos, type=$type, side=$side, hasMoved=$hasMoved)"
+    override fun toString() = "Piece(uniqueId=$uuid, pos=$pos, type=$type, side=$side, hasMoved=$hasMoved)"
 
     private val game
         get() = square.game
@@ -76,7 +74,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     init {
         game.components.callEvent(PieceEvent.Created(this))
-        glog.low("Piece created", game.uniqueId, uniqueId, pos, type, side)
+        glog.low("Piece created", game.uuid, uuid, pos, type, side)
     }
 
     fun move(target: Square) {

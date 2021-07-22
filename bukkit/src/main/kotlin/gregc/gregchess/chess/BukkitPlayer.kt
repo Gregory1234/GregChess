@@ -80,22 +80,22 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         move.game.finishMove(move)
     }
 
-    override fun showEndReason(side: Side, reason: GameEnd<*>) {
-        val wld = when (reason.result) {
-            EndResults.Victory(side) -> YOU_WON
-            EndResults.Draw -> YOU_DREW
+    override fun showGameResults(side: Side, results: GameResults<*>) {
+        val wld = when (results.score) {
+            GameScore.Victory(side) -> YOU_WON
+            GameScore.Draw -> YOU_DREW
             else -> YOU_LOST
         }
-        sendTitle(wld.get(lang), reason.name.get(lang))
-        sendMessage(reason.message)
+        sendTitle(wld.get(lang), results.name.get(lang))
+        sendMessage(results.message)
     }
 
-    override fun showEndReason(reason: GameEnd<*>) {
-        sendTitle(reason.result.let { if (it is EndResults.Victory) SPECTATOR_WINNER[it.winner] else SPECTATOR_DRAW }.get(lang), reason.name.get(lang))
-        sendMessage(reason.message)
+    override fun showGameResults(results: GameResults<*>) {
+        sendTitle(results.score.let { if (it is GameScore.Victory) SPECTATOR_WINNER[it.winner] else SPECTATOR_DRAW }.get(lang), results.name.get(lang))
+        sendMessage(results.message)
     }
 
-    override fun toString() = "BukkitPlayer(name=$name, uniqueId=$uniqueId)"
+    override fun toString() = "BukkitPlayer(name=$name, uuid=$uuid)"
 
     override fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>) {
         if (status.isEmpty())

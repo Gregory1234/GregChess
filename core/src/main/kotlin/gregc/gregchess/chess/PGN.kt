@@ -50,7 +50,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
             tags += TagPair("White", game[Side.WHITE].name)
             tags += TagPair("Black", game[Side.BLACK].name)
 
-            val result = game.end?.result?.pgn
+            val result = game.results?.score?.pgn
 
             tags += TagPair("Result", result ?: "*")
             tags += TagPair("PlyCount", game.board.moveHistory.size.toString())
@@ -58,7 +58,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
             tags += TagPair("TimeControl", timeControl)
             val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(game.startTime)
             tags += TagPair("Time", time)
-            tags += TagPair("Termination", game.end?.reason?.pgn ?: "unterminated")
+            tags += TagPair("Termination", game.results?.endReason?.pgn ?: "unterminated")
             tags += TagPair("Mode", "ICS")
 
             if (!game.board.initialFEN.isInitial() || game.board.chess960) {

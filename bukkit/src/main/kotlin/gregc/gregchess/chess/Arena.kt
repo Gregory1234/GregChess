@@ -23,7 +23,7 @@ object ArenaManager : Listener {
         val newArenas = config.getStringList("ChessArenas")
         arenas.removeIf {
             if (it.name !in newArenas) {
-                it.game?.quickStop(ARENA_REMOVED.of())
+                it.game?.quickStop(drawBy(ARENA_REMOVED))
                 true
             } else false
         }
@@ -66,17 +66,17 @@ data class Arena(val name: String, var game: ChessGame? = null): Component.Setti
         private val data = mutableMapOf<UUID, PlayerData>()
 
         private fun BukkitPlayer.join(d: PlayerData = defData) {
-            if (uniqueId in data)
+            if (uuid in data)
                 throw IllegalStateException("player already teleported")
-            data[uniqueId] = player.playerData
+            data[uuid] = player.playerData
             reset(d)
         }
 
         private fun BukkitPlayer.leave() {
-            if (uniqueId !in data)
+            if (uuid !in data)
                 throw IllegalStateException("player data not found")
-            player.playerData = data[uniqueId]!!
-            data.remove(uniqueId)
+            player.playerData = data[uuid]!!
+            data.remove(uuid)
         }
 
         private fun BukkitPlayer.reset(d: PlayerData = defData) {

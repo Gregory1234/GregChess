@@ -31,7 +31,7 @@ object ChessGameManager : Listener {
         }
     }
 
-    operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uniqueId == uuid }
+    operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uuid == uuid }
 
 
     fun start() {
@@ -39,14 +39,14 @@ object ChessGameManager : Listener {
     }
 
     fun stop() {
-        games.forEach { it.quickStop(PLUGIN_RESTART.of()) }
+        games.forEach { it.quickStop(drawBy(PLUGIN_RESTART)) }
     }
 
     fun leave(player: BukkitPlayer) {
         val games = player.games
         cRequire(games.isNotEmpty() || player.isSpectating, YOU_NOT_IN_GAME)
         games.forEach { g ->
-            g.stop(EndReason.WALKOVER.of(!g[player]!!.side), BySides { it == g[player]!!.side })
+            g.stop(g[player]!!.side.lostBy(EndReason.WALKOVER), BySides { it == g[player]!!.side })
         }
         player.spectatedGame = null
     }
@@ -113,7 +113,7 @@ object ChessGameManager : Listener {
 
     @EventHandler
     fun onChessGameStart(e: GameStartEvent) {
-        glog.low("Registering game", e.game.uniqueId)
+        glog.low("Registering game", e.game.uuid)
         games += e.game
         e.game.players.forEachReal {
             glog.low("Registering game player", it)

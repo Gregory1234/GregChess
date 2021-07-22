@@ -3,15 +3,15 @@ package gregc.gregchess.chess
 import gregc.gregchess.Identifier
 import gregc.gregchess.asIdent
 
-sealed class EndResults(val pgn: String) {
-    class Victory(val winner: Side): EndResults(when(winner) {Side.WHITE -> "1-0"; Side.BLACK -> "0-1"})
-    object Draw: EndResults("1/2-1/2")
+sealed class GameScore(val pgn: String) {
+    class Victory(val winner: Side): GameScore(when(winner) {Side.WHITE -> "1-0"; Side.BLACK -> "0-1"})
+    object Draw: GameScore("1/2-1/2")
 }
 
-typealias DetEndReason = EndReason<EndResults.Victory>
-typealias DrawEndReason = EndReason<EndResults.Draw>
+typealias DetEndReason = EndReason<GameScore.Victory>
+typealias DrawEndReason = EndReason<GameScore.Draw>
 
-open class EndReason<R: EndResults>(val id: Identifier, val type: Type, val quick: Boolean = false) {
+open class EndReason<R: GameScore>(val id: Identifier, val type: Type, val quick: Boolean = false) {
 
     enum class Type(val pgn: String) {
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
@@ -51,9 +51,11 @@ open class EndReason<R: EndResults>(val id: Identifier, val type: Type, val quic
     val pgn get() = type.pgn
 }
 
-fun DetEndReason.of(winner: Side, vararg args: Any?) = GameEnd(this, EndResults.Victory(winner), args.toList())
-fun DrawEndReason.of(vararg args: Any?) = GameEnd(this, EndResults.Draw, args.toList())
+fun Side.wonBy(reason: DetEndReason, vararg args: Any?) = GameResults(reason, GameScore.Victory(this), args.toList())
+fun Side.lostBy(reason: DetEndReason, vararg args: Any?) = (!this).wonBy(reason, *args)
+fun drawBy(reason: DrawEndReason, vararg args: Any?) = GameResults(reason, GameScore.Draw, args.toList())
+fun DrawEndReason.of(vararg args: Any?) = GameResults(this, GameScore.Draw, args.toList())
 
-data class GameEnd<R: EndResults>(val reason: EndReason<R>, val result: R, val args: List<Any?>) {
+data class GameResults<R: GameScore>(val endReason: EndReason<R>, val score: R, val args: List<Any?>) {
 
 }

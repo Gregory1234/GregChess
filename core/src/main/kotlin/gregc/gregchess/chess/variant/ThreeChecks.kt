@@ -30,7 +30,7 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         fun checkForGameEnd() {
             checks.forEachIndexed { s, c ->
                 if (c >= limit)
-                    game.stop(CHECK_LIMIT.of(!s, limit))
+                    game.stop(s.lostBy(CHECK_LIMIT, limit))
             }
         }
     }

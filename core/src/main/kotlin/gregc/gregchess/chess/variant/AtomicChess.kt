@@ -98,7 +98,7 @@ object AtomicChess : ChessVariant("Atomic") {
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.kingOf(!game.currentTurn) == null)
-            game.stop(ATOMIC.of(game.currentTurn))
+            game.stop(game.currentTurn.wonBy(ATOMIC))
         Normal.checkForGameEnd(game)
     }
 

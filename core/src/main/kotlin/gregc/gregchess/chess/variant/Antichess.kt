@@ -35,12 +35,12 @@ object Antichess : ChessVariant("Antichess") {
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(!game.currentTurn).isEmpty())
-            game.stop(EndReason.ALL_PIECES_LOST.of(!game.currentTurn))
+            game.stop(game.currentTurn.lostBy(EndReason.ALL_PIECES_LOST))
         if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none(game.variant::isLegal) })
-            game.stop(STALEMATE_VICTORY.of(!game.currentTurn))
+            game.stop(game.currentTurn.lostBy(STALEMATE_VICTORY))
         checkForRepetition()
         checkForFiftyMoveRule()
     }
 
-    override fun timeout(game: ChessGame, side: Side) = game.stop(EndReason.TIMEOUT.of(side))
+    override fun timeout(game: ChessGame, side: Side) = game.stop(side.wonBy(EndReason.TIMEOUT))
 }

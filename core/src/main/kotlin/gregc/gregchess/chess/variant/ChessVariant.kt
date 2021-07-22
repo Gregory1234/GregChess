@@ -124,27 +124,27 @@ abstract class ChessVariant(val name: String) {
         override fun checkForGameEnd(game: ChessGame) = with(game.board) {
             if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none(game.variant::isLegal) }) {
                 if (isInCheck(game, !game.currentTurn))
-                    game.stop(EndReason.CHECKMATE.of(game.currentTurn))
+                    game.stop(game.currentTurn.wonBy(EndReason.CHECKMATE))
                 else
-                    game.stop(EndReason.STALEMATE.of())
+                    game.stop(drawBy(EndReason.STALEMATE))
             }
             checkForRepetition()
             checkForFiftyMoveRule()
             val whitePieces = piecesOf(Side.WHITE)
             val blackPieces = piecesOf(Side.BLACK)
             if (whitePieces.size == 1 && blackPieces.size == 1)
-                game.stop(EndReason.INSUFFICIENT_MATERIAL.of())
+                game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
             if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
-                game.stop(EndReason.INSUFFICIENT_MATERIAL.of())
+                game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
             if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
-                game.stop(EndReason.INSUFFICIENT_MATERIAL.of())
+                game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
         }
 
         override fun timeout(game: ChessGame, side: Side) {
             if (game.board.piecesOf(!side).size == 1)
-                game.stop(EndReason.DRAW_TIMEOUT.of())
+                game.stop(drawBy(EndReason.DRAW_TIMEOUT))
             else
-                game.stop(EndReason.TIMEOUT.of(!side))
+                game.stop(side.lostBy(EndReason.TIMEOUT))
         }
 
         override fun undoLastMove(move: MoveData) = move.undo()

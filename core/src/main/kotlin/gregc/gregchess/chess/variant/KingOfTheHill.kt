@@ -18,7 +18,7 @@ object KingOfTheHill : ChessVariant("KingOfTheHill") {
     override fun checkForGameEnd(game: ChessGame) {
         game.board.pieces.filter { it.type == PieceType.KING }.forEach {
             if (it.pos.file in (3..4) && it.pos.rank in (3..4))
-                game.stop(KING_OF_THE_HILL.of(it.side))
+                game.stop(it.side.wonBy(KING_OF_THE_HILL))
         }
         Normal.checkForGameEnd(game)
     }

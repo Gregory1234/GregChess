@@ -32,11 +32,11 @@ object RequestManager : Listener {
 
 class RequestType(val name: String, private val acceptCommand: String, private val cancelCommand: String) {
     private val requests = mutableMapOf<UUID, Request>()
-    private val view get() = config.getConfigurationSection("Request.$name")!!
+    private val section get() = config.getConfigurationSection("Request.$name")!!
 
     suspend fun invalidSender(s: Player) {
         glog.mid("Invalid sender", s)
-        s.sendMessage(view.getLocalizedString("CannotSend"))
+        s.sendMessage(section.getLocalizedString("CannotSend"))
         return suspendCoroutine { }
     }
 
@@ -47,28 +47,28 @@ class RequestType(val name: String, private val acceptCommand: String, private v
 
     private fun call(request: Request, simple: Boolean) {
         if ((simple || config.getBoolean("Request.SelfAccept", true)) && request.sender == request.receiver) {
-            glog.mid("Self request", request.uniqueId)
+            glog.mid("Self request", request.uuid)
             request.cont.resume(RequestResponse.ACCEPT)
             return
         }
-        requests[request.uniqueId] = request
+        requests[request.uuid] = request
         request.sender.sendCommandMessage(
-            view.getLocalizedString("Sent.Request"),
+            section.getLocalizedString("Sent.Request"),
             config.getLocalizedString("Request.Cancel"),
-            if (simple) cancelCommand else "$cancelCommand ${request.uniqueId}"
+            if (simple) cancelCommand else "$cancelCommand ${request.uuid}"
         )
         request.receiver.sendCommandMessage(
-            view.getLocalizedString("Received.Request", request.sender.name, request.value),
+            section.getLocalizedString("Received.Request", request.sender.name, request.value),
             config.getLocalizedString("Request.Accept"),
-            if (simple) acceptCommand else "$acceptCommand ${request.uniqueId}"
+            if (simple) acceptCommand else "$acceptCommand ${request.uuid}"
         )
-        val duration = view.getString("Duration")?.asDurationOrNull()
+        val duration = section.getString("Duration")?.asDurationOrNull()
         if (duration != null)
             BukkitTimeManager.runTaskLater(duration) {
-                if (request.uniqueId in requests)
+                if (request.uuid in requests)
                     expire(request)
             }
-        glog.mid("Sent", request.uniqueId)
+        glog.mid("Sent", request.uuid)
     }
 
     private operator fun plusAssign(request: Request) = call(request, false)
@@ -95,48 +95,48 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     }
 
     private fun accept(request: Request) {
-        request.sender.sendMessage(view.getLocalizedString("Sent.Accept", request.receiver.name))
-        request.receiver.sendMessage(view.getLocalizedString("Received.Accept", request.sender.name))
-        requests.remove(request.uniqueId)
-        glog.mid("Accepted", request.uniqueId)
+        request.sender.sendMessage(section.getLocalizedString("Sent.Accept", request.receiver.name))
+        request.receiver.sendMessage(section.getLocalizedString("Received.Accept", request.sender.name))
+        requests.remove(request.uuid)
+        glog.mid("Accepted", request.uuid)
         request.cont.resume(RequestResponse.ACCEPT)
     }
 
-    fun accept(p: Player, uniqueId: UUID) {
-        val request = requests[uniqueId]
+    fun accept(p: Player, uuid: UUID) {
+        val request = requests[uuid]
         if (request == null || p != request.receiver)
-            p.sendMessage(view.getLocalizedString("Error.NotFound"))
+            p.sendMessage(section.getLocalizedString("Error.NotFound"))
         else
             accept(request)
     }
 
     private fun cancel(request: Request) {
-        request.sender.sendMessage(view.getLocalizedString("Sent.Cancel", request.receiver.name))
-        request.receiver.sendMessage(view.getLocalizedString("Received.Cancel", request.sender.name))
-        requests.remove(request.uniqueId)
-        glog.mid("Cancelled", request.uniqueId)
+        request.sender.sendMessage(section.getLocalizedString("Sent.Cancel", request.receiver.name))
+        request.receiver.sendMessage(section.getLocalizedString("Received.Cancel", request.sender.name))
+        requests.remove(request.uuid)
+        glog.mid("Cancelled", request.uuid)
         request.cont.resume(RequestResponse.CANCEL)
     }
 
-    fun cancel(p: Player, uniqueId: UUID) {
-        val request = requests[uniqueId]
+    fun cancel(p: Player, uuid: UUID) {
+        val request = requests[uuid]
         if (request == null || p != request.sender)
-            p.sendMessage(view.getLocalizedString("Error.NotFound"))
+            p.sendMessage(section.getLocalizedString("Error.NotFound"))
         else
             cancel(request)
     }
 
     private fun expire(request: Request) {
-        request.sender.sendMessage(view.getLocalizedString("Expired", request.receiver.name))
-        request.receiver.sendMessage(view.getLocalizedString("Expired", request.sender.name))
-        requests.remove(request.uniqueId)
-        glog.mid("Expired", request.uniqueId)
+        request.sender.sendMessage(section.getLocalizedString("Expired", request.receiver.name))
+        request.receiver.sendMessage(section.getLocalizedString("Expired", request.sender.name))
+        requests.remove(request.uuid)
+        glog.mid("Expired", request.uuid)
         request.cont.resume(RequestResponse.EXPIRED)
     }
 
     fun quietRemove(p: Player) = requests.values.filter { it.sender == p || it.receiver == p }.forEach {
-        requests.remove(it.uniqueId)
-        glog.mid("Quit", it.uniqueId)
+        requests.remove(it.uuid)
+        glog.mid("Quit", it.uuid)
         it.cont.resume(RequestResponse.QUIT)
     }
 
@@ -149,9 +149,9 @@ enum class RequestResponse {
 data class RequestData(val sender: Player, val receiver: Player, val value: String)
 
 class Request(val sender: Player, val receiver: Player, val value: String, val cont: Continuation<RequestResponse>) {
-    val uniqueId: UUID = UUID.randomUUID()
+    val uuid: UUID = UUID.randomUUID()
 
     init {
-        glog.low("Created request", uniqueId, sender, receiver, value)
+        glog.low("Created request", uuid, sender, receiver, value)
     }
 }

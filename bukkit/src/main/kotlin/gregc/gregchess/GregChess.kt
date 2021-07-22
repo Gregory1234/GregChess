@@ -131,7 +131,7 @@ object GregChess : Listener {
                     perms()
                     endArgs()
                     val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
-                    p.game.stop(EndReason.RESIGNATION.of(!p.side))
+                    p.game.stop(p.side.lostBy(EndReason.RESIGNATION))
                 }
                 "leave" -> {
                     cPlayer(player)
@@ -149,7 +149,7 @@ object GregChess : Listener {
                         drawRequest.invalidSender(player) { !p.hasTurn }
                         val res = drawRequest.call(RequestData(player, opponent.player.bukkit, ""), true)
                         if (res == RequestResponse.ACCEPT) {
-                            p.game.stop(EndReason.DRAW_AGREEMENT.of())
+                            p.game.stop(drawBy(EndReason.DRAW_AGREEMENT))
                         }
                     }
                 }

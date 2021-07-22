@@ -136,8 +136,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         }
     }
 
-    operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uniqueId == pieceUniqueId }
-    operator fun get(pieceUniqueId: UUID) = pieces.firstOrNull { it.uniqueId == pieceUniqueId }
+    operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uuid == pieceUniqueId }
+    operator fun get(pieceUniqueId: UUID) = pieces.firstOrNull { it.uuid == pieceUniqueId }
 
     fun piecesOf(side: Side) = pieces.filter { it.side == side }
     fun piecesOf(side: Side, type: PieceType) = pieces.filter { it.side == side && it.type == type }
@@ -146,12 +146,12 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     operator fun plusAssign(captured: CapturedPiece) {
         capturedPieces += captured
-        glog.low("Added captured", game.uniqueId, captured)
+        glog.low("Added captured", game.uuid, captured)
     }
 
     operator fun minusAssign(captured: CapturedPiece) {
         capturedPieces -= captured
-        glog.low("Removed captured", game.uniqueId, captured)
+        glog.low("Removed captured", game.uuid, captured)
     }
 
     fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
@@ -220,12 +220,12 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     fun checkForRepetition() {
         if (boardHashes[getFEN().copy(currentTurn = !game.currentTurn).hashed()] ?: 0 >= 3)
-            game.stop(EndReason.REPETITION.of())
+            game.stop(drawBy(EndReason.REPETITION))
     }
 
     fun checkForFiftyMoveRule() {
         if (movesSinceLastCapture >= 100u)
-            game.stop(EndReason.FIFTY_MOVES.of())
+            game.stop(drawBy(EndReason.FIFTY_MOVES))
     }
 
     private fun addBoardHash(fen: FEN): Int {
@@ -264,7 +264,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             moves.removeLast()
             lastMove?.render()
             game.previousTurn()
-            glog.mid("Undid last move", game.uniqueId, it)
+            glog.mid("Undid last move", game.uuid, it)
         }
     }
 

@@ -56,10 +56,10 @@ class TestHuman(name: String): HumanPlayer(name) {
     override fun openPawnPromotionMenu(moves: List<MoveCandidate>) {
     }
 
-    override fun showEndReason(side: Side, reason: GameEnd<*>) {
+    override fun showGameResults(side: Side, results: GameResults<*>) {
     }
 
-    override fun showEndReason(reason: GameEnd<*>) {
+    override fun showGameResults(results: GameResults<*>) {
     }
 
     override fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>) {

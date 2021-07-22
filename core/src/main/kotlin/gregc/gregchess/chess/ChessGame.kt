@@ -40,11 +40,9 @@ enum class GameBaseEvent: ChessEvent {
     PANIC
 }
 
-class ChessGame(private val timeManager: TimeManager, val settings: GameSettings) {
+class ChessGame(private val timeManager: TimeManager, val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) {
 
-    val uniqueId: UUID = UUID.randomUUID()
-
-    override fun toString() = "ChessGame(uniqueId=$uniqueId)"
+    override fun toString() = "ChessGame(uuid=$uuid)"
 
     val variant = settings.variant
 
@@ -79,7 +77,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
     private var state: GameState = GameState.Initial
 
     private inline fun <reified T> require(): T = (state as? T) ?: run {
-        stop(EndReason.ERROR.of())
+        stop(drawBy(EndReason.ERROR))
         throw WrongStateException(state, T::class.java)
     }
 
@@ -178,10 +176,10 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
             variant.start(this)
             components.callEvent(GameBaseEvent.START)
             state = GameState.Running(requireStarting())
-            glog.mid("Started game", uniqueId)
+            glog.mid("Started game", uuid)
         } catch (e: Exception) {
             panic(e)
-            glog.mid("Failed to start game", uniqueId)
+            glog.mid("Failed to start game", uuid)
             throw e
         }
         components.callEvent(GameBaseEvent.BEGIN)
@@ -199,39 +197,39 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         requireRunning()
         components.callEvent(TurnEvent.START)
         currentPlayer.startTurn()
-        glog.low("Started turn", uniqueId, currentTurn)
+        glog.low("Started turn", uuid, currentTurn)
     }
 
     private fun startPreviousTurn() {
         requireRunning()
         components.callEvent(TurnEvent.START)
         currentPlayer.startTurn()
-        glog.low("Started previous turn", uniqueId, currentTurn)
+        glog.low("Started previous turn", uuid, currentTurn)
     }
 
-    val end: GameEnd<*>?
-        get() = (state as? GameState.Ended)?.end
+    val results: GameResults<*>?
+        get() = (state as? GameState.Ended)?.results
 
-    fun quickStop(reason: GameEnd<*>) = stop(reason, BySides(true))
+    fun quickStop(results: GameResults<*>) = stop(results, BySides(true))
 
-    fun stop(reason: GameEnd<*>, quick: BySides<Boolean> = BySides(false)) {
-        val stopping = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, reason)
+    fun stop(results: GameResults<*>, quick: BySides<Boolean> = BySides(false)) {
+        val stopping = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, results)
         state = stopping
         try {
             components.callEvent(GameBaseEvent.STOP)
             players.forEachUnique(currentTurn) {
                 interact {
-                    it.player.showEndReason(it.side, reason)
-                    if (!reason.reason.quick)
+                    it.player.showGameResults(it.side, results)
+                    if (!results.endReason.quick)
                         timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
                     components.callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
                 }
             }
-            if (reason.reason.quick) {
+            if (results.endReason.quick) {
                 components.callEvent(GameBaseEvent.CLEAR)
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
-                glog.low("Stopped game", uniqueId, reason)
+                glog.low("Stopped game", uuid, results)
                 components.callEvent(GameBaseEvent.VERY_END)
                 return
             }
@@ -242,7 +240,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
                 timeManager.waitTick()
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
-                glog.low("Stopped game", uniqueId, reason)
+                glog.low("Stopped game", uuid, results)
                 components.callEvent(GameBaseEvent.VERY_END)
             }
         } catch (e: Exception) {
@@ -276,6 +274,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 fun <E> ChessGame.tryOrStopNull(expr: E?): E = try {
     expr!!
 } catch (e: NullPointerException) {
-    stop(EndReason.ERROR.of())
+    stop(drawBy(EndReason.ERROR))
     throw e
 }

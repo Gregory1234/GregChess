@@ -39,7 +39,7 @@ abstract class ChessPlayer(val name: String, val side: Side, protected val silen
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(player.name, side, silent, game) {
 
-    override fun toString() = "BukkitChessPlayer(name=$name, side=$side, game.uniqueId=${game.uniqueId})"
+    override fun toString() = "BukkitChessPlayer(name=$name, side=$side, game.uuid=${game.uuid})"
 
     fun pickUp(pos: Pos) {
         if (!game.running) return
@@ -105,6 +105,6 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
             val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(it) }
             val move = game.board.getMoves(origin).first { it.display.pos == target && it.promotion?.type == promotion }
             game.finishMove(move)
-        }, { game.stop(EndReason.ERROR.of()) })
+        }, { game.stop(drawBy(EndReason.ERROR)) })
     }
 }
