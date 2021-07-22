@@ -13,13 +13,13 @@ val Side.standardName get() = name.snakeToPascal()
 fun PieceType.getItem(side: Side, lang: String): ItemStack {
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
-    meta.setDisplayName(config.getLocalizedString("Chess.Side.${side.standardName}.Piece", pieceName).get(lang).chatColor())
+    meta.setDisplayName(config.getLocalizedString("Chess.Side.${side.standardName}.Piece", name).get(lang).chatColor())
     item.itemMeta = meta
     return item
 }
 
-val PieceType.section get() = config.getConfigurationSection("Chess.Piece.${id.path.snakeToPascal()}")!!
-val PieceType.pieceName get() = section.getLocalizedString("Name")
+val PieceType.section get() = configOf(id.namespace).getConfigurationSection("Chess.Piece.${id.path.snakeToPascal()}")!!
+val PieceType.name get() = section.getLocalizedString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
 val PieceType.itemMaterial get() = BySides { Material.valueOf(section.getString("Item.${it.standardName}")!!) }
 val PieceType.structure get() = BySides { section.getStringList("Structure.${it.standardName}").map { m -> Material.valueOf(m) } }
@@ -53,7 +53,7 @@ fun ChessGame.getInfo() = buildTextComponent {
 }
 
 val GameResults<*>.name
-    get() = config.getLocalizedString("Chess.EndReason.${endReason.id.path.snakeToPascal()}", *args.toTypedArray())
+    get() = configOf(endReason.id.namespace).getLocalizedString("Chess.EndReason.${endReason.id.path.snakeToPascal()}", *args.toTypedArray())
 
 val GameResults<*>.message
     get() = score.let {

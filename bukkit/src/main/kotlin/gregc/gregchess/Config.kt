@@ -4,6 +4,10 @@ import org.bukkit.configuration.ConfigurationSection
 
 val config: ConfigurationSection get() = GregChess.plugin.config
 
+val namespacePlugins = mutableMapOf("gregchess" to GregChess.plugin)
+
+fun configOf(namespace: String) = namespacePlugins[namespace]?.config ?: config
+
 fun ConfigurationSection.getLocalizedString(path: String, vararg args: Any?) = LocalizedString(this, path, *args)
 
 class LocalizedString(private val section: ConfigurationSection, private val path: String, private vararg val args: Any?) {
