@@ -93,7 +93,7 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     @ChessEventHandler
     fun spectatorJoin(p: SpectatorEvent) {
         if (p.dir == PlayerDirection.JOIN)
-            p.player.scoreboard = scoreboard
+            p.human.bukkit.scoreboard = scoreboard
     }
 
     private fun update() {

@@ -107,12 +107,11 @@ data class Arena(val name: String, var game: ChessGame? = null): Component.Setti
         }
 
         @ChessEventHandler
-        fun handleSpectator(p: SpectatorEvent) {
+        fun handleSpectator(p: SpectatorEvent) = (p.human as? BukkitPlayer)?.run{
             when(p.dir) {
-                PlayerDirection.JOIN -> p.human.join(spectatorData)
-                PlayerDirection.LEAVE -> p.human.leave()
+                PlayerDirection.JOIN -> join(spectatorData)
+                PlayerDirection.LEAVE -> leave()
             }
-
         }
 
         @ChessEventHandler
