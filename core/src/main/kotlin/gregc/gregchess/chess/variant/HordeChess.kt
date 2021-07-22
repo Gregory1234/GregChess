@@ -1,9 +1,10 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 
-object HordeChess : ChessVariant("Horde") {
+object HordeChess : ChessVariant("horde".asIdent()) {
 
     object HordePawnConfig : PawnMovementConfig {
         override fun canDouble(piece: PieceInfo): Boolean = when (piece.side) {

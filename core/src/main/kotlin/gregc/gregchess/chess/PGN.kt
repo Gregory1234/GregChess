@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.snakeToPascal
 import java.time.format.DateTimeFormatter
 
 class PGN internal constructor(private val tags: List<TagPair>, private val moves: MoveTree) {
@@ -66,8 +67,8 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
                 tags += TagPair("FEN", game.board.initialFEN.toString())
             }
             val variant = buildList {
-                if (game.variant != ChessVariant.Normal)
-                    this += game.variant.name
+                if (game.variant != ChessVariant.NORMAL)
+                    this += game.variant.id.path.snakeToPascal()
                 if (game.board.chess960)
                     this += "Chess960"
                 if (game.settings.simpleCastling)

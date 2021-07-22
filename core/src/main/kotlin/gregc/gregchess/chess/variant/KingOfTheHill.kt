@@ -5,7 +5,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.rangeTo
 
-object KingOfTheHill : ChessVariant("KingOfTheHill") {
+object KingOfTheHill : ChessVariant("king_of_the_hill".asIdent()) {
 
     private val KING_OF_THE_HILL = DetEndReason("king_of_the_hill".asIdent(), EndReason.Type.NORMAL)
 

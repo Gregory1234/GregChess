@@ -6,7 +6,7 @@ import gregc.gregchess.chess.component.AddPropertiesEvent
 import gregc.gregchess.chess.component.Component
 import kotlin.reflect.KClass
 
-object ThreeChecks : ChessVariant("ThreeChecks") {
+object ThreeChecks : ChessVariant("three_checks".asIdent()) {
 
     class CheckCounter(private val game: ChessGame, private val limit: UInt) : Component {
         data class Settings(val limit: UInt) : Component.Settings<CheckCounter> {

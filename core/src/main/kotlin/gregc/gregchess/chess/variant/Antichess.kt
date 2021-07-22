@@ -3,7 +3,7 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
 
-object Antichess : ChessVariant("Antichess") {
+object Antichess : ChessVariant("antichess".asIdent()) {
     private val STALEMATE_VICTORY = DetEndReason("stalemate_victory".asIdent(), EndReason.Type.NORMAL)
 
     object AntichessPawnConfig : PawnMovementConfig {

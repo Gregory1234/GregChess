@@ -6,7 +6,7 @@ import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import kotlin.reflect.KClass
 
-object AtomicChess : ChessVariant("Atomic") {
+object AtomicChess : ChessVariant("atomic".asIdent()) {
 
     data class ExplosionEvent(val pos: Pos): ChessEvent
 

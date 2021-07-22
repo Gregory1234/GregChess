@@ -1,5 +1,7 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.asIdent
+import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.*
 import org.junit.jupiter.api.*
 import kotlin.test.assertEquals
@@ -9,16 +11,15 @@ class ChessGameTests {
 
     init {
         val variant = spyk(TestVariant)
-        variant.init()
+        ChessVariant += variant
         excludeRecords {
-            variant.name
-            variant.init()
+            variant.id
         }
     }
 
     val basicSettings = testSettings("basic")
     val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
-    val spyVariantSettings get() = testSettings("spy variant", variant = "test")
+    val spyVariantSettings get() = testSettings("spy variant", variant = "test".asIdent())
 
     val humanA = TestHuman("a")
     val humanB = TestHuman("b")

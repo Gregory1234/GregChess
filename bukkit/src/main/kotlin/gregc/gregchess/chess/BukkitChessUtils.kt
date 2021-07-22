@@ -48,7 +48,7 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Spectators: ${spectators.spectators.joinToString { it.name }}\n")
     append("Arena: ${arena.name}\n")
     append("Preset: ${settings.name}\n")
-    append("Variant: ${variant.name}\n")
+    append("Variant: ${variant.id}\n")
     append("Components: ${components.joinToString { it.javaClass.simpleName }}")
 }
 

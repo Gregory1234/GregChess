@@ -59,7 +59,7 @@ object SettingsManager {
         config.getConfigurationSection("Settings.Presets")?.getKeys(false).orEmpty().map { name ->
             val section = config.getConfigurationSection("Settings.Presets.$name")!!
             val simpleCastling = section.getBoolean("SimpleCastling", false)
-            val variant = ChessVariant[section.getString("Variant")]
+            val variant = ChessVariant[section.getString("Variant")?.asIdent()]
             val components = (extraComponents + variant.requiredComponents + variant.requiredComponents)
                 .mapNotNull { componentParsers[it] }.mapNotNull { it(section) }
             GameSettings(name, simpleCastling, variant, components)

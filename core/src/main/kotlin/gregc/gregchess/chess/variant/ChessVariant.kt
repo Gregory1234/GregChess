@@ -1,32 +1,39 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.glog
 import kotlin.reflect.KClass
 
-abstract class ChessVariant(val name: String) {
-
+open class ChessVariant(val id: Identifier) {
+    @Suppress("unused")
     companion object {
-        private val normal = Normal
 
-        private val variants = mutableMapOf<String, ChessVariant>()
+        private val variants = mutableMapOf<Identifier, ChessVariant>()
 
-        init {
-            Normal.init()
-            ThreeChecks.init()
-            KingOfTheHill.init()
-            AtomicChess.init()
-            Antichess.init()
-            HordeChess.init()
+        operator fun plusAssign(v: ChessVariant) {
+            variants[v.id] = v
         }
 
-        operator fun get(name: String?) = when (name) {
-            null -> normal
-            else -> variants[name] ?: run {
-                glog.warn("Variant $name not found, defaulted to Normal")
-                normal
+        @JvmField
+        val NORMAL = Normal
+        @JvmField
+        val THREE_CHECKS = ThreeChecks
+        @JvmField
+        val KING_OF_THE_HILL = KingOfTheHill
+        @JvmField
+        val ATOMIC = AtomicChess
+        @JvmField
+        val ANTICHESS = Antichess
+        @JvmField
+        val HORDE = HordeChess
+
+        operator fun get(id: Identifier?) = when (id) {
+            null -> NORMAL
+            else -> variants[id] ?: run {
+                glog.warn("Variant $id not found, defaulted to Normal")
+                NORMAL
             }
         }
     }
@@ -39,8 +46,9 @@ abstract class ChessVariant(val name: String) {
         LEGAL("Legal moves")
     }
 
-    fun init() {
-        variants[name] = this
+    init {
+        @Suppress("LeakingThis")
+        ChessVariant += this
     }
 
     open fun start(game: ChessGame) {}
@@ -70,7 +78,7 @@ abstract class ChessVariant(val name: String) {
 
     protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { board.getMoves(it.pos) }
 
-    object Normal : ChessVariant("Normal") {
+    object Normal : ChessVariant("normal".asIdent()) {
 
         fun pinningMoves(by: Side, pos: Square) =
             allMoves(by, pos.board).filter { it.control == pos }.filter { m -> m.blocks.count { it !in m.help } == 1 }
