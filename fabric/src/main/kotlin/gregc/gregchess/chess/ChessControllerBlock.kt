@@ -1,8 +1,12 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.GregChess
+import gregc.gregchess.ident
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.client.CottonInventoryScreen
+import io.github.cottonmc.cotton.gui.networking.NetworkSide
+import io.github.cottonmc.cotton.gui.networking.ScreenNetworking
+import io.github.cottonmc.cotton.gui.widget.WButton
 import io.github.cottonmc.cotton.gui.widget.WGridPanel
 import io.github.cottonmc.cotton.gui.widget.data.Insets
 import net.minecraft.block.*
@@ -28,7 +32,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
 }
 
-class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext?) :
+class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext) :
     SyncedGuiDescription(
         GregChess.CHESS_CONTROLLER_SCREEN_HANDLER_TYPE,
         syncId,
@@ -42,6 +46,15 @@ class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventor
         setRootPanel(root)
         root.setSize(300, 200)
         root.insets = Insets.ROOT_PANEL
+        val detectBoardButton = WButton(TranslatableText("gui.detect_board"))
+        detectBoardButton.onClick = Runnable {
+            ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("detect_board")) {}
+        }
+        root.add(detectBoardButton, 1, 1, 5, 1)
+        ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("detect_board")) {
+
+        }
+        root.validate(this)
     }
 
 }

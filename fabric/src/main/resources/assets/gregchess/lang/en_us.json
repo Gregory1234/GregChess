@@ -13,5 +13,6 @@
   "block.gregchess.white_knight": "White Knight",
   "block.gregchess.black_knight": "Black Knight",
   "block.gregchess.white_rook": "White Rook",
-  "block.gregchess.black_rook": "Black Rook"
+  "block.gregchess.black_rook": "Black Rook",
+  "gui.detect_board": "Detect Board"
 }
