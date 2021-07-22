@@ -57,7 +57,8 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     fun sendMessage(msg: String) = player.sendMessage(msg.chatColor())
     fun sendMessage(msg: LocalizedString) = sendMessage(msg.get(lang))
 
-    private fun sendTitle(title: String, subtitle: String) = player.sendDefTitle(title.chatColor(), subtitle.chatColor())
+    private fun sendTitle(title: String, subtitle: String) =
+        player.sendTitle(title.chatColor(), subtitle.chatColor(), 10, 70, 20)
 
     override fun sendPGN(pgn: PGN) {
         val message = TextComponent(COPY_PGN.get(lang).chatColor())

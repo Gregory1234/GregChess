@@ -1,9 +1,11 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.variant.AtomicChess
-import org.bukkit.*
+import gregc.gregchess.toLocation
+import org.bukkit.Material
+import org.bukkit.World
 import kotlin.math.floor
 
 class BukkitRenderer(private val game: ChessGame, private val settings: Settings) : Component {
@@ -78,14 +80,14 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
         }
     }
 
-    private fun <R> doAt(pos: Pos, f: (World, Location) -> R) = pos.loc.doIn(world, f)
+    private val Pos.location get() = loc.toLocation(world)
 
     private fun playPieceSound(pos: Pos, sound: String, type: PieceType) =
-        doAt(pos) { world, l -> world.playSound(l, type.getSound(sound)) }
+        world.playSound(pos.location, type.getSound(sound), 3.0f, 1.0f)
 
     @ChessEventHandler
     fun handleExplosion(e: AtomicChess.ExplosionEvent) {
-        doAt(e.pos) { world, l -> world.createExplosion(l, 4.0f, false, false) }
+        world.createExplosion(e.pos.location, 4.0f, false, false)
     }
 
     private fun Pos.fillFloor(floor: Floor) {

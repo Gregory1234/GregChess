@@ -3,12 +3,53 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import org.bukkit.*
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.generator.ChunkGenerator
+import org.bukkit.inventory.ItemStack
+import org.bukkit.potion.PotionEffect
+import org.bukkit.scoreboard.Scoreboard
 import java.util.*
+
+private data class PlayerData(
+    val location: Location? = null,
+    val inventory: List<ItemStack?> = List(41) { null },
+    val gameMode: GameMode = GameMode.SURVIVAL,
+    val health: Double = 20.0,
+    val foodLevel: Int = 20, val saturation: Float = 20.0F,
+    val level: Int = 0, val exp: Float = 0.0F,
+    val allowFlight: Boolean = false, val isFlying: Boolean = false,
+    val effects: List<PotionEffect> = emptyList(),
+    val scoreboard: Scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
+)
+
+private var Player.playerData: PlayerData
+    get() = PlayerData(
+        location.clone(),
+        inventory.contents.toList(),
+        gameMode,
+        health,
+        foodLevel, saturation,
+        level, exp,
+        allowFlight, isFlying,
+        activePotionEffects.toList(),
+        scoreboard
+    )
+    set(d) {
+        inventory.contents = d.inventory.toTypedArray()
+        gameMode = d.gameMode
+        health = d.health
+        foodLevel = d.foodLevel; saturation = d.saturation
+        level = d.level; exp = d.exp
+        allowFlight = d.allowFlight; isFlying = d.isFlying
+        activePotionEffects.forEach { removePotionEffect(it.type) }
+        d.effects.forEach(::addPotionEffect)
+        d.location?.let(::teleport)
+        scoreboard = d.scoreboard
+    }
 
 object ArenaManager : Listener {
     private val ARENA_REMOVED = DrawEndReason("arena_removed".asIdent(), EndReason.Type.EMERGENCY, quick = true)

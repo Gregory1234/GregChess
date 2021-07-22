@@ -8,57 +8,11 @@ import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
-import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
-import org.bukkit.potion.PotionEffect
-import org.bukkit.scoreboard.Scoreboard
 import java.time.Duration
 import kotlin.contracts.contract
 
 const val DEFAULT_LANG = "en_US"
-
-data class PlayerData(
-    val location: Location? = null,
-    val inventory: List<ItemStack?> = List(41) { null },
-    val gameMode: GameMode = GameMode.SURVIVAL,
-    val health: Double = 20.0,
-    val foodLevel: Int = 20, val saturation: Float = 20.0F,
-    val level: Int = 0, val exp: Float = 0.0F,
-    val allowFlight: Boolean = false, val isFlying: Boolean = false,
-    val effects: List<PotionEffect> = emptyList(),
-    val scoreboard: Scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
-)
-
-var Player.playerData: PlayerData
-    get() = PlayerData(
-        location.clone(),
-        inventory.contents.toList(),
-        gameMode,
-        health,
-        foodLevel, saturation,
-        level, exp,
-        allowFlight, isFlying,
-        activePotionEffects.toList(),
-        scoreboard
-    )
-    set(d) {
-        inventory.contents = d.inventory.toTypedArray()
-        gameMode = d.gameMode
-        health = d.health
-        foodLevel = d.foodLevel; saturation = d.saturation
-        level = d.level; exp = d.exp
-        allowFlight = d.allowFlight; isFlying = d.isFlying
-        activePotionEffects.forEach { removePotionEffect(it.type) }
-        d.effects.forEach(::addPotionEffect)
-        d.location?.let(::teleport)
-        scoreboard = d.scoreboard
-    }
-
-fun World.playSound(l: Location, s: Sound) = playSound(l, s, 3.0f, 1.0f)
-
-fun <R> Loc.doIn(w: World, f: (World, Location) -> R) = f(w, toLocation(w))
-
-fun Player.sendDefTitle(title: String, subtitle: String = "") = sendTitle(title, subtitle, 10, 70, 20)
 
 class CommandArgs(val player: CommandSender, val args: Array<String>) {
     var index = 0
@@ -115,7 +69,6 @@ inline fun JavaPlugin.addCommandTab(name: String, crossinline tabCompleter: Comm
 fun Loc.toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
 fun Location.toLoc() = Loc(x.toInt(), y.toInt(), z.toInt())
 
-fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
