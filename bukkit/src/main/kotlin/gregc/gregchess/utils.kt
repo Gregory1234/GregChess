@@ -93,7 +93,7 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
-    p.sendMessage(e.error.msg.get(p.lang))
+    p.sendMessage(e.error.msg.get(p.lang).chatColor())
     err(e)
 }
 

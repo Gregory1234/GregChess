@@ -5,10 +5,11 @@ import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
+import java.time.Duration
 
-class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
-    object Settings : Component.Settings<BukkitScoreboardManager> {
-        override fun getComponent(game: ChessGame) = BukkitScoreboardManager(game)
+class ScoreboardManager(private val game: ChessGame): Component {
+    object Settings : Component.Settings<ScoreboardManager> {
+        override fun getComponent(game: ChessGame) = ScoreboardManager(game)
     }
 
     companion object {
@@ -20,27 +21,27 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
 
         private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")!!
 
-        private val GameProperty.name get() = config.getLocalizedString("Scoreboard.$standardName").get(DEFAULT_LANG)
-        private val PlayerProperty.name get() = config.getLocalizedString("Scoreboard.$standardName").get(DEFAULT_LANG)
-    }
+        private val GameProperty<*>.name get() = config.getLocalizedString("Scoreboard.${id.path.snakeToPascal()}").get(DEFAULT_LANG)
+        private val PlayerProperty<*>.name get() = config.getLocalizedString("Scoreboard.${id.path.snakeToPascal()}").get(DEFAULT_LANG)
 
-    private val gameProperties = mutableListOf<GameProperty>()
-    private val playerProperties = mutableListOf<PlayerProperty>()
+        private val timeFormat: String get() = config.getString("TimeFormat")!!
+
+        private fun <T> T.stringify(): String {
+            if (this is Duration)
+                return format(timeFormat) ?: timeFormat
+            return toString()
+        }
+    }
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
-    private val gamePropertyTeams = mutableMapOf<GameProperty, Team>()
-    private val playerPropertyTeams = mutableMapOf<PlayerProperty, BySides<Team>>()
+    private val gameProperties = mutableMapOf<Identifier, GameProperty<*>>()
+    private val playerProperties = mutableMapOf<Identifier, PlayerProperty<*>>()
+
+    private val gamePropertyTeams = mutableMapOf<Identifier, Team>()
+    private val playerPropertyTeams = mutableMapOf<Identifier, BySides<Team>>()
 
     private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get(DEFAULT_LANG))
-
-    override operator fun plusAssign(p: GameProperty) {
-        gameProperties += p
-    }
-
-    override operator fun plusAssign(p: PlayerProperty) {
-        playerProperties += p
-    }
 
     private fun newTeam(): Team {
         var s: String
@@ -60,8 +61,10 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     }
 
     private fun init() {
-        game("Preset") { game.settings.name }
-        player("Player") { playerPrefix + game[it].name }
+        val e = AddPropertiesEvent(playerProperties, gameProperties)
+        e.game("preset".asIdent()) { game.settings.name }
+        e.player("player".asIdent()) { playerPrefix + game[it].name }
+        game.components.callEvent(e)
     }
 
     private fun start() {
@@ -69,23 +72,23 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
-        gameProperties.forEach {
-            gamePropertyTeams[it] = newTeam().apply {
+        gameProperties.values.forEach {
+            gamePropertyTeams[it.id] = newTeam().apply {
                 addEntry(generalFormat(it.name).get(DEFAULT_LANG).chatColor())
             }
             objective.getScore(generalFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
         }
-        playerProperties.forEach {
-            playerPropertyTeams[it] = BySides { s ->
+        playerProperties.values.forEach {
+            playerPropertyTeams[it.id] = BySides { s ->
                 newTeam().apply { addEntry(format(s, it.name).get(DEFAULT_LANG).chatColor()) }
             }
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
-        playerProperties.forEach {
+        playerProperties.values.forEach {
             objective.getScore(whiteFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
-        playerProperties.forEach {
+        playerProperties.values.forEach {
             objective.getScore(blackFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
         }
     }
@@ -97,11 +100,11 @@ class BukkitScoreboardManager(private val game: ChessGame) : ScoreboardManager {
     }
 
     private fun update() {
-        gameProperties.forEach {
-            gamePropertyTeams[it]?.suffix = it().chatColor()
+        gameProperties.values.forEach {
+            gamePropertyTeams[it.id]?.suffix = it().stringify().chatColor()
         }
-        playerProperties.forEach {
-            playerPropertyTeams[it]?.forEachIndexed { s, t -> t.suffix = it(s).chatColor() }
+        playerProperties.values.forEach {
+            playerPropertyTeams[it.id]?.forEachIndexed { s, t -> t.suffix = it(s).stringify().chatColor() }
         }
     }
 

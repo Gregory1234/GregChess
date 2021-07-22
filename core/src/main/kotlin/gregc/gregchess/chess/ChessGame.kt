@@ -53,7 +53,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
     init {
         try {
             requireComponent<Chessboard>()
-            requireComponent<ScoreboardManager>()
             variant.requiredComponents.forEach {
                 settings.components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentSettingsNotFoundException(it)
             }
@@ -67,8 +66,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
     val board get() = requireComponent<Chessboard>()
 
     val clock get() = getComponent<ChessClock>()
-
-    val scoreboard get() = requireComponent<ScoreboardManager>()
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()

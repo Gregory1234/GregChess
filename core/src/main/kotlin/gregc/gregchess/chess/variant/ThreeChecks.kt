@@ -2,8 +2,8 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.AddPropertiesEvent
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.player
 import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant("ThreeChecks") {
@@ -16,9 +16,8 @@ object ThreeChecks : ChessVariant("ThreeChecks") {
         private var checks = MutableBySides(0u)
 
         @ChessEventHandler
-        fun init(e: GameBaseEvent) {
-            if (e == GameBaseEvent.INIT)
-                game.scoreboard.player("CheckCounter") { checks[it].toString() }
+        fun addProperties(e: AddPropertiesEvent) {
+            e.player("check_counter".asIdent()) { checks[it] }
         }
 
         @ChessEventHandler

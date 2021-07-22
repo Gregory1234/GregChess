@@ -2,7 +2,8 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.TimeManager
 import gregc.gregchess.asIdent
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
 import io.mockk.spyk
@@ -30,27 +31,12 @@ class TestTimeManager : TimeManager {
 
 }
 
-class TestScoreboard: ScoreboardManager {
-    object Settings: Component.Settings<TestScoreboard> {
-        override fun getComponent(game: ChessGame) = TestScoreboard()
-
-    }
-
-    override fun plusAssign(p: GameProperty) {
-    }
-
-    override fun plusAssign(p: PlayerProperty) {
-    }
-
-}
-
 fun testSettings(
     name: String, board: String? = null, variant: String? = null,
     extra: List<Component.Settings<*>> = emptyList()
 ): GameSettings {
     val components = buildList {
         this += Chessboard.Settings[board]
-        this += TestScoreboard.Settings
         this.addAll(extra)
     }
     return GameSettings(name, false, ChessVariant[variant], components)

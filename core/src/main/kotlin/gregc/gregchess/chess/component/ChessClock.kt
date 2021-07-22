@@ -13,8 +13,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     }
 
 
-    data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
-        Component.Settings<ChessClock>, Config by ComponentConfig.require<ChessClock, Config>() {
+    data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) : Component.Settings<ChessClock> {
 
         fun getPGN() = buildString {
             if (type == Type.SIMPLE) {
@@ -40,10 +39,6 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 }
             }
         }
-    }
-
-    interface Config {
-        val timeFormat: String
     }
 
     data class Time(
@@ -83,24 +78,22 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) = when (e) {
-        GameBaseEvent.START -> start()
-        GameBaseEvent.STOP -> stop()
-        GameBaseEvent.UPDATE -> update()
-        else -> {}
+    fun handleEvents(e: GameBaseEvent) {
+        when (e) {
+            GameBaseEvent.START -> if (settings.type == Type.FIXED) startTimer()
+            GameBaseEvent.STOP -> stopTime = LocalDateTime.now()
+            GameBaseEvent.UPDATE ->
+                Side.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
+            else -> {}
+        }
     }
 
-    private fun start() {
-
+    @ChessEventHandler
+    fun addProperties(e: AddPropertiesEvent) {
         if (settings.type == Type.FIXED) {
-            game.scoreboard.game("TimeRemainingSimple") {
-                getTimeRemaining(game.currentTurn).format(settings.timeFormat) ?: settings.timeFormat
-            }
-            startTimer()
+            e.game("time_remaining_simple".asIdent()) { getTimeRemaining(game.currentTurn) }
         } else {
-            game.scoreboard.player("TimeRemaining") {
-                getTimeRemaining(it).format(settings.timeFormat) ?: settings.timeFormat
-            }
+            e.player("time_remaining".asIdent()) { getTimeRemaining(it) }
         }
     }
 
@@ -112,8 +105,6 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         }
         started = true
     }
-
-    private fun update() = Side.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
 
     @ChessEventHandler
     fun endTurn(e: TurnEvent) {
@@ -151,10 +142,6 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 )
             }
         }
-    }
-
-    private fun stop() {
-        stopTime = LocalDateTime.now()
     }
 
     fun addTime(side: Side, addition: Duration) {

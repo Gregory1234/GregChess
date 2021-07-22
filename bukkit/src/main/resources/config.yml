@@ -250,5 +250,4 @@ Scoreboard:
   TimeRemaining: "time"
   TimeRemainingSimple: "Time remaining"
 
-Clock:
-  TimeFormat: "mm:ss.S"
+TimeFormat: "mm:ss.S"

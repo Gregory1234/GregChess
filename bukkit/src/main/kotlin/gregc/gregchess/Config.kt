@@ -1,7 +1,5 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.component.ChessClock
-import gregc.gregchess.chess.component.ComponentConfig
 import org.bukkit.configuration.ConfigurationSection
 
 val config: ConfigurationSection get() = GregChess.plugin.config
@@ -12,13 +10,4 @@ class LocalizedString(private val section: ConfigurationSection, private val pat
     fun get(lang: String): String =
         (section.getString(path) ?: throw IllegalArgumentException(lang + "/" + section.currentPath + "." + path))
         .format(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray())
-}
-
-fun ComponentConfig.initBukkit() {
-    this[ChessClock::class] = BukkitClockConfig
-}
-
-object BukkitClockConfig: ChessClock.Config {
-    override val timeFormat: String
-        get() = config.getString("Clock.TimeFormat")!!
 }
