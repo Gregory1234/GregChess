@@ -37,12 +37,12 @@ object GregChess : Listener {
     val plugin
         get() = Plugin.INSTANCE
 
-    private val CLOCK_NOT_FOUND = ErrorMsg("ClockNotFound")
-    private val ENGINE_NOT_FOUND = ErrorMsg("EngineNotFound")
-    private val STOCKFISH_NOT_FOUND = ErrorMsg("StockfishNotFound")
-    private val PIECE_NOT_FOUND = ErrorMsg("PieceNotFound")
-    private val GAME_NOT_FOUND = ErrorMsg("GameNotFound")
-    private val NOTHING_TO_TAKEBACK = ErrorMsg("NothingToTakeback")
+    private val CLOCK_NOT_FOUND = err("ClockNotFound")
+    private val ENGINE_NOT_FOUND = err("EngineNotFound")
+    private val STOCKFISH_NOT_FOUND = err("StockfishNotFound")
+    private val PIECE_NOT_FOUND = err("PieceNotFound")
+    private val GAME_NOT_FOUND = err("GameNotFound")
+    private val NOTHING_TO_TAKEBACK = err("NothingToTakeback")
 
     private val BOARD_OP_DONE = message("BoardOpDone")
     private val SKIPPED_TURN = message("SkippedTurn")

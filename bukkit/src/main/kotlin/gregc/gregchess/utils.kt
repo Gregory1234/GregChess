@@ -93,7 +93,7 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
-    p.sendMessage(e.error.msg.get(p.lang).chatColor())
+    p.sendMessage(e.error.get(p.lang).chatColor())
     err(e)
 }
 
@@ -119,60 +119,50 @@ fun World.getBlockAt(l: Loc) = getBlockAt(l.x, l.y, l.z)
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
-data class ErrorMsg(val standardName: String) {
-    companion object {
-        private val errors = mutableListOf<ErrorMsg>()
-    }
-    init {
-        errors += this
-    }
-
-    val msg get() = config.getLocalizedString("Message.Error.$standardName")
-}
-
 @JvmField
-val WRONG_ARGUMENTS_NUMBER = ErrorMsg("WrongArgumentsNumber")
+val WRONG_ARGUMENTS_NUMBER = err("WrongArgumentsNumber")
 @JvmField
-val WRONG_ARGUMENT = ErrorMsg("WrongArgument")
+val WRONG_ARGUMENT = err("WrongArgument")
 @JvmField
-val NO_PERMISSION = ErrorMsg("NoPermission")
+val NO_PERMISSION = err("NoPermission")
 @JvmField
-val NOT_PLAYER = ErrorMsg("NotPlayer")
+val NOT_PLAYER = err("NotPlayer")
 @JvmField
-val PLAYER_NOT_FOUND = ErrorMsg("PlayerNotFound")
+val PLAYER_NOT_FOUND = err("PlayerNotFound")
 @JvmField
-val WRONG_DURATION_FORMAT = ErrorMsg("WrongDurationFormat")
+val WRONG_DURATION_FORMAT = err("WrongDurationFormat")
 @JvmField
-val YOU_IN_GAME = ErrorMsg("InGame.You")
+val YOU_IN_GAME = err("InGame.You")
 @JvmField
-val OPPONENT_IN_GAME = ErrorMsg("InGame.Opponent")
+val OPPONENT_IN_GAME = err("InGame.Opponent")
 @JvmField
-val YOU_NOT_IN_GAME = ErrorMsg("NotInGame.You")
+val YOU_NOT_IN_GAME = err("NotInGame.You")
 @JvmField
-val PLAYER_NOT_IN_GAME = ErrorMsg("NotInGame.Player")
+val PLAYER_NOT_IN_GAME = err("NotInGame.Player")
 @JvmField
-val OPPONENT_NOT_HUMAN = ErrorMsg("NotHuman.Opponent")
+val OPPONENT_NOT_HUMAN = err("NotHuman.Opponent")
 
 fun message(n: String) = config.getLocalizedString( "Message.$n")
 fun title(n: String) = config.getLocalizedString( "Title.$n")
+fun err(n: String) = config.getLocalizedString("Message.Error.$n")
 
 
-class CommandException(val error: ErrorMsg, cause: Throwable? = null) : Exception(cause) {
+class CommandException(val error: LocalizedString, cause: Throwable? = null) : Exception(cause) {
 
     override val message: String
-        get() = "Uncaught command error: ${error.standardName}"
+        get() = "Uncaught command error: ${error.path}"
 }
 
-fun cRequire(e: Boolean, msg: ErrorMsg) {
+fun cRequire(e: Boolean, msg: LocalizedString) {
     contract {
         returns() implies e
     }
     if (!e) throw CommandException(msg)
 }
 
-fun <T> T?.cNotNull(msg: ErrorMsg): T = this ?: throw CommandException(msg)
+fun <T> T?.cNotNull(msg: LocalizedString): T = this ?: throw CommandException(msg)
 
-inline fun <reified T, reified R : T> T.cCast(msg: ErrorMsg): R = (this as? R).cNotNull(msg)
+inline fun <reified T, reified R : T> T.cCast(msg: LocalizedString): R = (this as? R).cNotNull(msg)
 
 
 fun cPerms(p: CommandSender, perm: String) {

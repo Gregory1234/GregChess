@@ -24,7 +24,7 @@ object SettingsManager {
 
     private val componentParsers = mutableMapOf<KClass<out Component.Settings<*>>, (ConfigurationSection) -> Component.Settings<*>?>()
 
-    private val NO_ARENAS = ErrorMsg("NoArenas")
+    private val NO_ARENAS = err("NoArenas")
 
     fun start() {
         this += { ArenaManager.freeAreas.firstOrNull().cNotNull(NO_ARENAS) }
