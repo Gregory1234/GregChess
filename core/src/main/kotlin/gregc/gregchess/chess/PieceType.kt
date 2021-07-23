@@ -16,6 +16,8 @@ data class PieceType(
         values += this
     }
 
+    override fun toString(): String = id.toString()
+
     companion object {
 
         private val values = mutableListOf<PieceType>()

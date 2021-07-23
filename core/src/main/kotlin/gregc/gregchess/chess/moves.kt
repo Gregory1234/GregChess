@@ -30,7 +30,7 @@ abstract class MoveCandidate(
 ) {
 
     override fun toString() =
-        "MoveCandidate(piece=$piece, target=${target.pos}, pass=[${pass.joinToString()}], help=[${help.joinToString()}], needed=[${needed.joinToString()}], control=${control?.pos}, promotion=$promotion, mustCapture=$mustCapture, display=${display.pos})"
+        "MoveCandidate(piece=${piece.piece}, target=${target.pos}, pass=[${pass.joinToString()}], help=[${help.map{it.piece}.joinToString()}], needed=[${needed.joinToString()}], control=${control?.pos}, promotion=$promotion, mustCapture=$mustCapture, display=${display.pos})"
 
     val origin = piece.square
 
@@ -236,7 +236,7 @@ interface PawnMovementConfig {
 object DefaultPawnConfig : PawnMovementConfig {
     override fun canDouble(piece: PieceInfo): Boolean = !piece.hasMoved
     override fun promotions(piece: PieceInfo): List<Piece> =
-        listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { Piece(it, piece.side) }
+        listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { it.of(piece.side) }
 }
 
 fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCandidate> = { piece ->

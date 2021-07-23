@@ -12,7 +12,7 @@ data class FEN(
     val chess960: Boolean = false
 ) {
     @JvmInline
-    value class BoardState(private val state: String) {
+    value class BoardState(val state: String) {
         companion object {
             fun fromPieces(pieces: Map<Pos, PieceInfo>): BoardState {
                 val rows = List(8) { ri ->
@@ -33,7 +33,7 @@ data class FEN(
                             append(e.digitToChar())
                     }
                 }
-                return BoardState(rows.joinToString("/"))
+                return BoardState(rows.reversed().joinToString("/"))
             }
         }
 
@@ -66,13 +66,13 @@ data class FEN(
         val type = PieceType.parseFromStandardChar(this)
         val side = if (isUpperCase()) Side.WHITE else Side.BLACK
         val hasMoved = type.hasMoved(this@FEN, p, side)
-        return PieceInfo(p, Piece(type, side), hasMoved)
+        return PieceInfo(p, type.of(side), hasMoved)
     }
 
     fun forEachSquare(f: (PieceInfo) -> Unit) = boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(p)) }
 
     override fun toString() = buildString {
-        append(boardState)
+        append(boardState.state)
         append(" ")
         append(currentTurn.standardChar)
         append(" ")

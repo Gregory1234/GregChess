@@ -14,6 +14,10 @@ data class Piece(val type: PieceType, val side: Side) {
         }
 }
 
+fun PieceType.of(side: Side) = Piece(this, side)
+val PieceType.white get() = of(Side.WHITE)
+val PieceType.black get() = of(Side.BLACK)
+
 data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)
 
 class CapturedPiece(val piece: Piece, val pos: CapturedPos, private val game: ChessGame) {

@@ -136,7 +136,7 @@ data class Square(val pos: Pos, val game: ChessGame) {
     override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, floor=$floor)"
 
     fun empty() {
-        piece = null
+        piece?.clear()
         bakedMoves = null
         variantMarker = null
         previousMoveMarker = null

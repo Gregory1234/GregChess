@@ -179,7 +179,7 @@ object GregChess : Listener {
                             game.board[Pos.parseFromString(this[2])]!!
                         val piece = PieceType.get(this[1].asIdent())
                         square.piece?.capture(p.side)
-                        square.piece = BoardPiece(Piece(piece, Side.valueOf(this[0])), square)
+                        square.piece = BoardPiece(piece.of(Side.valueOf(this[0])), square)
                         game.board.updateMoves()
                         player.human.sendMessage(BOARD_OP_DONE)
                     }

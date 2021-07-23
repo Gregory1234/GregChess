@@ -9,7 +9,7 @@ object Antichess : ChessVariant("antichess".asIdent()) {
     object AntichessPawnConfig : PawnMovementConfig {
         override fun promotions(piece: PieceInfo): List<Piece> =
             listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
-                .map { Piece(it, piece.side) }
+                .map { it.of(piece.side) }
     }
 
     override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when(piece.type) {

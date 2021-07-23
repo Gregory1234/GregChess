@@ -19,11 +19,11 @@ import java.util.logging.Logger
 
 object GregChess : ModInitializer {
     val CHESS_GROUP: ItemGroup = FabricItemGroupBuilder.build(ident("chess")) {
-        Piece(PieceType.PAWN, Side.WHITE).item.defaultStack
+        PieceType.PAWN.white.item.defaultStack
     }
 
     val PIECE_BLOCKS = PieceType.values().flatMap { t -> Side.values().map { s ->
-        val piece = Piece(t, s)
+        val piece = t.of(s)
         val block =
             if (t == PieceType.PAWN) PawnBlock(piece, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
             else TallPieceBlock(piece, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
@@ -31,7 +31,7 @@ object GregChess : ModInitializer {
     } }.toMap()
 
     val PIECE_ITEMS = PieceType.values().flatMap { t -> Side.values().map { s ->
-        val piece = Piece(t, s)
+        val piece = t.of(s)
         val block = piece.block
         val item =
             if (t == PieceType.PAWN) PawnItem(block, FabricItemSettings().group(CHESS_GROUP))
@@ -69,7 +69,7 @@ object GregChess : ModInitializer {
         glog = GregLogger(Logger.getLogger(MOD_NAME))
         PieceType.values().forEach { t ->
             Side.values().forEach { s ->
-                val piece = Piece(t, s)
+                val piece = t.of(s)
                 val block = piece.block
                 Registry.register(Registry.BLOCK, piece.id.fabric, block)
                 val item = piece.item

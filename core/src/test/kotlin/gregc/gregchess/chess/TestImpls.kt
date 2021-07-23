@@ -53,6 +53,9 @@ class TestHuman(name: String): HumanPlayer(name) {
     }
 
     override fun openPawnPromotionMenu(moves: List<MoveCandidate>) {
+        moves.first().let {
+            it.game.finishMove(it)
+        }
     }
 
     override fun showGameResults(side: Side, results: GameResults<*>) {
