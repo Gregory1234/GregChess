@@ -8,8 +8,7 @@ import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.ItemStack
+import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
@@ -24,17 +23,17 @@ import net.minecraft.world.*
 import java.util.*
 
 class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.PIECE_ENTITY_TYPE, pos, state) {
-    private var gameUniqueId: UUID? = null
-    val isGameless get() = gameUniqueId == null
+    private var gameUUID: UUID? = null
+    val isGameless get() = gameUUID == null
     override fun writeNbt(nbt: NbtCompound): NbtCompound {
         return nbt.apply {
-            if (gameUniqueId != null)
-                this.putUuid("GameUUID", gameUniqueId)
+            if (gameUUID != null)
+                this.putUuid("GameUUID", gameUUID)
         }
     }
     override fun readNbt(nbt: NbtCompound?) {
         try {
-            gameUniqueId = nbt?.getUuid("GameUUID")
+            gameUUID = nbt?.getUuid("GameUUID")
         } catch (e: IllegalArgumentException) {
             e.printStackTrace()
         }
@@ -77,6 +76,33 @@ abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEnti
             e.printStackTrace()
         }
     }
+}
+
+private fun ItemPlacementContext.canPlacePiece(): Boolean {
+    val data = stack.getSubNbt("BlockEntityTag")
+    try {
+        if (data?.getUuid("GameUUID") != null) {
+            if (side != Direction.UP)
+                return false
+            val b = world.getBlockState(blockPos.down())
+            if (b.block !is ChessboardFloorBlock)
+                return false
+        }
+    } catch (e: IllegalArgumentException) {
+        e.printStackTrace()
+        return false
+    }
+    return true
+}
+
+class PawnItem(block: Block?, settings: Settings) : BlockItem(block, settings) {
+    override fun canPlace(context: ItemPlacementContext, state: BlockState): Boolean =
+        context.canPlacePiece() && super.canPlace(context, state)
+}
+
+class TallPieceItem(block: Block?, settings: Settings) : TallBlockItem(block, settings) {
+    override fun canPlace(context: ItemPlacementContext, state: BlockState): Boolean =
+        context.canPlacePiece() && super.canPlace(context, state)
 }
 
 class PawnBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings)

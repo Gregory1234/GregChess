@@ -34,8 +34,8 @@ object GregChess : ModInitializer {
         val piece = Piece(t, s)
         val block = piece.block
         val item =
-            if (t == PieceType.PAWN) BlockItem(block, FabricItemSettings().group(CHESS_GROUP))
-            else TallBlockItem(block, FabricItemSettings().group(CHESS_GROUP).rarity(when {
+            if (t == PieceType.PAWN) PawnItem(block, FabricItemSettings().group(CHESS_GROUP))
+            else TallPieceItem(block, FabricItemSettings().group(CHESS_GROUP).rarity(when {
                 t.minor -> Rarity.UNCOMMON
                 t == PieceType.KING -> Rarity.EPIC
                 else -> Rarity.RARE
@@ -50,6 +50,10 @@ object GregChess : ModInitializer {
     val CHESSBOARD_FLOOR_BLOCK: Block = ChessboardFloorBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
     val CHESSBOARD_FLOOR_BLOCK_ITEM: Item = BlockItem(CHESSBOARD_FLOOR_BLOCK, FabricItemSettings().group(CHESS_GROUP))
 
+    val CHESSBOARD_FLOOR_ENTITY_TYPE: BlockEntityType<*> =
+        BlockEntityType.Builder.create({ a, b -> ChessboardFloorBlockEntity(a, b) }, CHESSBOARD_FLOOR_BLOCK).build(
+            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chessboard_floor"))
+
     val CHESS_CONTROLLER_BLOCK: Block = ChessControllerBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
     val CHESS_CONTROLLER_ITEM: Item = BlockItem(CHESS_CONTROLLER_BLOCK, FabricItemSettings().group(CHESS_GROUP))
 
@@ -57,8 +61,9 @@ object GregChess : ModInitializer {
         BlockEntityType.Builder.create({ a, b -> ChessControllerBlockEntity(a, b) }, CHESS_CONTROLLER_BLOCK).build(
             Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chess_controller"))
 
-    lateinit var CHESS_CONTROLLER_SCREEN_HANDLER_TYPE: ScreenHandlerType<ChessControllerGuiDescription>
-        private set
+    val CHESS_CONTROLLER_SCREEN_HANDLER_TYPE: ScreenHandlerType<ChessControllerGuiDescription> =
+        ScreenHandlerRegistry.registerSimple(ident("chess_controller")) {
+            syncId, inventory -> ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY) }
 
     override fun onInitialize() {
         glog = GregLogger(Logger.getLogger(MOD_NAME))
@@ -74,11 +79,10 @@ object GregChess : ModInitializer {
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)
         Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
         Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)
+        Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("chessboard_floor"), CHESSBOARD_FLOOR_ENTITY_TYPE)
         Registry.register(Registry.BLOCK, ident("chess_controller"), CHESS_CONTROLLER_BLOCK)
         Registry.register(Registry.ITEM, ident("chess_controller"), CHESS_CONTROLLER_ITEM)
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("chess_controller"), CHESS_CONTROLLER_ENTITY_TYPE)
-        CHESS_CONTROLLER_SCREEN_HANDLER_TYPE = ScreenHandlerRegistry.registerSimple(ident("chess_controller")) {
-                syncId, inventory -> ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY)
-        }
+
     }
 }
