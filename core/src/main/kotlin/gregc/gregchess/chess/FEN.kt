@@ -78,6 +78,7 @@ data class FEN(
         append(" ")
         append(castlingRightsToString(chess960, 'A', castlingRights.white))
         append(castlingRightsToString(chess960, 'a', castlingRights.black))
+        append(" ")
         append(enPassantSquare ?: "-")
         append(" ")
         append(halfmoveClock)

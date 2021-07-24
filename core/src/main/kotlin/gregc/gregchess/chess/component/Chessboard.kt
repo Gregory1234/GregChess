@@ -7,7 +7,6 @@ import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
-import kotlin.math.abs
 
 class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
     data class SetFenEvent(val FEN: FEN): ChessEvent
@@ -102,8 +101,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     @ChessEventHandler
     fun endTurn(e: TurnEvent) {
-        if (e.ending)
-            updateMoves()
         if (e == TurnEvent.END) {
             if (game.currentTurn == Side.BLACK) {
                 val wLast = (if (moves.size <= 1) null else moves[moves.size - 2])
@@ -114,7 +111,24 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                 fullMoveCounter++
             }
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
+            squares.values.forEach {  s ->
+                s.flags.forEach {
+                    it.timeLeft--
+                }
+            }
         }
+        if (e == TurnEvent.UNDO) {
+            squares.values.forEach { s ->
+                s.flags.forEach {
+                    it.timeLeft++
+                }
+                s.flags.removeIf {
+                    it.startTime.toInt() <= it.timeLeft
+                }
+            }
+        }
+        if (e.ending)
+            updateMoves()
     }
 
     @ChessEventHandler
@@ -175,13 +189,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         fen.forEachSquare { (pos, p, hm) ->
             this += BoardPiece(p, this[pos]!!, hm)
         }
-        if (fen.enPassantSquare != null) {
-            val pos = fen.enPassantSquare
-            val target = this[pos.plusR(1)] ?: this[pos.plusR(-1)]!!
-            val piece = target.piece!!
-            val origin = this[piece.pos.plusR(-2 * piece.side.direction)]!!
-            lastMove = MoveData(piece.piece, origin, target, "", true) {}
-        }
 
         movesSinceLastCapture = fen.halfmoveClock
 
@@ -189,8 +196,13 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
         if (fen.currentTurn != game.currentTurn)
             game.nextTurn()
-        else
-            updateMoves()
+
+
+        if (fen.enPassantSquare != null) {
+            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(EN_PASSANT_FLAG, 1u, 0))
+        }
+
+        updateMoves()
 
         boardHashes.clear()
         addBoardHash(fen)
@@ -211,8 +223,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             boardState,
             game.currentTurn,
             BySides(::castling),
-            lastMove?.takeIf { it.piece.type == PieceType.PAWN && abs(it.origin.pos.rank - it.target.pos.rank) == 2 }
-                ?.let { it.origin.pos.copy(rank = (it.origin.pos.rank + it.target.pos.rank) / 2) },
+            squares.values.firstOrNull { s -> s.flags.any { it.id == EN_PASSANT_FLAG && it.timeLeft >= 0 } }?.pos,
             movesSinceLastCapture,
             fullMoveCounter
         )

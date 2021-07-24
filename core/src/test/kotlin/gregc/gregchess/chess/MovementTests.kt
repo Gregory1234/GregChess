@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.asIdent
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -8,7 +9,7 @@ import kotlin.test.*
 class MovementTests {
     val humanA = TestHuman("a")
     val humanB = TestHuman("b")
-    val game = ChessGame(TestTimeManager(), testSettings("basic")).addPlayers {
+    val game = ChessGame(TestTimeManager(), testSettings("basic", variant = "capture_all".asIdent())).addPlayers {
         human(humanA, Side.WHITE, false)
         human(humanB, Side.BLACK, false)
     }.start()
@@ -65,8 +66,7 @@ class MovementTests {
     @Nested
     inner class Pawn {
         private fun setupPawn(pos: Pos, side: Side, hasMoved: Boolean, vararg added: Pair<Dir, Piece>): Collection<MoveCandidate> {
-            setup(PieceType.PAWN.of(side) at pos,
-                PieceType.KING.white at Dir(2, 0), PieceType.KING.black at Dir(4, 0), *added)
+            setup(PieceType.PAWN.of(side) at pos, *added)
             pos.hasMoved = hasMoved
             return movesFrom(pos)
         }

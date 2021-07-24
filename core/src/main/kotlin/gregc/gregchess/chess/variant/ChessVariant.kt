@@ -28,6 +28,8 @@ open class ChessVariant(val id: Identifier) {
         val ANTICHESS = Antichess
         @JvmField
         val HORDE = HordeChess
+        @JvmField
+        val CAPTURE_ALL = CaptureAll
 
         operator fun get(id: Identifier?) = when (id) {
             null -> NORMAL
@@ -90,6 +92,8 @@ open class ChessVariant(val id: Identifier) {
             }
 
         fun isValid(move: MoveCandidate): Boolean = with(move) {
+            if (flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.id == f && it.timeLeft >= 0 } == false }})
+                return false
 
             if (needed.any { p -> board[p].let { it?.piece != null && it.piece !in help } })
                 return false

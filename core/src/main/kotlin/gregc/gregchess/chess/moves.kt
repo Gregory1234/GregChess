@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.between
-import gregc.gregchess.rotationsOf
-import kotlin.math.abs
+import gregc.gregchess.*
 
 class MoveData(
     val piece: Piece, val origin: Square, val target: Square, val standardName: String,
@@ -25,6 +23,8 @@ class MoveData(
 abstract class MoveCandidate(
     val piece: BoardPiece, val target: Square, val floor: Floor,
     val pass: Collection<Pos>, val help: Collection<BoardPiece> = emptyList(), val needed: Collection<Pos> = pass,
+    val flagsNeeded: Collection<Pair<Pos, Identifier>> = emptyList(),
+    val flagsAdded: Collection<Pair<Pos, ChessFlag>> = emptyList(),
     val control: Square? = target, val promotion: Piece? = null,
     val mustCapture: Boolean = false, val display: Square = target
 ) {
@@ -41,6 +41,9 @@ abstract class MoveCandidate(
         piece.move(target)
         promotion?.let { piece.promote(it) }
         game.variant.finishMove(this)
+        flagsAdded.forEach { (p, f) ->
+            game.board[p]?.flags?.plusAssign(f)
+        }
         val hmc =
             if (piece.type == PieceType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
         val ch = checkForChecks(piece.side, game)
@@ -239,6 +242,9 @@ object DefaultPawnConfig : PawnMovementConfig {
         listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { it.of(piece.side) }
 }
 
+@JvmField
+val EN_PASSANT_FLAG = "en_passant".asIdent()
+
 fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCandidate> = { piece ->
 
     fun ifProm(promotion: Piece?, floor: Floor) =
@@ -248,7 +254,8 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
         (piece.info.takeIf { pos.rank in listOf(0, 7) }?.let { config.promotions(piece.info) } ?: listOf(null)).forEach(f)
 
     class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotion: Piece?) : MoveCandidate(
-        piece, target, ifProm(promotion, Floor.MOVE), listOfNotNull(pass), control = null, promotion = promotion
+        piece, target, ifProm(promotion, Floor.MOVE), listOfNotNull(pass), control = null, promotion = promotion,
+        flagsAdded = listOfNotNull(pass?.to(ChessFlag(EN_PASSANT_FLAG, 1u)))
     )
 
     class PawnCapture(piece: BoardPiece, target: Square, promotion: Piece?) : MoveCandidate(
@@ -256,7 +263,8 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
     )
 
     class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
-        MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true) {
+        MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true,
+        flagsNeeded = listOf(target.pos to EN_PASSANT_FLAG)) {
         override fun execute(): MoveData {
             val standardBase = baseStandardName()
             val hasMoved = piece.hasMoved
@@ -291,13 +299,11 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
                     this += PawnCapture(piece, t, it)
                 }
             }
-            val p = piece.square.board[piece.pos.plusF(s)]?.piece
-            val lm = piece.square.board.lastMove
-            if (p?.type == PieceType.PAWN && lm?.piece == p.piece && abs(lm.origin.pos.rank - lm.target.pos.rank) == 2) {
+            val p = piece.square.board[piece.pos.plusF(s)]
+            if (p != null)
                 piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let {
-                    this += EnPassantCapture(piece, it, p.square)
+                    this += EnPassantCapture(piece, it, p)
                 }
-            }
         }
     }
 }
