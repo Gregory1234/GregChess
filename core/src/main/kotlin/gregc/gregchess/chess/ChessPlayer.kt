@@ -1,5 +1,7 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.interact
+
 
 abstract class ChessPlayer(val name: String, val side: Side, protected val silent: Boolean, val game: ChessGame) {
 
@@ -59,10 +61,10 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         player.setItem(0, null)
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
-        if (chosenMoves.size != 1)
-            pawnPromotionScreen(chosenMoves.filter { it.promotion != null })
-        else
-            game.finishMove(chosenMoves.first())
+        val move = chosenMoves.first()
+        interact {
+            game.finishMove(move, move.promotions?.let { pawnPromotionScreen(it) })
+        }
     }
 
     private var firstTurn = true
@@ -88,7 +90,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         })
     }
 
-    private fun pawnPromotionScreen(moves: List<MoveCandidate>) = player.openPawnPromotionMenu(moves)
+    private suspend fun pawnPromotionScreen(promotions: Collection<Piece>) = player.openPawnPromotionMenu(promotions)
 }
 
 class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
@@ -103,8 +105,8 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
             val origin = Pos.parseFromString(str.take(2))
             val target = Pos.parseFromString(str.drop(2).take(2))
             val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(it) }
-            val move = game.board.getMoves(origin).first { it.display.pos == target && it.promotion?.type == promotion }
-            game.finishMove(move)
+            val move = game.board.getMoves(origin).first { it.display.pos == target }
+            game.finishMove(move, promotion?.of(side))
         }, { game.stop(drawBy(EndReason.ERROR)) })
     }
 }

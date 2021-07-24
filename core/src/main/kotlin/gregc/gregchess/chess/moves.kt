@@ -25,17 +25,21 @@ abstract class MoveCandidate(
     val pass: Collection<Pos>, val help: Collection<BoardPiece> = emptyList(), val needed: Collection<Pos> = pass,
     val flagsNeeded: Collection<Pair<Pos, Identifier>> = emptyList(),
     val flagsAdded: Collection<Pair<Pos, ChessFlag>> = emptyList(),
-    val control: Square? = target, val promotion: Piece? = null,
+    val control: Square? = target, val promotions: Collection<Piece>? = null,
     val mustCapture: Boolean = false, val display: Square = target
 ) {
 
     override fun toString() =
-        "MoveCandidate(piece=${piece.piece}, target=${target.pos}, pass=[${pass.joinToString()}], help=[${help.map{it.piece}.joinToString()}], needed=[${needed.joinToString()}], control=${control?.pos}, promotion=$promotion, mustCapture=$mustCapture, display=${display.pos})"
+        "MoveCandidate(piece=${piece.piece}, target=${target.pos}, pass=[${pass.joinToString()}], help=[${help.map{it.piece}.joinToString()}], needed=[${needed.joinToString()}], control=${control?.pos}, promotions=$promotions, mustCapture=$mustCapture, display=${display.pos})"
 
     val origin = piece.square
 
-    open fun execute(): MoveData {
-        val standardBase = baseStandardName()
+    open fun execute(promotion: Piece? = null): MoveData {
+        if ((promotion == null) != (promotions == null))
+            throw IllegalArgumentException(promotion.toString())
+        if (promotion != null && promotions != null && promotion !in promotions)
+            throw IllegalArgumentException(promotion.toString())
+        val standardBase = baseStandardName(promotion)
         val hasMoved = piece.hasMoved
         val ct = captured?.capture(piece.side)
         piece.move(target)
@@ -56,7 +60,7 @@ abstract class MoveCandidate(
         }
     }
 
-    open fun baseStandardName() = buildString {
+    open fun baseStandardName(promotion: Piece? = null) = buildString {
         if (piece.type != PieceType.PAWN) {
             append(piece.type.standardChar.uppercaseChar())
             append(getUniquenessCoordinate(piece, target))
@@ -64,11 +68,11 @@ abstract class MoveCandidate(
             append(origin.pos.fileStr)
         if (captured != null)
             append("x")
+        append(target.pos)
         promotion?.let {
             append("=")
             append(it.standardChar.uppercaseChar())
         }
-        append(target.pos)
     }
 
     fun render() {
@@ -173,8 +177,8 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
         Floor.SPECIAL, pass, help = listOf(piece, rook), needed = needed,
         control = null, display = display
     ) {
-        override fun execute(): MoveData {
-            val base = baseStandardName()
+        override fun execute(promotion: Piece?): MoveData {
+            val base = baseStandardName(promotion)
             val rookOrigin = rook.square
             BoardPiece.autoMove(mapOf(piece to target, rook to rookTarget))
             val ch = checkForChecks(piece.side, game)
@@ -187,7 +191,7 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
             }
         }
 
-        override fun baseStandardName() = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
+        override fun baseStandardName(promotion: Piece?) = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
     }
 
     val castles = mutableListOf<MoveCandidate>()
@@ -247,26 +251,25 @@ val EN_PASSANT_FLAG = "en_passant".asIdent()
 
 fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCandidate> = { piece ->
 
-    fun ifProm(promotion: Piece?, floor: Floor) =
-        if (promotion == null) floor else Floor.SPECIAL
+    fun ifProm(promotions: Any?, floor: Floor) =
+        if (promotions == null) floor else Floor.SPECIAL
 
-    fun handlePromotion(pos: Pos, f: (Piece?) -> Unit) =
-        (piece.info.takeIf { pos.rank in listOf(0, 7) }?.let { config.promotions(piece.info) } ?: listOf(null)).forEach(f)
+    fun promotions(pos: Pos) = if (pos.rank in listOf(0, 7)) config.promotions(piece.info) else null
 
-    class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotion: Piece?) : MoveCandidate(
-        piece, target, ifProm(promotion, Floor.MOVE), listOfNotNull(pass), control = null, promotion = promotion,
+    class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotions: Collection<Piece>?) : MoveCandidate(
+        piece, target, ifProm(promotions, Floor.MOVE), listOfNotNull(pass), control = null, promotions = promotions,
         flagsAdded = listOfNotNull(pass?.to(ChessFlag(EN_PASSANT_FLAG, 1u)))
     )
 
-    class PawnCapture(piece: BoardPiece, target: Square, promotion: Piece?) : MoveCandidate(
-        piece, target, ifProm(promotion, Floor.CAPTURE), emptyList(), promotion = promotion, mustCapture = true
+    class PawnCapture(piece: BoardPiece, target: Square, promotions: Collection<Piece>?) : MoveCandidate(
+        piece, target, ifProm(promotions, Floor.CAPTURE), emptyList(), promotions = promotions, mustCapture = true
     )
 
     class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
         MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true,
         flagsNeeded = listOf(target.pos to EN_PASSANT_FLAG)) {
-        override fun execute(): MoveData {
-            val standardBase = baseStandardName()
+        override fun execute(promotion: Piece?): MoveData {
+            val standardBase = baseStandardName(promotion)
             val hasMoved = piece.hasMoved
             val ct = captured?.capture(piece.side)
             piece.move(target)
@@ -283,21 +286,15 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
 
     buildList {
         piece.square.board[piece.pos.plusR(piece.side.direction)]?.let { t ->
-            handlePromotion(t.pos) {
-                this += PawnPush(piece, t, null, it)
-            }
+            this += PawnPush(piece, t, null, promotions(t.pos))
         }
         if (config.canDouble(piece.info))
             piece.square.board[piece.pos.plusR(2 * piece.side.direction)]?.let { t ->
-                handlePromotion(t.pos) {
-                    this += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), it)
-                }
+                this += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), promotions(t.pos))
             }
         for (s in listOf(-1, 1)) {
             piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let { t ->
-                handlePromotion(t.pos) {
-                    this += PawnCapture(piece, t, it)
-                }
+                this += PawnCapture(piece, t, promotions(t.pos))
             }
             val p = piece.square.board[piece.pos.plusF(s)]
             if (p != null)

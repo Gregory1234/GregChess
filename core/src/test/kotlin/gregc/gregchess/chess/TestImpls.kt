@@ -52,11 +52,7 @@ class TestHuman(name: String): HumanPlayer(name) {
     override fun setItem(i: Int, piece: Piece?) {
     }
 
-    override fun openPawnPromotionMenu(moves: List<MoveCandidate>) {
-        moves.first().let {
-            it.game.finishMove(it)
-        }
-    }
+    override suspend fun openPawnPromotionMenu(promotions: Collection<Piece>): Piece = promotions.first()
 
     override fun showGameResults(side: Side, results: GameResults<*>) {
     }

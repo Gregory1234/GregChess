@@ -259,9 +259,9 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     operator fun get(side: Side): ChessPlayer = require<GameState.WithPlayers>()[side]
 
-    fun finishMove(move: MoveCandidate) {
+    fun finishMove(move: MoveCandidate, promotion: Piece?) {
         requireRunning()
-        val data = move.execute()
+        val data = move.execute(promotion)
         board.lastMove?.clear()
         board.lastMove = data
         board.lastMove?.render()

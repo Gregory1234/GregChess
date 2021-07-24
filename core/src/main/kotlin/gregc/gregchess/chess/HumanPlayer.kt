@@ -14,7 +14,7 @@ abstract class HumanPlayer(val name: String) {
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendFEN(fen: FEN)
     abstract fun setItem(i: Int, piece: Piece?)
-    abstract fun openPawnPromotionMenu(moves: List<MoveCandidate>)
+    abstract suspend fun openPawnPromotionMenu(promotions: Collection<Piece>): Piece
     abstract fun showGameResults(side: Side, results: GameResults<*>)
     abstract fun showGameResults(results: GameResults<*>)
     abstract fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>)
