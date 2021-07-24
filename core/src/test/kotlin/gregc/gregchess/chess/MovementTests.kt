@@ -38,26 +38,36 @@ class MovementTests {
 
     private fun movesFrom(p: Pos) = game.board[p]?.bakedLegalMoves.orEmpty()
 
-    private inline fun forEachPosIn(start: Pos, end: Pos, fn: (Pos) -> Unit) {
+    private inline fun forEachPosIn(start: Pos = Pos(0,0), end: Pos = Pos(7,7), fn: (Pos) -> Unit) {
         for (f in start.file..end.file)
             for (r in start.rank..end.rank)
                 fn(Pos(f, r))
     }
 
+    private fun setup(piece: PieceInfo, vararg added: Pair<Dir, Piece>) {
+        val (f, r) = piece.pos
+        clearBoard(
+            piece,
+            *added.map { (d, p) ->
+                p at Pos((f + d.first)%8, (r + d.second)%8)
+            }.toTypedArray()
+        )
+    }
+
+    private var Pos.hasMoved
+        get() = game.board[this]?.piece?.hasMoved ?: false
+        set(value) {
+            game.board[this]?.piece?.force(value)
+            game.board.updateMoves()
+        }
+
+
     @Nested
     inner class Pawn {
         private fun setupPawn(pos: Pos, side: Side, hasMoved: Boolean, vararg added: Pair<Dir, Piece>): Collection<MoveCandidate> {
-            val (f, r) = pos
-            clearBoard(
-                PieceType.PAWN.of(side) at pos,
-                PieceType.KING.white at Pos((f + 2) % 8, r),
-                PieceType.KING.black at Pos((f + 4) % 8, r),
-                *added.map { (d, p) ->
-                    p at Pos((f + d.first)%8, (r + d.second)%8)
-                }.toTypedArray()
-            )
-            game.board[Pos(f, r)]?.piece?.force(hasMoved)
-            game.board.updateMoves()
+            setup(PieceType.PAWN.of(side) at pos,
+                PieceType.KING.white at Dir(2, 0), PieceType.KING.black at Dir(4, 0), *added)
+            pos.hasMoved = hasMoved
             return movesFrom(pos)
         }
 
@@ -240,8 +250,7 @@ class MovementTests {
         fun `can en passant opposite colored pawns`() {
             forEachPosIn(Pos(0, 1), Pos(6, 5)) { pos ->
                 setupPawn(pos, Side.WHITE, true, PieceType.PAWN.black at Dir(1, 2))
-                game.board[pos + Dir(1, 2)]?.piece?.force(false)
-                game.nextTurn()
+                (pos + Dir(1, 2)).hasMoved = false
                 (game.players[Side.BLACK] as HumanChessPlayer).run {
                     pickUp(pos + Dir(1, 2))
                     makeMove(pos + Dir(1,0))
@@ -250,8 +259,7 @@ class MovementTests {
             }
             forEachPosIn(Pos(0, 2), Pos(6, 6)) { pos ->
                 setupPawn(pos, Side.BLACK, true, PieceType.PAWN.white at Dir(1, -2))
-                game.board[pos + Dir(1, -2)]?.piece?.force(false)
-                game.board.updateMoves()
+                (pos + Dir(1, -2)).hasMoved = false
                 (game.players[Side.WHITE] as HumanChessPlayer).run {
                     pickUp(pos + Dir(1, -2))
                     makeMove(pos + Dir(1,0))
@@ -263,8 +271,7 @@ class MovementTests {
 
             forEachPosIn(Pos(1, 1), Pos(7, 5)) { pos ->
                 setupPawn(pos, Side.WHITE, true, PieceType.PAWN.black at Dir(-1, 2))
-                game.board[pos + Dir(-1, 2)]?.piece?.force(false)
-                game.nextTurn()
+                (pos + Dir(-1, 2)).hasMoved = false
                 (game.players[Side.BLACK] as HumanChessPlayer).run {
                     pickUp(pos + Dir(-1, 2))
                     makeMove(pos + Dir(-1,0))
@@ -273,8 +280,7 @@ class MovementTests {
             }
             forEachPosIn(Pos(1, 2), Pos(7, 6)) { pos ->
                 setupPawn(pos, Side.BLACK, true, PieceType.PAWN.white at Dir(-1, -2))
-                game.board[pos + Dir(-1, -2)]?.piece?.force(false)
-                game.board.updateMoves()
+                (pos + Dir(-1, -2)).hasMoved = false
                 (game.players[Side.WHITE] as HumanChessPlayer).run {
                     pickUp(pos + Dir(-1, -2))
                     makeMove(pos + Dir(-1,0))
