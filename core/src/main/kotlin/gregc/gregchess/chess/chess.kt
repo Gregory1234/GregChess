@@ -1,16 +1,20 @@
 package gregc.gregchess.chess
 
-enum class Side(val standardChar: Char, val direction: Int) {
-    WHITE('w', 1),
-    BLACK('b', -1);
+enum class Side(val standardChar: Char, val direction: Int, val endRank: Int) {
+    WHITE('w', 1, 7),
+    BLACK('b', -1, 0);
 
     operator fun not(): Side = if (this == WHITE) BLACK else WHITE
     operator fun inc(): Side = not()
+
+    val dir get() = Dir(0, direction)
 
     companion object {
         fun parseFromStandardChar(c: Char) =
             values().firstOrNull { it.standardChar == c }
                 ?: throw IllegalArgumentException(c.toString())
+
+        inline fun forEach(block: (Side) -> Unit) = values().forEach(block)
     }
 
 }

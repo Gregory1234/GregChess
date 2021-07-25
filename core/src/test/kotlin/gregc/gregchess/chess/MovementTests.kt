@@ -1,8 +1,11 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.asIdent
+import gregc.gregchess.times
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Test
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.test.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -20,29 +23,34 @@ class MovementTests {
     private infix fun Piece.at(p: Pos) = PieceInfo(p, this, false)
     private infix fun Piece.at(d: Dir) = d to this
 
-    private data class MoveSpec(val target: Pos, val isCapture: Boolean = false, val promotions: Collection<Piece>? = null, val negate: Boolean = false)
-
-    private fun MoveCandidate.follows(spec: MoveSpec) =
-        target.pos == spec.target && (captured != null) == spec.isCapture && promotions == spec.promotions
-
-    private fun Collection<MoveCandidate>.assertFollows(strict: Boolean, e: String, vararg specs: MoveSpec) {
-        val sc = specs.toMutableList()
-        forEach { c ->
-            val s = sc.firstOrNull { c.follows(it) }
-            if (strict)
-                assertNotNull(s, "$e, $c\n$sc\n${specs.toList()}")
-            assertFalse(s?.negate == true)
-            sc.remove(s)
-        }
-        assertTrue(sc.all { it.negate }, "$e\n$this\n$sc")
-    }
-
     private fun movesFrom(p: Pos) = game.board[p]?.bakedLegalMoves.orEmpty()
 
-    private inline fun forEachPosIn(start: Pos = Pos(0,0), end: Pos = Pos(7,7), fn: (Pos) -> Unit) {
-        for (f in start.file..end.file)
-            for (r in start.rank..end.rank)
-                fn(Pos(f, r))
+    private inline fun forEachPosIn(start: Pos = Pos(0,0), end: Pos = Pos(7,7), side: Side = Side.WHITE, u: Int = 0, fn: (Pos) -> Unit) {
+        for (f in max(start.file+u, 0)..min(end.file+u, 7))
+            when(side) {
+                Side.WHITE -> {
+                    for (r in start.rank..end.rank)
+                        fn(Pos(f, r))
+                }
+                Side.BLACK -> {
+                    for (r in 7-end.rank..7-start.rank)
+                        fn(Pos(f, r))
+                }
+            }
+    }
+
+    private fun Collection<MoveCandidate>.assertSize(s: Int) = apply {
+        assertSame(s, size)
+    }
+
+    private inline fun Collection<MoveCandidate>.assertMove(target: Pos, block: MoveCandidate.() -> Unit) = apply {
+        val move = firstOrNull { it.target.pos == target }
+        assertNotNull(move, target.toString()).block()
+    }
+
+    private fun Collection<MoveCandidate>.assertNoMove(target: Pos) = apply {
+        val move = firstOrNull { it.target.pos == target }
+        assertNull(move, target.toString())
     }
 
     private fun setup(piece: PieceInfo, vararg added: Pair<Dir, Piece>) {
@@ -62,6 +70,10 @@ class MovementTests {
             game.board.updateMoves()
         }
 
+    private fun MoveCandidate.assertNotCapture() = assertNull(captured)
+
+    private fun MoveCandidate.assertCapture(target: Pos = this.target.pos) = assertEquals(captured?.pos, target)
+
 
     @Nested
     inner class Pawn {
@@ -74,42 +86,37 @@ class MovementTests {
         private fun promotions(s: Side) =
             listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { it.of(s) }
 
+        private fun MoveCandidate.assertNotPromoting() = assertNull(promotions)
+
+        private fun MoveCandidate.assertPromoting() = assertContentEquals(promotions, promotions(piece.side))
+
         @Nested
         inner class IfHasMoved {
             @Test
             fun `can only move 1 space forward`() {
-                forEachPosIn(Pos(0,0), Pos(7,5)) { pos ->
-                    setupPawn(pos, Side.WHITE, true)
-                        .assertFollows(true, pos.toString(), MoveSpec(pos.plusR(1)))
-                }
-                forEachPosIn(Pos(0,2), Pos(7,7)) { pos ->
-                    setupPawn(pos, Side.BLACK, true)
-                        .assertFollows(true, pos.toString(), MoveSpec(pos.plusR(-1)))
+                Side.forEach { s ->
+                    forEachPosIn(Pos(0,0), Pos(7,5), s) { pos ->
+                        setupPawn(pos, s, true).assertSize(1)
+                            .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
+                    }
                 }
             }
             @Test
             fun `can promote from 1 space away`() {
-                forEachPosIn(Pos(0,6), Pos(7,6)) { pos ->
-                    setupPawn(pos, Side.WHITE, true)
-                        .assertFollows(true, pos.toString(),
-                            MoveSpec(pos.copy(rank=7), promotions = promotions(Side.WHITE)))
-                }
-                forEachPosIn(Pos(0,1), Pos(7,1)) { pos ->
-                    setupPawn(pos, Side.BLACK, true)
-                        .assertFollows(true, pos.toString(),
-                            MoveSpec(pos.copy(rank=0), promotions = promotions(Side.BLACK)))
+                Side.forEach { s ->
+                    forEachPosIn(Pos(0, 6), Pos(7, 6), s) { pos ->
+                        setupPawn(pos, s, true).assertSize(1)
+                            .assertMove(pos + s.dir) { assertNotCapture(); assertPromoting() }
+                    }
                 }
             }
             @Test
             fun `is blocked by pieces`() {
-                Side.values().forEach { blockSide ->
-                    forEachPosIn(Pos(0,0), Pos(7,6)) { pos ->
-                        setupPawn(pos, Side.WHITE, true, PieceType.ROOK.of(blockSide) at Dir(0,1))
-                            .assertFollows(true, pos.toString())
-                    }
-                    forEachPosIn(Pos(0,1), Pos(7,7)) { pos ->
-                        setupPawn(pos, Side.BLACK, true, PieceType.ROOK.of(blockSide) at Dir(0,-1))
-                            .assertFollows(true, pos.toString())
+                Side.forEach { s ->
+                    Side.forEach { blockSide ->
+                        forEachPosIn(Pos(0,0), Pos(7,6), s) { pos ->
+                            setupPawn(pos, s, true, PieceType.ROOK.of(blockSide) at s.dir).assertSize(0)
+                        }
                     }
                 }
             }
@@ -119,180 +126,108 @@ class MovementTests {
         inner class IfHasNotMoved {
             @Test
             fun `can only move 1 or 2 spaces forward`() {
-                forEachPosIn(Pos(0,0), Pos(7,4)) { pos ->
-                    setupPawn(pos, Side.WHITE, false)
-                        .assertFollows(true, pos.toString(),
-                            MoveSpec(pos.plusR(1)), MoveSpec(pos.plusR(2)))
-                }
-                forEachPosIn(Pos(0,3), Pos(7,7)) { pos ->
-                    setupPawn(pos, Side.BLACK, false)
-                        .assertFollows(true, pos.toString(),
-                            MoveSpec(pos.plusR(-1)), MoveSpec(pos.plusR(-2)))
+                Side.forEach { s ->
+                    forEachPosIn(Pos(0, 0), Pos(7, 4), s) { pos ->
+                        setupPawn(pos, s, false).assertSize(2)
+                            .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
+                            .assertMove(pos + s.dir * 2) { assertNotCapture(); assertNotPromoting() }
+                    }
                 }
             }
             @Test
             fun `can promote from 1 space away`() {
-                forEachPosIn(Pos(0,6), Pos(7,6)) { pos ->
-                    setupPawn(pos, Side.WHITE, false)
-                        .assertFollows(true, pos.toString(),
-                            MoveSpec(pos.copy(rank=7), promotions = promotions(Side.WHITE)))
-                }
-                forEachPosIn(Pos(0,1), Pos(7,1)) { pos ->
-                    setupPawn(pos, Side.BLACK, false)
-                        .assertFollows(true, pos.toString(),
-                            MoveSpec(pos.copy(rank=0), promotions = promotions(Side.BLACK)))
+                Side.forEach { s ->
+                    forEachPosIn(Pos(0, 6), Pos(7, 6), s) { pos ->
+                        setupPawn(pos, s, false).assertSize(1)
+                            .assertMove(pos + s.dir) { assertNotCapture(); assertPromoting() }
+                    }
                 }
             }
             @Test
             fun `can promote from 2 spaces away`() {
-                forEachPosIn(Pos(0,5), Pos(7,5)) { pos ->
-                    setupPawn(pos, Side.WHITE, false)
-                        .assertFollows(true, pos.toString(), MoveSpec(pos.copy(rank=6)),
-                            MoveSpec(pos.copy(rank=7), promotions = promotions(Side.WHITE)))
-                }
-                forEachPosIn(Pos(0,2), Pos(7,2)) { pos ->
-                    setupPawn(pos, Side.BLACK, false)
-                        .assertFollows(true, pos.toString(), MoveSpec(pos.copy(rank=1)),
-                            MoveSpec(pos.copy(rank=0), promotions = promotions(Side.BLACK)))
+                Side.forEach { s ->
+                    forEachPosIn(Pos(0, 5), Pos(7, 5), s) { pos ->
+                        setupPawn(pos, s, false).assertSize(2)
+                            .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
+                            .assertMove(pos + s.dir * 2) { assertNotCapture(); assertPromoting() }
+                    }
                 }
             }
             @Test
             fun `is blocked by pieces from 1 space away`() {
-                Side.values().forEach { blockSide ->
-                    forEachPosIn(Pos(0,0), Pos(7,6)) { pos ->
-                        setupPawn(pos, Side.WHITE, false, PieceType.ROOK.of(blockSide) at Dir(0,1))
-                            .assertFollows(true, pos.toString())
-                    }
-                    forEachPosIn(Pos(0,1), Pos(7,7)) { pos ->
-                        setupPawn(pos, Side.BLACK, false, PieceType.ROOK.of(blockSide) at Dir(0,-1))
-                            .assertFollows(true, pos.toString())
+                Side.forEach { s ->
+                    Side.forEach { blockSide ->
+                        forEachPosIn(Pos(0, 0), Pos(7, 6), s) { pos ->
+                            setupPawn(pos, s, false, PieceType.ROOK.of(blockSide) at s.dir).assertSize(0)
+                        }
                     }
                 }
             }
             @Test
             fun `is blocked by pieces from 2 spaces away`() {
-                Side.values().forEach { blockSide ->
-                    forEachPosIn(Pos(0, 0), Pos(7, 5)) { pos ->
-                        setupPawn(pos, Side.WHITE, false, PieceType.ROOK.of(blockSide) at Dir(0, 2))
-                            .assertFollows(true, pos.toString(), MoveSpec(pos.plusR(1)))
-                    }
-                    forEachPosIn(Pos(0, 2), Pos(7, 7)) { pos ->
-                        setupPawn(pos, Side.BLACK, false, PieceType.ROOK.of(blockSide) at Dir(0, -2))
-                            .assertFollows(true, pos.toString(), MoveSpec(pos.plusR(-1)))
+                Side.forEach { s ->
+                    Side.values().forEach { blockSide ->
+                        forEachPosIn(Pos(0, 0), Pos(7, 5), s) { pos ->
+                            setupPawn(pos, s, false, PieceType.ROOK.of(blockSide) at s.dir * 2).assertSize(1)
+                                .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
+                        }
                     }
                 }
             }
         }
 
+
         @Test
         fun `can capture opposite colored pieces diagonally`() {
-            forEachPosIn(Pos(0, 0), Pos(6, 5)) { pos ->
-                setupPawn(pos, Side.WHITE, false, PieceType.ROOK.black at Dir(1, 1))
-                    .assertFollows(false, pos.toString(), MoveSpec(pos + Dir(1, 1), true))
-            }
-            forEachPosIn(Pos(0, 2), Pos(6, 7)) { pos ->
-                setupPawn(pos, Side.BLACK, false, PieceType.ROOK.white at Dir(1, -1))
-                    .assertFollows(false, pos.toString(), MoveSpec(pos + Dir(1, -1), true))
-            }
-
-            forEachPosIn(Pos(1, 0), Pos(7, 5)) { pos ->
-                setupPawn(pos, Side.WHITE, false, PieceType.ROOK.black at Dir(-1, 1))
-                    .assertFollows(false, pos.toString(), MoveSpec(pos + Dir(-1, 1), true))
-            }
-            forEachPosIn(Pos(1, 2), Pos(7, 7)) { pos ->
-                setupPawn(pos, Side.BLACK, false, PieceType.ROOK.white at Dir(-1, -1))
-                    .assertFollows(false, pos.toString(), MoveSpec(pos + Dir(-1, -1), true))
+            Side.forEach { s ->
+                listOf(1, -1).forEach { u ->
+                    forEachPosIn(Pos(0, 0), Pos(7, 5), s, -u) { pos ->
+                        val d = Dir(u, s.direction)
+                        setupPawn(pos, s, false, PieceType.ROOK.of(!s) at d)
+                            .assertMove(pos + d) { assertCapture(); assertNotPromoting() }
+                    }
+                }
             }
         }
 
         @Test
         fun `can promote when capturing opposite colored pieces diagonally`() {
-            forEachPosIn(Pos(0, 6), Pos(6, 6)) { pos ->
-                setupPawn(pos, Side.WHITE, true, PieceType.ROOK.black at Dir(1, 1))
-                    .assertFollows(false, pos.toString(),
-                        MoveSpec(pos + Dir(1,1), true, promotions = promotions(Side.WHITE)))
-            }
-            forEachPosIn(Pos(0, 1), Pos(6, 1)) { pos ->
-                setupPawn(pos, Side.BLACK, true, PieceType.ROOK.white at Dir(1, -1))
-                    .assertFollows(false, pos.toString(),
-                        MoveSpec(pos + Dir(1, -1), true, promotions = promotions(Side.BLACK)))
-            }
-
-            forEachPosIn(Pos(1, 6), Pos(7, 6)) { pos ->
-                setupPawn(pos, Side.WHITE, true, PieceType.ROOK.black at Dir(-1, 1))
-                    .assertFollows(false, pos.toString(),
-                        MoveSpec(pos + Dir(-1, 1), true, promotions = promotions(Side.WHITE)))
-            }
-            forEachPosIn(Pos(1, 1), Pos(7, 1)) { pos ->
-                setupPawn(pos, Side.BLACK, true, PieceType.ROOK.white at Dir(-1, -1))
-                    .assertFollows(false, pos.toString(),
-                        MoveSpec(pos + Dir(-1, -1), true, promotions = promotions(Side.BLACK)))
+            Side.forEach { s ->
+                listOf(1, -1).forEach { u ->
+                    forEachPosIn(Pos(0, 6), Pos(7, 6), s, -u) { pos ->
+                        val d = Dir(u, s.direction)
+                        setupPawn(pos, s, true, PieceType.ROOK.of(!s) at d)
+                            .assertMove(pos + d) { assertCapture(); assertPromoting() }
+                    }
+                }
             }
         }
 
         @Test
         fun `cannot capture same colored pieces diagonally`() {
-            forEachPosIn(Pos(0, 0), Pos(6, 5)) { pos ->
-                setupPawn(pos, Side.WHITE, true, PieceType.ROOK.white at Dir(1, 1))
-                    .assertFollows(false, pos.toString(), MoveSpec(pos + Dir(1, 1), true, negate = true))
-            }
-            forEachPosIn(Pos(0, 2), Pos(6, 7)) { pos ->
-                setupPawn(pos, Side.BLACK, true, PieceType.ROOK.black at Dir(1, -1))
-                    .assertFollows(false, pos.toString(), MoveSpec(pos + Dir(1, -1), true, negate = true))
-            }
-
-            forEachPosIn(Pos(1, 0), Pos(7, 5)) { pos ->
-                setupPawn(pos, Side.WHITE, true, PieceType.ROOK.white at Dir(-1, 1))
-                    .assertFollows(false, pos.toString(), MoveSpec(pos + Dir(-1, 1), true, negate = true))
-            }
-            forEachPosIn(Pos(1, 2), Pos(7, 7)) { pos ->
-                setupPawn(pos, Side.BLACK, true, PieceType.ROOK.black at Dir(-1, -1))
-                    .assertFollows(false, pos.toString(), MoveSpec(pos + Dir(-1, -1), true, negate = true))
+            Side.forEach { s ->
+                listOf(1, -1).forEach { u ->
+                    forEachPosIn(Pos(0, 0), Pos(7, 5), s, -u) { pos ->
+                        val d = Dir(u, s.direction)
+                        setupPawn(pos, s, true, PieceType.ROOK.of(s) at d)
+                            .assertNoMove(pos + d)
+                    }
+                }
             }
         }
 
         @Test
         fun `can en passant opposite colored pawns`() {
-            forEachPosIn(Pos(0, 1), Pos(6, 5)) { pos ->
-                setupPawn(pos, Side.WHITE, true, PieceType.PAWN.black at Dir(1, 2))
-                (pos + Dir(1, 2)).hasMoved = false
-                (game.players[Side.BLACK] as HumanChessPlayer).run {
-                    pickUp(pos + Dir(1, 2))
-                    makeMove(pos + Dir(1,0))
+            Side.forEach { s ->
+                listOf(1, -1).forEach { u ->
+                    forEachPosIn(Pos(0, 1), Pos(6, 5), s, -u) { pos ->
+                        val d = Dir(u, s.direction)
+                        setupPawn(pos, s, true, PieceType.PAWN.of(!s) at Dir(u, 0))
+                        game.board[pos + d]!!.flags += ChessFlag(EN_PASSANT_FLAG, 1u, 0)
+                        game.board.updateMoves()
+                        movesFrom(pos).assertMove(pos + d) { assertCapture(pos.plusF(u)); assertNotPromoting() }
+                    }
                 }
-                movesFrom(pos).assertFollows(false, pos.toString(), MoveSpec(pos + Dir(1, 1), true))
-            }
-            forEachPosIn(Pos(0, 2), Pos(6, 6)) { pos ->
-                setupPawn(pos, Side.BLACK, true, PieceType.PAWN.white at Dir(1, -2))
-                (pos + Dir(1, -2)).hasMoved = false
-                (game.players[Side.WHITE] as HumanChessPlayer).run {
-                    pickUp(pos + Dir(1, -2))
-                    makeMove(pos + Dir(1,0))
-                }
-                println(game.board.getFEN())
-                println(game.running)
-                movesFrom(pos).assertFollows(false, pos.toString(), MoveSpec(pos + Dir(1, -1), true))
-            }
-
-            forEachPosIn(Pos(1, 1), Pos(7, 5)) { pos ->
-                setupPawn(pos, Side.WHITE, true, PieceType.PAWN.black at Dir(-1, 2))
-                (pos + Dir(-1, 2)).hasMoved = false
-                (game.players[Side.BLACK] as HumanChessPlayer).run {
-                    pickUp(pos + Dir(-1, 2))
-                    makeMove(pos + Dir(-1,0))
-                }
-                movesFrom(pos).assertFollows(false, pos.toString(), MoveSpec(pos + Dir(-1, 1), true))
-            }
-            forEachPosIn(Pos(1, 2), Pos(7, 6)) { pos ->
-                setupPawn(pos, Side.BLACK, true, PieceType.PAWN.white at Dir(-1, -2))
-                (pos + Dir(-1, -2)).hasMoved = false
-                (game.players[Side.WHITE] as HumanChessPlayer).run {
-                    pickUp(pos + Dir(-1, -2))
-                    makeMove(pos + Dir(-1,0))
-                }
-                println(game.board.getFEN())
-                println(game.running)
-                movesFrom(pos).assertFollows(false, pos.toString(), MoveSpec(pos + Dir(-1, -1), true))
             }
         }
     }
