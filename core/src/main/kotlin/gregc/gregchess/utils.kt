@@ -82,19 +82,4 @@ data class Loc(val x: Int, val y: Int, val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
 }
 
-fun String.asIdent(): Identifier {
-    val s = split(":")
-    return when(s.size) {
-        1 -> Identifier(this)
-        2 -> Identifier(s[0], s[1])
-        else -> throw IllegalArgumentException(this)
-    }
-}
-
-data class Identifier(val namespace: String, val path: String) {
-    internal constructor(id: String): this("gregchess", id)
-
-    override fun toString(): String = "$namespace:$path"
-}
-
 var glog: GregLogger = GregLogger()

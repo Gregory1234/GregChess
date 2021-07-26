@@ -31,7 +31,7 @@ class TestTimeManager : TimeManager {
 }
 
 fun testSettings(
-    name: String, board: String? = null, variant: ChessVariant = ChessVariant.NORMAL,
+    name: String, board: String? = null, variant: ChessVariant = ChessVariant.Normal,
     extra: List<Component.Settings<*>> = emptyList()
 ): GameSettings {
     val components = buildList {

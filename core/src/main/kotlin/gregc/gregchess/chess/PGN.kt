@@ -67,7 +67,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
                 tags += TagPair("FEN", game.board.initialFEN.toString())
             }
             val variant = buildList {
-                if (game.variant != ChessVariant.NORMAL)
+                if (game.variant != ChessVariant.Normal)
                     this += game.variant.name.snakeToPascal()
                 if (game.board.chess960)
                     this += "Chess960"

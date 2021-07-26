@@ -4,7 +4,7 @@ import gregc.gregchess.chess.*
 
 object CaptureAll: ChessVariant("CAPTURE_ALL") {
     override fun getLegality(move: MoveCandidate): MoveLegality =
-        if (NORMAL.isValid(move)) MoveLegality.LEGAL else MoveLegality.INVALID
+        if (Normal.isValid(move)) MoveLegality.LEGAL else MoveLegality.INVALID
 
     override fun isInCheck(king: BoardPiece): Boolean = false
 

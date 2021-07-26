@@ -191,3 +191,5 @@ fun Duration.toTicks(): Long = toMillis() / 50
 
 val Int.ticks: Duration
     get() = Duration.ofMillis(toLong() * 50)
+
+internal fun String.toKey(): NamespacedKey = NamespacedKey.fromString(this, GregChess.plugin)!!

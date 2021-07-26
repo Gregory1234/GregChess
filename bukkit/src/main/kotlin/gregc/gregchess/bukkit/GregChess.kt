@@ -2,9 +2,9 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.chess.*
 import gregc.gregchess.bukkit.chess.component.GameEndEvent
 import gregc.gregchess.bukkit.chess.component.TurnEndEvent
+import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -183,7 +183,7 @@ object GregChess : Listener {
                             game.board[game.renderer.getPos(player.location.toLoc())]!!
                         else
                             game.board[Pos.parseFromString(this[2])]!!
-                        val piece = BukkitPieceTypes[this[1].asIdent()]!!
+                        val piece = BukkitPieceTypes[this[1].toKey()]!!
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(piece.of(Side.valueOf(this[0])), square)
                         game.board.updateMoves()

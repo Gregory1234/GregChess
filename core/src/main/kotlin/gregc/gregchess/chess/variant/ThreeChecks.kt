@@ -1,6 +1,5 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import kotlin.reflect.KClass

@@ -6,22 +6,6 @@ import gregc.gregchess.chess.component.Component
 import kotlin.reflect.KClass
 
 open class ChessVariant(val name: String) {
-    companion object {
-        @JvmField
-        val NORMAL = Normal
-        @JvmField
-        val THREE_CHECKS = ThreeChecks
-        @JvmField
-        val KING_OF_THE_HILL = KingOfTheHill
-        @JvmField
-        val ATOMIC = AtomicChess
-        @JvmField
-        val ANTICHESS = Antichess
-        @JvmField
-        val HORDE = HordeChess
-        @JvmField
-        val CAPTURE_ALL = CaptureAll
-    }
 
     override fun toString(): String = name
 
