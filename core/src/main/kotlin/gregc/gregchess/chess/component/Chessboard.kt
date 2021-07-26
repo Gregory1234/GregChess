@@ -186,7 +186,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     fun setFromFEN(fen: FEN) {
         squares.values.forEach(Square::empty)
-        fen.forEachSquare { (pos, p, hm) ->
+        fen.forEachSquare(game.variant.pieceTypes) { (pos, p, hm) ->
             this += BoardPiece(p, this[pos]!!, hm)
         }
 

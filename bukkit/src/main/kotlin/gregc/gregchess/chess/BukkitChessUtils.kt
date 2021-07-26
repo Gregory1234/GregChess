@@ -10,6 +10,41 @@ import org.bukkit.inventory.ItemStack
 
 val Side.standardName get() = name.snakeToPascal()
 
+data class IdentifierAlreadyUsedException(val id: Identifier, val original: Any?, val duplicate: Any?) :
+    Exception("$id - original: $original, duplicate: $duplicate")
+
+data class AlreadyRegisteredException(val o: Any, val original: Identifier, val duplicate: Identifier) :
+    Exception("$o - original: $original, duplicate: $duplicate")
+
+object BukkitPieceTypes {
+    private val pieceTypes = mutableMapOf<Identifier, PieceType>()
+
+
+    fun register(id: Identifier, pieceType: PieceType) {
+        if (id in pieceTypes)
+            throw IdentifierAlreadyUsedException(id, pieceTypes[id], pieceType)
+        if (pieceTypes.containsValue(pieceType))
+            throw AlreadyRegisteredException(pieceType, getId(pieceType)!!, id)
+        pieceTypes[id] = pieceType
+    }
+
+    init {
+        register("king".asIdent(), PieceType.KING)
+        register("queen".asIdent(), PieceType.QUEEN)
+        register("rook".asIdent(), PieceType.ROOK)
+        register("bishop".asIdent(), PieceType.BISHOP)
+        register("knight".asIdent(), PieceType.KNIGHT)
+        register("pawn".asIdent(), PieceType.PAWN)
+    }
+
+    fun getId(pieceType: PieceType) = pieceTypes.filterValues { it == pieceType }.keys.firstOrNull()
+    operator fun get(id: Identifier) = pieceTypes[id]
+
+    val values get() = pieceTypes.values
+    val ids get() = pieceTypes.keys
+
+}
+
 fun PieceType.getItem(side: Side, lang: String): ItemStack {
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
@@ -18,6 +53,7 @@ fun PieceType.getItem(side: Side, lang: String): ItemStack {
     return item
 }
 
+val PieceType.id get() = BukkitPieceTypes.getId(this)!!
 val PieceType.section get() = configOf(id.namespace).getConfigurationSection("Chess.Piece.${id.path.snakeToPascal()}")!!
 val PieceType.name get() = section.getLocalizedString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
@@ -28,6 +64,9 @@ fun Piece.getItem(lang: String) = type.getItem(side, lang)
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${standardName}")!!)
 
+val Piece.id get() = type.id.let { Identifier(it.namespace, side.name.lowercase() + "_" + it.path) }
+
+val BoardPiece.id get() = piece.id
 fun BoardPiece.getInfo() = buildTextComponent {
     append("Id: $id\n")
     appendCopy("UUID: $uuid\n", uuid)

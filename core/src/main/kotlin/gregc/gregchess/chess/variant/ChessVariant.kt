@@ -72,6 +72,9 @@ open class ChessVariant(val id: Identifier) {
 
     open fun genFEN(chess960: Boolean): FEN = Normal.genFEN(chess960)
 
+    open val pieceTypes: Collection<PieceType>
+        get() = Normal.pieceTypes
+
     open val requiredComponents: Collection<KClass<out Component.Settings<*>>>
         get() = Normal.requiredComponents
 
@@ -164,6 +167,10 @@ open class ChessVariant(val id: Identifier) {
         override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = piece.type.moveScheme(piece)
 
         override fun genFEN(chess960: Boolean) = if (!chess960) FEN() else FEN.generateChess960()
+
+        override val pieceTypes: Collection<PieceType>
+            get() = listOf(PieceType.KING, PieceType.QUEEN, PieceType.ROOK,
+                PieceType.BISHOP, PieceType.KNIGHT, PieceType.PAWN)
 
         override val requiredComponents: Collection<KClass<out Component.Settings<*>>>
             get() = emptyList()

@@ -62,14 +62,15 @@ data class FEN(
             BoardState(state.split('/').mapIndexed(block).joinToString("/"))
     }
 
-    private fun Char.toPiece(p: Pos): PieceInfo {
-        val type = PieceType.parseFromStandardChar(this)
+    private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): PieceInfo {
+        val type = PieceType.parseFromStandardChar(pieceTypes, this)
         val side = if (isUpperCase()) Side.WHITE else Side.BLACK
         val hasMoved = type.hasMoved(this@FEN, p, side)
         return PieceInfo(p, type.of(side), hasMoved)
     }
 
-    fun forEachSquare(f: (PieceInfo) -> Unit) = boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(p)) }
+    fun forEachSquare(pieceTypes: Collection<PieceType>, f: (PieceInfo) -> Unit) =
+        boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(pieceTypes, p)) }
 
     override fun toString() = buildString {
         append(boardState.state)

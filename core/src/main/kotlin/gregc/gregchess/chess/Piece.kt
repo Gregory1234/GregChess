@@ -1,12 +1,9 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Identifier
 import gregc.gregchess.glog
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
-    val id = Identifier(type.id.namespace, side.name.lowercase() + "_" + type.id.path)
-
     val standardChar
         get() = when (side) {
             Side.WHITE -> type.standardChar.uppercaseChar()
@@ -53,8 +50,6 @@ sealed class PieceEvent(val piece: BoardPiece) : ChessEvent {
 class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
 
 class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false, val uuid: UUID = UUID.randomUUID()) {
-    val id
-        get() = piece.id
     val type = piece.type
     val side = piece.side
 

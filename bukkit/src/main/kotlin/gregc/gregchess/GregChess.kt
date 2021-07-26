@@ -70,6 +70,7 @@ object GregChess : Listener {
             file.createNewFile()
             glog = GregLogger(logger, file)
         }
+        BukkitPieceTypes
         ChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()
@@ -177,7 +178,7 @@ object GregChess : Listener {
                             game.board[game.renderer.getPos(player.location.toLoc())]!!
                         else
                             game.board[Pos.parseFromString(this[2])]!!
-                        val piece = PieceType.get(this[1].asIdent())
+                        val piece = BukkitPieceTypes[this[1].asIdent()]!!
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(piece.of(Side.valueOf(this[0])), square)
                         game.board.updateMoves()
@@ -339,12 +340,12 @@ object GregChess : Listener {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("spawn", PieceType.values().map { it.id }.toTypedArray())
+                    "spawn" -> ifPermission("spawn", BukkitPieceTypes.ids.toTypedArray())
                     "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }
                 else -> listOf()
-            }?.filter { it.startsWith(args.last()) }
+            }?.filter { it.startsWith(args.last()) || it.startsWith("gregchess:" + args.last()) }
         }
     }
 

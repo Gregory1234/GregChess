@@ -1,26 +1,14 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.Identifier
-import gregc.gregchess.asIdent
 
-
-data class PieceType(
-    val id: Identifier,
+class PieceType(
     val standardChar: Char,
     val moveScheme: (BoardPiece) -> List<MoveCandidate>,
     val hasMoved: (FEN, Pos, Side) -> Boolean,
     val minor: Boolean
 ) {
 
-    init {
-        values += this
-    }
-
-    override fun toString(): String = id.toString()
-
     companion object {
-
-        private val values = mutableListOf<PieceType>()
 
         @Suppress("UNUSED_PARAMETER")
         private fun assumeNotMoved(fen: FEN, p: Pos, s: Side) = false
@@ -31,22 +19,19 @@ data class PieceType(
             Side.BLACK -> p.rank != 6
         }
         @JvmField
-        val KING = PieceType("king".asIdent(), 'k', ::kingMovement, ::assumeNotMoved, false)
+        val KING = PieceType('k', ::kingMovement, ::assumeNotMoved, false)
         @JvmField
-        val QUEEN = PieceType("queen".asIdent(), 'q', ::queenMovement, ::assumeNotMoved, false)
+        val QUEEN = PieceType('q', ::queenMovement, ::assumeNotMoved, false)
         @JvmField
-        val ROOK = PieceType("rook".asIdent(), 'r', ::rookMovement, ::rookHasMoved, false)
+        val ROOK = PieceType('r', ::rookMovement, ::rookHasMoved, false)
         @JvmField
-        val BISHOP = PieceType("bishop".asIdent(), 'b', ::bishopMovement, ::assumeNotMoved, true)
+        val BISHOP = PieceType('b', ::bishopMovement, ::assumeNotMoved, true)
         @JvmField
-        val KNIGHT = PieceType("knight".asIdent(), 'n', ::knightMovement, ::assumeNotMoved, true)
+        val KNIGHT = PieceType('n', ::knightMovement, ::assumeNotMoved, true)
         @JvmField
-        val PAWN = PieceType("pawn".asIdent(), 'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
+        val PAWN = PieceType('p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
 
-        fun values() = values
-
-        fun parseFromStandardChar(c: Char): PieceType =
+        fun parseFromStandardChar(values: Collection<PieceType>, c: Char): PieceType =
             values.firstOrNull { it.standardChar == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())
-        fun get(id: Identifier) = values.firstOrNull { it.id == id } ?: throw IllegalArgumentException(id.toString())
     }
 }

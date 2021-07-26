@@ -22,7 +22,7 @@ object GregChess : ModInitializer {
         PieceType.PAWN.white.item.defaultStack
     }
 
-    val PIECE_BLOCKS = PieceType.values().flatMap { t -> Side.values().map { s ->
+    val PIECE_BLOCKS = FabricPieceTypes.values.flatMap { t -> Side.values().map { s ->
         val piece = t.of(s)
         val block =
             if (t == PieceType.PAWN) PawnBlock(piece, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
@@ -30,7 +30,7 @@ object GregChess : ModInitializer {
         piece to block
     } }.toMap()
 
-    val PIECE_ITEMS = PieceType.values().flatMap { t -> Side.values().map { s ->
+    val PIECE_ITEMS = FabricPieceTypes.values.flatMap { t -> Side.values().map { s ->
         val piece = t.of(s)
         val block = piece.block
         val item =
@@ -67,13 +67,13 @@ object GregChess : ModInitializer {
 
     override fun onInitialize() {
         glog = GregLogger(Logger.getLogger(MOD_NAME))
-        PieceType.values().forEach { t ->
+        FabricPieceTypes.values.forEach { t ->
             Side.values().forEach { s ->
                 val piece = t.of(s)
                 val block = piece.block
-                Registry.register(Registry.BLOCK, piece.id.fabric, block)
+                Registry.register(Registry.BLOCK, piece.id, block)
                 val item = piece.item
-                Registry.register(Registry.ITEM, piece.id.fabric, item)
+                Registry.register(Registry.ITEM, piece.id, item)
             }
         }
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)

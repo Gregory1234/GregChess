@@ -104,7 +104,7 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
         engine.getMove(game.board.getFEN(), { str ->
             val origin = Pos.parseFromString(str.take(2))
             val target = Pos.parseFromString(str.drop(2).take(2))
-            val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(it) }
+            val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(game.variant.pieceTypes, it) }
             val move = game.board.getMoves(origin).first { it.display.pos == target }
             game.finishMove(move, promotion?.of(side))
         }, { game.stop(drawBy(EndReason.ERROR)) })
