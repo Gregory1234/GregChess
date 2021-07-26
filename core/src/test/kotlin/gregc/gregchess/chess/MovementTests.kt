@@ -223,7 +223,7 @@ class MovementTests {
                     forEachPosIn(Pos(0, 1), Pos(6, 5), s, -u) { pos ->
                         val d = Dir(u, s.direction)
                         setupPawn(pos, s, true, PieceType.PAWN.of(!s) at Dir(u, 0))
-                        game.board[pos + d]!!.flags += ChessFlag(EN_PASSANT_FLAG, 1u, 0)
+                        game.board[pos + d]!!.flags += ChessFlag(EN_PASSANT, 0)
                         game.board.updateMoves()
                         movesFrom(pos).assertMove(pos + d) { assertCapture(pos.plusF(u)); assertNotPromoting() }
                     }

@@ -123,7 +123,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                     it.timeLeft++
                 }
                 s.flags.removeIf {
-                    it.startTime.toInt() <= it.timeLeft
+                    it.type.startTime.toInt() <= it.timeLeft
                 }
             }
         }
@@ -199,7 +199,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
 
         if (fen.enPassantSquare != null) {
-            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(EN_PASSANT_FLAG, 1u, 0))
+            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(EN_PASSANT, 0))
         }
 
         updateMoves()
@@ -223,7 +223,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             boardState,
             game.currentTurn,
             BySides(::castling),
-            squares.values.firstOrNull { s -> s.flags.any { it.id == EN_PASSANT_FLAG && it.timeLeft >= 0 } }?.pos,
+            squares.values.firstOrNull { s -> s.flags.any { it.type == EN_PASSANT && it.timeLeft >= 0 } }?.pos,
             movesSinceLastCapture,
             fullMoveCounter
         )

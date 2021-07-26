@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.between
+import gregc.gregchess.rotationsOf
 
 class MoveData(
     val piece: Piece, val origin: Square, val target: Square, val standardName: String,
@@ -23,7 +24,7 @@ class MoveData(
 abstract class MoveCandidate(
     val piece: BoardPiece, val target: Square, val floor: Floor,
     val pass: Collection<Pos>, val help: Collection<BoardPiece> = emptyList(), val needed: Collection<Pos> = pass,
-    val flagsNeeded: Collection<Pair<Pos, Identifier>> = emptyList(),
+    val flagsNeeded: Collection<Pair<Pos, ChessFlagType>> = emptyList(),
     val flagsAdded: Collection<Pair<Pos, ChessFlag>> = emptyList(),
     val control: Square? = target, val promotions: Collection<Piece>? = null,
     val mustCapture: Boolean = false, val display: Square = target
@@ -247,7 +248,7 @@ object DefaultPawnConfig : PawnMovementConfig {
 }
 
 @JvmField
-val EN_PASSANT_FLAG = "en_passant".asIdent()
+val EN_PASSANT = ChessFlagType("EN_PASSANT", 1u)
 
 fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCandidate> = { piece ->
 
@@ -258,7 +259,7 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
 
     class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotions: Collection<Piece>?) : MoveCandidate(
         piece, target, ifProm(promotions, Floor.MOVE), listOfNotNull(pass), control = null, promotions = promotions,
-        flagsAdded = listOfNotNull(pass?.to(ChessFlag(EN_PASSANT_FLAG, 1u)))
+        flagsAdded = listOfNotNull(pass?.to(ChessFlag(EN_PASSANT)))
     )
 
     class PawnCapture(piece: BoardPiece, target: Square, promotions: Collection<Piece>?) : MoveCandidate(
@@ -267,7 +268,7 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
 
     class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
         MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true,
-        flagsNeeded = listOf(target.pos to EN_PASSANT_FLAG)) {
+        flagsNeeded = listOf(target.pos to EN_PASSANT)) {
         override fun execute(promotion: Piece?): MoveData {
             val standardBase = baseStandardName(promotion)
             val hasMoved = piece.hasMoved

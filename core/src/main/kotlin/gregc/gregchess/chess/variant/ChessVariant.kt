@@ -95,7 +95,7 @@ open class ChessVariant(val id: Identifier) {
             }
 
         fun isValid(move: MoveCandidate): Boolean = with(move) {
-            if (flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.id == f && it.timeLeft >= 0 } == false }})
+            if (flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.type == f && it.timeLeft >= 0 } == false }})
                 return false
 
             if (needed.any { p -> board[p].let { it?.piece != null && it.piece !in help } })

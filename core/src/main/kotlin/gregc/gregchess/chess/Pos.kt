@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.rangeTo
+import gregc.gregchess.snakeToPascal
 
 
 typealias Dir = Pair<Int, Int>
@@ -98,7 +99,11 @@ enum class Floor {
 
 data class FloorUpdateEvent(val pos: Pos, val floor: Floor): ChessEvent
 
-data class ChessFlag(val id: Identifier, val startTime: UInt, var timeLeft: Int = startTime.toInt())
+class ChessFlagType(val name: String, val startTime: UInt) {
+    override fun toString(): String = name
+}
+
+data class ChessFlag(val type: ChessFlagType, var timeLeft: Int = type.startTime.toInt())
 
 data class Square(val pos: Pos, val game: ChessGame) {
     var piece: BoardPiece? = null
