@@ -1,6 +1,7 @@
-package gregc.gregchess
+package gregc.gregchess.bukkit
 
-import gregc.gregchess.chess.human
+import gregc.gregchess.Loc
+import gregc.gregchess.bukkit.chess.human
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*

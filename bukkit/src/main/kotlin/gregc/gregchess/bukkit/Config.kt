@@ -1,4 +1,4 @@
-package gregc.gregchess
+package gregc.gregchess.bukkit
 
 import org.bukkit.configuration.ConfigurationSection
 

@@ -1,6 +1,9 @@
-package gregc.gregchess
+package gregc.gregchess.fabric
 
+import gregc.gregchess.GregLogger
 import gregc.gregchess.chess.*
+import gregc.gregchess.fabric.chess.*
+import gregc.gregchess.glog
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings

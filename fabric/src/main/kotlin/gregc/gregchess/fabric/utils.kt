@@ -1,4 +1,4 @@
-package gregc.gregchess
+package gregc.gregchess.fabric
 
 import net.minecraft.util.Identifier
 

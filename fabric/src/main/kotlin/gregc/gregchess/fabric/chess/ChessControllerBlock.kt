@@ -1,7 +1,7 @@
-package gregc.gregchess.chess
+package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.GregChess
-import gregc.gregchess.ident
+import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.ident
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.client.CottonInventoryScreen
 import io.github.cottonmc.cotton.gui.networking.NetworkSide

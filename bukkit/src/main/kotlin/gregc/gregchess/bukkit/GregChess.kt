@@ -1,8 +1,10 @@
-package gregc.gregchess
+package gregc.gregchess.bukkit
 
+import gregc.gregchess.*
+import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.GameEndEvent
-import gregc.gregchess.chess.component.TurnEndEvent
+import gregc.gregchess.bukkit.chess.component.GameEndEvent
+import gregc.gregchess.bukkit.chess.component.TurnEndEvent
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -412,7 +414,7 @@ object GregChess : Listener {
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
         val holder = e.inventory.holder
-        if (holder is BukkitMenu<*>) {
+        if (holder is Menu<*>) {
             e.isCancelled = true
             cTry(e.whoClicked, { e.whoClicked.closeInventory() }) {
                 if (!holder.finished)
@@ -425,7 +427,7 @@ object GregChess : Listener {
     @EventHandler
     fun onInventoryClose(e: InventoryCloseEvent) {
         val holder = e.inventory.holder
-        if (holder is BukkitMenu<*>) {
+        if (holder is Menu<*>) {
             cTry(e.player) {
                 if (!holder.finished)
                     holder.cancel()

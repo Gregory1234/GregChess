@@ -1,5 +1,7 @@
-package gregc.gregchess
+package gregc.gregchess.bukkit
 
+import gregc.gregchess.asDurationOrNull
+import gregc.gregchess.glog
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener

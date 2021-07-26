@@ -1,6 +1,7 @@
-package gregc.gregchess.chess
+package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.GregChess
+import gregc.gregchess.chess.Floor
+import gregc.gregchess.fabric.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtCompound

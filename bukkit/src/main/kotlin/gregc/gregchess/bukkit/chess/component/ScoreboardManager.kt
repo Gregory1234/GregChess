@@ -1,7 +1,10 @@
-package gregc.gregchess.chess.component
+package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.*
+import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.*
 import org.bukkit.Bukkit
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team

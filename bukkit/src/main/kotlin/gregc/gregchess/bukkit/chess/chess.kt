@@ -1,7 +1,9 @@
-package gregc.gregchess.chess
+package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.BukkitRenderer
+import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.chess.component.BukkitRenderer
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.spectators
 import org.bukkit.Material
 import org.bukkit.Sound

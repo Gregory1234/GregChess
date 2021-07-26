@@ -1,6 +1,7 @@
-package gregc.gregchess.chess.component
+package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.Component
 import org.bukkit.Bukkit
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList

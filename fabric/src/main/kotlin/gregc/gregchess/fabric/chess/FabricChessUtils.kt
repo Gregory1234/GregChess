@@ -1,7 +1,8 @@
-package gregc.gregchess.chess
+package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.GregChess
-import gregc.gregchess.ident
+import gregc.gregchess.chess.*
+import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.ident
 import net.minecraft.util.Identifier
 
 val PieceType.id get() = FabricPieceTypes.getId(this)!!

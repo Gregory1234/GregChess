@@ -1,6 +1,6 @@
-package gregc.gregchess
+package gregc.gregchess.bukkit
 
-import gregc.gregchess.chess.human
+import gregc.gregchess.bukkit.chess.human
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
@@ -9,10 +9,10 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 
 suspend fun <T> Player.openMenu(name: LocalizedString, content: List<ScreenOption<T>>): T? = suspendCoroutine {
-    openMenu(BukkitMenu(name.get(human.lang), it, content, null))
+    openMenu(Menu(name.get(human.lang), it, content, null))
 }
 
-class BukkitMenu<T>(
+class Menu<T>(
     val name: String,
     private val cont: Continuation<T>,
     private val content: List<ScreenOption<T>>,
@@ -57,4 +57,4 @@ data class InventoryPosition(val x: Int, val y: Int) {
 data class ScreenOption<out T>(val item: ItemStack, val value: T, val position: InventoryPosition)
 
 
-fun Player.openMenu(m: BukkitMenu<*>) = openInventory(m.inventory)
+fun Player.openMenu(m: Menu<*>) = openInventory(m.inventory)

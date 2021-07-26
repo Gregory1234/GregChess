@@ -1,7 +1,12 @@
-package gregc.gregchess.chess
+package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.asIdent
+import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.chess.component.BukkitRenderer
+import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.SpectatorEvent
+import gregc.gregchess.glog
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler

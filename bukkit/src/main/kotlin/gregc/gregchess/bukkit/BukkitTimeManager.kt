@@ -1,5 +1,6 @@
-package gregc.gregchess
+package gregc.gregchess.bukkit
 
+import gregc.gregchess.TimeManager
 import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration

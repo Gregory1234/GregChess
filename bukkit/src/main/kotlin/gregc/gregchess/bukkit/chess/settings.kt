@@ -1,6 +1,9 @@
-package gregc.gregchess.chess
+package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
 import org.bukkit.Material

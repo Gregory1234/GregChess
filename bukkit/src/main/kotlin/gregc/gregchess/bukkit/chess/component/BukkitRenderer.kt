@@ -1,9 +1,11 @@
-package gregc.gregchess.chess.component
+package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.Loc
+import gregc.gregchess.bukkit.chess.*
+import gregc.gregchess.bukkit.toLocation
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.variant.AtomicChess
-import gregc.gregchess.toLocation
 import org.bukkit.Material
 import org.bukkit.World
 import kotlin.math.floor

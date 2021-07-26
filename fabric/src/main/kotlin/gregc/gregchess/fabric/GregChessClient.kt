@@ -1,6 +1,6 @@
-package gregc.gregchess
+package gregc.gregchess.fabric
 
-import gregc.gregchess.chess.ChessControllerBlockScreen
+import gregc.gregchess.fabric.chess.ChessControllerBlockScreen
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry
 

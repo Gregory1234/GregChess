@@ -1,6 +1,9 @@
-package gregc.gregchess.chess
+package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.*
+import gregc.gregchess.bukkit.*
+import gregc.gregchess.chess.ChessEngine
+import gregc.gregchess.chess.FEN
 import java.util.concurrent.*
 
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
