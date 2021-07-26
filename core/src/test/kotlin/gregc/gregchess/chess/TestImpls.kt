@@ -91,6 +91,6 @@ class TestComponent : Component {
 object TestVariant: ChessVariant("test".asIdent())
 
 @JvmField
-val TEST_END_REASON = DetEndReason("test".asIdent(), EndReason.Type.EMERGENCY)
+val TEST_END_REASON = DetEndReason("TEST", EndReason.Type.EMERGENCY)
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)

@@ -7,7 +7,7 @@ import gregc.gregchess.rangeTo
 
 object KingOfTheHill : ChessVariant("king_of_the_hill".asIdent()) {
 
-    private val KING_OF_THE_HILL = DetEndReason("king_of_the_hill".asIdent(), EndReason.Type.NORMAL)
+    val KING_OF_THE_HILL = DetEndReason("KING_OF_THE_HILL", EndReason.Type.NORMAL)
 
     override fun chessboardSetup(board: Chessboard) {
         (Pair(3, 3)..Pair(4, 4)).forEach { (x, y) ->

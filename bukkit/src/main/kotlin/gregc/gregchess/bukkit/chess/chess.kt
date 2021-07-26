@@ -5,31 +5,13 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.spectators
+import gregc.gregchess.chess.variant.*
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
 
-val Side.standardName get() = name.snakeToPascal()
-
-data class IdentifierAlreadyUsedException(val id: Identifier, val original: Any?, val duplicate: Any?) :
-    Exception("$id - original: $original, duplicate: $duplicate")
-
-data class AlreadyRegisteredException(val o: Any, val original: Identifier, val duplicate: Identifier) :
-    Exception("$o - original: $original, duplicate: $duplicate")
-
-object BukkitPieceTypes {
-    private val pieceTypes = mutableMapOf<Identifier, PieceType>()
-
-
-    fun register(id: Identifier, pieceType: PieceType) {
-        if (id in pieceTypes)
-            throw IdentifierAlreadyUsedException(id, pieceTypes[id], pieceType)
-        if (pieceTypes.containsValue(pieceType))
-            throw AlreadyRegisteredException(pieceType, getId(pieceType)!!, id)
-        pieceTypes[id] = pieceType
-    }
-
+object BukkitPieceTypes: Registry<PieceType>() {
     init {
         register("king".asIdent(), PieceType.KING)
         register("queen".asIdent(), PieceType.QUEEN)
@@ -38,26 +20,46 @@ object BukkitPieceTypes {
         register("knight".asIdent(), PieceType.KNIGHT)
         register("pawn".asIdent(), PieceType.PAWN)
     }
-
-    fun getId(pieceType: PieceType) = pieceTypes.filterValues { it == pieceType }.keys.firstOrNull()
-    operator fun get(id: Identifier) = pieceTypes[id]
-
-    val values get() = pieceTypes.values
-    val ids get() = pieceTypes.keys
-
 }
+
+object BukkitEndReasons: Registry<EndReason<*>>() {
+    init {
+        register("checkmate".asIdent(), EndReason.CHECKMATE)
+        register("resignation".asIdent(), EndReason.RESIGNATION)
+        register("walkover".asIdent(), EndReason.WALKOVER)
+        register("stalemate".asIdent(), EndReason.STALEMATE)
+        register("insufficient_material".asIdent(), EndReason.INSUFFICIENT_MATERIAL)
+        register("fifty_moves".asIdent(), EndReason.FIFTY_MOVES)
+        register("repetition".asIdent(), EndReason.REPETITION)
+        register("draw_agreement".asIdent(), EndReason.DRAW_AGREEMENT)
+        register("timeout".asIdent(), EndReason.TIMEOUT)
+        register("draw_timeout".asIdent(), EndReason.DRAW_TIMEOUT)
+        register("pieces_lost".asIdent(), EndReason.ALL_PIECES_LOST)
+        register("error".asIdent(), EndReason.ERROR)
+
+        register("stalemate_victory".asIdent(), Antichess.STALEMATE_VICTORY)
+        register("atomic".asIdent(), AtomicChess.ATOMIC)
+        register("king_of_the_hill".asIdent(), KingOfTheHill.KING_OF_THE_HILL)
+        register("check_limit".asIdent(), ThreeChecks.CHECK_LIMIT)
+
+        register("arena_removed".asIdent(), ArenaManager.ARENA_REMOVED)
+        register("plugin_restart".asIdent(), ChessGameManager.PLUGIN_RESTART)
+    }
+}
+
+val Side.standardName get() = name.snakeToPascal()
 
 fun PieceType.getItem(side: Side, lang: String): ItemStack {
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
-    meta.setDisplayName(config.getLocalizedString("Chess.Side.${side.standardName}.Piece", name).get(lang).chatColor())
+    meta.setDisplayName(config.getLocalizedString("Chess.Side.${side.standardName}.Piece", localName).get(lang).chatColor())
     item.itemMeta = meta
     return item
 }
 
 val PieceType.id get() = BukkitPieceTypes.getId(this)!!
 val PieceType.section get() = configOf(id.namespace).getConfigurationSection("Chess.Piece.${id.path.snakeToPascal()}")!!
-val PieceType.name get() = section.getLocalizedString("Name")
+val PieceType.localName get() = section.getLocalizedString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
 val PieceType.itemMaterial get() = BySides { Material.valueOf(section.getString("Item.${it.standardName}")!!) }
 val PieceType.structure get() = BySides { section.getStringList("Structure.${it.standardName}").map { m -> Material.valueOf(m) } }
@@ -93,6 +95,8 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Components: ${components.joinToString { it.javaClass.simpleName }}")
 }
 
+val EndReason<*>.id
+    get() = BukkitEndReasons.getId(this)!!
 val GameResults<*>.name
     get() = configOf(endReason.id.namespace).getLocalizedString("Chess.EndReason.${endReason.id.path.snakeToPascal()}", *args.toTypedArray())
 

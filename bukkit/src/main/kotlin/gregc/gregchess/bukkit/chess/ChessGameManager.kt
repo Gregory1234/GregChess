@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.asIdent
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.GameEndEvent
 import gregc.gregchess.bukkit.chess.component.GameStartEvent
@@ -20,7 +19,7 @@ import java.util.*
 
 object ChessGameManager : Listener {
 
-    private val PLUGIN_RESTART = DrawEndReason("plugin_restart".asIdent(), EndReason.Type.EMERGENCY, quick = true)
+    val PLUGIN_RESTART = DrawEndReason("PLUGIN_RESTART", EndReason.Type.EMERGENCY, quick = true)
 
     private val games = mutableListOf<ChessGame>()
 

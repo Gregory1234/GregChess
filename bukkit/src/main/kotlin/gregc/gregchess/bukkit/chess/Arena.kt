@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.asIdent
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.chess.*
@@ -57,7 +56,7 @@ private var Player.playerData: PlayerData
     }
 
 object ArenaManager : Listener {
-    private val ARENA_REMOVED = DrawEndReason("arena_removed".asIdent(), EndReason.Type.EMERGENCY, quick = true)
+    val ARENA_REMOVED = DrawEndReason("ARENA_REMOVED", EndReason.Type.EMERGENCY, quick = true)
 
     private val arenas = mutableListOf<Arena>()
 

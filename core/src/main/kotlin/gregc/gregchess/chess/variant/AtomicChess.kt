@@ -40,7 +40,7 @@ object AtomicChess : ChessVariant("atomic".asIdent()) {
         }
     }
 
-    private val ATOMIC = DetEndReason("atomic".asIdent(), EndReason.Type.NORMAL)
+    val ATOMIC = DetEndReason("ATOMIC", EndReason.Type.NORMAL)
 
     override fun start(game: ChessGame) {
         game.requireComponent<ExplosionManager>()

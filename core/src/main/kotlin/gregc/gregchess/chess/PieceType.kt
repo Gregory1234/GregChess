@@ -2,11 +2,14 @@ package gregc.gregchess.chess
 
 
 class PieceType(
+    val name: String,
     val standardChar: Char,
     val moveScheme: (BoardPiece) -> List<MoveCandidate>,
     val hasMoved: (FEN, Pos, Side) -> Boolean,
     val minor: Boolean
 ) {
+
+    override fun toString(): String = "$name(${super.toString()})"
 
     companion object {
 
@@ -19,17 +22,17 @@ class PieceType(
             Side.BLACK -> p.rank != 6
         }
         @JvmField
-        val KING = PieceType('k', ::kingMovement, ::assumeNotMoved, false)
+        val KING = PieceType("KING",'k', ::kingMovement, ::assumeNotMoved, false)
         @JvmField
-        val QUEEN = PieceType('q', ::queenMovement, ::assumeNotMoved, false)
+        val QUEEN = PieceType("QUEEN",'q', ::queenMovement, ::assumeNotMoved, false)
         @JvmField
-        val ROOK = PieceType('r', ::rookMovement, ::rookHasMoved, false)
+        val ROOK = PieceType("ROOK",'r', ::rookMovement, ::rookHasMoved, false)
         @JvmField
-        val BISHOP = PieceType('b', ::bishopMovement, ::assumeNotMoved, true)
+        val BISHOP = PieceType("BISHOP",'b', ::bishopMovement, ::assumeNotMoved, true)
         @JvmField
-        val KNIGHT = PieceType('n', ::knightMovement, ::assumeNotMoved, true)
+        val KNIGHT = PieceType("KNIGHT",'n', ::knightMovement, ::assumeNotMoved, true)
         @JvmField
-        val PAWN = PieceType('p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
+        val PAWN = PieceType("PAWN",'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
 
         fun parseFromStandardChar(values: Collection<PieceType>, c: Char): PieceType =
             values.firstOrNull { it.standardChar == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())

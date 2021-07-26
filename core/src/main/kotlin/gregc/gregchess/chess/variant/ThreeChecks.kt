@@ -35,7 +35,7 @@ object ThreeChecks : ChessVariant("three_checks".asIdent()) {
         }
     }
 
-    private val CHECK_LIMIT = DetEndReason("check_limit".asIdent(), EndReason.Type.NORMAL)
+    val CHECK_LIMIT = DetEndReason("CHECK_LIMIT", EndReason.Type.NORMAL)
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

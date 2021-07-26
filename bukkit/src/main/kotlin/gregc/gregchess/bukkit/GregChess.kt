@@ -73,6 +73,7 @@ object GregChess : Listener {
             glog = GregLogger(logger, file)
         }
         BukkitPieceTypes
+        BukkitEndReasons
         ChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()
