@@ -1,6 +1,5 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.Identifier
 import gregc.gregchess.chess.*
 import kotlin.collections.set
 import kotlin.reflect.KClass
@@ -12,29 +11,33 @@ interface Component {
 }
 
 class AddPropertiesEvent(
-    private val playerPropertiesList: MutableMap<Identifier, PlayerProperty<*>>,
-    private val gamePropertiesList: MutableMap<Identifier, GameProperty<*>>
+    private val playerPropertiesList: MutableMap<PropertyType<*>, PlayerProperty<*>>,
+    private val gamePropertiesList: MutableMap<PropertyType<*>, GameProperty<*>>
 ): ChessEvent {
     val playerProperties get() = playerPropertiesList.toMap()
     val gameProperties get() = gamePropertiesList.toMap()
 
-    fun <T> player(id: Identifier, f: (Side) -> T) {
+    fun <T> player(id: PropertyType<T>, f: (Side) -> T) {
         playerPropertiesList[id] = object : PlayerProperty<T>(id) {
             override fun invoke(s: Side): T = f(s)
         }
     }
-    fun <T> game(id: Identifier, f: () -> T) {
+    fun <T> game(id: PropertyType<T>, f: () -> T) {
         gamePropertiesList[id] = object : GameProperty<T>(id) {
             override fun invoke(): T = f()
         }
     }
 }
 
-abstract class PlayerProperty<T>(val id: Identifier) {
+class PropertyType<T>(val name: String) {
+    override fun toString(): String = name
+}
+
+abstract class PlayerProperty<T>(val type: PropertyType<T>) {
     abstract operator fun invoke(s: Side): T
 }
 
-abstract class GameProperty<T>(val id: Identifier) {
+abstract class GameProperty<T>(val type: PropertyType<T>) {
     abstract operator fun invoke(): T
 }
 

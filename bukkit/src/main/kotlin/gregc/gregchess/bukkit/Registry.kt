@@ -9,7 +9,7 @@ data class AlreadyRegisteredException(val o: Any, val original: Identifier, val 
     Exception("$o - original: $original, duplicate: $duplicate")
 
 open class Registry<T: Any> {
-    private val values = mutableMapOf<Identifier, T>()
+    protected val values = mutableMapOf<Identifier, T>()
 
 
     fun register(id: Identifier, v: T) {

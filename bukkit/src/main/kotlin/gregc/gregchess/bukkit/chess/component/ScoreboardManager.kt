@@ -1,14 +1,13 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.randomString
 import org.bukkit.Bukkit
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
-import java.time.Duration
 
 class ScoreboardManager(private val game: ChessGame): Component {
     object Settings : Component.Settings<ScoreboardManager> {
@@ -24,25 +23,19 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
         private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")!!
 
-        private val GameProperty<*>.name get() = config.getLocalizedString("Scoreboard.${id.path.snakeToPascal()}").get(DEFAULT_LANG)
-        private val PlayerProperty<*>.name get() = config.getLocalizedString("Scoreboard.${id.path.snakeToPascal()}").get(DEFAULT_LANG)
-
-        private val timeFormat: String get() = config.getString("TimeFormat")!!
-
-        private fun <T> T.stringify(): String {
-            if (this is Duration)
-                return format(timeFormat) ?: timeFormat
-            return toString()
-        }
+        @JvmField
+        val PRESET = PropertyType<String>("PRESET")
+        @JvmField
+        val PLAYER = PropertyType<String>("PLAYER")
     }
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
-    private val gameProperties = mutableMapOf<Identifier, GameProperty<*>>()
-    private val playerProperties = mutableMapOf<Identifier, PlayerProperty<*>>()
+    private val gameProperties = mutableMapOf<PropertyType<*>, GameProperty<*>>()
+    private val playerProperties = mutableMapOf<PropertyType<*>, PlayerProperty<*>>()
 
-    private val gamePropertyTeams = mutableMapOf<Identifier, Team>()
-    private val playerPropertyTeams = mutableMapOf<Identifier, BySides<Team>>()
+    private val gamePropertyTeams = mutableMapOf<PropertyType<*>, Team>()
+    private val playerPropertyTeams = mutableMapOf<PropertyType<*>, BySides<Team>>()
 
     private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get(DEFAULT_LANG))
 
@@ -65,8 +58,8 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     private fun init() {
         val e = AddPropertiesEvent(playerProperties, gameProperties)
-        e.game("preset".asIdent()) { game.settings.name }
-        e.player("player".asIdent()) { playerPrefix + game[it].name }
+        e.game(PRESET) { game.settings.name }
+        e.player(PLAYER) { playerPrefix + game[it].name }
         game.components.callEvent(e)
     }
 
@@ -76,23 +69,23 @@ class ScoreboardManager(private val game: ChessGame): Component {
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
         gameProperties.values.forEach {
-            gamePropertyTeams[it.id] = newTeam().apply {
-                addEntry(generalFormat(it.name).get(DEFAULT_LANG).chatColor())
+            gamePropertyTeams[it.type] = newTeam().apply {
+                addEntry(generalFormat(it.type.localName).get(DEFAULT_LANG).chatColor())
             }
-            objective.getScore(generalFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
+            objective.getScore(generalFormat(it.type.localName).get(DEFAULT_LANG).chatColor()).score = i--
         }
         playerProperties.values.forEach {
-            playerPropertyTeams[it.id] = BySides { s ->
-                newTeam().apply { addEntry(format(s, it.name).get(DEFAULT_LANG).chatColor()) }
+            playerPropertyTeams[it.type] = BySides { s ->
+                newTeam().apply { addEntry(format(s, it.type.localName).get(DEFAULT_LANG).chatColor()) }
             }
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.values.forEach {
-            objective.getScore(whiteFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
+            objective.getScore(whiteFormat(it.type.localName).get(DEFAULT_LANG).chatColor()).score = i--
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.values.forEach {
-            objective.getScore(blackFormat(it.name).get(DEFAULT_LANG).chatColor()).score = i--
+            objective.getScore(blackFormat(it.type.localName).get(DEFAULT_LANG).chatColor()).score = i--
         }
     }
 
@@ -104,10 +97,10 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     private fun update() {
         gameProperties.values.forEach {
-            gamePropertyTeams[it.id]?.suffix = it().stringify().chatColor()
+            gamePropertyTeams[it.type]?.suffix = it.asString().chatColor()
         }
         playerProperties.values.forEach {
-            playerPropertyTeams[it.id]?.forEachIndexed { s, t -> t.suffix = it(s).stringify().chatColor() }
+            playerPropertyTeams[it.type]?.forEachIndexed { s, t -> t.suffix = it.asString(s).chatColor() }
         }
     }
 

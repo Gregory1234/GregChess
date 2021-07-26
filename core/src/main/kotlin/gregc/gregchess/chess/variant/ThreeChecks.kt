@@ -2,8 +2,7 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.AddPropertiesEvent
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.*
 import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant("three_checks".asIdent()) {
@@ -17,7 +16,7 @@ object ThreeChecks : ChessVariant("three_checks".asIdent()) {
 
         @ChessEventHandler
         fun addProperties(e: AddPropertiesEvent) {
-            e.player("check_counter".asIdent()) { checks[it] }
+            e.player(CHECK_COUNTER) { checks[it] }
         }
 
         @ChessEventHandler
@@ -35,6 +34,9 @@ object ThreeChecks : ChessVariant("three_checks".asIdent()) {
         }
     }
 
+    @JvmField
+    val CHECK_COUNTER = PropertyType<UInt>("CHECK_COUNTER")
+    @JvmField
     val CHECK_LIMIT = DetEndReason("CHECK_LIMIT", EndReason.Type.NORMAL)
 
     override fun start(game: ChessGame) {

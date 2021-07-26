@@ -8,6 +8,13 @@ import java.time.LocalDateTime
 
 class ChessClock(private val game: ChessGame, private val settings: Settings) : Component {
 
+    companion object {
+        @JvmField
+        val TIME_REMAINING = PropertyType<Duration>("TIME_REMAINING")
+        @JvmField
+        val TIME_REMAINING_SIMPLE = PropertyType<Duration>("TIME_REMAINING_SIMPLE")
+    }
+
     enum class Type(val usesIncrement: Boolean = true) {
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
@@ -91,9 +98,9 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     @ChessEventHandler
     fun addProperties(e: AddPropertiesEvent) {
         if (settings.type == Type.FIXED) {
-            e.game("time_remaining_simple".asIdent()) { getTimeRemaining(game.currentTurn) }
+            e.game(TIME_REMAINING_SIMPLE) { getTimeRemaining(game.currentTurn) }
         } else {
-            e.player("time_remaining".asIdent()) { getTimeRemaining(it) }
+            e.player(TIME_REMAINING) { getTimeRemaining(it) }
         }
     }
 

@@ -3,12 +3,14 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
+import gregc.gregchess.bukkit.chess.component.ScoreboardManager
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.spectators
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
+import java.time.Duration
 
 
 object BukkitPieceTypes: Registry<PieceType>() {
@@ -45,6 +47,32 @@ object BukkitEndReasons: Registry<EndReason<*>>() {
         register("arena_removed".asIdent(), ArenaManager.ARENA_REMOVED)
         register("plugin_restart".asIdent(), ChessGameManager.PLUGIN_RESTART)
     }
+}
+
+data class BukkitPropertyType<T>(val type: PropertyType<T>, val stringify: (T) -> String)
+
+private val timeFormat: String get() = config.getString("TimeFormat")!!
+
+private fun Duration.format() = format(timeFormat)!!
+
+object BukkitPropertyTypes: Registry<BukkitPropertyType<*>>() {
+
+    fun <T> register(id: Identifier, type: PropertyType<T>, stringify: (T) -> String = Any?::toString) {
+        register(id, BukkitPropertyType(type, stringify))
+    }
+
+    init {
+        register("preset".asIdent(), ScoreboardManager.PRESET)
+        register("player".asIdent(), ScoreboardManager.PLAYER)
+        register("time_remaining".asIdent(), ChessClock.TIME_REMAINING, Duration::format)
+        register("time_remaining_simple".asIdent(), ChessClock.TIME_REMAINING_SIMPLE, Duration::format)
+        register("check_counter".asIdent(), ThreeChecks.CHECK_COUNTER)
+    }
+
+    fun <T> getId(v: PropertyType<T>) = values.filterValues { it.type == v }.keys.firstOrNull()
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T> get(v: PropertyType<T>): BukkitPropertyType<T> =
+        values.filterValues { it.type == v }.values.firstOrNull() as BukkitPropertyType<T>
 }
 
 val Side.standardName get() = name.snakeToPascal()
@@ -107,5 +135,14 @@ val GameResults<*>.message
             is GameScore.Victory -> config.getLocalizedString("Message.GameFinished." + it.winner.standardName + "Won", name)
         }
     }
+
+val PropertyType<*>.id
+    get() = BukkitPropertyTypes.getId(this)!!
+val PropertyType<*>.localName
+    get() = configOf(id.namespace).getLocalizedString("Scoreboard.${id.path.snakeToPascal()}").get(DEFAULT_LANG)
+fun <T> PropertyType<T>.stringify(v: T) = BukkitPropertyTypes[this].stringify(v)
+
+fun <T> PlayerProperty<T>.asString(s: Side) = type.stringify(this(s))
+fun <T> GameProperty<T>.asString() = type.stringify(this())
 
 val ChessGame.renderer get() = requireComponent<BukkitRenderer>()
