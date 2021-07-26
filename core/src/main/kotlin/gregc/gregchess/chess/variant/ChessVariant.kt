@@ -1,21 +1,12 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import kotlin.reflect.KClass
 
-open class ChessVariant(val id: Identifier) {
-    @Suppress("unused")
+open class ChessVariant(val name: String) {
     companion object {
-
-        private val variants = mutableMapOf<Identifier, ChessVariant>()
-
-        operator fun plusAssign(v: ChessVariant) {
-            variants[v.id] = v
-        }
-
         @JvmField
         val NORMAL = Normal
         @JvmField
@@ -30,15 +21,9 @@ open class ChessVariant(val id: Identifier) {
         val HORDE = HordeChess
         @JvmField
         val CAPTURE_ALL = CaptureAll
-
-        operator fun get(id: Identifier?) = when (id) {
-            null -> NORMAL
-            else -> variants[id] ?: run {
-                glog.warn("Variant $id not found, defaulted to Normal")
-                NORMAL
-            }
-        }
     }
+
+    override fun toString(): String = name
 
     enum class MoveLegality(val prettyName: String) {
         INVALID("Invalid moves"),
@@ -46,11 +31,6 @@ open class ChessVariant(val id: Identifier) {
         PINNED("Moves blocked by pins"),
         SPECIAL("Moves blocked for other reasons"),
         LEGAL("Legal moves")
-    }
-
-    init {
-        @Suppress("LeakingThis")
-        ChessVariant += this
     }
 
     open fun start(game: ChessGame) {}
@@ -83,7 +63,7 @@ open class ChessVariant(val id: Identifier) {
 
     protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { board.getMoves(it.pos) }
 
-    object Normal : ChessVariant("normal".asIdent()) {
+    object Normal : ChessVariant("NORMAL") {
 
         fun pinningMoves(by: Side, pos: Square) =
             allMoves(by, pos.board).filter { it.control == pos }.filter { m -> m.blocks.count { it !in m.help } == 1 }

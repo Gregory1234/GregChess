@@ -74,6 +74,8 @@ object GregChess : Listener {
         }
         BukkitPieceTypes
         BukkitEndReasons
+        BukkitPropertyTypes
+        BukkitChessVariants
         ChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()

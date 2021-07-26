@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.TimeManager
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.variant.ChessVariant
@@ -31,14 +31,14 @@ class TestTimeManager : TimeManager {
 }
 
 fun testSettings(
-    name: String, board: String? = null, variant: Identifier? = null,
+    name: String, board: String? = null, variant: ChessVariant = ChessVariant.NORMAL,
     extra: List<Component.Settings<*>> = emptyList()
 ): GameSettings {
     val components = buildList {
         this += Chessboard.Settings[board]
         this.addAll(extra)
     }
-    return GameSettings(name, false, ChessVariant[variant], components)
+    return GameSettings(name, false, variant, components)
 }
 
 class TestHuman(name: String): HumanPlayer(name) {
@@ -88,7 +88,7 @@ class TestComponent : Component {
 
 }
 
-object TestVariant: ChessVariant("test".asIdent())
+object TestVariant: ChessVariant("TEST")
 
 @JvmField
 val TEST_END_REASON = DetEndReason("TEST", EndReason.Type.EMERGENCY)

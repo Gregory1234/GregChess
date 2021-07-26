@@ -1,9 +1,8 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
 
-object Antichess : ChessVariant("antichess".asIdent()) {
+object Antichess : ChessVariant("ANTICHESS") {
     val STALEMATE_VICTORY = DetEndReason("STALEMATE_VICTORY", EndReason.Type.NORMAL)
 
     object AntichessPawnConfig : PawnMovementConfig {

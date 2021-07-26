@@ -75,6 +75,18 @@ object BukkitPropertyTypes: Registry<BukkitPropertyType<*>>() {
         values.filterValues { it.type == v }.values.firstOrNull() as BukkitPropertyType<T>
 }
 
+object BukkitChessVariants: Registry<ChessVariant>() {
+    init {
+        register("normal".asIdent(), ChessVariant.NORMAL)
+        register("three_checks".asIdent(), ChessVariant.THREE_CHECKS)
+        register("king_of_the_hill".asIdent(), ChessVariant.KING_OF_THE_HILL)
+        register("atomic".asIdent(), ChessVariant.ATOMIC)
+        register("antichess".asIdent(), ChessVariant.ANTICHESS)
+        register("horde".asIdent(), ChessVariant.HORDE)
+        register("capture_all".asIdent(), ChessVariant.CAPTURE_ALL)
+    }
+}
+
 val Side.standardName get() = name.snakeToPascal()
 
 fun PieceType.getItem(side: Side, lang: String): ItemStack {
@@ -144,5 +156,8 @@ fun <T> PropertyType<T>.stringify(v: T) = BukkitPropertyTypes[this].stringify(v)
 
 fun <T> PlayerProperty<T>.asString(s: Side) = type.stringify(this(s))
 fun <T> GameProperty<T>.asString() = type.stringify(this())
+
+val ChessVariant.id
+    get() = BukkitChessVariants.getId(this)
 
 val ChessGame.renderer get() = requireComponent<BukkitRenderer>()

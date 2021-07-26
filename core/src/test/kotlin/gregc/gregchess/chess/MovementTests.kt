@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.asIdent
+import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.times
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Test
@@ -12,7 +12,7 @@ import kotlin.test.*
 class MovementTests {
     val humanA = TestHuman("a")
     val humanB = TestHuman("b")
-    val game = ChessGame(TestTimeManager(), testSettings("basic", variant = "capture_all".asIdent())).addPlayers {
+    val game = ChessGame(TestTimeManager(), testSettings("basic", variant = ChessVariant.CAPTURE_ALL)).addPlayers {
         human(humanA, Side.WHITE, false)
         human(humanB, Side.BLACK, false)
     }.start()

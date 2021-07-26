@@ -1,11 +1,10 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.asIdent
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.rangeTo
 
-object KingOfTheHill : ChessVariant("king_of_the_hill".asIdent()) {
+object KingOfTheHill : ChessVariant("KING_OF_THE_HILL") {
 
     val KING_OF_THE_HILL = DetEndReason("KING_OF_THE_HILL", EndReason.Type.NORMAL)
 
