@@ -56,6 +56,7 @@ private var Player.playerData: PlayerData
     }
 
 object ArenaManager : Listener {
+    @JvmField
     val ARENA_REMOVED = DrawEndReason("ARENA_REMOVED", EndReason.Type.EMERGENCY, quick = true)
 
     private val arenas = mutableListOf<Arena>()

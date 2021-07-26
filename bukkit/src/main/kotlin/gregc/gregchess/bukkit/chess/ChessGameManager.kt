@@ -18,7 +18,7 @@ import org.bukkit.event.player.*
 import java.util.*
 
 object ChessGameManager : Listener {
-
+    @JvmField
     val PLUGIN_RESTART = DrawEndReason("PLUGIN_RESTART", EndReason.Type.EMERGENCY, quick = true)
 
     private val games = mutableListOf<ChessGame>()

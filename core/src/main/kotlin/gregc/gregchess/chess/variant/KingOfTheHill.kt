@@ -6,6 +6,7 @@ import gregc.gregchess.rangeTo
 
 object KingOfTheHill : ChessVariant("KING_OF_THE_HILL") {
 
+    @JvmField
     val KING_OF_THE_HILL = DetEndReason("KING_OF_THE_HILL", EndReason.Type.NORMAL)
 
     override fun chessboardSetup(board: Chessboard) {
