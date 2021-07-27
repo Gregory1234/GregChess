@@ -32,7 +32,7 @@ class BukkitEventRelay(private val game: ChessGame) : Component {
 
 }
 
-data class GameStartEvent(val game: ChessGame) : Event() {
+class GameStartEvent(val game: ChessGame) : Event() {
 
     override fun getHandlers() = handlerList
 
@@ -44,7 +44,7 @@ data class GameStartEvent(val game: ChessGame) : Event() {
     }
 }
 
-data class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
+class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
     override fun getHandlers() = handlerList
 
     companion object {
@@ -56,7 +56,7 @@ data class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() 
 }
 
 
-data class GameEndEvent(val game: ChessGame) : Event() {
+class GameEndEvent(val game: ChessGame) : Event() {
 
     override fun getHandlers() = handlerList
 
@@ -68,7 +68,7 @@ data class GameEndEvent(val game: ChessGame) : Event() {
     }
 }
 
-data class ChessGameEvent(val game: ChessGame, val event: ChessEvent): Event() {
+class ChessGameEvent(val game: ChessGame, val event: ChessEvent): Event() {
     override fun getHandlers() = handlerList
 
     companion object {

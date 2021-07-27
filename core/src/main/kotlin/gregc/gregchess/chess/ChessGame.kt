@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
 
-data class GameSettings(
+class GameSettings(
     val name: String,
     val simpleCastling: Boolean,
     val variant: ChessVariant,

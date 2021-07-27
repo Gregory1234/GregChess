@@ -20,7 +20,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     }
 
 
-    data class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) : Component.Settings<ChessClock> {
+    class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) : Component.Settings<ChessClock> {
 
         fun getPGN() = buildString {
             if (type == Type.SIMPLE) {

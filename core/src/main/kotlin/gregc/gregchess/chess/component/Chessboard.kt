@@ -11,8 +11,7 @@ import kotlin.collections.set
 class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
     data class SetFenEvent(val FEN: FEN): ChessEvent
 
-    data class Settings(val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) :
-        Component.Settings<Chessboard> {
+    class Settings(private val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) : Component.Settings<Chessboard> {
         override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN(game: ChessGame) = initialFEN ?: game.variant.genFEN(chess960)

@@ -17,7 +17,7 @@ val PieceType.black get() = of(Side.BLACK)
 
 data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)
 
-class CapturedPiece(val piece: Piece, val pos: CapturedPos, private val game: ChessGame) {
+class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
     val type = piece.type
     val side = piece.side
 
@@ -96,7 +96,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     fun capture(by: Side): CapturedPiece {
         glog.mid("Captured", type, "at", pos)
         clear()
-        val captured = CapturedPiece(piece, board.nextCapturedPos(type, by), game)
+        val captured = CapturedPiece(piece, board.nextCapturedPos(type, by))
         board += captured
         game.components.callEvent(PieceEvent.Captured(this, captured))
         return captured

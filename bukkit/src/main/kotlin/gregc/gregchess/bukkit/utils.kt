@@ -16,7 +16,7 @@ import kotlin.contracts.contract
 const val DEFAULT_LANG = "en_US"
 
 class CommandArgs(val player: CommandSender, val args: Array<String>) {
-    var index = 0
+    private var index = 0
 
     fun nextArg(): String {
         cArgs(args, ++index)
@@ -139,8 +139,7 @@ fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
 inline fun <T> cWrongArgument(block: () -> T): T = try {
     block()
 } catch (e: IllegalArgumentException) {
-    e.printStackTrace()
-    cWrongArgument()
+    throw CommandException(WRONG_ARGUMENT, e)
 }
 
 fun cWrongArgument(): Nothing = throw CommandException(WRONG_ARGUMENT)

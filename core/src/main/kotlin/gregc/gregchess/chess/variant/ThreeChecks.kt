@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
 object ThreeChecks : ChessVariant("THREE_CHECKS") {
 
     class CheckCounter(private val game: ChessGame, private val limit: UInt) : Component {
-        data class Settings(val limit: UInt) : Component.Settings<CheckCounter> {
+        class Settings(private val limit: UInt) : Component.Settings<CheckCounter> {
             override fun getComponent(game: ChessGame) = CheckCounter(game, limit)
         }
 

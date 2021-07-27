@@ -1,8 +1,8 @@
 package gregc.gregchess.chess
 
-enum class Side(val standardChar: Char, val direction: Int, val endRank: Int) {
-    WHITE('w', 1, 7),
-    BLACK('b', -1, 0);
+enum class Side(val standardChar: Char, val direction: Int) {
+    WHITE('w', 1),
+    BLACK('b', -1);
 
     operator fun not(): Side = if (this == WHITE) BLACK else WHITE
     operator fun inc(): Side = not()

@@ -4,15 +4,15 @@ import com.google.common.collect.BiMap
 import com.google.common.collect.HashBiMap
 import org.bukkit.NamespacedKey
 
-data class IdentifierAlreadyUsedException(val id: NamespacedKey, val original: Any?, val duplicate: Any?) :
+class IdentifierAlreadyUsedException(id: NamespacedKey, original: Any?, duplicate: Any?) :
     Exception("$id - original: $original, duplicate: $duplicate")
 
-data class AlreadyRegisteredException(val o: Any, val original: NamespacedKey, val duplicate: NamespacedKey) :
+class AlreadyRegisteredException(o: Any, original: NamespacedKey, duplicate: NamespacedKey) :
     Exception("$o - original: $original, duplicate: $duplicate")
 
 open class Registry<T: Any, D: Any> {
-    val values: BiMap<NamespacedKey, T> = HashBiMap.create()
-    val datas = mutableMapOf<NamespacedKey, D>()
+    private val values: BiMap<NamespacedKey, T> = HashBiMap.create()
+    private val datas = mutableMapOf<NamespacedKey, D>()
 
 
     protected fun register(id: NamespacedKey, v: T, d: D) {

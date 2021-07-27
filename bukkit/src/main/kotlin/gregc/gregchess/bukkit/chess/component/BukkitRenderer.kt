@@ -13,7 +13,7 @@ import kotlin.math.floor
 class BukkitRenderer(private val game: ChessGame, private val settings: Settings) : Component {
     companion object {
 
-        private data class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
+        private class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
             constructor(world: World, mat: Material, loc: Loc) : this(world, mat, loc, loc)
         }
 

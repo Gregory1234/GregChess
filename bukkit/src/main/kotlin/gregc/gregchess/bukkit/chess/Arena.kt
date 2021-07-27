@@ -19,15 +19,15 @@ import org.bukkit.scoreboard.Scoreboard
 import java.util.*
 
 private data class PlayerData(
-    val location: Location? = null,
-    val inventory: List<ItemStack?> = List(41) { null },
-    val gameMode: GameMode = GameMode.SURVIVAL,
-    val health: Double = 20.0,
-    val foodLevel: Int = 20, val saturation: Float = 20.0F,
-    val level: Int = 0, val exp: Float = 0.0F,
-    val allowFlight: Boolean = false, val isFlying: Boolean = false,
-    val effects: List<PotionEffect> = emptyList(),
-    val scoreboard: Scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
+    @JvmField val location: Location? = null,
+    @JvmField val inventory: List<ItemStack?> = List(41) { null },
+    @JvmField val gameMode: GameMode = GameMode.SURVIVAL,
+    @JvmField val health: Double = 20.0,
+    @JvmField val foodLevel: Int = 20, @JvmField val saturation: Float = 20.0F,
+    @JvmField val level: Int = 0, @JvmField val exp: Float = 0.0F,
+    @JvmField val allowFlight: Boolean = false, @JvmField val isFlying: Boolean = false,
+    @JvmField val effects: List<PotionEffect> = emptyList(),
+    @JvmField val scoreboard: Scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
 )
 
 private var Player.playerData: PlayerData
@@ -99,7 +99,7 @@ object ArenaManager : Listener {
 }
 
 
-data class Arena(val name: String, var game: ChessGame? = null): Component.Settings<Arena.Usage> {
+class Arena(val name: String, var game: ChessGame? = null): Component.Settings<Arena.Usage> {
     companion object {
         private val defData = PlayerData(allowFlight = true, isFlying = true)
 

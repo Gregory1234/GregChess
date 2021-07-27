@@ -140,7 +140,7 @@ private val PAWN_PROMOTION = message("PawnPromotion")
 
 suspend fun Player.openPawnPromotionMenu(promotions: Collection<Piece>) =
     openMenu(PAWN_PROMOTION, promotions.mapIndexed { i, p ->
-        ScreenOption(p.getItem(human.lang), p, InventoryPosition.fromIndex(i))
+        ScreenOption(p.getItem(human.lang), p, i.toInvPos())
     }) ?: promotions.first()
 
 val HumanPlayer.chess get() = this.currentGame?.get(this)

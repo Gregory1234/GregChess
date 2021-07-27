@@ -26,7 +26,7 @@ class Menu<T>(
         content.forEach { (item, _, pos) -> inv.setItem(pos.index, item) }
     }
 
-    fun click(choice: InventoryPosition): Boolean {
+    fun click(choice: InvPos): Boolean {
         content.firstOrNull { (_, _, pos) -> pos == choice }?.value?.let {
             finished = true
             click(it)
@@ -46,15 +46,13 @@ class Menu<T>(
     }
 }
 
-data class InventoryPosition(val x: Int, val y: Int) {
+data class InvPos(val x: Int, val y: Int) {
     val index get() = x + y * 9
-
-    companion object {
-        fun fromIndex(index: Int) = InventoryPosition(index % 9, index.div(9))
-    }
 }
 
-data class ScreenOption<out T>(val item: ItemStack, val value: T, val position: InventoryPosition)
+fun Int.toInvPos() = InvPos(this % 9, this.div(9))
+
+data class ScreenOption<out T>(val item: ItemStack, val value: T, val position: InvPos)
 
 
 fun Player.openMenu(m: Menu<*>) = openInventory(m.inventory)

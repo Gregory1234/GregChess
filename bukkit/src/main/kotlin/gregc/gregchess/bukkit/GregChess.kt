@@ -421,7 +421,7 @@ object GregChess : Listener {
             e.isCancelled = true
             cTry(e.whoClicked, { e.whoClicked.closeInventory() }) {
                 if (!holder.finished)
-                    if (holder.click(InventoryPosition.fromIndex(e.slot)))
+                    if (holder.click(e.slot.toInvPos()))
                         e.whoClicked.closeInventory()
             }
         }

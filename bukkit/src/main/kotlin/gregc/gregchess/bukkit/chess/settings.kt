@@ -79,5 +79,5 @@ suspend fun Player.openSettingsMenu() =
         val meta = item.itemMeta!!
         meta.setDisplayName(s.name)
         item.itemMeta = meta
-        ScreenOption(item, s, InventoryPosition.fromIndex(index))
+        ScreenOption(item, s, index.toInvPos())
     })

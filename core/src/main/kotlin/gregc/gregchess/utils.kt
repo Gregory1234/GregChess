@@ -25,7 +25,6 @@ operator fun Pair<Int, Int>.rangeTo(other: Pair<Int, Int>) = (first..other.first
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 
 fun String.upperFirst() = replaceFirstChar { it.uppercase() }
-fun String.lowerFirst() = replaceFirstChar { it.lowercase() }
 
 val Int.seconds: Duration
     get() = Duration.ofSeconds(toLong())

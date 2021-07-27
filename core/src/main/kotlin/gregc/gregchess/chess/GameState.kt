@@ -22,7 +22,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     }
 
     object Initial : GameState(false, false, false)
-    data class Ready(
+    class Ready(
         override val players: BySides<ChessPlayer>
     ) : GameState(false, false, false), WithPlayers {
         override val white = players.white
@@ -33,7 +33,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         }
     }
 
-    data class Starting(
+    class Starting(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime = LocalDateTime.now(),
         override var currentTurn: Side = Side.WHITE
@@ -48,7 +48,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         }
     }
 
-    data class Running(
+    class Running(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override var currentTurn: Side
@@ -63,7 +63,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         }
     }
 
-    data class Stopping(
+    class Stopping(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
@@ -79,7 +79,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         }
     }
 
-    data class Stopped(
+    class Stopped(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
@@ -96,7 +96,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         }
     }
 
-    data class Error(val state: GameState, val error: Exception) :
+    class Error(val state: GameState, val error: Exception) :
         GameState(false, true, false), Ended {
         override val results: GameResults<*> = drawBy(EndReason.ERROR)
     }
