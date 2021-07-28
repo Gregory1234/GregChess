@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.asDurationOrNull
-import gregc.gregchess.glog
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -37,7 +36,6 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     private val section get() = config.getConfigurationSection("Request.$name")!!
 
     suspend fun invalidSender(s: Player) {
-        glog.mid("Invalid sender", s)
         s.sendMessage(section.getLocalizedString("CannotSend"))
         return suspendCoroutine { }
     }
@@ -49,7 +47,6 @@ class RequestType(val name: String, private val acceptCommand: String, private v
 
     private fun call(request: Request, simple: Boolean) {
         if ((simple || config.getBoolean("Request.SelfAccept", true)) && request.sender == request.receiver) {
-            glog.mid("Self request", request.uuid)
             request.cont.resume(RequestResponse.ACCEPT)
             return
         }
@@ -70,7 +67,6 @@ class RequestType(val name: String, private val acceptCommand: String, private v
                 if (request.uuid in requests)
                     expire(request)
             }
-        glog.mid("Sent", request.uuid)
     }
 
     private operator fun plusAssign(request: Request) = call(request, false)
@@ -100,7 +96,6 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         request.sender.sendMessage(section.getLocalizedString("Sent.Accept", request.receiver.name))
         request.receiver.sendMessage(section.getLocalizedString("Received.Accept", request.sender.name))
         requests.remove(request.uuid)
-        glog.mid("Accepted", request.uuid)
         request.cont.resume(RequestResponse.ACCEPT)
     }
 
@@ -116,7 +111,6 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         request.sender.sendMessage(section.getLocalizedString("Sent.Cancel", request.receiver.name))
         request.receiver.sendMessage(section.getLocalizedString("Received.Cancel", request.sender.name))
         requests.remove(request.uuid)
-        glog.mid("Cancelled", request.uuid)
         request.cont.resume(RequestResponse.CANCEL)
     }
 
@@ -132,13 +126,11 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         request.sender.sendMessage(section.getLocalizedString("Expired", request.receiver.name))
         request.receiver.sendMessage(section.getLocalizedString("Expired", request.sender.name))
         requests.remove(request.uuid)
-        glog.mid("Expired", request.uuid)
         request.cont.resume(RequestResponse.EXPIRED)
     }
 
     fun quietRemove(p: Player) = requests.values.filter { it.sender == p || it.receiver == p }.forEach {
         requests.remove(it.uuid)
-        glog.mid("Quit", it.uuid)
         it.cont.resume(RequestResponse.QUIT)
     }
 
@@ -152,8 +144,4 @@ data class RequestData(val sender: Player, val receiver: Player, val value: Stri
 
 class Request(val sender: Player, val receiver: Player, val value: String, val cont: Continuation<RequestResponse>) {
     val uuid: UUID = UUID.randomUUID()
-
-    init {
-        glog.low("Created request", uuid, sender, receiver, value)
-    }
 }

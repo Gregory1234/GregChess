@@ -1,7 +1,8 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.minutes
+import gregc.gregchess.seconds
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -41,7 +42,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
                 else -> Regex("""(\d+)\+(\d+)""").find(name)?.let {
                     Settings(Type.INCREMENT, it.groupValues[1].toLong().minutes, it.groupValues[2].toInt().seconds)
                 } ?: run {
-                    glog.warn("Invalid chessboard configuration $name, defaulted to none!")
+                    println("Invalid chessboard configuration $name, defaulted to none!")
                     null
                 }
             }

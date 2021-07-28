@@ -5,7 +5,6 @@ import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.SpectatorEvent
-import gregc.gregchess.glog
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -191,11 +190,10 @@ class Arena(val name: String, var game: ChessGame? = null): Component.Settings<A
         val world = Bukkit.getWorld(name)
 
         (if (world != null) {
-            glog.low("World already exists", name)
             world
         } else {
             val ret = Bukkit.createWorld(WorldCreator(name).generator(WorldGen))!!
-            glog.io("Created arena", name)
+            println("Created arena $name")
             ret
         }).apply {
             pvp = false

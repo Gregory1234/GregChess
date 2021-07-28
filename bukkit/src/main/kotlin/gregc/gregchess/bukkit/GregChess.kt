@@ -11,9 +11,6 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
-import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 object GregChess : Listener {
@@ -65,13 +62,6 @@ object GregChess : Listener {
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
-        with (plugin) {
-            File(dataFolder.absolutePath + "/logs").mkdir()
-            val now = DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss").format(LocalDateTime.now())
-            val file = File(dataFolder.absolutePath + "/logs/GregChess-$now.log")
-            file.createNewFile()
-            glog = GregLogger(logger, file)
-        }
         BukkitPieceTypes
         BukkitEndReasons
         BukkitPropertyTypes
@@ -295,13 +285,6 @@ object GregChess : Listener {
                         }
                     }
 
-                }
-                "debug" -> {
-                    perms()
-                    cWrongArgument {
-                        glog.level = GregLogger.Level.valueOf(lastArg())
-                        player.sendMessage(LEVEL_SET.get(player.lang))
-                    }
                 }
                 "info" -> {
                     cWrongArgument {

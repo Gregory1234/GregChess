@@ -1,7 +1,6 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.glog
 import gregc.gregchess.rangeTo
 import java.util.*
 import kotlin.collections.component1
@@ -28,10 +27,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                     if (name.startsWith("fen ")) try {
                         Settings(FEN.parseFromString(name.drop(4)))
                     } catch (e: IllegalArgumentException) {
-                        glog.warn("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
+                        println("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
                         normal
                     } else {
-                        glog.warn("Invalid chessboard configuration $name, defaulted to normal!")
+                        println("Invalid chessboard configuration $name, defaulted to normal!")
                         normal
                     }
                 }
@@ -159,12 +158,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     operator fun plusAssign(captured: CapturedPiece) {
         capturedPieces += captured
-        glog.low("Added captured", game.uuid, captured)
     }
 
     operator fun minusAssign(captured: CapturedPiece) {
         capturedPieces -= captured
-        glog.low("Removed captured", game.uuid, captured)
     }
 
     fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
@@ -229,7 +226,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     fun checkForRepetition() {
-        if (boardHashes[getFEN().copy(currentTurn = !game.currentTurn).hashed()] ?: 0 >= 3)
+        if ((boardHashes[getFEN().copy(currentTurn = !game.currentTurn).hashed()] ?: 0) >= 3)
             game.stop(drawBy(EndReason.REPETITION))
     }
 
@@ -274,7 +271,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             moves.removeLast()
             lastMove?.render()
             game.previousTurn()
-            glog.mid("Undid last move", game.uuid, it)
         }
     }
 

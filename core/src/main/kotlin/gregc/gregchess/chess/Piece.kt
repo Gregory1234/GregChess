@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.glog
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
@@ -73,11 +72,9 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     init {
         game.components.callEvent(PieceEvent.Created(this))
-        glog.low("Piece created", game.uuid, uuid, pos, type, side)
     }
 
     fun move(target: Square) {
-        glog.mid("Moved", type, "from", pos, "to", target.pos)
         target.piece?.let {
             throw PieceAlreadyOccupiesSquareException(it.piece, target.pos)
         }
@@ -94,7 +91,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     fun placeDown() = game.components.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
 
     fun capture(by: Side): CapturedPiece {
-        glog.mid("Captured", type, "at", pos)
         clear()
         val captured = CapturedPiece(piece, board.nextCapturedPos(type, by))
         board += captured
@@ -103,7 +99,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     }
 
     fun promote(promotion: Piece) {
-        glog.mid("Promoted", type, "at", pos, "into", promotion)
         square.piece = BoardPiece(promotion, square)
         game.components.callEvent(PieceEvent.Promoted(this, square.piece!!))
     }
@@ -132,7 +127,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         fun autoMove(moves: Map<BoardPiece, Square>) {
             val org = moves.mapValues { (p, _) -> p.pos }
             moves.forEach { (piece, target) ->
-                glog.mid("Auto-moved", piece.type, "from", piece.pos, "to", target.pos)
                 piece.hasMoved = true
                 target.piece?.let { p ->
                     if (moves.keys.none {it.square == target})

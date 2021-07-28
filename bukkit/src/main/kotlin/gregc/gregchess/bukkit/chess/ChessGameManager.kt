@@ -4,7 +4,6 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.GameEndEvent
 import gregc.gregchess.bukkit.chess.component.GameStartEvent
 import gregc.gregchess.chess.*
-import gregc.gregchess.glog
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -115,10 +114,8 @@ object ChessGameManager : Listener {
 
     @EventHandler
     fun onChessGameStart(e: GameStartEvent) {
-        glog.low("Registering game", e.game.uuid)
         games += e.game
         e.game.players.forEachReal {
-            glog.low("Registering game player", it)
             it.games += e.game
             it.currentGame = e.game
         }

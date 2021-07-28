@@ -1,9 +1,10 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.asDurationOrNull
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.ChessEngine
 import gregc.gregchess.chess.FEN
+import gregc.gregchess.seconds
 import java.util.concurrent.*
 
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
@@ -32,7 +33,6 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
                 moveTime = value.asDurationOrNull().cNotNull(WRONG_DURATION_FORMAT)
             }
             else -> {
-                glog.io("setoption name $name value $value")
                 process.outputStream.write(("setoption name $name value $value\n").toByteArray())
                 process.outputStream.flush()
             }
@@ -40,20 +40,17 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
     }
 
     override fun sendCommand(command: String) {
-        glog.io("isready")
         process.outputStream.write("isready\n".toByteArray())
         process.outputStream.flush()
         runTimeout {
-            glog.io(reader.readLine())
+            reader.readLine()
         }
-        glog.io(command)
         process.outputStream.write(("$command\n").toByteArray())
         process.outputStream.flush()
     }
 
     private fun readLine() = runTimeout {
         val a = reader.readLine()
-        glog.io(a)
         a
     }
 

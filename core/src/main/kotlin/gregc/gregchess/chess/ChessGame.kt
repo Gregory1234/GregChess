@@ -40,6 +40,8 @@ enum class GameBaseEvent: ChessEvent {
     PANIC
 }
 
+class FailedToStartGameException(e: Exception): Exception("", e)
+
 class ChessGame(private val timeManager: TimeManager, val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) {
 
     override fun toString() = "ChessGame(uuid=$uuid)"
@@ -176,11 +178,10 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
             variant.start(this)
             components.callEvent(GameBaseEvent.START)
             state = GameState.Running(requireStarting())
-            glog.mid("Started game", uuid)
         } catch (e: Exception) {
-            panic(e)
-            glog.mid("Failed to start game", uuid)
-            throw e
+            val f = FailedToStartGameException(e)
+            panic(f)
+            throw f
         }
         components.callEvent(GameBaseEvent.BEGIN)
         timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
@@ -197,14 +198,12 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         requireRunning()
         components.callEvent(TurnEvent.START)
         currentPlayer.startTurn()
-        glog.low("Started turn", uuid, currentTurn)
     }
 
     private fun startPreviousTurn() {
         requireRunning()
         components.callEvent(TurnEvent.START)
         currentPlayer.startTurn()
-        glog.low("Started previous turn", uuid, currentTurn)
     }
 
     val results: GameResults<*>?
@@ -229,7 +228,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
                 components.callEvent(GameBaseEvent.CLEAR)
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
-                glog.low("Stopped game", uuid, results)
                 components.callEvent(GameBaseEvent.VERY_END)
                 return
             }
@@ -240,7 +238,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
                 timeManager.waitTick()
                 players.forEach(ChessPlayer::stop)
                 state = GameState.Stopped(stopping)
-                glog.low("Stopped game", uuid, results)
                 components.callEvent(GameBaseEvent.VERY_END)
             }
         } catch (e: Exception) {
@@ -265,7 +262,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
         board.lastMove?.clear()
         board.lastMove = data
         board.lastMove?.render()
-        glog.low("Finished move", data)
         nextTurn()
     }
 

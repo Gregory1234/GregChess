@@ -3,6 +3,7 @@ package gregc.gregchess.chess
 import io.mockk.*
 import org.junit.jupiter.api.*
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ChessGameTests {
@@ -11,7 +12,7 @@ class ChessGameTests {
 
     val basicSettings = testSettings("basic")
     val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
-    val spyVariantSettings get() = testSettings("spy variant", variant = TEST_VARIANT)
+    val spyVariantSettings = testSettings("spy variant", variant = TEST_VARIANT)
 
     val humanA = TestHuman("a")
     val humanB = TestHuman("b")
@@ -150,26 +151,29 @@ class ChessGameTests {
 
         @Test
         fun `throws when not initialized`() {
-            assertThrows<WrongStateException> {
+            val e = assertThrows<FailedToStartGameException> {
                 ChessGame(TestTimeManager(), basicSettings).start()
             }
+            assertIs<WrongStateException>(e.cause)
         }
 
         @Test
         fun `throws when running`() {
-            assertThrows<WrongStateException> {
+            val e = assertThrows<FailedToStartGameException> {
                 mkGame().start().start()
             }
+            assertIs<WrongStateException>(e.cause)
         }
 
         @Test
         fun `throws when stopped`() {
-            assertThrows<WrongStateException> {
+            val e = assertThrows<FailedToStartGameException> {
                 val g = mkGame().start()
                 val reason = Side.WHITE.wonBy(TEST_END_REASON)
                 g.stop(reason)
                 g.start()
             }
+            assertIs<WrongStateException>(e.cause)
         }
 
         @Test

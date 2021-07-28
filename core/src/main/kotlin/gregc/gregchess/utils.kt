@@ -80,5 +80,3 @@ fun String.snakeToPascal(): String {
 data class Loc(val x: Int, val y: Int, val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
 }
-
-var glog: GregLogger = GregLogger()
