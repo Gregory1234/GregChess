@@ -19,6 +19,9 @@ enum class Side(val standardChar: Char, val direction: Int) {
 
 }
 
+val white get() = Side.WHITE
+val black get() = Side.BLACK
+
 data class MutableBySides<T>(var white: T, var black: T) {
     constructor(block: (Side) -> T) : this(block(Side.WHITE), block(Side.BLACK))
     constructor(v: T) : this(v, v)

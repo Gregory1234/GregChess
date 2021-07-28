@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.chess.variant.CaptureAll
+import gregc.gregchess.rotationsOf
 import gregc.gregchess.times
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Test
@@ -46,6 +47,13 @@ class MovementTests {
         assertNotNull(move, target.toString()).block()
     }
 
+    private inline fun Collection<MoveCandidate>.assertMoveIfValid(target: Pos, block: MoveCandidate.() -> Unit) = apply {
+        if (target.isValid()) {
+            val move = firstOrNull { it.target.pos == target }
+            assertNotNull(move, target.toString()).block()
+        }
+    }
+
     private fun Collection<MoveCandidate>.assertNoMove(target: Pos) = apply {
         val move = firstOrNull { it.target.pos == target }
         assertNull(move, target.toString())
@@ -76,13 +84,12 @@ class MovementTests {
     @Nested
     inner class Pawn {
         private fun setupPawn(pos: Pos, side: Side, hasMoved: Boolean, vararg added: Pair<Dir, Piece>): Collection<MoveCandidate> {
-            setup(PieceType.PAWN.of(side) at pos, *added)
+            setup(side.pawn at pos, *added)
             pos.hasMoved = hasMoved
             return movesFrom(pos)
         }
 
-        private fun promotions(s: Side) =
-            listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { it.of(s) }
+        private fun promotions(s: Side) = PieceType.run { listOf(QUEEN, ROOK, BISHOP, KNIGHT) }.map { it.of(s) }
 
         private fun MoveCandidate.assertNotPromoting() = assertNull(promotions)
 
@@ -113,7 +120,7 @@ class MovementTests {
                 Side.forEach { s ->
                     Side.forEach { blockSide ->
                         forEachPosIn(Pos(0,0), Pos(7,6), s) { pos ->
-                            setupPawn(pos, s, true, PieceType.ROOK.of(blockSide) at s.dir).assertSize(0)
+                            setupPawn(pos, s, true, blockSide.rook at s.dir).assertSize(0)
                         }
                     }
                 }
@@ -156,7 +163,7 @@ class MovementTests {
                 Side.forEach { s ->
                     Side.forEach { blockSide ->
                         forEachPosIn(Pos(0, 0), Pos(7, 6), s) { pos ->
-                            setupPawn(pos, s, false, PieceType.ROOK.of(blockSide) at s.dir).assertSize(0)
+                            setupPawn(pos, s, false, blockSide.rook at s.dir).assertSize(0)
                         }
                     }
                 }
@@ -166,7 +173,7 @@ class MovementTests {
                 Side.forEach { s ->
                     Side.values().forEach { blockSide ->
                         forEachPosIn(Pos(0, 0), Pos(7, 5), s) { pos ->
-                            setupPawn(pos, s, false, PieceType.ROOK.of(blockSide) at s.dir * 2).assertSize(1)
+                            setupPawn(pos, s, false, blockSide.rook at s.dir * 2).assertSize(1)
                                 .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
                         }
                     }
@@ -181,7 +188,7 @@ class MovementTests {
                 listOf(1, -1).forEach { u ->
                     forEachPosIn(Pos(0, 0), Pos(7, 5), s, -u) { pos ->
                         val d = Dir(u, s.direction)
-                        setupPawn(pos, s, false, PieceType.ROOK.of(!s) at d)
+                        setupPawn(pos, s, false, (!s).rook at d)
                             .assertMove(pos + d) { assertCapture(); assertNotPromoting() }
                     }
                 }
@@ -194,7 +201,7 @@ class MovementTests {
                 listOf(1, -1).forEach { u ->
                     forEachPosIn(Pos(0, 6), Pos(7, 6), s, -u) { pos ->
                         val d = Dir(u, s.direction)
-                        setupPawn(pos, s, true, PieceType.ROOK.of(!s) at d)
+                        setupPawn(pos, s, true, (!s).rook at d)
                             .assertMove(pos + d) { assertCapture(); assertPromoting() }
                     }
                 }
@@ -207,7 +214,7 @@ class MovementTests {
                 listOf(1, -1).forEach { u ->
                     forEachPosIn(Pos(0, 0), Pos(7, 5), s, -u) { pos ->
                         val d = Dir(u, s.direction)
-                        setupPawn(pos, s, true, PieceType.ROOK.of(s) at d)
+                        setupPawn(pos, s, true, s.rook at d)
                             .assertNoMove(pos + d)
                     }
                 }
@@ -220,7 +227,7 @@ class MovementTests {
                 listOf(1, -1).forEach { u ->
                     forEachPosIn(Pos(0, 1), Pos(6, 5), s, -u) { pos ->
                         val d = Dir(u, s.direction)
-                        setupPawn(pos, s, true, PieceType.PAWN.of(!s) at Dir(u, 0))
+                        setupPawn(pos, s, true, (!s).rook at Dir(u, 0))
                         game.board[pos + d]!!.flags += ChessFlag(EN_PASSANT, 0)
                         game.board.updateMoves()
                         movesFrom(pos).assertMove(pos + d) { assertCapture(pos.plusF(u)); assertNotPromoting() }
@@ -237,19 +244,13 @@ class MovementTests {
         fun `can only move on the diagonals`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.BISHOP.of(s) at pos)
+                    setup(s.bishop at pos)
                     movesFrom(pos).apply {
                         var size = 0
                         (-7..7).forEach {
-                            val t1 = pos + Dir(it, it)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(it, -it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { assertNotCapture() }
-                                size++
+                            if (it != 0) {
+                                assertMoveIfValid(pos + Dir(it, it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos + Dir(it, -it)) { size++; assertNotCapture() }
                             }
                         }
                         assertSize(size)
@@ -262,23 +263,13 @@ class MovementTests {
         fun `is blocked by same colored pieces`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.BISHOP.of(s) at pos,
-                        PieceType.ROOK.of(s) at Dir(2, 2),
-                        PieceType.ROOK.of(s) at Dir(2, -2),
-                        PieceType.ROOK.of(s) at Dir(-2, 2),
-                        PieceType.ROOK.of(s) at Dir(-2, -2))
+                    setup(s.bishop at pos, *rotationsOf(2, 2).map { s.rook at it }.toTypedArray())
                     movesFrom(pos).apply {
                         var size = 0
                         (-1..1).forEach {
-                            val t1 = pos + Dir(it, it)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(it, -it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { assertNotCapture() }
-                                size++
+                            if (it != 0) {
+                                assertMoveIfValid(pos + Dir(it, it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos + Dir(it, -it)) { size++; assertNotCapture() }
                             }
                         }
                         assertSize(size)
@@ -291,23 +282,15 @@ class MovementTests {
         fun `can capture opposite colored pieces`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.BISHOP.of(s) at pos,
-                        PieceType.ROOK.of(!s) at Dir(2, 2),
-                        PieceType.ROOK.of(!s) at Dir(2, -2),
-                        PieceType.ROOK.of(!s) at Dir(-2, 2),
-                        PieceType.ROOK.of(!s) at Dir(-2, -2))
+                    setup(s.bishop at pos, *rotationsOf(2, 2).map { (!s).rook at it }.toTypedArray())
                     movesFrom(pos).apply {
                         var size = 0
                         (-2..2).forEach {
-                            val t1 = pos + Dir(it, it)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(it, -it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
-                                size++
+                            fun MoveCandidate.maybeCapture() =
+                                if (it.absoluteValue == 2) assertCapture() else assertNotCapture()
+                            if (it != 0) {
+                                assertMoveIfValid(pos + Dir(it, it)) { size++; maybeCapture() }
+                                assertMoveIfValid(pos + Dir(it, -it)) { size++; maybeCapture() }
                             }
                         }
                         assertSize(size)
@@ -324,19 +307,13 @@ class MovementTests {
         fun `can only move horizontally and vertically`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.ROOK.of(s) at pos)
+                    setup(s.rook at pos)
                     movesFrom(pos).apply {
                         var size = 0
                         (-7..7).forEach {
-                            val t1 = pos + Dir(it, 0)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(0, it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { assertNotCapture() }
-                                size++
+                            if (it != 0) {
+                                assertMoveIfValid(pos.plusF(it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos.plusR(it)) { size++; assertNotCapture() }
                             }
                         }
                         assertSize(size)
@@ -349,23 +326,13 @@ class MovementTests {
         fun `is blocked by same colored pieces`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.ROOK.of(s) at pos,
-                        PieceType.BISHOP.of(s) at Dir(2, 0),
-                        PieceType.BISHOP.of(s) at Dir(-2, 0),
-                        PieceType.BISHOP.of(s) at Dir(0, 2),
-                        PieceType.BISHOP.of(s) at Dir(0, -2))
+                    setup(s.rook at pos, *rotationsOf(2, 0).map { s.bishop at it }.toTypedArray())
                     movesFrom(pos).apply {
                         var size = 0
                         (-1..1).forEach {
-                            val t1 = pos + Dir(it, 0)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(0, it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { assertNotCapture() }
-                                size++
+                            if (it != 0) {
+                                assertMoveIfValid(pos.plusF(it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos.plusR(it)) { size++; assertNotCapture() }
                             }
                         }
                         assertSize(size)
@@ -378,23 +345,15 @@ class MovementTests {
         fun `can capture opposite colored pieces`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.ROOK.of(s) at pos,
-                        PieceType.BISHOP.of(!s) at Dir(2, 0),
-                        PieceType.BISHOP.of(!s) at Dir(-2, 0),
-                        PieceType.BISHOP.of(!s) at Dir(0, 2),
-                        PieceType.BISHOP.of(!s) at Dir(0, -2))
+                    setup(s.rook at pos, *rotationsOf(2, 0).map { (!s).bishop at it }.toTypedArray())
                     movesFrom(pos).apply {
                         var size = 0
                         (-2..2).forEach {
-                            val t1 = pos + Dir(it, 0)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(0, it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
-                                size++
+                            fun MoveCandidate.maybeCapture() =
+                                if (it.absoluteValue == 2) assertCapture() else assertNotCapture()
+                            if (it != 0) {
+                                assertMoveIfValid(pos.plusF(it)) { size++; maybeCapture() }
+                                assertMoveIfValid(pos.plusR(it)) { size++; maybeCapture() }
                             }
                         }
                         assertSize(size)
@@ -411,29 +370,15 @@ class MovementTests {
         fun `can only move on the diagonals horizontally and vertically`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.QUEEN.of(s) at pos)
+                    setup(s.queen at pos)
                     movesFrom(pos).apply {
                         var size = 0
                         (-7..7).forEach {
-                            val t1 = pos + Dir(it, it)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(it, -it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { assertNotCapture() }
-                                size++
-                            }
-                            val t3 = pos + Dir(it, 0)
-                            if (t3.isValid() && t3 != pos) {
-                                assertMove(t3) { assertNotCapture() }
-                                size++
-                            }
-                            val t4 = pos + Dir(0, it)
-                            if (t4.isValid() && t4 != pos) {
-                                assertMove(t4) { assertNotCapture() }
-                                size++
+                            if (it != 0) {
+                                assertMoveIfValid(pos + Dir(it, it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos + Dir(it, -it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos.plusF(it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos.plusR(it)) { size++; assertNotCapture() }
                             }
                         }
                         assertSize(size)
@@ -446,37 +391,17 @@ class MovementTests {
         fun `is blocked by same colored pieces`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.QUEEN.of(s) at pos,
-                        PieceType.KING.of(s) at Dir(2, 2),
-                        PieceType.KING.of(s) at Dir(2, -2),
-                        PieceType.KING.of(s) at Dir(-2, 2),
-                        PieceType.KING.of(s) at Dir(-2, -2),
-                        PieceType.KING.of(s) at Dir(2, 0),
-                        PieceType.KING.of(s) at Dir(-2, 0),
-                        PieceType.KING.of(s) at Dir(0, 2),
-                        PieceType.KING.of(s) at Dir(0, -2))
+                    setup(s.queen at pos,
+                        *rotationsOf(2, 2).map { s.king at it }.toTypedArray(),
+                        *rotationsOf(2, 0).map { s.king at it }.toTypedArray())
                     movesFrom(pos).apply {
                         var size = 0
                         (-1..1).forEach {
-                            val t1 = pos + Dir(it, it)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(it, -it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { assertNotCapture() }
-                                size++
-                            }
-                            val t3 = pos + Dir(it, 0)
-                            if (t3.isValid() && t3 != pos) {
-                                assertMove(t3) { assertNotCapture() }
-                                size++
-                            }
-                            val t4 = pos + Dir(0, it)
-                            if (t4.isValid() && t4 != pos) {
-                                assertMove(t4) { assertNotCapture() }
-                                size++
+                            if (it != 0) {
+                                assertMoveIfValid(pos + Dir(it, it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos + Dir(it, -it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos.plusF(it)) { size++; assertNotCapture() }
+                                assertMoveIfValid(pos.plusR(it)) { size++; assertNotCapture() }
                             }
                         }
                         assertSize(size)
@@ -489,37 +414,19 @@ class MovementTests {
         fun `can capture opposite colored pieces`() {
             Side.forEach { s ->
                 forEachPosIn { pos ->
-                    setup(PieceType.QUEEN.of(s) at pos,
-                        PieceType.KING.of(!s) at Dir(2, 2),
-                        PieceType.KING.of(!s) at Dir(2, -2),
-                        PieceType.KING.of(!s) at Dir(-2, 2),
-                        PieceType.KING.of(!s) at Dir(-2, -2),
-                        PieceType.KING.of(!s) at Dir(2, 0),
-                        PieceType.KING.of(!s) at Dir(-2, 0),
-                        PieceType.KING.of(!s) at Dir(0, 2),
-                        PieceType.KING.of(!s) at Dir(0, -2))
+                    setup(s.queen at pos,
+                        *rotationsOf(2, 2).map { (!s).king at it }.toTypedArray(),
+                        *rotationsOf(2, 0).map { (!s).king at it }.toTypedArray())
                     movesFrom(pos).apply {
                         var size = 0
                         (-2..2).forEach {
-                            val t1 = pos + Dir(it, it)
-                            if (t1.isValid() && t1 != pos) {
-                                assertMove(t1) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
-                                size++
-                            }
-                            val t2 = pos + Dir(it, -it)
-                            if (t2.isValid() && t2 != pos) {
-                                assertMove(t2) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
-                                size++
-                            }
-                            val t3 = pos + Dir(it, 0)
-                            if (t3.isValid() && t3 != pos) {
-                                assertMove(t3) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
-                                size++
-                            }
-                            val t4 = pos + Dir(0, it)
-                            if (t4.isValid() && t4 != pos) {
-                                assertMove(t4) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
-                                size++
+                            fun MoveCandidate.maybeCapture() =
+                                if (it.absoluteValue == 2) assertCapture() else assertNotCapture()
+                            if (it != 0) {
+                                assertMoveIfValid(pos + Dir(it, it)) { size++; maybeCapture() }
+                                assertMoveIfValid(pos + Dir(it, -it)) { size++; maybeCapture() }
+                                assertMoveIfValid(pos.plusF(it)) { size++; maybeCapture() }
+                                assertMoveIfValid(pos.plusR(it)) { size++; maybeCapture() }
                             }
                         }
                         assertSize(size)

@@ -11,8 +11,13 @@ data class Piece(val type: PieceType, val side: Side) {
 }
 
 fun PieceType.of(side: Side) = Piece(this, side)
-val PieceType.white get() = of(Side.WHITE)
-val PieceType.black get() = of(Side.BLACK)
+
+val Side.pawn get() = PieceType.PAWN.of(this)
+val Side.knight get() = PieceType.KNIGHT.of(this)
+val Side.bishop get() = PieceType.BISHOP.of(this)
+val Side.rook get() = PieceType.ROOK.of(this)
+val Side.queen get() = PieceType.QUEEN.of(this)
+val Side.king get() = PieceType.KING.of(this)
 
 data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)
 
