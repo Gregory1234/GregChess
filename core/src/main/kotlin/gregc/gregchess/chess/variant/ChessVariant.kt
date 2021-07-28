@@ -18,14 +18,62 @@ open class ChessVariant(val name: String) {
     }
 
     open fun start(game: ChessGame) {}
+
     open fun chessboardSetup(board: Chessboard) {}
+
     open fun finishMove(move: MoveCandidate) {}
-    open fun getLegality(move: MoveCandidate): MoveLegality = Normal.getLegality(move)
-    open fun isInCheck(king: BoardPiece): Boolean = Normal.isInCheck(king)
-    open fun checkForGameEnd(game: ChessGame) = Normal.checkForGameEnd(game)
-    open fun timeout(game: ChessGame, side: Side) = Normal.timeout(game, side)
-    open fun undoLastMove(move: MoveData) = Normal.undoLastMove(move)
-    open fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = Normal.getPieceMoves(piece)
+
+    open fun getLegality(move: MoveCandidate): MoveLegality = with(move) {
+        if (!Normal.isValid(move))
+            return MoveLegality.INVALID
+
+        if (piece.type == PieceType.KING) {
+            return if ((pass + target.pos).mapNotNull { game.board[it] }.all {
+                    Normal.checkingMoves(!piece.side, it).isEmpty()
+                }) MoveLegality.LEGAL else MoveLegality.IN_CHECK
+        }
+
+        val myKing = game.tryOrStopNull(game.board.kingOf(piece.side))
+        val checks = Normal.checkingMoves(!piece.side, myKing.square)
+        if (checks.any { target.pos !in it.pass && target != it.origin })
+            return MoveLegality.IN_CHECK
+        val pins = Normal.pinningMoves(!piece.side, myKing.square).filter { origin.pos in it.pass }
+        if (pins.any { target.pos !in it.pass && target != it.origin })
+            return MoveLegality.PINNED
+        return MoveLegality.LEGAL
+    }
+
+    open fun isInCheck(king: BoardPiece): Boolean = Normal.checkingMoves(!king.side, king.square).isNotEmpty()
+
+    open fun checkForGameEnd(game: ChessGame) = with(game.board) {
+        if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none(game.variant::isLegal) }) {
+            if (isInCheck(game, !game.currentTurn))
+                game.stop(game.currentTurn.wonBy(EndReason.CHECKMATE))
+            else
+                game.stop(drawBy(EndReason.STALEMATE))
+        }
+        checkForRepetition()
+        checkForFiftyMoveRule()
+        val whitePieces = piecesOf(Side.WHITE)
+        val blackPieces = piecesOf(Side.BLACK)
+        if (whitePieces.size == 1 && blackPieces.size == 1)
+            game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
+        if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
+            game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
+        if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
+            game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
+    }
+
+    open fun timeout(game: ChessGame, side: Side) {
+        if (game.board.piecesOf(!side).size == 1)
+            game.stop(drawBy(EndReason.DRAW_TIMEOUT))
+        else
+            game.stop(side.lostBy(EndReason.TIMEOUT))
+    }
+
+    open fun undoLastMove(move: MoveData) = move.undo()
+
+    open fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = piece.type.moveScheme(piece)
 
     open fun isInCheck(game: ChessGame, side: Side): Boolean {
         val king = game.board.kingOf(side)
@@ -34,16 +82,16 @@ open class ChessVariant(val name: String) {
 
     fun isLegal(move: MoveCandidate) = getLegality(move) == MoveLegality.LEGAL
 
-    open fun genFEN(chess960: Boolean): FEN = Normal.genFEN(chess960)
+    open fun genFEN(chess960: Boolean): FEN = if (!chess960) FEN() else FEN.generateChess960()
 
     open val pieceTypes: Collection<PieceType>
-        get() = Normal.pieceTypes
+        get() = PieceType.run { listOf(KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN) }
 
     open val requiredComponents: Collection<KClass<out Component.Settings<*>>>
-        get() = Normal.requiredComponents
+        get() = emptyList()
 
     open val optionalComponents: Collection<KClass<out Component.Settings<*>>>
-        get() = Normal.optionalComponents
+        get() = emptyList()
 
     protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { board.getMoves(it.pos) }
 
@@ -77,70 +125,6 @@ open class ChessVariant(val name: String) {
             return true
         }
 
-        override fun getLegality(move: MoveCandidate): MoveLegality = with(move) {
-            if (!isValid(move))
-                return MoveLegality.INVALID
-
-            if (piece.type == PieceType.KING) {
-                return if ((pass + target.pos).mapNotNull { game.board[it] }.all {
-                        checkingMoves(!piece.side, it).isEmpty()
-                    }) MoveLegality.LEGAL else MoveLegality.IN_CHECK
-            }
-
-            val myKing = game.tryOrStopNull(game.board.kingOf(piece.side))
-            val checks = checkingMoves(!piece.side, myKing.square)
-            if (checks.any { target.pos !in it.pass && target != it.origin })
-                return MoveLegality.IN_CHECK
-            val pins = pinningMoves(!piece.side, myKing.square).filter { origin.pos in it.pass }
-            if (pins.any { target.pos !in it.pass && target != it.origin })
-                return MoveLegality.PINNED
-            return MoveLegality.LEGAL
-        }
-
-        override fun isInCheck(king: BoardPiece): Boolean =
-            checkingMoves(!king.side, king.square).isNotEmpty()
-
-        override fun checkForGameEnd(game: ChessGame) = with(game.board) {
-            if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none(game.variant::isLegal) }) {
-                if (isInCheck(game, !game.currentTurn))
-                    game.stop(game.currentTurn.wonBy(EndReason.CHECKMATE))
-                else
-                    game.stop(drawBy(EndReason.STALEMATE))
-            }
-            checkForRepetition()
-            checkForFiftyMoveRule()
-            val whitePieces = piecesOf(Side.WHITE)
-            val blackPieces = piecesOf(Side.BLACK)
-            if (whitePieces.size == 1 && blackPieces.size == 1)
-                game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
-            if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
-                game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
-            if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
-                game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
-        }
-
-        override fun timeout(game: ChessGame, side: Side) {
-            if (game.board.piecesOf(!side).size == 1)
-                game.stop(drawBy(EndReason.DRAW_TIMEOUT))
-            else
-                game.stop(side.lostBy(EndReason.TIMEOUT))
-        }
-
-        override fun undoLastMove(move: MoveData) = move.undo()
-
-        override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = piece.type.moveScheme(piece)
-
-        override fun genFEN(chess960: Boolean) = if (!chess960) FEN() else FEN.generateChess960()
-
-        override val pieceTypes: Collection<PieceType>
-            get() = listOf(PieceType.KING, PieceType.QUEEN, PieceType.ROOK,
-                PieceType.BISHOP, PieceType.KNIGHT, PieceType.PAWN)
-
-        override val requiredComponents: Collection<KClass<out Component.Settings<*>>>
-            get() = emptyList()
-
-        override val optionalComponents: Collection<KClass<out Component.Settings<*>>>
-            get() = emptyList()
     }
 
 }
