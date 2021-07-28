@@ -26,3 +26,9 @@ suspend fun TimeManager.waitTick() = suspendCoroutine<Unit> {
         it.resume(Unit)
     }
 }
+
+suspend fun TimeManager.toAsync() = suspendCoroutine<Unit> {
+    runTaskAsynchronously {
+        it.resume(Unit)
+    }
+}

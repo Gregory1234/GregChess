@@ -101,12 +101,18 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
     override fun stop() = engine.stop()
 
     override fun startTurn() {
-        engine.getMove(game.board.getFEN(), { str ->
-            val origin = Pos.parseFromString(str.take(2))
-            val target = Pos.parseFromString(str.drop(2).take(2))
-            val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(game.variant.pieceTypes, it) }
-            val move = game.board.getMoves(origin).first { it.display.pos == target }
-            game.finishMove(move, promotion?.of(side))
-        }, { game.stop(drawBy(EndReason.ERROR)) })
+        interact {
+            try {
+                val str = engine.getMove(game.board.getFEN())
+                val origin = Pos.parseFromString(str.take(2))
+                val target = Pos.parseFromString(str.drop(2).take(2))
+                val promotion = str.drop(4).firstOrNull()?.let { PieceType.parseFromStandardChar(game.variant.pieceTypes, it) }
+                val move = game.board.getMoves(origin).first { it.display.pos == target }
+                game.finishMove(move, promotion?.of(side))
+            } catch(e: Exception) {
+                e.printStackTrace()
+                game.stop(drawBy(EndReason.ERROR))
+            }
+        }
     }
 }

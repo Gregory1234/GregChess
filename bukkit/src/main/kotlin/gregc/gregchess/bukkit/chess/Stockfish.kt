@@ -1,10 +1,8 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.asDurationOrNull
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.chess.ChessEngine
-import gregc.gregchess.chess.FEN
-import gregc.gregchess.seconds
+import gregc.gregchess.chess.*
 import java.util.concurrent.*
 
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
@@ -58,34 +56,19 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
         readLine()
     }
 
-    override fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit) {
-        var move = ""
-        var exc: Exception? = null
-        BukkitTimeManager.runTaskAsynchronously {
-            try {
-                sendCommand("position fen $fen")
-                sendCommand("go movetime " + moveTime.toMillis())
-                while (true) {
-                    val line = readLine().split(" ")
-                    if (line[0] == "bestmove") {
-                        if (line[1] != "(none)")
-                            move = line[1]
-                        break
-                    }
+    override suspend fun getMove(fen: FEN): String {
+        BukkitTimeManager.toAsync()
+        sendCommand("position fen $fen")
+        sendCommand("go movetime " + moveTime.toMillis())
+        while (true) {
+            val line = readLine().split(" ")
+            if (line[0] == "bestmove") {
+                if (line[1] != "(none)") {
+                    BukkitTimeManager.toSync()
+                    return line[1]
+                } else {
+                    throw NoEngineMoveException(fen)
                 }
-            } catch (e: Exception) {
-                exc = e
-                throw e
-            }
-        }
-        //TODO: this is potentially dangerous!
-        BukkitTimeManager.runTaskTimer(moveTime + 1.ticks, 1.ticks) {
-            if (move != "") {
-                onSuccess(move)
-                cancel()
-            } else if (exc != null) {
-                onException(exc!!)
-                cancel()
             }
         }
     }

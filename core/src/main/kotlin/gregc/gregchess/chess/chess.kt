@@ -81,10 +81,12 @@ data class BySides<T>(val white: T, val black: T) {
     fun toMutableBySides() = MutableBySides(white, black)
 }
 
+class NoEngineMoveException(fen: FEN): Exception(fen.toString())
+
 interface ChessEngine {
     val name: String
     fun stop()
     fun setOption(name: String, value: String)
     fun sendCommand(command: String)
-    fun getMove(fen: FEN, onSuccess: (String) -> Unit, onException: (Exception) -> Unit)
+    suspend fun getMove(fen: FEN): String
 }

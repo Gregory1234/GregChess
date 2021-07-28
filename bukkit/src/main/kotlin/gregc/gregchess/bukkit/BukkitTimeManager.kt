@@ -4,6 +4,8 @@ import gregc.gregchess.TimeManager
 import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 object BukkitTimeManager : TimeManager {
 
@@ -38,5 +40,15 @@ object BukkitTimeManager : TimeManager {
 
     override fun runTaskAsynchronously(callback: () -> Unit) {
         Bukkit.getScheduler().runTaskAsynchronously(GregChess.plugin, callback)
+    }
+
+    fun runTask(callback: () -> Unit) {
+        Bukkit.getScheduler().runTask(GregChess.plugin, callback)
+    }
+}
+
+suspend fun BukkitTimeManager.toSync() = suspendCoroutine<Unit> {
+    runTask {
+        it.resume(Unit)
     }
 }
