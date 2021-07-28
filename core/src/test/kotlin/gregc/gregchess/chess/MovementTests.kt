@@ -4,18 +4,16 @@ import gregc.gregchess.chess.variant.CaptureAll
 import gregc.gregchess.times
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Test
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.*
 import kotlin.test.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MovementTests {
-    val humanA = TestHuman("a")
-    val humanB = TestHuman("b")
     val game = ChessGame(TestTimeManager(), testSettings("basic", variant = CaptureAll)).addPlayers {
-        human(humanA, Side.WHITE, false)
-        human(humanB, Side.BLACK, false)
+        human(TestHuman("a"), Side.WHITE, false)
+        human(TestHuman("b"), Side.BLACK, false)
     }.start()
+
     fun clearBoard(vararg pieces: PieceInfo) {
         game.board.setFromFEN(FEN.parseFromString("${FEN.BoardState.fromPieces(pieces.associateBy { it.pos }).state} w - - 0 1"))
     }
@@ -226,6 +224,305 @@ class MovementTests {
                         game.board[pos + d]!!.flags += ChessFlag(EN_PASSANT, 0)
                         game.board.updateMoves()
                         movesFrom(pos).assertMove(pos + d) { assertCapture(pos.plusF(u)); assertNotPromoting() }
+                    }
+                }
+            }
+        }
+    }
+
+    @Nested
+    inner class Bishop {
+
+        @Test
+        fun `can only move on the diagonals`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.BISHOP.of(s) at pos)
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-7..7).forEach {
+                            val t1 = pos + Dir(it, it)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(it, -it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `is blocked by same colored pieces`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.BISHOP.of(s) at pos,
+                        PieceType.ROOK.of(s) at Dir(2, 2),
+                        PieceType.ROOK.of(s) at Dir(2, -2),
+                        PieceType.ROOK.of(s) at Dir(-2, 2),
+                        PieceType.ROOK.of(s) at Dir(-2, -2))
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-1..1).forEach {
+                            val t1 = pos + Dir(it, it)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(it, -it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `can capture opposite colored pieces`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.BISHOP.of(s) at pos,
+                        PieceType.ROOK.of(!s) at Dir(2, 2),
+                        PieceType.ROOK.of(!s) at Dir(2, -2),
+                        PieceType.ROOK.of(!s) at Dir(-2, 2),
+                        PieceType.ROOK.of(!s) at Dir(-2, -2))
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-2..2).forEach {
+                            val t1 = pos + Dir(it, it)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(it, -it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
+                    }
+                }
+            }
+        }
+    }
+
+    @Nested
+    inner class Rook {
+
+        @Test
+        fun `can only move horizontally and vertically`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.ROOK.of(s) at pos)
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-7..7).forEach {
+                            val t1 = pos + Dir(it, 0)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(0, it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `is blocked by same colored pieces`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.ROOK.of(s) at pos,
+                        PieceType.BISHOP.of(s) at Dir(2, 0),
+                        PieceType.BISHOP.of(s) at Dir(-2, 0),
+                        PieceType.BISHOP.of(s) at Dir(0, 2),
+                        PieceType.BISHOP.of(s) at Dir(0, -2))
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-1..1).forEach {
+                            val t1 = pos + Dir(it, 0)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(0, it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `can capture opposite colored pieces`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.ROOK.of(s) at pos,
+                        PieceType.BISHOP.of(!s) at Dir(2, 0),
+                        PieceType.BISHOP.of(!s) at Dir(-2, 0),
+                        PieceType.BISHOP.of(!s) at Dir(0, 2),
+                        PieceType.BISHOP.of(!s) at Dir(0, -2))
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-2..2).forEach {
+                            val t1 = pos + Dir(it, 0)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(0, it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
+                    }
+                }
+            }
+        }
+    }
+
+    @Nested
+    inner class Queen {
+
+        @Test
+        fun `can only move on the diagonals horizontally and vertically`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.QUEEN.of(s) at pos)
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-7..7).forEach {
+                            val t1 = pos + Dir(it, it)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(it, -it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { assertNotCapture() }
+                                size++
+                            }
+                            val t3 = pos + Dir(it, 0)
+                            if (t3.isValid() && t3 != pos) {
+                                assertMove(t3) { assertNotCapture() }
+                                size++
+                            }
+                            val t4 = pos + Dir(0, it)
+                            if (t4.isValid() && t4 != pos) {
+                                assertMove(t4) { assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `is blocked by same colored pieces`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.QUEEN.of(s) at pos,
+                        PieceType.KING.of(s) at Dir(2, 2),
+                        PieceType.KING.of(s) at Dir(2, -2),
+                        PieceType.KING.of(s) at Dir(-2, 2),
+                        PieceType.KING.of(s) at Dir(-2, -2),
+                        PieceType.KING.of(s) at Dir(2, 0),
+                        PieceType.KING.of(s) at Dir(-2, 0),
+                        PieceType.KING.of(s) at Dir(0, 2),
+                        PieceType.KING.of(s) at Dir(0, -2))
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-1..1).forEach {
+                            val t1 = pos + Dir(it, it)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(it, -it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { assertNotCapture() }
+                                size++
+                            }
+                            val t3 = pos + Dir(it, 0)
+                            if (t3.isValid() && t3 != pos) {
+                                assertMove(t3) { assertNotCapture() }
+                                size++
+                            }
+                            val t4 = pos + Dir(0, it)
+                            if (t4.isValid() && t4 != pos) {
+                                assertMove(t4) { assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `can capture opposite colored pieces`() {
+            Side.forEach { s ->
+                forEachPosIn { pos ->
+                    setup(PieceType.QUEEN.of(s) at pos,
+                        PieceType.KING.of(!s) at Dir(2, 2),
+                        PieceType.KING.of(!s) at Dir(2, -2),
+                        PieceType.KING.of(!s) at Dir(-2, 2),
+                        PieceType.KING.of(!s) at Dir(-2, -2),
+                        PieceType.KING.of(!s) at Dir(2, 0),
+                        PieceType.KING.of(!s) at Dir(-2, 0),
+                        PieceType.KING.of(!s) at Dir(0, 2),
+                        PieceType.KING.of(!s) at Dir(0, -2))
+                    movesFrom(pos).apply {
+                        var size = 0
+                        (-2..2).forEach {
+                            val t1 = pos + Dir(it, it)
+                            if (t1.isValid() && t1 != pos) {
+                                assertMove(t1) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
+                                size++
+                            }
+                            val t2 = pos + Dir(it, -it)
+                            if (t2.isValid() && t2 != pos) {
+                                assertMove(t2) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
+                                size++
+                            }
+                            val t3 = pos + Dir(it, 0)
+                            if (t3.isValid() && t3 != pos) {
+                                assertMove(t3) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
+                                size++
+                            }
+                            val t4 = pos + Dir(0, it)
+                            if (t4.isValid() && t4 != pos) {
+                                assertMove(t4) { if (it.absoluteValue == 2) assertCapture() else assertNotCapture() }
+                                size++
+                            }
+                        }
+                        assertSize(size)
                     }
                 }
             }
