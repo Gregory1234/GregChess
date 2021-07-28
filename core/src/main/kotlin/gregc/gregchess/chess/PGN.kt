@@ -17,8 +17,8 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
         private val result: String?
     ) {
         override fun toString() = buildString {
-            val indexShift = if (initial == Side.WHITE) (initialMove * 2u - 2u) else (initialMove * 2u - 1u)
-            if (initial == Side.BLACK) {
+            val indexShift = if (initial == white) (initialMove * 2u - 2u) else (initialMove * 2u - 1u)
+            if (initial == black) {
                 append(initialMove, ". ")
             }
             moves.forEachIndexed { index, moveData ->
@@ -48,8 +48,8 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
             val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(game.startTime)
             tags += TagPair("Date", date)
             tags += TagPair("Round", "1")
-            tags += TagPair("White", game[Side.WHITE].name)
-            tags += TagPair("Black", game[Side.BLACK].name)
+            tags += TagPair("White", game[white].name)
+            tags += TagPair("Black", game[black].name)
 
             val result = game.results?.score?.pgn
 

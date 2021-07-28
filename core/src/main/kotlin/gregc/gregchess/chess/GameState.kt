@@ -36,7 +36,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     class Starting(
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime = LocalDateTime.now(),
-        override var currentTurn: Side = Side.WHITE
+        override var currentTurn: Side = white
     ) : GameState(false, false, false), WithCurrentPlayer, WithStartTime {
         constructor(ready: Ready) : this(ready.players)
 

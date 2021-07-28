@@ -13,7 +13,7 @@ object HordeChess : ChessVariant("HORDE") {
     }
 
     override fun chessboardSetup(board: Chessboard) {
-        board.piecesOf(Side.WHITE, PieceType.PAWN).forEach {
+        board.piecesOf(white, PieceType.PAWN).forEach {
             it.force(false)
         }
     }
@@ -24,22 +24,22 @@ object HordeChess : ChessVariant("HORDE") {
     }
 
     override fun getLegality(move: MoveCandidate): MoveLegality = when {
-        move.piece.side == Side.BLACK -> Normal.getLegality(move)
+        move.piece.side == black -> Normal.getLegality(move)
         Normal.isValid(move) -> MoveLegality.LEGAL
         else -> MoveLegality.INVALID
     }
 
-    override fun isInCheck(king: BoardPiece) = king.side == Side.BLACK && Normal.isInCheck(king)
+    override fun isInCheck(king: BoardPiece) = king.side == black && Normal.isInCheck(king)
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(Side.BLACK).all { getMoves(it.pos).none(game.variant::isLegal) }) {
-            if (isInCheck(game, Side.BLACK))
-                game.stop(Side.WHITE.wonBy(EndReason.CHECKMATE))
+        if (piecesOf(black).all { getMoves(it.pos).none(game.variant::isLegal) }) {
+            if (isInCheck(game, black))
+                game.stop(white.wonBy(EndReason.CHECKMATE))
             else
                 game.stop(drawBy(EndReason.STALEMATE))
         }
-        if (piecesOf(Side.WHITE).isEmpty())
-            game.stop(Side.BLACK.wonBy(EndReason.ALL_PIECES_LOST))
+        if (piecesOf(white).isEmpty())
+            game.stop(black.wonBy(EndReason.ALL_PIECES_LOST))
         checkForRepetition()
         checkForFiftyMoveRule()
     }

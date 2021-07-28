@@ -73,10 +73,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         get() {
             if (settings.chess960)
                 return true
-            val whiteKing = kingOf(Side.WHITE)
-            val blackKing = kingOf(Side.BLACK)
-            val whiteRooks = piecesOf(Side.WHITE, PieceType.ROOK).filter { !it.hasMoved }
-            val blackRooks = piecesOf(Side.BLACK, PieceType.ROOK).filter { !it.hasMoved }
+            val whiteKing = kingOf(white)
+            val blackKing = kingOf(black)
+            val whiteRooks = piecesOf(white, PieceType.ROOK).filter { !it.hasMoved }
+            val blackRooks = piecesOf(black, PieceType.ROOK).filter { !it.hasMoved }
             if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != Pos(4, 0))
                 return true
             if (blackKing != null && !blackKing.hasMoved && blackKing.pos != Pos(4, 7))
@@ -100,7 +100,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     @ChessEventHandler
     fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
-            if (game.currentTurn == Side.BLACK) {
+            if (game.currentTurn == black) {
                 val wLast = (if (moves.size <= 1) null else moves[moves.size - 2])
                 val bLast = lastMove
                 game.players.forEachReal { p ->
@@ -140,7 +140,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     private fun stop() {
-        if (game.currentTurn == Side.WHITE) {
+        if (game.currentTurn == white) {
             val wLast = lastMove
             game.players.forEachReal { p ->
                 p.sendLastMoves(fullMoveCounter, wLast, null)
@@ -266,7 +266,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             val hash = getFEN().hashed()
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
             game.variant.undoLastMove(it)
-            if (game.currentTurn == Side.WHITE)
+            if (game.currentTurn == white)
                 fullMoveCounter--
             moves.removeLast()
             lastMove?.render()

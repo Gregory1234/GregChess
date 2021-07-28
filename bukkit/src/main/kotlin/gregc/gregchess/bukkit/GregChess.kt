@@ -98,8 +98,8 @@ object GregChess : Listener {
                                     val res = duelRequest.call(RequestData(player, opponent, settings.name))
                                     if (res == RequestResponse.ACCEPT) {
                                         ChessGame(BukkitTimeManager, settings).addPlayers {
-                                            human(player.human, Side.WHITE, player == opponent)
-                                            human(opponent.human, Side.BLACK, player == opponent)
+                                            human(player.human, white, player == opponent)
+                                            human(opponent.human, black, player == opponent)
                                         }.start()
                                     }
                                 }
@@ -117,8 +117,8 @@ object GregChess : Listener {
                         val settings = player.openSettingsMenu()
                         if (settings != null)
                             ChessGame(BukkitTimeManager, settings).addPlayers {
-                                human(player.human, Side.WHITE, false)
-                                engine(Stockfish(), Side.BLACK)
+                                human(player.human, white, false)
+                                engine(Stockfish(), black)
                             }.start()
                     }
                 }

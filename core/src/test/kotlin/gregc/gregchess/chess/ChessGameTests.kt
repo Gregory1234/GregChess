@@ -18,7 +18,7 @@ class ChessGameTests {
 
     fun mkGame(
         settings: GameSettings = basicSettings,
-        players: List<Pair<HumanPlayer, Side>> = listOf(humanA to Side.WHITE, humanB to Side.BLACK)
+        players: List<Pair<HumanPlayer, Side>> = listOf(humanA to white, humanB to black)
     ) = ChessGame(TestTimeManager(), settings).addPlayers {
         players.forEach { (h, s) ->
             human(h, s, false)
@@ -56,14 +56,14 @@ class ChessGameTests {
         @Test
         fun `throws with 1 player`() {
             assertThrows<IllegalStateException> {
-                mkGame(players = listOf(humanA to Side.WHITE))
+                mkGame(players = listOf(humanA to white))
             }
         }
 
         @Test
         fun `throws with duplicated sides`() {
             assertThrows<IllegalStateException> {
-                mkGame(players = listOf(humanA to Side.WHITE, humanB to Side.WHITE, humanC to Side.BLACK))
+                mkGame(players = listOf(humanA to white, humanB to white, humanC to black))
             }
         }
 
@@ -71,8 +71,8 @@ class ChessGameTests {
         fun `throws when already initialized`() {
             assertThrows<WrongStateException> {
                 mkGame().addPlayers {
-                    human(humanA, Side.WHITE, false)
-                    human(humanB, Side.BLACK, false)
+                    human(humanA, white, false)
+                    human(humanB, black, false)
                 }
             }
         }
@@ -126,8 +126,8 @@ class ChessGameTests {
             playerExclude(a)
             playerExclude(b)
             verifyAll {
-                a.sendGameUpdate(Side.WHITE, listOf(GamePlayerStatus.START, GamePlayerStatus.TURN))
-                b.sendGameUpdate(Side.BLACK, listOf(GamePlayerStatus.START))
+                a.sendGameUpdate(white, listOf(GamePlayerStatus.START, GamePlayerStatus.TURN))
+                b.sendGameUpdate(black, listOf(GamePlayerStatus.START))
             }
         }
 
@@ -167,7 +167,7 @@ class ChessGameTests {
         fun `throws when stopped`() {
             val e = assertThrows<FailedToStartGameException> {
                 val g = mkGame().start()
-                val reason = Side.WHITE.wonBy(TEST_END_REASON)
+                val reason = white.wonBy(TEST_END_REASON)
                 g.stop(reason)
                 g.start()
             }
@@ -188,7 +188,7 @@ class ChessGameTests {
         @Test
         fun `saves end reason`() {
             val g = mkGame().start()
-            val reason = Side.WHITE.wonBy(TEST_END_REASON)
+            val reason = white.wonBy(TEST_END_REASON)
             g.stop(reason)
             assertEquals(reason, g.results)
             assert(!g.running)
@@ -198,16 +198,16 @@ class ChessGameTests {
         fun `throws when not running`() {
             assertThrows<WrongStateException> {
                 val g = mkGame()
-                val reason = Side.WHITE.wonBy(TEST_END_REASON)
+                val reason = white.wonBy(TEST_END_REASON)
                 g.stop(reason)
             }
         }
 
         @Test
-        fun `throws when not stopped`() {
+        fun `throws when stopped`() {
             assertThrows<WrongStateException> {
                 val g = mkGame().start()
-                val reason = Side.WHITE.wonBy(TEST_END_REASON)
+                val reason = white.wonBy(TEST_END_REASON)
                 g.stop(reason)
                 g.stop(reason)
             }
@@ -218,7 +218,7 @@ class ChessGameTests {
             val g = mkGame(spyComponentSettings).start()
             val c = g.getComponent<TestComponent>()!!
             clearRecords(c)
-            g.stop(Side.WHITE.wonBy(TEST_END_REASON))
+            g.stop(white.wonBy(TEST_END_REASON))
             verifySequence {
                 c.handleEvents(GameBaseEvent.STOP)
                 c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.LEAVE))

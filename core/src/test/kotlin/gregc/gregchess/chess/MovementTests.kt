@@ -11,8 +11,8 @@ import kotlin.test.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MovementTests {
     val game = ChessGame(TestTimeManager(), testSettings("basic", variant = CaptureAll)).addPlayers {
-        human(TestHuman("a"), Side.WHITE, false)
-        human(TestHuman("b"), Side.BLACK, false)
+        human(TestHuman("a"), white, false)
+        human(TestHuman("b"), black, false)
     }.start()
 
     fun clearBoard(vararg pieces: PieceInfo) {
@@ -24,7 +24,7 @@ class MovementTests {
 
     private fun movesFrom(p: Pos) = game.board[p]?.bakedLegalMoves.orEmpty()
 
-    private inline fun forEachPosIn(start: Pos = Pos(0,0), end: Pos = Pos(7,7), side: Side = Side.WHITE, u: Int = 0, fn: (Pos) -> Unit) {
+    private inline fun forEachPosIn(start: Pos = Pos(0,0), end: Pos = Pos(7,7), side: Side = white, u: Int = 0, fn: (Pos) -> Unit) {
         for (f in max(start.file+u, 0)..min(end.file+u, 7))
             when(side) {
                 Side.WHITE -> {

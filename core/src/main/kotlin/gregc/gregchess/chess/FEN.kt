@@ -4,7 +4,7 @@ import gregc.gregchess.component6
 
 data class FEN(
     val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
-    val currentTurn: Side = Side.WHITE,
+    val currentTurn: Side = white,
     val castlingRights: BySides<List<Int>> = BySides(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: UInt = 0u,
@@ -64,7 +64,7 @@ data class FEN(
 
     private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): PieceInfo {
         val type = PieceType.parseFromStandardChar(pieceTypes, this)
-        val side = if (isUpperCase()) Side.WHITE else Side.BLACK
+        val side = if (isUpperCase()) white else black
         val hasMoved = type.hasMoved(this@FEN, p, side)
         return PieceInfo(p, type.of(side), hasMoved)
     }
