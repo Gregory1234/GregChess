@@ -94,3 +94,11 @@ object TestVariant: ChessVariant("TEST")
 val TEST_END_REASON = DetEndReason("TEST", EndReason.Type.EMERGENCY)
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)
+
+inline fun <T> measureTime(block: () -> T): T {
+    val start = System.nanoTime()
+    val ret = block()
+    val elapsed = System.nanoTime() - start
+    println("Elapsed time: ${elapsed.toDouble()/1_000_000}ms")
+    return ret
+}

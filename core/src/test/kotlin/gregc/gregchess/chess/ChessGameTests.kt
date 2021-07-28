@@ -8,11 +8,9 @@ import kotlin.test.assertIs
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ChessGameTests {
 
-    val TEST_VARIANT = spyk(TestVariant)
-
     val basicSettings = testSettings("basic")
     val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
-    val spyVariantSettings = testSettings("spy variant", variant = TEST_VARIANT)
+    val spyVariantSettings = testSettings("spy variant", variant = spyk(TestVariant))
 
     val humanA = TestHuman("a")
     val humanB = TestHuman("b")
