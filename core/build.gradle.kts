@@ -7,6 +7,8 @@ dependencies {
     testImplementation(kotlin("test"))
     val kotestVersion: String by project
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-property:$kotestVersion")
+    testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
     val mockkVersion: String by project
     testImplementation("io.mockk:mockk:$mockkVersion")
 }
@@ -35,6 +37,7 @@ tasks {
             jvmTarget = jvmVersion
             freeCompilerArgs = listOf(
                 "-Xopt-in=kotlin.ExperimentalStdlibApi",
+                "-Xopt-in=io.kotest.common.ExperimentalKotest",
                 "-Xjvm-default=all",
                 "-progressive")
         }

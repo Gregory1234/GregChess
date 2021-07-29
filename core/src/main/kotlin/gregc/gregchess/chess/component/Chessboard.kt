@@ -60,6 +60,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         piece.square.piece = piece
     }
 
+    operator fun plusAssign(piece: PieceInfo) {
+        this += BoardPiece(piece.piece, this[piece.pos]!!, piece.hasMoved)
+    }
+
     operator fun get(pos: Pos) = squares[pos]
 
     private val moves: MutableList<MoveData> = mutableListOf()

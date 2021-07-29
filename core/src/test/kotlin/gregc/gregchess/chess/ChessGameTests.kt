@@ -8,44 +8,45 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.*
 
-class ChessGameTests: FreeSpec({
-    val basicSettings = testSettings("basic")
-    val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
-    fun spyVariantSettings() = testSettings("spy variant", variant = spyk(TestVariant))
+private val humanA = TestHuman("a")
+private val humanB = TestHuman("b")
+private val humanC = TestHuman("c")
 
-    val humanA = TestHuman("a")
-    val humanB = TestHuman("b")
-    val humanC = TestHuman("c")
+private val basicSettings = testSettings("basic")
+private val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
+private fun spyVariantSettings() = testSettings("spy variant", variant = spyk(TestVariant))
 
-    fun mkGame(
-        settings: GameSettings = basicSettings,
-        players: List<Pair<HumanPlayer, Side>> = listOf(humanA to white, humanB to black)
-    ) = ChessGame(TestTimeManager(), settings).addPlayers {
-        players.forEach { (h, s) ->
+private fun mkGame(
+    settings: GameSettings = basicSettings,
+    players: List<Pair<HumanPlayer, Side>> = listOf(humanA to white, humanB to black)
+) = ChessGame(TestTimeManager(), settings).addPlayers {
+    players.forEach { (h, s) ->
+        human(h, s, false)
+    }
+}
+
+private fun mkGame(settings: GameSettings = basicSettings, players: BySides<HumanPlayer>) =
+    ChessGame(TestTimeManager(), settings).addPlayers {
+        players.forEachIndexed { s, h ->
             human(h, s, false)
         }
     }
 
-    fun mkGame(settings: GameSettings = basicSettings, players: BySides<HumanPlayer>) =
-        ChessGame(TestTimeManager(), settings).addPlayers {
-            players.forEachIndexed { s, h ->
-                human(h, s, false)
-            }
-        }
-
-    fun playerExclude(p: HumanPlayer) {
-        excludeRecords {
-            p.name
-            @Suppress("UNUSED_EQUALS_EXPRESSION")
-            p == any()
-        }
+private fun playerExclude(p: HumanPlayer) {
+    excludeRecords {
+        p.name
+        @Suppress("UNUSED_EQUALS_EXPRESSION")
+        p == any()
     }
+}
 
-    fun componentExclude(c: TestComponent) {
-        excludeRecords {
-            c.handleEvents(GameBaseEvent.PRE_INIT)
-        }
+fun componentExclude(c: TestComponent) {
+    excludeRecords {
+        c.handleEvents(GameBaseEvent.PRE_INIT)
     }
+}
+
+class ChessGameTests: FreeSpec({
 
     "ChessGame" - {
         "initializing should" - {

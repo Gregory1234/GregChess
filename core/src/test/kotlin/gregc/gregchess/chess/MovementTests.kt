@@ -1,438 +1,211 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.chess.variant.CaptureAll
-import gregc.gregchess.rotationsOf
 import gregc.gregchess.times
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Test
-import kotlin.math.*
-import kotlin.test.*
+import io.kotest.core.spec.style.FreeSpec
+import io.kotest.datatest.withData
+import io.kotest.matchers.collections.*
+import io.kotest.matchers.shouldNotHave
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.*
+import io.kotest.property.checkAll
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MovementTests {
-    val game = ChessGame(TestTimeManager(), testSettings("basic", variant = CaptureAll)).addPlayers {
-        human(TestHuman("a"), white, false)
-        human(TestHuman("b"), black, false)
-    }.start()
+private infix fun Piece.at(p: Pos) = PieceInfo(p, this, true)
+private infix fun Piece.notMovedAt(p: Pos) = PieceInfo(p, this, false)
 
-    fun clearBoard(vararg pieces: PieceInfo) {
-        game.board.setFromFEN(FEN.parseFromString("${FEN.BoardState.fromPieces(pieces.associateBy { it.pos }).state} w - - 0 1"))
-    }
-
-    private infix fun Piece.at(p: Pos) = PieceInfo(p, this, false)
-    private infix fun Piece.at(d: Dir) = d to this
-
-    private fun movesFrom(p: Pos) = game.board[p]?.bakedLegalMoves.orEmpty()
-
-    private inline fun forEachPosIn(start: Pos = Pos(0,0), end: Pos = Pos(7,7), side: Side = white, u: Int = 0, fn: (Pos) -> Unit) {
-        for (f in max(start.file+u, 0)..min(end.file+u, 7))
-            when(side) {
-                Side.WHITE -> {
-                    for (r in start.rank..end.rank)
-                        fn(Pos(f, r))
-                }
-                Side.BLACK -> {
-                    for (r in 7-end.rank..7-start.rank)
-                        fn(Pos(f, r))
-                }
-            }
-    }
-
-    private fun Collection<MoveCandidate>.assertSize(s: Int) = apply {
-        assertSame(s, size)
-    }
-
-    private inline fun Collection<MoveCandidate>.assertMove(target: Pos, block: MoveCandidate.() -> Unit) = apply {
-        val move = firstOrNull { it.target.pos == target }
-        assertNotNull(move, target.toString()).block()
-    }
-
-    private inline fun Collection<MoveCandidate>.assertMoveIfValid(target: Pos, block: MoveCandidate.() -> Unit) = apply {
-        if (target.isValid()) {
-            val move = firstOrNull { it.target.pos == target }
-            assertNotNull(move, target.toString()).block()
-        }
-    }
-
-    private fun Collection<MoveCandidate>.assertNoMove(target: Pos) = apply {
-        val move = firstOrNull { it.target.pos == target }
-        assertNull(move, target.toString())
-    }
-
-    private fun setup(piece: PieceInfo, vararg added: Pair<Dir, Piece>) {
-        val (f, r) = piece.pos
-        clearBoard(
-            piece,
-            *added.map { (d, p) ->
-                p at Pos((f + d.first)%8, (r + d.second)%8)
-            }.toTypedArray()
-        )
-    }
-
-    private var Pos.hasMoved
-        get() = game.board[this]?.piece?.hasMoved ?: false
-        set(value) {
-            game.board[this]?.piece?.force(value)
-            game.board.updateMoves()
-        }
-
-    private fun MoveCandidate.assertNotCapture() = assertNull(captured)
-
-    private fun MoveCandidate.assertCapture(target: Pos = this.target.pos) = assertEquals(captured?.pos, target)
-
-
-    @Nested
-    inner class Pawn {
-        private fun setupPawn(pos: Pos, side: Side, hasMoved: Boolean, vararg added: Pair<Dir, Piece>): Collection<MoveCandidate> {
-            setup(side.pawn at pos, *added)
-            pos.hasMoved = hasMoved
-            return movesFrom(pos)
-        }
-
-        private fun promotions(s: Side) = PieceType.run { listOf(QUEEN, ROOK, BISHOP, KNIGHT) }.map { it.of(s) }
-
-        private fun MoveCandidate.assertNotPromoting() = assertNull(promotions)
-
-        private fun MoveCandidate.assertPromoting() = assertContentEquals(promotions, promotions(piece.side))
-
-        @Nested
-        inner class IfHasMoved {
-            @Test
-            fun `can only move 1 space forward`() {
-                Side.forEach { s ->
-                    forEachPosIn(Pos(0,0), Pos(7,5), s) { pos ->
-                        setupPawn(pos, s, true).assertSize(1)
-                            .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
-                    }
-                }
-            }
-            @Test
-            fun `can promote from 1 space away`() {
-                Side.forEach { s ->
-                    forEachPosIn(Pos(0, 6), Pos(7, 6), s) { pos ->
-                        setupPawn(pos, s, true).assertSize(1)
-                            .assertMove(pos + s.dir) { assertNotCapture(); assertPromoting() }
-                    }
-                }
-            }
-            @Test
-            fun `is blocked by pieces`() {
-                Side.forEach { s ->
-                    Side.forEach { blockSide ->
-                        forEachPosIn(Pos(0,0), Pos(7,6), s) { pos ->
-                            setupPawn(pos, s, true, blockSide.rook at s.dir).assertSize(0)
-                        }
-                    }
-                }
-            }
-        }
-
-        @Nested
-        inner class IfHasNotMoved {
-            @Test
-            fun `can only move 1 or 2 spaces forward`() {
-                Side.forEach { s ->
-                    forEachPosIn(Pos(0, 0), Pos(7, 4), s) { pos ->
-                        setupPawn(pos, s, false).assertSize(2)
-                            .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
-                            .assertMove(pos + s.dir * 2) { assertNotCapture(); assertNotPromoting() }
-                    }
-                }
-            }
-            @Test
-            fun `can promote from 1 space away`() {
-                Side.forEach { s ->
-                    forEachPosIn(Pos(0, 6), Pos(7, 6), s) { pos ->
-                        setupPawn(pos, s, false).assertSize(1)
-                            .assertMove(pos + s.dir) { assertNotCapture(); assertPromoting() }
-                    }
-                }
-            }
-            @Test
-            fun `can promote from 2 spaces away`() {
-                Side.forEach { s ->
-                    forEachPosIn(Pos(0, 5), Pos(7, 5), s) { pos ->
-                        setupPawn(pos, s, false).assertSize(2)
-                            .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
-                            .assertMove(pos + s.dir * 2) { assertNotCapture(); assertPromoting() }
-                    }
-                }
-            }
-            @Test
-            fun `is blocked by pieces from 1 space away`() {
-                Side.forEach { s ->
-                    Side.forEach { blockSide ->
-                        forEachPosIn(Pos(0, 0), Pos(7, 6), s) { pos ->
-                            setupPawn(pos, s, false, blockSide.rook at s.dir).assertSize(0)
-                        }
-                    }
-                }
-            }
-            @Test
-            fun `is blocked by pieces from 2 spaces away`() {
-                Side.forEach { s ->
-                    Side.values().forEach { blockSide ->
-                        forEachPosIn(Pos(0, 0), Pos(7, 5), s) { pos ->
-                            setupPawn(pos, s, false, blockSide.rook at s.dir * 2).assertSize(1)
-                                .assertMove(pos + s.dir) { assertNotCapture(); assertNotPromoting() }
-                        }
-                    }
-                }
-            }
-        }
-
-
-        @Test
-        fun `can capture opposite colored pieces diagonally`() {
-            Side.forEach { s ->
-                listOf(1, -1).forEach { u ->
-                    forEachPosIn(Pos(0, 0), Pos(7, 5), s, -u) { pos ->
-                        val d = Dir(u, s.direction)
-                        setupPawn(pos, s, false, (!s).rook at d)
-                            .assertMove(pos + d) { assertCapture(); assertNotPromoting() }
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `can promote when capturing opposite colored pieces diagonally`() {
-            Side.forEach { s ->
-                listOf(1, -1).forEach { u ->
-                    forEachPosIn(Pos(0, 6), Pos(7, 6), s, -u) { pos ->
-                        val d = Dir(u, s.direction)
-                        setupPawn(pos, s, true, (!s).rook at d)
-                            .assertMove(pos + d) { assertCapture(); assertPromoting() }
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `cannot capture same colored pieces diagonally`() {
-            Side.forEach { s ->
-                listOf(1, -1).forEach { u ->
-                    forEachPosIn(Pos(0, 0), Pos(7, 5), s, -u) { pos ->
-                        val d = Dir(u, s.direction)
-                        setupPawn(pos, s, true, s.rook at d)
-                            .assertNoMove(pos + d)
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `can en passant opposite colored pawns`() {
-            Side.forEach { s ->
-                listOf(1, -1).forEach { u ->
-                    forEachPosIn(Pos(0, 1), Pos(6, 5), s, -u) { pos ->
-                        val d = Dir(u, s.direction)
-                        setupPawn(pos, s, true, (!s).rook at Dir(u, 0))
-                        game.board[pos + d]!!.flags += ChessFlag(EN_PASSANT, 0)
-                        game.board.updateMoves()
-                        movesFrom(pos).assertMove(pos + d) { assertCapture(pos.plusF(u)); assertNotPromoting() }
-                    }
-                }
-            }
-        }
-    }
-
-    @Nested
-    inner class Bishop {
-
-        @Test
-        fun `can only move on the diagonals`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.bishop at pos)
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-7..7).forEach {
-                            if (it != 0) {
-                                assertMoveIfValid(pos + Dir(it, it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos + Dir(it, -it)) { size++; assertNotCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `is blocked by same colored pieces`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.bishop at pos, *rotationsOf(2, 2).map { s.rook at it }.toTypedArray())
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-1..1).forEach {
-                            if (it != 0) {
-                                assertMoveIfValid(pos + Dir(it, it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos + Dir(it, -it)) { size++; assertNotCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `can capture opposite colored pieces`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.bishop at pos, *rotationsOf(2, 2).map { (!s).rook at it }.toTypedArray())
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-2..2).forEach {
-                            fun MoveCandidate.maybeCapture() =
-                                if (it.absoluteValue == 2) assertCapture() else assertNotCapture()
-                            if (it != 0) {
-                                assertMoveIfValid(pos + Dir(it, it)) { size++; maybeCapture() }
-                                assertMoveIfValid(pos + Dir(it, -it)) { size++; maybeCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-    }
-
-    @Nested
-    inner class Rook {
-
-        @Test
-        fun `can only move horizontally and vertically`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.rook at pos)
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-7..7).forEach {
-                            if (it != 0) {
-                                assertMoveIfValid(pos.plusF(it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos.plusR(it)) { size++; assertNotCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `is blocked by same colored pieces`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.rook at pos, *rotationsOf(2, 0).map { s.bishop at it }.toTypedArray())
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-1..1).forEach {
-                            if (it != 0) {
-                                assertMoveIfValid(pos.plusF(it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos.plusR(it)) { size++; assertNotCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `can capture opposite colored pieces`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.rook at pos, *rotationsOf(2, 0).map { (!s).bishop at it }.toTypedArray())
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-2..2).forEach {
-                            fun MoveCandidate.maybeCapture() =
-                                if (it.absoluteValue == 2) assertCapture() else assertNotCapture()
-                            if (it != 0) {
-                                assertMoveIfValid(pos.plusF(it)) { size++; maybeCapture() }
-                                assertMoveIfValid(pos.plusR(it)) { size++; maybeCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-    }
-
-    @Nested
-    inner class Queen {
-
-        @Test
-        fun `can only move on the diagonals horizontally and vertically`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.queen at pos)
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-7..7).forEach {
-                            if (it != 0) {
-                                assertMoveIfValid(pos + Dir(it, it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos + Dir(it, -it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos.plusF(it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos.plusR(it)) { size++; assertNotCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `is blocked by same colored pieces`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.queen at pos,
-                        *rotationsOf(2, 2).map { s.king at it }.toTypedArray(),
-                        *rotationsOf(2, 0).map { s.king at it }.toTypedArray())
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-1..1).forEach {
-                            if (it != 0) {
-                                assertMoveIfValid(pos + Dir(it, it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos + Dir(it, -it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos.plusF(it)) { size++; assertNotCapture() }
-                                assertMoveIfValid(pos.plusR(it)) { size++; assertNotCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-
-        @Test
-        fun `can capture opposite colored pieces`() {
-            Side.forEach { s ->
-                forEachPosIn { pos ->
-                    setup(s.queen at pos,
-                        *rotationsOf(2, 2).map { (!s).king at it }.toTypedArray(),
-                        *rotationsOf(2, 0).map { (!s).king at it }.toTypedArray())
-                    movesFrom(pos).apply {
-                        var size = 0
-                        (-2..2).forEach {
-                            fun MoveCandidate.maybeCapture() =
-                                if (it.absoluteValue == 2) assertCapture() else assertNotCapture()
-                            if (it != 0) {
-                                assertMoveIfValid(pos + Dir(it, it)) { size++; maybeCapture() }
-                                assertMoveIfValid(pos + Dir(it, -it)) { size++; maybeCapture() }
-                                assertMoveIfValid(pos.plusF(it)) { size++; maybeCapture() }
-                                assertMoveIfValid(pos.plusR(it)) { size++; maybeCapture() }
-                            }
-                        }
-                        assertSize(size)
-                    }
-                }
-            }
-        }
-    }
+private val arbPos = arbitrary { rs ->
+    Pos(rs.random.nextInt(0, 7), rs.random.nextInt(0, 7))
 }
+
+private fun arbPawnPos(s: Side, n: Int = 1, b: BoardSide? = null) =
+    arbPos.filter { (it + s.dir * n + (b?.dir ?: Dir(0, 0))).isValid() }
+
+private fun arbPromotingPos(s: Side, n: Int = 1, b: BoardSide? = null) =
+    arbPos.filter { (it + s.dir * n + (b?.dir ?: Dir(0, 0))).run { isValid() && rank in listOf(0, 7) } }
+
+private val arbPieceType = PieceType.run { Arb.of(PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING) }
+
+private val arbPiece = Arb.bind(arbPieceType, Arb.enum<Side>()) { type, s -> Piece(type, s) }
+
+private val game = ChessGame(TestTimeManager(), testSettings("basic", variant = CaptureAll)).addPlayers {
+    human(TestHuman("a"), white, false)
+    human(TestHuman("b"), black, false)
+}.start()
+
+private fun clearBoard(vararg pieces: PieceInfo) {
+    game.board.setFromFEN(FEN.parseFromString("8/8/8/8/8/8/8/8 w - - 0 1"))
+    pieces.forEach {
+        game.board += it
+    }
+    game.board.updateMoves()
+}
+
+private fun addFlags(vararg flags: Pair<ChessFlagType, Pos>) {
+    flags.forEach { (f, p) ->
+        game.board[p]!!.flags += ChessFlag(f, f.startTime.toInt())
+    }
+    game.board.updateMoves()
+}
+
+private val Pos.moves get() = game.board[this]?.bakedLegalMoves.orEmpty()
+
+private infix fun Pos.canMoveTo(target: Pos) {
+    moves shouldHaveSingleElement { it.target.pos == target && it.captured == null }
+}
+
+private infix fun Pos.canPromoteAt(target: Pos) {
+    moves shouldHaveSingleElement { it.target.pos == target && it.promotions == promotions(it.piece.side) }
+}
+
+private infix fun Pos.canCaptureAt(target: Pos) {
+    moves shouldHaveSingleElement { it.target.pos == target && it.captured?.pos == target }
+}
+
+private fun Pos.canCaptureAt(target: Pos, capture: Pos) {
+    moves shouldHaveSingleElement { it.target.pos == target && it.captured?.pos == capture }
+}
+
+private infix fun Pos.cannotGoTo(target: Pos) {
+    moves shouldNotHave singleElement { it.target.pos == target }
+}
+
+private fun promotions(s: Side) = PieceType.run { listOf(QUEEN, ROOK, BISHOP, KNIGHT) }.map { it.of(s) }
+
+private const val ITERS = 50
+
+enum class BoardSide(private val direction: Int) {
+    QUEENSIDE(-1), KINGSIDE(1);
+    val dir get() = Dir(direction, 0)
+}
+
+class MovementTests: FreeSpec({
+
+    "Pawn" - {
+        "if has moved" - {
+            "can only move 1 square forward" - {
+                withData(Side.values().toList()) { s ->
+                    checkAll(ITERS, arbPawnPos(s)) { pos ->
+                        clearBoard(s.pawn at pos)
+                        pos canMoveTo pos + s.dir
+                        pos.moves shouldHaveSize 1
+                    }
+                }
+            }
+            "can promote from 1 square away" - {
+                withData(Side.values().toList()) { s ->
+                    checkAll(ITERS, arbPromotingPos(s)) { pos ->
+                        clearBoard(s.pawn at pos)
+                        pos canMoveTo pos + s.dir
+                        pos canPromoteAt pos + s.dir
+                        pos.moves shouldHaveSize 1
+                    }
+                }
+            }
+            "is blocked by pieces" - {
+                withData(Side.values().toList()) { s ->
+                    checkAll(ITERS, arbPawnPos(s), arbPiece) { pos, block ->
+                        clearBoard(s.pawn at pos, block at pos + s.dir)
+                        pos.moves shouldHaveSize 0
+                    }
+                }
+            }
+        }
+        "if has not moved" - {
+            "can only move 1 or 2 squares forward" - {
+                withData(Side.values().toList()) { s ->
+                    checkAll(ITERS, arbPawnPos(s, 2)) { pos ->
+                        clearBoard(s.pawn notMovedAt pos)
+                        pos canMoveTo pos + s.dir
+                        pos canMoveTo pos + s.dir * 2
+                        pos.moves shouldHaveSize 2
+                    }
+                }
+            }
+            "can promote from" - {
+                "1 square away" - {
+                    withData(Side.values().toList()) { s ->
+                        checkAll(ITERS, arbPromotingPos(s)) { pos ->
+                            clearBoard(s.pawn notMovedAt pos)
+                            pos canMoveTo pos + s.dir
+                            pos canPromoteAt pos + s.dir
+                            pos.moves shouldHaveSize 1
+                        }
+                    }
+                }
+                "2 squares away" - {
+                    withData(Side.values().toList()) { s ->
+                        checkAll(ITERS, arbPromotingPos(s, 2)) { pos ->
+                            clearBoard(s.pawn notMovedAt pos)
+                            pos canMoveTo pos + s.dir
+                            pos canMoveTo pos + s.dir * 2
+                            pos canPromoteAt pos + s.dir * 2
+                            pos.moves shouldHaveSize 2
+                        }
+                    }
+                }
+            }
+            "is blocked by pieces from" - {
+                "1 square away" - {
+                    withData(Side.values().toList()) { s ->
+                        checkAll(ITERS, arbPawnPos(s), arbPiece) { pos, block ->
+                            clearBoard(s.pawn notMovedAt pos, block at pos + s.dir)
+                            pos.moves shouldHaveSize 0
+                        }
+                    }
+                }
+                "2 squares away" - {
+                    withData(Side.values().toList()) { s ->
+                        checkAll(ITERS, arbPawnPos(s, 2), arbPiece) { pos, block ->
+                            clearBoard(s.pawn notMovedAt pos, block at pos + s.dir * 2)
+                            pos canMoveTo pos + s.dir
+                            pos.moves shouldHaveSize 1
+                        }
+                    }
+                }
+            }
+        }
+        "can capture opposite colored pieces diagonally" - {
+            withData(Side.values().toList()) { s ->
+                withData(BoardSide.values().toList()) { bs ->
+                    checkAll(ITERS, arbPawnPos(s, 1, bs), arbPieceType) { pos, block ->
+                        clearBoard(s.pawn at pos, block.of(!s) at pos + s.dir + bs.dir)
+                        pos canCaptureAt pos + s.dir + bs.dir
+                    }
+                }
+            }
+        }
+        "cannot capture same colored pieces diagonally" - {
+            withData(Side.values().toList()) { s ->
+                withData(BoardSide.values().toList()) { bs ->
+                    checkAll(ITERS, arbPawnPos(s, 1, bs), arbPieceType) { pos, block ->
+                        clearBoard(s.pawn at pos, block.of(s) at pos + s.dir + bs.dir)
+                        pos cannotGoTo pos + s.dir + bs.dir
+                    }
+                }
+            }
+        }
+        "can promote when capturing opposite colored pieces diagonally" - {
+            withData(Side.values().toList()) { s ->
+                withData(BoardSide.values().toList()) { bs ->
+                    checkAll(ITERS, arbPromotingPos(s, 1, bs), arbPieceType) { pos, block ->
+                        clearBoard(s.pawn at pos, block.of(!s) at pos + s.dir + bs.dir)
+                        pos canCaptureAt pos + s.dir + bs.dir
+                        pos canPromoteAt pos + s.dir + bs.dir
+                    }
+                }
+            }
+        }
+        "can en passant opposite colored pawns" - {
+            withData(Side.values().toList()) { s ->
+                withData(BoardSide.values().toList()) { bs ->
+                    checkAll(ITERS, arbPawnPos(s, 1, bs)) { pos ->
+                        clearBoard(s.pawn at pos, (!s).pawn at pos + bs.dir)
+                        addFlags(EN_PASSANT to pos + s.dir + bs.dir)
+                        pos.canCaptureAt(pos + s.dir + bs.dir, pos + bs.dir)
+                    }
+                }
+            }
+        }
+    }
+
+})

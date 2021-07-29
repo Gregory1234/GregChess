@@ -9,7 +9,7 @@ class PieceType(
     val minor: Boolean
 ) {
 
-    override fun toString(): String = "$name(${super.toString()})"
+    override fun toString(): String = "$name(${hashCode().toString(16)})"
 
     companion object {
 
