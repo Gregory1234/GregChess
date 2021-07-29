@@ -1,16 +1,17 @@
 package gregc.gregchess.chess
 
+import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.core.spec.style.FreeSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.*
-import org.junit.jupiter.api.*
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ChessGameTests {
-
+class ChessGameTests: FreeSpec({
     val basicSettings = testSettings("basic")
     val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
-    val spyVariantSettings = testSettings("spy variant", variant = spyk(TestVariant))
+    fun spyVariantSettings() = testSettings("spy variant", variant = spyk(TestVariant))
 
     val humanA = TestHuman("a")
     val humanB = TestHuman("b")
@@ -46,187 +47,156 @@ class ChessGameTests {
         }
     }
 
-    @Nested
-    inner class Initializing {
-        @Test
-        fun `works with 2 players`() {
-            mkGame()
-        }
-
-        @Test
-        fun `throws with 1 player`() {
-            assertThrows<IllegalStateException> {
-                mkGame(players = listOf(humanA to white))
+    "ChessGame" - {
+        "initializing should" - {
+            "succeed if" - {
+                "provided 2 players on different sides" {
+                    mkGame()
+                }
             }
-        }
-
-        @Test
-        fun `throws with duplicated sides`() {
-            assertThrows<IllegalStateException> {
-                mkGame(players = listOf(humanA to white, humanB to white, humanC to black))
+            "fail if" - {
+                "provided 1 players" {
+                    mkGame()
+                }
+                "provided 2 players on the same side" {
+                    shouldThrowExactly<IllegalStateException> {
+                        mkGame(players = listOf(humanA to white, humanB to white, humanC to black))
+                    }
+                }
+                "already initialized" {
+                    shouldThrowExactly<WrongStateException> {
+                        mkGame().addPlayers {
+                            human(humanA, white, false)
+                            human(humanB, black, false)
+                        }
+                    }
+                }
             }
-        }
-
-        @Test
-        fun `throws when already initialized`() {
-            assertThrows<WrongStateException> {
-                mkGame().addPlayers {
-                    human(humanA, white, false)
-                    human(humanB, black, false)
+            "not call players" {
+                val a = spyk(humanA)
+                val b = spyk(humanB)
+                mkGame(players = BySides(a, b))
+                playerExclude(a)
+                playerExclude(b)
+                verify {
+                    a wasNot Called
+                    b wasNot Called
+                }
+            }
+            "not call components" {
+                val g = mkGame(spyComponentSettings)
+                val c = g.getComponent<TestComponent>()!!
+                componentExclude(c)
+                verify {
+                    c wasNot Called
+                }
+            }
+            "only get required components and fen from variant" {
+                val g = mkGame(spyVariantSettings())
+                verifyAll {
+                    g.variant.requiredComponents
+                    g.variant.genFEN(any())
                 }
             }
         }
-
-        @Test
-        fun `doesn't call players`() {
-            val a = spyk(humanA)
-            val b = spyk(humanB)
-            mkGame(players = BySides(a, b))
-            playerExclude(a)
-            playerExclude(b)
-            verify {
-                a wasNot Called
-                b wasNot Called
+        "starting should" - {
+            "make the game runring" {
+                val g = mkGame().start()
+                g.running.shouldBeTrue()
+            }
+            "send messages to players" {
+                val a = spyk(humanA)
+                val b = spyk(humanB)
+                mkGame(players = BySides(a, b)).start()
+                playerExclude(a)
+                playerExclude(b)
+                verifyAll {
+                    a.sendGameUpdate(white, listOf(GamePlayerStatus.START, GamePlayerStatus.TURN))
+                    b.sendGameUpdate(black, listOf(GamePlayerStatus.START))
+                }
+            }
+            "start components" {
+                val g = mkGame(spyComponentSettings).start()
+                val c = g.getComponent<TestComponent>()!!
+                verifySequence {
+                    c.handleEvents(GameBaseEvent.PRE_INIT)
+                    c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.JOIN))
+                    c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.JOIN))
+                    c.handleEvents(GameBaseEvent.INIT)
+                    c.handleEvents(GameBaseEvent.START)
+                    c.handleEvents(GameBaseEvent.BEGIN)
+                    c.handleEvents(GameBaseEvent.UPDATE)
+                    c.handleTurn(TurnEvent.START)
+                }
+            }
+            "start variant" {
+                val g = mkGame(spyVariantSettings()).start()
+                verify {
+                    g.variant.start(g)
+                }
+            }
+            "fail if" - {
+                "not initialized yet" {
+                    val e = shouldThrowExactly<FailedToStartGameException> {
+                        ChessGame(TestTimeManager(), basicSettings).start()
+                    }
+                    e.cause.shouldBeInstanceOf<WrongStateException>()
+                }
+                "already running" {
+                    val e = shouldThrowExactly<FailedToStartGameException> {
+                        mkGame().start().start()
+                    }
+                    e.cause.shouldBeInstanceOf<WrongStateException>()
+                }
+                "already stopped" {
+                    val e = shouldThrowExactly<FailedToStartGameException> {
+                        val g = mkGame().start()
+                        val reason = white.wonBy(TEST_END_REASON)
+                        g.stop(reason)
+                        g.start()
+                    }
+                    e.cause.shouldBeInstanceOf<WrongStateException>()
+                }
             }
         }
-
-        @Test
-        fun `doesn't call components`() {
-            val g = mkGame(spyComponentSettings)
-            val c = g.getComponent<TestComponent>()!!
-            componentExclude(c)
-            verify {
-                c wasNot Called
-            }
-        }
-
-        @Test
-        fun `only gets required components and fen from variant`() {
-            val g = mkGame(spyVariantSettings)
-            verifyAll {
-                g.variant.requiredComponents
-                g.variant.genFEN(any())
-            }
-        }
-    }
-
-    @Nested
-    inner class Starting {
-        @Test
-        fun `makes game running`() {
-            val g = mkGame().start()
-            assert(g.running)
-        }
-
-        @Test
-        fun `sends messages to players`() {
-            val a = spyk(humanA)
-            val b = spyk(humanB)
-            mkGame(players = BySides(a, b)).start()
-            playerExclude(a)
-            playerExclude(b)
-            verifyAll {
-                a.sendGameUpdate(white, listOf(GamePlayerStatus.START, GamePlayerStatus.TURN))
-                b.sendGameUpdate(black, listOf(GamePlayerStatus.START))
-            }
-        }
-
-        @Test
-        fun `starts components`() {
-            val g = mkGame(spyComponentSettings).start()
-            val c = g.getComponent<TestComponent>()!!
-            verifySequence {
-                c.handleEvents(GameBaseEvent.PRE_INIT)
-                c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.JOIN))
-                c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.JOIN))
-                c.handleEvents(GameBaseEvent.INIT)
-                c.handleEvents(GameBaseEvent.START)
-                c.handleEvents(GameBaseEvent.BEGIN)
-                c.handleEvents(GameBaseEvent.UPDATE)
-                c.handleTurn(TurnEvent.START)
-            }
-        }
-
-        @Test
-        fun `throws when not initialized`() {
-            val e = assertThrows<FailedToStartGameException> {
-                ChessGame(TestTimeManager(), basicSettings).start()
-            }
-            assertIs<WrongStateException>(e.cause)
-        }
-
-        @Test
-        fun `throws when running`() {
-            val e = assertThrows<FailedToStartGameException> {
-                mkGame().start().start()
-            }
-            assertIs<WrongStateException>(e.cause)
-        }
-
-        @Test
-        fun `throws when stopped`() {
-            val e = assertThrows<FailedToStartGameException> {
+        "stopping should" - {
+            "save end reason" {
                 val g = mkGame().start()
                 val reason = white.wonBy(TEST_END_REASON)
                 g.stop(reason)
-                g.start()
+                g.results shouldBe reason
+                g.running.shouldBeFalse()
             }
-            assertIs<WrongStateException>(e.cause)
-        }
-
-        @Test
-        fun `starts variant`() {
-            val g = mkGame(spyVariantSettings).start()
-            verify {
-                g.variant.start(g)
+            "stop components" {
+                val g = mkGame(spyComponentSettings).start()
+                val c = g.getComponent<TestComponent>()!!
+                clearRecords(c)
+                g.stop(white.wonBy(TEST_END_REASON))
+                verifySequence {
+                    c.handleEvents(GameBaseEvent.STOP)
+                    c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.LEAVE))
+                    c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.LEAVE))
+                    c.handleEvents(GameBaseEvent.CLEAR)
+                    c.handleEvents(GameBaseEvent.VERY_END)
+                }
             }
-        }
-    }
-
-    @Nested
-    inner class Stopping {
-        @Test
-        fun `saves end reason`() {
-            val g = mkGame().start()
-            val reason = white.wonBy(TEST_END_REASON)
-            g.stop(reason)
-            assertEquals(reason, g.results)
-            assert(!g.running)
-        }
-
-        @Test
-        fun `throws when not running`() {
-            assertThrows<WrongStateException> {
-                val g = mkGame()
-                val reason = white.wonBy(TEST_END_REASON)
-                g.stop(reason)
-            }
-        }
-
-        @Test
-        fun `throws when stopped`() {
-            assertThrows<WrongStateException> {
-                val g = mkGame().start()
-                val reason = white.wonBy(TEST_END_REASON)
-                g.stop(reason)
-                g.stop(reason)
-            }
-        }
-
-        @Test
-        fun `stops components`() {
-            val g = mkGame(spyComponentSettings).start()
-            val c = g.getComponent<TestComponent>()!!
-            clearRecords(c)
-            g.stop(white.wonBy(TEST_END_REASON))
-            verifySequence {
-                c.handleEvents(GameBaseEvent.STOP)
-                c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.LEAVE))
-                c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.LEAVE))
-                c.handleEvents(GameBaseEvent.CLEAR)
-                c.handleEvents(GameBaseEvent.VERY_END)
+            "fail if" - {
+                "not running yet" {
+                    shouldThrowExactly<WrongStateException> {
+                        val g = mkGame()
+                        val reason = white.wonBy(TEST_END_REASON)
+                        g.stop(reason)
+                    }
+                }
+                "already stopped" {
+                    shouldThrowExactly<WrongStateException> {
+                        val g = mkGame().start()
+                        val reason = white.wonBy(TEST_END_REASON)
+                        g.stop(reason)
+                        g.stop(reason)
+                    }
+                }
             }
         }
     }
-
-}
+})

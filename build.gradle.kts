@@ -11,8 +11,7 @@ allprojects {
 tasks {
     create<DefaultTask>("createSpigotJar") {
         group = "gregchess"
-        dependsOn(":core:build")
-        dependsOn(":bukkit:build")
+        dependsOn(":bukkit:jar")
         doLast {
             copy {
                 from(project(":bukkit").getTasksByName("jar", true))

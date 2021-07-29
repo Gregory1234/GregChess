@@ -5,8 +5,8 @@ plugins {
 dependencies {
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))
-    val junitVersion: String by project
-    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+    val kotestVersion: String by project
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     val mockkVersion: String by project
     testImplementation("io.mockk:mockk:$mockkVersion")
 }

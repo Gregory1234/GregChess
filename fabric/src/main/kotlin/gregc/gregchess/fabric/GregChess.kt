@@ -19,7 +19,7 @@ import net.minecraft.util.registry.Registry
 
 object GregChess : ModInitializer {
     val CHESS_GROUP: ItemGroup = FabricItemGroupBuilder.build(ident("chess")) {
-        PieceType.PAWN.white.item.defaultStack
+        white.pawn.item.defaultStack
     }
 
     val PIECE_BLOCKS = FabricPieceTypes.values.flatMap { t -> Side.values().map { s ->
