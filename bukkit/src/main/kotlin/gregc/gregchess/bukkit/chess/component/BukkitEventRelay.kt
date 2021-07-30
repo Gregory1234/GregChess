@@ -18,19 +18,19 @@ class BukkitEventRelay(private val game: ChessGame) : Component {
     }
 
     @ChessEventHandler
-    fun sendStartEvent(e: GameBaseEvent) {
-        if (e == GameBaseEvent.VERY_END)
+    fun onStop(e: GameStopStageEvent) {
+        if (e == GameStopStageEvent.VERY_END)
             Bukkit.getPluginManager().callEvent(GameEndEvent(game))
     }
 
     @ChessEventHandler
-    fun sendTurnEndEvent(e: TurnEvent) {
+    fun onTurnEnd(e: TurnEvent) {
         if (e == TurnEvent.END)
             Bukkit.getPluginManager().callEvent(TurnEndEvent(game, game.currentPlayer))
     }
 
     @ChessEventHandler
-    fun sendGeneralEvent(e: ChessEvent) {
+    fun handleEvent(e: ChessEvent) {
         Bukkit.getPluginManager().callEvent(ChessGameEvent(game, e))
     }
 

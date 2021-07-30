@@ -1,10 +1,9 @@
 package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.chess.component.BukkitRenderer
+import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.bukkit.chess.component.SpectatorEvent
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -133,8 +132,13 @@ class Arena(val name: String, var game: ChessGame? = null): Component.Settings<A
         @ChessEventHandler
         fun handleEvents(e: GameBaseEvent) = when (e) {
             GameBaseEvent.PRE_INIT -> addGame()
-            GameBaseEvent.VERY_END -> removeGame()
-            GameBaseEvent.PANIC -> evacuate()
+            else -> {}
+        }
+
+        @ChessEventHandler
+        fun onStop(e: GameStopStageEvent) = when (e) {
+            GameStopStageEvent.VERY_END -> removeGame()
+            GameStopStageEvent.PANIC -> evacuate()
             else -> {}
         }
 

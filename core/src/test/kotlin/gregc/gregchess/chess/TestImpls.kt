@@ -82,10 +82,6 @@ class TestComponent : Component {
     @Suppress("UNUSED_PARAMETER")
     fun handleTurn(e: TurnEvent) {}
 
-    @ChessEventHandler
-    @Suppress("UNUSED_PARAMETER")
-    fun handlePlayer(p: HumanPlayerEvent) {}
-
 }
 
 object TestVariant: ChessVariant("TEST")

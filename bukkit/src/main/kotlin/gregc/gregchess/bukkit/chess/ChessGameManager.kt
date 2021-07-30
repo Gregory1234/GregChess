@@ -1,8 +1,7 @@
 package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.chess.component.GameEndEvent
-import gregc.gregchess.bukkit.chess.component.GameStartEvent
+import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player

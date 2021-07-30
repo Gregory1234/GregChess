@@ -159,12 +159,10 @@ class ChessGameTests: FreeSpec({
                 val c = g.getComponent<TestComponent>()!!
                 clearRecords(c)
                 g.stop(white.wonBy(TEST_END_REASON))
+                g.finishStopping()
                 verifySequence {
                     c.handleEvents(GameBaseEvent.STOP)
-                    c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.LEAVE))
-                    c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.LEAVE))
-                    c.handleEvents(GameBaseEvent.CLEAR)
-                    c.handleEvents(GameBaseEvent.VERY_END)
+                    c.handleEvents(GameBaseEvent.STOPPED)
                 }
             }
             "fail if" - {
@@ -173,6 +171,7 @@ class ChessGameTests: FreeSpec({
                         val g = mkGame()
                         val reason = white.wonBy(TEST_END_REASON)
                         g.stop(reason)
+                        g.finishStopping()
                     }
                 }
                 "already stopped" {
@@ -180,7 +179,9 @@ class ChessGameTests: FreeSpec({
                         val g = mkGame().start()
                         val reason = white.wonBy(TEST_END_REASON)
                         g.stop(reason)
+                        g.finishStopping()
                         g.stop(reason)
+                        g.finishStopping()
                     }
                 }
             }

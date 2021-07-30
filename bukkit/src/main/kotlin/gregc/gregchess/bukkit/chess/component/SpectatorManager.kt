@@ -31,9 +31,9 @@ class SpectatorManager(private val game: ChessGame) : Component {
     }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) = when (e) {
-        GameBaseEvent.STOP -> stop()
-        GameBaseEvent.CLEAR -> clear()
+    fun onStop(e: GameStopStageEvent) = when (e) {
+        GameStopStageEvent.STOP -> stop()
+        GameStopStageEvent.CLEAR -> clear()
         else -> {}
     }
 

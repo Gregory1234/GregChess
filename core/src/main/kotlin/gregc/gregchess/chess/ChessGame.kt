@@ -1,8 +1,9 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.TimeManager
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.upperFirst
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
@@ -18,12 +19,6 @@ class GameSettings(
     inline fun <reified T : Component.Settings<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
 }
 
-enum class PlayerDirection {
-    JOIN, LEAVE
-}
-
-data class HumanPlayerEvent(val human: HumanPlayer, val dir: PlayerDirection): ChessEvent
-
 enum class TurnEvent(val ending: Boolean): ChessEvent {
     START(false), END(true), UNDO(true)
 }
@@ -34,8 +29,7 @@ enum class GameBaseEvent: ChessEvent {
     RUNNING,
     UPDATE,
     STOP,
-    CLEAR,
-    VERY_END,
+    STOPPED,
     PANIC
 }
 
@@ -166,7 +160,6 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
     }
 
     fun start(): ChessGame {
-        println(state)
         state = GameState.Starting(requireReady())
         components.callEvent(GameBaseEvent.START)
         state = GameState.Running(requireStarting())
@@ -195,41 +188,14 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
     val results: GameResults<*>?
         get() = (state as? GameState.Ended)?.results
 
-    fun quickStop(results: GameResults<*>) = stop(results, BySides(true))
+    fun stop(results: GameResults<*>) {
+        state = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, results)
+        components.callEvent(GameBaseEvent.STOP)
+    }
 
-    fun stop(results: GameResults<*>, quick: BySides<Boolean> = BySides(false)) {
-        val stopping = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, results)
-        state = stopping
-        try {
-            components.callEvent(GameBaseEvent.STOP)
-            players.forEachUnique(currentTurn) {
-                interact {
-                    it.player.showGameResults(it.side, results)
-                    if (!results.endReason.quick)
-                        timeManager.wait((if (quick[it.side]) 0 else 3).seconds)
-                    components.callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
-                }
-            }
-            if (results.endReason.quick) {
-                components.callEvent(GameBaseEvent.CLEAR)
-                players.forEach(ChessPlayer::stop)
-                state = GameState.Stopped(stopping)
-                components.callEvent(GameBaseEvent.VERY_END)
-                return
-            }
-            interact {
-                timeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
-                timeManager.waitTick()
-                components.callEvent(GameBaseEvent.CLEAR)
-                timeManager.waitTick()
-                players.forEach(ChessPlayer::stop)
-                state = GameState.Stopped(stopping)
-                components.callEvent(GameBaseEvent.VERY_END)
-            }
-        } catch (e: Exception) {
-            panic(e)
-            throw e
-        }
+    fun finishStopping() {
+        state = GameState.Stopped(requireStopping())
+        components.callEvent(GameBaseEvent.STOPPED)
     }
 
     private fun panic(e: Exception) {
