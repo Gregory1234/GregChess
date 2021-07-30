@@ -14,5 +14,7 @@
   "block.gregchess.black_knight": "Black Knight",
   "block.gregchess.white_rook": "White Rook",
   "block.gregchess.black_rook": "Black Rook",
-  "gui.detect_board": "Detect Board"
+  "gui.gregchess.detect_board": "Detect Board",
+  "gui.gregchess.no_chessboard": "No Chessboard Detected",
+  "gui.gregchess.has_chessboard": "Chessboard Detected"
 }

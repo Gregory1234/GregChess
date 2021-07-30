@@ -1,18 +1,19 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.fabric.GregChess
-import gregc.gregchess.fabric.ident
+import gregc.gregchess.fabric.*
+import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.client.CottonInventoryScreen
 import io.github.cottonmc.cotton.gui.networking.NetworkSide
 import io.github.cottonmc.cotton.gui.networking.ScreenNetworking
-import io.github.cottonmc.cotton.gui.widget.WButton
-import io.github.cottonmc.cotton.gui.widget.WGridPanel
+import io.github.cottonmc.cotton.gui.widget.*
 import io.github.cottonmc.cotton.gui.widget.data.Insets
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.client.resource.language.I18n
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.screen.*
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
@@ -20,15 +21,89 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import kotlin.math.max
+import kotlin.math.min
 
 
 class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
-    BlockEntity(GregChess.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory {
+    BlockEntity(GregChess.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder {
+    //var currentGame: ChessGame? = null
+    var chessboardStart: BlockPos? by BlockEntityDirtyDelegate(null)
+    var chessboardEnd: BlockPos? by BlockEntityDirtyDelegate(null)
+
+    override fun writeNbt(nbt: NbtCompound): NbtCompound {
+        super.writeNbt(nbt)
+
+        chessboardStart?.let {
+            nbt.putLong("ChessboardStart", it.asLong())
+        }
+        chessboardEnd?.let {
+            nbt.putLong("ChessboardEnd", it.asLong())
+        }
+
+        return nbt
+    }
+
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+
+        if(nbt.contains("ChessboardStart", 4) && nbt.contains("ChessboardEnd", 4)) {
+            chessboardStart = BlockPos.fromLong(nbt.getLong("ChessboardStart"))
+            chessboardEnd = BlockPos.fromLong(nbt.getLong("ChessboardEnd"))
+        }
+    }
+
     override fun getDisplayName(): Text = TranslatableText(cachedState.block.translationKey)
 
     override fun createMenu(syncId: Int, inventory: PlayerInventory?, player: PlayerEntity?): ScreenHandler =
         ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.create(world, pos))
+
+    fun detectBoard(): Boolean {
+        val dirs = mutableListOf(Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH)
+        fun BlockPos.isFloor() = world?.getBlockState(this)?.block.let { it != null && it is ChessboardFloorBlock }
+                && (world?.getBlockEntity(this) as? ChessboardFloorBlockEntity)
+            .let { println(it); it != null && (it.chessControllerBlockPos == null || it.chessControllerBlockPos == pos)}
+        dirs.removeIf { d ->
+            (1..8*3).any { i ->
+                !pos.offset(d, i).isFloor()
+            }
+        }
+        dirs.forEach { d ->
+            val o = listOf(d.rotateYClockwise(), d.rotateYCounterclockwise())
+            o.forEach { d2 ->
+                if ((1..8*3).all { i -> (0 until 8*3).all { j -> pos.offset(d, i).offset(d2, j).isFloor() } }) {
+                    val v1 = pos.offset(d)
+                    val v2 = pos.offset(d, 8*3).offset(d2, 8*3-1)
+                    chessboardStart = BlockPos(min(v1.x, v2.x), pos.y, min(v1.z, v2.z))
+                    chessboardEnd = BlockPos(max(v1.x, v2.x), pos.y, max(v1.z, v2.z))
+                    (1..8*3).forEach { i -> (0 until 8*3).forEach { j ->
+                        (world?.getBlockEntity(pos.offset(d, i).offset(d2, j)) as? ChessboardFloorBlockEntity)?.let {
+                            it.chessControllerBlockPos = pos
+                        }
+                    } }
+                    return true
+                }
+            }
+        }
+        chessboardStart = null
+        chessboardEnd = null
+        return false
+    }
+
+    private val propertyDelegate = object : PropertyDelegate {
+        override fun get(index: Int): Int = when (index) {
+            0 -> if (chessboardStart != null && chessboardEnd != null) 1 else 0
+            else -> -1
+        }
+
+        override fun set(index: Int, value: Int) {}
+
+        override fun size(): Int = 1
+    }
+
+    override fun getPropertyDelegate(): PropertyDelegate = propertyDelegate
 
 }
 
@@ -38,7 +113,7 @@ class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventor
         syncId,
         playerInventory,
         null,
-        getBlockPropertyDelegate(context)
+        getBlockPropertyDelegate(context, 1)
     ) {
 
     init {
@@ -46,13 +121,22 @@ class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventor
         setRootPanel(root)
         root.setSize(300, 200)
         root.insets = Insets.ROOT_PANEL
-        val detectBoardButton = WButton(TranslatableText("gui.detect_board"))
+        val detectBoardButton = WButton(TranslatableText("gui.gregchess.detect_board"))
         detectBoardButton.onClick = Runnable {
             ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("detect_board")) {}
         }
-        root.add(detectBoardButton, 1, 1, 5, 1)
+        root.add(detectBoardButton, 0, 1, 5, 1)
+        val boardStatusLabel = WDynamicLabel {
+            I18n.translate(if (propertyDelegate.get(0) == 0) "gui.gregchess.no_chessboard" else "gui.gregchess.has_chessboard")
+        }
+        root.add(boardStatusLabel, 0, 3, 5, 1)
         ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("detect_board")) {
-
+            context.run { world, pos ->
+                val entity = world.getBlockEntity(pos)
+                if (entity is ChessControllerBlockEntity) {
+                    entity.detectBoard()
+                }
+            }
         }
         root.validate(this)
     }

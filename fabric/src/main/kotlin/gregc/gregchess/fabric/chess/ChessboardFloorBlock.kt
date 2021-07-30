@@ -1,6 +1,7 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.Floor
+import gregc.gregchess.fabric.BlockEntityDirtyDelegate
 import gregc.gregchess.fabric.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
@@ -10,19 +11,20 @@ import net.minecraft.state.property.EnumProperty
 import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.math.BlockPos
 
-class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.PIECE_ENTITY_TYPE, pos, state) {
-    var chessControllerBlockPos: BlockPos? = null
+class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
+    var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)
     override fun writeNbt(nbt: NbtCompound): NbtCompound {
-        return nbt.apply {
-            if (chessControllerBlockPos != null)
-                this.putLong("Controller", chessControllerBlockPos!!.asLong())
+        super.writeNbt(nbt)
+        chessControllerBlockPos?.let {
+            nbt.putLong("controller", it.asLong())
         }
+        return nbt
     }
-    override fun readNbt(nbt: NbtCompound?) {
-        try {
-            chessControllerBlockPos = nbt?.getLong("Controller")?.let(BlockPos::fromLong)
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+
+        if(nbt.contains("controller", 4)) {
+            chessControllerBlockPos = BlockPos.fromLong(nbt.getLong("controller"))
         }
     }
 }

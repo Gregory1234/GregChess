@@ -1,6 +1,7 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.Piece
+import gregc.gregchess.fabric.BlockEntityDirtyDelegate
 import gregc.gregchess.fabric.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
@@ -24,20 +25,22 @@ import net.minecraft.world.*
 import java.util.*
 
 class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.PIECE_ENTITY_TYPE, pos, state) {
-    private var gameUUID: UUID? = null
+    private var gameUUID: UUID? by BlockEntityDirtyDelegate(null)
     val isGameless get() = gameUUID == null
     override fun writeNbt(nbt: NbtCompound): NbtCompound {
-        return nbt.apply {
-            if (gameUUID != null)
-                this.putUuid("GameUUID", gameUUID)
+        super.writeNbt(nbt)
+
+        gameUUID?.let {
+            nbt.putUuid("GameUUID", it)
         }
+
+        return nbt
     }
-    override fun readNbt(nbt: NbtCompound?) {
-        try {
-            gameUUID = nbt?.getUuid("GameUUID")
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-        }
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+
+        if(nbt.containsUuid("GameUUID"))
+            gameUUID = nbt.getUuid("GameUUID")
     }
 }
 
@@ -69,29 +72,21 @@ abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEnti
 
     override fun appendTooltip(stack: ItemStack, world: BlockView?, tooltip: MutableList<Text>, options: TooltipContext?) {
         val data = stack.getSubNbt("BlockEntityTag")
-        try {
-            data?.getUuid("GameUUID")?.let {
+        if(data?.containsUuid("GameUUID") == true)
+            data.getUuid("GameUUID")?.let {
                 tooltip += LiteralText("Game: $it")
             }
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-        }
     }
 }
 
 private fun ItemPlacementContext.canPlacePiece(): Boolean {
     val data = stack.getSubNbt("BlockEntityTag")
-    try {
-        if (data?.getUuid("GameUUID") != null) {
-            if (side != Direction.UP)
-                return false
-            val b = world.getBlockState(blockPos.down())
-            if (b.block !is ChessboardFloorBlock)
-                return false
-        }
-    } catch (e: IllegalArgumentException) {
-        e.printStackTrace()
-        return false
+    if (data?.containsUuid("GameUUID") == true) {
+        if (side != Direction.UP)
+            return false
+        val b = world.getBlockState(blockPos.down())
+        if (b.block !is ChessboardFloorBlock)
+            return false
     }
     return true
 }
