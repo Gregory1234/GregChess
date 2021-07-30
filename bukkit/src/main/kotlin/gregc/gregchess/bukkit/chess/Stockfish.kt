@@ -1,8 +1,9 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.asDurationOrNull
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.seconds
 import java.util.concurrent.*
 
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
@@ -57,14 +58,14 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
     }
 
     override suspend fun getMove(fen: FEN): String {
-        BukkitTimeManager.toAsync()
+        toAsync()
         sendCommand("position fen $fen")
         sendCommand("go movetime " + moveTime.toMillis())
         while (true) {
             val line = readLine().split(" ")
             if (line[0] == "bestmove") {
                 if (line[1] != "(none)") {
-                    BukkitTimeManager.toSync()
+                    toSync()
                     return line[1]
                 } else {
                     throw NoEngineMoveException(fen)

@@ -1,34 +1,10 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.TimeManager
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
 import io.mockk.spyk
-import java.time.Duration
-
-class TestTimeManager : TimeManager {
-    override fun runTaskLater(delay: Duration, callback: () -> Unit) {
-        callback()
-    }
-
-    override fun runTaskNextTick(callback: () -> Unit) {
-        callback()
-    }
-
-    override fun runTaskTimer(delay: Duration, period: Duration, callback: TimeManager.CancellableContext.() -> Unit) {
-        (object : TimeManager.CancellableContext {
-            override fun cancel() {
-            }
-        }).callback()
-    }
-
-    override fun runTaskAsynchronously(callback: () -> Unit) {
-        callback()
-    }
-
-}
 
 fun testSettings(
     name: String, board: String? = null, variant: ChessVariant = ChessVariant.Normal,

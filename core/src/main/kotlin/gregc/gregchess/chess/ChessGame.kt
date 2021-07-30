@@ -1,6 +1,5 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.TimeManager
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.upperFirst
@@ -33,7 +32,7 @@ enum class GameBaseEvent: ChessEvent {
     PANIC
 }
 
-class ChessGame(private val timeManager: TimeManager, val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) {
+class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) {
 
     override fun toString() = "ChessGame(uuid=$uuid)"
 

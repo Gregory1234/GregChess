@@ -27,7 +27,7 @@ private val arbPieceType = PieceType.run { Arb.of(PAWN, KNIGHT, BISHOP, ROOK, QU
 
 private val arbPiece = Arb.bind(arbPieceType, Arb.enum<Side>()) { type, s -> Piece(type, s) }
 
-private val game = ChessGame(TestTimeManager(), testSettings("basic", variant = CaptureAll)).addPlayers {
+private val game = ChessGame(testSettings("basic", variant = CaptureAll)).addPlayers {
     human(TestHuman("a"), white, false)
     human(TestHuman("b"), black, false)
 }.start()

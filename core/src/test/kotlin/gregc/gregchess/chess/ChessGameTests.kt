@@ -18,14 +18,14 @@ private fun spyVariantSettings() = testSettings("spy variant", variant = spyk(Te
 private fun mkGame(
     settings: GameSettings = basicSettings,
     players: List<Pair<HumanPlayer, Side>> = listOf(humanA to white, humanB to black)
-) = ChessGame(TestTimeManager(), settings).addPlayers {
+) = ChessGame(settings).addPlayers {
     players.forEach { (h, s) ->
         human(h, s, false)
     }
 }
 
 private fun mkGame(settings: GameSettings = basicSettings, players: BySides<HumanPlayer>) =
-    ChessGame(TestTimeManager(), settings).addPlayers {
+    ChessGame(settings).addPlayers {
         players.forEachIndexed { s, h ->
             human(h, s, false)
         }
@@ -128,7 +128,7 @@ class ChessGameTests: FreeSpec({
             "fail if" - {
                 "not initialized yet" {
                     shouldThrowExactly<WrongStateException> {
-                        ChessGame(TestTimeManager(), basicSettings).start()
+                        ChessGame(basicSettings).start()
                     }
                 }
                 "already running" {

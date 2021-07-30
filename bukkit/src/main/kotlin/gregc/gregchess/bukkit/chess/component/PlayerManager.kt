@@ -1,9 +1,10 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.*
-import gregc.gregchess.bukkit.BukkitTimeManager
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.interact
+import gregc.gregchess.seconds
 
 enum class GameStartStageEvent: ChessEvent {
     INIT, START, BEGIN
@@ -42,7 +43,7 @@ class PlayerManager(private val game: ChessGame) : Component {
             GameBaseEvent.RUNNING ->
             {
                 components.callEvent(GameStartStageEvent.BEGIN)
-                BukkitTimeManager.runTaskTimer(0.seconds, 0.1.seconds) {
+                runTaskTimer(0.seconds, 0.1.seconds) {
                     if (running)
                         update()
                     else
@@ -57,7 +58,7 @@ class PlayerManager(private val game: ChessGame) : Component {
                     interact {
                         it.player.showGameResults(it.side, results)
                         if (!results.endReason.quick)
-                            BukkitTimeManager.wait((if (quick[it.side]) 0 else 3).seconds)
+                            wait((if (quick[it.side]) 0 else 3).seconds)
                         components.callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
                     }
                 }
@@ -68,10 +69,10 @@ class PlayerManager(private val game: ChessGame) : Component {
                     return
                 }
                 interact {
-                    BukkitTimeManager.wait((if (quick.white && quick.black) 0 else 3).seconds)
-                    BukkitTimeManager.waitTick()
+                    wait((if (quick.white && quick.black) 0 else 3).seconds)
+                    waitTick()
                     components.callEvent(GameStopStageEvent.CLEAR)
-                    BukkitTimeManager.waitTick()
+                    waitTick()
                     players.forEach(ChessPlayer::stop)
                     finishStopping()
                 }

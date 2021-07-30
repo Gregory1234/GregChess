@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.asDurationOrNull
+import gregc.gregchess.interact
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -63,7 +64,8 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         )
         val duration = section.getString("Duration")?.asDurationOrNull()
         if (duration != null)
-            BukkitTimeManager.runTaskLater(duration) {
+            interact {
+                wait(duration)
                 if (request.uuid in requests)
                     expire(request)
             }
