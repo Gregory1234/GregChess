@@ -26,7 +26,7 @@ data class FEN(
                                 if (e != 0)
                                     append(e.digitToChar())
                                 e = 0
-                                append(p.standardChar)
+                                append(p.char)
                             }
                         }
                         if (e != 0)
@@ -63,7 +63,7 @@ data class FEN(
     }
 
     private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): PieceInfo {
-        val type = PieceType.parseFromStandardChar(pieceTypes, this)
+        val type = PieceType.chooseByChar(pieceTypes, this)
         val side = if (isUpperCase()) white else black
         val hasMoved = type.hasMoved(this@FEN, p, side)
         return PieceInfo(p, type.of(side), hasMoved)
@@ -75,7 +75,7 @@ data class FEN(
     override fun toString() = buildString {
         append(boardState.state)
         append(" ")
-        append(currentTurn.standardChar)
+        append(currentTurn.char)
         append(" ")
         append(castlingRightsToString(chess960, 'A', castlingRights.white))
         append(castlingRightsToString(chess960, 'a', castlingRights.black))
@@ -90,7 +90,7 @@ data class FEN(
     fun toHash() = buildString {
         append(boardState)
         append(" ")
-        append(currentTurn.standardChar)
+        append(currentTurn.char)
         append(" ")
         append(castlingRightsToString(chess960, 'A', castlingRights.white))
         append(castlingRightsToString(chess960, 'a', castlingRights.black))
@@ -144,7 +144,7 @@ data class FEN(
             if (fullmove.toInt() <= 0) throw IllegalArgumentException(fen)
             return FEN(
                 BoardState(board),
-                Side.parseFromStandardChar(turn[0]),
+                Side.parseFromChar(turn[0]),
                 BySides(
                     parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
                     parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() })
@@ -158,18 +158,18 @@ data class FEN(
 
         fun generateChess960(): FEN {
             val types = MutableList<Char?>(8) { null }
-            types[(0..7).filter { it % 2 == 0 }.random()] = PieceType.BISHOP.standardChar
-            types[(0..7).filter { it % 2 == 1 }.random()] = PieceType.BISHOP.standardChar
-            types[(0..7).filter { types[it] == null }.random()] = PieceType.KNIGHT.standardChar
-            types[(0..7).filter { types[it] == null }.random()] = PieceType.KNIGHT.standardChar
-            types[(0..7).filter { types[it] == null }.random()] = PieceType.QUEEN.standardChar
+            types[(0..7).filter { it % 2 == 0 }.random()] = PieceType.BISHOP.char
+            types[(0..7).filter { it % 2 == 1 }.random()] = PieceType.BISHOP.char
+            types[(0..7).filter { types[it] == null }.random()] = PieceType.KNIGHT.char
+            types[(0..7).filter { types[it] == null }.random()] = PieceType.KNIGHT.char
+            types[(0..7).filter { types[it] == null }.random()] = PieceType.QUEEN.char
             val r1 = types.indexOf(null)
-            types[r1] = PieceType.ROOK.standardChar
-            types[types.indexOf(null)] = PieceType.KING.standardChar
+            types[r1] = PieceType.ROOK.char
+            types[types.indexOf(null)] = PieceType.KING.char
             val r2 = types.indexOf(null)
-            types[r2] = PieceType.ROOK.standardChar
+            types[r2] = PieceType.ROOK.char
             val row = String(types.mapNotNull { it }.toCharArray())
-            val pawns = PieceType.PAWN.standardChar.toString().repeat(8)
+            val pawns = PieceType.PAWN.char.toString().repeat(8)
             return FEN(
                 BoardState("$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}"),
                 castlingRights = BySides(listOf(r1, r2)),

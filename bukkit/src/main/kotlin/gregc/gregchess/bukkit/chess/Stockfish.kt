@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.asDurationOrNull
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.seconds

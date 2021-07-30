@@ -19,7 +19,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
         private fun whiteFormat(s: String) = config.getLocalizedString("Scoreboard.Format.White", s)
         private fun blackFormat(s: String) = config.getLocalizedString("Scoreboard.Format.Black", s)
         private fun generalFormat(s: String) = config.getLocalizedString("Scoreboard.Format.General", s)
-        private fun format(side: Side, s: String) = config.getLocalizedString("Scoreboard.Format.${side.standardName}", s)
+        private fun format(side: Side, s: String) = config.getLocalizedString("Scoreboard.Format.${side.configName}", s)
 
         private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")!!
 

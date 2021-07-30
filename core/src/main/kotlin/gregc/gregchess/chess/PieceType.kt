@@ -3,7 +3,7 @@ package gregc.gregchess.chess
 
 class PieceType(
     val name: String,
-    val standardChar: Char,
+    val char: Char,
     val moveScheme: (BoardPiece) -> List<MoveCandidate>,
     val hasMoved: (FEN, Pos, Side) -> Boolean,
     val minor: Boolean
@@ -34,7 +34,7 @@ class PieceType(
         @JvmField
         val PAWN = PieceType("PAWN",'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
 
-        fun parseFromStandardChar(values: Collection<PieceType>, c: Char): PieceType =
-            values.firstOrNull { it.standardChar == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())
+        fun chooseByChar(values: Collection<PieceType>, c: Char): PieceType =
+            values.firstOrNull { it.char == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())
     }
 }

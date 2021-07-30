@@ -3,10 +3,10 @@ package gregc.gregchess.chess
 import java.util.*
 
 data class Piece(val type: PieceType, val side: Side) {
-    val standardChar
+    val char
         get() = when (side) {
-            Side.WHITE -> type.standardChar.uppercaseChar()
-            Side.BLACK -> type.standardChar
+            Side.WHITE -> type.char.uppercaseChar()
+            Side.BLACK -> type.char
         }
 }
 
@@ -31,7 +31,7 @@ class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
 data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val type get() = piece.type
     val side get() = piece.side
-    val standardChar get() = piece.standardChar
+    val char get() = piece.char
 }
 
 sealed class PieceEvent(val piece: BoardPiece) : ChessEvent {

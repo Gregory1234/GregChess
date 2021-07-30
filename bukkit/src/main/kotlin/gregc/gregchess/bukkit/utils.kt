@@ -2,6 +2,7 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.Loc
 import gregc.gregchess.bukkit.chess.human
+import gregc.gregchess.minutes
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
@@ -10,8 +11,10 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
-import java.time.Duration
+import java.time.*
+import java.time.format.DateTimeFormatter
 import kotlin.contracts.contract
+import kotlin.math.*
 
 const val DEFAULT_LANG = "en_US"
 
@@ -190,5 +193,46 @@ fun Duration.toTicks(): Long = toMillis() / 50
 
 val Int.ticks: Duration
     get() = Duration.ofMillis(toLong() * 50)
+val Long.ticks: Duration
+    get() = Duration.ofMillis(this * 50)
+val Double.seconds: Duration
+    get() = Duration.ofNanos(floor(this * 1000000000L).toLong())
+val Double.milliseconds: Duration
+    get() = Duration.ofNanos(floor(this * 1000000L).toLong())
+val Double.minutes: Duration
+    get() = Duration.ofNanos(floor(this * 60000000000L).toLong())
+
+fun String.asDurationOrNull(): Duration? {
+    val match1 = Regex("""^(-|\+|)(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(this)
+    if (match1 != null) {
+        val amount =
+            (match1.groupValues[2].toDoubleOrNull()
+                ?: return null) * (if (match1.groupValues[1] == "-") -1 else 1)
+        return when (match1.groupValues[3]) {
+            "s" -> amount.seconds
+            "ms" -> amount.milliseconds
+            "t" -> amount.roundToLong().ticks
+            "m" -> amount.minutes
+            else -> null
+        }
+    }
+    val match2 = Regex("""^(-)?(\d+):(\d{2,}(?:\.\d)?)$""").find(this)
+    if (match2 != null) {
+        val sign = (if (match2.groupValues[1] == "-") -1 else 1)
+        val minutes = (match2.groupValues[2].toLongOrNull() ?: return null) * sign
+        val seconds = (match2.groupValues[3].toDoubleOrNull() ?: return null) * sign
+        return minutes.minutes + seconds.seconds
+    }
+    return null
+}
+
+fun Duration.toLocalTime(): LocalTime =
+    LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
+
+fun Duration.format(formatString: String): String? = try {
+    DateTimeFormatter.ofPattern(formatString).format(toLocalTime())
+} catch (e: DateTimeException) {
+    null
+}
 
 internal fun String.toKey(): NamespacedKey = NamespacedKey.fromString(this, GregChess.plugin)!!

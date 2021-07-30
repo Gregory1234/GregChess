@@ -1,8 +1,8 @@
 package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.chess.*
 import gregc.gregchess.bukkit.chess.component.spectators
+import gregc.gregchess.chess.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.entity.Player
@@ -22,17 +22,17 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         private val COPY_FEN = message("CopyFEN")
         private val COPY_PGN = message("CopyPGN")
         private val IN_CHECK_MSG = message("InCheck")
-        private val YOU_ARE_PLAYING_AS_MSG = BySides { message("YouArePlayingAs.${it.standardName}") }
+        private val YOU_ARE_PLAYING_AS_MSG = BySides { message("YouArePlayingAs.${it.configName}") }
 
         private val IN_CHECK_TITLE = title("InCheck")
-        private val YOU_ARE_PLAYING_AS_TITLE get() = BySides { title("YouArePlayingAs.${it.standardName}") }
+        private val YOU_ARE_PLAYING_AS_TITLE get() = BySides { title("YouArePlayingAs.${it.configName}") }
         private val YOUR_TURN = title("YourTurn")
 
         private val YOU_WON = title("Player.YouWon")
         private val YOU_LOST = title("Player.YouLost")
         private val YOU_DREW = title("Player.YouDrew")
 
-        private val SPECTATOR_WINNER = BySides { title("Spectator.${it.standardName}Won") }
+        private val SPECTATOR_WINNER = BySides { title("Spectator.${it.configName}Won") }
         private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")
     }
 
@@ -129,9 +129,9 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         sendMessage(buildString {
             append(num)
             append(". ")
-            wLast?.let { append(it.standardName) }
+            wLast?.let { append(it.name) }
             append("  | ")
-            bLast?.let { append(it.standardName) }
+            bLast?.let { append(it.name) }
         })
     }
 }

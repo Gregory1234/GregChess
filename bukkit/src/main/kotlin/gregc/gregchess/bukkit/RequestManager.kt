@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.asDurationOrNull
 import gregc.gregchess.interact
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler

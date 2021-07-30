@@ -24,7 +24,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
             moves.forEachIndexed { index, moveData ->
                 if (index % 2 == 0)
                     append((index.toUInt() + indexShift).div(2u) + 1u, ". ")
-                append(moveData.standardName, " ")
+                append(moveData.name, " ")
                 if (index % 2 == 1)
                     append("\n")
             }
@@ -80,7 +80,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
 
             val tree = MoveTree(
                 game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveClock,
-                game.board.moveHistory.filter { it.standardName != "" }, result
+                game.board.moveHistory.filter { it.name != "" }, result
             )
 
             return PGN(tags, tree)

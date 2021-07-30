@@ -4,11 +4,11 @@ import gregc.gregchess.between
 import gregc.gregchess.rotationsOf
 
 class MoveData(
-    val piece: Piece, val origin: Square, val target: Square, val standardName: String,
+    val piece: Piece, val origin: Square, val target: Square, val name: String,
     val captured: Boolean, val display: Square = target, val undo: () -> Unit
 ) {
 
-    override fun toString() = "MoveData(piece=$piece, standardName=$standardName)"
+    override fun toString() = "MoveData(piece=$piece, name=$name)"
 
     fun clear() {
         origin.previousMoveMarker = null
@@ -40,7 +40,7 @@ abstract class MoveCandidate(
             throw IllegalArgumentException(promotion.toString())
         if (promotion != null && promotions != null && promotion !in promotions)
             throw IllegalArgumentException(promotion.toString())
-        val standardBase = baseStandardName(promotion)
+        val base = baseName(promotion)
         val hasMoved = piece.hasMoved
         val ct = captured?.capture(piece.side)
         piece.move(target)
@@ -52,7 +52,7 @@ abstract class MoveCandidate(
         val hmc =
             if (piece.type == PieceType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
         val ch = checkForChecks(piece.side, game)
-        return MoveData(piece.piece, origin, target, standardBase + ch, ct != null, display) {
+        return MoveData(piece.piece, origin, target, base + ch, ct != null, display) {
             hmc()
             promotion?.let { piece.square.piece?.demote(piece) }
             piece.move(origin)
@@ -61,9 +61,9 @@ abstract class MoveCandidate(
         }
     }
 
-    open fun baseStandardName(promotion: Piece? = null) = buildString {
+    open fun baseName(promotion: Piece? = null) = buildString {
         if (piece.type != PieceType.PAWN) {
-            append(piece.type.standardChar.uppercaseChar())
+            append(piece.type.char.uppercaseChar())
             append(getUniquenessCoordinate(piece, target))
         } else if (control != null)
             append(origin.pos.fileStr)
@@ -72,7 +72,7 @@ abstract class MoveCandidate(
         append(target.pos)
         promotion?.let {
             append("=")
-            append(it.standardChar.uppercaseChar())
+            append(it.char.uppercaseChar())
         }
     }
 
@@ -179,7 +179,7 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
         control = null, display = display
     ) {
         override fun execute(promotion: Piece?): MoveData {
-            val base = baseStandardName(promotion)
+            val base = baseName(promotion)
             val rookOrigin = rook.square
             BoardPiece.autoMove(mapOf(piece to target, rook to rookTarget))
             val ch = checkForChecks(piece.side, game)
@@ -192,7 +192,7 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
             }
         }
 
-        override fun baseStandardName(promotion: Piece?) = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
+        override fun baseName(promotion: Piece?) = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
     }
 
     val castles = mutableListOf<MoveCandidate>()
@@ -270,13 +270,13 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
         MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true,
         flagsNeeded = listOf(target.pos to EN_PASSANT)) {
         override fun execute(promotion: Piece?): MoveData {
-            val standardBase = baseStandardName(promotion)
+            val base = baseName(promotion)
             val hasMoved = piece.hasMoved
             val ct = captured?.capture(piece.side)
             piece.move(target)
             val ch = checkForChecks(piece.side, game)
             val hmc = board.resetMovesSinceLastCapture()
-            return MoveData(piece.piece, origin, target, standardBase + ch, true, display) {
+            return MoveData(piece.piece, origin, target, base + ch, true, display) {
                 hmc()
                 piece.move(origin)
                 ct?.let { captured?.resurrect(it) }
