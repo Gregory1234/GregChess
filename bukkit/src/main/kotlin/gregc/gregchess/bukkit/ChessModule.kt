@@ -10,17 +10,17 @@ import org.bukkit.configuration.ConfigurationSection
 import java.time.Duration
 import kotlin.reflect.KClass
 
-interface BukkitChessModuleExtension: ChessModuleExtension {
+interface BukkitChessModule: ChessModule {
     val config: ConfigurationSection
     fun <T> stringify(propertyType: PropertyType<T>, t: T): String
     fun getSettings(requested: Collection<KClass<out Component.Settings<*>>>, section: ConfigurationSection): Collection<Component.Settings<*>>
 }
 
 val ChessModule.bukkit
-    get() = if (this is BukkitChessModuleExtension) this
-    else extensions.filterIsInstance<BukkitChessModuleExtension>().first()
+    get() = if (this is BukkitChessModule) this
+    else extensions.filterIsInstance<BukkitChessModule>().first()
 
-object BukkitGregChessModule: BukkitChessModuleExtension {
+object BukkitGregChessModule: BukkitChessModule, ChessModuleExtension {
     private val timeFormat: String get() = gregc.gregchess.bukkit.config.getString("TimeFormat")!!
     private val NO_ARENAS = err("NoArenas")
 
