@@ -39,6 +39,7 @@ object SettingsManager {
         this += { BukkitEventRelay.Settings }
         this += { ThreeChecks.CheckCounter.Settings(it.getInt("CheckLimit", 3).toUInt()) }
         this += { AtomicChess.ExplosionManager.Settings }
+        this += { PlayerManager.Settings }
         this += { SpectatorManager.Settings }
     }
 
@@ -51,7 +52,8 @@ object SettingsManager {
     }
 
     private val extraComponents = mutableListOf<KClass<out Component.Settings<*>>>(
-        Arena::class, Chessboard.Settings::class, ChessClock.Settings::class, SpectatorManager.Settings::class,
+        Arena::class, Chessboard.Settings::class, ChessClock.Settings::class,
+        PlayerManager.Settings::class, SpectatorManager.Settings::class,
         ScoreboardManager.Settings::class, BukkitRenderer.Settings::class, BukkitEventRelay.Settings::class
     )
 

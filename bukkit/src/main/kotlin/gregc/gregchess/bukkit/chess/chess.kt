@@ -2,8 +2,7 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.Registry
-import gregc.gregchess.bukkit.chess.component.BukkitRenderer
-import gregc.gregchess.bukkit.chess.component.ScoreboardManager
+import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*

@@ -4,7 +4,7 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.SpectatorEvent
+import gregc.gregchess.bukkit.chess.component.SpectatorEvent
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler

@@ -5,7 +5,6 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.*
 
 private val humanA = TestHuman("a")
@@ -108,12 +107,12 @@ class ChessGameTests: FreeSpec({
             "send messages to players" {
                 val a = spyk(humanA)
                 val b = spyk(humanB)
-                mkGame(players = BySides(a, b)).start()
+                mkGame(players = BySides(a, b))
                 playerExclude(a)
                 playerExclude(b)
-                verifyAll {
-                    a.sendGameUpdate(white, listOf(GamePlayerStatus.START, GamePlayerStatus.TURN))
-                    b.sendGameUpdate(black, listOf(GamePlayerStatus.START))
+                verify {
+                    a wasNot Called
+                    b wasNot Called
                 }
             }
             "start components" {
@@ -121,42 +120,29 @@ class ChessGameTests: FreeSpec({
                 val c = g.getComponent<TestComponent>()!!
                 verifySequence {
                     c.handleEvents(GameBaseEvent.PRE_INIT)
-                    c.handlePlayer(HumanPlayerEvent(humanA, PlayerDirection.JOIN))
-                    c.handlePlayer(HumanPlayerEvent(humanB, PlayerDirection.JOIN))
-                    c.handleEvents(GameBaseEvent.INIT)
                     c.handleEvents(GameBaseEvent.START)
-                    c.handleEvents(GameBaseEvent.BEGIN)
-                    c.handleEvents(GameBaseEvent.UPDATE)
+                    c.handleEvents(GameBaseEvent.RUNNING)
                     c.handleTurn(TurnEvent.START)
-                }
-            }
-            "start variant" {
-                val g = mkGame(spyVariantSettings()).start()
-                verify {
-                    g.variant.start(g)
                 }
             }
             "fail if" - {
                 "not initialized yet" {
-                    val e = shouldThrowExactly<FailedToStartGameException> {
+                    shouldThrowExactly<WrongStateException> {
                         ChessGame(TestTimeManager(), basicSettings).start()
                     }
-                    e.cause.shouldBeInstanceOf<WrongStateException>()
                 }
                 "already running" {
-                    val e = shouldThrowExactly<FailedToStartGameException> {
+                    shouldThrowExactly<WrongStateException> {
                         mkGame().start().start()
                     }
-                    e.cause.shouldBeInstanceOf<WrongStateException>()
                 }
                 "already stopped" {
-                    val e = shouldThrowExactly<FailedToStartGameException> {
+                    shouldThrowExactly<WrongStateException> {
                         val g = mkGame().start()
                         val reason = white.wonBy(TEST_END_REASON)
                         g.stop(reason)
                         g.start()
                     }
-                    e.cause.shouldBeInstanceOf<WrongStateException>()
                 }
             }
         }

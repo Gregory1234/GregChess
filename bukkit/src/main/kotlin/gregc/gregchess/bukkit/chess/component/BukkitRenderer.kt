@@ -124,10 +124,15 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
     fun handleEvents(e: GameBaseEvent) {
         when (e) {
             GameBaseEvent.PRE_INIT -> game.requireComponent<Arena.Usage>()
-            GameBaseEvent.START -> renderBoardBase()
             GameBaseEvent.CLEAR, GameBaseEvent.PANIC -> removeBoard()
             else -> {}
         }
+    }
+
+    @ChessEventHandler
+    fun onStart(e: GameStartStageEvent) = when(e) {
+        GameStartStageEvent.START -> renderBoardBase()
+        else -> {}
     }
 
     @ChessEventHandler

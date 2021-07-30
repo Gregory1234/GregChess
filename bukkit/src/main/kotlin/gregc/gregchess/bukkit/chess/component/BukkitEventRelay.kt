@@ -12,9 +12,13 @@ class BukkitEventRelay(private val game: ChessGame) : Component {
     }
 
     @ChessEventHandler
-    fun sendStartEvent(e: GameBaseEvent) {
-        if (e == GameBaseEvent.BEGIN)
+    fun onStart(e: GameStartStageEvent) {
+        if (e == GameStartStageEvent.BEGIN)
             Bukkit.getPluginManager().callEvent(GameStartEvent(game))
+    }
+
+    @ChessEventHandler
+    fun sendStartEvent(e: GameBaseEvent) {
         if (e == GameBaseEvent.VERY_END)
             Bukkit.getPluginManager().callEvent(GameEndEvent(game))
     }

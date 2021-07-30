@@ -2,7 +2,7 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.spectators
+import gregc.gregchess.bukkit.chess.component.spectators
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.entity.Player

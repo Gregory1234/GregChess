@@ -30,17 +30,14 @@ enum class TurnEvent(val ending: Boolean): ChessEvent {
 
 enum class GameBaseEvent: ChessEvent {
     PRE_INIT,
-    INIT,
     START,
-    BEGIN,
+    RUNNING,
     UPDATE,
     STOP,
     CLEAR,
     VERY_END,
     PANIC
 }
-
-class FailedToStartGameException(e: Exception): Exception("", e)
 
 class ChessGame(private val timeManager: TimeManager, val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) {
 
@@ -79,8 +76,13 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
     private var state: GameState = GameState.Initial
 
     private inline fun <reified T> require(): T = (state as? T) ?: run {
-        stop(drawBy(EndReason.ERROR))
-        throw WrongStateException(state, T::class.java)
+        val e = WrongStateException(state, T::class.java)
+        if (state !is GameState.Stopping && state !is GameState.Running) {
+            panic(e)
+        } else {
+            stop(drawBy(EndReason.ERROR))
+        }
+        throw e
     }
 
     private fun requireInitial() = require<GameState.Initial>()
@@ -91,11 +93,7 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
 
     private fun requireRunning() = require<GameState.Running>()
 
-    private fun requireStopping() = (state as? GameState.Stopping) ?: run {
-        val e = WrongStateException(state, GameState.Stopping::class.java)
-        panic(e)
-        throw e
-    }
+    private fun requireStopping() = require<GameState.Stopping>()
 
     var currentTurn: Side
         get() = require<GameState.WithCurrentPlayer>().currentTurn
@@ -168,30 +166,18 @@ class ChessGame(private val timeManager: TimeManager, val settings: GameSettings
     }
 
     fun start(): ChessGame {
-        try {
-            state = GameState.Starting(requireReady())
-            players.forEachReal {
-                components.callEvent(HumanPlayerEvent(it, PlayerDirection.JOIN))
-            }
-            components.callEvent(GameBaseEvent.INIT)
-            requireStarting().forEachUnique { it.init() }
-            variant.start(this)
-            components.callEvent(GameBaseEvent.START)
-            state = GameState.Running(requireStarting())
-        } catch (e: Exception) {
-            val f = FailedToStartGameException(e)
-            panic(f)
-            throw f
-        }
-        components.callEvent(GameBaseEvent.BEGIN)
-        timeManager.runTaskTimer(0.seconds, 0.1.seconds) {
-            if (!running)
-                cancel()
-            else
-                components.callEvent(GameBaseEvent.UPDATE)
-        }
+        println(state)
+        state = GameState.Starting(requireReady())
+        components.callEvent(GameBaseEvent.START)
+        state = GameState.Running(requireStarting())
+        components.callEvent(GameBaseEvent.RUNNING)
         startTurn()
         return this
+    }
+
+    fun update() {
+        requireRunning()
+        components.callEvent(GameBaseEvent.UPDATE)
     }
 
     private fun startTurn() {

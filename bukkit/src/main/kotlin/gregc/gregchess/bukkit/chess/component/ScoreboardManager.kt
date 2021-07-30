@@ -49,10 +49,15 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = when (e) {
-        GameBaseEvent.INIT -> init()
-        GameBaseEvent.START -> start()
         GameBaseEvent.CLEAR, GameBaseEvent.PANIC -> stop()
         GameBaseEvent.UPDATE -> update()
+        else -> {}
+    }
+
+    @ChessEventHandler
+    fun onStart(e: GameStartStageEvent) = when(e) {
+        GameStartStageEvent.INIT -> init()
+        GameStartStageEvent.START -> start()
         else -> {}
     }
 
