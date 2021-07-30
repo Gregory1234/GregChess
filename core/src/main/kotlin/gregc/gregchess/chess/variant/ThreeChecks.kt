@@ -1,5 +1,6 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import kotlin.reflect.KClass
@@ -34,9 +35,9 @@ object ThreeChecks : ChessVariant("THREE_CHECKS") {
     }
 
     @JvmField
-    val CHECK_COUNTER = PropertyType<UInt>("CHECK_COUNTER")
+    val CHECK_COUNTER = GregChessModule.register(PropertyType<UInt>("CHECK_COUNTER"))
     @JvmField
-    val CHECK_LIMIT = DetEndReason("CHECK_LIMIT", EndReason.Type.NORMAL)
+    val CHECK_LIMIT = GregChessModule.register(DetEndReason("CHECK_LIMIT", EndReason.Type.NORMAL))
 
     override fun start(game: ChessGame) {
         game.requireComponent<CheckCounter>()

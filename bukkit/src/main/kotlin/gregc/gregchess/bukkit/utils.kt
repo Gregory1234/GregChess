@@ -8,6 +8,7 @@ import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
@@ -236,3 +237,13 @@ fun Duration.format(formatString: String): String? = try {
 }
 
 internal fun String.toKey(): NamespacedKey = NamespacedKey.fromString(this, GregChess.plugin)!!
+
+val config: ConfigurationSection get() = GregChess.plugin.config
+
+fun ConfigurationSection.getLocalizedString(path: String, vararg args: Any?) = LocalizedString(this, path, *args)
+
+class LocalizedString(private val section: ConfigurationSection, val path: String, private vararg val args: Any?) {
+    fun get(lang: String): String =
+        (section.getString(path) ?: throw IllegalArgumentException(lang + "/" + section.currentPath + "." + path))
+            .format(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray())
+}

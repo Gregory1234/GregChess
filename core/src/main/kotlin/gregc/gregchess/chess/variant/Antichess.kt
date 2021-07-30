@@ -1,10 +1,11 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 
 object Antichess : ChessVariant("ANTICHESS") {
     @JvmField
-    val STALEMATE_VICTORY = DetEndReason("STALEMATE_VICTORY", EndReason.Type.NORMAL)
+    val STALEMATE_VICTORY = GregChessModule.register(DetEndReason("STALEMATE_VICTORY", EndReason.Type.NORMAL))
 
     object AntichessPawnConfig : PawnMovementConfig {
         override fun promotions(piece: PieceInfo): List<Piece> =

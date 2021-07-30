@@ -49,7 +49,6 @@ object GregChess : Listener {
     private val ENGINE_COMMAND_SENT = message("EngineCommandSent")
     private val LOADED_FEN = message("LoadedFEN")
     private val CONFIG_RELOADED = message("ConfigReloaded")
-    private val LEVEL_SET = message("LevelSet")
 
     private val drawRequest = RequestManager.register("Draw", "/chess draw", "/chess draw")
 
@@ -62,10 +61,8 @@ object GregChess : Listener {
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
-        BukkitPieceTypes
-        BukkitEndReasons
-        BukkitPropertyTypes
-        BukkitChessVariants
+        GregChessModule.extensions += BukkitGregChessModule
+        GregChessModule.load()
         ChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()
@@ -173,7 +170,8 @@ object GregChess : Listener {
                             game.board[game.renderer.getPos(player.location.toLoc())]!!
                         else
                             game.board[Pos.parseFromString(this[2])]!!
-                        val piece = BukkitPieceTypes[this[1].toKey()]!!
+                        val key = this[1].toKey()
+                        val piece = GregChessModule.getModule(key.namespace).pieceTypes.first { it.name.lowercase() == key.key }
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(piece.of(Side.valueOf(this[0])), square)
                         game.board.updateMoves()
@@ -328,7 +326,7 @@ object GregChess : Listener {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("spawn", BukkitPieceTypes.ids.toTypedArray())
+                    "spawn" -> ifPermission("spawn", GregChessModule.modules.flatMap { p -> p.pieceTypes.map { p.namespace + ":" + it.name.lowercase() } }.toTypedArray())
                     "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }

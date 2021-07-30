@@ -1,5 +1,6 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.rangeTo
@@ -7,7 +8,7 @@ import gregc.gregchess.rangeTo
 object KingOfTheHill : ChessVariant("KING_OF_THE_HILL") {
 
     @JvmField
-    val KING_OF_THE_HILL = DetEndReason("KING_OF_THE_HILL", EndReason.Type.NORMAL)
+    val KING_OF_THE_HILL = GregChessModule.register(DetEndReason("KING_OF_THE_HILL", EndReason.Type.NORMAL))
 
     override fun chessboardSetup(board: Chessboard) {
         (Pair(3, 3)..Pair(4, 4)).forEach { (x, y) ->

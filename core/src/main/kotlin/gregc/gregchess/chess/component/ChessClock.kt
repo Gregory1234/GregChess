@@ -1,8 +1,7 @@
 package gregc.gregchess.chess.component
 
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.minutes
-import gregc.gregchess.seconds
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -11,9 +10,9 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
 
     companion object {
         @JvmField
-        val TIME_REMAINING = PropertyType<Duration>("TIME_REMAINING")
+        val TIME_REMAINING = GregChessModule.register(PropertyType<Duration>("TIME_REMAINING"))
         @JvmField
-        val TIME_REMAINING_SIMPLE = PropertyType<Duration>("TIME_REMAINING_SIMPLE")
+        val TIME_REMAINING_SIMPLE = GregChessModule.register(PropertyType<Duration>("TIME_REMAINING_SIMPLE"))
     }
 
     enum class Type(val usesIncrement: Boolean = true) {

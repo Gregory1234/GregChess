@@ -1,5 +1,7 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.GregChessModule
+
 
 class PieceType(
     val name: String,
@@ -22,17 +24,17 @@ class PieceType(
             Side.BLACK -> p.rank != 6
         }
         @JvmField
-        val KING = PieceType("KING",'k', ::kingMovement, ::assumeNotMoved, false)
+        val KING = GregChessModule.register(PieceType("KING",'k', ::kingMovement, ::assumeNotMoved, false))
         @JvmField
-        val QUEEN = PieceType("QUEEN",'q', ::queenMovement, ::assumeNotMoved, false)
+        val QUEEN = GregChessModule.register(PieceType("QUEEN",'q', ::queenMovement, ::assumeNotMoved, false))
         @JvmField
-        val ROOK = PieceType("ROOK",'r', ::rookMovement, ::rookHasMoved, false)
+        val ROOK = GregChessModule.register(PieceType("ROOK",'r', ::rookMovement, ::rookHasMoved, false))
         @JvmField
-        val BISHOP = PieceType("BISHOP",'b', ::bishopMovement, ::assumeNotMoved, true)
+        val BISHOP = GregChessModule.register(PieceType("BISHOP",'b', ::bishopMovement, ::assumeNotMoved, true))
         @JvmField
-        val KNIGHT = PieceType("KNIGHT",'n', ::knightMovement, ::assumeNotMoved, true)
+        val KNIGHT = GregChessModule.register(PieceType("KNIGHT",'n', ::knightMovement, ::assumeNotMoved, true))
         @JvmField
-        val PAWN = PieceType("PAWN",'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false)
+        val PAWN = GregChessModule.register(PieceType("PAWN",'p', pawnMovement(DefaultPawnConfig), ::pawnHasMoved, false))
 
         fun chooseByChar(values: Collection<PieceType>, c: Char): PieceType =
             values.firstOrNull { it.char == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())

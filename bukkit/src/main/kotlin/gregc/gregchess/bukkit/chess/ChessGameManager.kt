@@ -17,7 +17,7 @@ import java.util.*
 
 object ChessGameManager : Listener {
     @JvmField
-    val PLUGIN_RESTART = DrawEndReason("PLUGIN_RESTART", EndReason.Type.EMERGENCY, quick = true)
+    val PLUGIN_RESTART = BukkitGregChessModule.register(DrawEndReason("PLUGIN_RESTART", EndReason.Type.EMERGENCY, quick = true))
 
     private val games = mutableListOf<ChessGame>()
 

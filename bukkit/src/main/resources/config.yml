@@ -235,7 +235,7 @@ Chess:
     CheckLimit: "check limit reached (%s)"
     KingOfTheHill: "king of the hill"
     Atomic: "explosion"
-    PiecesLost: "all pieces lost"
+    AllPiecesLost: "all pieces lost"
 
 Scoreboard:
   Title: "GregChess game"

@@ -1,5 +1,6 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
@@ -40,7 +41,7 @@ object AtomicChess : ChessVariant("ATOMIC") {
     }
 
     @JvmField
-    val ATOMIC = DetEndReason("ATOMIC", EndReason.Type.NORMAL)
+    val ATOMIC = GregChessModule.register(DetEndReason("ATOMIC", EndReason.Type.NORMAL))
 
     override fun start(game: ChessGame) {
         game.requireComponent<ExplosionManager>()
