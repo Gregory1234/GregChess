@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric.chess
 
+import gregc.gregchess.chess.Pos
 import gregc.gregchess.fabric.*
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
@@ -64,7 +65,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         val dirs = mutableListOf(Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH)
         fun BlockPos.isFloor() = world?.getBlockState(this)?.block.let { it != null && it is ChessboardFloorBlock }
                 && (world?.getBlockEntity(this) as? ChessboardFloorBlockEntity)
-            .let { println(it); it != null && (it.chessControllerBlockPos == null || it.chessControllerBlockPos == pos)}
+            .let { it != null && (it.chessControllerBlockPos == null || it.chessControllerBlockPos == pos)}
         dirs.removeIf { d ->
             (1..8*3).any { i ->
                 !pos.offset(d, i).isFloor()
@@ -81,14 +82,18 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
                     (1..8*3).forEach { i -> (0 until 8*3).forEach { j ->
                         (world?.getBlockEntity(pos.offset(d, i).offset(d2, j)) as? ChessboardFloorBlockEntity)?.let {
                             it.chessControllerBlockPos = pos
+                            if (d2 == d.rotateYClockwise())
+                                it.boardPos = Pos(j/3, (i-1)/3)
+                            else
+                                it.boardPos = Pos(7-j/3, (i-1)/3)
+                            it.updateFloor()
                         }
                     } }
                     return true
                 }
             }
         }
-        chessboardStart = null
-        chessboardEnd = null
+        resetBoard()
         return false
     }
 
@@ -104,6 +109,27 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 
     override fun getPropertyDelegate(): PropertyDelegate = propertyDelegate
+
+    fun resetBoard() {
+        chessboardStart?.let { s ->
+            chessboardEnd?.let { e ->
+                for (x in s.x..e.x) {
+                    for (y in s.y..e.y) {
+                        for (z in s.z..e.z) {
+                            val block = world?.getBlockEntity(BlockPos(x,y,z)) as? ChessboardFloorBlockEntity
+                            if (block != null) {
+                                block.chessControllerBlockPos = null
+                                block.boardPos = null
+                                block.updateFloor()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        chessboardStart = null
+        chessboardEnd = null
+    }
 
 }
 
@@ -152,6 +178,13 @@ class ChessControllerBlock(settings: Settings?) : BlockWithEntity(settings) {
         ChessControllerBlockEntity(pos, state)
 
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
+
+    override fun onBreak(world: World?, pos: BlockPos?, state: BlockState?, player: PlayerEntity?) {
+        if (world?.isClient == false) {
+            (world.getBlockEntity(pos) as? ChessControllerBlockEntity)?.resetBoard()
+        }
+        super.onBreak(world, pos, state, player)
+    }
 
     override fun onUse(state: BlockState, world: World?, pos: BlockPos?, player: PlayerEntity, hand: Hand?, hit: BlockHitResult?): ActionResult {
         player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
