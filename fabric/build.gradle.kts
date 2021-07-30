@@ -5,7 +5,7 @@ plugins {
     id("fabric-loom")
 }
 
-minecraft.runConfigs.forEach {
+loom.runConfigs.forEach {
     it.runDir = "fabric/" + it.runDir
 }
 
