@@ -2,67 +2,18 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.GameSettings
-import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.variant.*
-import gregc.gregchess.seconds
+import gregc.gregchess.chess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
-import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import kotlin.reflect.KClass
 
 object SettingsManager {
 
-    private val clockSettings: Map<String, ChessClock.Settings>
-        get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
-            val section = config.getConfigurationSection("Settings.Clock.$it")!!
-            val t = ChessClock.Type.valueOf(section.getString("Type", ChessClock.Type.INCREMENT.toString())!!)
-            val initial = section.getString("Initial")?.asDurationOrNull()!!
-            val increment = if (t.usesIncrement) section.getString("Increment")?.asDurationOrNull()!! else 0.seconds
-            ChessClock.Settings(t, initial, increment)
-        }
-
     fun <T, R> chooseOrParse(opts: Map<T, R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
 
-    private val componentParsers = mutableMapOf<KClass<out Component.Settings<*>>, (ConfigurationSection) -> Component.Settings<*>?>()
-
-    private val NO_ARENAS = err("NoArenas")
-
-    fun start() {
-        this += { ArenaManager.freeAreas.firstOrNull().cNotNull(NO_ARENAS) }
-        this += { Chessboard.Settings[it.getString("Board")] }
-        this += { chooseOrParse(clockSettings, it.getString("Clock"), ChessClock.Settings::parse) }
-        this += { BukkitRenderer.Settings(it.getInt("TileSize", 3)) }
-        this += { ScoreboardManager.Settings }
-        this += { BukkitEventRelay.Settings }
-        this += { ThreeChecks.CheckCounter.Settings(it.getInt("CheckLimit", 3).toUInt()) }
-        this += { AtomicChess.ExplosionManager.Settings }
-        this += { PlayerManager.Settings }
-        this += { SpectatorManager.Settings }
-    }
-
-    operator fun <T : Component.Settings<*>> set(cl: KClass<T>, f: (ConfigurationSection) -> T?) {
-        componentParsers[cl] = f
-    }
-
-    inline operator fun <reified T : Component.Settings<*>> plusAssign(noinline f: (ConfigurationSection) -> T?) {
-        this[T::class] = f
-    }
-
-    private val extraComponents = mutableListOf<KClass<out Component.Settings<*>>>(
-        Arena::class, Chessboard.Settings::class, ChessClock.Settings::class,
-        PlayerManager.Settings::class, SpectatorManager.Settings::class,
-        ScoreboardManager.Settings::class, BukkitRenderer.Settings::class, BukkitEventRelay.Settings::class
-    )
-
-    operator fun <T : Component.Settings<*>> plusAssign(cl: KClass<T>) {
-        extraComponents += cl
-    }
-
-    fun getChessVariant(key: NamespacedKey): ChessVariant? =
+    private fun getChessVariant(key: NamespacedKey): ChessVariant? =
         GregChessModule.getModuleOrNull(key.namespace)?.variants?.firstOrNull { it.name.lowercase() == key.key }
 
     fun getSettings(): List<GameSettings> =
@@ -70,8 +21,7 @@ object SettingsManager {
             val section = config.getConfigurationSection("Settings.Presets.$name")!!
             val simpleCastling = section.getBoolean("SimpleCastling", false)
             val variant = section.getString("Variant")?.toKey()?.let(::getChessVariant) ?: ChessVariant.Normal
-            val components = (extraComponents + variant.requiredComponents + variant.optionalComponents)
-                .mapNotNull { componentParsers[it] }.mapNotNull { it(section) }
+            val components = GregChessModule.modules.flatMap { it.bukkit.getSettings(variant.requiredComponents + variant.optionalComponents, section) }
             GameSettings(name, simpleCastling, variant, components)
         }
 

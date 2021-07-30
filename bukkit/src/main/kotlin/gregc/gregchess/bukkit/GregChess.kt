@@ -66,7 +66,6 @@ object GregChess : Listener {
         ChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()
-        SettingsManager.start()
 
         plugin.addCommand("chess") {
             when (nextArg().lowercase()) {
