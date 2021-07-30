@@ -76,7 +76,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         get() = PieceInfo(pos, piece, hasMoved)
 
     init {
-        game.components.callEvent(PieceEvent.Created(this))
+        game.callEvent(PieceEvent.Created(this))
     }
 
     fun move(target: Square) {
@@ -88,24 +88,24 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         val from = square.pos
         square = target
         hasMoved = true
-        game.components.callEvent(PieceEvent.Moved(this, from))
+        game.callEvent(PieceEvent.Moved(this, from))
     }
 
-    fun pickUp() = game.components.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
+    fun pickUp() = game.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
 
-    fun placeDown() = game.components.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
+    fun placeDown() = game.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
 
     fun capture(by: Side): CapturedPiece {
         clear()
         val captured = CapturedPiece(piece, board.nextCapturedPos(type, by))
         board += captured
-        game.components.callEvent(PieceEvent.Captured(this, captured))
+        game.callEvent(PieceEvent.Captured(this, captured))
         return captured
     }
 
     fun promote(promotion: Piece) {
         square.piece = BoardPiece(promotion, square)
-        game.components.callEvent(PieceEvent.Promoted(this, square.piece!!))
+        game.callEvent(PieceEvent.Promoted(this, square.piece!!))
     }
 
     fun force(hasMoved: Boolean) {
@@ -113,18 +113,18 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     }
 
     fun demote(piece: BoardPiece) {
-        game.components.callEvent(PieceEvent.Promoted(this, square.piece!!))
+        game.callEvent(PieceEvent.Promoted(this, square.piece!!))
         square.piece = piece
     }
 
     fun resurrect(captured: CapturedPiece) {
         board -= captured
         square.piece = this
-        game.components.callEvent(PieceEvent.Resurrected(this, captured))
+        game.callEvent(PieceEvent.Resurrected(this, captured))
     }
 
     fun clear() {
-        game.components.callEvent(PieceEvent.Cleared(this))
+        game.callEvent(PieceEvent.Cleared(this))
         square.piece = null
     }
 
@@ -143,7 +143,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
             moves.forEach { (piece, target) ->
                 target.piece = piece
             }
-            org.keys.firstOrNull()?.game?.components?.callEvent(PieceEvent.MultiMoved(org))
+            org.keys.firstOrNull()?.game?.callEvent(PieceEvent.MultiMoved(org))
         }
     }
 }

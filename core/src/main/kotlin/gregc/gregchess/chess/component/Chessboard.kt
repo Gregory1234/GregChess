@@ -207,7 +207,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         boardHashes.clear()
         addBoardHash(fen)
         game.variant.chessboardSetup(this)
-        game.components.callEvent(SetFenEvent(fen))
+        game.callEvent(SetFenEvent(fen))
         squares.values.forEach(Square::update)
     }
 

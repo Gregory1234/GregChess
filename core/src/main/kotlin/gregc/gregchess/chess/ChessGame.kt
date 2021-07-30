@@ -46,7 +46,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
             variant.requiredComponents.forEach {
                 settings.components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentSettingsNotFoundException(it)
             }
-            components.callEvent(GameBaseEvent.PRE_INIT)
+            callEvent(GameBaseEvent.PRE_INIT)
         } catch (e: Exception) {
             panic(e)
             throw e
@@ -87,6 +87,8 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
     private fun requireRunning() = require<GameState.Running>()
 
     private fun requireStopping() = require<GameState.Stopping>()
+
+    fun callEvent(e: ChessEvent) = components.forEach { it.callEvent(e) }
 
     var currentTurn: Side
         get() = require<GameState.WithCurrentPlayer>().currentTurn
@@ -143,7 +145,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
 
     fun nextTurn() {
         requireRunning()
-        components.callEvent(TurnEvent.END)
+        callEvent(TurnEvent.END)
         variant.checkForGameEnd(this)
         if (running) {
             currentTurn++
@@ -153,34 +155,34 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
 
     fun previousTurn() {
         requireRunning()
-        components.callEvent(TurnEvent.UNDO)
+        callEvent(TurnEvent.UNDO)
         currentTurn++
         startPreviousTurn()
     }
 
     fun start(): ChessGame {
         state = GameState.Starting(requireReady())
-        components.callEvent(GameBaseEvent.START)
+        callEvent(GameBaseEvent.START)
         state = GameState.Running(requireStarting())
-        components.callEvent(GameBaseEvent.RUNNING)
+        callEvent(GameBaseEvent.RUNNING)
         startTurn()
         return this
     }
 
     fun update() {
         requireRunning()
-        components.callEvent(GameBaseEvent.UPDATE)
+        callEvent(GameBaseEvent.UPDATE)
     }
 
     private fun startTurn() {
         requireRunning()
-        components.callEvent(TurnEvent.START)
+        callEvent(TurnEvent.START)
         currentPlayer.startTurn()
     }
 
     private fun startPreviousTurn() {
         requireRunning()
-        components.callEvent(TurnEvent.START)
+        callEvent(TurnEvent.START)
         currentPlayer.startTurn()
     }
 
@@ -189,17 +191,17 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
 
     fun stop(results: GameResults<*>) {
         state = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, results)
-        components.callEvent(GameBaseEvent.STOP)
+        callEvent(GameBaseEvent.STOP)
     }
 
     fun finishStopping() {
         state = GameState.Stopped(requireStopping())
-        components.callEvent(GameBaseEvent.STOPPED)
+        callEvent(GameBaseEvent.STOPPED)
     }
 
     private fun panic(e: Exception) {
         e.printStackTrace()
-        components.callEvent(GameBaseEvent.PANIC)
+        callEvent(GameBaseEvent.PANIC)
         state = GameState.Error(state, e)
     }
 

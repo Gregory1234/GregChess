@@ -33,16 +33,16 @@ class PlayerManager(private val game: ChessGame) : Component {
             GameBaseEvent.START ->
             {
                 players.forEachReal {
-                    components.callEvent(HumanPlayerEvent(it, PlayerDirection.JOIN))
+                    callEvent(HumanPlayerEvent(it, PlayerDirection.JOIN))
                 }
-                components.callEvent(GameStartStageEvent.INIT)
+                callEvent(GameStartStageEvent.INIT)
                 players.forEachUnique(currentTurn) { it.init() }
                 variant.start(game)
-                components.callEvent(GameStartStageEvent.START)
+                callEvent(GameStartStageEvent.START)
             }
             GameBaseEvent.RUNNING ->
             {
-                components.callEvent(GameStartStageEvent.BEGIN)
+                callEvent(GameStartStageEvent.BEGIN)
                 runTaskTimer(0.seconds, 0.1.seconds) {
                     if (running)
                         update()
@@ -53,17 +53,17 @@ class PlayerManager(private val game: ChessGame) : Component {
             GameBaseEvent.STOP ->
             {
                 val results = results!!
-                components.callEvent(GameStopStageEvent.STOP)
+                callEvent(GameStopStageEvent.STOP)
                 players.forEachUnique(currentTurn) {
                     interact {
                         it.player.showGameResults(it.side, results)
                         if (!results.endReason.quick)
                             wait((if (quick[it.side]) 0 else 3).seconds)
-                        components.callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
+                        callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
                     }
                 }
                 if (results.endReason.quick) {
-                    components.callEvent(GameStopStageEvent.CLEAR)
+                    callEvent(GameStopStageEvent.CLEAR)
                     players.forEach(ChessPlayer::stop)
                     finishStopping()
                     return
@@ -71,7 +71,7 @@ class PlayerManager(private val game: ChessGame) : Component {
                 interact {
                     wait((if (quick.white && quick.black) 0 else 3).seconds)
                     waitTick()
-                    components.callEvent(GameStopStageEvent.CLEAR)
+                    callEvent(GameStopStageEvent.CLEAR)
                     waitTick()
                     players.forEach(ChessPlayer::stop)
                     finishStopping()
@@ -79,11 +79,11 @@ class PlayerManager(private val game: ChessGame) : Component {
             }
             GameBaseEvent.STOPPED ->
             {
-                components.callEvent(GameStopStageEvent.VERY_END)
+                callEvent(GameStopStageEvent.VERY_END)
             }
             GameBaseEvent.PANIC ->
             {
-                components.callEvent(GameStopStageEvent.PANIC)
+                callEvent(GameStopStageEvent.PANIC)
             }
             else -> {}
         }

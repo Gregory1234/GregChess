@@ -18,5 +18,3 @@ fun Component.callEvent(e: ChessEvent) {
         }
     }
 }
-
-fun Collection<Component>.callEvent(e: ChessEvent) = forEach { it.callEvent(e) }

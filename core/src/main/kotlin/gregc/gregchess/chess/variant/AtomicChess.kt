@@ -27,7 +27,7 @@ object AtomicChess : ChessVariant("ATOMIC") {
                 if (it.piece?.type != PieceType.PAWN)
                     it.piece?.let(::helper)
             }
-            game.components.callEvent(ExplosionEvent(pos))
+            game.callEvent(ExplosionEvent(pos))
             explosions += exp
         }
 

@@ -137,7 +137,7 @@ data class Square(val pos: Pos, val game: ChessGame) {
         get() = game.board
 
     fun update() {
-        game.components.callEvent(FloorUpdateEvent(pos, floor))
+        game.callEvent(FloorUpdateEvent(pos, floor))
     }
 
     override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, floor=$floor)"

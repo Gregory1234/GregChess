@@ -20,14 +20,14 @@ class SpectatorManager(private val game: ChessGame) : Component {
 
     operator fun plusAssign(p: BukkitPlayer) {
         spectatorList += p
-        game.components.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
+        game.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
     operator fun minusAssign(p: BukkitPlayer) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
         spectatorList -= p
-        game.components.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
+        game.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
 
     @ChessEventHandler
@@ -47,7 +47,7 @@ class SpectatorManager(private val game: ChessGame) : Component {
         val s = spectators
         spectatorList.clear()
         s.forEach {
-            game.components.callEvent(SpectatorEvent(it, PlayerDirection.LEAVE))
+            game.callEvent(SpectatorEvent(it, PlayerDirection.LEAVE))
         }
     }
 }

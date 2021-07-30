@@ -70,7 +70,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
         val e = AddPropertiesEvent(playerProperties, gameProperties)
         e.game(PRESET) { game.settings.name }
         e.player(PLAYER) { playerPrefix + game[it].name }
-        game.components.callEvent(e)
+        game.callEvent(e)
     }
 
     private fun start() {
