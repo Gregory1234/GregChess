@@ -3,9 +3,11 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.EndReason
+import gregc.gregchess.chess.GameScore
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.variant.*
+import gregc.gregchess.chess.variant.AtomicChess
+import gregc.gregchess.chess.variant.ThreeChecks
 import org.bukkit.configuration.ConfigurationSection
 import java.time.Duration
 import kotlin.reflect.KClass
@@ -16,7 +18,7 @@ interface BukkitChessModule: ChessModule {
     fun getSettings(requested: Collection<KClass<out Component.Settings<*>>>, section: ConfigurationSection): Collection<Component.Settings<*>>
 }
 
-val ChessModule.bukkit
+val MainChessModule.bukkit
     get() = if (this is BukkitChessModule) this
     else extensions.filterIsInstance<BukkitChessModule>().first()
 
@@ -24,15 +26,14 @@ object BukkitGregChessModule: BukkitChessModule, ChessModuleExtension {
     private val timeFormat: String get() = config.getString("TimeFormat")!!
     private val NO_ARENAS = err("NoArenas")
 
+    override val base = GregChessModule
+
     private val endReasons_ = mutableListOf<EndReason<*>>()
     private val propertyTypes_ = mutableListOf<PropertyType<*>>()
     internal fun <T: GameScore> register(endReason: EndReason<T>): EndReason<T> { endReasons_ += endReason; return endReason }
     internal fun <T> register(propertyType: PropertyType<T>): PropertyType<T> { propertyTypes_ += propertyType; return propertyType }
-    override val pieceTypes = emptyList<PieceType>()
-    override val variants = emptyList<ChessVariant>()
     override val endReasons get() = endReasons_.toList()
     override val propertyTypes get() = propertyTypes_.toList()
-    override val base: ChessModule = GregChessModule
     override val config: ConfigurationSection get() = GregChess.plugin.config
     override fun <T> stringify(propertyType: PropertyType<T>, t: T): String =
         if (t is Duration)

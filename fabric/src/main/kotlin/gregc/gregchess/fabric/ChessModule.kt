@@ -2,8 +2,6 @@ package gregc.gregchess.fabric
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.PropertyType
-import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.chess.*
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
@@ -18,17 +16,12 @@ interface FabricChessModule: ChessModule {
     val pieceItems: Map<Piece, BlockItem>
 }
 
-val ChessModule.fabric
+val MainChessModule.fabric
     get() = if (this is FabricChessModule) this
     else extensions.filterIsInstance<FabricChessModule>().first()
 
 object FabricGregChessModule: FabricChessModule, ChessModuleExtension {
-    override val base: ChessModule = GregChessModule
-
-    override val pieceTypes: Collection<PieceType> = emptyList()
-    override val variants: Collection<ChessVariant> = emptyList()
-    override val endReasons: Collection<EndReason<*>> = emptyList()
-    override val propertyTypes: Collection<PropertyType<*>> = emptyList()
+    override val base = GregChessModule
 
     private val pieceBlocks_ = mutableMapOf<Piece, PieceBlock>()
     private val pieceItems_ = mutableMapOf<Piece, BlockItem>()

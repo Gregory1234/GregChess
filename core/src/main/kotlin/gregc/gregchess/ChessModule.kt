@@ -6,23 +6,24 @@ import gregc.gregchess.chess.component.PropertyType
 import gregc.gregchess.chess.variant.*
 
 interface ChessModule {
-    val pieceTypes: Collection<PieceType>
-    val variants: Collection<ChessVariant>
-    val endReasons: Collection<EndReason<*>>
-    val propertyTypes: Collection<PropertyType<*>>
-    val namespace: String
-    val extensions: List<ChessModuleExtension>
+    val pieceTypes: Collection<PieceType> get() = emptyList()
+    val variants: Collection<ChessVariant> get() = emptyList()
+    val endReasons: Collection<EndReason<*>> get() = emptyList()
+    val propertyTypes: Collection<PropertyType<*>> get() = emptyList()
     fun load()
 }
 
-interface ChessModuleExtension: ChessModule {
-    val base: ChessModule
-    override val namespace: String get() = base.namespace
-    override val extensions get() = emptyList<ChessModuleExtension>()
+interface MainChessModule: ChessModule {
+    val extensions: MutableCollection<ChessModuleExtension>
+    val namespace: String
 }
 
-object GregChessModule: ChessModule {
-    val modules = mutableListOf<ChessModule>(this)
+interface ChessModuleExtension: ChessModule {
+    val base: MainChessModule
+}
+
+object GregChessModule: MainChessModule {
+    val modules = mutableListOf<MainChessModule>(this)
     private val pieceTypes_ = mutableListOf<PieceType>()
     private val endReasons_ = mutableListOf<EndReason<*>>()
     private val propertyTypes_ = mutableListOf<PropertyType<*>>()
