@@ -21,7 +21,7 @@ val ChessModule.bukkit
     else extensions.filterIsInstance<BukkitChessModule>().first()
 
 object BukkitGregChessModule: BukkitChessModule, ChessModuleExtension {
-    private val timeFormat: String get() = gregc.gregchess.bukkit.config.getString("TimeFormat")!!
+    private val timeFormat: String get() = config.getString("TimeFormat")!!
     private val NO_ARENAS = err("NoArenas")
 
     private val endReasons_ = mutableListOf<EndReason<*>>()
@@ -32,7 +32,6 @@ object BukkitGregChessModule: BukkitChessModule, ChessModuleExtension {
     override val variants = emptyList<ChessVariant>()
     override val endReasons get() = endReasons_.toList()
     override val propertyTypes get() = propertyTypes_.toList()
-    override val extensions: MutableList<ChessModuleExtension> = mutableListOf()
     override val base: ChessModule = GregChessModule
     override val config: ConfigurationSection get() = GregChess.plugin.config
     override fun <T> stringify(propertyType: PropertyType<T>, t: T): String =

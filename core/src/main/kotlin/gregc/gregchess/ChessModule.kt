@@ -11,13 +11,14 @@ interface ChessModule {
     val endReasons: Collection<EndReason<*>>
     val propertyTypes: Collection<PropertyType<*>>
     val namespace: String
-    val extensions: MutableList<ChessModuleExtension>
+    val extensions: List<ChessModuleExtension>
     fun load()
 }
 
 interface ChessModuleExtension: ChessModule {
     val base: ChessModule
     override val namespace: String get() = base.namespace
+    override val extensions get() = emptyList<ChessModuleExtension>()
 }
 
 object GregChessModule: ChessModule {

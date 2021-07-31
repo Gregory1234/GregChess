@@ -1,41 +1,18 @@
 package gregc.gregchess.fabric.chess
 
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
-import gregc.gregchess.fabric.GregChess
-import gregc.gregchess.fabric.ident
+import gregc.gregchess.fabric.FabricGregChessModule
 import net.minecraft.util.Identifier
 
-val PieceType.id get() = FabricPieceTypes.getId(this)!!
+val PieceType.id get() = Identifier(GregChessModule.pieceTypeModule(this).namespace, name.lowercase())
 
-val Piece.block get() = GregChess.PIECE_BLOCKS[this]!!
-val Piece.item get() = GregChess.PIECE_ITEMS[this]!!
+val Piece.block get() = FabricGregChessModule.pieceBlocks[this]!!
+val Piece.item get() = FabricGregChessModule.pieceItems[this]!!
 val Piece.id get() = type.id.let { Identifier(it.namespace, side.name.lowercase() + "_" + it.path) }
 
 val Floor.chess get() = ChessboardFloor.valueOf(name)
 
-object FabricPieceTypes {
-    private val pieceTypes = mutableMapOf<Identifier, PieceType>()
-
-    fun register(id: Identifier, pieceType: PieceType) {
-        if (id in pieceTypes)
-            throw IllegalArgumentException(id.toString())
-        if (pieceTypes.containsValue(pieceType))
-            throw IllegalArgumentException(pieceType.toString())
-        pieceTypes[id] = pieceType
-    }
-
-    init {
-        register(ident("king"), PieceType.KING)
-        register(ident("queen"), PieceType.QUEEN)
-        register(ident("rook"), PieceType.ROOK)
-        register(ident("bishop"), PieceType.BISHOP)
-        register(ident("knight"), PieceType.KNIGHT)
-        register(ident("pawn"), PieceType.PAWN)
-    }
-
-    fun getId(pieceType: PieceType) = pieceTypes.filterValues { it == pieceType }.keys.firstOrNull()
-    operator fun get(id: Identifier) = pieceTypes[id]
-
-    val values get() = pieceTypes.values
-    val ids get() = pieceTypes.keys
+fun interface ChessInitializer {
+    fun onInitializeChess()
 }

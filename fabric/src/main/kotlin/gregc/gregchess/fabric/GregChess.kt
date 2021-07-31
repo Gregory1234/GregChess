@@ -1,18 +1,20 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.chess.*
+import gregc.gregchess.GregChessModule
+import gregc.gregchess.chess.pawn
+import gregc.gregchess.chess.white
 import gregc.gregchess.fabric.chess.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
+import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointUtils
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.datafixer.TypeReferences
 import net.minecraft.item.*
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.ScreenHandlerType
-import net.minecraft.util.Rarity
 import net.minecraft.util.Util
 import net.minecraft.util.registry.Registry
 
@@ -22,30 +24,8 @@ object GregChess : ModInitializer {
         white.pawn.item.defaultStack
     }
 
-    val PIECE_BLOCKS = FabricPieceTypes.values.flatMap { t -> Side.values().map { s ->
-        val piece = t.of(s)
-        val block =
-            if (t == PieceType.PAWN) PawnBlock(piece, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-            else TallPieceBlock(piece, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-        piece to block
-    } }.toMap()
-
-    val PIECE_ITEMS = FabricPieceTypes.values.flatMap { t -> Side.values().map { s ->
-        val piece = t.of(s)
-        val block = piece.block
-        val item =
-            if (t == PieceType.PAWN) PawnItem(block, FabricItemSettings().group(CHESS_GROUP))
-            else TallPieceItem(block, FabricItemSettings().group(CHESS_GROUP).rarity(when {
-                t.minor -> Rarity.UNCOMMON
-                t == PieceType.KING -> Rarity.EPIC
-                else -> Rarity.RARE
-            }))
-        piece to item
-    } }.toMap()
-
-    val PIECE_ENTITY_TYPE: BlockEntityType<*> =
-        BlockEntityType.Builder.create({ a, b -> PieceBlockEntity(a, b) }, *PIECE_BLOCKS.values.toTypedArray()).build(
-            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
+    lateinit var PIECE_ENTITY_TYPE: BlockEntityType<*>
+        private set
 
     val CHESSBOARD_FLOOR_BLOCK: Block = ChessboardFloorBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
     val CHESSBOARD_FLOOR_BLOCK_ITEM: Item = BlockItem(CHESSBOARD_FLOOR_BLOCK, FabricItemSettings().group(CHESS_GROUP))
@@ -66,15 +46,10 @@ object GregChess : ModInitializer {
             syncId, inventory -> ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY) }
 
     override fun onInitialize() {
-        FabricPieceTypes.values.forEach { t ->
-            Side.values().forEach { s ->
-                val piece = t.of(s)
-                val block = piece.block
-                Registry.register(Registry.BLOCK, piece.id, block)
-                val item = piece.item
-                Registry.register(Registry.ITEM, piece.id, item)
-            }
-        }
+
+        EntrypointUtils.invoke("chess", ChessInitializer::class.java, ChessInitializer::onInitializeChess)
+        PIECE_ENTITY_TYPE = BlockEntityType.Builder.create({ a, b -> PieceBlockEntity(a, b) },
+            *GregChessModule.modules.flatMap { it.fabric.pieceBlocks.values }.toTypedArray()).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)
         Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
         Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)

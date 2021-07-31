@@ -21,6 +21,12 @@
         "adapter": "kotlin",
         "value": "gregc.gregchess.fabric.GregChessClient"
       }
+    ],
+    "chess": [
+      {
+        "adapter": "kotlin",
+        "value": "gregc.gregchess.fabric.GregChessChess"
+      }
     ]
   },
   "depends": {
