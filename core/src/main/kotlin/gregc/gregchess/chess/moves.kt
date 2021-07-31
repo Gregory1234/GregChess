@@ -164,14 +164,9 @@ fun MoveName.checkForChecks(side: Side, game: ChessGame): MoveName {
 
 fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Floor.CAPTURE
 
-fun jumps(piece: BoardPiece, dirs: Collection<Dir>, f: (Square) -> MoveCandidate) =
-    dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map(f)
-
-fun rays(piece: BoardPiece, dirs: Collection<Dir>, f: (Int, Dir, Square) -> MoveCandidate) =
-    dirs.flatMap { dir ->
-        PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
-            piece.square.board[pos]?.let { f(index + 1, dir, it) }
-        }
+fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
+    dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map{
+        MoveCandidate(piece, it, defaultColor(it), emptyList())
     }
 
 fun interface MoveScheme {
@@ -179,16 +174,17 @@ fun interface MoveScheme {
 }
 
 class JumpMovement(private val dirs: Collection<Dir>): MoveScheme {
-    override fun generate(piece: BoardPiece): List<MoveCandidate> =
-        jumps(piece, dirs) {
-            MoveCandidate(piece, it, defaultColor(it), emptyList())
-        }
+    override fun generate(piece: BoardPiece): List<MoveCandidate> = jumps(piece, dirs)
 }
 
 class RayMovement(private val dirs: Collection<Dir>): MoveScheme {
     override fun generate(piece: BoardPiece): List<MoveCandidate> =
-        rays(piece, dirs) { index, dir, square ->
-            MoveCandidate(piece, square, defaultColor(square), PosSteps(piece.pos + dir, dir, index - 1))
+        dirs.flatMap { dir ->
+            PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
+                piece.square.board[pos]?.let {
+                    MoveCandidate(piece, it, defaultColor(it), PosSteps(piece.pos + dir, dir, index))
+                }
+            }
         }
 }
 
@@ -259,9 +255,7 @@ object KingMovement: MoveScheme {
                     }
                 }
 
-        return jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) {
-            MoveCandidate(piece, it, defaultColor(it), emptyList())
-        } + castles
+        return jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) + castles
     }
 
 }
