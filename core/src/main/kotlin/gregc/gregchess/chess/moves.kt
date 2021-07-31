@@ -175,42 +175,50 @@ fun rays(piece: BoardPiece, dirs: Collection<Dir>, f: (Int, Dir, Square) -> Move
         }
     }
 
-fun knightMovement(piece: BoardPiece): List<MoveCandidate> {
-    class KnightJump(piece: BoardPiece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
-
-    return jumps(piece, rotationsOf(2, 1)) {
-        KnightJump(piece, it, defaultColor(it))
-    }
+fun interface MoveScheme {
+    fun generate(piece: BoardPiece): List<MoveCandidate>
 }
 
-fun rookMovement(piece: BoardPiece): List<MoveCandidate> {
+object KnightMovement: MoveScheme {
+    class KnightJump(piece: BoardPiece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
+
+    override fun generate(piece: BoardPiece): List<MoveCandidate> =
+        jumps(piece, rotationsOf(2, 1)) {
+            KnightJump(piece, it, defaultColor(it))
+        }
+}
+
+object RookMovement: MoveScheme {
     class RookMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
         MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
-    return rays(piece, rotationsOf(1, 0)) { index, dir, square ->
-        RookMove(piece, square, dir, index, defaultColor(square))
-    }
+    override fun generate(piece: BoardPiece): List<MoveCandidate> =
+        rays(piece, rotationsOf(1, 0)) { index, dir, square ->
+            RookMove(piece, square, dir, index, defaultColor(square))
+        }
 }
 
-fun bishopMovement(piece: BoardPiece): List<MoveCandidate> {
+object BishopMovement: MoveScheme {
     class BishopMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
         MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
-    return rays(piece, rotationsOf(1, 1)) { index, dir, square ->
-        BishopMove(piece, square, dir, index, defaultColor(square))
-    }
+    override fun generate(piece: BoardPiece): List<MoveCandidate> =
+        rays(piece, rotationsOf(1, 1)) { index, dir, square ->
+            BishopMove(piece, square, dir, index, defaultColor(square))
+        }
 }
 
-fun queenMovement(piece: BoardPiece): List<MoveCandidate> {
+object QueenMovement: MoveScheme {
     class QueenMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
         MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
 
-    return rays(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) { index, dir, square ->
-        QueenMove(piece, square, dir, index, defaultColor(square))
-    }
+    override fun generate(piece: BoardPiece): List<MoveCandidate> =
+        rays(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) { index, dir, square ->
+            QueenMove(piece, square, dir, index, defaultColor(square))
+        }
 }
 
-fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
+object KingMovement: MoveScheme {
     class KingMove(piece: BoardPiece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
 
     class Castles(
@@ -241,67 +249,62 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
         ))
     }
 
-    val castles = mutableListOf<MoveCandidate>()
+    override fun generate(piece: BoardPiece): List<MoveCandidate> {
+        val castles = mutableListOf<MoveCandidate>()
 
-    val game = piece.square.game
+        val game = piece.square.game
 
-    if (!piece.hasMoved)
-        game.board.piecesOf(piece.side, PieceType.ROOK)
-            .filter { !it.hasMoved && it.pos.rank == piece.pos.rank }
-            .forEach { rook ->
+        if (!piece.hasMoved)
+            game.board.piecesOf(piece.side, PieceType.ROOK)
+                .filter { !it.hasMoved && it.pos.rank == piece.pos.rank }
+                .forEach { rook ->
 
-                if (game.settings.simpleCastling) {
-                    TODO()
-                } else {
-                    val target: Square
-                    val rookTarget: Square
-                    val pass: List<Pos>
-                    val needed: List<Pos>
-                    if (piece.pos.file > rook.pos.file) {
-                        target = game.board[piece.pos.copy(file = 2)]!!
-                        rookTarget = game.board[piece.pos.copy(file = 3)]!!
-                        pass = between(piece.pos.file, 2).map { piece.pos.copy(file = it) }
-                        needed = (rook.pos.file..3).map { piece.pos.copy(file = it) }
+                    if (game.settings.simpleCastling) {
+                        TODO()
                     } else {
-                        target = game.board[piece.pos.copy(file = 6)]!!
-                        rookTarget = game.board[piece.pos.copy(file = 5)]!!
-                        pass = between(piece.pos.file, 6).map { piece.pos.copy(file = it) }
-                        needed = (rook.pos.file..5).map { piece.pos.copy(file = it) }
+                        val target: Square
+                        val rookTarget: Square
+                        val pass: List<Pos>
+                        val needed: List<Pos>
+                        if (piece.pos.file > rook.pos.file) {
+                            target = game.board[piece.pos.copy(file = 2)]!!
+                            rookTarget = game.board[piece.pos.copy(file = 3)]!!
+                            pass = between(piece.pos.file, 2).map { piece.pos.copy(file = it) }
+                            needed = (rook.pos.file..3).map { piece.pos.copy(file = it) }
+                        } else {
+                            target = game.board[piece.pos.copy(file = 6)]!!
+                            rookTarget = game.board[piece.pos.copy(file = 5)]!!
+                            pass = between(piece.pos.file, 6).map { piece.pos.copy(file = it) }
+                            needed = (rook.pos.file..5).map { piece.pos.copy(file = it) }
+                        }
+                        castles += Castles(
+                            piece, target,
+                            rook, rookTarget,
+                            pass + piece.pos, pass + needed,
+                            if (game.board.chess960) rook.square else target
+                        )
                     }
-                    castles += Castles(
-                        piece, target,
-                        rook, rookTarget,
-                        pass + piece.pos, pass + needed,
-                        if (game.board.chess960) rook.square else target
-                    )
                 }
-            }
 
-    return jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) {
-        KingMove(piece, it, defaultColor(it))
-    } + castles
+        return jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) {
+            KingMove(piece, it, defaultColor(it))
+        } + castles
+    }
+
 }
 
-interface PawnMovementConfig {
-    fun canDouble(piece: PieceInfo): Boolean = DefaultPawnConfig.canDouble(piece)
-    fun promotions(piece: PieceInfo): List<Piece> = DefaultPawnConfig.promotions(piece)
-}
-
-object DefaultPawnConfig : PawnMovementConfig {
-    override fun canDouble(piece: PieceInfo): Boolean = !piece.hasMoved
-    override fun promotions(piece: PieceInfo): List<Piece> =
+open class PawnMovementConfig {
+    open fun canDouble(piece: PieceInfo): Boolean = !piece.hasMoved
+    open fun promotions(piece: PieceInfo): List<Piece> =
         listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { it.of(piece.side) }
 }
 
 @JvmField
 val EN_PASSANT = ChessFlagType("EN_PASSANT", 1u)
 
-fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCandidate> = { piece ->
+private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
 
-    fun ifProm(promotions: Any?, floor: Floor) =
-        if (promotions == null) floor else Floor.SPECIAL
-
-    fun promotions(pos: Pos) = if (pos.rank in listOf(0, 7)) config.promotions(piece.info) else null
+class PawnMovement(private val config: PawnMovementConfig = PawnMovementConfig()): MoveScheme {
 
     class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotions: Collection<Piece>?) : MoveCandidate(
         piece, target, ifProm(promotions, Floor.MOVE), listOfNotNull(pass), control = null, promotions = promotions,
@@ -331,23 +334,26 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
         }
     }
 
-    buildList {
-        piece.square.board[piece.pos.plusR(piece.side.direction)]?.let { t ->
-            this += PawnPush(piece, t, null, promotions(t.pos))
-        }
-        if (config.canDouble(piece.info))
-            piece.square.board[piece.pos.plusR(2 * piece.side.direction)]?.let { t ->
-                this += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), promotions(t.pos))
+    override fun generate(piece: BoardPiece): List<MoveCandidate> =
+        buildList {
+            fun promotions(pos: Pos) = if (pos.rank in listOf(0, 7)) config.promotions(piece.info) else null
+
+            piece.square.board[piece.pos.plusR(piece.side.direction)]?.let { t ->
+                this += PawnPush(piece, t, null, promotions(t.pos))
             }
-        for (s in listOf(-1, 1)) {
-            piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let { t ->
-                this += PawnCapture(piece, t, promotions(t.pos))
-            }
-            val p = piece.square.board[piece.pos.plusF(s)]
-            if (p != null)
-                piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let {
-                    this += EnPassantCapture(piece, it, p)
+            if (config.canDouble(piece.info))
+                piece.square.board[piece.pos.plusR(2 * piece.side.direction)]?.let { t ->
+                    this += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), promotions(t.pos))
                 }
+            for (s in listOf(-1, 1)) {
+                piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let { t ->
+                    this += PawnCapture(piece, t, promotions(t.pos))
+                }
+                val p = piece.square.board[piece.pos.plusF(s)]
+                if (p != null)
+                    piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let {
+                        this += EnPassantCapture(piece, it, p)
+                    }
+            }
         }
-    }
 }

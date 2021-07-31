@@ -5,7 +5,7 @@ import gregc.gregchess.chess.component.Chessboard
 
 object HordeChess : ChessVariant("HORDE") {
 
-    object HordePawnConfig : PawnMovementConfig {
+    object HordePawnConfig : PawnMovementConfig() {
         override fun canDouble(piece: PieceInfo): Boolean = when (piece.side) {
             Side.WHITE -> piece.pos.rank <= 1
             Side.BLACK -> piece.pos.rank >= 6
@@ -19,7 +19,7 @@ object HordeChess : ChessVariant("HORDE") {
     }
 
     override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when(piece.type) {
-        PieceType.PAWN -> pawnMovement(HordePawnConfig)(piece)
+        PieceType.PAWN -> PawnMovement(HordePawnConfig).generate(piece)
         else -> Normal.getPieceMoves(piece)
     }
 

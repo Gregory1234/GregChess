@@ -73,7 +73,7 @@ open class ChessVariant(val name: String) {
 
     open fun undoLastMove(move: MoveData) = move.undo()
 
-    open fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = piece.type.moveScheme(piece)
+    open fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = piece.type.moveScheme.generate(piece)
 
     open fun isInCheck(game: ChessGame, side: Side): Boolean {
         val king = game.board.kingOf(side)
