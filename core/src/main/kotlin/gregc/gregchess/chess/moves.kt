@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.between
-import gregc.gregchess.rotationsOf
+import gregc.gregchess.*
 
 class MoveData(
     val piece: Piece, val origin: Square, val target: Square, val name: MoveName,
@@ -21,7 +20,7 @@ class MoveData(
     }
 }
 
-abstract class MoveCandidate(
+open class MoveCandidate(
     val piece: BoardPiece, val target: Square, val floor: Floor,
     val pass: Collection<Pos>, val help: Collection<BoardPiece> = emptyList(), val needed: Collection<Pos> = pass,
     val flagsNeeded: Collection<Pair<Pos, ChessFlagType>> = emptyList(),
@@ -179,47 +178,21 @@ fun interface MoveScheme {
     fun generate(piece: BoardPiece): List<MoveCandidate>
 }
 
-object KnightMovement: MoveScheme {
-    class KnightJump(piece: BoardPiece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
-
+class JumpMovement(private val dirs: Collection<Dir>): MoveScheme {
     override fun generate(piece: BoardPiece): List<MoveCandidate> =
-        jumps(piece, rotationsOf(2, 1)) {
-            KnightJump(piece, it, defaultColor(it))
+        jumps(piece, dirs) {
+            MoveCandidate(piece, it, defaultColor(it), emptyList())
         }
 }
 
-object RookMovement: MoveScheme {
-    class RookMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
-        MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
-
+class RayMovement(private val dirs: Collection<Dir>): MoveScheme {
     override fun generate(piece: BoardPiece): List<MoveCandidate> =
-        rays(piece, rotationsOf(1, 0)) { index, dir, square ->
-            RookMove(piece, square, dir, index, defaultColor(square))
-        }
-}
-
-object BishopMovement: MoveScheme {
-    class BishopMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
-        MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
-
-    override fun generate(piece: BoardPiece): List<MoveCandidate> =
-        rays(piece, rotationsOf(1, 1)) { index, dir, square ->
-            BishopMove(piece, square, dir, index, defaultColor(square))
-        }
-}
-
-object QueenMovement: MoveScheme {
-    class QueenMove(piece: BoardPiece, target: Square, dir: Dir, amount: Int, floor: Floor) :
-        MoveCandidate(piece, target, floor, PosSteps(piece.pos + dir, dir, amount - 1))
-
-    override fun generate(piece: BoardPiece): List<MoveCandidate> =
-        rays(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) { index, dir, square ->
-            QueenMove(piece, square, dir, index, defaultColor(square))
+        rays(piece, dirs) { index, dir, square ->
+            MoveCandidate(piece, square, defaultColor(square), PosSteps(piece.pos + dir, dir, index - 1))
         }
 }
 
 object KingMovement: MoveScheme {
-    class KingMove(piece: BoardPiece, target: Square, floor: Floor) : MoveCandidate(piece, target, floor, emptyList())
 
     class Castles(
         piece: BoardPiece, target: Square,
@@ -287,7 +260,7 @@ object KingMovement: MoveScheme {
                 }
 
         return jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) {
-            KingMove(piece, it, defaultColor(it))
+            MoveCandidate(piece, it, defaultColor(it), emptyList())
         } + castles
     }
 
@@ -305,15 +278,6 @@ val EN_PASSANT = ChessFlagType("EN_PASSANT", 1u)
 private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
 
 class PawnMovement(private val config: PawnMovementConfig = PawnMovementConfig()): MoveScheme {
-
-    class PawnPush(piece: BoardPiece, target: Square, pass: Pos?, promotions: Collection<Piece>?) : MoveCandidate(
-        piece, target, ifProm(promotions, Floor.MOVE), listOfNotNull(pass), control = null, promotions = promotions,
-        flagsAdded = listOfNotNull(pass?.to(ChessFlag(EN_PASSANT)))
-    )
-
-    class PawnCapture(piece: BoardPiece, target: Square, promotions: Collection<Piece>?) : MoveCandidate(
-        piece, target, ifProm(promotions, Floor.CAPTURE), emptyList(), promotions = promotions, mustCapture = true
-    )
 
     class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
         MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true,
@@ -338,16 +302,23 @@ class PawnMovement(private val config: PawnMovementConfig = PawnMovementConfig()
         buildList {
             fun promotions(pos: Pos) = if (pos.rank in listOf(0, 7)) config.promotions(piece.info) else null
 
-            piece.square.board[piece.pos.plusR(piece.side.direction)]?.let { t ->
-                this += PawnPush(piece, t, null, promotions(t.pos))
+            piece.square.board[piece.pos + piece.side.dir]?.let { t ->
+                val promotions = promotions(t.pos)
+                this += MoveCandidate(piece, t, ifProm(promotions, Floor.MOVE), emptyList(),
+                    control = null, promotions = promotions)
             }
             if (config.canDouble(piece.info))
-                piece.square.board[piece.pos.plusR(2 * piece.side.direction)]?.let { t ->
-                    this += PawnPush(piece, t, piece.pos.plusR(piece.side.direction), promotions(t.pos))
+                piece.square.board[piece.pos + piece.side.dir * 2]?.let { t ->
+                    val promotions = promotions(t.pos)
+                    val pass = piece.pos + piece.side.dir
+                    this += MoveCandidate(piece, t, ifProm(promotions, Floor.MOVE), listOf(pass),
+                        control = null, promotions = promotions, flagsAdded = listOf(pass to ChessFlag(EN_PASSANT)))
                 }
             for (s in listOf(-1, 1)) {
                 piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let { t ->
-                    this += PawnCapture(piece, t, promotions(t.pos))
+                    val promotions = promotions(t.pos)
+                    this += MoveCandidate(piece, t, ifProm(promotions, Floor.CAPTURE), emptyList(),
+                        promotions = promotions, mustCapture = true)
                 }
                 val p = piece.square.board[piece.pos.plusF(s)]
                 if (p != null)
