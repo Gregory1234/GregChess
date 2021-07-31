@@ -73,11 +73,6 @@ private fun promotions(s: Side) = PieceType.run { listOf(QUEEN, ROOK, BISHOP, KN
 
 private const val ITERS = 50
 
-enum class BoardSide(private val direction: Int) {
-    QUEENSIDE(-1), KINGSIDE(1);
-    val dir get() = Dir(direction, 0)
-}
-
 class MovementTests: FreeSpec({
 
     "Pawn" - {

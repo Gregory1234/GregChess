@@ -35,6 +35,7 @@ object GregChessModule: MainChessModule {
     override val variants get() = variants_ + extensions.flatMap { it.variants }
     override val endReasons get() = endReasons_.toList() + extensions.flatMap { it.endReasons }
     override val propertyTypes get() = propertyTypes_.toList() + extensions.flatMap { it.propertyTypes }
+
     override val extensions = mutableListOf<ChessModuleExtension>()
     override val namespace = "gregchess"
     override fun load() {

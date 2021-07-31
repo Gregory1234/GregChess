@@ -41,9 +41,9 @@ fun BoardPiece.getInfo() = buildTextComponent {
     val game = square.game
     appendCopy("Game: ${game.uuid}\n", game.uuid)
     val moves = square.bakedMoves.orEmpty()
-    append("All moves: ${moves.joinToString { it.baseName() }}")
+    append("All moves: ${moves.joinToString { it.baseName().pgn }}")
     moves.groupBy { m -> game.variant.getLegality(m) }.forEach { (l, m) ->
-        append("\n${l.prettyName}: ${m.joinToString { it.baseName() }}")
+        append("\n${l.prettyName}: ${m.joinToString { it.baseName().pgn }}")
     }
 }
 

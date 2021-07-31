@@ -22,6 +22,14 @@ enum class Side(val char: Char, val direction: Int) {
 val white get() = Side.WHITE
 val black get() = Side.BLACK
 
+enum class BoardSide(private val direction: Int, val castles: String) {
+    QUEENSIDE(-1, "O-O-O"), KINGSIDE(1, "O-O");
+    val dir get() = Dir(direction, 0)
+}
+
+val kingside get() = BoardSide.KINGSIDE
+val queenside get() = BoardSide.KINGSIDE
+
 data class MutableBySides<T>(var white: T, var black: T) {
     constructor(block: (Side) -> T) : this(block(Side.WHITE), block(Side.BLACK))
     constructor(v: T) : this(v, v)

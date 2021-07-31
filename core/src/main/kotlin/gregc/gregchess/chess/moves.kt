@@ -4,7 +4,7 @@ import gregc.gregchess.between
 import gregc.gregchess.rotationsOf
 
 class MoveData(
-    val piece: Piece, val origin: Square, val target: Square, val name: String,
+    val piece: Piece, val origin: Square, val target: Square, val name: MoveName,
     val captured: Boolean, val display: Square = target, val undo: () -> Unit
 ) {
 
@@ -51,8 +51,8 @@ abstract class MoveCandidate(
         }
         val hmc =
             if (piece.type == PieceType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
-        val ch = checkForChecks(piece.side, game)
-        return MoveData(piece.piece, origin, target, base + ch, ct != null, display) {
+        val ch = base.checkForChecks(piece.side, game)
+        return MoveData(piece.piece, origin, target, ch, ct != null, display) {
             hmc()
             promotion?.let { piece.square.piece?.demote(piece) }
             piece.move(origin)
@@ -61,18 +61,17 @@ abstract class MoveCandidate(
         }
     }
 
-    open fun baseName(promotion: Piece? = null) = buildString {
+    open fun baseName(promotion: Piece? = null): MoveName = buildList {
         if (piece.type != PieceType.PAWN) {
-            append(piece.type.char.uppercaseChar())
-            append(getUniquenessCoordinate(piece, target))
+            this += MoveNameTokenType.PIECE_TYPE.of(piece.type)
+            this += MoveNameTokenType.UNIQUENESS_COORDINATE.of(getUniquenessCoordinate(piece, target))
         } else if (control != null)
-            append(origin.pos.fileStr)
+            this += MoveNameTokenType.UNIQUENESS_COORDINATE.of(UniquenessCoordinate(file = origin.pos.file))
         if (captured != null)
-            append("x")
-        append(target.pos)
+            this += MoveNameTokenType.CAPTURE.mk
+        this += MoveNameTokenType.TARGET.of(target.pos)
         promotion?.let {
-            append("=")
-            append(it.char.uppercaseChar())
+            this += MoveNameTokenType.PROMOTION.of(it.type)
         }
     }
 
@@ -93,29 +92,74 @@ abstract class MoveCandidate(
     val captured = control?.piece
 }
 
-fun getUniquenessCoordinate(piece: BoardPiece, target: Square): String {
+class MoveNameTokenType<T>(val name: String, @JvmField val toPgnString: (T) -> String = Any?::toString) {
+    constructor(name: String, constPGN: String): this(name, { constPGN })
+
+    companion object {
+        @JvmField
+        val PIECE_TYPE = MoveNameTokenType<PieceType>("PIECE_TYPE") { it.char.uppercase() }
+        @JvmField
+        val UNIQUENESS_COORDINATE = MoveNameTokenType<UniquenessCoordinate>("UNIQUENESS_COORDINATE")
+        @JvmField
+        val CAPTURE = MoveNameTokenType<Unit>("CAPTURE", "x")
+        @JvmField
+        val TARGET = MoveNameTokenType<Pos>("TARGET")
+        @JvmField
+        val PROMOTION = MoveNameTokenType<PieceType>("PROMOTION") { "=" + it.char.uppercase() }
+        @JvmField
+        val CHECK = MoveNameTokenType<Unit>("CHECK", "+")
+        @JvmField
+        val CHECKMATE = MoveNameTokenType<Unit>("CHECKMATE", "#")
+        @JvmField
+        val CASTLE = MoveNameTokenType<BoardSide>("CASTLE", BoardSide::castles)
+        @JvmField
+        val EN_PASSANT = MoveNameTokenType<Unit>("EN_PASSANT", "")
+    }
+
+    override fun toString(): String = name
+    fun of(v: T) = MoveNameToken(this, v)
+}
+
+val MoveNameTokenType<Unit>.mk get() = of(Unit)
+
+data class MoveNameToken<T>(val type: MoveNameTokenType<T>, val value: T) {
+    val pgn: String get() = type.toPgnString(value)
+}
+
+typealias MoveName = List<MoveNameToken<*>>
+
+val MoveName.pgn get() = joinToString("") { it.pgn }
+
+data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
+    constructor(pos: Pos): this(pos.file, pos.rank)
+    val fileStr get() = file?.let { "${'a' + it}" }
+    val rankStr get() = rank?.let { (it + 1).toString() }
+    override fun toString(): String = fileStr.orEmpty() + rankStr.orEmpty()
+}
+
+fun getUniquenessCoordinate(piece: BoardPiece, target: Square): UniquenessCoordinate {
     val game = target.game
     val pieces = game.board.pieces.filter { it.side == piece.side && it.type == piece.type }
     val consideredPieces = pieces.filter { p ->
         p.square.bakedMoves.orEmpty().any { it.target == target && game.variant.isLegal(it) }
     }
     return when {
-        consideredPieces.size == 1 -> ""
-        consideredPieces.count { it.pos.file == piece.pos.file } == 1 -> piece.pos.fileStr
-        consideredPieces.count { it.pos.rank == piece.pos.rank } == 1 -> piece.pos.rankStr
-        else -> piece.pos.toString()
+        consideredPieces.size == 1 -> UniquenessCoordinate()
+        consideredPieces.count { it.pos.file == piece.pos.file } == 1 -> UniquenessCoordinate(file = piece.pos.file)
+        consideredPieces.count { it.pos.rank == piece.pos.rank } == 1 -> UniquenessCoordinate(rank = piece.pos.rank)
+        else -> UniquenessCoordinate(piece.pos)
     }
 }
 
-fun checkForChecks(side: Side, game: ChessGame): String {
+fun MoveName.checkForChecks(side: Side, game: ChessGame): MoveName {
     game.board.updateMoves()
     val pieces = game.board.piecesOf(!side)
     val inCheck = game.variant.isInCheck(game, !side)
     val noMoves = pieces.all { game.board.getMoves(it.pos).none(game.variant::isLegal) }
     return when {
-        inCheck && noMoves -> "#"
-        inCheck -> "+"
-        else -> ""
+        inCheck && noMoves -> this + MoveNameTokenType.CHECKMATE.mk
+        inCheck -> this + MoveNameTokenType.CHECK.mk
+        else -> this
     }
 }
 
@@ -182,9 +226,9 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
             val base = baseName(promotion)
             val rookOrigin = rook.square
             BoardPiece.autoMove(mapOf(piece to target, rook to rookTarget))
-            val ch = checkForChecks(piece.side, game)
+            val ch = base.checkForChecks(piece.side, game)
             val hmc = board.increaseMovesSinceLastCapture()
-            return MoveData(piece.piece, origin, target, base + ch, false, display) {
+            return MoveData(piece.piece, origin, target, ch, false, display) {
                 hmc()
                 BoardPiece.autoMove(mapOf(piece to origin, rook to rookOrigin))
                 piece.force(false)
@@ -192,7 +236,9 @@ fun kingMovement(piece: BoardPiece): List<MoveCandidate> {
             }
         }
 
-        override fun baseName(promotion: Piece?) = if (piece.pos.file > rook.pos.file) "O-O-O" else "O-O"
+        override fun baseName(promotion: Piece?) = listOf(MoveNameTokenType.CASTLE.of(
+            if (piece.pos.file > rook.pos.file) BoardSide.QUEENSIDE else BoardSide.KINGSIDE
+        ))
     }
 
     val castles = mutableListOf<MoveCandidate>()
@@ -274,9 +320,9 @@ fun pawnMovement(config: PawnMovementConfig): (piece: BoardPiece)-> List<MoveCan
             val hasMoved = piece.hasMoved
             val ct = captured?.capture(piece.side)
             piece.move(target)
-            val ch = checkForChecks(piece.side, game)
+            val ch = base.checkForChecks(piece.side, game) + MoveNameTokenType.EN_PASSANT.mk
             val hmc = board.resetMovesSinceLastCapture()
-            return MoveData(piece.piece, origin, target, base + ch, true, display) {
+            return MoveData(piece.piece, origin, target, ch, true, display) {
                 hmc()
                 piece.move(origin)
                 ct?.let { captured?.resurrect(it) }
