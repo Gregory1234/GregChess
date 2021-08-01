@@ -18,6 +18,10 @@ interface BukkitChessModule: ChessModule {
     fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String?
 }
 
+interface BukkitChessPlugin {
+    fun onInitialize()
+}
+
 val MainChessModule.bukkit
     get() = if (this is BukkitChessModule) this
     else extensions.filterIsInstance<BukkitChessModule>().first()

@@ -14,7 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import java.util.*
 
 object GregChess : Listener {
-    class Plugin : JavaPlugin() {
+    class Plugin : JavaPlugin(), BukkitChessPlugin {
         companion object {
             lateinit var INSTANCE: Plugin
                 private set
@@ -30,6 +30,11 @@ object GregChess : Listener {
 
         override fun onDisable() {
             GregChess.onDisable()
+        }
+
+        override fun onInitialize() {
+            GregChessModule.extensions += BukkitGregChessModule
+            GregChessModule.load()
         }
     }
 
@@ -61,8 +66,9 @@ object GregChess : Listener {
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
-        GregChessModule.extensions += BukkitGregChessModule
-        GregChessModule.load()
+        plugin.server.pluginManager.plugins.filterIsInstance<BukkitChessPlugin>().forEach {
+            it.onInitialize()
+        }
         ChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()
