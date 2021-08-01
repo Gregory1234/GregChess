@@ -1,11 +1,11 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.fabric.FabricGregChessModule
 import net.minecraft.util.Identifier
 
-val PieceType.id get() = Identifier(GregChessModule.pieceTypeModule(this).namespace, name.lowercase())
+val PieceType.id get() = Identifier(ChessModule[this].namespace, name.lowercase())
 
 val Piece.block get() = FabricGregChessModule.pieceBlocks[this]!!
 val Piece.item get() = FabricGregChessModule.pieceItems[this]!!

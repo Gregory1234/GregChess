@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.component.spectators
@@ -21,7 +21,7 @@ fun PieceType.getItem(side: Side): ItemStack {
     return item
 }
 
-val PieceType.module get() = GregChessModule.pieceTypeModule(this).bukkit
+val PieceType.module get() = ChessModule[this].bukkit
 val PieceType.configName get() = name.snakeToPascal()
 val PieceType.section get() = module.config.getConfigurationSection("Chess.Piece.$configName")!!
 val PieceType.localChar get() = section.getString("Char")!!.single()
@@ -32,7 +32,7 @@ val PieceType.structure get() = BySides { section.getStringList("Structure.${it.
 
 val Piece.item get() = type.getItem(side)
 
-val MoveName.localName get() = joinToString("") { GregChessModule.modules.firstNotNullOfOrNull { m -> m.bukkit.moveNameTokenToString(it.type, it.value) } ?: it.pgn }
+val MoveName.localName get() = joinToString("") { ChessModule.modules.firstNotNullOfOrNull { m -> m.bukkit.moveNameTokenToString(it.type, it.value) } ?: it.pgn }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
@@ -60,7 +60,7 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Components: ${components.joinToString { it.javaClass.simpleName }}")
 }
 
-val EndReason<*>.module get() = GregChessModule.endReasonModule(this).bukkit
+val EndReason<*>.module get() = ChessModule[this].bukkit
 val GameResults<*>.name
     get() = endReason.module.config.getPathString("Chess.EndReason.${endReason.name.snakeToPascal()}", *args.map { it.toString() }.toTypedArray())
 
@@ -72,7 +72,7 @@ val GameResults<*>.message
         }
     }
 
-val PropertyType<*>.module get() = GregChessModule.propertyTypeModule(this).bukkit
+val PropertyType<*>.module get() = ChessModule[this].bukkit
 val PropertyType<*>.localName get() = module.config.getPathString("Scoreboard.${name.snakeToPascal()}")
 fun <T> PropertyType<T>.stringify(v: T) = module.stringify(this, v)
 

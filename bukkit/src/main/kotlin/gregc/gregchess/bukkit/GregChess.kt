@@ -170,7 +170,7 @@ object GregChess : Listener {
                         else
                             game.board[Pos.parseFromString(this[2])]!!
                         val key = this[1].toKey()
-                        val piece = GregChessModule.getModule(key.namespace).pieceTypes.first { it.name.lowercase() == key.key }
+                        val piece = ChessModule[key.namespace].pieceTypes.first { it.name.lowercase() == key.key }
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(piece.of(Side.valueOf(this[0])), square)
                         game.board.updateMoves()
@@ -325,7 +325,7 @@ object GregChess : Listener {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("spawn", GregChessModule.modules.flatMap { p -> p.pieceTypes.map { p.namespace + ":" + it.name.lowercase() } }.toTypedArray())
+                    "spawn" -> ifPermission("spawn", ChessModule.modules.flatMap { p -> p.pieceTypes.map { p.namespace + ":" + it.name.lowercase() } }.toTypedArray())
                     "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }

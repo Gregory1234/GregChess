@@ -1,6 +1,6 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.pawn
 import gregc.gregchess.chess.white
 import gregc.gregchess.fabric.chess.*
@@ -49,7 +49,7 @@ object GregChess : ModInitializer {
 
         EntrypointUtils.invoke("chess", ChessInitializer::class.java, ChessInitializer::onInitializeChess)
         PIECE_ENTITY_TYPE = BlockEntityType.Builder.create({ a, b -> PieceBlockEntity(a, b) },
-            *GregChessModule.modules.flatMap { it.fabric.pieceBlocks.values }.toTypedArray()).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
+            *ChessModule.modules.flatMap { it.fabric.pieceBlocks.values }.toTypedArray()).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)
         Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
         Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)
