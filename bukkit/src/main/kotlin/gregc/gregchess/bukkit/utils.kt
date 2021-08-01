@@ -49,7 +49,7 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
-    p.sendMessage(e.error.get().chatColor())
+    p.sendMessage(e.error.get())
     err(e)
 }
 
@@ -98,7 +98,7 @@ val PLAYER_NOT_IN_GAME = err("NotInGame.Player")
 val OPPONENT_NOT_HUMAN = err("NotHuman.Opponent")
 
 class Message(val config: ConfigurationSection, val path: String) {
-    fun get() = config.getString(path)!!
+    fun get() = config.getPathString(path)
 }
 
 fun message(n: String) = Message(config, "Message.$n")
@@ -236,3 +236,6 @@ fun Duration.format(formatString: String): String? = try {
 internal fun String.toKey(): NamespacedKey = NamespacedKey.fromString(this, GregChess.plugin)!!
 
 val config: ConfigurationSection get() = GregChess.plugin.config
+
+fun ConfigurationSection.getPathString(path: String, vararg args: String) =
+    getString(path)?.format(*args)?.chatColor() ?: ((currentPath ?: "") + "-" + path)

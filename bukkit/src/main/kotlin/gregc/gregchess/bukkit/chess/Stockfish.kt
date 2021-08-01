@@ -2,15 +2,14 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.seconds
 import java.util.concurrent.*
 
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
 
     object Config {
         val hasStockfish get() = config.getBoolean("Chess.HasStockfish", false)
-        val stockfishCommand get() = config.getString("Chess.Stockfish.Path")!!
-        val engineName get() = config.getString("Chess.Stockfish.Name")!!
+        val stockfishCommand get() = config.getPathString("Chess.Stockfish.Path")
+        val engineName get() = config.getPathString("Chess.Stockfish.Name")
     }
 
     private val process: Process = ProcessBuilder(Config.stockfishCommand).start()

@@ -16,7 +16,7 @@ val Side.configName get() = name.snakeToPascal()
 fun PieceType.getItem(side: Side): ItemStack {
     val item = ItemStack(itemMaterial[side])
     val meta = item.itemMeta!!
-    meta.setDisplayName(config.getString("Chess.Side.${side.configName}.Piece")!!.format(localName).chatColor())
+    meta.setDisplayName(config.getPathString("Chess.Side.${side.configName}.Piece", localName))
     item.itemMeta = meta
     return item
 }
@@ -25,7 +25,7 @@ val PieceType.module get() = GregChessModule.pieceTypeModule(this).bukkit
 val PieceType.configName get() = name.snakeToPascal()
 val PieceType.section get() = module.config.getConfigurationSection("Chess.Piece.$configName")!!
 val PieceType.localChar get() = section.getString("Char")!!.single()
-val PieceType.localName get() = section.getString("Name")!!
+val PieceType.localName get() = section.getPathString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
 val PieceType.itemMaterial get() = BySides { Material.valueOf(section.getString("Item.${it.configName}")!!) }
 val PieceType.structure get() = BySides { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
@@ -62,18 +62,18 @@ fun ChessGame.getInfo() = buildTextComponent {
 
 val EndReason<*>.module get() = GregChessModule.endReasonModule(this).bukkit
 val GameResults<*>.name
-    get() = endReason.module.config.getString("Chess.EndReason.${endReason.name.snakeToPascal()}")!!.format(*args.toTypedArray())
+    get() = endReason.module.config.getPathString("Chess.EndReason.${endReason.name.snakeToPascal()}", *args.map { it.toString() }.toTypedArray())
 
 val GameResults<*>.message
     get() = score.let {
         when(it) {
-            is GameScore.Draw -> config.getString("Message.GameFinished.ItWasADraw")!!
-            is GameScore.Victory -> config.getString("Message.GameFinished." + it.winner.configName + "Won")!!
-        }.format(name)
+            is GameScore.Draw -> config.getPathString("Message.GameFinished.ItWasADraw", name)
+            is GameScore.Victory -> config.getPathString("Message.GameFinished." + it.winner.configName + "Won", name)
+        }
     }
 
 val PropertyType<*>.module get() = GregChessModule.propertyTypeModule(this).bukkit
-val PropertyType<*>.localName get() = module.config.getString("Scoreboard.${name.snakeToPascal()}")!!
+val PropertyType<*>.localName get() = module.config.getPathString("Scoreboard.${name.snakeToPascal()}")
 fun <T> PropertyType<T>.stringify(v: T) = module.stringify(this, v)
 
 fun <T> PlayerProperty<T>.asString(s: Side) = type.stringify(this(s))

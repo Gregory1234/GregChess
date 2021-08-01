@@ -23,7 +23,7 @@ val MainChessModule.bukkit
     else extensions.filterIsInstance<BukkitChessModule>().first()
 
 object BukkitGregChessModule: BukkitChessModule, ChessModuleExtension {
-    private val timeFormat: String get() = config.getString("TimeFormat")!!
+    private val timeFormat: String get() = config.getPathString("TimeFormat")
     private val NO_ARENAS = err("NoArenas")
 
     override val base = GregChessModule
@@ -43,7 +43,7 @@ object BukkitGregChessModule: BukkitChessModule, ChessModuleExtension {
 
     override fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String? =
         if (type == MoveNameTokenType.CAPTURE)
-            config.getString("Chess.Capture")
+            config.getPathString("Chess.Capture")
         else if ((type == MoveNameTokenType.PROMOTION  || type == MoveNameTokenType.PIECE_TYPE) && value is PieceType)
             value.localChar.uppercase()
         else if (type == MoveNameTokenType.EN_PASSANT)

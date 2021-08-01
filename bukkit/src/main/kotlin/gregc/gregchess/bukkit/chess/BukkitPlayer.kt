@@ -60,13 +60,13 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         player.sendTitle(title.chatColor(), subtitle.chatColor(), 10, 70, 20)
 
     override fun sendPGN(pgn: PGN) {
-        val message = TextComponent(COPY_PGN.get().chatColor())
+        val message = TextComponent(COPY_PGN.get())
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }
 
     override fun sendFEN(fen: FEN) {
-        val message = TextComponent(COPY_FEN.get().chatColor())
+        val message = TextComponent(COPY_FEN.get())
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
         player.spigot().sendMessage(message)
     }

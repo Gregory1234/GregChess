@@ -16,12 +16,12 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
     companion object {
         private val TITLE = Message(config,"Scoreboard.Title")
-        private fun whiteFormat(s: String) = config.getString("Scoreboard.Format.White")!!.format(s)
-        private fun blackFormat(s: String) = config.getString("Scoreboard.Format.Black")!!.format(s)
-        private fun generalFormat(s: String) = config.getString("Scoreboard.Format.General")!!.format(s)
-        private fun format(side: Side, s: String) = config.getString("Scoreboard.Format.${side.configName}")!!.format(s)
+        private fun whiteFormat(s: String) = config.getPathString("Scoreboard.Format.White", s)
+        private fun blackFormat(s: String) = config.getPathString("Scoreboard.Format.Black", s)
+        private fun generalFormat(s: String) = config.getPathString("Scoreboard.Format.General", s)
+        private fun format(side: Side, s: String) = config.getPathString("Scoreboard.Format.${side.configName}", s)
 
-        private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")!!
+        private val playerPrefix get() = config.getPathString("Scoreboard.PlayerPrefix")
 
         @JvmField
         val PRESET = BukkitGregChessModule.register(PropertyType<String>("PRESET"))
@@ -80,22 +80,22 @@ class ScoreboardManager(private val game: ChessGame): Component {
         var i = l
         gameProperties.values.forEach {
             gamePropertyTeams[it.type] = newTeam().apply {
-                addEntry(generalFormat(it.type.localName).chatColor())
+                addEntry(generalFormat(it.type.localName))
             }
-            objective.getScore(generalFormat(it.type.localName).chatColor()).score = i--
+            objective.getScore(generalFormat(it.type.localName)).score = i--
         }
         playerProperties.values.forEach {
             playerPropertyTeams[it.type] = BySides { s ->
-                newTeam().apply { addEntry(format(s, it.type.localName).chatColor()) }
+                newTeam().apply { addEntry(format(s, it.type.localName)) }
             }
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.values.forEach {
-            objective.getScore(whiteFormat(it.type.localName).chatColor()).score = i--
+            objective.getScore(whiteFormat(it.type.localName)).score = i--
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.values.forEach {
-            objective.getScore(blackFormat(it.type.localName).chatColor()).score = i--
+            objective.getScore(blackFormat(it.type.localName)).score = i--
         }
     }
 
