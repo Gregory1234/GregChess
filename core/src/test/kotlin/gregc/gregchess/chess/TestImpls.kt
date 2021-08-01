@@ -25,9 +25,6 @@ class TestHuman(name: String): HumanPlayer(name) {
     override fun sendFEN(fen: FEN) {
     }
 
-    override fun setItem(i: Int, piece: Piece?) {
-    }
-
     override suspend fun openPawnPromotionMenu(promotions: Collection<Piece>): Piece = promotions.first()
 
     override fun showGameResults(side: Side, results: GameResults<*>) {

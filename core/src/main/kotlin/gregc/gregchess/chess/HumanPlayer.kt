@@ -13,7 +13,6 @@ abstract class HumanPlayer(val name: String) {
     val isInGame get() = currentGame != null
     abstract fun sendPGN(pgn: PGN)
     abstract fun sendFEN(fen: FEN)
-    abstract fun setItem(i: Int, piece: Piece?)
     abstract suspend fun openPawnPromotionMenu(promotions: Collection<Piece>): Piece
     abstract fun showGameResults(side: Side, results: GameResults<*>)
     abstract fun showGameResults(results: GameResults<*>)

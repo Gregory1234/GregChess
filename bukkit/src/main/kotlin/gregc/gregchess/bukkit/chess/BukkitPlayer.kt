@@ -71,7 +71,7 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         player.spigot().sendMessage(message)
     }
 
-    override fun setItem(i: Int, piece: Piece?) {
+    fun setItem(i: Int, piece: Piece?) {
         player.inventory.setItem(i, piece?.item)
     }
 

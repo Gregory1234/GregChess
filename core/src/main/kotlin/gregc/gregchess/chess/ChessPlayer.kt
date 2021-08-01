@@ -38,6 +38,8 @@ abstract class ChessPlayer(val name: String, val side: Side, protected val silen
 
 }
 
+class HeldPieceChangedEvent(val side: Side, val piece: BoardPiece? = null): ChessEvent
+
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(player.name, side, silent, game) {
 
@@ -48,7 +50,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
         held = piece
-        player.setItem(0, piece.piece)
+        game.callEvent(HeldPieceChangedEvent(side, piece))
     }
 
     fun makeMove(pos: Pos) {
@@ -58,7 +60,7 @@ class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, gam
         val moves = piece.square.bakedLegalMoves ?: return
         if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
         held = null
-        player.setItem(0, null)
+        game.callEvent(HeldPieceChangedEvent(side))
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == newSquare }
         val move = chosenMoves.first()

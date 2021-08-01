@@ -92,6 +92,11 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
         world.createExplosion(e.pos.location, 4.0f, false, false)
     }
 
+    @ChessEventHandler
+    fun handleHeldPieces(e: HeldPieceChangedEvent) {
+        ((game[e.side] as? HumanChessPlayer)?.player as? BukkitPlayer)?.setItem(0, e.piece?.piece)
+    }
+
     private fun Pos.fillFloor(floor: Floor) {
         val (x, y, z) = loc
         val mi = -settings.lowHalfTile
