@@ -24,12 +24,15 @@ fun PieceType.getItem(side: Side, lang: String): ItemStack {
 val PieceType.module get() = GregChessModule.pieceTypeModule(this).bukkit
 val PieceType.configName get() = name.snakeToPascal()
 val PieceType.section get() = module.config.getConfigurationSection("Chess.Piece.$configName")!!
+fun PieceType.getLocalChar(lang: String) = section.getLocalizedString("Char").get(lang).single()
 val PieceType.localName get() = section.getLocalizedString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
 val PieceType.itemMaterial get() = BySides { Material.valueOf(section.getString("Item.${it.configName}")!!) }
 val PieceType.structure get() = BySides { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
 
 fun Piece.getItem(lang: String) = type.getItem(side, lang)
+
+fun MoveName.getLocalName(lang: String) = joinToString("") { GregChessModule.modules.firstNotNullOfOrNull { m -> m.bukkit.moveNameTokenToString(it.type, it.value, lang) } ?: it.pgn }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
@@ -41,9 +44,9 @@ fun BoardPiece.getInfo() = buildTextComponent {
     val game = square.game
     appendCopy("Game: ${game.uuid}\n", game.uuid)
     val moves = square.bakedMoves.orEmpty()
-    append("All moves: ${moves.joinToString { it.baseName().pgn }}")
+    append("All moves: ${moves.joinToString { it.baseName().getLocalName(DEFAULT_LANG) }}")
     moves.groupBy { m -> game.variant.getLegality(m) }.forEach { (l, m) ->
-        append("\n${l.prettyName}: ${m.joinToString { it.baseName().pgn }}")
+        append("\n${l.prettyName}: ${m.joinToString { it.baseName().getLocalName(DEFAULT_LANG) }}")
     }
 }
 

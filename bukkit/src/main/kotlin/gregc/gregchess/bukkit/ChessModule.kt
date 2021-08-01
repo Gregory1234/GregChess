@@ -3,8 +3,7 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.chess.EndReason
-import gregc.gregchess.chess.GameScore
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.AtomicChess
 import gregc.gregchess.chess.variant.ThreeChecks
@@ -16,6 +15,7 @@ interface BukkitChessModule: ChessModule {
     val config: ConfigurationSection
     fun <T> stringify(propertyType: PropertyType<T>, t: T): String
     fun getSettings(requested: Collection<KClass<out Component.Settings<*>>>, section: ConfigurationSection): Collection<Component.Settings<*>>
+    fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?, lang: String): String?
 }
 
 val MainChessModule.bukkit
@@ -40,6 +40,16 @@ object BukkitGregChessModule: BukkitChessModule, ChessModuleExtension {
             t.format(timeFormat) ?: timeFormat
         else
             t.toString()
+
+    override fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?, lang: String): String? =
+        if (type == MoveNameTokenType.CAPTURE)
+            config.getLocalizedString("Chess.Capture").get(lang)
+        else if ((type == MoveNameTokenType.PROMOTION  || type == MoveNameTokenType.PIECE_TYPE) && value is PieceType)
+            value.getLocalChar(lang).uppercase()
+        else if (type == MoveNameTokenType.EN_PASSANT)
+            " e.p."
+        else
+            null
 
     private val clockSettings: Map<String, ChessClock.Settings>
         get() = gregc.gregchess.bukkit.config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {

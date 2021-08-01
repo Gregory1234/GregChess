@@ -129,9 +129,9 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         sendMessage(buildString {
             append(num)
             append(". ")
-            wLast?.let { append(it.name.pgn) }
+            wLast?.let { append(it.name.getLocalName(lang)) }
             append("  | ")
-            bLast?.let { append(it.name.pgn) }
+            bLast?.let { append(it.name.getLocalName(lang)) }
         })
     }
 }
