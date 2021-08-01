@@ -257,7 +257,7 @@ object GregChess : Listener {
                     endArgs()
                     plugin.reloadConfig()
                     ArenaManager.reload()
-                    player.sendMessage(CONFIG_RELOADED.get(player.lang))
+                    player.sendMessage(CONFIG_RELOADED.get())
                 }
                 "dev" -> {
                     cRequire(Bukkit.getPluginManager().isPluginEnabled("DevHelpPlugin"), WRONG_ARGUMENTS_NUMBER)

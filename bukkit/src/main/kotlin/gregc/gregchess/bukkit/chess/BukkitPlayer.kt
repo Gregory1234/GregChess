@@ -9,8 +9,8 @@ import org.bukkit.entity.Player
 
 
 private class BukkitGamePlayerStatus(
-    @JvmField val title: LocalizedString,
-    @JvmField val msg: LocalizedString? = null,
+    @JvmField val title: Message,
+    @JvmField val msg: Message? = null,
     @JvmField val minor: Boolean = false
 )
 
@@ -36,8 +36,6 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")
     }
 
-    var lang: String = DEFAULT_LANG
-
     var isAdmin = false
         set(value) {
             field = value
@@ -56,25 +54,25 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     val isSpectating get() = spectatedGame != null
 
     fun sendMessage(msg: String) = player.sendMessage(msg.chatColor())
-    fun sendMessage(msg: LocalizedString) = sendMessage(msg.get(lang))
+    fun sendMessage(msg: Message) = sendMessage(msg.get())
 
     private fun sendTitle(title: String, subtitle: String) =
         player.sendTitle(title.chatColor(), subtitle.chatColor(), 10, 70, 20)
 
     override fun sendPGN(pgn: PGN) {
-        val message = TextComponent(COPY_PGN.get(lang).chatColor())
+        val message = TextComponent(COPY_PGN.get().chatColor())
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
         player.spigot().sendMessage(message)
     }
 
     override fun sendFEN(fen: FEN) {
-        val message = TextComponent(COPY_FEN.get(lang).chatColor())
+        val message = TextComponent(COPY_FEN.get().chatColor())
         message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
         player.spigot().sendMessage(message)
     }
 
     override fun setItem(i: Int, piece: Piece?) {
-        player.inventory.setItem(i, piece?.getItem(lang))
+        player.inventory.setItem(i, piece?.item)
     }
 
     override suspend fun openPawnPromotionMenu(promotions: Collection<Piece>): Piece = player.openPawnPromotionMenu(promotions)
@@ -85,12 +83,12 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
             GameScore.Draw -> YOU_DREW
             else -> YOU_LOST
         }
-        sendTitle(wld.get(lang), results.name.get(lang))
+        sendTitle(wld.get(), results.name)
         sendMessage(results.message)
     }
 
     override fun showGameResults(results: GameResults<*>) {
-        sendTitle(results.score.let { if (it is GameScore.Victory) SPECTATOR_WINNER[it.winner] else SPECTATOR_DRAW }.get(lang), results.name.get(lang))
+        sendTitle(results.score.let { if (it is GameScore.Victory) SPECTATOR_WINNER[it.winner] else SPECTATOR_DRAW }.get(), results.name)
         sendMessage(results.message)
     }
 
@@ -111,14 +109,14 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         }
         if (values.size == 1) {
             if (values[0].minor)
-                sendTitle("", values[0].title.get(lang))
+                sendTitle("", values[0].title.get())
             else
-                sendTitle(values[0].title.get(lang), "")
+                sendTitle(values[0].title.get(), "")
         } else {
             if (values[0].minor && !values[1].minor)
-                sendTitle(values[1].title.get(lang), values[0].title.get(lang))
+                sendTitle(values[1].title.get(), values[0].title.get())
             else
-                sendTitle(values[0].title.get(lang), values[1].title.get(lang))
+                sendTitle(values[0].title.get(), values[1].title.get())
         }
         values.forEach {
             it.msg?.let(::sendMessage)
@@ -129,9 +127,9 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         sendMessage(buildString {
             append(num)
             append(". ")
-            wLast?.let { append(it.name.getLocalName(lang)) }
+            wLast?.let { append(it.name.localName) }
             append("  | ")
-            bLast?.let { append(it.name.getLocalName(lang)) }
+            bLast?.let { append(it.name.localName) }
         })
     }
 }
@@ -140,7 +138,7 @@ private val PAWN_PROMOTION = message("PawnPromotion")
 
 suspend fun Player.openPawnPromotionMenu(promotions: Collection<Piece>) =
     openMenu(PAWN_PROMOTION, promotions.mapIndexed { i, p ->
-        ScreenOption(p.getItem(human.lang), p, i.toInvPos())
+        ScreenOption(p.item, p, i.toInvPos())
     }) ?: promotions.first()
 
 val HumanPlayer.chess get() = this.currentGame?.get(this)

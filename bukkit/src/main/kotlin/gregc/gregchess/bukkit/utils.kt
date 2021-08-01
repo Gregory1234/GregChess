@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.Loc
-import gregc.gregchess.bukkit.chess.human
 import gregc.gregchess.minutes
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
@@ -16,8 +15,6 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import kotlin.contracts.contract
 import kotlin.math.*
-
-const val DEFAULT_LANG = "en_US"
 
 class CommandArgs(val player: CommandSender, val args: Array<String>) {
     private var index = 0
@@ -52,7 +49,7 @@ class CommandArgs(val player: CommandSender, val args: Array<String>) {
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
-    p.sendMessage(e.error.get(p.lang).chatColor())
+    p.sendMessage(e.error.get().chatColor())
     err(e)
 }
 
@@ -100,27 +97,31 @@ val PLAYER_NOT_IN_GAME = err("NotInGame.Player")
 @JvmField
 val OPPONENT_NOT_HUMAN = err("NotHuman.Opponent")
 
-fun message(n: String) = config.getLocalizedString( "Message.$n")
-fun title(n: String) = config.getLocalizedString( "Title.$n")
-fun err(n: String) = config.getLocalizedString("Message.Error.$n")
-
-
-class CommandException(val error: LocalizedString, cause: Throwable? = null) : Exception(cause) {
-
-    override val message: String
-        get() = "Uncaught command error: ${error.path}"
+class Message(val config: ConfigurationSection, val path: String) {
+    fun get() = config.getString(path)!!
 }
 
-fun cRequire(e: Boolean, msg: LocalizedString) {
+fun message(n: String) = Message(config, "Message.$n")
+fun title(n: String) = Message(config, "Title.$n")
+fun err(n: String) = Message(config, "Message.Error.$n")
+
+
+class CommandException(val error: Message, cause: Throwable? = null) : Exception(cause) {
+
+    override val message: String
+        get() = "Uncaught command error: ${error.get()}"
+}
+
+fun cRequire(e: Boolean, msg: Message) {
     contract {
         returns() implies e
     }
     if (!e) throw CommandException(msg)
 }
 
-fun <T> T?.cNotNull(msg: LocalizedString): T = this ?: throw CommandException(msg)
+fun <T> T?.cNotNull(msg: Message): T = this ?: throw CommandException(msg)
 
-inline fun <reified T, reified R : T> T.cCast(msg: LocalizedString): R = (this as? R).cNotNull(msg)
+inline fun <reified T, reified R : T> T.cCast(msg: Message): R = (this as? R).cNotNull(msg)
 
 
 fun cPerms(p: CommandSender, perm: String) {
@@ -176,8 +177,6 @@ class BuildTextComponentScope {
 inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
     BuildTextComponentScope().apply(f).returnValue
 
-val CommandSender.lang get() = (this as? Player)?.human?.lang ?: DEFAULT_LANG
-fun CommandSender.sendMessage(s: LocalizedString) = sendMessage(s.get(lang).chatColor())
 fun CommandSender.sendCommandMessage(msg: String, action: String, command: String) {
     spigot().sendMessage(buildTextComponent {
         append(msg.chatColor())
@@ -185,8 +184,6 @@ fun CommandSender.sendCommandMessage(msg: String, action: String, command: Strin
         append(action.chatColor(), ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
     })
 }
-fun CommandSender.sendCommandMessage(msg: LocalizedString, action: LocalizedString, command: String) =
-    sendCommandMessage(msg.get(lang), action.get(lang), command)
 
 fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
 
@@ -239,11 +236,3 @@ fun Duration.format(formatString: String): String? = try {
 internal fun String.toKey(): NamespacedKey = NamespacedKey.fromString(this, GregChess.plugin)!!
 
 val config: ConfigurationSection get() = GregChess.plugin.config
-
-fun ConfigurationSection.getLocalizedString(path: String, vararg args: Any?) = LocalizedString(this, path, *args)
-
-class LocalizedString(private val section: ConfigurationSection, val path: String, private vararg val args: Any?) {
-    fun get(lang: String): String =
-        (section.getString(path) ?: throw IllegalArgumentException(lang + "/" + section.currentPath + "." + path))
-            .format(*args.map { if (it is LocalizedString) it.get(lang) else it }.toTypedArray())
-}

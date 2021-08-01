@@ -36,7 +36,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     private val section get() = config.getConfigurationSection("Request.$name")!!
 
     suspend fun invalidSender(s: Player) {
-        s.sendMessage(section.getLocalizedString("CannotSend"))
+        s.sendMessage(section.getString("CannotSend")!!)
         return suspendCoroutine { }
     }
 
@@ -52,13 +52,13 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         }
         requests[request.uuid] = request
         request.sender.sendCommandMessage(
-            section.getLocalizedString("Sent.Request"),
-            config.getLocalizedString("Request.Cancel"),
+            section.getString("Sent.Request")!!,
+            config.getString("Request.Cancel")!!,
             if (simple) cancelCommand else "$cancelCommand ${request.uuid}"
         )
         request.receiver.sendCommandMessage(
-            section.getLocalizedString("Received.Request", request.sender.name, request.value),
-            config.getLocalizedString("Request.Accept"),
+            section.getString("Received.Request")!!.format(request.sender.name, request.value),
+            config.getString("Request.Accept")!!,
             if (simple) acceptCommand else "$acceptCommand ${request.uuid}"
         )
         val duration = section.getString("Duration")?.asDurationOrNull()
@@ -94,8 +94,8 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     }
 
     private fun accept(request: Request) {
-        request.sender.sendMessage(section.getLocalizedString("Sent.Accept", request.receiver.name))
-        request.receiver.sendMessage(section.getLocalizedString("Received.Accept", request.sender.name))
+        request.sender.sendMessage(section.getString("Sent.Accept")!!.format(request.receiver.name))
+        request.receiver.sendMessage(section.getString("Received.Accept")!!.format(request.sender.name))
         requests.remove(request.uuid)
         request.cont.resume(RequestResponse.ACCEPT)
     }
@@ -103,14 +103,14 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     fun accept(p: Player, uuid: UUID) {
         val request = requests[uuid]
         if (request == null || p != request.receiver)
-            p.sendMessage(section.getLocalizedString("Error.NotFound"))
+            p.sendMessage(section.getString("Error.NotFound")!!)
         else
             accept(request)
     }
 
     private fun cancel(request: Request) {
-        request.sender.sendMessage(section.getLocalizedString("Sent.Cancel", request.receiver.name))
-        request.receiver.sendMessage(section.getLocalizedString("Received.Cancel", request.sender.name))
+        request.sender.sendMessage(section.getString("Sent.Cancel")!!.format(request.receiver.name))
+        request.receiver.sendMessage(section.getString("Received.Cancel")!!.format(request.sender.name))
         requests.remove(request.uuid)
         request.cont.resume(RequestResponse.CANCEL)
     }
@@ -118,14 +118,14 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     fun cancel(p: Player, uuid: UUID) {
         val request = requests[uuid]
         if (request == null || p != request.sender)
-            p.sendMessage(section.getLocalizedString("Error.NotFound"))
+            p.sendMessage(section.getString("Error.NotFound")!!)
         else
             cancel(request)
     }
 
     private fun expire(request: Request) {
-        request.sender.sendMessage(section.getLocalizedString("Expired", request.receiver.name))
-        request.receiver.sendMessage(section.getLocalizedString("Expired", request.sender.name))
+        request.sender.sendMessage(section.getString("Expired")!!.format(request.receiver.name))
+        request.receiver.sendMessage(section.getString("Expired")!!.format(request.sender.name))
         requests.remove(request.uuid)
         request.cont.resume(RequestResponse.EXPIRED)
     }

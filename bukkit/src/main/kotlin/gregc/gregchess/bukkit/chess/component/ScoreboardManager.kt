@@ -15,11 +15,11 @@ class ScoreboardManager(private val game: ChessGame): Component {
     }
 
     companion object {
-        private val TITLE = config.getLocalizedString("Scoreboard.Title")
-        private fun whiteFormat(s: String) = config.getLocalizedString("Scoreboard.Format.White", s)
-        private fun blackFormat(s: String) = config.getLocalizedString("Scoreboard.Format.Black", s)
-        private fun generalFormat(s: String) = config.getLocalizedString("Scoreboard.Format.General", s)
-        private fun format(side: Side, s: String) = config.getLocalizedString("Scoreboard.Format.${side.configName}", s)
+        private val TITLE = Message(config,"Scoreboard.Title")
+        private fun whiteFormat(s: String) = config.getString("Scoreboard.Format.White")!!.format(s)
+        private fun blackFormat(s: String) = config.getString("Scoreboard.Format.Black")!!.format(s)
+        private fun generalFormat(s: String) = config.getString("Scoreboard.Format.General")!!.format(s)
+        private fun format(side: Side, s: String) = config.getString("Scoreboard.Format.${side.configName}")!!.format(s)
 
         private val playerPrefix get() = config.getString("Scoreboard.PlayerPrefix")!!
 
@@ -37,7 +37,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
     private val gamePropertyTeams = mutableMapOf<PropertyType<*>, Team>()
     private val playerPropertyTeams = mutableMapOf<PropertyType<*>, BySides<Team>>()
 
-    private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get(DEFAULT_LANG))
+    private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get())
 
     private fun newTeam(): Team {
         var s: String
@@ -80,22 +80,22 @@ class ScoreboardManager(private val game: ChessGame): Component {
         var i = l
         gameProperties.values.forEach {
             gamePropertyTeams[it.type] = newTeam().apply {
-                addEntry(generalFormat(it.type.localName).get(DEFAULT_LANG).chatColor())
+                addEntry(generalFormat(it.type.localName).chatColor())
             }
-            objective.getScore(generalFormat(it.type.localName).get(DEFAULT_LANG).chatColor()).score = i--
+            objective.getScore(generalFormat(it.type.localName).chatColor()).score = i--
         }
         playerProperties.values.forEach {
             playerPropertyTeams[it.type] = BySides { s ->
-                newTeam().apply { addEntry(format(s, it.type.localName).get(DEFAULT_LANG).chatColor()) }
+                newTeam().apply { addEntry(format(s, it.type.localName).chatColor()) }
             }
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.values.forEach {
-            objective.getScore(whiteFormat(it.type.localName).get(DEFAULT_LANG).chatColor()).score = i--
+            objective.getScore(whiteFormat(it.type.localName).chatColor()).score = i--
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
         playerProperties.values.forEach {
-            objective.getScore(blackFormat(it.type.localName).get(DEFAULT_LANG).chatColor()).score = i--
+            objective.getScore(blackFormat(it.type.localName).chatColor()).score = i--
         }
     }
 

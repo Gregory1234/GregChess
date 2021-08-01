@@ -15,7 +15,7 @@ interface BukkitChessModule: ChessModule {
     val config: ConfigurationSection
     fun <T> stringify(propertyType: PropertyType<T>, t: T): String
     fun getSettings(requested: Collection<KClass<out Component.Settings<*>>>, section: ConfigurationSection): Collection<Component.Settings<*>>
-    fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?, lang: String): String?
+    fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String?
 }
 
 val MainChessModule.bukkit
@@ -41,11 +41,11 @@ object BukkitGregChessModule: BukkitChessModule, ChessModuleExtension {
         else
             t.toString()
 
-    override fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?, lang: String): String? =
+    override fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String? =
         if (type == MoveNameTokenType.CAPTURE)
-            config.getLocalizedString("Chess.Capture").get(lang)
+            config.getString("Chess.Capture")
         else if ((type == MoveNameTokenType.PROMOTION  || type == MoveNameTokenType.PIECE_TYPE) && value is PieceType)
-            value.getLocalChar(lang).uppercase()
+            value.localChar.uppercase()
         else if (type == MoveNameTokenType.EN_PASSANT)
             " e.p."
         else
