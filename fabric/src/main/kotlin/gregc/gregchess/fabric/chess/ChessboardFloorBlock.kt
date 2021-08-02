@@ -14,7 +14,8 @@ import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
-class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
+class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
+    BlockEntity(GregChess.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
     var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)
     var boardPos: Pos? by BlockEntityDirtyDelegate(null)
     override fun writeNbt(nbt: NbtCompound): NbtCompound {
@@ -27,18 +28,20 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
         }
         return nbt
     }
+
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
 
-        if(nbt.contains("Controller", 4)) {
+        if (nbt.contains("Controller", 4)) {
             chessControllerBlockPos = BlockPos.fromLong(nbt.getLong("Controller"))
         }
 
-        if(nbt.contains("Pos", 4)) {
+        if (nbt.contains("Pos", 4)) {
             val v = nbt.getLong("Pos")
             boardPos = Pos((v shr 32).toInt(), v.toInt())
         }
     }
+
     fun updateFloor() {
         world?.setBlockState(pos, world!!.getBlockState(pos).with(ChessboardFloorBlock.FLOOR, boardPos?.let {
             if ((it.rank + it.file) % 2 == 0) ChessboardFloor.DARK else ChessboardFloor.LIGHT
@@ -46,7 +49,7 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
     }
 }
 
-enum class ChessboardFloor(val floor: Floor?): StringIdentifiable {
+enum class ChessboardFloor(val floor: Floor?) : StringIdentifiable {
     INACTIVE(null), LIGHT(Floor.LIGHT), DARK(Floor.DARK), MOVE(Floor.MOVE), CAPTURE(Floor.CAPTURE),
     SPECIAL(Floor.SPECIAL), NOTHING(Floor.NOTHING), OTHER(Floor.OTHER),
     LAST_START(Floor.LAST_START), LAST_END(Floor.LAST_END);
@@ -62,7 +65,8 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
 
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
 
-    override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity = ChessboardFloorBlockEntity(pos, state)
+    override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity =
+        ChessboardFloorBlockEntity(pos, state)
 
     override fun onBreak(world: World?, pos: BlockPos?, state: BlockState?, player: PlayerEntity?) {
         if (world?.isClient == false) {

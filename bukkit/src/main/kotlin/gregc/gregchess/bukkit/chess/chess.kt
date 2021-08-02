@@ -28,11 +28,15 @@ val PieceType.localChar get() = section.getString("Char")!!.single()
 val PieceType.localName get() = section.getPathString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
 val PieceType.itemMaterial get() = BySides { Material.valueOf(section.getString("Item.${it.configName}")!!) }
-val PieceType.structure get() = BySides { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
+val PieceType.structure
+    get() = BySides { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
 
 val Piece.item get() = type.getItem(side)
 
-val MoveName.localName get() = joinToString("") { ChessModule.modules.firstNotNullOfOrNull { m -> m.bukkit.moveNameTokenToString(it.type, it.value) } ?: it.pgn }
+fun BukkitChessModule.moveNameTokenToString(token: MoveNameToken<*>) = moveNameTokenToString(token.type, token.value)
+val MoveNameToken<*>.localName
+    get() = ChessModule.modules.firstNotNullOfOrNull { it.bukkit.moveNameTokenToString(this) } ?: pgn
+val MoveName.localName get() = joinToString("") { it.localName }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
@@ -61,12 +65,13 @@ fun ChessGame.getInfo() = buildTextComponent {
 }
 
 val EndReason<*>.module get() = ChessModule[this].bukkit
+val EndReason<*>.configName get() = name.snakeToPascal()
 val GameResults<*>.name
-    get() = endReason.module.config.getPathString("Chess.EndReason.${endReason.name.snakeToPascal()}", *args.map { it.toString() }.toTypedArray())
+    get() = endReason.module.config.getPathString("Chess.EndReason.${endReason.configName}", *args.map { it.toString() }.toTypedArray())
 
 val GameResults<*>.message
     get() = score.let {
-        when(it) {
+        when (it) {
             is GameScore.Draw -> config.getPathString("Message.GameFinished.ItWasADraw", name)
             is GameScore.Victory -> config.getPathString("Message.GameFinished." + it.winner.configName + "Won", name)
         }

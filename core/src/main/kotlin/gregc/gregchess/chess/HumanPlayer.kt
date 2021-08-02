@@ -17,7 +17,7 @@ abstract class HumanPlayer(val name: String) {
     abstract fun showGameResults(side: Side, results: GameResults<*>)
     abstract fun showGameResults(results: GameResults<*>)
     abstract fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>)
-    abstract fun sendLastMoves(num:UInt, wLast: MoveData?, bLast: MoveData?)
+    abstract fun sendLastMoves(num: UInt, wLast: MoveData?, bLast: MoveData?)
 }
 
 abstract class MinecraftPlayer(val uuid: UUID, name: String) : HumanPlayer(name)

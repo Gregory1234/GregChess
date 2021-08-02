@@ -18,7 +18,7 @@ object HordeChess : ChessVariant("HORDE") {
         }
     }
 
-    override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when(piece.type) {
+    override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when (piece.type) {
         PieceType.PAWN -> PawnMovement(HordePawnConfig).generate(piece)
         else -> Normal.getPieceMoves(piece)
     }

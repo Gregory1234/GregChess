@@ -8,9 +8,11 @@ import kotlin.collections.component2
 import kotlin.collections.set
 
 class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
-    data class SetFenEvent(val FEN: FEN): ChessEvent
+    data class SetFenEvent(val FEN: FEN) : ChessEvent
 
-    class Settings(private val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) : Component.Settings<Chessboard> {
+    class Settings(private val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) :
+        Component.Settings<Chessboard> {
+
         override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
         fun genFEN(game: ChessGame) = initialFEN ?: game.variant.genFEN(chess960)
@@ -113,7 +115,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                 fullMoveCounter++
             }
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
-            squares.values.forEach {  s ->
+            squares.values.forEach { s ->
                 s.flags.forEach {
                     it.timeLeft--
                 }
@@ -140,7 +142,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             stop()
             sendPGN()
         }
-        else -> {}
+        else -> {
+        }
     }
 
     private fun stop() {
@@ -199,7 +202,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
 
         if (fen.enPassantSquare != null) {
-            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(EN_PASSANT, 0))
+            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(PawnMovement.EN_PASSANT, 0))
         }
 
         updateMoves()
@@ -223,7 +226,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
             boardState,
             game.currentTurn,
             BySides(::castling),
-            squares.values.firstOrNull { s -> s.flags.any { it.type == EN_PASSANT && it.timeLeft >= 0 } }?.pos,
+            squares.values.firstOrNull { s -> s.flags.any { it.type == PawnMovement.EN_PASSANT && it.timeLeft >= 0 } }?.pos,
             movesSinceLastCapture,
             fullMoveCounter
         )
@@ -280,7 +283,8 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
 
     fun nextCapturedPos(type: PieceType, by: Side): CapturedPos {
         val cap = capturedPieces.filter { it.pos.by == by }
-        return CapturedPos(by,
+        return CapturedPos(
+            by,
             if (type == PieceType.PAWN) Pair(cap.count { it.type == PieceType.PAWN }, 1)
             else Pair(cap.count { it.type != PieceType.PAWN }, 0)
         )

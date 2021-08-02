@@ -18,11 +18,11 @@ class GameSettings(
     inline fun <reified T : Component.Settings<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
 }
 
-enum class TurnEvent(val ending: Boolean): ChessEvent {
+enum class TurnEvent(val ending: Boolean) : ChessEvent {
     START(false), END(true), UNDO(true)
 }
 
-enum class GameBaseEvent: ChessEvent {
+enum class GameBaseEvent : ChessEvent {
     PRE_INIT,
     START,
     RUNNING,
@@ -44,7 +44,8 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
         try {
             requireComponent<Chessboard>()
             variant.requiredComponents.forEach {
-                settings.components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentSettingsNotFoundException(it)
+                settings.components.filterIsInstance(it.java).firstOrNull()
+                    ?: throw ComponentSettingsNotFoundException(it)
             }
             callEvent(GameBaseEvent.PRE_INIT)
         } catch (e: Exception) {

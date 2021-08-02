@@ -32,24 +32,31 @@ object GregChess : ModInitializer {
 
     val CHESSBOARD_FLOOR_ENTITY_TYPE: BlockEntityType<*> =
         BlockEntityType.Builder.create({ a, b -> ChessboardFloorBlockEntity(a, b) }, CHESSBOARD_FLOOR_BLOCK).build(
-            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chessboard_floor"))
+            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chessboard_floor")
+        )
 
     val CHESS_CONTROLLER_BLOCK: Block = ChessControllerBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
     val CHESS_CONTROLLER_ITEM: Item = BlockItem(CHESS_CONTROLLER_BLOCK, FabricItemSettings().group(CHESS_GROUP))
 
     val CHESS_CONTROLLER_ENTITY_TYPE: BlockEntityType<*> =
         BlockEntityType.Builder.create({ a, b -> ChessControllerBlockEntity(a, b) }, CHESS_CONTROLLER_BLOCK).build(
-            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chess_controller"))
+            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chess_controller")
+        )
 
     val CHESS_CONTROLLER_SCREEN_HANDLER_TYPE: ScreenHandlerType<ChessControllerGuiDescription> =
-        ScreenHandlerRegistry.registerSimple(ident("chess_controller")) {
-            syncId, inventory -> ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY) }
+        ScreenHandlerRegistry.registerSimple(ident("chess_controller")) { syncId, inventory ->
+            ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY)
+        }
 
     override fun onInitialize() {
 
         EntrypointUtils.invoke("chess", ChessInitializer::class.java, ChessInitializer::onInitializeChess)
-        PIECE_ENTITY_TYPE = BlockEntityType.Builder.create({ a, b -> PieceBlockEntity(a, b) },
-            *ChessModule.modules.flatMap { it.fabric.pieceBlocks.values }.toTypedArray()).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
+
+        PIECE_ENTITY_TYPE = BlockEntityType.Builder.create(
+            { a, b -> PieceBlockEntity(a, b) },
+            *ChessModule.modules.flatMap { it.fabric.pieceBlocks.values }.toTypedArray()
+        ).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
+
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)
         Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
         Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)

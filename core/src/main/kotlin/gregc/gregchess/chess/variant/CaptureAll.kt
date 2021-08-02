@@ -2,7 +2,7 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
 
-object CaptureAll: ChessVariant("CAPTURE_ALL") {
+object CaptureAll : ChessVariant("CAPTURE_ALL") {
     override fun getLegality(move: MoveCandidate): MoveLegality =
         if (Normal.isValid(move)) MoveLegality.LEGAL else MoveLegality.INVALID
 

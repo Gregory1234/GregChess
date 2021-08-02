@@ -24,6 +24,7 @@ val black get() = Side.BLACK
 
 enum class BoardSide(private val direction: Int, val castles: String) {
     QUEENSIDE(-1, "O-O-O"), KINGSIDE(1, "O-O");
+
     val dir get() = Dir(direction, 0)
 }
 
@@ -89,7 +90,7 @@ data class BySides<T>(val white: T, val black: T) {
     fun toMutableBySides() = MutableBySides(white, black)
 }
 
-class NoEngineMoveException(fen: FEN): Exception(fen.toString())
+class NoEngineMoveException(fen: FEN) : Exception(fen.toString())
 
 interface ChessEngine {
     val name: String

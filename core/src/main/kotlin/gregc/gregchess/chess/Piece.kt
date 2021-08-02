@@ -134,7 +134,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
             moves.forEach { (piece, target) ->
                 piece.hasMoved = true
                 target.piece?.let { p ->
-                    if (moves.keys.none {it.square == target})
+                    if (moves.keys.none { it.square == target })
                         throw PieceAlreadyOccupiesSquareException(p.piece, target.pos)
                 }
                 piece.square.piece = null

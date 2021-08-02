@@ -38,7 +38,7 @@ abstract class ChessPlayer(val name: String, val side: Side, protected val silen
 
 }
 
-class HeldPieceChangedEvent(val side: Side, val piece: BoardPiece? = null): ChessEvent
+class HeldPieceChangedEvent(val side: Side, val piece: BoardPiece? = null) : ChessEvent
 
 class HumanChessPlayer(val player: HumanPlayer, side: Side, silent: Boolean, game: ChessGame) :
     ChessPlayer(player.name, side, silent, game) {
@@ -111,7 +111,7 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
                 val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
                 val move = game.board.getMoves(origin).first { it.display.pos == target }
                 game.finishMove(move, promotion?.of(side))
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 e.printStackTrace()
                 game.stop(drawBy(EndReason.ERROR))
             }

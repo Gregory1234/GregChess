@@ -20,7 +20,8 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     }
 
 
-    class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) : Component.Settings<ChessClock> {
+    class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
+        Component.Settings<ChessClock> {
 
         fun getPGN() = buildString {
             if (type == Type.SIMPLE) {
@@ -91,7 +92,8 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
             GameBaseEvent.STOP -> stopTime = LocalDateTime.now()
             GameBaseEvent.UPDATE ->
                 Side.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
-            else -> {}
+            else -> {
+            }
         }
     }
 

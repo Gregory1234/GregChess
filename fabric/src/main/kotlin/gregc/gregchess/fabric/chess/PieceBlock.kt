@@ -36,10 +36,11 @@ class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChe
 
         return nbt
     }
+
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
 
-        if(nbt.containsUuid("GameUUID"))
+        if (nbt.containsUuid("GameUUID"))
             gameUUID = nbt.getUuid("GameUUID")
     }
 }
@@ -48,8 +49,12 @@ abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEnti
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
 
     override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity? = PieceBlockEntity(pos, state)
-    override fun getOutlineShape(state: BlockState?, view: BlockView?, pos: BlockPos?, context: ShapeContext?): VoxelShape? =
-        VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
+    override fun getOutlineShape(
+        state: BlockState?,
+        view: BlockView?,
+        pos: BlockPos?,
+        context: ShapeContext?
+    ): VoxelShape? = VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
 
     override fun onBreak(world: World, pos: BlockPos, state: BlockState?, player: PlayerEntity) {
         val blockEntity = world.getBlockEntity(pos)
@@ -70,9 +75,14 @@ abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEnti
         super.onBreak(world, pos, state, player)
     }
 
-    override fun appendTooltip(stack: ItemStack, world: BlockView?, tooltip: MutableList<Text>, options: TooltipContext?) {
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: BlockView?,
+        tooltip: MutableList<Text>,
+        options: TooltipContext?
+    ) {
         val data = stack.getSubNbt("BlockEntityTag")
-        if(data?.containsUuid("GameUUID") == true)
+        if (data?.containsUuid("GameUUID") == true)
             data.getUuid("GameUUID")?.let {
                 tooltip += LiteralText("Game: $it")
             }

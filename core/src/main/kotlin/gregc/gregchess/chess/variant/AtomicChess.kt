@@ -8,7 +8,7 @@ import kotlin.reflect.KClass
 
 object AtomicChess : ChessVariant("ATOMIC") {
 
-    data class ExplosionEvent(val pos: Pos): ChessEvent
+    data class ExplosionEvent(val pos: Pos) : ChessEvent
 
     class ExplosionManager(private val game: ChessGame) : Component {
         object Settings : Component.Settings<ExplosionManager> {

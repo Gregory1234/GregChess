@@ -73,7 +73,7 @@ private fun promotions(s: Side) = PieceType.run { listOf(QUEEN, ROOK, BISHOP, KN
 
 private const val ITERS = 50
 
-class MovementTests: FreeSpec({
+class MovementTests : FreeSpec({
 
     "Pawn" - {
         "if has moved" - {
@@ -195,7 +195,7 @@ class MovementTests: FreeSpec({
                 withData(BoardSide.values().toList()) { bs ->
                     checkAll(ITERS, arbPawnPos(s, 1, bs)) { pos ->
                         clearBoard(s.pawn at pos, (!s).pawn at pos + bs.dir)
-                        addFlags(EN_PASSANT to pos + s.dir + bs.dir)
+                        addFlags(PawnMovement.EN_PASSANT to pos + s.dir + bs.dir)
                         pos.canCaptureAt(pos + s.dir + bs.dir, pos + bs.dir)
                     }
                 }

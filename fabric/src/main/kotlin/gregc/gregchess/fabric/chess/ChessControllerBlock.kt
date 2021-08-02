@@ -50,7 +50,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
 
-        if(nbt.contains("ChessboardStart", 4) && nbt.contains("ChessboardEnd", 4)) {
+        if (nbt.contains("ChessboardStart", 4) && nbt.contains("ChessboardEnd", 4)) {
             chessboardStart = BlockPos.fromLong(nbt.getLong("ChessboardStart"))
             chessboardEnd = BlockPos.fromLong(nbt.getLong("ChessboardEnd"))
         }
@@ -65,30 +65,33 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         val dirs = mutableListOf(Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH)
         fun BlockPos.isFloor() = world?.getBlockState(this)?.block.let { it != null && it is ChessboardFloorBlock }
                 && (world?.getBlockEntity(this) as? ChessboardFloorBlockEntity)
-            .let { it != null && (it.chessControllerBlockPos == null || it.chessControllerBlockPos == pos)}
+            .let { it != null && (it.chessControllerBlockPos == null || it.chessControllerBlockPos == pos) }
         dirs.removeIf { d ->
-            (1..8*3).any { i ->
+            (1..8 * 3).any { i ->
                 !pos.offset(d, i).isFloor()
             }
         }
         dirs.forEach { d ->
             val o = listOf(d.rotateYClockwise(), d.rotateYCounterclockwise())
             o.forEach { d2 ->
-                if ((1..8*3).all { i -> (0 until 8*3).all { j -> pos.offset(d, i).offset(d2, j).isFloor() } }) {
+                if ((1..8 * 3).all { i -> (0 until 8 * 3).all { j -> pos.offset(d, i).offset(d2, j).isFloor() } }) {
                     val v1 = pos.offset(d)
-                    val v2 = pos.offset(d, 8*3).offset(d2, 8*3-1)
+                    val v2 = pos.offset(d, 8 * 3).offset(d2, 8 * 3 - 1)
                     chessboardStart = BlockPos(min(v1.x, v2.x), pos.y, min(v1.z, v2.z))
                     chessboardEnd = BlockPos(max(v1.x, v2.x), pos.y, max(v1.z, v2.z))
-                    (1..8*3).forEach { i -> (0 until 8*3).forEach { j ->
-                        (world?.getBlockEntity(pos.offset(d, i).offset(d2, j)) as? ChessboardFloorBlockEntity)?.let {
-                            it.chessControllerBlockPos = pos
-                            if (d2 == d.rotateYClockwise())
-                                it.boardPos = Pos(j/3, (i-1)/3)
-                            else
-                                it.boardPos = Pos(7-j/3, (i-1)/3)
-                            it.updateFloor()
+                    (1..8 * 3).forEach { i ->
+                        (0 until 8 * 3).forEach { j ->
+                            (world?.getBlockEntity(pos.offset(d, i).offset(d2, j)) as? ChessboardFloorBlockEntity)
+                                ?.let {
+                                    it.chessControllerBlockPos = pos
+                                    if (d2 == d.rotateYClockwise())
+                                        it.boardPos = Pos(j / 3, (i - 1) / 3)
+                                    else
+                                        it.boardPos = Pos(7 - j / 3, (i - 1) / 3)
+                                    it.updateFloor()
+                                }
                         }
-                    } }
+                    }
                     return true
                 }
             }
@@ -116,7 +119,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
                 for (x in s.x..e.x) {
                     for (y in s.y..e.y) {
                         for (z in s.z..e.z) {
-                            val block = world?.getBlockEntity(BlockPos(x,y,z)) as? ChessboardFloorBlockEntity
+                            val block = world?.getBlockEntity(BlockPos(x, y, z)) as? ChessboardFloorBlockEntity
                             if (block != null) {
                                 block.chessControllerBlockPos = null
                                 block.boardPos = null
@@ -186,7 +189,14 @@ class ChessControllerBlock(settings: Settings?) : BlockWithEntity(settings) {
         super.onBreak(world, pos, state, player)
     }
 
-    override fun onUse(state: BlockState, world: World?, pos: BlockPos?, player: PlayerEntity, hand: Hand?, hit: BlockHitResult?): ActionResult {
+    override fun onUse(
+        state: BlockState,
+        world: World?,
+        pos: BlockPos?,
+        player: PlayerEntity,
+        hand: Hand?,
+        hit: BlockHitResult?
+    ): ActionResult {
         player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
         return ActionResult.SUCCESS
     }

@@ -310,17 +310,24 @@ object GregChess : Listener {
         plugin.addCommandTab("chess") {
             fun ifPermission(perm: String): List<String>? =
                 if (player.hasPermission("greg-chess.chess.$perm")) null else emptyList()
+
             fun <T> ifPermission(perm: String, list: Array<T>) =
                 if (player.hasPermission("greg-chess.chess.$perm")) list.map { it.toString() } else emptyList()
+
             fun <T> ifPermissionPrefix(vararg list: T) =
                 list.map { it.toString() }.filter { player.hasPermission("greg-chess.chess.$it") }
+
             fun <T> ifInfo(vararg list: T) =
-                if (player.hasPermission("greg-chess.chess.info.ingame") || player.hasPermission("greg-chess.info.chess.remote")) list.map { it.toString() } else emptyList()
+                if (player.hasPermission("greg-chess.chess.info.ingame") || player.hasPermission("greg-chess.info.chess.remote"))
+                    list.map { it.toString() }
+                else
+                    emptyList()
 
             when (args.size) {
-                1 -> ifPermissionPrefix("duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move",
-                    "skip", "load", "save", "time", "uci", "spectate", "reload", "dev", "undo", "debug", "admin") +
-                        ifInfo("info")
+                1 -> ifPermissionPrefix(
+                    "duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move",
+                    "skip", "load", "save", "time", "uci", "spectate", "reload", "dev", "undo", "debug", "admin"
+                ) + ifInfo("info")
                 2 -> when (args[0]) {
                     "duel" -> ifPermission("duel")
                     "spawn" -> ifPermission("spawn", Side.values())
@@ -331,7 +338,7 @@ object GregChess : Listener {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("spawn", ChessModule.modules.flatMap { p -> p.pieceTypes.map { p.namespace + ":" + it.name.lowercase() } }.toTypedArray())
+                    "spawn" -> ifPermission("spawn", ChessModule.pieceTypes.keys.map { toString() }.toTypedArray())
                     "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }

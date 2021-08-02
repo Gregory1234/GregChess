@@ -13,7 +13,7 @@ object Antichess : ChessVariant("ANTICHESS") {
                 .map { it.of(piece.side) }
     }
 
-    override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when(piece.type) {
+    override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when (piece.type) {
         PieceType.PAWN -> PawnMovement(AntichessPawnConfig).generate(piece)
         else -> Normal.getPieceMoves(piece)
     }

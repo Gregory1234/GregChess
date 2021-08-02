@@ -13,12 +13,13 @@ interface Component {
 class AddPropertiesEvent(
     private val playerProperties: MutableMap<PropertyType<*>, PlayerProperty<*>>,
     private val gameProperties: MutableMap<PropertyType<*>, GameProperty<*>>
-): ChessEvent {
+) : ChessEvent {
     fun <T> player(id: PropertyType<T>, f: (Side) -> T) {
         playerProperties[id] = object : PlayerProperty<T>(id) {
             override fun invoke(s: Side): T = f(s)
         }
     }
+
     fun <T> game(id: PropertyType<T>, f: () -> T) {
         gameProperties[id] = object : GameProperty<T>(id) {
             override fun invoke(): T = f()

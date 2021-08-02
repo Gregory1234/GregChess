@@ -69,7 +69,8 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val currentTurn: Side,
         override val results: GameResults<*>
     ) : GameState(true, false, false), WithCurrentPlayer, WithStartTime, Ended {
-        constructor(running: Running, results: GameResults<*>) : this(running.players, running.startTime, running.currentTurn, results)
+        constructor(running: Running, results: GameResults<*>)
+                : this(running.players, running.startTime, running.currentTurn, results)
 
         override val white = players.white
         override val black = players.black

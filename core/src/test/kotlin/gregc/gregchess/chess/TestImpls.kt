@@ -17,7 +17,7 @@ fun testSettings(
     return GameSettings(name, false, variant, components)
 }
 
-class TestHuman(name: String): HumanPlayer(name) {
+class TestHuman(name: String) : HumanPlayer(name) {
 
     override fun sendPGN(pgn: PGN) {
     }
@@ -49,15 +49,17 @@ class TestComponent : Component {
 
     @ChessEventHandler
     @Suppress("UNUSED_PARAMETER")
-    fun handleEvents(e: GameBaseEvent) {}
+    fun handleEvents(e: GameBaseEvent) {
+    }
 
     @ChessEventHandler
     @Suppress("UNUSED_PARAMETER")
-    fun handleTurn(e: TurnEvent) {}
+    fun handleTurn(e: TurnEvent) {
+    }
 
 }
 
-object TestVariant: ChessVariant("TEST")
+object TestVariant : ChessVariant("TEST")
 
 @JvmField
 val TEST_END_REASON = DetEndReason("TEST", EndReason.Type.EMERGENCY)
@@ -68,6 +70,6 @@ inline fun <T> measureTime(block: () -> T): T {
     val start = System.nanoTime()
     val ret = block()
     val elapsed = System.nanoTime() - start
-    println("Elapsed time: ${elapsed.toDouble()/1_000_000}ms")
+    println("Elapsed time: ${elapsed.toDouble() / 1_000_000}ms")
     return ret
 }

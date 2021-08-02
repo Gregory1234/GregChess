@@ -94,7 +94,7 @@ enum class Floor {
     LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END
 }
 
-data class FloorUpdateEvent(val pos: Pos, val floor: Floor): ChessEvent
+data class FloorUpdateEvent(val pos: Pos, val floor: Floor) : ChessEvent
 
 class ChessFlagType(val name: String, val startTime: UInt) {
     override fun toString(): String = name

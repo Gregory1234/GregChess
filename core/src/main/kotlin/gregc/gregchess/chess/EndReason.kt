@@ -2,25 +2,28 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.GregChessModule
 
+private fun victoryPgn(winner: Side) = when(winner) {
+    Side.WHITE -> "1-0"
+    Side.BLACK -> "0-1"
+}
+
 sealed class GameScore(val pgn: String) {
-    class Victory(val winner: Side): GameScore(when(winner) {Side.WHITE -> "1-0"; Side.BLACK -> "0-1"})
+    class Victory(val winner: Side): GameScore(victoryPgn(winner))
     object Draw: GameScore("1/2-1/2")
 }
 
 typealias DetEndReason = EndReason<GameScore.Victory>
 typealias DrawEndReason = EndReason<GameScore.Draw>
 
-class EndReason<R: GameScore>(val name: String, val type: Type, val quick: Boolean = false) {
+class EndReason<R : GameScore>(val name: String, val type: Type, val quick: Boolean = false) {
 
     enum class Type(val pgn: String) {
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
     }
 
-
-
     override fun toString() = name
 
-    companion object{
+    companion object {
         @JvmField
         val CHECKMATE = GregChessModule.register(DetEndReason("CHECKMATE", Type.NORMAL))
         @JvmField
@@ -55,4 +58,4 @@ fun Side.lostBy(reason: DetEndReason, vararg args: Any?) = (!this).wonBy(reason,
 fun drawBy(reason: DrawEndReason, vararg args: Any?) = GameResults(reason, GameScore.Draw, args.toList())
 fun DrawEndReason.of(vararg args: Any?) = GameResults(this, GameScore.Draw, args.toList())
 
-data class GameResults<R: GameScore>(val endReason: EndReason<R>, val score: R, val args: List<Any?>)
+data class GameResults<R : GameScore>(val endReason: EndReason<R>, val score: R, val args: List<Any?>)

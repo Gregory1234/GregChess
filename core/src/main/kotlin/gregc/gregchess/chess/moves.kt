@@ -29,8 +29,27 @@ open class MoveCandidate(
     val mustCapture: Boolean = false, val display: Square = target
 ) {
 
-    override fun toString() =
-        "MoveCandidate(piece=${piece.piece}, target=${target.pos}, pass=[${pass.joinToString()}], help=[${help.map{it.piece}.joinToString()}], needed=[${needed.joinToString()}], control=${control?.pos}, promotions=$promotions, mustCapture=$mustCapture, display=${display.pos})"
+    override fun toString() = buildString {
+        append("MoveCandidate(piece=")
+        append(piece.piece)
+        append(", target=")
+        append(target.pos)
+        append(", pass=[")
+        append(pass.joinToString())
+        append("], help=[")
+        append(help.map { it.piece }.joinToString())
+        append("], needed=[")
+        append(needed.joinToString())
+        append("], control=")
+        append(control?.pos)
+        append(", promotions=")
+        append(promotions)
+        append(", mustCapture=")
+        append(mustCapture)
+        append(", display=")
+        append(display.pos)
+        append(")")
+    }
 
     val origin = piece.square
 
@@ -92,7 +111,7 @@ open class MoveCandidate(
 }
 
 class MoveNameTokenType<T>(val name: String, @JvmField val toPgnString: (T) -> String = Any?::toString) {
-    constructor(name: String, constPGN: String): this(name, { constPGN })
+    constructor(name: String, constPGN: String) : this(name, { constPGN })
 
     companion object {
         @JvmField
@@ -130,7 +149,8 @@ typealias MoveName = List<MoveNameToken<*>>
 val MoveName.pgn get() = joinToString("") { it.pgn }
 
 data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
-    constructor(pos: Pos): this(pos.file, pos.rank)
+    constructor(pos: Pos) : this(pos.file, pos.rank)
+
     val fileStr get() = file?.let { "${'a' + it}" }
     val rankStr get() = rank?.let { (it + 1).toString() }
     override fun toString(): String = fileStr.orEmpty() + rankStr.orEmpty()
@@ -165,7 +185,7 @@ fun MoveName.checkForChecks(side: Side, game: ChessGame): MoveName {
 fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Floor.CAPTURE
 
 fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
-    dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map{
+    dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map {
         MoveCandidate(piece, it, defaultColor(it), emptyList())
     }
 
@@ -173,11 +193,11 @@ fun interface MoveScheme {
     fun generate(piece: BoardPiece): List<MoveCandidate>
 }
 
-class JumpMovement(private val dirs: Collection<Dir>): MoveScheme {
+class JumpMovement(private val dirs: Collection<Dir>) : MoveScheme {
     override fun generate(piece: BoardPiece): List<MoveCandidate> = jumps(piece, dirs)
 }
 
-class RayMovement(private val dirs: Collection<Dir>): MoveScheme {
+class RayMovement(private val dirs: Collection<Dir>) : MoveScheme {
     override fun generate(piece: BoardPiece): List<MoveCandidate> =
         dirs.flatMap { dir ->
             PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
@@ -188,7 +208,7 @@ class RayMovement(private val dirs: Collection<Dir>): MoveScheme {
         }
 }
 
-object KingMovement: MoveScheme {
+object KingMovement : MoveScheme {
 
     class Castles(
         piece: BoardPiece, target: Square,
@@ -213,9 +233,9 @@ object KingMovement: MoveScheme {
             }
         }
 
-        override fun baseName(promotion: Piece?) = listOf(MoveNameTokenType.CASTLE.of(
-            if (piece.pos.file > rook.pos.file) BoardSide.QUEENSIDE else BoardSide.KINGSIDE
-        ))
+        val boardSide get() = if (piece.pos.file > rook.pos.file) BoardSide.QUEENSIDE else BoardSide.KINGSIDE
+
+        override fun baseName(promotion: Piece?) = listOf(MoveNameTokenType.CASTLE.of(boardSide))
     }
 
     override fun generate(piece: BoardPiece): List<MoveCandidate> {
@@ -266,16 +286,19 @@ open class PawnMovementConfig {
         listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT).map { it.of(piece.side) }
 }
 
-@JvmField
-val EN_PASSANT = ChessFlagType("EN_PASSANT", 1u)
 
-private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
-
-class PawnMovement(private val config: PawnMovementConfig = PawnMovementConfig()): MoveScheme {
+class PawnMovement(private val config: PawnMovementConfig = PawnMovementConfig()) : MoveScheme {
+    companion object {
+        @JvmField
+        val EN_PASSANT = ChessFlagType("EN_PASSANT", 1u)
+        private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
+    }
 
     class EnPassantCapture(piece: BoardPiece, target: Square, control: Square) :
-        MoveCandidate(piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true,
-        flagsNeeded = listOf(target.pos to EN_PASSANT)) {
+        MoveCandidate(
+            piece, target, Floor.CAPTURE, emptyList(), control = control, mustCapture = true,
+            flagsNeeded = listOf(target.pos to EN_PASSANT)
+        ) {
         override fun execute(promotion: Piece?): MoveData {
             val base = baseName(promotion)
             val hasMoved = piece.hasMoved
@@ -298,21 +321,27 @@ class PawnMovement(private val config: PawnMovementConfig = PawnMovementConfig()
 
             piece.square.board[piece.pos + piece.side.dir]?.let { t ->
                 val promotions = promotions(t.pos)
-                this += MoveCandidate(piece, t, ifProm(promotions, Floor.MOVE), emptyList(),
-                    control = null, promotions = promotions)
+                this += MoveCandidate(
+                    piece, t, ifProm(promotions, Floor.MOVE), emptyList(),
+                    control = null, promotions = promotions
+                )
             }
             if (config.canDouble(piece.info))
                 piece.square.board[piece.pos + piece.side.dir * 2]?.let { t ->
                     val promotions = promotions(t.pos)
                     val pass = piece.pos + piece.side.dir
-                    this += MoveCandidate(piece, t, ifProm(promotions, Floor.MOVE), listOf(pass),
-                        control = null, promotions = promotions, flagsAdded = listOf(pass to ChessFlag(EN_PASSANT)))
+                    this += MoveCandidate(
+                        piece, t, ifProm(promotions, Floor.MOVE), listOf(pass),
+                        control = null, promotions = promotions, flagsAdded = listOf(pass to ChessFlag(EN_PASSANT))
+                    )
                 }
             for (s in listOf(-1, 1)) {
                 piece.square.board[piece.pos + Pair(s, piece.side.direction)]?.let { t ->
                     val promotions = promotions(t.pos)
-                    this += MoveCandidate(piece, t, ifProm(promotions, Floor.CAPTURE), emptyList(),
-                        promotions = promotions, mustCapture = true)
+                    this += MoveCandidate(
+                        piece, t, ifProm(promotions, Floor.CAPTURE), emptyList(),
+                        promotions = promotions, mustCapture = true
+                    )
                 }
                 val p = piece.square.board[piece.pos.plusF(s)]
                 if (p != null)

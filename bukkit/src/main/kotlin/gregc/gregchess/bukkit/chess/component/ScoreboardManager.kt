@@ -9,13 +9,13 @@ import org.bukkit.Bukkit
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
-class ScoreboardManager(private val game: ChessGame): Component {
+class ScoreboardManager(private val game: ChessGame) : Component {
     object Settings : Component.Settings<ScoreboardManager> {
         override fun getComponent(game: ChessGame) = ScoreboardManager(game)
     }
 
     companion object {
-        private val TITLE = Message(config,"Scoreboard.Title")
+        private val TITLE = Message(config, "Scoreboard.Title")
         private fun whiteFormat(s: String) = config.getPathString("Scoreboard.Format.White", s)
         private fun blackFormat(s: String) = config.getPathString("Scoreboard.Format.Black", s)
         private fun generalFormat(s: String) = config.getPathString("Scoreboard.Format.General", s)
@@ -25,6 +25,7 @@ class ScoreboardManager(private val game: ChessGame): Component {
 
         @JvmField
         val PRESET = BukkitGregChessModule.register(PropertyType<String>("PRESET"))
+
         @JvmField
         val PLAYER = BukkitGregChessModule.register(PropertyType<String>("PLAYER"))
     }
@@ -50,20 +51,23 @@ class ScoreboardManager(private val game: ChessGame): Component {
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = when (e) {
         GameBaseEvent.UPDATE -> update()
-        else -> {}
+        else -> {
+        }
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) = when(e) {
+    fun onStart(e: GameStartStageEvent) = when (e) {
         GameStartStageEvent.INIT -> init()
         GameStartStageEvent.START -> start()
-        else -> {}
+        else -> {
+        }
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) = when(e) {
+    fun onStop(e: GameStopStageEvent) = when (e) {
         GameStopStageEvent.CLEAR, GameStopStageEvent.PANIC -> stop()
-        else -> {}
+        else -> {
+        }
     }
 
     private fun init() {

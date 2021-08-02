@@ -72,7 +72,7 @@ class GameEndEvent(val game: ChessGame) : Event() {
     }
 }
 
-class ChessGameEvent(val game: ChessGame, val event: ChessEvent): Event() {
+class ChessGameEvent(val game: ChessGame, val event: ChessEvent) : Event() {
     override fun getHandlers() = handlerList
 
     companion object {

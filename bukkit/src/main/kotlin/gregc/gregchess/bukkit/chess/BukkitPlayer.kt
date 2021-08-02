@@ -75,7 +75,8 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         player.inventory.setItem(i, piece?.item)
     }
 
-    override suspend fun openPawnPromotionMenu(promotions: Collection<Piece>): Piece = player.openPawnPromotionMenu(promotions)
+    override suspend fun openPawnPromotionMenu(promotions: Collection<Piece>): Piece =
+        player.openPawnPromotionMenu(promotions)
 
     override fun showGameResults(side: Side, results: GameResults<*>) {
         val wld = when (results.score) {
@@ -88,7 +89,8 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
     }
 
     override fun showGameResults(results: GameResults<*>) {
-        sendTitle(results.score.let { if (it is GameScore.Victory) SPECTATOR_WINNER[it.winner] else SPECTATOR_DRAW }.get(), results.name)
+        sendTitle(results.score.let { if (it is GameScore.Victory) SPECTATOR_WINNER[it.winner] else SPECTATOR_DRAW }
+            .get(), results.name)
         sendMessage(results.message)
     }
 
@@ -100,7 +102,7 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         if (status.size > 2)
             throw IllegalArgumentException(status.toString())
         val values = status.map {
-            when(it) {
+            when (it) {
                 GamePlayerStatus.START ->
                     BukkitGamePlayerStatus(YOU_ARE_PLAYING_AS_TITLE[side], YOU_ARE_PLAYING_AS_MSG[side], true)
                 GamePlayerStatus.IN_CHECK -> BukkitGamePlayerStatus(IN_CHECK_TITLE, IN_CHECK_MSG)

@@ -6,11 +6,11 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.interact
 import gregc.gregchess.seconds
 
-enum class GameStartStageEvent: ChessEvent {
+enum class GameStartStageEvent : ChessEvent {
     INIT, START, BEGIN
 }
 
-enum class GameStopStageEvent: ChessEvent {
+enum class GameStopStageEvent : ChessEvent {
     STOP, CLEAR, VERY_END, PANIC
 }
 
@@ -18,7 +18,7 @@ enum class PlayerDirection {
     JOIN, LEAVE
 }
 
-data class HumanPlayerEvent(val human: HumanPlayer, val dir: PlayerDirection): ChessEvent
+data class HumanPlayerEvent(val human: HumanPlayer, val dir: PlayerDirection) : ChessEvent
 
 class PlayerManager(private val game: ChessGame) : Component {
     object Settings : Component.Settings<PlayerManager> {
@@ -29,9 +29,8 @@ class PlayerManager(private val game: ChessGame) : Component {
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = with(game) {
-        when(e){
-            GameBaseEvent.START ->
-            {
+        when (e) {
+            GameBaseEvent.START -> {
                 players.forEachReal {
                     callEvent(HumanPlayerEvent(it, PlayerDirection.JOIN))
                 }
@@ -40,8 +39,7 @@ class PlayerManager(private val game: ChessGame) : Component {
                 variant.start(game)
                 callEvent(GameStartStageEvent.START)
             }
-            GameBaseEvent.RUNNING ->
-            {
+            GameBaseEvent.RUNNING -> {
                 callEvent(GameStartStageEvent.BEGIN)
                 runTaskTimer(0.seconds, 0.1.seconds) {
                     if (running)
@@ -50,8 +48,7 @@ class PlayerManager(private val game: ChessGame) : Component {
                         cancel()
                 }
             }
-            GameBaseEvent.STOP ->
-            {
+            GameBaseEvent.STOP -> {
                 val results = results!!
                 callEvent(GameStopStageEvent.STOP)
                 players.forEachUnique(currentTurn) {
@@ -77,15 +74,14 @@ class PlayerManager(private val game: ChessGame) : Component {
                     finishStopping()
                 }
             }
-            GameBaseEvent.STOPPED ->
-            {
+            GameBaseEvent.STOPPED -> {
                 callEvent(GameStopStageEvent.VERY_END)
             }
-            GameBaseEvent.PANIC ->
-            {
+            GameBaseEvent.PANIC -> {
                 callEvent(GameStopStageEvent.PANIC)
             }
-            else -> {}
+            else -> {
+            }
         }
     }
 }

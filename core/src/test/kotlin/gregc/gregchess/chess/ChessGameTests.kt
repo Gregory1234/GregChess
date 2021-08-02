@@ -45,7 +45,7 @@ fun componentExclude(c: TestComponent) {
     }
 }
 
-class ChessGameTests: FreeSpec({
+class ChessGameTests : FreeSpec({
 
     "ChessGame" - {
         "initializing should" - {

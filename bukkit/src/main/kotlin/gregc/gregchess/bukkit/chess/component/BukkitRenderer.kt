@@ -34,6 +34,7 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
 
         private val defaultSpawnLocation = Loc(4, 101, 4)
     }
+
     class Settings(val tileSize: Int, val offset: Loc = Loc(0, 0, 0)) : Component.Settings<BukkitRenderer> {
         val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
         val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
@@ -67,6 +68,7 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
 
     private fun fill(from: Loc, to: Loc, mat: Material) =
         fill(FillVolume(world, mat, from + settings.offset, to + settings.offset))
+
     private fun fillBorder(from: Loc, to: Loc, mat: Material) =
         fillBorder(FillVolume(world, mat, from + settings.offset, to + settings.offset))
 
@@ -132,15 +134,17 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) = when(e) {
+    fun onStart(e: GameStartStageEvent) = when (e) {
         GameStartStageEvent.START -> renderBoardBase()
-        else -> {}
+        else -> {
+        }
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) = when(e) {
+    fun onStop(e: GameStopStageEvent) = when (e) {
         GameStopStageEvent.CLEAR, GameStopStageEvent.PANIC -> removeBoard()
-        else -> {}
+        else -> {
+        }
     }
 
     @ChessEventHandler
@@ -151,10 +155,10 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
         val pos = e.piece.pos
         val loc = pos.loc
         val piece = e.piece.piece
-        when(e) {
+        when (e) {
             is PieceEvent.Created -> piece.render(loc)
             is PieceEvent.Cleared -> clearPiece(loc)
-            is PieceEvent.Action -> when(e.type) {
+            is PieceEvent.Action -> when (e.type) {
                 PieceEvent.ActionType.PICK_UP -> {
                     clearPiece(loc)
                     playPieceSound(pos, "PickUp", piece.type)

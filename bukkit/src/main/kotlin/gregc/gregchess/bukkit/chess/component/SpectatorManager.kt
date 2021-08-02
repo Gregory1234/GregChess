@@ -34,7 +34,8 @@ class SpectatorManager(private val game: ChessGame) : Component {
     fun onStop(e: GameStopStageEvent) = when (e) {
         GameStopStageEvent.STOP -> stop()
         GameStopStageEvent.CLEAR -> clear()
-        else -> {}
+        else -> {
+        }
     }
 
     private fun stop() {

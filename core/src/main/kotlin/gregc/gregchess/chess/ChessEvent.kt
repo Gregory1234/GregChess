@@ -13,7 +13,9 @@ annotation class ChessEventHandler
 
 fun Component.callEvent(e: ChessEvent) {
     this::class.members.forEach { f ->
-        if (f.annotations.any { it is ChessEventHandler } && f.parameters.size == 2 && f.parameters[1].type.isSupertypeOf(e::class.starProjectedType)) {
+        if (f.annotations.any { it is ChessEventHandler } && f.parameters.size == 2 &&
+            f.parameters[1].type.isSupertypeOf(e::class.starProjectedType)
+        ) {
             f.call(this, e)
         }
     }

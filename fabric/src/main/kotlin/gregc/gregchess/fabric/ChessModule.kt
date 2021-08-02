@@ -11,7 +11,7 @@ import net.minecraft.util.Rarity
 import net.minecraft.util.registry.Registry
 
 
-interface FabricChessModule: ChessModule {
+interface FabricChessModule : ChessModule {
     val pieceBlocks: Map<Piece, PieceBlock>
     val pieceItems: Map<Piece, BlockItem>
 }
@@ -20,7 +20,7 @@ val MainChessModule.fabric
     get() = if (this is FabricChessModule) this
     else extensions.filterIsInstance<FabricChessModule>().first()
 
-object FabricGregChessModule: FabricChessModule, ChessModuleExtension {
+object FabricGregChessModule : FabricChessModule, ChessModuleExtension {
     override val base = GregChessModule
 
     private val pieceBlocks_ = mutableMapOf<Piece, PieceBlock>()
@@ -36,6 +36,7 @@ object FabricGregChessModule: FabricChessModule, ChessModuleExtension {
             Registry.register(Registry.ITEM, of(it).id, item)
         }
     }
+
     private fun PieceType.tall(rarity: Rarity) {
         Side.forEach {
             val block = TallPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))

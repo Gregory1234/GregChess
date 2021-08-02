@@ -2,7 +2,7 @@ package gregc.gregchess
 
 import kotlin.coroutines.*
 
-class InteractionController: Continuation<Unit> {
+class InteractionController : Continuation<Unit> {
     override val context: CoroutineContext
         get() = EmptyCoroutineContext
 

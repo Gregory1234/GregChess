@@ -55,7 +55,8 @@ private var Player.playerData: PlayerData
 
 object ArenaManager : Listener {
     @JvmField
-    val ARENA_REMOVED = BukkitGregChessModule.register(DrawEndReason("ARENA_REMOVED", EndReason.Type.EMERGENCY, quick = true))
+    val ARENA_REMOVED =
+        BukkitGregChessModule.register(DrawEndReason("ARENA_REMOVED", EndReason.Type.EMERGENCY, quick = true))
 
     private val arenas = mutableListOf<Arena>()
 
@@ -97,7 +98,7 @@ object ArenaManager : Listener {
 }
 
 
-class Arena(val name: String, var game: ChessGame? = null): Component.Settings<Arena.Usage> {
+class Arena(val name: String, var game: ChessGame? = null) : Component.Settings<Arena.Usage> {
     companion object {
         private val defData = PlayerData(allowFlight = true, isFlying = true)
 
@@ -105,7 +106,7 @@ class Arena(val name: String, var game: ChessGame? = null): Component.Settings<A
         private val adminData = defData.copy(gameMode = GameMode.CREATIVE)
     }
 
-    class Usage(val arena: Arena, private val game: ChessGame): Component {
+    class Usage(val arena: Arena, private val game: ChessGame) : Component {
 
         private val data = mutableMapOf<UUID, PlayerData>()
 
@@ -132,14 +133,16 @@ class Arena(val name: String, var game: ChessGame? = null): Component.Settings<A
         @ChessEventHandler
         fun handleEvents(e: GameBaseEvent) = when (e) {
             GameBaseEvent.PRE_INIT -> addGame()
-            else -> {}
+            else -> {
+            }
         }
 
         @ChessEventHandler
         fun onStop(e: GameStopStageEvent) = when (e) {
             GameStopStageEvent.VERY_END -> removeGame()
             GameStopStageEvent.PANIC -> evacuate()
-            else -> {}
+            else -> {
+            }
         }
 
         private fun addGame() {
@@ -156,8 +159,8 @@ class Arena(val name: String, var game: ChessGame? = null): Component.Settings<A
         }
 
         @ChessEventHandler
-        fun handleSpectator(p: SpectatorEvent) = (p.human as? BukkitPlayer)?.run{
-            when(p.dir) {
+        fun handleSpectator(p: SpectatorEvent) = (p.human as? BukkitPlayer)?.run {
+            when (p.dir) {
                 PlayerDirection.JOIN -> join(spectatorData)
                 PlayerDirection.LEAVE -> leave()
             }

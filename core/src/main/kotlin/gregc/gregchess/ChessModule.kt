@@ -8,10 +8,10 @@ import gregc.gregchess.chess.variant.*
 interface ChessModule {
     companion object {
         val modules = mutableSetOf<MainChessModule>()
-        operator fun get(pieceType: PieceType) = modules.first {pieceType in it.pieceTypes}
-        operator fun get(endReason: EndReason<*>) = modules.first {endReason in it.endReasons}
-        operator fun get(propertyType: PropertyType<*>) = modules.first {propertyType in it.propertyTypes}
-        operator fun get(variant: ChessVariant) = modules.first {variant in it.variants}
+        operator fun get(pieceType: PieceType) = modules.first { pieceType in it.pieceTypes }
+        operator fun get(endReason: EndReason<*>) = modules.first { endReason in it.endReasons }
+        operator fun get(propertyType: PropertyType<*>) = modules.first { propertyType in it.propertyTypes }
+        operator fun get(variant: ChessVariant) = modules.first { variant in it.variants }
         fun getOrNull(namespace: String) = modules.firstOrNull { it.namespace == namespace }
         operator fun get(namespace: String) = modules.first { it.namespace == namespace }
     }
@@ -23,23 +23,36 @@ interface ChessModule {
     fun load()
 }
 
-interface MainChessModule: ChessModule {
+interface MainChessModule : ChessModule {
     val extensions: MutableCollection<ChessModuleExtension>
     val namespace: String
 }
 
-interface ChessModuleExtension: ChessModule {
+interface ChessModuleExtension : ChessModule {
     val base: MainChessModule
 }
 
-object GregChessModule: MainChessModule {
+object GregChessModule : MainChessModule {
     private val pieceTypes_ = mutableListOf<PieceType>()
     private val endReasons_ = mutableListOf<EndReason<*>>()
     private val propertyTypes_ = mutableListOf<PropertyType<*>>()
-    internal fun register(pieceType: PieceType): PieceType { pieceTypes_ += pieceType; return pieceType }
-    internal fun <T: GameScore> register(endReason: EndReason<T>): EndReason<T> { endReasons_ += endReason; return endReason }
-    internal fun <T> register(propertyType: PropertyType<T>): PropertyType<T> { propertyTypes_ += propertyType; return propertyType }
-    private val variants_ = listOf(ChessVariant.Normal, Antichess, AtomicChess, CaptureAll, HordeChess, KingOfTheHill, ThreeChecks)
+    internal fun register(pieceType: PieceType): PieceType {
+        pieceTypes_ += pieceType
+        return pieceType
+    }
+
+    internal fun <T : GameScore> register(endReason: EndReason<T>): EndReason<T> {
+        endReasons_ += endReason
+        return endReason
+    }
+
+    internal fun <T> register(propertyType: PropertyType<T>): PropertyType<T> {
+        propertyTypes_ += propertyType
+        return propertyType
+    }
+
+    private val variants_ =
+        listOf(ChessVariant.Normal, Antichess, AtomicChess, CaptureAll, HordeChess, KingOfTheHill, ThreeChecks)
     override val pieceTypes get() = pieceTypes_.toList() + extensions.flatMap { it.pieceTypes }
     override val variants get() = variants_ + extensions.flatMap { it.variants }
     override val endReasons get() = endReasons_.toList() + extensions.flatMap { it.endReasons }
