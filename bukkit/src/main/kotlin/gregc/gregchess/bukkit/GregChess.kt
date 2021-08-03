@@ -337,7 +337,7 @@ object GregChess : Listener {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("spawn", ChessModule.pieceTypes.keys.map { toString() }.toTypedArray())
+                    "spawn" -> ifPermission("spawn", ChessModule.pieceTypes.keys.map(Any::toString).toTypedArray())
                     "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }

@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import kotlin.math.abs
 
 class MoveData(
     val piece: Piece, val origin: Square, val target: Square, val name: MoveName,
@@ -243,36 +244,52 @@ object KingMovement : MoveScheme {
         val game = piece.square.game
 
         if (!piece.hasMoved)
-            game.board.piecesOf(piece.side, PieceType.ROOK)
-                .filter { !it.hasMoved && it.pos.rank == piece.pos.rank }
-                .forEach { rook ->
+            for (rook in game.board.piecesOf(piece.side, PieceType.ROOK)) {
+                if (rook.hasMoved || rook.pos.rank != piece.pos.rank)
+                    continue
 
-                    if (game.settings.simpleCastling) {
-                        TODO()
+                if (game.settings.simpleCastling) {
+                    val target: Square
+                    val rookTarget: Square
+                    if (abs(rook.pos.file - piece.pos.file) == 1) {
+                        target = rook.square
+                        rookTarget = piece.square
                     } else {
-                        val target: Square
-                        val rookTarget: Square
-                        val pass: List<Pos>
-                        val needed: List<Pos>
-                        if (piece.pos.file > rook.pos.file) {
-                            target = game.board[piece.pos.copy(file = 2)]!!
-                            rookTarget = game.board[piece.pos.copy(file = 3)]!!
-                            pass = between(piece.pos.file, 2).map { piece.pos.copy(file = it) }
-                            needed = (rook.pos.file..3).map { piece.pos.copy(file = it) }
-                        } else {
-                            target = game.board[piece.pos.copy(file = 6)]!!
-                            rookTarget = game.board[piece.pos.copy(file = 5)]!!
-                            pass = between(piece.pos.file, 6).map { piece.pos.copy(file = it) }
-                            needed = (rook.pos.file..5).map { piece.pos.copy(file = it) }
-                        }
-                        castles += Castles(
-                            piece, target,
-                            rook, rookTarget,
-                            pass + piece.pos, pass + needed,
-                            if (game.board.chess960) rook.square else target
-                        )
+                        target = game.board[piece.pos.copy(file = piece.pos.file.towards(rook.pos.file, 2))]!!
+                        rookTarget = game.board[piece.pos.copy(file = piece.pos.file.towards(rook.pos.file, 1))]!!
                     }
+                    val pass = between(piece.pos.file, target.pos.file).map { piece.pos.copy(file = it) }
+                    val needed = between(piece.pos.file, rook.pos.file).map { piece.pos.copy(file = it) }
+                    castles += Castles(
+                        piece, target,
+                        rook, rookTarget,
+                        pass + piece.pos, needed,
+                        target
+                    )
+                } else {
+                    val target: Square
+                    val rookTarget: Square
+                    val pass: List<Pos>
+                    val needed: List<Pos>
+                    if (piece.pos.file > rook.pos.file) {
+                        target = game.board[piece.pos.copy(file = 2)]!!
+                        rookTarget = game.board[piece.pos.copy(file = 3)]!!
+                        pass = between(piece.pos.file, 2).map { piece.pos.copy(file = it) }
+                        needed = (rook.pos.file..3).map { piece.pos.copy(file = it) }
+                    } else {
+                        target = game.board[piece.pos.copy(file = 6)]!!
+                        rookTarget = game.board[piece.pos.copy(file = 5)]!!
+                        pass = between(piece.pos.file, 6).map { piece.pos.copy(file = it) }
+                        needed = (rook.pos.file..5).map { piece.pos.copy(file = it) }
+                    }
+                    castles += Castles(
+                        piece, target,
+                        rook, rookTarget,
+                        pass + piece.pos, pass + needed,
+                        if (game.board.chess960) rook.square else target
+                    )
                 }
+            }
 
         return jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)) + castles
     }
