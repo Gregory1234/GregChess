@@ -129,10 +129,9 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) = when (e) {
-        GameBaseEvent.START -> setFromFEN(settings.genFEN(game))
-        else -> {
-        }
+    fun handleEvents(e: GameBaseEvent) {
+        if (e == GameBaseEvent.START)
+            setFromFEN(settings.genFEN(game))
     }
 
     operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uuid == pieceUniqueId }

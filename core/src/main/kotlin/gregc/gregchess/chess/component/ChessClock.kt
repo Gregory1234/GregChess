@@ -87,14 +87,11 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) {
-        when (e) {
-            GameBaseEvent.START -> if (settings.type == Type.FIXED) startTimer()
-            GameBaseEvent.STOP -> stopTime = LocalDateTime.now()
-            GameBaseEvent.UPDATE ->
-                for (it in Side.values()) if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it)
-            else -> {
-            }
-        }
+        if (e == GameBaseEvent.START && settings.type == Type.FIXED) startTimer()
+        else if (e == GameBaseEvent.STOP) stopTime = LocalDateTime.now()
+        else if (e == GameBaseEvent.UPDATE)
+            for (it in Side.values())
+                if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it)
     }
 
     @ChessEventHandler

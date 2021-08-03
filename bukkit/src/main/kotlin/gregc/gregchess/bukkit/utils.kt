@@ -122,9 +122,8 @@ fun <T> T?.cNotNull(msg: Message): T = this ?: throw CommandException(msg)
 
 inline fun <reified T, reified R : T> T.cCast(msg: Message): R = (this as? R).cNotNull(msg)
 
-
-fun cPerms(p: CommandSender, perm: String) {
-    cRequire(p.hasPermission(perm), NO_PERMISSION)
+fun CommandSender.cPerms(perm: String) {
+    cRequire(hasPermission(perm), NO_PERMISSION)
 }
 
 fun cPlayer(p: CommandSender) {
@@ -134,7 +133,7 @@ fun cPlayer(p: CommandSender) {
     cRequire(p is Player, NOT_PLAYER)
 }
 
-fun cServerPlayer(name: String) = Bukkit.getPlayer(name).cNotNull(PLAYER_NOT_FOUND)
+fun String.cPlayer() = Bukkit.getPlayer(this).cNotNull(PLAYER_NOT_FOUND)
 
 fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
     cRequire(args.size in min..max, WRONG_ARGUMENTS_NUMBER)
@@ -176,13 +175,6 @@ class BuildTextComponentScope {
 inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
     BuildTextComponentScope().apply(f).returnValue
 
-fun CommandSender.sendCommandMessage(msg: String, action: String, command: String) {
-    spigot().sendMessage(buildTextComponent {
-        append(msg.chatColor())
-        append(" ")
-        append(action.chatColor(), ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
-    })
-}
 
 fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
 

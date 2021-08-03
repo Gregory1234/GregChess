@@ -50,25 +50,21 @@ class ScoreboardManager(private val game: ChessGame) : Component {
     }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) = when (e) {
-        GameBaseEvent.UPDATE -> update()
-        else -> {
-        }
+    fun handleEvents(e: GameBaseEvent) {
+        if (e == GameBaseEvent.UPDATE)
+            update()
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) = when (e) {
-        GameStartStageEvent.INIT -> init()
-        GameStartStageEvent.START -> start()
-        else -> {
-        }
+    fun onStart(e: GameStartStageEvent) {
+        if (e == GameStartStageEvent.INIT) init()
+        else if (e == GameStartStageEvent.START) start()
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) = when (e) {
-        GameStopStageEvent.CLEAR, GameStopStageEvent.PANIC -> stop()
-        else -> {
-        }
+    fun onStop(e: GameStopStageEvent) {
+        if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC)
+            stop()
     }
 
     private fun init() {

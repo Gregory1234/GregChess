@@ -1,6 +1,8 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.interact
+import net.md_5.bungee.api.chat.ClickEvent
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -42,6 +44,14 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     suspend inline fun invalidSender(s: Player, block: () -> Boolean) {
         if (block())
             invalidSender(s)
+    }
+
+    private fun CommandSender.sendCommandMessage(msg: String, action: String, command: String) {
+        spigot().sendMessage(buildTextComponent {
+            append(msg.chatColor())
+            append(" ")
+            append(action.chatColor(), ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
+        })
     }
 
     private fun call(request: Request, simple: Boolean) {

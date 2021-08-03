@@ -60,7 +60,7 @@ object GregChess : Listener {
 
     private val duelRequest = RequestManager.register("Duel", "/chess duel accept", "/chess duel cancel")
 
-    private fun CommandArgs.perms(c: String = latestArg().lowercase()) = cPerms(player, "greg-chess.chess.$c")
+    private fun CommandArgs.perms(c: String = latestArg().lowercase()) = player.cPerms("greg-chess.chess.$c")
 
     fun onEnable() {
         registerEvents()
@@ -91,7 +91,7 @@ object GregChess : Listener {
                         }
                         else -> {
                             endArgs()
-                            val opponent = cServerPlayer(latestArg())
+                            val opponent = latestArg().cPlayer()
                             cRequire(!opponent.isInGame, OPPONENT_IN_GAME)
                             interact {
                                 val settings = player.openSettingsMenu()
@@ -254,7 +254,7 @@ object GregChess : Listener {
                 "spectate" -> {
                     cPlayer(player)
                     perms()
-                    val toSpectate = cServerPlayer(lastArg())
+                    val toSpectate = lastArg().cPlayer()
                     player.spectatedGame = toSpectate.currentGame.cNotNull(PLAYER_NOT_IN_GAME)
                 }
                 "reload" -> {

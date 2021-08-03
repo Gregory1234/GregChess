@@ -128,17 +128,15 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) = when (e) {
-        GameStartStageEvent.START -> renderBoardBase()
-        else -> {
-        }
+    fun onStart(e: GameStartStageEvent) {
+        if (e == GameStartStageEvent.START)
+            renderBoardBase()
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) = when (e) {
-        GameStopStageEvent.CLEAR, GameStopStageEvent.PANIC -> removeBoard()
-        else -> {
-        }
+    fun onStop(e: GameStopStageEvent)  {
+        if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC)
+            removeBoard()
     }
 
     @ChessEventHandler

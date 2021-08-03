@@ -131,7 +131,7 @@ class BukkitPlayer(val player: Player, side: Side, val silent: Boolean, game: Ch
         private val YOU_ARE_PLAYING_AS_MSG = bySides { message("YouArePlayingAs.${it.configName}") }
 
         private val IN_CHECK_TITLE = title("InCheck")
-        private val YOU_ARE_PLAYING_AS_TITLE get() = bySides { title("YouArePlayingAs.${it.configName}") }
+        private val YOU_ARE_PLAYING_AS_TITLE = bySides { title("YouArePlayingAs.${it.configName}") }
         private val YOUR_TURN = title("YourTurn")
     }
 

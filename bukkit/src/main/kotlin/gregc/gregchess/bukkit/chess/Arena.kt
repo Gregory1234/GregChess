@@ -133,18 +133,15 @@ class Arena(val name: String, var game: ChessGame? = null) : Component.Settings<
         }
 
         @ChessEventHandler
-        fun handleEvents(e: GameBaseEvent) = when (e) {
-            GameBaseEvent.PRE_INIT -> addGame()
-            else -> {
-            }
+        fun handleEvents(e: GameBaseEvent) {
+            if (e == GameBaseEvent.PRE_INIT)
+                addGame()
         }
 
         @ChessEventHandler
-        fun onStop(e: GameStopStageEvent) = when (e) {
-            GameStopStageEvent.VERY_END -> removeGame()
-            GameStopStageEvent.PANIC -> evacuate()
-            else -> {
-            }
+        fun onStop(e: GameStopStageEvent) {
+            if (e == GameStopStageEvent.VERY_END) removeGame()
+            else if (e == GameStopStageEvent.PANIC) evacuate()
         }
 
         private fun addGame() {
