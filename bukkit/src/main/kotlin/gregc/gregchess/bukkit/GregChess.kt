@@ -38,8 +38,7 @@ object GregChess : Listener {
         }
     }
 
-    val plugin
-        get() = Plugin.INSTANCE
+    val plugin get() = Plugin.INSTANCE
 
     private val CLOCK_NOT_FOUND = err("ClockNotFound")
     private val ENGINE_NOT_FOUND = err("EngineNotFound")
@@ -66,9 +65,9 @@ object GregChess : Listener {
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
-        plugin.server.pluginManager.plugins.filterIsInstance<BukkitChessPlugin>().forEach {
-            it.onInitialize()
-        }
+        for (p in plugin.server.pluginManager.plugins)
+            if (p is BukkitChessPlugin)
+                p.onInitialize()
         ChessGameManager.start()
         ArenaManager.start()
         RequestManager.start()

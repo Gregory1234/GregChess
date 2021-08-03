@@ -18,7 +18,7 @@ data class FEN(
                 val rows = List(8) { ri ->
                     var e = 0
                     buildString {
-                        (0 until 8).forEach { i ->
+                        for (i in 0 until 8) {
                             val p = pieces[Pos(i, ri)]
                             if (p == null)
                                 e++
@@ -46,7 +46,7 @@ data class FEN(
             val rows = state.split('/')
             rows.forEachIndexed { ri, r ->
                 var i = 0
-                r.forEach { c ->
+                for (c in r) {
                     if (c in '1'..'8') {
                         repeat(c.digitToInt()) { j -> block(Pos(i + j, 7 - ri), null) }
                         i += c.digitToInt()
@@ -124,8 +124,8 @@ data class FEN(
                     .sumOf { if (it.isDigit()) it.digitToInt() else 1 } != 4) return true
             if ("kq".any { it in castling } && blackRow.takeWhile { it != 'k' }
                     .sumOf { if (it.isDigit()) it.digitToInt() else 1 } != 4) return true
-            castling.forEach {
-                when (it) {
+            for (c in castling) {
+                when (c) {
                     'K' -> if (!whiteRow.endsWith('R')) return true
                     'Q' -> if (!whiteRow.startsWith('R')) return true
                     'k' -> if (!blackRow.endsWith('r')) return true

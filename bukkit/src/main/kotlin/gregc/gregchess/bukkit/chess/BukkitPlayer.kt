@@ -120,9 +120,8 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
             else
                 sendTitle(values[0].title.get(), values[1].title.get())
         }
-        values.forEach {
-            it.msg?.let(::sendMessage)
-        }
+        for (v in values)
+            v.msg?.let(::sendMessage)
     }
 
     override fun sendLastMoves(num: UInt, wLast: MoveData?, bLast: MoveData?) {

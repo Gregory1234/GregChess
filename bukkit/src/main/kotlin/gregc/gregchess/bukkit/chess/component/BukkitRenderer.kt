@@ -73,13 +73,12 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
         fillBorder(FillVolume(world, mat, from + settings.offset, to + settings.offset))
 
     private fun Piece.render(loc: Loc) {
-        type.structure[side].forEachIndexed { i, m ->
+        for ((i, m) in type.structure[side].withIndex())
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
-        }
     }
 
     private fun clearPiece(loc: Loc) {
-        (0..10).forEach { i ->
+        for (i in 0..10) {
             fill(FillVolume(world, Material.AIR, loc.copy(y = loc.y + i)))
         }
     }
@@ -188,10 +187,10 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
                 playPieceSound(pos, "Move", piece.type)
             }
             is PieceEvent.MultiMoved -> {
-                e.moves.forEach { (_, f) ->
+                for ((_, f) in e.moves) {
                     clearPiece(f.loc)
                 }
-                e.moves.forEach { (p, _) ->
+                for ((p, _) in e.moves) {
                     p.piece.render(p.pos.loc)
                     playPieceSound(p.pos, "Move", p.type)
                 }

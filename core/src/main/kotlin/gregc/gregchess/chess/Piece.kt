@@ -131,7 +131,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     companion object {
         fun autoMove(moves: Map<BoardPiece, Square>) {
             val org = moves.mapValues { (p, _) -> p.pos }
-            moves.forEach { (piece, target) ->
+            for ((piece, target) in moves) {
                 piece.hasMoved = true
                 target.piece?.let { p ->
                     if (moves.keys.none { it.square == target })
@@ -140,7 +140,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
                 piece.square.piece = null
                 piece.square = target
             }
-            moves.forEach { (piece, target) ->
+            for ((piece, target) in moves) {
                 target.piece = piece
             }
             org.keys.firstOrNull()?.game?.callEvent(PieceEvent.MultiMoved(org))

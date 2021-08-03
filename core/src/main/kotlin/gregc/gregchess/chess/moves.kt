@@ -64,9 +64,8 @@ open class MoveCandidate(
         piece.move(target)
         promotion?.let { piece.promote(it) }
         game.variant.finishMove(this)
-        flagsAdded.forEach { (p, f) ->
+        for ((p, f) in flagsAdded)
             game.board[p]?.flags?.plusAssign(f)
-        }
         val hmc =
             if (piece.type == PieceType.PAWN || ct != null) board.resetMovesSinceLastCapture() else board.increaseMovesSinceLastCapture()
         val ch = base.checkForChecks(piece.side, game)

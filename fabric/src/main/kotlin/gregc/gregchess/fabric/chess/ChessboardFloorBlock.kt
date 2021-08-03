@@ -26,6 +26,7 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
         boardPos?.let {
             nbt.putLong("Pos", ((it.file.toLong() shl 32) or (it.rank.toLong() and 0xFFFFFFFFL)))
         }
+        println("$boardPos $nbt")
         return nbt
     }
 

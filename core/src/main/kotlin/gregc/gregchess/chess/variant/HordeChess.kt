@@ -13,7 +13,7 @@ object HordeChess : ChessVariant("HORDE") {
     }
 
     override fun chessboardSetup(board: Chessboard) {
-        board.piecesOf(white, PieceType.PAWN).forEach {
+        for (it in board.piecesOf(white, PieceType.PAWN)) {
             it.force(false)
         }
     }

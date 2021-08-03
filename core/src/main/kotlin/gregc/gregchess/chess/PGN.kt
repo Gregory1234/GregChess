@@ -21,7 +21,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
             if (initial == black) {
                 append(initialMove, ". ")
             }
-            moves.forEachIndexed { index, moveData ->
+            for ((index, moveData) in moves.withIndex()) {
                 if (index % 2 == 0)
                     append((index.toUInt() + indexShift).div(2u) + 1u, ". ")
                 append(moveData.name.pgn, " ")

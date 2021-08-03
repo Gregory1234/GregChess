@@ -2,6 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.fabric.*
+import gregc.gregchess.rangeTo
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.client.CottonInventoryScreen
@@ -24,7 +25,7 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import kotlin.math.max
+import kotlin.math.abs
 import kotlin.math.min
 
 
@@ -32,16 +33,12 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChess.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder {
     //var currentGame: ChessGame? = null
     var chessboardStart: BlockPos? by BlockEntityDirtyDelegate(null)
-    var chessboardEnd: BlockPos? by BlockEntityDirtyDelegate(null)
 
     override fun writeNbt(nbt: NbtCompound): NbtCompound {
         super.writeNbt(nbt)
 
         chessboardStart?.let {
             nbt.putLong("ChessboardStart", it.asLong())
-        }
-        chessboardEnd?.let {
-            nbt.putLong("ChessboardEnd", it.asLong())
         }
 
         return nbt
@@ -50,9 +47,8 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
 
-        if (nbt.contains("ChessboardStart", 4) && nbt.contains("ChessboardEnd", 4)) {
+        if (nbt.contains("ChessboardStart", 4)) {
             chessboardStart = BlockPos.fromLong(nbt.getLong("ChessboardStart"))
-            chessboardEnd = BlockPos.fromLong(nbt.getLong("ChessboardEnd"))
         }
     }
 
@@ -63,34 +59,34 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     fun detectBoard(): Boolean {
         val dirs = mutableListOf(Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH)
-        fun BlockPos.isFloor() = world?.getBlockState(this)?.block.let { it != null && it is ChessboardFloorBlock }
-                && (world?.getBlockEntity(this) as? ChessboardFloorBlockEntity)
-            .let { it != null && (it.chessControllerBlockPos == null || it.chessControllerBlockPos == pos) }
-        dirs.removeIf { d ->
-            (1..8 * 3).any { i ->
-                !pos.offset(d, i).isFloor()
-            }
+        fun BlockPos.isFloor(): Boolean {
+            val block = world?.getBlockState(this)?.block
+            if (block == null || block !is ChessboardFloorBlock)
+                return false
+
+            val blockEntity = world?.getBlockEntity(this)
+            if (blockEntity == null || blockEntity !is ChessboardFloorBlockEntity)
+                return false
+            return blockEntity.chessControllerBlockPos == null || blockEntity.chessControllerBlockPos == pos
         }
-        dirs.forEach { d ->
+
+        for (d in dirs) {
+            if ((1..8 * 3).any { i -> !pos.offset(d, i).isFloor() })
+                continue
             val o = listOf(d.rotateYClockwise(), d.rotateYCounterclockwise())
-            o.forEach { d2 ->
+            for (d2 in o) {
                 if ((1..8 * 3).all { i -> (0 until 8 * 3).all { j -> pos.offset(d, i).offset(d2, j).isFloor() } }) {
                     val v1 = pos.offset(d)
                     val v2 = pos.offset(d, 8 * 3).offset(d2, 8 * 3 - 1)
-                    chessboardStart = BlockPos(min(v1.x, v2.x), pos.y, min(v1.z, v2.z))
-                    chessboardEnd = BlockPos(max(v1.x, v2.x), pos.y, max(v1.z, v2.z))
-                    (1..8 * 3).forEach { i ->
-                        (0 until 8 * 3).forEach { j ->
-                            (world?.getBlockEntity(pos.offset(d, i).offset(d2, j)) as? ChessboardFloorBlockEntity)
-                                ?.let {
-                                    it.chessControllerBlockPos = pos
-                                    if (d2 == d.rotateYClockwise())
-                                        it.boardPos = Pos(j / 3, (i - 1) / 3)
-                                    else
-                                        it.boardPos = Pos(7 - j / 3, (i - 1) / 3)
-                                    it.updateFloor()
-                                }
-                        }
+                    val st = BlockPos(min(v1.x, v2.x), pos.y, min(v1.z, v2.z))
+                    chessboardStart = st
+                    for (ent in floorBlockEntities) {
+                        ent.chessControllerBlockPos = pos
+                        val eposx = abs(ent.pos.getComponentAlongAxis(d2.axis) - v1.getComponentAlongAxis(d2.axis))
+                        val realposx = if (d2 == d.rotateYClockwise()) eposx / 3 else 7 - (eposx / 3)
+                        val eposy = abs(ent.pos.getComponentAlongAxis(d.axis) - v1.getComponentAlongAxis(d.axis))
+                        ent.boardPos = Pos(realposx, eposy / 3)
+                        ent.updateFloor()
                     }
                     return true
                 }
@@ -100,9 +96,16 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         return false
     }
 
+    private val floorBlockEntities
+        get() = chessboardStart?.let { st ->
+            (Pair(0, 0)..Pair(8 * 3 - 1, 8 * 3 - 1)).mapNotNull { (i, j) ->
+                world?.getBlockEntity(st.offset(Direction.Axis.X, i).offset(Direction.Axis.Z, j))
+            }.filterIsInstance<ChessboardFloorBlockEntity>()
+        }.orEmpty()
+
     private val propertyDelegate = object : PropertyDelegate {
         override fun get(index: Int): Int = when (index) {
-            0 -> if (chessboardStart != null && chessboardEnd != null) 1 else 0
+            0 -> if (chessboardStart != null) 1 else 0
             else -> -1
         }
 
@@ -114,24 +117,12 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     override fun getPropertyDelegate(): PropertyDelegate = propertyDelegate
 
     fun resetBoard() {
-        chessboardStart?.let { s ->
-            chessboardEnd?.let { e ->
-                for (x in s.x..e.x) {
-                    for (y in s.y..e.y) {
-                        for (z in s.z..e.z) {
-                            val block = world?.getBlockEntity(BlockPos(x, y, z)) as? ChessboardFloorBlockEntity
-                            if (block != null) {
-                                block.chessControllerBlockPos = null
-                                block.boardPos = null
-                                block.updateFloor()
-                            }
-                        }
-                    }
-                }
-            }
+        for (block in floorBlockEntities) {
+            block.chessControllerBlockPos = null
+            block.boardPos = null
+            block.updateFloor()
         }
         chessboardStart = null
-        chessboardEnd = null
     }
 
 }

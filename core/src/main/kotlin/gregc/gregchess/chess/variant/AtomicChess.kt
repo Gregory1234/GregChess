@@ -34,7 +34,7 @@ object AtomicChess : ChessVariant("ATOMIC") {
 
         fun reverseExplosion() {
             val exp = explosions.last()
-            exp.forEach { (p, c) ->
+            for ((p, c) in exp) {
                 p.resurrect(c)
             }
         }

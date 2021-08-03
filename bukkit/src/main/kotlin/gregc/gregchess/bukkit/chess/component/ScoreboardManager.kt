@@ -82,23 +82,23 @@ class ScoreboardManager(private val game: ChessGame) : Component {
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
-        gameProperties.values.forEach {
+        for (it in gameProperties.values) {
             gamePropertyTeams[it.type] = newTeam().apply {
                 addEntry(generalFormat(it.type.localName))
             }
             objective.getScore(generalFormat(it.type.localName)).score = i--
         }
-        playerProperties.values.forEach {
+        for (it in playerProperties.values) {
             playerPropertyTeams[it.type] = BySides { s ->
                 newTeam().apply { addEntry(format(s, it.type.localName)) }
             }
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
-        playerProperties.values.forEach {
+        for (it in playerProperties.values) {
             objective.getScore(whiteFormat(it.type.localName)).score = i--
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
-        playerProperties.values.forEach {
+        for (it in playerProperties.values) {
             objective.getScore(blackFormat(it.type.localName)).score = i--
         }
     }
@@ -110,16 +110,20 @@ class ScoreboardManager(private val game: ChessGame) : Component {
     }
 
     private fun update() {
-        gameProperties.values.forEach {
+        for (it in gameProperties.values) {
             gamePropertyTeams[it.type]?.suffix = it.asString().chatColor()
         }
-        playerProperties.values.forEach {
+        for (it in playerProperties.values) {
             playerPropertyTeams[it.type]?.forEachIndexed { s, t -> t.suffix = it.asString(s).chatColor() }
         }
     }
 
     private fun stop() {
-        scoreboard.teams.forEach { it.unregister() }
-        scoreboard.objectives.forEach { it.unregister() }
+        for (it in scoreboard.teams) {
+            it.unregister()
+        }
+        for (it in scoreboard.objectives) {
+            it.unregister()
+        }
     }
 }

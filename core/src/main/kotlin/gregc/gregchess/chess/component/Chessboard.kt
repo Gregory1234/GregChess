@@ -115,19 +115,17 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
                 fullMoveCounter++
             }
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
-            squares.values.forEach { s ->
-                s.flags.forEach {
-                    it.timeLeft--
-                }
-            }
+            for (s in squares.values)
+                for (f in s.flags)
+                    f.timeLeft--
         }
         if (e == TurnEvent.UNDO) {
-            squares.values.forEach { s ->
-                s.flags.forEach {
-                    it.timeLeft++
+            for (s in squares.values) {
+                for (f in s.flags) {
+                    f.timeLeft++
                 }
-                s.flags.removeIf {
-                    it.type.startTime.toInt() <= it.timeLeft
+                s.flags.removeIf { f ->
+                    f.type.startTime.toInt() <= f.timeLeft
                 }
             }
         }
@@ -174,10 +172,10 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
 
     fun updateMoves() {
-        squares.forEach { (_, square) ->
+        for ((_, square) in squares) {
             square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p) }
         }
-        squares.forEach { (_, square) ->
+        for ((_, square) in squares) {
             square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it) }
         }
     }

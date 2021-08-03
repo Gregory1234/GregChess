@@ -40,15 +40,15 @@ object ChessGameManager : Listener {
     }
 
     fun stop() {
-        games.forEach { it.quickStop(drawBy(PLUGIN_RESTART)) }
+        for (g in games)
+            g.quickStop(drawBy(PLUGIN_RESTART))
     }
 
     fun leave(player: BukkitPlayer) {
         val games = player.games
         cRequire(games.isNotEmpty() || player.isSpectating, YOU_NOT_IN_GAME)
-        games.forEach { g ->
+        for (g in games)
             g.stop(g[player]!!.side.lostBy(EndReason.WALKOVER), BySides { it == g[player]!!.side })
-        }
         player.spectatedGame = null
     }
 

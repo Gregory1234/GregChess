@@ -22,7 +22,8 @@ class Menu<T>(
         private set
 
     init {
-        content.forEach { (item, _, pos) -> inv.setItem(pos.index, item) }
+        for ((item, _, pos) in content)
+            inv.setItem(pos.index, item)
     }
 
     fun click(choice: InvPos): Boolean {

@@ -25,9 +25,8 @@ object RequestManager : Listener {
 
     @EventHandler
     fun onPlayerQuit(e: PlayerQuitEvent) {
-        requestTypes.forEach {
-            it.quietRemove(e.player)
-        }
+        for (type in requestTypes)
+            type.quietRemove(e.player)
     }
 }
 
@@ -130,9 +129,13 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         request.cont.resume(RequestResponse.EXPIRED)
     }
 
-    fun quietRemove(p: Player) = requests.values.filter { it.sender == p || it.receiver == p }.forEach {
-        requests.remove(it.uuid)
-        it.cont.resume(RequestResponse.QUIT)
+    fun quietRemove(p: Player) {
+        for(r in requests.values) {
+            if (r.sender == p || r.receiver == p) {
+                requests.remove(r.uuid)
+                r.cont.resume(RequestResponse.QUIT)
+            }
+        }
     }
 
 }

@@ -43,7 +43,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
     init {
         try {
             requireComponent<Chessboard>()
-            variant.requiredComponents.forEach {
+            for (it in variant.requiredComponents) {
                 settings.components.filterIsInstance(it.java).firstOrNull()
                     ?: throw ComponentSettingsNotFoundException(it)
             }

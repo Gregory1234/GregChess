@@ -39,7 +39,7 @@ class SpectatorManager(private val game: ChessGame) : Component {
     }
 
     private fun stop() {
-        spectators.forEach {
+        for (it in spectators) {
             it.showGameResults(game.results!!)
         }
     }
@@ -47,7 +47,7 @@ class SpectatorManager(private val game: ChessGame) : Component {
     private fun clear() {
         val s = spectators
         spectatorList.clear()
-        s.forEach {
+        for (it in s) {
             game.callEvent(SpectatorEvent(it, PlayerDirection.LEAVE))
         }
     }

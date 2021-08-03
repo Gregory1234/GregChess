@@ -19,7 +19,7 @@ private fun mkGame(
     settings: GameSettings = basicSettings,
     players: List<Pair<HumanPlayer, Side>> = listOf(humanA to white, humanB to black)
 ) = ChessGame(settings).addPlayers {
-    players.forEach { (h, s) ->
+    for ((h, s) in players) {
         human(h, s, false)
     }
 }

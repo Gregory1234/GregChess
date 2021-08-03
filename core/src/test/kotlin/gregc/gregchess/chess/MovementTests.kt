@@ -34,14 +34,14 @@ private val game = ChessGame(testSettings("basic", variant = CaptureAll)).addPla
 
 private fun clearBoard(vararg pieces: PieceInfo) {
     game.board.setFromFEN(FEN.parseFromString("8/8/8/8/8/8/8/8 w - - 0 1"))
-    pieces.forEach {
-        game.board += it
+    for (p in pieces) {
+        game.board += p
     }
     game.board.updateMoves()
 }
 
 private fun addFlags(vararg flags: Pair<ChessFlagType, Pos>) {
-    flags.forEach { (f, p) ->
+    for ((f, p) in flags) {
         game.board[p]!!.flags += ChessFlag(f, f.startTime.toInt())
     }
     game.board.updateMoves()

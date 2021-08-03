@@ -12,7 +12,7 @@ interface ChessEvent
 annotation class ChessEventHandler
 
 fun Component.callEvent(e: ChessEvent) {
-    this::class.members.forEach { f ->
+    for (f in this::class.members) {
         if (f.annotations.any { it is ChessEventHandler } && f.parameters.size == 2 &&
             f.parameters[1].type.isSupertypeOf(e::class.starProjectedType)
         ) {

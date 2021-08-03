@@ -108,8 +108,7 @@ fun err(n: String) = Message(config, "Message.Error.$n")
 
 class CommandException(val error: Message, cause: Throwable? = null) : Exception(cause) {
 
-    override val message: String
-        get() = "Uncaught command error: ${error.get()}"
+    override val message: String get() = "Uncaught command error: ${error.get()}"
 }
 
 fun cRequire(e: Boolean, msg: Message) {
@@ -189,16 +188,11 @@ fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, G
 
 fun Duration.toTicks(): Long = toMillis() / 50
 
-val Int.ticks: Duration
-    get() = Duration.ofMillis(toLong() * 50)
-val Long.ticks: Duration
-    get() = Duration.ofMillis(this * 50)
-val Double.seconds: Duration
-    get() = Duration.ofNanos(floor(this * 1000000000L).toLong())
-val Double.milliseconds: Duration
-    get() = Duration.ofNanos(floor(this * 1000000L).toLong())
-val Double.minutes: Duration
-    get() = Duration.ofNanos(floor(this * 60000000000L).toLong())
+val Int.ticks: Duration get() = Duration.ofMillis(toLong() * 50)
+val Long.ticks: Duration get() = Duration.ofMillis(this * 50)
+val Double.seconds: Duration get() = Duration.ofNanos(floor(this * 1000000000L).toLong())
+val Double.milliseconds: Duration get() = Duration.ofNanos(floor(this * 1000000L).toLong())
+val Double.minutes: Duration get() = Duration.ofNanos(floor(this * 60000000000L).toLong())
 
 fun String.asDurationOrNull(): Duration? {
     val match1 = Regex("""^(-|\+|)(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(this)

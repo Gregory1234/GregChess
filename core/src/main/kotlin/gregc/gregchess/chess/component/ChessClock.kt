@@ -91,7 +91,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
             GameBaseEvent.START -> if (settings.type == Type.FIXED) startTimer()
             GameBaseEvent.STOP -> stopTime = LocalDateTime.now()
             GameBaseEvent.UPDATE ->
-                Side.values().forEach { if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it) }
+                for (it in Side.values()) if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it)
             else -> {
             }
         }
@@ -107,7 +107,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     }
 
     private fun startTimer() {
-        Side.values().forEach { time[it].reset() }
+        Side.forEach { time[it].reset() }
         if (settings.type == Type.FIXED) {
             time[game.currentTurn].begin = LocalDateTime.now() + settings.increment
             time[game.currentTurn] += settings.increment
