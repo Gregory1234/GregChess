@@ -6,6 +6,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.randomString
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
@@ -77,8 +78,17 @@ class ScoreboardManager(private val game: ChessGame) : Component {
         game.callEvent(e)
     }
 
+    @ChessEventHandler
+    fun resetPlayer(e: ResetPlayerEvent) {
+        giveScoreboard(e.player)
+    }
+
+    private fun giveScoreboard(p: Player) {
+        p.scoreboard = scoreboard
+    }
+
     private fun start() {
-        game.players.forEachReal { (it as? BukkitPlayer)?.player?.scoreboard = scoreboard }
+        game.players.forEachReal(::giveScoreboard)
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
@@ -98,7 +108,7 @@ class ScoreboardManager(private val game: ChessGame) : Component {
             objective.getScore(whiteFormat(t.localName)).score = i--
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
-        for (t in gameProperties.keys) {
+        for (t in playerProperties.keys) {
             objective.getScore(blackFormat(t.localName)).score = i--
         }
     }
@@ -106,7 +116,7 @@ class ScoreboardManager(private val game: ChessGame) : Component {
     @ChessEventHandler
     fun spectatorJoin(p: SpectatorEvent) {
         if (p.dir == PlayerDirection.JOIN)
-            p.human.bukkit.scoreboard = scoreboard
+            giveScoreboard(p.player)
     }
 
     private fun update() {

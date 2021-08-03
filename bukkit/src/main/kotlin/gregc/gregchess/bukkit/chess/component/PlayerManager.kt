@@ -1,10 +1,12 @@
 package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.interact
 import gregc.gregchess.seconds
+import org.bukkit.entity.Player
 
 enum class GameStartStageEvent : ChessEvent {
     INIT, START, BEGIN
@@ -18,7 +20,7 @@ enum class PlayerDirection {
     JOIN, LEAVE
 }
 
-data class HumanPlayerEvent(val human: HumanPlayer, val dir: PlayerDirection) : ChessEvent
+data class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
 class PlayerManager(private val game: ChessGame) : Component {
     object Settings : Component.Settings<PlayerManager> {
@@ -32,12 +34,12 @@ class PlayerManager(private val game: ChessGame) : Component {
         when (e) {
             GameBaseEvent.START -> {
                 players.forEachReal {
-                    callEvent(HumanPlayerEvent(it, PlayerDirection.JOIN))
+                    callEvent(PlayerEvent(it, PlayerDirection.JOIN))
                     it.games += game
                     it.currentGame = game
                 }
                 callEvent(GameStartStageEvent.INIT)
-                players.forEachUnique(currentTurn) { it.init() }
+                players.forEachUnique { it.init() }
                 variant.start(game)
                 callEvent(GameStartStageEvent.START)
             }
@@ -53,12 +55,22 @@ class PlayerManager(private val game: ChessGame) : Component {
             GameBaseEvent.STOP -> {
                 val results = results!!
                 callEvent(GameStopStageEvent.STOP)
-                players.forEachUnique(currentTurn) {
+                with(game.board) {
+                    if (lastMove?.piece?.side == white) {
+                        val wLast = lastMove
+                        game.players.forEachReal { p ->
+                            p.sendLastMoves(fullMoveCounter + 1u, wLast, null)
+                        }
+                    }
+                }
+                val pgn = PGN.generate(game)
+                players.forEachUnique {
                     interact {
                         it.player.showGameResults(it.side, results)
                         if (!results.endReason.quick)
                             wait((if (quick[it.side]) 0 else 3).seconds)
-                        callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
+                        callEvent(PlayerEvent(it.player, PlayerDirection.LEAVE))
+                        it.player.sendPGN(pgn)
                         it.player.games -= game
                         it.player.currentGame = null
                     }
@@ -85,6 +97,21 @@ class PlayerManager(private val game: ChessGame) : Component {
                 callEvent(GameStopStageEvent.PANIC)
             }
             else -> {
+            }
+        }
+    }
+
+    @ChessEventHandler
+    fun handleTurn(e: TurnEvent) {
+        if (e == TurnEvent.END) {
+            if (game.currentTurn == black) {
+                with(game.board) {
+                    val wLast = (if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2])
+                    val bLast = lastMove
+                    game.players.forEachReal { p ->
+                        p.sendLastMoves(game.board.fullMoveCounter, wLast, bLast)
+                    }
+                }
             }
         }
     }

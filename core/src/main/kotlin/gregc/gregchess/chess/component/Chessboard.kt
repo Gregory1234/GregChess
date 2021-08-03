@@ -107,11 +107,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (game.currentTurn == black) {
-                val wLast = (if (moves.size <= 1) null else moves[moves.size - 2])
-                val bLast = lastMove
-                game.players.forEachReal { p ->
-                    p.sendLastMoves(fullMoveCounter, wLast, bLast)
-                }
                 fullMoveCounter++
             }
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
@@ -136,20 +131,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = when (e) {
         GameBaseEvent.START -> setFromFEN(settings.genFEN(game))
-        GameBaseEvent.STOP -> {
-            stop()
-            sendPGN()
-        }
         else -> {
-        }
-    }
-
-    private fun stop() {
-        if (game.currentTurn == white) {
-            val wLast = lastMove
-            game.players.forEachReal { p ->
-                p.sendLastMoves(fullMoveCounter, wLast, null)
-            }
         }
     }
 
@@ -178,11 +160,6 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         for ((_, square) in squares) {
             square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it) }
         }
-    }
-
-    private fun sendPGN() {
-        val pgn = PGN.generate(game)
-        game.players.forEachReal { it.sendPGN(pgn) }
     }
 
     fun setFromFEN(fen: FEN) {

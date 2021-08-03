@@ -7,35 +7,23 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.mockk.*
 
-private val humanA = TestHuman("a")
-private val humanB = TestHuman("b")
-private val humanC = TestHuman("c")
-
 private val basicSettings = testSettings("basic")
 private val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
 private fun spyVariantSettings() = testSettings("spy variant", variant = spyk(TestVariant))
 
 private fun mkGame(
     settings: GameSettings = basicSettings,
-    players: List<Pair<HumanPlayer, Side>> = listOf(humanA to white, humanB to black)
+    players: List<Pair<String, Side>> = listOf("a" to white, "b" to black)
 ) = ChessGame(settings).addPlayers {
-    for ((h, s) in players)
-        human(h, s, false)
+    for ((n, s) in players)
+        test(n, s)
 }
 
-private fun mkGame(settings: GameSettings = basicSettings, players: BySides<HumanPlayer>) =
+private fun mkGame(settings: GameSettings = basicSettings, players: BySides<String>) =
     ChessGame(settings).addPlayers {
-        for ((s, h) in players.toIndexedList())
-            human(h, s, false)
+        for ((s, n) in players.toIndexedList())
+            test(n, s)
     }
-
-private fun playerExclude(p: HumanPlayer) {
-    excludeRecords {
-        p.name
-        @Suppress("UNUSED_EQUALS_EXPRESSION")
-        p == any()
-    }
-}
 
 fun componentExclude(c: TestComponent) {
     excludeRecords {
@@ -58,27 +46,16 @@ class ChessGameTests : FreeSpec({
                 }
                 "provided 2 players on the same side" {
                     shouldThrowExactly<IllegalStateException> {
-                        mkGame(players = listOf(humanA to white, humanB to white, humanC to black))
+                        mkGame(players = listOf("a" to white, "b" to white, "c" to black))
                     }
                 }
                 "already initialized" {
                     shouldThrowExactly<WrongStateException> {
                         mkGame().addPlayers {
-                            human(humanA, white, false)
-                            human(humanB, black, false)
+                            test("a", white)
+                            test("b", black)
                         }
                     }
-                }
-            }
-            "not call players" {
-                val a = spyk(humanA)
-                val b = spyk(humanB)
-                mkGame(players = bySides(a, b))
-                playerExclude(a)
-                playerExclude(b)
-                verify {
-                    a wasNot Called
-                    b wasNot Called
                 }
             }
             "not call components" {
@@ -101,17 +78,6 @@ class ChessGameTests : FreeSpec({
             "make the game runring" {
                 val g = mkGame().start()
                 g.running.shouldBeTrue()
-            }
-            "send messages to players" {
-                val a = spyk(humanA)
-                val b = spyk(humanB)
-                mkGame(players = bySides(a, b))
-                playerExclude(a)
-                playerExclude(b)
-                verify {
-                    a wasNot Called
-                    b wasNot Called
-                }
             }
             "start components" {
                 val g = mkGame(spyComponentSettings).start()

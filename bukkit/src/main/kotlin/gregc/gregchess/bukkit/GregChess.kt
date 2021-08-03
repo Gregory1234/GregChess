@@ -77,7 +77,7 @@ object GregChess : Listener {
                 "duel" -> {
                     cPlayer(player)
                     perms()
-                    cRequire(!player.human.isInGame, YOU_IN_GAME)
+                    cRequire(!player.isInGame, YOU_IN_GAME)
                     when (nextArg().lowercase()) {
                         "accept" -> {
                             cWrongArgument {
@@ -92,15 +92,15 @@ object GregChess : Listener {
                         else -> {
                             endArgs()
                             val opponent = cServerPlayer(latestArg())
-                            cRequire(!opponent.human.isInGame, OPPONENT_IN_GAME)
+                            cRequire(!opponent.isInGame, OPPONENT_IN_GAME)
                             interact {
                                 val settings = player.openSettingsMenu()
                                 if (settings != null) {
                                     val res = duelRequest.call(RequestData(player, opponent, settings.name))
                                     if (res == RequestResponse.ACCEPT) {
                                         ChessGame(settings).addPlayers {
-                                            human(player.human, white, player == opponent)
-                                            human(opponent.human, black, player == opponent)
+                                            bukkit(player, white, player == opponent)
+                                            bukkit(opponent, black, player == opponent)
                                         }.start()
                                     }
                                 }
@@ -113,12 +113,12 @@ object GregChess : Listener {
                     perms()
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     endArgs()
-                    cRequire(!player.human.isInGame, YOU_IN_GAME)
+                    cRequire(!player.isInGame, YOU_IN_GAME)
                     interact {
                         val settings = player.openSettingsMenu()
                         if (settings != null)
                             ChessGame(settings).addPlayers {
-                                human(player.human, white, false)
+                                bukkit(player, white, false)
                                 engine(Stockfish(), black)
                             }.start()
                     }
@@ -127,24 +127,24 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
+                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     p.game.stop(p.side.lostBy(EndReason.RESIGNATION))
                 }
                 "leave" -> {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    ChessGameManager.leave(player.human)
+                    ChessGameManager.leave(player)
                 }
                 "draw" -> {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
-                    val opponent: HumanChessPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
+                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
+                    val opponent: BukkitPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
                     interact {
                         drawRequest.invalidSender(player) { !p.hasTurn }
-                        val res = drawRequest.call(RequestData(player, opponent.player.bukkit, ""), true)
+                        val res = drawRequest.call(RequestData(player, opponent.player, ""), true)
                         if (res == RequestResponse.ACCEPT) {
                             p.game.stop(drawBy(EndReason.DRAW_AGREEMENT))
                         }
@@ -153,7 +153,7 @@ object GregChess : Listener {
                 "capture" -> {
                     cPlayer(player)
                     perms()
-                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
+                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     val pos = if (args.size == 1)
                         p.game.renderer.getPos(player.location.toLoc())
                     else
@@ -161,13 +161,13 @@ object GregChess : Listener {
                     endArgs()
                     p.game.board[pos]?.piece?.capture(p.side)
                     p.game.board.updateMoves()
-                    player.human.sendMessage(BOARD_OP_DONE)
+                    player.sendMessage(BOARD_OP_DONE)
                 }
                 "spawn" -> {
                     cPlayer(player)
                     perms()
                     cArgs(args, 3, 4)
-                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
+                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     val game = p.game
                     cWrongArgument {
                         val square = if (args.size == 3)
@@ -179,49 +179,49 @@ object GregChess : Listener {
                         square.piece?.capture(p.side)
                         square.piece = BoardPiece(piece.of(Side.valueOf(this[0])), square)
                         game.board.updateMoves()
-                        player.human.sendMessage(BOARD_OP_DONE)
+                        player.sendMessage(BOARD_OP_DONE)
                     }
                 }
                 "move" -> {
                     cPlayer(player)
                     perms()
                     cArgs(args, 3, 3)
-                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
+                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     val game = p.game
                     cWrongArgument {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
                         game.board[Pos.parseFromString(this[1])]?.piece?.move(game.board[Pos.parseFromString(this[2])]!!)
                         game.board.updateMoves()
-                        player.human.sendMessage(BOARD_OP_DONE)
+                        player.sendMessage(BOARD_OP_DONE)
                     }
                 }
                 "skip" -> {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     game.nextTurn()
-                    player.human.sendMessage(SKIPPED_TURN)
+                    player.sendMessage(SKIPPED_TURN)
                 }
                 "load" -> {
                     cPlayer(player)
                     perms()
-                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     game.board.setFromFEN(FEN.parseFromString(restString()))
-                    player.human.sendMessage(LOADED_FEN)
+                    player.sendMessage(LOADED_FEN)
                 }
                 "save" -> {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    player.human.sendFEN(game.board.getFEN())
+                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    player.sendFEN(game.board.getFEN())
                 }
                 "time" -> {
                     cPlayer(player)
                     perms()
                     cArgs(args, 4, 4)
-                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     val clock = game.clock.cNotNull(CLOCK_NOT_FOUND)
                     cWrongArgument {
                         val side = Side.valueOf(nextArg())
@@ -231,13 +231,13 @@ object GregChess : Listener {
                             "set" -> clock.setTime(side, time)
                             else -> cWrongArgument()
                         }
-                        player.human.sendMessage(TIME_OP_DONE)
+                        player.sendMessage(TIME_OP_DONE)
                     }
                 }
                 "uci" -> {
                     cPlayer(player)
                     perms()
-                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     val engines = game.players.toList().filterIsInstance<EnginePlayer>()
                     val engine = engines.firstOrNull().cNotNull(ENGINE_NOT_FOUND)
                     cWrongArgument {
@@ -248,14 +248,14 @@ object GregChess : Listener {
                             "send" -> engine.engine.sendCommand(restString())
                             else -> cWrongArgument()
                         }
-                        player.human.sendMessage(ENGINE_COMMAND_SENT)
+                        player.sendMessage(ENGINE_COMMAND_SENT)
                     }
                 }
                 "spectate" -> {
                     cPlayer(player)
                     perms()
                     val toSpectate = cServerPlayer(lastArg())
-                    player.human.spectatedGame = toSpectate.human.currentGame.cNotNull(PLAYER_NOT_IN_GAME)
+                    player.spectatedGame = toSpectate.currentGame.cNotNull(PLAYER_NOT_IN_GAME)
                 }
                 "reload" -> {
                     perms()
@@ -274,14 +274,14 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    val p = player.human.chess.cNotNull(YOU_NOT_IN_GAME)
+                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     p.game.board.lastMove.cNotNull(NOTHING_TO_TAKEBACK)
-                    val opponent: HumanChessPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
+                    val opponent: BukkitPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
                     interact {
                         drawRequest.invalidSender(player) {
-                            (p.game.currentOpponent as? HumanChessPlayer)?.player != player.human
+                            (p.game.currentOpponent as? BukkitPlayer)?.player != player
                         }
-                        val res = takebackRequest.call(RequestData(player, opponent.player.bukkit, ""), true)
+                        val res = takebackRequest.call(RequestData(player, opponent.player, ""), true)
                         if (res == RequestResponse.ACCEPT) {
                             p.game.board.undoLastMove()
                         }
@@ -301,7 +301,7 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    player.human.isAdmin = !player.human.isAdmin
+                    player.isAdmin = !player.isAdmin
                 }
                 else -> cWrongArgument()
             }
@@ -351,7 +351,7 @@ object GregChess : Listener {
             0 -> {
                 cPlayer(player)
                 perms("info.ingame")
-                val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
                 game.board[game.renderer.getPos(player.location.toLoc())]?.piece.cNotNull(PIECE_NOT_FOUND)
             }
             1 -> {
@@ -363,7 +363,7 @@ object GregChess : Listener {
                 } else {
                     cPlayer(player)
                     perms("info.ingame")
-                    val game = player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     game.board[Pos.parseFromString(latestArg())]?.piece.cNotNull(PIECE_NOT_FOUND)
                 }
             }
@@ -375,7 +375,7 @@ object GregChess : Listener {
             0 -> {
                 cPlayer(player)
                 perms("info.ingame")
-                player.human.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                player.currentGame.cNotNull(YOU_NOT_IN_GAME)
             }
             1 -> {
                 cWrongArgument {
@@ -392,17 +392,17 @@ object GregChess : Listener {
 
     @EventHandler
     fun onTurnEnd(e: TurnEndEvent) {
-        if (e.player is HumanChessPlayer) {
-            drawRequest.quietRemove(e.player.player.bukkit)
-            takebackRequest.quietRemove(e.player.player.bukkit)
+        if (e.player is BukkitPlayer) {
+            drawRequest.quietRemove(e.player.player)
+            takebackRequest.quietRemove(e.player.player)
         }
     }
 
     @EventHandler
     fun onGameEnd(e: GameEndEvent) {
         e.game.players.forEachReal {
-            drawRequest.quietRemove(it.bukkit)
-            takebackRequest.quietRemove(it.bukkit)
+            drawRequest.quietRemove(it)
+            takebackRequest.quietRemove(it)
         }
     }
 

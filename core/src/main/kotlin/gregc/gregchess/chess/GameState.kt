@@ -104,39 +104,15 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
 
 }
 
-val BySides<ChessPlayer>.humans get() = toList().filterIsInstance<HumanChessPlayer>()
-val BySides<ChessPlayer>.real get() = humans.map { it.player }.distinct()
-inline fun BySides<ChessPlayer>.forEachReal(f: (HumanPlayer) -> Unit) = real.forEach(f)
-inline fun BySides<ChessPlayer>.forEachRealIndexed(s: Side, f: (Side, HumanPlayer) -> Unit) =
-    forEachUnique(s) { f(it.side, it.player) }
-
-inline fun BySides<ChessPlayer>.forEachUnique(s: Side, f: (HumanChessPlayer) -> Unit) =
-    real.mapNotNull { this[it, s] }.forEach(f)
-
 fun BySides<ChessPlayer>.validate() {
     for ((s, p) in toIndexedList())
         if (p.side != s)
             throw IllegalStateException("Player's side wrong!")
 }
 
-operator fun BySides<ChessPlayer>.get(p: HumanPlayer, s: Side): HumanChessPlayer? =
-    humans.filter { it.player == p }.run { singleOrNull() ?: singleOrNull { it.side == s } }
-
-operator fun BySides<ChessPlayer>.contains(p: HumanPlayer) = p in real
-
-
-inline fun GameState.WithPlayers.forEachPlayer(f: (ChessPlayer) -> Unit) = players.forEach(f)
-inline fun GameState.WithPlayers.forEachReal(f: (HumanPlayer) -> Unit) = players.forEachReal(f)
 operator fun GameState.WithPlayers.get(s: Side) = players[s]
-operator fun GameState.WithPlayers.contains(p: HumanPlayer) = p in players
 
 val GameState.WithCurrentPlayer.currentPlayer: ChessPlayer get() = this[currentTurn]
 val GameState.WithCurrentPlayer.currentOpponent: ChessPlayer get() = this[!currentTurn]
-operator fun GameState.WithCurrentPlayer.get(p: HumanPlayer) = players[p, currentTurn]
-inline fun GameState.WithCurrentPlayer.forEachUnique(f: (HumanChessPlayer) -> Unit) =
-    players.forEachUnique(currentTurn, f)
-
-inline fun GameState.WithCurrentPlayer.forEachRealIndexed(f: (Side, HumanPlayer) -> Unit) =
-    players.forEachRealIndexed(currentTurn, f)
 
 class WrongStateException(s: GameState, cls: Class<*>) : Exception("expected ${cls.name}, got $s")

@@ -17,28 +17,10 @@ fun testSettings(
     return GameSettings(name, false, variant, components)
 }
 
-class TestHuman(name: String) : HumanPlayer(name) {
+class TestPlayer(name: String, side: Side, game: ChessGame) : ChessPlayer(name, side, game)
 
-    override fun sendPGN(pgn: PGN) {
-    }
-
-    override fun sendFEN(fen: FEN) {
-    }
-
-    override suspend fun openPawnPromotionMenu(promotions: Collection<Piece>): Piece = promotions.first()
-
-    override fun showGameResults(side: Side, results: GameResults<*>) {
-    }
-
-    override fun showGameResults(results: GameResults<*>) {
-    }
-
-    override fun sendGameUpdate(side: Side, status: List<GamePlayerStatus>) {
-    }
-
-    override fun sendLastMoves(num: UInt, wLast: MoveData?, bLast: MoveData?) {
-    }
-
+fun ChessGame.AddPlayersScope.test(name: String, side: Side) {
+    addPlayer(TestPlayer(name, side, game))
 }
 
 class TestComponent : Component {

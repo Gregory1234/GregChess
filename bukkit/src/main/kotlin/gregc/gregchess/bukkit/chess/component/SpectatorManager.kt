@@ -1,12 +1,13 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.bukkit.chess.BukkitPlayer
+import gregc.gregchess.bukkit.chess.showGameResults
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import org.bukkit.entity.Player
 
-data class SpectatorEvent(val human: BukkitPlayer, val dir: PlayerDirection) : ChessEvent
+data class SpectatorEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
-class SpectatorNotFoundException(human: BukkitPlayer) : Exception(human.name)
+class SpectatorNotFoundException(player: Player) : Exception(player.name)
 
 class SpectatorManager(private val game: ChessGame) : Component {
 
@@ -14,16 +15,16 @@ class SpectatorManager(private val game: ChessGame) : Component {
         override fun getComponent(game: ChessGame) = SpectatorManager(game)
     }
 
-    private val spectatorList = mutableListOf<BukkitPlayer>()
+    private val spectatorList = mutableListOf<Player>()
 
     val spectators get() = spectatorList.toList()
 
-    operator fun plusAssign(p: BukkitPlayer) {
+    operator fun plusAssign(p: Player) {
         spectatorList += p
         game.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
-    operator fun minusAssign(p: BukkitPlayer) {
+    operator fun minusAssign(p: Player) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
         spectatorList -= p

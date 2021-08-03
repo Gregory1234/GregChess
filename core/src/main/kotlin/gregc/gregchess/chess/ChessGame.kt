@@ -105,6 +105,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
 
     inner class AddPlayersScope {
         private val players = mutableBySides<ChessPlayer?>(null)
+        val game = this@ChessGame
 
         fun addPlayer(p: ChessPlayer) {
             if (players[p.side] != null)
@@ -112,11 +113,8 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
             players[p.side] = p
         }
 
-        fun human(p: HumanPlayer, side: Side, silent: Boolean) =
-            addPlayer(HumanChessPlayer(p, side, silent, this@ChessGame))
-
         fun engine(engine: ChessEngine, side: Side) =
-            addPlayer(EnginePlayer(engine, side, this@ChessGame))
+            addPlayer(EnginePlayer(engine, side, game))
 
         fun build(): BySides<ChessPlayer> = bySides {
             players[it] ?: throw IllegalStateException("player has not been initialized")
@@ -141,8 +139,6 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
 
     val players: BySides<ChessPlayer>
         get() = require<GameState.WithPlayers>().players
-
-    operator fun contains(p: HumanPlayer): Boolean = require<GameState.WithPlayers>().contains(p)
 
     fun nextTurn() {
         requireRunning()
@@ -205,8 +201,6 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
         callEvent(GameBaseEvent.PANIC)
         state = GameState.Error(state, e)
     }
-
-    operator fun get(player: HumanPlayer): HumanChessPlayer? = (state as? GameState.WithCurrentPlayer)?.get(player)
 
     operator fun get(side: Side): ChessPlayer = require<GameState.WithPlayers>()[side]
 

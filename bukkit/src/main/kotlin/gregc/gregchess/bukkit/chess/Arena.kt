@@ -97,6 +97,8 @@ object ArenaManager : Listener {
     }
 }
 
+class ResetPlayerEvent(val player: Player): ChessEvent
+
 
 class Arena(val name: String, var game: ChessGame? = null) : Component.Settings<Arena.Usage> {
     companion object {
@@ -110,24 +112,24 @@ class Arena(val name: String, var game: ChessGame? = null) : Component.Settings<
 
         private val data = mutableMapOf<UUID, PlayerData>()
 
-        private fun BukkitPlayer.join(d: PlayerData = defData) {
-            if (uuid in data)
+        private fun Player.join(d: PlayerData = defData) {
+            if (uniqueId in data)
                 throw IllegalStateException("player already teleported")
-            data[uuid] = player.playerData
+            data[uniqueId] = playerData
             reset(d)
         }
 
-        private fun BukkitPlayer.leave() {
-            if (uuid !in data)
+        private fun Player.leave() {
+            if (uniqueId !in data)
                 throw IllegalStateException("player data not found")
-            player.playerData = data[uuid]!!
-            data.remove(uuid)
+            playerData = data[uniqueId]!!
+            data.remove(uniqueId)
         }
 
-        private fun BukkitPlayer.reset(d: PlayerData = defData) {
-            player.teleport(game.requireComponent<BukkitRenderer>().spawnLocation.toLocation(arena.world))
-            player.playerData = d
-            game[this]?.held?.let { setItem(0, it.piece) }
+        private fun Player.reset(d: PlayerData = defData) {
+            teleport(game.requireComponent<BukkitRenderer>().spawnLocation.toLocation(arena.world))
+            playerData = d
+            chess?.held?.let { inventory.setItem(0, it.piece.item) }
         }
 
         @ChessEventHandler
@@ -155,29 +157,30 @@ class Arena(val name: String, var game: ChessGame? = null) : Component.Settings<
         }
 
         private fun evacuate() {
-            game.players.forEachReal { (it as? BukkitPlayer)?.leave() }
+            for (p in game.players.toList())
+                if (p is BukkitPlayer)
+                    p.player.leave()
         }
 
         @ChessEventHandler
-        fun handleSpectator(p: SpectatorEvent) = (p.human as? BukkitPlayer)?.run {
+        fun handleSpectator(p: SpectatorEvent)  {
             when (p.dir) {
-                PlayerDirection.JOIN -> join(spectatorData)
-                PlayerDirection.LEAVE -> leave()
+                PlayerDirection.JOIN -> p.player.join(spectatorData)
+                PlayerDirection.LEAVE -> p.player.leave()
             }
         }
 
         @ChessEventHandler
-        fun handlePlayer(p: HumanPlayerEvent) {
-            (p.human as? BukkitPlayer)?.let {
-                when (p.dir) {
-                    PlayerDirection.JOIN -> it.join(if (it.isAdmin) adminData else defData)
-                    PlayerDirection.LEAVE -> it.leave()
-                }
+        fun handlePlayer(p: PlayerEvent) {
+            when (p.dir) {
+                PlayerDirection.JOIN -> p.player.join(if (p.player.isAdmin) adminData else defData)
+                PlayerDirection.LEAVE -> p.player.leave()
             }
         }
 
-        fun resetPlayer(p: BukkitPlayer) {
-            p.reset(if (p.isAdmin) adminData else defData)
+        @ChessEventHandler
+        fun resetPlayer(e: ResetPlayerEvent) {
+            e.player.reset(if (e.player.isAdmin) adminData else defData)
         }
     }
 

@@ -36,19 +36,19 @@ object ChessGameManager : Listener {
             g.quickStop(drawBy(PLUGIN_RESTART))
     }
 
-    fun leave(player: BukkitPlayer) {
-        val g = player.currentGame
+    fun leave(player: Player) {
+        val g = player.chess
         if (g == null) {
             cRequire(player.isSpectating, YOU_NOT_IN_GAME)
             player.spectatedGame = null
         } else {
-            g.stop(g[player]!!.side.lostBy(EndReason.WALKOVER), bySides { it == g[player]!!.side })
+            g.game.stop(g.side.lostBy(EndReason.WALKOVER), bySides { it == g.side })
         }
     }
 
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) = try {
-        leave(e.player.human)
+        leave(e.player)
     } catch (ex: CommandException) {
 
     }
@@ -56,15 +56,15 @@ object ChessGameManager : Listener {
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.entity as? Player ?: return
-        val game = ent.human.currentGame ?: return
-        game.arenaUsage.resetPlayer(ent.human)
+        val game = ent.currentGame ?: return
+        game.callEvent(ResetPlayerEvent(ent))
         e.isCancelled = true
     }
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        val player = e.player.human.chess ?: return
-        if (!e.player.human.isInGame || e.player.human.isAdmin)
+        val player = e.player.chess ?: return
+        if (!e.player.isInGame || e.player.isAdmin)
             return
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
@@ -80,28 +80,28 @@ object ChessGameManager : Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (e.player.human.isInGame && !e.player.human.isAdmin) {
+        if (e.player.isInGame && !e.player.isAdmin) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.whoClicked.let { it is Player && it.human.isInGame && !it.human.isAdmin }) {
+        if (e.whoClicked.let { it is Player && it.isInGame && !it.isAdmin }) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        if (e.whoClicked.let { it is Player && it.human.isInGame && !it.human.isAdmin }) {
+        if (e.whoClicked.let { it is Player && it.isInGame && !it.isAdmin }) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (e.player.human.isInGame && !e.player.human.isAdmin) {
+        if (e.player.isInGame && !e.player.isAdmin) {
             e.isCancelled = true
         }
     }
