@@ -33,6 +33,8 @@ class PlayerManager(private val game: ChessGame) : Component {
             GameBaseEvent.START -> {
                 players.forEachReal {
                     callEvent(HumanPlayerEvent(it, PlayerDirection.JOIN))
+                    it.games += game
+                    it.currentGame = game
                 }
                 callEvent(GameStartStageEvent.INIT)
                 players.forEachUnique(currentTurn) { it.init() }
@@ -57,6 +59,8 @@ class PlayerManager(private val game: ChessGame) : Component {
                         if (!results.endReason.quick)
                             wait((if (quick[it.side]) 0 else 3).seconds)
                         callEvent(HumanPlayerEvent(it.player, PlayerDirection.LEAVE))
+                        it.player.games -= game
+                        it.player.currentGame = null
                     }
                 }
                 if (results.endReason.quick) {

@@ -24,14 +24,6 @@ object ChessGameManager : Listener {
 
     fun firstGame(predicate: (ChessGame) -> Boolean): ChessGame? = games.firstOrNull(predicate)
 
-    private fun removeGame(g: ChessGame) {
-        games -= g
-        g.players.forEachReal { p ->
-            p.games -= g
-            p.currentGame = null
-        }
-    }
-
     operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uuid == uuid }
 
 
@@ -45,11 +37,13 @@ object ChessGameManager : Listener {
     }
 
     fun leave(player: BukkitPlayer) {
-        val games = player.games
-        cRequire(games.isNotEmpty() || player.isSpectating, YOU_NOT_IN_GAME)
-        for (g in games)
+        val g = player.currentGame
+        if (g == null) {
+            cRequire(player.isSpectating, YOU_NOT_IN_GAME)
+            player.spectatedGame = null
+        } else {
             g.stop(g[player]!!.side.lostBy(EndReason.WALKOVER), bySides { it == g[player]!!.side })
-        player.spectatedGame = null
+        }
     }
 
     @EventHandler
@@ -115,13 +109,11 @@ object ChessGameManager : Listener {
     @EventHandler
     fun onChessGameStart(e: GameStartEvent) {
         games += e.game
-        e.game.players.forEachReal {
-            it.games += e.game
-            it.currentGame = e.game
-        }
     }
 
     @EventHandler
-    fun onChessGameEnd(e: GameEndEvent) = removeGame(e.game)
+    fun onChessGameEnd(e: GameEndEvent) {
+        games -= e.game
+    }
 
 }
