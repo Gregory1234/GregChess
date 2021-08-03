@@ -22,17 +22,17 @@ class BukkitPlayer private constructor(val player: Player) : MinecraftPlayer(pla
         private val COPY_FEN = message("CopyFEN")
         private val COPY_PGN = message("CopyPGN")
         private val IN_CHECK_MSG = message("InCheck")
-        private val YOU_ARE_PLAYING_AS_MSG = BySides { message("YouArePlayingAs.${it.configName}") }
+        private val YOU_ARE_PLAYING_AS_MSG = bySides { message("YouArePlayingAs.${it.configName}") }
 
         private val IN_CHECK_TITLE = title("InCheck")
-        private val YOU_ARE_PLAYING_AS_TITLE get() = BySides { title("YouArePlayingAs.${it.configName}") }
+        private val YOU_ARE_PLAYING_AS_TITLE get() = bySides { title("YouArePlayingAs.${it.configName}") }
         private val YOUR_TURN = title("YourTurn")
 
         private val YOU_WON = title("Player.YouWon")
         private val YOU_LOST = title("Player.YouLost")
         private val YOU_DREW = title("Player.YouDrew")
 
-        private val SPECTATOR_WINNER = BySides { title("Spectator.${it.configName}Won") }
+        private val SPECTATOR_WINNER = bySides { title("Spectator.${it.configName}Won") }
         private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")
     }
 

@@ -82,24 +82,24 @@ class ScoreboardManager(private val game: ChessGame) : Component {
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
-        for (it in gameProperties.values) {
-            gamePropertyTeams[it.type] = newTeam().apply {
-                addEntry(generalFormat(it.type.localName))
+        for (t in gameProperties.keys) {
+            gamePropertyTeams[t] = newTeam().apply {
+                addEntry(generalFormat(t.localName))
             }
-            objective.getScore(generalFormat(it.type.localName)).score = i--
+            objective.getScore(generalFormat(t.localName)).score = i--
         }
-        for (it in playerProperties.values) {
-            playerPropertyTeams[it.type] = BySides { s ->
-                newTeam().apply { addEntry(format(s, it.type.localName)) }
+        for (t in playerProperties.keys) {
+            playerPropertyTeams[t] = bySides { s ->
+                newTeam().apply { addEntry(format(s, t.localName)) }
             }
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
-        for (it in playerProperties.values) {
-            objective.getScore(whiteFormat(it.type.localName)).score = i--
+        for (t in playerProperties.keys) {
+            objective.getScore(whiteFormat(t.localName)).score = i--
         }
         objective.getScore("&r".chatColor().repeat(i)).score = i--
-        for (it in playerProperties.values) {
-            objective.getScore(blackFormat(it.type.localName)).score = i--
+        for (t in gameProperties.keys) {
+            objective.getScore(blackFormat(t.localName)).score = i--
         }
     }
 
@@ -110,11 +110,12 @@ class ScoreboardManager(private val game: ChessGame) : Component {
     }
 
     private fun update() {
-        for (it in gameProperties.values) {
-            gamePropertyTeams[it.type]?.suffix = it.asString().chatColor()
-        }
-        for (it in playerProperties.values) {
-            playerPropertyTeams[it.type]?.forEachIndexed { s, t -> t.suffix = it.asString(s).chatColor() }
+        for ((t, v) in gamePropertyTeams)
+            v.suffix = gameProperties[t]!!.asString().chatColor()
+
+        for ((tp, v) in playerPropertyTeams) {
+            for ((s, t) in v.toIndexedList())
+                t.suffix = playerProperties[tp]!!.asString(s).chatColor()
         }
     }
 

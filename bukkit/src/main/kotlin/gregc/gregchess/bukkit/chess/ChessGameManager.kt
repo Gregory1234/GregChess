@@ -48,7 +48,7 @@ object ChessGameManager : Listener {
         val games = player.games
         cRequire(games.isNotEmpty() || player.isSpectating, YOU_NOT_IN_GAME)
         for (g in games)
-            g.stop(g[player]!!.side.lostBy(EndReason.WALKOVER), BySides { it == g[player]!!.side })
+            g.stop(g[player]!!.side.lostBy(EndReason.WALKOVER), bySides { it == g[player]!!.side })
         player.spectatedGame = null
     }
 

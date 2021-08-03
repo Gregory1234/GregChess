@@ -12,7 +12,7 @@ object ThreeChecks : ChessVariant("THREE_CHECKS") {
             override fun getComponent(game: ChessGame) = CheckCounter(game, limit)
         }
 
-        private var checks = MutableBySides(0u)
+        private val checks = mutableBySides(0u)
 
         @ChessEventHandler
         fun addProperties(e: AddPropertiesEvent) {
@@ -27,10 +27,9 @@ object ThreeChecks : ChessVariant("THREE_CHECKS") {
         }
 
         fun checkForGameEnd() {
-            checks.forEachIndexed { s, c ->
+            for ((s, c) in checks.toIndexedList())
                 if (c >= limit)
                     game.stop(s.lostBy(CHECK_LIMIT, limit))
-            }
         }
     }
 

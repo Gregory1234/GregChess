@@ -27,9 +27,9 @@ val PieceType.section get() = module.config.getConfigurationSection("Chess.Piece
 val PieceType.localChar get() = section.getString("Char")!!.single()
 val PieceType.localName get() = section.getPathString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
-val PieceType.itemMaterial get() = BySides { Material.valueOf(section.getString("Item.${it.configName}")!!) }
+val PieceType.itemMaterial get() = bySides { Material.valueOf(section.getString("Item.${it.configName}")!!) }
 val PieceType.structure
-    get() = BySides { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
+    get() = bySides { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
 
 val Piece.item get() = type.getItem(side)
 

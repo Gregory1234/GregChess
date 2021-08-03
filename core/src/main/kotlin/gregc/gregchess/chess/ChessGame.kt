@@ -104,7 +104,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
         get() = require<GameState.WithCurrentPlayer>().currentOpponent
 
     inner class AddPlayersScope {
-        private val players = MutableBySides<ChessPlayer?>(null)
+        private val players = mutableBySides<ChessPlayer?>(null)
 
         fun addPlayer(p: ChessPlayer) {
             if (players[p.side] != null)
@@ -118,8 +118,8 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
         fun engine(engine: ChessEngine, side: Side) =
             addPlayer(EnginePlayer(engine, side, this@ChessGame))
 
-        fun build(): BySides<ChessPlayer> = players.map {
-            it ?: throw IllegalStateException("player has not been initialized")
+        fun build(): BySides<ChessPlayer> = bySides {
+            players[it] ?: throw IllegalStateException("player has not been initialized")
         }
 
     }

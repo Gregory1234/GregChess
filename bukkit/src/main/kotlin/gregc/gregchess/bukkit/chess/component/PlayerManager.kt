@@ -25,7 +25,7 @@ class PlayerManager(private val game: ChessGame) : Component {
         override fun getComponent(game: ChessGame) = PlayerManager(game)
     }
 
-    var quick: BySides<Boolean> = BySides(false)
+    var quick: BySides<Boolean> = bySides(false)
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = with(game) {
@@ -93,4 +93,4 @@ fun ChessGame.stop(results: GameResults<*>, quick: BySides<Boolean>) {
     stop(results)
 }
 
-fun ChessGame.quickStop(results: GameResults<*>) = stop(results, BySides(true))
+fun ChessGame.quickStop(results: GameResults<*>) = stop(results, bySides(true))

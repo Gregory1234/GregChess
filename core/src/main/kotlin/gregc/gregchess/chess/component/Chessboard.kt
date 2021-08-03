@@ -223,7 +223,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
         return FEN(
             boardState,
             game.currentTurn,
-            BySides(::castling),
+            bySides(::castling),
             squares.values.firstOrNull { s -> s.flags.any { it.type == PawnMovement.EN_PASSANT && it.timeLeft >= 0 } }?.pos,
             movesSinceLastCapture,
             fullMoveCounter

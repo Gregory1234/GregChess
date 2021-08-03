@@ -19,16 +19,14 @@ private fun mkGame(
     settings: GameSettings = basicSettings,
     players: List<Pair<HumanPlayer, Side>> = listOf(humanA to white, humanB to black)
 ) = ChessGame(settings).addPlayers {
-    for ((h, s) in players) {
+    for ((h, s) in players)
         human(h, s, false)
-    }
 }
 
 private fun mkGame(settings: GameSettings = basicSettings, players: BySides<HumanPlayer>) =
     ChessGame(settings).addPlayers {
-        players.forEachIndexed { s, h ->
+        for ((s, h) in players.toIndexedList())
             human(h, s, false)
-        }
     }
 
 private fun playerExclude(p: HumanPlayer) {
@@ -75,7 +73,7 @@ class ChessGameTests : FreeSpec({
             "not call players" {
                 val a = spyk(humanA)
                 val b = spyk(humanB)
-                mkGame(players = BySides(a, b))
+                mkGame(players = bySides(a, b))
                 playerExclude(a)
                 playerExclude(b)
                 verify {
@@ -107,7 +105,7 @@ class ChessGameTests : FreeSpec({
             "send messages to players" {
                 val a = spyk(humanA)
                 val b = spyk(humanB)
-                mkGame(players = BySides(a, b))
+                mkGame(players = bySides(a, b))
                 playerExclude(a)
                 playerExclude(b)
                 verify {

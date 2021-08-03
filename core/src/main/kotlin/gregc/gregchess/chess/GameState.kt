@@ -113,8 +113,10 @@ inline fun BySides<ChessPlayer>.forEachRealIndexed(s: Side, f: (Side, HumanPlaye
 inline fun BySides<ChessPlayer>.forEachUnique(s: Side, f: (HumanChessPlayer) -> Unit) =
     real.mapNotNull { this[it, s] }.forEach(f)
 
-fun BySides<ChessPlayer>.validate() = forEachIndexed { side, player ->
-    if (player.side != side) throw IllegalStateException("Player's side wrong!")
+fun BySides<ChessPlayer>.validate() {
+    for ((s, p) in toIndexedList())
+        if (p.side != s)
+            throw IllegalStateException("Player's side wrong!")
 }
 
 operator fun BySides<ChessPlayer>.get(p: HumanPlayer, s: Side): HumanChessPlayer? =
