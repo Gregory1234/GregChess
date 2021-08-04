@@ -24,6 +24,9 @@ val MainChessModule.fabric
 object FabricGregChessModule : FabricChessModule, ChessModuleExtension {
     override val base = GregChessModule
 
+    @JvmField
+    val CHESSBOARD_BROKEN = DrawEndReason("CHESSBOARD_BROKEN", EndReason.Type.EMERGENCY, true)
+
     private val pieceBlocks_ = mutableMapOf<Piece, PieceBlock>()
     private val pieceItems_ = mutableMapOf<Piece, BlockItem>()
 
@@ -51,6 +54,8 @@ object FabricGregChessModule : FabricChessModule, ChessModuleExtension {
 
     override val pieceBlocks get() = pieceBlocks_.toMap()
     override val pieceItems get() = pieceItems_.toMap()
+
+    override val endReasons = listOf<EndReason<*>>(CHESSBOARD_BROKEN)
 
     private fun registerItems() {
         PieceType.PAWN.short()

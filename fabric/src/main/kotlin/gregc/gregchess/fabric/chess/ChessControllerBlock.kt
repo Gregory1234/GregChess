@@ -1,6 +1,6 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.chess.Pos
+import gregc.gregchess.chess.*
 import gregc.gregchess.fabric.*
 import gregc.gregchess.rangeTo
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
@@ -17,6 +17,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.screen.*
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.ActionResult
@@ -31,7 +32,7 @@ import kotlin.math.min
 
 class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChess.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder {
-    //var currentGame: ChessGame? = null
+    var currentGame: ChessGame? = null
     var chessboardStart: BlockPos? by BlockEntityDirtyDelegate(null)
 
     override fun writeNbt(nbt: NbtCompound): NbtCompound {
@@ -123,12 +124,21 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             block.updateFloor()
         }
         chessboardStart = null
+        currentGame?.stop(drawBy(FabricGregChessModule.CHESSBOARD_BROKEN))
+        currentGame = null
     }
 
     override fun markRemoved() {
         if (world?.isClient == false) {
             resetBoard()
         }
+    }
+
+    fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
+        currentGame = ChessGame(gameSettings(pos, world!!)).addPlayers {
+            fabric(whitePlayer, white)
+            fabric(blackPlayer, black)
+        }.start()
     }
 
 }
@@ -147,20 +157,41 @@ class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventor
         setRootPanel(root)
         root.setSize(300, 200)
         root.insets = Insets.ROOT_PANEL
+
+        val startGameButton = WButton(TranslatableText("gui.gregchess.start_game"))
+        startGameButton.onClick = Runnable {
+            ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("start_game")) {
+                it.writeUuid(playerInventory?.player?.uuid)
+            }
+        }
+        root.add(startGameButton, 0, 5, 5, 1)
+
         val detectBoardButton = WButton(TranslatableText("gui.gregchess.detect_board"))
         detectBoardButton.onClick = Runnable {
             ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("detect_board")) {}
         }
         root.add(detectBoardButton, 0, 1, 5, 1)
+
         val boardStatusLabel = WDynamicLabel {
             I18n.translate(if (propertyDelegate.get(0) == 0) "gui.gregchess.no_chessboard" else "gui.gregchess.has_chessboard")
         }
         root.add(boardStatusLabel, 0, 3, 5, 1)
+
         ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("detect_board")) {
             context.run { world, pos ->
                 val entity = world.getBlockEntity(pos)
                 if (entity is ChessControllerBlockEntity) {
                     entity.detectBoard()
+                }
+            }
+        }
+
+        ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("start_game")) {
+            context.run { world, pos ->
+                val entity = world.getBlockEntity(pos)
+                if (entity is ChessControllerBlockEntity && entity.chessboardStart != null && entity.currentGame == null) {
+                    val player = world.getPlayerByUuid(it.readUuid()) as ServerPlayerEntity
+                    entity.startGame(player, player)
                 }
             }
         }
