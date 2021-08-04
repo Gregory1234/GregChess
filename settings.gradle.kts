@@ -8,7 +8,18 @@ pluginManagement {
         val kotlinVersion: String by settings
         kotlin("jvm") version kotlinVersion
         val loomVersion: String by settings
-        id("fabric-loom").version(loomVersion)
+        id("fabric-loom") version loomVersion
+        val dokkaVersion: String by settings
+        id("org.jetbrains.dokka") version dokkaVersion
+    }
+}
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        val jacksonOverrideVersion: String by settings
+        classpath("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonOverrideVersion")
     }
 }
 dependencyResolutionManagement {

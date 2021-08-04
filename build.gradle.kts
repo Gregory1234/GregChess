@@ -1,11 +1,13 @@
 
 plugins {
     kotlin("jvm") apply false
+    id("org.jetbrains.dokka")
 }
 
 allprojects {
     group = "gregc"
     version = "1.0"
+    apply(plugin = "org.jetbrains.dokka")
 }
 
 tasks {
