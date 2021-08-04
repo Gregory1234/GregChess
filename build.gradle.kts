@@ -23,4 +23,17 @@ tasks {
             }
         }
     }
+    create<DefaultTask>("createFabricJar") {
+        group = "gregchess"
+        dependsOn(":fabric:remapJar")
+        doLast {
+            copy {
+                from(project(":fabric").getTasksByName("remapJar", true))
+                into(rootDir)
+                rename {
+                    "${rootProject.name}-$version-fabric.jar"
+                }
+            }
+        }
+    }
 }

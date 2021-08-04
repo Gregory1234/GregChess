@@ -125,6 +125,12 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         chessboardStart = null
     }
 
+    override fun markRemoved() {
+        if (world?.isClient == false) {
+            resetBoard()
+        }
+    }
+
 }
 
 class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext) :
@@ -172,13 +178,6 @@ class ChessControllerBlock(settings: Settings?) : BlockWithEntity(settings) {
         ChessControllerBlockEntity(pos, state)
 
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
-
-    override fun onBreak(world: World?, pos: BlockPos?, state: BlockState?, player: PlayerEntity?) {
-        if (world?.isClient == false) {
-            (world.getBlockEntity(pos) as? ChessControllerBlockEntity)?.resetBoard()
-        }
-        super.onBreak(world, pos, state, player)
-    }
 
     override fun onUse(
         state: BlockState,

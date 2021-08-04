@@ -6,13 +6,11 @@ import gregc.gregchess.fabric.BlockEntityDirtyDelegate
 import gregc.gregchess.fabric.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
 
 class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChess.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
@@ -26,7 +24,6 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
         boardPos?.let {
             nbt.putLong("Pos", ((it.file.toLong() shl 32) or (it.rank.toLong() and 0xFFFFFFFFL)))
         }
-        println("$boardPos $nbt")
         return nbt
     }
 
@@ -48,6 +45,15 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
             if ((it.rank + it.file) % 2 == 0) ChessboardFloor.DARK else ChessboardFloor.LIGHT
         } ?: ChessboardFloor.INACTIVE))
     }
+
+    override fun markRemoved() {
+        if (world?.isClient == false) {
+            if (chessControllerBlockPos != null) {
+                (world?.getBlockEntity(chessControllerBlockPos) as? ChessControllerBlockEntity)?.resetBoard()
+            }
+        }
+        super.markRemoved()
+    }
 }
 
 enum class ChessboardFloor(val floor: Floor?) : StringIdentifiable {
@@ -68,16 +74,6 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
 
     override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity =
         ChessboardFloorBlockEntity(pos, state)
-
-    override fun onBreak(world: World?, pos: BlockPos?, state: BlockState?, player: PlayerEntity?) {
-        if (world?.isClient == false) {
-            val controllerPos = (world.getBlockEntity(pos) as? ChessboardFloorBlockEntity)?.chessControllerBlockPos
-            if (controllerPos != null) {
-                (world.getBlockEntity(controllerPos) as? ChessControllerBlockEntity)?.resetBoard()
-            }
-        }
-        super.onBreak(world, pos, state, player)
-    }
 
     init {
         defaultState = stateManager.defaultState.with(FLOOR, ChessboardFloor.INACTIVE)
