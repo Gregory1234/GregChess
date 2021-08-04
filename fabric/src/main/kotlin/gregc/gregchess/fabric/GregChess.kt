@@ -6,6 +6,7 @@ import gregc.gregchess.chess.white
 import gregc.gregchess.fabric.chess.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
 import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointUtils
@@ -20,6 +21,8 @@ import net.minecraft.util.registry.Registry
 
 
 object GregChess : ModInitializer {
+    val PLAYER_EXTRA_INFO_SYNC = ident("player_extra_info_sync")
+
     val CHESS_GROUP: ItemGroup = FabricItemGroupBuilder.build(ident("chess")) {
         white.pawn.item.defaultStack
     }
@@ -64,6 +67,12 @@ object GregChess : ModInitializer {
         Registry.register(Registry.BLOCK, ident("chess_controller"), CHESS_CONTROLLER_BLOCK)
         Registry.register(Registry.ITEM, ident("chess_controller"), CHESS_CONTROLLER_ITEM)
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("chess_controller"), CHESS_CONTROLLER_ENTITY_TYPE)
+
+        ClientPlayNetworking.registerGlobalReceiver(PLAYER_EXTRA_INFO_SYNC) {client, _, buf, _ ->
+            val nbt = buf.readNbt()
+            if (nbt != null && client.player != null)
+                (client.player as PlayerExtraInfo).readExtraInfo(nbt)
+        }
 
     }
 }

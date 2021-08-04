@@ -29,6 +29,9 @@
       }
     ]
   },
+  "mixins": [
+    "gregchess.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=@loader-version@",
     "fabric": "*",

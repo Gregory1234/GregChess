@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "gregc.gregchess.fabric.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "PlayerMixin"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
