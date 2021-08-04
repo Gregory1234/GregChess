@@ -6,17 +6,13 @@ import gregc.gregchess.fabric.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf
-import net.minecraft.client.item.TooltipContext
-import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.*
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.Properties
-import net.minecraft.text.LiteralText
-import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShape
@@ -55,63 +51,9 @@ abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEnti
         pos: BlockPos?,
         context: ShapeContext?
     ): VoxelShape? = VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
-
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState?, player: PlayerEntity) {
-        val blockEntity = world.getBlockEntity(pos)
-        if (blockEntity is PieceBlockEntity) {
-            if (!world.isClient && player.isCreative && !blockEntity.isGameless) {
-                val itemStack = ItemStack(piece.block)
-                val nbtCompound = blockEntity.writeNbt(NbtCompound())
-                if (!nbtCompound.isEmpty) {
-                    itemStack.setSubNbt("BlockEntityTag", nbtCompound)
-                }
-                val itemEntity = ItemEntity(
-                    world, pos.x.toDouble() + 0.5, pos.y.toDouble() + 0.5, pos.z.toDouble() + 0.5, itemStack
-                )
-                itemEntity.setToDefaultPickupDelay()
-                world.spawnEntity(itemEntity)
-            }
-        }
-        super.onBreak(world, pos, state, player)
-    }
-
-    override fun appendTooltip(
-        stack: ItemStack,
-        world: BlockView?,
-        tooltip: MutableList<Text>,
-        options: TooltipContext?
-    ) {
-        val data = stack.getSubNbt("BlockEntityTag")
-        if (data?.containsUuid("GameUUID") == true)
-            data.getUuid("GameUUID")?.let {
-                tooltip += LiteralText("Game: $it")
-            }
-    }
 }
 
-private fun ItemPlacementContext.canPlacePiece(): Boolean {
-    val data = stack.getSubNbt("BlockEntityTag")
-    if (data?.containsUuid("GameUUID") == true) {
-        if (side != Direction.UP)
-            return false
-        val b = world.getBlockState(blockPos.down())
-        if (b.block !is ChessboardFloorBlock)
-            return false
-    }
-    return true
-}
-
-class PawnItem(block: Block?, settings: Settings) : BlockItem(block, settings) {
-    override fun canPlace(context: ItemPlacementContext, state: BlockState): Boolean =
-        context.canPlacePiece() && super.canPlace(context, state)
-}
-
-class TallPieceItem(block: Block?, settings: Settings) : TallBlockItem(block, settings) {
-    override fun canPlace(context: ItemPlacementContext, state: BlockState): Boolean =
-        context.canPlacePiece() && super.canPlace(context, state)
-}
-
-class PawnBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings)
+class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings)
 
 class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
 
