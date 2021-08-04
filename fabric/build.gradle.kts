@@ -1,8 +1,10 @@
 import org.apache.tools.ant.filters.ReplaceTokens
+import java.net.URL
 
 plugins {
     kotlin("jvm")
     id("fabric-loom")
+    id("org.jetbrains.dokka")
 }
 
 loom.runConfigs.forEach {
@@ -65,5 +67,20 @@ tasks {
     jar {
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
+    }
+    withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
+        dokkaSourceSets {
+            configureEach {
+                externalDocumentationLink {
+                    url.set(URL("https://cottonmc.github.io/docs/libgui/"))
+                    packageListUrl.set(URL("https://cottonmc.github.io/docs/libgui/element-list"))
+                }
+                externalDocumentationLink {
+                    val yarnMappings: String by project
+                    url.set(URL("https://maven.fabricmc.net/docs/yarn-$yarnMappings/"))
+                    packageListUrl.set(URL("https://maven.fabricmc.net/docs/yarn-$yarnMappings/element-list"))
+                }
+            }
+        }
     }
 }

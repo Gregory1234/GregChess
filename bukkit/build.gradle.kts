@@ -1,7 +1,9 @@
 import org.apache.tools.ant.filters.ReplaceTokens
+import java.net.URL
 
 plugins {
     kotlin("jvm")
+    id("org.jetbrains.dokka")
 }
 
 val shaded: Configuration by configurations.creating
@@ -52,5 +54,15 @@ tasks {
         from ({ shaded.filter { it !in unshaded }.map { if(it.isDirectory) it else zipTree(it) } })
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
+    }
+    withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
+        dokkaSourceSets {
+            configureEach {
+                externalDocumentationLink {
+                    url.set(URL("https://hub.spigotmc.org/javadocs/spigot/"))
+                    packageListUrl.set(URL("https://hub.spigotmc.org/javadocs/spigot/element-list"))
+                }
+            }
+        }
     }
 }
