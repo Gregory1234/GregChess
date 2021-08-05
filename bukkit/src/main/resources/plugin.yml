@@ -7,6 +7,7 @@ description: Chess Plugin
 libraries:
   - org.jetbrains.kotlin:kotlin-stdlib-jdk8:@kotlin-version@
   - org.jetbrains.kotlin:kotlin-reflect:@kotlin-version@
+  - org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:@serialization-version@
 commands:
   chess:
     description: Main chess command

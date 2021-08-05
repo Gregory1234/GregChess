@@ -18,6 +18,8 @@ dependencies {
 
     unshaded(kotlin("stdlib-jdk8"))
     unshaded(kotlin("reflect"))
+    val kotlinxSerializationVersion: String by project
+    unshaded("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
     shaded(project(":core"))
 }
 
@@ -27,12 +29,14 @@ tasks {
 
     processResources {
         val kotlinVersion: String by project
+        val kotlinxSerializationVersion: String by project
         val spigotMinecraftVersion: String by project
         from(sourceSets["main"].resources.srcDirs) {
             include("**/*.yml")
             replace(
                 "version" to version,
                 "kotlin-version" to kotlinVersion,
+                "serialization-version" to kotlinxSerializationVersion,
                 "minecraft-version" to spigotMinecraftVersion
             )
         }
