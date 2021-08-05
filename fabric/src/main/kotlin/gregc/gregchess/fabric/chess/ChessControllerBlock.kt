@@ -2,6 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.fabric.*
+import gregc.gregchess.fabric.chess.component.FabricRenderer
 import gregc.gregchess.rangeTo
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
@@ -41,6 +42,9 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         chessboardStart?.let {
             nbt.putLong("ChessboardStart", it.asLong())
         }
+        currentGame?.let {
+            nbt.putUuid("GameUUID", it.uuid)
+        }
 
         return nbt
     }
@@ -50,6 +54,9 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
         if (nbt.contains("ChessboardStart", 4)) {
             chessboardStart = BlockPos.fromLong(nbt.getLong("ChessboardStart"))
+        }
+        if (nbt.containsUuid("GameUUID")) {
+            currentGame = ChessGameManager[nbt.getUuid("GameUUID")]
         }
     }
 
@@ -97,7 +104,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         return false
     }
 
-    private val floorBlockEntities
+    val floorBlockEntities
         get() = chessboardStart?.let { st ->
             (Pair(0, 0)..Pair(8 * 3 - 1, 8 * 3 - 1)).mapNotNull { (i, j) ->
                 world?.getBlockEntity(st.offset(Direction.Axis.X, i).offset(Direction.Axis.Z, j))
@@ -135,7 +142,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
-        currentGame = ChessGame(gameSettings(pos, world!!)).addPlayers {
+        currentGame = ChessGame(ChessGameManager.settings(FabricRenderer.Settings(this))).addPlayers {
             fabric(whitePlayer, white)
             fabric(blackPlayer, black)
         }.start()

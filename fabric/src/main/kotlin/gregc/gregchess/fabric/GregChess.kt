@@ -7,6 +7,7 @@ import gregc.gregchess.fabric.chess.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
 import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointUtils
@@ -72,6 +73,10 @@ object GregChess : ModInitializer {
             val nbt = buf.readNbt()
             if (nbt != null && client.player != null)
                 (client.player as PlayerExtraInfo).readExtraInfo(nbt)
+        }
+
+        ServerLifecycleEvents.SERVER_STOPPING.register {
+            ChessGameManager.clear()
         }
 
     }
