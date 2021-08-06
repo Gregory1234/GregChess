@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.isValidName
 import kotlin.collections.set
 import kotlin.reflect.KClass
 
@@ -28,7 +29,11 @@ class AddPropertiesEvent(
 }
 
 class PropertyType<T>(val name: String) {
-    override fun toString(): String = name
+    init {
+        require(name.isValidName())
+    }
+
+    override fun toString(): String = "$name@${hashCode().toString(16)}"
 }
 
 abstract class PlayerProperty<T>(val type: PropertyType<T>) {

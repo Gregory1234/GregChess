@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.GregChessModule
+import gregc.gregchess.isValidName
 
 private fun victoryPgn(winner: Side) = when(winner) {
     Side.WHITE -> "1-0"
@@ -21,7 +22,11 @@ class EndReason<R : GameScore>(val name: String, val type: Type, val quick: Bool
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
     }
 
-    override fun toString() = name
+    init {
+        require(name.isValidName())
+    }
+
+    override fun toString(): String = "$name@${hashCode().toString(16)}"
 
     companion object {
         @JvmField

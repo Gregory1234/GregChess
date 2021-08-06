@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.GregChessModule
-import gregc.gregchess.rotationsOf
+import gregc.gregchess.*
 
 
 class PieceType(
@@ -12,7 +11,11 @@ class PieceType(
     val minor: Boolean
 ) {
 
-    override fun toString(): String = "$name(${hashCode().toString(16)})"
+    init {
+        require(name.isValidName())
+    }
+
+    override fun toString(): String = "$name@${hashCode().toString(16)}"
 
     companion object {
 

@@ -3,11 +3,16 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.isValidName
 import kotlin.reflect.KClass
 
 open class ChessVariant(val name: String) {
 
-    override fun toString(): String = name
+    init {
+        require(name.isValidName())
+    }
+
+    final override fun toString(): String = "$name@${hashCode().toString(16)}"
 
     enum class MoveLegality(val prettyName: String) {
         INVALID("Invalid moves"),

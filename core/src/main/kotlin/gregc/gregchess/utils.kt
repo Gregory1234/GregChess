@@ -37,6 +37,8 @@ fun String.snakeToPascal(): String {
     return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
 }
 
+fun String.isValidName(): Boolean = all { it == '_' || it in ('A'..'Z')}
+
 data class Loc(val x: Int, val y: Int, val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
 }
