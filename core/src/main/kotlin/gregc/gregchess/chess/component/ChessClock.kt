@@ -1,19 +1,13 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.minutes
+import gregc.gregchess.seconds
 import java.time.Duration
 import java.time.LocalDateTime
 
 
 class ChessClock(private val game: ChessGame, private val settings: Settings) : Component {
-
-    companion object {
-        @JvmField
-        val TIME_REMAINING = GregChessModule.register(PropertyType<Duration>("TIME_REMAINING"))
-        @JvmField
-        val TIME_REMAINING_SIMPLE = GregChessModule.register(PropertyType<Duration>("TIME_REMAINING_SIMPLE"))
-    }
 
     enum class Type(val usesIncrement: Boolean = true) {
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
@@ -82,7 +76,7 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
     private var started = false
     private var stopTime: LocalDateTime? = null
 
-    private fun getTimeRemaining(s: Side) =
+    fun getTimeRemaining(s: Side) =
         time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
 
     @ChessEventHandler
@@ -92,15 +86,6 @@ class ChessClock(private val game: ChessGame, private val settings: Settings) : 
         else if (e == GameBaseEvent.UPDATE)
             for (it in Side.values())
                 if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it)
-    }
-
-    @ChessEventHandler
-    fun addProperties(e: AddPropertiesEvent) {
-        if (settings.type == Type.FIXED) {
-            e.game(TIME_REMAINING_SIMPLE) { getTimeRemaining(game.currentTurn) }
-        } else {
-            e.player(TIME_REMAINING) { getTimeRemaining(it) }
-        }
     }
 
     private fun startTimer() {

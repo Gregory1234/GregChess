@@ -1,11 +1,11 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.snakeToPascal
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
@@ -73,11 +73,6 @@ val GameResults<*>.message
         }
     }
 
-val PropertyType<*>.module get() = RegistryType.PROPERTY_TYPE.getModule(this)
-val PropertyType<*>.localName get() = module.bukkit.config.getPathString("Scoreboard.${name.snakeToPascal()}")
-fun <T> PropertyType<T>.stringify(v: T) = module.bukkit.stringify(this, v)
-
-fun <T> PlayerProperty<T>.asString(s: Side) = type.stringify(this(s))
-fun <T> GameProperty<T>.asString() = type.stringify(this())
+val PropertyType.localName get() = module.bukkit.config.getPathString("Scoreboard.${name.snakeToPascal()}")
 
 val ChessGame.renderer get() = requireComponent<BukkitRenderer>()

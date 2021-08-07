@@ -10,12 +10,18 @@ import gregc.gregchess.chess.variant.ThreeChecks
 import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
-import java.time.Duration
 import kotlin.reflect.KClass
+
+object BukkitRegistryTypes {
+    @JvmField
+    val PROPERTY_TYPE = RegistryType<String, PropertyType>("property_type")
+}
+
+fun ChessModule.register(id: String, propertyType: PropertyType) =
+    register(BukkitRegistryTypes.PROPERTY_TYPE, id, propertyType)
 
 abstract class BukkitChessModuleExtension(val plugin: Plugin) : ChessModuleExtension {
     open val config: ConfigurationSection get() = plugin.config
-    open fun <T> stringify(propertyType: PropertyType<T>, t: T): String = t.toString()
     open fun getSettings(
         requested: Collection<KClass<out Component.Settings<*>>>,
         section: ConfigurationSection
@@ -34,14 +40,7 @@ interface BukkitChessPlugin {
 }
 
 object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
-    private val timeFormat: String get() = config.getPathString("TimeFormat")
     private val NO_ARENAS = err("NoArenas")
-
-    override fun <T> stringify(propertyType: PropertyType<T>, t: T): String =
-        if (t is Duration)
-            t.format(timeFormat) ?: timeFormat
-        else
-            t.toString()
 
     override fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String? =
         if (type == MoveNameTokenType.CAPTURE)
@@ -77,6 +76,7 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
                 this += ThreeChecks.CheckCounter.Settings(section.getInt("CheckLimit", 3).toUInt())
             if (AtomicChess.ExplosionManager.Settings::class in requested)
                 this += AtomicChess.ExplosionManager.Settings
+            this += BukkitGregChessAdapter.Settings
         }
 
     override fun load() {

@@ -2,7 +2,7 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.register
 import kotlin.reflect.KClass
 
@@ -16,11 +16,6 @@ object ThreeChecks : ChessVariant() {
         private val checks = mutableBySides(0u)
 
         @ChessEventHandler
-        fun addProperties(e: AddPropertiesEvent) {
-            e.player(CHECK_COUNTER) { checks[it] }
-        }
-
-        @ChessEventHandler
         fun endTurn(e: TurnEvent) {
             if (e == TurnEvent.END)
                 if (game.variant.isInCheck(game, !game.currentTurn))
@@ -32,10 +27,10 @@ object ThreeChecks : ChessVariant() {
                 if (c >= limit)
                     game.stop(s.lostBy(CHECK_LIMIT, limit))
         }
+
+        operator fun get(s: Side) = checks[s]
     }
 
-    @JvmField
-    val CHECK_COUNTER = GregChessModule.register(PropertyType<UInt>("CHECK_COUNTER"))
     @JvmField
     val CHECK_LIMIT = GregChessModule.register("check_limit", DetEndReason(EndReason.Type.NORMAL))
 

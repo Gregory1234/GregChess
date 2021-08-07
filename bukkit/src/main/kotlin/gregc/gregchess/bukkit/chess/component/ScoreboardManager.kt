@@ -1,10 +1,11 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.randomString
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
@@ -25,19 +26,19 @@ class ScoreboardManager(private val game: ChessGame) : Component {
         private val playerPrefix get() = config.getPathString("Scoreboard.PlayerPrefix")
 
         @JvmField
-        val PRESET = GregChessModule.register(PropertyType<String>("PRESET"))
+        val PRESET = GregChessModule.register("preset", PropertyType())
 
         @JvmField
-        val PLAYER = GregChessModule.register(PropertyType<String>("PLAYER"))
+        val PLAYER = GregChessModule.register("player", PropertyType())
     }
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
-    private val gameProperties = mutableMapOf<PropertyType<*>, GameProperty<*>>()
-    private val playerProperties = mutableMapOf<PropertyType<*>, PlayerProperty<*>>()
+    private val gameProperties = mutableMapOf<PropertyType, GameProperty>()
+    private val playerProperties = mutableMapOf<PropertyType, PlayerProperty>()
 
-    private val gamePropertyTeams = mutableMapOf<PropertyType<*>, Team>()
-    private val playerPropertyTeams = mutableMapOf<PropertyType<*>, BySides<Team>>()
+    private val gamePropertyTeams = mutableMapOf<PropertyType, Team>()
+    private val playerPropertyTeams = mutableMapOf<PropertyType, BySides<Team>>()
 
     private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get())
 
@@ -117,11 +118,11 @@ class ScoreboardManager(private val game: ChessGame) : Component {
 
     private fun update() {
         for ((t, v) in gamePropertyTeams)
-            v.suffix = gameProperties[t]!!.asString().chatColor()
+            v.suffix = gameProperties[t]!!().chatColor()
 
         for ((tp, v) in playerPropertyTeams) {
             for ((s, t) in v.toIndexedList())
-                t.suffix = playerProperties[tp]!!.asString(s).chatColor()
+                t.suffix = playerProperties[tp]!!(s).chatColor()
         }
     }
 

@@ -2,7 +2,6 @@ package gregc.gregchess
 
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.PieceType
-import gregc.gregchess.chess.component.PropertyType
 import gregc.gregchess.chess.variant.ChessVariant
 
 class RegistryType<K, T>(val name: String, val base: RegistryType<*, K>? = null) {
@@ -23,8 +22,6 @@ class RegistryType<K, T>(val name: String, val base: RegistryType<*, K>? = null)
         val PIECE_TYPE = RegistryType<String, PieceType>("piece_type")
         @JvmField
         val END_REASON = RegistryType<String, EndReason<*>>("end_reason")
-        @JvmField
-        val PROPERTY_TYPE = RegistryType<String, PropertyType<*>>("property_type")
         @JvmField
         val VARIANT = RegistryType<String, ChessVariant>("variant")
     }
