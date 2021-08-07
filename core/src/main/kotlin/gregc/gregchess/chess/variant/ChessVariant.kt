@@ -1,16 +1,19 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.RegistryType
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.isValidName
+import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
-open class ChessVariant {
+@Serializable(with = ChessVariant.Serializer::class)
+open class ChessVariant: NameRegistered {
 
-    val module get() = RegistryType.VARIANT.getModule(this)
-    val name get() = RegistryType.VARIANT[this]
+    object Serializer: NameRegisteredSerializer<ChessVariant>("ChessVariant", RegistryType.VARIANT)
+
+    override val module get() = RegistryType.VARIANT.getModule(this)
+    override val name get() = RegistryType.VARIANT[this]
 
     override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 

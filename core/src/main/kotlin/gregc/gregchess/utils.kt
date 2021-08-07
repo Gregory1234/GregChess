@@ -1,5 +1,9 @@
 package gregc.gregchess
 
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.time.Duration
 
 fun randomString(size: Int) =
@@ -37,9 +41,30 @@ fun String.snakeToPascal(): String {
     return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
 }
 
-fun String.isValidName(): Boolean = all { it == '_' || it in ('A'..'Z')}
-fun String.isValidId(): Boolean = all { it == '_' || it in ('a'..'z')}
+fun String.isValidName(): Boolean = all { it == '_' || it in ('A'..'Z') }
+fun String.isValidId(): Boolean = all { it == '_' || it in ('a'..'z') }
 
 data class Loc(val x: Int, val y: Int, val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
+}
+
+interface NameRegistered {
+    val module: ChessModule
+    val name: String
+}
+
+open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryType: RegistryType<String, T>) :
+    KSerializer<T> {
+
+    override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor(name, PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: T) {
+        encoder.encodeString(value.module.namespace + ":" + value.name)
+    }
+
+    override fun deserialize(decoder: Decoder): T {
+        val (namespace, name) = decoder.decodeString().split(":")
+        return ChessModule[namespace][registryType][name]
+    }
+
 }

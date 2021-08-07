@@ -1,17 +1,20 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import kotlinx.serialization.Serializable
 
-
+@Serializable(with = PieceType.Serializer::class)
 class PieceType(
     val char: Char,
     val moveScheme: MoveScheme,
     val hasMoved: (FEN, Pos, Side) -> Boolean,
     val minor: Boolean
-) {
+): NameRegistered {
 
-    val module get() = RegistryType.PIECE_TYPE.getModule(this)
-    val name get() = RegistryType.PIECE_TYPE[this]
+    object Serializer: NameRegisteredSerializer<PieceType>("PieceType", RegistryType.PIECE_TYPE)
+
+    override val module get() = RegistryType.PIECE_TYPE.getModule(this)
+    override val name get() = RegistryType.PIECE_TYPE[this]
 
     override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 

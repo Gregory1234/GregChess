@@ -1,7 +1,9 @@
 package gregc.gregchess.chess
 
+import kotlinx.serialization.Serializable
 import java.util.*
 
+@Serializable
 data class Piece(val type: PieceType, val side: Side) {
     val char
         get() = when (side) {

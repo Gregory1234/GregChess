@@ -1,28 +1,38 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 private fun victoryPgn(winner: Side) = when(winner) {
     Side.WHITE -> "1-0"
     Side.BLACK -> "0-1"
 }
 
+@Serializable
 sealed class GameScore(val pgn: String) {
+    @Serializable
+    @SerialName("Victory")
     class Victory(val winner: Side): GameScore(victoryPgn(winner))
+    @Serializable
+    @SerialName("Draw")
     object Draw: GameScore("1/2-1/2")
 }
 
 typealias DetEndReason = EndReason<GameScore.Victory>
 typealias DrawEndReason = EndReason<GameScore.Draw>
 
-class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false) {
+@Serializable(with = EndReason.Serializer::class)
+class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false): NameRegistered {
+
+    object Serializer: NameRegisteredSerializer<EndReason<*>>("EndReason", RegistryType.END_REASON)
 
     enum class Type(val pgn: String) {
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
     }
 
-    val module get() = RegistryType.END_REASON.getModule(this)
-    val name get() = RegistryType.END_REASON[this]
+    override val module get() = RegistryType.END_REASON.getModule(this)
+    override val name get() = RegistryType.END_REASON[this]
 
     override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 
