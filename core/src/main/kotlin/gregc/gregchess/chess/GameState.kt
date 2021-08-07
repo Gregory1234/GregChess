@@ -18,7 +18,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
     }
 
     sealed interface Ended {
-        val results: GameResults<*>
+        val results: GameResults
     }
 
     object Initial : GameState(false, false, false)
@@ -67,9 +67,9 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
-        override val results: GameResults<*>
+        override val results: GameResults
     ) : GameState(true, false, false), WithCurrentPlayer, WithStartTime, Ended {
-        constructor(running: Running, results: GameResults<*>)
+        constructor(running: Running, results: GameResults)
                 : this(running.players, running.startTime, running.currentTurn, results)
 
         override val white = players.white
@@ -84,7 +84,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
         override val players: BySides<ChessPlayer>,
         override val startTime: LocalDateTime,
         override val currentTurn: Side,
-        override val results: GameResults<*>
+        override val results: GameResults
     ) : GameState(true, true, false), WithCurrentPlayer, WithStartTime, Ended {
         constructor(stopping: Stopping) :
                 this(stopping.players, stopping.startTime, stopping.currentTurn, stopping.results)
@@ -99,7 +99,7 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
 
     class Error(val state: GameState, val error: Exception) :
         GameState(false, true, false), Ended {
-        override val results: GameResults<*> = drawBy(EndReason.ERROR)
+        override val results: GameResults = drawBy(EndReason.ERROR)
     }
 
 }

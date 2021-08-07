@@ -1,21 +1,41 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import kotlinx.serialization.SerialName
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 private fun victoryPgn(winner: Side) = when(winner) {
     Side.WHITE -> "1-0"
     Side.BLACK -> "0-1"
 }
 
-@Serializable
+@Serializable(with = GameScore.Serializer::class)
 sealed class GameScore(val pgn: String) {
-    @Serializable
-    @SerialName("Victory")
+    override fun toString(): String = pgn
+
+    object Serializer: KSerializer<GameScore> {
+        override val descriptor: SerialDescriptor
+            get() = PrimitiveSerialDescriptor("GameScore", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: GameScore) {
+            encoder.encodeString(value.pgn)
+        }
+
+        override fun deserialize(decoder: Decoder): GameScore = when(decoder.decodeString()) {
+            Draw.pgn -> Draw
+            victoryPgn(white) -> Victory(white)
+            victoryPgn(black) -> Victory(black)
+            else -> throw IllegalStateException()
+        }
+
+    }
+
+    @Serializable(with = Serializer::class)
     class Victory(val winner: Side): GameScore(victoryPgn(winner))
-    @Serializable
-    @SerialName("Draw")
+    @Serializable(with = Serializer::class)
     object Draw: GameScore("1/2-1/2")
 }
 
@@ -66,9 +86,12 @@ class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false): Name
     val pgn get() = type.pgn
 }
 
-fun Side.wonBy(reason: DetEndReason, vararg args: Any?) = GameResults(reason, GameScore.Victory(this), args.toList())
-fun Side.lostBy(reason: DetEndReason, vararg args: Any?) = (!this).wonBy(reason, *args)
-fun drawBy(reason: DrawEndReason, vararg args: Any?) = GameResults(reason, GameScore.Draw, args.toList())
-fun DrawEndReason.of(vararg args: Any?) = GameResults(this, GameScore.Draw, args.toList())
+fun Side.wonBy(reason: DetEndReason, vararg args: String): GameResults = GameResultsWith(reason, GameScore.Victory(this), args.toList())
+fun Side.lostBy(reason: DetEndReason, vararg args: String): GameResults = (!this).wonBy(reason, *args)
+fun drawBy(reason: DrawEndReason, vararg args: String): GameResults = GameResultsWith(reason, GameScore.Draw, args.toList())
+fun DrawEndReason.of(vararg args: String): GameResults = GameResultsWith(this, GameScore.Draw, args.toList())
 
-data class GameResults<R : GameScore>(val endReason: EndReason<R>, val score: R, val args: List<Any?>)
+@Serializable
+data class GameResultsWith<out R : GameScore> internal constructor(val endReason: EndReason<out R>, val score: R, val args: List<String>)
+
+typealias GameResults = GameResultsWith<GameScore>

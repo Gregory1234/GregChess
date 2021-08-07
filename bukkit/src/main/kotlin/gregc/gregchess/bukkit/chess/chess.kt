@@ -62,10 +62,10 @@ fun ChessGame.getInfo() = buildTextComponent {
 }
 
 val EndReason<*>.configName get() = name.snakeToPascal()
-val GameResults<*>.name
-    get() = endReason.module.bukkit.config.getPathString("Chess.EndReason.${endReason.configName}", *args.map { it.toString() }.toTypedArray())
+val GameResults.name
+    get() = endReason.module.bukkit.config.getPathString("Chess.EndReason.${endReason.configName}", *args.toTypedArray())
 
-val GameResults<*>.message
+val GameResults.message
     get() = score.let {
         when (it) {
             is GameScore.Draw -> config.getPathString("Message.GameFinished.ItWasADraw", name)

@@ -4,7 +4,7 @@ import gregc.gregchess.chess.*
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.LiteralText
 
-fun ServerPlayerEntity.showGameResults(side: Side, results: GameResults<*>) {
+fun ServerPlayerEntity.showGameResults(side: Side, results: GameResults) {
     sendMessage(LiteralText(results.endReason.name), false)
 }
 

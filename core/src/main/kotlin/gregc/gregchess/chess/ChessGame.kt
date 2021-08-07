@@ -183,10 +183,10 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
         currentPlayer.startTurn()
     }
 
-    val results: GameResults<*>?
+    val results: GameResults?
         get() = (state as? GameState.Ended)?.results
 
-    fun stop(results: GameResults<*>) {
+    fun stop(results: GameResults) {
         state = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, results)
         callEvent(GameBaseEvent.STOP)
     }

@@ -25,7 +25,7 @@ object ThreeChecks : ChessVariant() {
         fun checkForGameEnd() {
             for ((s, c) in checks.toIndexedList())
                 if (c >= limit)
-                    game.stop(s.lostBy(CHECK_LIMIT, limit))
+                    game.stop(s.lostBy(CHECK_LIMIT, limit.toString()))
         }
 
         operator fun get(s: Side) = checks[s]

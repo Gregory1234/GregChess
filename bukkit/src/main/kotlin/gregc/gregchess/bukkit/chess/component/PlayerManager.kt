@@ -119,9 +119,9 @@ class PlayerManager(private val game: ChessGame) : Component {
 
 val ChessGame.playerManager get() = requireComponent<PlayerManager>()
 
-fun ChessGame.stop(results: GameResults<*>, quick: BySides<Boolean>) {
+fun ChessGame.stop(results: GameResults, quick: BySides<Boolean>) {
     playerManager.quick = quick
     stop(results)
 }
 
-fun ChessGame.quickStop(results: GameResults<*>) = stop(results, bySides(true))
+fun ChessGame.quickStop(results: GameResults) = stop(results, bySides(true))

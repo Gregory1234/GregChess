@@ -68,7 +68,7 @@ fun Player.sendTitleFull(title: String?, subtitle: String?) = sendTitle(title, s
 private val SPECTATOR_WINNER = bySides { title("Spectator.${it.configName}Won") }
 private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")
 
-fun Player.showGameResults(results: GameResults<*>) {
+fun Player.showGameResults(results: GameResults) {
     sendTitleFull(
         results.score.let { if (it is GameScore.Victory) SPECTATOR_WINNER[it.winner] else SPECTATOR_DRAW }.get(),
         results.name
@@ -80,7 +80,7 @@ private val YOU_WON = title("Player.YouWon")
 private val YOU_LOST = title("Player.YouLost")
 private val YOU_DREW = title("Player.YouDrew")
 
-fun Player.showGameResults(side: Side, results: GameResults<*>) {
+fun Player.showGameResults(side: Side, results: GameResults) {
     val wld = when (results.score) {
         GameScore.Victory(side) -> YOU_WON
         GameScore.Draw -> YOU_DREW
