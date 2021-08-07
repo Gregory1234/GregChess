@@ -7,63 +7,55 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks
 import net.minecraft.item.BlockItem
-import net.minecraft.item.TallBlockItem
 import net.minecraft.util.Rarity
 import net.minecraft.util.registry.Registry
 
-
-interface FabricChessModule : ChessModule {
-    val pieceBlocks: Map<Piece, PieceBlock>
-    val pieceItems: Map<Piece, BlockItem>
+object FabricRegistryTypes {
+    @JvmField
+    val PIECE_BLOCK = RegistryType<PieceType, BySides<PieceBlock>>("piece_block", RegistryType.PIECE_TYPE)
+    @JvmField
+    val PIECE_ITEM = RegistryType<PieceType, BySides<BlockItem>>("piece_item", RegistryType.PIECE_TYPE)
 }
 
-val MainChessModule.fabric
-    get() = if (this is FabricChessModule) this
-    else extensions.filterIsInstance<FabricChessModule>().first()
+val ChessModule.pieceBlocks get() = this[FabricRegistryTypes.PIECE_BLOCK]
+val ChessModule.pieceItems get() = this[FabricRegistryTypes.PIECE_ITEM]
 
-object FabricGregChessModule : FabricChessModule, ChessModuleExtension {
-    override val base = GregChessModule
+fun ChessModule.registerShort(t: PieceType) {
+    val blocks = bySides { ShortPieceBlock(t.of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)) }
+    register(FabricRegistryTypes.PIECE_BLOCK, t, blocks)
+    val items = bySides { BlockItem(blocks[it], FabricItemSettings().group(GregChess.CHESS_GROUP)) }
+    register(FabricRegistryTypes.PIECE_ITEM, t, items)
+    Side.forEach {
+        Registry.register(Registry.BLOCK, t.of(it).id, blocks[it])
+        Registry.register(Registry.ITEM, t.of(it).id, items[it])
+    }
+}
 
+fun ChessModule.registerTall(t: PieceType, rarity: Rarity) {
+    val blocks = bySides { TallPieceBlock(t.of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)) }
+    register(FabricRegistryTypes.PIECE_BLOCK, t, blocks)
+    val items = bySides { BlockItem(blocks[it], FabricItemSettings().group(GregChess.CHESS_GROUP).rarity(rarity)) }
+    register(FabricRegistryTypes.PIECE_ITEM, t, items)
+    Side.forEach {
+        Registry.register(Registry.BLOCK, t.of(it).id, blocks[it])
+        Registry.register(Registry.ITEM, t.of(it).id, items[it])
+    }
+}
+
+object FabricGregChessModule : ChessModuleExtension {
     @JvmField
-    val CHESSBOARD_BROKEN = DrawEndReason("CHESSBOARD_BROKEN", EndReason.Type.EMERGENCY, true)
-
-    private val pieceBlocks_ = mutableMapOf<Piece, PieceBlock>()
-    private val pieceItems_ = mutableMapOf<Piece, BlockItem>()
-
-    private fun PieceType.short() {
-        Side.forEach {
-            val block = ShortPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-            pieceBlocks_[of(it)] = block
-            val item = BlockItem(block, FabricItemSettings().group(GregChess.CHESS_GROUP))
-            pieceItems_[of(it)] = item
-            Registry.register(Registry.BLOCK, of(it).id, block)
-            Registry.register(Registry.ITEM, of(it).id, item)
-        }
-    }
-
-    private fun PieceType.tall(rarity: Rarity) {
-        Side.forEach {
-            val block = TallPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-            pieceBlocks_[of(it)] = block
-            val item = TallBlockItem(block, FabricItemSettings().group(GregChess.CHESS_GROUP).rarity(rarity))
-            pieceItems_[of(it)] = item
-            Registry.register(Registry.BLOCK, of(it).id, block)
-            Registry.register(Registry.ITEM, of(it).id, item)
-        }
-    }
-
-    override val pieceBlocks get() = pieceBlocks_.toMap()
-    override val pieceItems get() = pieceItems_.toMap()
-
-    override val endReasons = listOf<EndReason<*>>(CHESSBOARD_BROKEN)
+    val CHESSBOARD_BROKEN =
+        GregChessModule.register(DrawEndReason("CHESSBOARD_BROKEN", EndReason.Type.EMERGENCY, true))
 
     private fun registerItems() {
-        PieceType.PAWN.short()
-        PieceType.KNIGHT.tall(Rarity.UNCOMMON)
-        PieceType.BISHOP.tall(Rarity.UNCOMMON)
-        PieceType.ROOK.tall(Rarity.RARE)
-        PieceType.QUEEN.tall(Rarity.RARE)
-        PieceType.KING.tall(Rarity.EPIC)
+        GregChessModule.apply {
+            registerShort(PieceType.PAWN)
+            registerTall(PieceType.KNIGHT, Rarity.UNCOMMON)
+            registerTall(PieceType.BISHOP, Rarity.UNCOMMON)
+            registerTall(PieceType.ROOK, Rarity.RARE)
+            registerTall(PieceType.QUEEN, Rarity.RARE)
+            registerTall(PieceType.KING, Rarity.EPIC)
+        }
     }
 
     override fun load() {

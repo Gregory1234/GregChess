@@ -5,67 +5,60 @@ import gregc.gregchess.chess.component.ChessClock
 import gregc.gregchess.chess.component.PropertyType
 import gregc.gregchess.chess.variant.*
 
-interface ChessModule {
-    companion object {
-        val modules = mutableSetOf<MainChessModule>()
-        operator fun get(pieceType: PieceType) = modules.first { pieceType in it.pieceTypes }
-        operator fun get(endReason: EndReason<*>) = modules.first { endReason in it.endReasons }
-        operator fun get(propertyType: PropertyType<*>) = modules.first { propertyType in it.propertyTypes }
-        operator fun get(variant: ChessVariant) = modules.first { variant in it.variants }
-        fun getOrNull(namespace: String) = modules.firstOrNull { it.namespace == namespace }
-        operator fun get(namespace: String) = modules.first { it.namespace == namespace }
-    }
-
-    val pieceTypes: Collection<PieceType> get() = emptyList()
-    val variants: Collection<ChessVariant> get() = emptyList()
-    val endReasons: Collection<EndReason<*>> get() = emptyList()
-    val propertyTypes: Collection<PropertyType<*>> get() = emptyList()
+interface ChessModuleExtension {
     fun load()
 }
 
-interface MainChessModule : ChessModule {
-    val extensions: MutableCollection<ChessModuleExtension>
-    val namespace: String
+abstract class ChessModule(val namespace: String) {
+    companion object {
+        val modules = mutableSetOf<ChessModule>()
+        fun getOrNull(namespace: String) = modules.firstOrNull { it.namespace == namespace }
+        operator fun get(namespace: String) = modules.first { it.namespace == namespace }
+    }
+    val extensions = mutableSetOf<ChessModuleExtension>()
+
+    abstract operator fun <K, T> get(t: RegistryType<K, T>): Registry<K, T>
+    fun <K, T, R: T> register(t: RegistryType<K, T>, key: K, v: R): R {
+        this[t][key] = v
+        return v
+    }
+    protected abstract fun load()
+    fun fullLoad() {
+        load()
+        extensions.forEach(ChessModuleExtension::load)
+        modules += this
+    }
 }
 
-interface ChessModuleExtension : ChessModule {
-    val base: MainChessModule
-}
+val ChessModule.pieceTypes get() = this[RegistryType.PIECE_TYPE]
+fun ChessModule.register(pieceType: PieceType) =
+    register(RegistryType.PIECE_TYPE, pieceType.name.lowercase(), pieceType)
 
-object GregChessModule : MainChessModule {
-    private val pieceTypes_ = mutableListOf<PieceType>()
-    private val endReasons_ = mutableListOf<EndReason<*>>()
-    private val propertyTypes_ = mutableListOf<PropertyType<*>>()
-    internal fun register(pieceType: PieceType): PieceType {
-        pieceTypes_ += pieceType
-        return pieceType
-    }
+val ChessModule.endReasons get() = this[RegistryType.END_REASON]
+fun <T: GameScore> ChessModule.register(endReason: EndReason<T>) =
+    register(RegistryType.END_REASON, endReason.name.lowercase(), endReason)
 
-    internal fun <T : GameScore> register(endReason: EndReason<T>): EndReason<T> {
-        endReasons_ += endReason
-        return endReason
-    }
+val ChessModule.propertyTypes get() = this[RegistryType.PROPERTY_TYPE]
+fun <T> ChessModule.register(propertyType: PropertyType<T>) =
+    register(RegistryType.PROPERTY_TYPE, propertyType.name.lowercase(), propertyType)
 
-    internal fun <T> register(propertyType: PropertyType<T>): PropertyType<T> {
-        propertyTypes_ += propertyType
-        return propertyType
-    }
+val ChessModule.variants get() = this[RegistryType.VARIANT]
+fun ChessModule.register(variant: ChessVariant) =
+    register(RegistryType.VARIANT, variant.name.lowercase(), variant)
 
-    private val variants_ =
-        listOf(ChessVariant.Normal, Antichess, AtomicChess, CaptureAll, HordeChess, KingOfTheHill, ThreeChecks)
-    override val pieceTypes get() = pieceTypes_.toList() + extensions.flatMap { it.pieceTypes }
-    override val variants get() = variants_ + extensions.flatMap { it.variants }
-    override val endReasons get() = endReasons_.toList() + extensions.flatMap { it.endReasons }
-    override val propertyTypes get() = propertyTypes_.toList() + extensions.flatMap { it.propertyTypes }
+object GregChessModule : ChessModule("gregchess") {
+    private val registries = mutableMapOf<RegistryType<*, *>, Registry<*, *>>()
 
-    override val extensions = mutableSetOf<ChessModuleExtension>()
-    override val namespace = "gregchess"
+    @Suppress("UNCHECKED_CAST")
+    override fun <K, T> get(t: RegistryType<K, T>): Registry<K, T> =
+        registries.getOrPut(t) { Registry(this, t) } as Registry<K, T>
+
+
     override fun load() {
         PieceType.Companion
         EndReason.Companion
         ChessClock.Companion
-        variants_
-        ChessModule.modules += this
-        extensions.forEach(ChessModuleExtension::load)
+        for (v in listOf(ChessVariant.Normal, Antichess, AtomicChess, CaptureAll, HordeChess, KingOfTheHill, ThreeChecks))
+            register(RegistryType.VARIANT, v.name.lowercase(), v)
     }
 }

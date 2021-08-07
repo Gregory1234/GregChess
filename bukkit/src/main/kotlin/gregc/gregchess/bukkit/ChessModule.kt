@@ -9,54 +9,34 @@ import gregc.gregchess.chess.variant.AtomicChess
 import gregc.gregchess.chess.variant.ThreeChecks
 import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
+import org.bukkit.plugin.Plugin
 import java.time.Duration
 import kotlin.reflect.KClass
 
-fun MainChessModule.getKey(key: String) = NamespacedKey.fromString("$namespace:$key")!!
-
-val ChessModule.Companion.pieceTypes
-    get() = modules.flatMap { p -> p.pieceTypes.map { p.getKey(it.name.lowercase()) to p } }.toMap()
-
-interface BukkitChessModule : ChessModule {
-    val config: ConfigurationSection
-    fun <T> stringify(propertyType: PropertyType<T>, t: T): String
-    fun getSettings(
+abstract class BukkitChessModuleExtension(val plugin: Plugin) : ChessModuleExtension {
+    open val config: ConfigurationSection get() = plugin.config
+    open fun <T> stringify(propertyType: PropertyType<T>, t: T): String = t.toString()
+    open fun getSettings(
         requested: Collection<KClass<out Component.Settings<*>>>,
         section: ConfigurationSection
-    ): Collection<Component.Settings<*>>
+    ): Collection<Component.Settings<*>> = emptyList()
 
-    fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String?
+    open fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String? = null
 }
+
+val ChessModule.bukkit get() = extensions.filterIsInstance<BukkitChessModuleExtension>().first()
+
+fun BukkitChessModuleExtension.moveNameTokenToString(token: MoveNameToken<*>) =
+    moveNameTokenToString(token.type, token.value)
 
 interface BukkitChessPlugin {
     fun onInitialize()
 }
 
-val MainChessModule.bukkit
-    get() = if (this is BukkitChessModule) this
-    else extensions.filterIsInstance<BukkitChessModule>().first()
-
-object BukkitGregChessModule : BukkitChessModule, ChessModuleExtension {
+object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
     private val timeFormat: String get() = config.getPathString("TimeFormat")
     private val NO_ARENAS = err("NoArenas")
 
-    override val base = GregChessModule
-
-    private val endReasons_ = mutableListOf<EndReason<*>>()
-    private val propertyTypes_ = mutableListOf<PropertyType<*>>()
-    internal fun <T : GameScore> register(endReason: EndReason<T>): EndReason<T> {
-        endReasons_ += endReason
-        return endReason
-    }
-
-    internal fun <T> register(propertyType: PropertyType<T>): PropertyType<T> {
-        propertyTypes_ += propertyType
-        return propertyType
-    }
-
-    override val endReasons get() = endReasons_.toList()
-    override val propertyTypes get() = propertyTypes_.toList()
-    override val config: ConfigurationSection get() = GregChess.plugin.config
     override fun <T> stringify(propertyType: PropertyType<T>, t: T): String =
         if (t is Duration)
             t.format(timeFormat) ?: timeFormat
@@ -104,4 +84,8 @@ object BukkitGregChessModule : BukkitChessModule, ChessModuleExtension {
         ChessGameManager
         ScoreboardManager.Companion
     }
+}
+
+val ChessModule.Companion.pieceTypes get() = modules.flatMap { m ->
+    m[RegistryType.PIECE_TYPE].keys.map { NamespacedKey(m.bukkit.plugin, it) }
 }

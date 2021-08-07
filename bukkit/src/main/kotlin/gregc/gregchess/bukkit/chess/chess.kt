@@ -1,12 +1,11 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.snakeToPascal
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
@@ -21,9 +20,9 @@ fun PieceType.getItem(side: Side): ItemStack {
     return item
 }
 
-val PieceType.module get() = ChessModule[this].bukkit
+val PieceType.module get() = RegistryType.PIECE_TYPE.getModule(this)
 val PieceType.configName get() = name.snakeToPascal()
-val PieceType.section get() = module.config.getConfigurationSection("Chess.Piece.$configName")!!
+val PieceType.section get() = module.bukkit.config.getConfigurationSection("Chess.Piece.$configName")!!
 val PieceType.localChar get() = section.getString("Char")!!.single()
 val PieceType.localName get() = section.getPathString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
@@ -33,7 +32,6 @@ val PieceType.structure
 
 val Piece.item get() = type.getItem(side)
 
-fun BukkitChessModule.moveNameTokenToString(token: MoveNameToken<*>) = moveNameTokenToString(token.type, token.value)
 val MoveNameToken<*>.localName
     get() = ChessModule.modules.firstNotNullOfOrNull { it.bukkit.moveNameTokenToString(this) } ?: pgn
 val MoveName.localName get() = joinToString("") { it.localName }
@@ -64,10 +62,10 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Components: ${components.joinToString { it.javaClass.simpleName }}")
 }
 
-val EndReason<*>.module get() = ChessModule[this].bukkit
+val EndReason<*>.module get() = RegistryType.END_REASON.getModule(this)
 val EndReason<*>.configName get() = name.snakeToPascal()
 val GameResults<*>.name
-    get() = endReason.module.config.getPathString("Chess.EndReason.${endReason.configName}", *args.map { it.toString() }.toTypedArray())
+    get() = endReason.module.bukkit.config.getPathString("Chess.EndReason.${endReason.configName}", *args.map { it.toString() }.toTypedArray())
 
 val GameResults<*>.message
     get() = score.let {
@@ -77,9 +75,9 @@ val GameResults<*>.message
         }
     }
 
-val PropertyType<*>.module get() = ChessModule[this].bukkit
-val PropertyType<*>.localName get() = module.config.getPathString("Scoreboard.${name.snakeToPascal()}")
-fun <T> PropertyType<T>.stringify(v: T) = module.stringify(this, v)
+val PropertyType<*>.module get() = RegistryType.PROPERTY_TYPE.getModule(this)
+val PropertyType<*>.localName get() = module.bukkit.config.getPathString("Scoreboard.${name.snakeToPascal()}")
+fun <T> PropertyType<T>.stringify(v: T) = module.bukkit.stringify(this, v)
 
 fun <T> PlayerProperty<T>.asString(s: Side) = type.stringify(this(s))
 fun <T> GameProperty<T>.asString() = type.stringify(this())

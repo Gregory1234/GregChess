@@ -19,7 +19,7 @@ dependencies {
     unshaded(kotlin("stdlib-jdk8"))
     unshaded(kotlin("reflect"))
     val kotlinxSerializationVersion: String by project
-    unshaded("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
+    unshaded("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
     shaded(project(":core"))
 }
 

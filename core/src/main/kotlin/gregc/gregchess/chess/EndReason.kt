@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.GregChessModule
-import gregc.gregchess.isValidName
+import gregc.gregchess.*
 
 private fun victoryPgn(winner: Side) = when(winner) {
     Side.WHITE -> "1-0"

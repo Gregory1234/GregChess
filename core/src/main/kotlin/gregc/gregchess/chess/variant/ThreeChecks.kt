@@ -3,6 +3,7 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.register
 import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant("THREE_CHECKS") {

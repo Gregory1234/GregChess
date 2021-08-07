@@ -7,7 +7,7 @@ plugins {
 dependencies {
     implementation(kotlin("reflect"))
     val kotlinxSerializationVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
     testImplementation(kotlin("test"))
     val kotestVersion: String by project
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")

@@ -4,6 +4,7 @@ import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.variants
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
@@ -14,7 +15,7 @@ object SettingsManager {
     fun <T, R> chooseOrParse(opts: Map<T, R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
 
     private fun getChessVariant(key: NamespacedKey): ChessVariant? =
-        ChessModule.getOrNull(key.namespace)?.variants?.firstOrNull { it.name.lowercase() == key.key }
+        ChessModule.getOrNull(key.namespace)?.variants?.get(key.key)
 
     fun getSettings(): List<GameSettings> =
         config.getConfigurationSection("Settings.Presets")?.getKeys(false).orEmpty().map { name ->

@@ -1,9 +1,11 @@
 package gregc.gregchess.bukkit.chess
 
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.register
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -56,7 +58,7 @@ private var Player.playerData: PlayerData
 object ArenaManager : Listener {
     @JvmField
     val ARENA_REMOVED =
-        BukkitGregChessModule.register(DrawEndReason("ARENA_REMOVED", EndReason.Type.EMERGENCY, quick = true))
+        GregChessModule.register(DrawEndReason("ARENA_REMOVED", EndReason.Type.EMERGENCY, quick = true))
 
     private val arenas = mutableListOf<Arena>()
 

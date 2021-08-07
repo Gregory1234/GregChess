@@ -38,6 +38,7 @@ fun String.snakeToPascal(): String {
 }
 
 fun String.isValidName(): Boolean = all { it == '_' || it in ('A'..'Z')}
+fun String.isValidId(): Boolean = all { it == '_' || it in ('a'..'z')}
 
 data class Loc(val x: Int, val y: Int, val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)

@@ -4,6 +4,7 @@ import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.register
 import kotlin.reflect.KClass
 
 object AtomicChess : ChessVariant("ATOMIC") {

@@ -2,6 +2,7 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
+import gregc.gregchess.register
 
 object Antichess : ChessVariant("ANTICHESS") {
     @JvmField

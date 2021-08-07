@@ -58,7 +58,7 @@ fun <T> mutableBySides(white: T, black: T) = MutableBySides(white, black)
 fun <T> mutableBySides(both: T) = MutableBySides(both, both)
 inline fun <T> mutableBySides(block: (Side) -> T) = mutableBySides(block(white), block(black))
 
-data class BySides<T> internal constructor(val white: T, val black: T) {
+data class BySides<out T> internal constructor(val white: T, val black: T) {
 
     operator fun get(side: Side) = when (side) {
         Side.WHITE -> white

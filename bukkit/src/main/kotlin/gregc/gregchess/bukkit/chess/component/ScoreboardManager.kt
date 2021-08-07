@@ -1,10 +1,10 @@
 package gregc.gregchess.bukkit.chess.component
 
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.randomString
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
@@ -25,10 +25,10 @@ class ScoreboardManager(private val game: ChessGame) : Component {
         private val playerPrefix get() = config.getPathString("Scoreboard.PlayerPrefix")
 
         @JvmField
-        val PRESET = BukkitGregChessModule.register(PropertyType<String>("PRESET"))
+        val PRESET = GregChessModule.register(PropertyType<String>("PRESET"))
 
         @JvmField
-        val PLAYER = BukkitGregChessModule.register(PropertyType<String>("PLAYER"))
+        val PLAYER = GregChessModule.register(PropertyType<String>("PLAYER"))
     }
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
