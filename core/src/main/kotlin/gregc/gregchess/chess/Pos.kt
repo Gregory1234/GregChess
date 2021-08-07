@@ -1,11 +1,27 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.rangeTo
+import gregc.gregchess.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 
 typealias Dir = Pair<Int, Int>
 
+@Serializable(with = Pos.Serializer::class)
 data class Pos(val file: Int, val rank: Int) {
+    object Serializer: KSerializer<Pos> {
+        override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Pos", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: Pos) {
+            encoder.encodeString(value.toString())
+        }
+
+        override fun deserialize(decoder: Decoder): Pos = parseFromString(decoder.decodeString())
+    }
+
     override fun toString() = "$fileStr$rankStr"
     operator fun plus(diff: Dir) = plus(diff.first, diff.second)
     fun plus(df: Int, dr: Int) = Pos(file + df, rank + dr)
@@ -96,10 +112,17 @@ enum class Floor {
 
 data class FloorUpdateEvent(val pos: Pos, val floor: Floor) : ChessEvent
 
-class ChessFlagType(val name: String, val startTime: UInt) {
-    override fun toString(): String = name
+@Serializable(with = ChessFlagType.Serializer::class)
+class ChessFlagType(val startTime: UInt): NameRegistered {
+    object Serializer: NameRegisteredSerializer<ChessFlagType>("ChessFlagType", RegistryType.FLAG_TYPE)
+
+    override val module get() = RegistryType.FLAG_TYPE.getModule(this)
+    override val name get() = RegistryType.FLAG_TYPE[this]
+
+    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 }
 
+@Serializable
 data class ChessFlag(val type: ChessFlagType, var timeLeft: Int = type.startTime.toInt())
 
 data class Square(val pos: Pos, val game: ChessGame) {

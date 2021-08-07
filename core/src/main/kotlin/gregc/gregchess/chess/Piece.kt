@@ -21,15 +21,18 @@ val Side.rook get() = PieceType.ROOK.of(this)
 val Side.queen get() = PieceType.QUEEN.of(this)
 val Side.king get() = PieceType.KING.of(this)
 
+@Serializable
 data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)
 
+@Serializable
 class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
-    val type = piece.type
-    val side = piece.side
+    val type get() = piece.type
+    val side get() = piece.side
 
     override fun toString() = "CapturedPiece(type=$type, side=$side, pos=$pos)"
 }
 
+@Serializable
 data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val type get() = piece.type
     val side get() = piece.side

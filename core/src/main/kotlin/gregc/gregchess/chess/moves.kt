@@ -1,6 +1,11 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlin.math.abs
 
 class MoveData(
@@ -148,8 +153,29 @@ typealias MoveName = List<MoveNameToken<*>>
 
 val MoveName.pgn get() = joinToString("") { it.pgn }
 
+@Serializable(with = UniquenessCoordinate.Serializer::class)
 data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
     constructor(pos: Pos) : this(pos.file, pos.rank)
+
+    object Serializer: KSerializer<UniquenessCoordinate> {
+        override val descriptor: SerialDescriptor
+            get() = PrimitiveSerialDescriptor("UniquenessCoordinate", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: UniquenessCoordinate) {
+            encoder.encodeString(value.toString())
+        }
+
+        override fun deserialize(decoder: Decoder): UniquenessCoordinate {
+            val str = decoder.decodeString()
+            return if (str.length == 2)
+                UniquenessCoordinate(Pos.parseFromString(str))
+            else when(str.single()) {
+                in '1'..'8' -> UniquenessCoordinate(rank = str.single() - '1')
+                in 'a'..'h' -> UniquenessCoordinate(file = str.single() - 'a')
+                else -> throw IllegalArgumentException(str)
+            }
+        }
+    }
 
     val fileStr get() = file?.let { "${'a' + it}" }
     val rankStr get() = rank?.let { (it + 1).toString() }
@@ -306,7 +332,7 @@ open class PawnMovementConfig {
 class PawnMovement(private val config: PawnMovementConfig = PawnMovementConfig()) : MoveScheme {
     companion object {
         @JvmField
-        val EN_PASSANT = ChessFlagType("EN_PASSANT", 1u)
+        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType(1u))
         private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
     }
 

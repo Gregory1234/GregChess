@@ -38,6 +38,8 @@ fun <T: GameScore> ChessModule.register(id: String, endReason: EndReason<T>) =
 val ChessModule.variants get() = this[RegistryType.VARIANT]
 fun ChessModule.register(id: String, variant: ChessVariant) = register(RegistryType.VARIANT, id, variant)
 
+fun ChessModule.register(id: String, flagType: ChessFlagType) = register(RegistryType.FLAG_TYPE, id, flagType)
+
 object GregChessModule : ChessModule("gregchess") {
     private val registries = mutableMapOf<RegistryType<*, *>, Registry<*, *>>()
 
