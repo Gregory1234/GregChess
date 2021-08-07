@@ -45,7 +45,7 @@ fun ChessModule.registerTall(t: PieceType, rarity: Rarity) {
 object FabricGregChessModule : ChessModuleExtension {
     @JvmField
     val CHESSBOARD_BROKEN =
-        GregChessModule.register(DrawEndReason("CHESSBOARD_BROKEN", EndReason.Type.EMERGENCY, true))
+        GregChessModule.register("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY, true))
 
     private fun registerItems() {
         GregChessModule.apply {

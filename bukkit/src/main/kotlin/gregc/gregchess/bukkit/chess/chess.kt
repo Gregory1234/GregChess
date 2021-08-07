@@ -20,7 +20,6 @@ fun PieceType.getItem(side: Side): ItemStack {
     return item
 }
 
-val PieceType.module get() = RegistryType.PIECE_TYPE.getModule(this)
 val PieceType.configName get() = name.snakeToPascal()
 val PieceType.section get() = module.bukkit.config.getConfigurationSection("Chess.Piece.$configName")!!
 val PieceType.localChar get() = section.getString("Char")!!.single()
@@ -39,7 +38,7 @@ val MoveName.localName get() = joinToString("") { it.localName }
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
 fun BoardPiece.getInfo() = buildTextComponent {
-    append("Type: ${side.name} ${type.name}\n")
+    append("Type: $side $type\n")
     appendCopy("UUID: $uuid\n", uuid)
     append("Position: $pos\n")
     append(if (hasMoved) "Has moved\n" else "Has not moved\n")
@@ -62,7 +61,6 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Components: ${components.joinToString { it.javaClass.simpleName }}")
 }
 
-val EndReason<*>.module get() = RegistryType.END_REASON.getModule(this)
 val EndReason<*>.configName get() = name.snakeToPascal()
 val GameResults<*>.name
     get() = endReason.module.bukkit.config.getPathString("Chess.EndReason.${endReason.configName}", *args.map { it.toString() }.toTypedArray())

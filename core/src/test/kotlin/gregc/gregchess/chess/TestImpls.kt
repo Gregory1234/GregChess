@@ -41,10 +41,10 @@ class TestComponent : Component {
 
 }
 
-object TestVariant : ChessVariant("TEST")
+object TestVariant : ChessVariant()
 
 @JvmField
-val TEST_END_REASON = DetEndReason("TEST", EndReason.Type.EMERGENCY)
+val TEST_END_REASON = DetEndReason(EndReason.Type.EMERGENCY)
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)
 

@@ -15,43 +15,42 @@ sealed class GameScore(val pgn: String) {
 typealias DetEndReason = EndReason<GameScore.Victory>
 typealias DrawEndReason = EndReason<GameScore.Draw>
 
-class EndReason<R : GameScore>(val name: String, val type: Type, val quick: Boolean = false) {
+class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false) {
 
     enum class Type(val pgn: String) {
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
     }
 
-    init {
-        require(name.isValidName())
-    }
+    val module get() = RegistryType.END_REASON.getModule(this)
+    val name get() = RegistryType.END_REASON[this]
 
-    override fun toString(): String = "$name@${hashCode().toString(16)}"
+    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 
     companion object {
         @JvmField
-        val CHECKMATE = GregChessModule.register(DetEndReason("CHECKMATE", Type.NORMAL))
+        val CHECKMATE = GregChessModule.register("checkmate", DetEndReason(Type.NORMAL))
         @JvmField
-        val RESIGNATION = GregChessModule.register(DetEndReason("RESIGNATION", Type.ABANDONED))
+        val RESIGNATION = GregChessModule.register("resignation", DetEndReason(Type.ABANDONED))
         @JvmField
-        val WALKOVER = GregChessModule.register(DetEndReason("WALKOVER", Type.ABANDONED))
+        val WALKOVER = GregChessModule.register("walkover", DetEndReason(Type.ABANDONED))
         @JvmField
-        val STALEMATE = GregChessModule.register(DrawEndReason("STALEMATE", Type.NORMAL))
+        val STALEMATE = GregChessModule.register("stalemate", DrawEndReason(Type.NORMAL))
         @JvmField
-        val INSUFFICIENT_MATERIAL = GregChessModule.register(DrawEndReason("INSUFFICIENT_MATERIAL", Type.NORMAL))
+        val INSUFFICIENT_MATERIAL = GregChessModule.register("insufficient_material", DrawEndReason(Type.NORMAL))
         @JvmField
-        val FIFTY_MOVES = GregChessModule.register(DrawEndReason("FIFTY_MOVES", Type.NORMAL))
+        val FIFTY_MOVES = GregChessModule.register("fifty_moves", DrawEndReason(Type.NORMAL))
         @JvmField
-        val REPETITION = GregChessModule.register(DrawEndReason("REPETITION", Type.NORMAL))
+        val REPETITION = GregChessModule.register("repetition", DrawEndReason(Type.NORMAL))
         @JvmField
-        val DRAW_AGREEMENT = GregChessModule.register(DrawEndReason("DRAW_AGREEMENT", Type.NORMAL))
+        val DRAW_AGREEMENT = GregChessModule.register("draw_agreement", DrawEndReason(Type.NORMAL))
         @JvmField
-        val TIMEOUT = GregChessModule.register(DetEndReason("TIMEOUT", Type.TIME_FORFEIT))
+        val TIMEOUT = GregChessModule.register("timeout", DetEndReason(Type.TIME_FORFEIT))
         @JvmField
-        val DRAW_TIMEOUT = GregChessModule.register(DrawEndReason("DRAW_TIMEOUT", Type.TIME_FORFEIT))
+        val DRAW_TIMEOUT = GregChessModule.register("draw_timeout", DrawEndReason(Type.TIME_FORFEIT))
         @JvmField
-        val ALL_PIECES_LOST = GregChessModule.register(DetEndReason("ALL_PIECES_LOST", Type.NORMAL))
+        val ALL_PIECES_LOST = GregChessModule.register("all_pieces_lost", DetEndReason(Type.NORMAL))
         @JvmField
-        val ERROR = GregChessModule.register(DrawEndReason("ERROR", Type.EMERGENCY))
+        val ERROR = GregChessModule.register("error", DrawEndReason(Type.EMERGENCY))
     }
 
     val pgn get() = type.pgn

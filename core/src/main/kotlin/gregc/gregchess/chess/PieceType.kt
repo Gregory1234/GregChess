@@ -4,18 +4,16 @@ import gregc.gregchess.*
 
 
 class PieceType(
-    val name: String,
     val char: Char,
     val moveScheme: MoveScheme,
     val hasMoved: (FEN, Pos, Side) -> Boolean,
     val minor: Boolean
 ) {
 
-    init {
-        require(name.isValidName())
-    }
+    val module get() = RegistryType.PIECE_TYPE.getModule(this)
+    val name get() = RegistryType.PIECE_TYPE[this]
 
-    override fun toString(): String = "$name@${hashCode().toString(16)}"
+    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 
     companion object {
 
@@ -29,17 +27,17 @@ class PieceType(
         }
 
         @JvmField
-        val KING = GregChessModule.register(PieceType("KING", 'k', KingMovement, assumeNotMoved, false))
+        val KING = GregChessModule.register("king", PieceType('k', KingMovement, assumeNotMoved, false))
         @JvmField
-        val QUEEN = GregChessModule.register(PieceType("QUEEN", 'q', RayMovement(rotationsOf(1, 0) + rotationsOf(1, 1)), assumeNotMoved, false))
+        val QUEEN = GregChessModule.register("queen", PieceType('q', RayMovement(rotationsOf(1, 0) + rotationsOf(1, 1)), assumeNotMoved, false))
         @JvmField
-        val ROOK = GregChessModule.register(PieceType("ROOK", 'r', RayMovement(rotationsOf(1, 0)), rookHasMoved, false))
+        val ROOK = GregChessModule.register("rook", PieceType('r', RayMovement(rotationsOf(1, 0)), rookHasMoved, false))
         @JvmField
-        val BISHOP = GregChessModule.register(PieceType("BISHOP", 'b', RayMovement(rotationsOf(1, 1)), assumeNotMoved, true))
+        val BISHOP = GregChessModule.register("bishop", PieceType('b', RayMovement(rotationsOf(1, 1)), assumeNotMoved, true))
         @JvmField
-        val KNIGHT = GregChessModule.register(PieceType("KNIGHT", 'n', JumpMovement(rotationsOf(2, 1)), assumeNotMoved, true))
+        val KNIGHT = GregChessModule.register("knight", PieceType('n', JumpMovement(rotationsOf(2, 1)), assumeNotMoved, true))
         @JvmField
-        val PAWN = GregChessModule.register(PieceType("PAWN", 'p', PawnMovement(), pawnHasMoved, false))
+        val PAWN = GregChessModule.register("pawn", PieceType('p', PawnMovement(), pawnHasMoved, false))
 
         fun chooseByChar(values: Collection<PieceType>, c: Char): PieceType =
             values.firstOrNull { it.char == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())

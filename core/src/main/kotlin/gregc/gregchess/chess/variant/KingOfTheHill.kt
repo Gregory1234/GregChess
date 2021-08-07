@@ -4,10 +4,10 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 
-object KingOfTheHill : ChessVariant("KING_OF_THE_HILL") {
+object KingOfTheHill : ChessVariant() {
 
     @JvmField
-    val KING_OF_THE_HILL = GregChessModule.register(DetEndReason("KING_OF_THE_HILL", EndReason.Type.NORMAL))
+    val KING_OF_THE_HILL = GregChessModule.register("king_of_the_hill", DetEndReason(EndReason.Type.NORMAL))
 
     override fun chessboardSetup(board: Chessboard) {
         for ((x, y) in Pair(3, 3)..Pair(4, 4)) {

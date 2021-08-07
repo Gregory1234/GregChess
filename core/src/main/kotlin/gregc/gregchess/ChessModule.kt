@@ -31,20 +31,18 @@ abstract class ChessModule(val namespace: String) {
 }
 
 val ChessModule.pieceTypes get() = this[RegistryType.PIECE_TYPE]
-fun ChessModule.register(pieceType: PieceType) =
-    register(RegistryType.PIECE_TYPE, pieceType.name.lowercase(), pieceType)
+fun ChessModule.register(id: String, pieceType: PieceType) = register(RegistryType.PIECE_TYPE, id, pieceType)
 
 val ChessModule.endReasons get() = this[RegistryType.END_REASON]
-fun <T: GameScore> ChessModule.register(endReason: EndReason<T>) =
-    register(RegistryType.END_REASON, endReason.name.lowercase(), endReason)
+fun <T: GameScore> ChessModule.register(id: String, endReason: EndReason<T>) =
+    register(RegistryType.END_REASON, id, endReason)
 
 val ChessModule.propertyTypes get() = this[RegistryType.PROPERTY_TYPE]
 fun <T> ChessModule.register(propertyType: PropertyType<T>) =
     register(RegistryType.PROPERTY_TYPE, propertyType.name.lowercase(), propertyType)
 
 val ChessModule.variants get() = this[RegistryType.VARIANT]
-fun ChessModule.register(variant: ChessVariant) =
-    register(RegistryType.VARIANT, variant.name.lowercase(), variant)
+fun ChessModule.register(id: String, variant: ChessVariant) = register(RegistryType.VARIANT, id, variant)
 
 object GregChessModule : ChessModule("gregchess") {
     private val registries = mutableMapOf<RegistryType<*, *>, Registry<*, *>>()
@@ -53,12 +51,20 @@ object GregChessModule : ChessModule("gregchess") {
     override fun <K, T> get(t: RegistryType<K, T>): Registry<K, T> =
         registries.getOrPut(t) { Registry(this, t) } as Registry<K, T>
 
+    private fun registerVariants() {
+        register("normal", ChessVariant.Normal)
+        register("antichess", Antichess)
+        register("atomic", AtomicChess)
+        register("capture_all", CaptureAll)
+        register("horde", HordeChess)
+        register("king_of_the_hill", KingOfTheHill)
+        register("three_checks", ThreeChecks)
+    }
 
     override fun load() {
         PieceType.Companion
         EndReason.Companion
         ChessClock.Companion
-        for (v in listOf(ChessVariant.Normal, Antichess, AtomicChess, CaptureAll, HordeChess, KingOfTheHill, ThreeChecks))
-            register(RegistryType.VARIANT, v.name.lowercase(), v)
+        registerVariants()
     }
 }

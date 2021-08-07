@@ -19,8 +19,7 @@ import java.util.*
 
 object ChessGameManager : Listener {
     @JvmField
-    val PLUGIN_RESTART =
-        GregChessModule.register(DrawEndReason("PLUGIN_RESTART", EndReason.Type.EMERGENCY, quick = true))
+    val PLUGIN_RESTART = GregChessModule.register("plugin_restart", DrawEndReason(EndReason.Type.EMERGENCY, true))
 
     private val games = mutableListOf<ChessGame>()
 

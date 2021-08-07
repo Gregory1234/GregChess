@@ -1,18 +1,18 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.RegistryType
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.isValidName
 import kotlin.reflect.KClass
 
-open class ChessVariant(val name: String) {
+open class ChessVariant {
 
-    init {
-        require(name.isValidName())
-    }
+    val module get() = RegistryType.VARIANT.getModule(this)
+    val name get() = RegistryType.VARIANT[this]
 
-    final override fun toString(): String = "$name@${hashCode().toString(16)}"
+    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 
     enum class MoveLegality(val prettyName: String) {
         INVALID("Invalid moves"),
@@ -100,7 +100,7 @@ open class ChessVariant(val name: String) {
 
     protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { board.getMoves(it.pos) }
 
-    object Normal : ChessVariant("NORMAL") {
+    object Normal : ChessVariant() {
 
         fun pinningMoves(by: Side, pos: Square) =
             allMoves(by, pos.board).filter { it.control == pos }.filter { m -> m.blocks.count { it !in m.help } == 1 }

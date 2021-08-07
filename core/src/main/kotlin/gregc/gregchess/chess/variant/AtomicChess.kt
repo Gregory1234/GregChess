@@ -7,7 +7,7 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.register
 import kotlin.reflect.KClass
 
-object AtomicChess : ChessVariant("ATOMIC") {
+object AtomicChess : ChessVariant() {
 
     data class ExplosionEvent(val pos: Pos) : ChessEvent
 
@@ -42,7 +42,7 @@ object AtomicChess : ChessVariant("ATOMIC") {
     }
 
     @JvmField
-    val ATOMIC = GregChessModule.register(DetEndReason("ATOMIC", EndReason.Type.NORMAL))
+    val ATOMIC = GregChessModule.register("atomic", DetEndReason(EndReason.Type.NORMAL))
 
     override fun start(game: ChessGame) {
         game.requireComponent<ExplosionManager>()

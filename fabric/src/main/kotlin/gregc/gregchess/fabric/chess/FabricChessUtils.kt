@@ -1,13 +1,13 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.fabric.pieceBlocks
 import gregc.gregchess.fabric.pieceItems
+import gregc.gregchess.pieceTypes
 import net.minecraft.util.Identifier
 
-val PieceType.module get() = RegistryType.PIECE_TYPE.getModule(this)
-val PieceType.id get() = Identifier(module.namespace, name.lowercase())
+val PieceType.id get() = Identifier(module.namespace, name)
 
 val Piece.block get() = type.module.pieceBlocks[type][side]
 val Piece.item get() = type.module.pieceItems[type][side]
