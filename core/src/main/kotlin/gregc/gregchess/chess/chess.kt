@@ -1,5 +1,7 @@
 package gregc.gregchess.chess
 
+import kotlinx.serialization.Serializable
+
 enum class Side(val char: Char, val direction: Int) {
     WHITE('w', 1),
     BLACK('b', -1);
@@ -31,6 +33,7 @@ enum class BoardSide(private val direction: Int, val castles: String) {
 val kingside get() = BoardSide.KINGSIDE
 val queenside get() = BoardSide.KINGSIDE
 
+@Serializable
 data class MutableBySides<T> internal constructor(var white: T, var black: T) {
     operator fun get(side: Side) = when (side) {
         Side.WHITE -> white
@@ -58,6 +61,7 @@ fun <T> mutableBySides(white: T, black: T) = MutableBySides(white, black)
 fun <T> mutableBySides(both: T) = MutableBySides(both, both)
 inline fun <T> mutableBySides(block: (Side) -> T) = mutableBySides(block(white), block(black))
 
+@Serializable
 data class BySides<out T> internal constructor(val white: T, val black: T) {
 
     operator fun get(side: Side) = when (side) {

@@ -115,36 +115,44 @@ open class MoveCandidate(
     val captured = control?.piece
 }
 
-class MoveNameTokenType<T>(val name: String, @JvmField val toPgnString: (T) -> String = Any?::toString) {
-    constructor(name: String, constPGN: String) : this(name, { constPGN })
+@Serializable(with = MoveNameTokenType.Serializer::class)
+class MoveNameTokenType<T>(@JvmField val toPgnString: (T) -> String = Any?::toString): NameRegistered {
+    constructor(constPGN: String) : this({ constPGN })
+
+    object Serializer: NameRegisteredSerializer<MoveNameTokenType<*>>("MoveNameTokenType", RegistryType.MOVE_NAME_TOKEN_TYPE)
+
+    override val module get() = RegistryType.MOVE_NAME_TOKEN_TYPE.getModule(this)
+    override val name get() = RegistryType.MOVE_NAME_TOKEN_TYPE[this]
+
+    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
+
+    fun of(v: T) = MoveNameToken(this, v)
 
     companion object {
         @JvmField
-        val PIECE_TYPE = MoveNameTokenType<PieceType>("PIECE_TYPE") { it.char.uppercase() }
+        val PIECE_TYPE = GregChessModule.register("piece_type", MoveNameTokenType<PieceType>{ it.char.uppercase() })
         @JvmField
-        val UNIQUENESS_COORDINATE = MoveNameTokenType<UniquenessCoordinate>("UNIQUENESS_COORDINATE")
+        val UNIQUENESS_COORDINATE = GregChessModule.register("uniqueness_coordinate", MoveNameTokenType<UniquenessCoordinate>())
         @JvmField
-        val CAPTURE = MoveNameTokenType<Unit>("CAPTURE", "x")
+        val CAPTURE = GregChessModule.register("capture", MoveNameTokenType<Unit>("x"))
         @JvmField
-        val TARGET = MoveNameTokenType<Pos>("TARGET")
+        val TARGET = GregChessModule.register("target", MoveNameTokenType<Pos>())
         @JvmField
-        val PROMOTION = MoveNameTokenType<PieceType>("PROMOTION") { "=" + it.char.uppercase() }
+        val PROMOTION = GregChessModule.register("promotion", MoveNameTokenType<PieceType>{ "=" + it.char.uppercase() })
         @JvmField
-        val CHECK = MoveNameTokenType<Unit>("CHECK", "+")
+        val CHECK = GregChessModule.register("check", MoveNameTokenType<Unit>("+"))
         @JvmField
-        val CHECKMATE = MoveNameTokenType<Unit>("CHECKMATE", "#")
+        val CHECKMATE = GregChessModule.register("checkmate", MoveNameTokenType<Unit>("#"))
         @JvmField
-        val CASTLE = MoveNameTokenType<BoardSide>("CASTLE", BoardSide::castles)
+        val CASTLE = GregChessModule.register("castle", MoveNameTokenType<BoardSide>(BoardSide::castles))
         @JvmField
-        val EN_PASSANT = MoveNameTokenType<Unit>("EN_PASSANT", "")
+        val EN_PASSANT = GregChessModule.register("en_passant", MoveNameTokenType<Unit>(""))
     }
-
-    override fun toString(): String = name
-    fun of(v: T) = MoveNameToken(this, v)
 }
 
 val MoveNameTokenType<Unit>.mk get() = of(Unit)
 
+@Serializable
 data class MoveNameToken<T>(val type: MoveNameTokenType<T>, val value: T) {
     val pgn: String get() = type.toPgnString(value)
 }

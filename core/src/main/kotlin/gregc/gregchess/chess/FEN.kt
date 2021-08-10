@@ -1,7 +1,9 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.component6
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class FEN(
     val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
     val currentTurn: Side = white,
@@ -12,6 +14,7 @@ data class FEN(
     val chess960: Boolean = false
 ) {
     @JvmInline
+    @Serializable
     value class BoardState(val state: String) {
         companion object {
             fun fromPieces(pieces: Map<Pos, PieceInfo>): BoardState {

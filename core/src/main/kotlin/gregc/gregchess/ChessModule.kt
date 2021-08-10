@@ -40,6 +40,9 @@ fun ChessModule.register(id: String, variant: ChessVariant) = register(RegistryT
 
 fun ChessModule.register(id: String, flagType: ChessFlagType) = register(RegistryType.FLAG_TYPE, id, flagType)
 
+fun <T> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
+    register(RegistryType.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
+
 object GregChessModule : ChessModule("gregchess") {
     private val registries = mutableMapOf<RegistryType<*, *>, Registry<*, *>>()
 
@@ -58,8 +61,10 @@ object GregChessModule : ChessModule("gregchess") {
     }
 
     override fun load() {
-        PieceType.Companion
-        EndReason.Companion
+        PieceType
+        EndReason
+        MoveNameTokenType
+        PawnMovement
         registerVariants()
     }
 }

@@ -25,6 +25,8 @@ class RegistryType<K, T>(val name: String, val base: RegistryType<*, K>? = null)
         val VARIANT = RegistryType<String, ChessVariant>("variant")
         @JvmField
         val FLAG_TYPE = RegistryType<String, ChessFlagType>("flag_type")
+        @JvmField
+        val MOVE_NAME_TOKEN_TYPE = RegistryType<String, MoveNameTokenType<*>>("move_name_token_type")
     }
 }
 
