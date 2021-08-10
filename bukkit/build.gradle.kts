@@ -7,19 +7,14 @@ plugins {
 }
 
 val shaded: Configuration by configurations.creating
-val unshaded: Configuration by configurations.creating
 
 configurations["implementation"].extendsFrom(shaded)
-shaded.extendsFrom(unshaded)
 
 dependencies {
     val spigotVersion: String by project
     api("org.spigotmc:spigot-api:$spigotVersion")
-
-    unshaded(kotlin("stdlib-jdk8"))
-    unshaded(kotlin("reflect"))
     val kotlinxSerializationVersion: String by project
-    unshaded("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
     shaded(project(":core"))
 }
 
@@ -51,11 +46,12 @@ tasks {
                 "-Xopt-in=kotlin.ExperimentalStdlibApi",
                 "-Xopt-in=kotlin.contracts.ExperimentalContracts",
                 "-Xjvm-default=all",
+                "-Xlambdas=indy",
                 "-progressive")
         }
     }
     jar {
-        from ({ shaded.filter { it !in unshaded }.map { if(it.isDirectory) it else zipTree(it) } })
+        from ({ shaded.resolvedConfiguration.firstLevelModuleDependencies.flatMap { dep -> dep.moduleArtifacts.map { zipTree(it.file) }}})
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
     }

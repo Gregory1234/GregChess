@@ -44,6 +44,7 @@ tasks {
                 "-Xopt-in=kotlin.ExperimentalStdlibApi",
                 "-Xopt-in=kotlin.contracts.ExperimentalContracts",
                 "-Xjvm-default=all",
+                "-Xlambdas=indy",
                 "-progressive")
         }
     }

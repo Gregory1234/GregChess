@@ -106,7 +106,7 @@ data class FEN(
 
     companion object {
         private fun castlingRightsToString(chess960: Boolean, base: Char, cr: List<Int>) =
-            cr.map { base + if (chess960) (if (it < 4) 'q' else 'a') - 'a' else it }.sorted()
+            cr.map { base + if (!chess960) (if (it < 4) 'q' else 'k') - 'a' else it }.sorted()
                 .joinToString("")
 
         private fun parseCastlingRights(r: String, s: String) = s.lowercase().map { c ->
