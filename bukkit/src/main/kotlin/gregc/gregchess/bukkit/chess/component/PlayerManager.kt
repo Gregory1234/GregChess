@@ -4,8 +4,10 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.interact
 import gregc.gregchess.seconds
+import kotlinx.serialization.Serializable
 import org.bukkit.entity.Player
 
 enum class GameStartStageEvent : ChessEvent {
@@ -20,14 +22,15 @@ enum class PlayerDirection {
     JOIN, LEAVE
 }
 
-data class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
+class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
-class PlayerManager(private val game: ChessGame) : Component {
-    object Settings : Component.Settings<PlayerManager> {
-        override fun getComponent(game: ChessGame) = PlayerManager(game)
-    }
+@Serializable
+object PlayerManagerData : ComponentData<PlayerManager> {
+    override fun getComponent(game: ChessGame) = PlayerManager(game, this)
+}
 
-    var quick: BySides<Boolean> = bySides(false)
+class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Component(game) {
+    internal var quick: BySides<Boolean> = bySides(false)
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = with(game) {

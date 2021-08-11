@@ -1,8 +1,9 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.*
-import gregc.gregchess.fabric.chess.component.FabricRenderer
+import gregc.gregchess.fabric.chess.component.FabricRendererSettings
 import gregc.gregchess.rangeTo
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
@@ -142,10 +143,11 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
-        currentGame = ChessGame(ChessGameManager.settings(FabricRenderer.Settings(this))).addPlayers {
-            fabric(whitePlayer, white)
-            fabric(blackPlayer, black)
-        }.start()
+        currentGame = ChessGame(ChessGameManager.settings(ChessVariant.Normal, FabricRendererSettings(this)))
+            .addPlayers {
+                fabric(whitePlayer, white)
+                fabric(blackPlayer, black)
+            }.start()
     }
 
 }

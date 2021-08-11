@@ -6,14 +6,16 @@ import gregc.gregchess.bukkit.chess.AddPropertiesEvent
 import gregc.gregchess.bukkit.chess.PropertyType
 import gregc.gregchess.chess.ChessEventHandler
 import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.component.ChessClock
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ThreeChecks
+import kotlinx.serialization.Serializable
 
-class BukkitGregChessAdapter(private val game: ChessGame): Component {
-    object Settings : Component.Settings<BukkitGregChessAdapter> {
-        override fun getComponent(game: ChessGame) = BukkitGregChessAdapter(game)
-    }
+@Serializable
+object BukkitGregChessAdapterData : ComponentData<BukkitGregChessAdapter> {
+    override fun getComponent(game: ChessGame) = BukkitGregChessAdapter(game, this)
+}
+
+class BukkitGregChessAdapter(game: ChessGame, override val data: BukkitGregChessAdapterData): Component(game) {
 
     companion object {
         @JvmField
@@ -28,11 +30,11 @@ class BukkitGregChessAdapter(private val game: ChessGame): Component {
 
     @ChessEventHandler
     fun addProperties(e: AddPropertiesEvent) {
-        game.clock?.apply {
-            if (game.settings.getComponent<ChessClock.Settings>()?.type == ChessClock.Type.FIXED) {
-                e.game(TIME_REMAINING_SIMPLE) { getTimeRemaining(game.currentTurn).format(timeFormat) ?: timeFormat }
+        game.settings.getComponent<ChessClockData>()?.apply {
+            if (timeControl.type == TimeControl.Type.FIXED) {
+                e.game(TIME_REMAINING_SIMPLE) { timeRemaining[game.currentTurn].format(timeFormat) ?: timeFormat }
             } else {
-                e.player(TIME_REMAINING) { getTimeRemaining(it).format(timeFormat) ?: timeFormat }
+                e.player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) ?: timeFormat }
             }
         }
         game.getComponent<ThreeChecks.CheckCounter>()?.apply {

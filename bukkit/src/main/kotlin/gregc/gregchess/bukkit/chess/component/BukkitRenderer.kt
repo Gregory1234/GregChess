@@ -5,12 +5,25 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.toLocation
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.variant.AtomicChess
+import kotlinx.serialization.Serializable
 import org.bukkit.Material
 import org.bukkit.World
 import kotlin.math.floor
 
-class BukkitRenderer(private val game: ChessGame, private val settings: Settings) : Component {
+@Serializable
+data class BukkitRendererSettings(
+    val tileSize: Int,
+    val offset: Loc = Loc(0, 0, 0)
+) : ComponentData<BukkitRenderer> {
+    val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
+    val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
+    val boardSize get() = 8 * tileSize
+    override fun getComponent(game: ChessGame) = BukkitRenderer(game, this)
+}
+
+class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings) : Component(game) {
     companion object {
 
         private class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
@@ -35,42 +48,35 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
         private val defaultSpawnLocation = Loc(4, 101, 4)
     }
 
-    class Settings(val tileSize: Int, val offset: Loc = Loc(0, 0, 0)) : Component.Settings<BukkitRenderer> {
-        val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
-        val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
-        val boardSize get() = 8 * tileSize
-        override fun getComponent(game: ChessGame) = BukkitRenderer(game, this)
-    }
-
     val spawnLocation
-        get() = defaultSpawnLocation + settings.offset
+        get() = defaultSpawnLocation + data.offset
 
     fun getPos(loc: Loc) =
         Pos(
-            file = (8 + settings.boardSize - 1 - loc.x + settings.offset.x).floorDiv(settings.tileSize),
-            rank = (loc.z - settings.offset.z - 8).floorDiv(settings.tileSize)
+            file = (8 + data.boardSize - 1 - loc.x + data.offset.x).floorDiv(data.tileSize),
+            rank = (loc.z - data.offset.z - 8).floorDiv(data.tileSize)
         )
 
     private val Pos.loc
         get() = Loc(
-            x = 8 + settings.boardSize - 1 - settings.highHalfTile - file * settings.tileSize,
+            x = 8 + data.boardSize - 1 - data.highHalfTile - file * data.tileSize,
             y = 102,
-            z = rank * settings.tileSize + 8 + settings.lowHalfTile
-        ) + settings.offset
+            z = rank * data.tileSize + 8 + data.lowHalfTile
+        ) + data.offset
 
     private val CapturedPos.loc
         get() = when (by) {
-            Side.WHITE -> Loc(8 + settings.boardSize - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
-            Side.BLACK -> Loc(8 + 2 * pos.first, 101, 8 + settings.boardSize + 2 + 2 * pos.second)
-        } + settings.offset
+            Side.WHITE -> Loc(8 + data.boardSize - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
+            Side.BLACK -> Loc(8 + 2 * pos.first, 101, 8 + data.boardSize + 2 + 2 * pos.second)
+        } + data.offset
 
     private val world get() = game.arena.world
 
     private fun fill(from: Loc, to: Loc, mat: Material) =
-        fill(FillVolume(world, mat, from + settings.offset, to + settings.offset))
+        fill(FillVolume(world, mat, from + data.offset, to + data.offset))
 
     private fun fillBorder(from: Loc, to: Loc, mat: Material) =
-        fillBorder(FillVolume(world, mat, from + settings.offset, to + settings.offset))
+        fillBorder(FillVolume(world, mat, from + data.offset, to + data.offset))
 
     private fun Piece.render(loc: Loc) {
         for ((i, m) in type.structure[side].withIndex())
@@ -95,20 +101,20 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
 
     private fun Pos.fillFloor(floor: Floor) {
         val (x, y, z) = loc
-        val mi = -settings.lowHalfTile
-        val ma = settings.highHalfTile
+        val mi = -data.lowHalfTile
+        val ma = data.highHalfTile
         fill(FillVolume(world, floor.material, Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma)))
     }
 
     private fun renderBoardBase() {
         fill(
             Loc(0, 100, 0),
-            Loc(8 + settings.boardSize + 8 - 1, 100, 8 + settings.boardSize + 8 - 1),
+            Loc(8 + data.boardSize + 8 - 1, 100, 8 + data.boardSize + 8 - 1),
             Material.DARK_OAK_PLANKS
         )
         fillBorder(
             Loc(8 - 1, 101, 8 - 1),
-            Loc(8 + settings.boardSize, 101, 8 + settings.boardSize),
+            Loc(8 + data.boardSize, 101, 8 + data.boardSize),
             Material.DARK_OAK_PLANKS
         )
     }
@@ -116,7 +122,7 @@ class BukkitRenderer(private val game: ChessGame, private val settings: Settings
     private fun removeBoard() {
         fill(
             Loc(0, 100, 0),
-            Loc(8 + settings.boardSize + 8 - 1, 105, 8 + settings.boardSize + 8 - 1),
+            Loc(8 + data.boardSize + 8 - 1, 105, 8 + data.boardSize + 8 - 1),
             Material.AIR
         )
     }

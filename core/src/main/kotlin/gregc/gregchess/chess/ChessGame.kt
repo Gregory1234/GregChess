@@ -13,9 +13,9 @@ class GameSettings(
     val name: String,
     val simpleCastling: Boolean,
     val variant: ChessVariant,
-    val components: Collection<Component.Settings<*>>
+    val components: Collection<ComponentData<*>>
 ) {
-    inline fun <reified T : Component.Settings<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
+    inline fun <reified T : ComponentData<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
 }
 
 enum class TurnEvent(val ending: Boolean) : ChessEvent {
@@ -45,7 +45,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
             requireComponent<Chessboard>()
             for (it in variant.requiredComponents) {
                 settings.components.filterIsInstance(it.java).firstOrNull()
-                    ?: throw ComponentSettingsNotFoundException(it)
+                    ?: throw ComponentDataNotFoundException(it)
             }
             callEvent(GameBaseEvent.PRE_INIT)
         } catch (e: Exception) {

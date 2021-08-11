@@ -3,17 +3,25 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.register
+import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant() {
 
-    class CheckCounter(private val game: ChessGame, private val limit: UInt) : Component {
-        class Settings(private val limit: UInt) : Component.Settings<CheckCounter> {
-            override fun getComponent(game: ChessGame) = CheckCounter(game, limit)
-        }
+    @Serializable
+    data class CheckCounterData(
+        val limit: UInt,
+        val checks: MutableBySides<UInt> = mutableBySides(0u)
+    ) : ComponentData<CheckCounter> {
+        override fun getComponent(game: ChessGame) = CheckCounter(game, this)
+    }
 
-        private val checks = mutableBySides(0u)
+    class CheckCounter(game: ChessGame, override val data: CheckCounterData) : Component(game) {
+
+        private val checks = data.checks
+        private val limit = data.limit
 
         @ChessEventHandler
         fun endTurn(e: TurnEvent) {
@@ -43,7 +51,7 @@ object ThreeChecks : ChessVariant() {
         Normal.checkForGameEnd(game)
     }
 
-    override val requiredComponents: Collection<KClass<out Component.Settings<*>>>
-        get() = listOf(CheckCounter.Settings::class)
+    override val requiredComponents: Collection<KClass<out ComponentData<*>>>
+        get() = listOf(CheckCounterData::class)
 
 }

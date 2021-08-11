@@ -2,14 +2,18 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
+import kotlinx.serialization.Serializable
 import org.bukkit.Bukkit
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 
-class BukkitEventRelay(private val game: ChessGame) : Component {
-    object Settings : Component.Settings<BukkitEventRelay> {
-        override fun getComponent(game: ChessGame) = BukkitEventRelay(game)
-    }
+@Serializable
+object BukkitEventRelayData : ComponentData<BukkitEventRelay> {
+    override fun getComponent(game: ChessGame) = BukkitEventRelay(game, this)
+}
+
+class BukkitEventRelay(game: ChessGame, override val data: BukkitEventRelayData) : Component(game) {
 
     @ChessEventHandler
     fun onStart(e: GameStartStageEvent) {

@@ -2,19 +2,21 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.register
+import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 object AtomicChess : ChessVariant() {
 
-    data class ExplosionEvent(val pos: Pos) : ChessEvent
+    class ExplosionEvent(val pos: Pos) : ChessEvent
 
-    class ExplosionManager(private val game: ChessGame) : Component {
-        object Settings : Component.Settings<ExplosionManager> {
-            override fun getComponent(game: ChessGame) = ExplosionManager(game)
-        }
+    @Serializable
+    object ExplosionManagerData : ComponentData<ExplosionManager> {
+        override fun getComponent(game: ChessGame) = ExplosionManager(game, this)
+    }
+
+    class ExplosionManager(game: ChessGame, override val data: ExplosionManagerData) : Component(game) {
 
         private val explosions = mutableListOf<List<Pair<BoardPiece, CapturedPiece>>>()
 
@@ -110,6 +112,6 @@ object AtomicChess : ChessVariant() {
         move.undo()
     }
 
-    override val requiredComponents: Collection<KClass<out Component.Settings<*>>>
-        get() = listOf(ExplosionManager.Settings::class)
+    override val requiredComponents: Collection<KClass<out ComponentData<*>>>
+        get() = listOf(ExplosionManagerData::class)
 }

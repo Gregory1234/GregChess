@@ -5,8 +5,7 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.variant.AtomicChess
-import gregc.gregchess.chess.variant.ThreeChecks
+import gregc.gregchess.chess.variant.*
 import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
@@ -23,9 +22,10 @@ fun ChessModule.register(id: String, propertyType: PropertyType) =
 abstract class BukkitChessModuleExtension(val plugin: Plugin) : ChessModuleExtension {
     open val config: ConfigurationSection get() = plugin.config
     open fun getSettings(
-        requested: Collection<KClass<out Component.Settings<*>>>,
+        variant: ChessVariant,
+        requested: Collection<KClass<out ComponentData<*>>>,
         section: ConfigurationSection
-    ): Collection<Component.Settings<*>> = emptyList()
+    ): Collection<ComponentData<*>> = emptyList()
 
     open fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String? = null
 }
@@ -52,31 +52,32 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
         else
             null
 
-    private val clockSettings: Map<String, ChessClock.Settings>
+    private val clockSettings: Map<String, ChessClockData>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
             val section = gregc.gregchess.bukkit.config.getConfigurationSection("Settings.Clock.$it")!!
-            val t = ChessClock.Type.valueOf(section.getString("Type", ChessClock.Type.INCREMENT.toString())!!)
+            val t = TimeControl.Type.valueOf(section.getString("Type", TimeControl.Type.INCREMENT.toString())!!)
             val initial = section.getString("Initial")?.asDurationOrNull()!!
             val increment = if (t.usesIncrement) section.getString("Increment")?.asDurationOrNull()!! else 0.seconds
-            ChessClock.Settings(t, initial, increment)
+            ChessClockData(TimeControl(t, initial, increment))
         }
 
-    override fun getSettings(requested: Collection<KClass<out Component.Settings<*>>>, section: ConfigurationSection) =
+    override fun getSettings(variant: ChessVariant, requested: Collection<KClass<out ComponentData<*>>>, section: ConfigurationSection) =
         buildList {
             this += ArenaManager.freeAreas.firstOrNull().cNotNull(NO_ARENAS)
-            this += Chessboard.Settings[section.getString("Board")]
-            SettingsManager.chooseOrParse(clockSettings, section.getString("Clock"), ChessClock.Settings::parse)
-                ?.let { this += it }
-            this += PlayerManager.Settings
-            this += SpectatorManager.Settings
-            this += ScoreboardManager.Settings
-            this += BukkitRenderer.Settings(section.getInt("TileSize", 3))
-            this += BukkitEventRelay.Settings
-            if (ThreeChecks.CheckCounter.Settings::class in requested)
-                this += ThreeChecks.CheckCounter.Settings(section.getInt("CheckLimit", 3).toUInt())
-            if (AtomicChess.ExplosionManager.Settings::class in requested)
-                this += AtomicChess.ExplosionManager.Settings
-            this += BukkitGregChessAdapter.Settings
+            this += ChessboardState[variant, section.getString("Board")]
+            SettingsManager.chooseOrParse(clockSettings, section.getString("Clock")) {
+                TimeControl.parseOrNull(it)?.let { t -> ChessClockData(t) }
+            }?.let { this += it }
+            this += PlayerManagerData
+            this += SpectatorManagerData
+            this += ScoreboardManagerData
+            this += BukkitRendererSettings(section.getInt("TileSize", 3))
+            this += BukkitEventRelayData
+            if (ThreeChecks.CheckCounterData::class in requested)
+                this += ThreeChecks.CheckCounterData(section.getInt("CheckLimit", 3).toUInt())
+            if (AtomicChess.ExplosionManagerData::class in requested)
+                this += AtomicChess.ExplosionManagerData
+            this += BukkitGregChessAdapterData
         }
 
     override fun load() {

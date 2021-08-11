@@ -5,7 +5,10 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.register
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -18,7 +21,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
 import java.util.*
 
-private data class PlayerData(
+internal data class PlayerData(
     @JvmField val location: Location? = null,
     @JvmField val inventory: List<ItemStack?> = List(41) { null },
     @JvmField val gameMode: GameMode = GameMode.SURVIVAL,
@@ -100,8 +103,8 @@ object ArenaManager : Listener {
 
 class ResetPlayerEvent(val player: Player): ChessEvent
 
-
-class Arena(val name: String, var game: ChessGame? = null) : Component.Settings<Arena.Usage> {
+@Serializable
+class Arena(val name: String, @Transient var game: ChessGame? = null) : ComponentData<Arena.Usage> {
     companion object {
         private val defData = PlayerData(allowFlight = true, isFlying = true)
 
@@ -109,22 +112,24 @@ class Arena(val name: String, var game: ChessGame? = null) : Component.Settings<
         private val adminData = defData.copy(gameMode = GameMode.CREATIVE)
     }
 
-    class Usage(val arena: Arena, private val game: ChessGame) : Component {
+    class Usage(val arena: Arena, game: ChessGame) : Component(game) {
 
-        private val data = mutableMapOf<UUID, PlayerData>()
+        override val data = arena
+
+        private val dataMap = mutableMapOf<UUID, PlayerData>()
 
         private fun Player.join(d: PlayerData = defData) {
-            if (uniqueId in data)
+            if (uniqueId in dataMap)
                 throw IllegalStateException("player already teleported")
-            data[uniqueId] = playerData
+            dataMap[uniqueId] = playerData
             reset(d)
         }
 
         private fun Player.leave() {
-            if (uniqueId !in data)
+            if (uniqueId !in dataMap)
                 throw IllegalStateException("player data not found")
-            playerData = data[uniqueId]!!
-            data.remove(uniqueId)
+            playerData = dataMap[uniqueId]!!
+            dataMap.remove(uniqueId)
         }
 
         private fun Player.reset(d: PlayerData = defData) {

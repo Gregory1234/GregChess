@@ -2,10 +2,10 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.GameSettings
-import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.ChessboardState
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.fabric.chess.component.FabricRenderer
-import gregc.gregchess.fabric.chess.component.PlayerManager
+import gregc.gregchess.fabric.chess.component.FabricRendererSettings
+import gregc.gregchess.fabric.chess.component.PlayerManagerData
 import java.util.*
 
 object ChessGameManager {
@@ -24,10 +24,10 @@ object ChessGameManager {
 
     fun clear() = loadedGames.clear()
 
-    fun settings(r: FabricRenderer.Settings): GameSettings {
+    fun settings(v: ChessVariant, r: FabricRendererSettings): GameSettings {
         val components = buildList {
-            this += Chessboard.Settings[null]
-            this += PlayerManager.Settings
+            this += ChessboardState[v, null]
+            this += PlayerManagerData
             this += r
         }
         return GameSettings("", false, ChessVariant.Normal, components)

@@ -3,7 +3,7 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -95,10 +95,10 @@ open class ChessVariant: NameRegistered {
     open val pieceTypes: Collection<PieceType>
         get() = PieceType.run { listOf(KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN) }
 
-    open val requiredComponents: Collection<KClass<out Component.Settings<*>>>
+    open val requiredComponents: Collection<KClass<out ComponentData<*>>>
         get() = emptyList()
 
-    open val optionalComponents: Collection<KClass<out Component.Settings<*>>>
+    open val optionalComponents: Collection<KClass<out ComponentData<*>>>
         get() = emptyList()
 
     protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { board.getMoves(it.pos) }

@@ -2,12 +2,15 @@ package gregc.gregchess.fabric.chess.component
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.fabric.chess.*
 
-class PlayerManager(private val game: ChessGame) : Component {
-    object Settings : Component.Settings<PlayerManager> {
-        override fun getComponent(game: ChessGame) = PlayerManager(game)
-    }
+object PlayerManagerData : ComponentData<PlayerManager> {
+    override fun getComponent(game: ChessGame) = PlayerManager(game, this)
+}
+
+class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Component(game) {
+
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = with(game) {

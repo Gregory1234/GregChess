@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.chess.component.ChessClock
+import gregc.gregchess.chess.component.ChessClockData
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.snakeToPascal
 import java.time.format.DateTimeFormatter
@@ -55,7 +55,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
 
             tags += TagPair("Result", result ?: "*")
             tags += TagPair("PlyCount", game.board.moveHistory.size.toString())
-            val timeControl = game.settings.getComponent<ChessClock.Settings>()?.getPGN() ?: "-"
+            val timeControl = game.settings.getComponent<ChessClockData>()?.timeControl?.getPGN() ?: "-"
             tags += TagPair("TimeControl", timeControl)
             val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(game.startTime)
             tags += TagPair("Time", time)

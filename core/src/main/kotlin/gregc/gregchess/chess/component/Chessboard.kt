@@ -1,45 +1,45 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.rangeTo
+import kotlinx.serialization.Serializable
 import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 
-class Chessboard(private val game: ChessGame, private val settings: Settings) : Component {
-    data class SetFenEvent(val FEN: FEN) : ChessEvent
+class SetFenEvent(val FEN: FEN) : ChessEvent
 
-    class Settings(private val initialFEN: FEN?, internal val chess960: Boolean = initialFEN?.chess960 ?: false) :
-        Component.Settings<Chessboard> {
+@Serializable
+data class ChessboardState(
+    val initialFEN: FEN = FEN()
+): ComponentData<Chessboard> {
+    override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
-        override fun getComponent(game: ChessGame) = Chessboard(game, this)
+    companion object {
 
-        fun genFEN(game: ChessGame) = initialFEN ?: game.variant.genFEN(chess960)
-
-        companion object {
-
-            private val normal = Settings(null)
-
-            operator fun get(name: String?) = when (name) {
-                "normal" -> normal
-                null -> normal
-                "chess960" -> Settings(null, true)
-                else -> {
-                    if (name.startsWith("fen ")) try {
-                        Settings(FEN.parseFromString(name.drop(4)))
-                    } catch (e: IllegalArgumentException) {
-                        println("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
-                        normal
-                    } else {
-                        println("Invalid chessboard configuration $name, defaulted to normal!")
-                        normal
-                    }
+        operator fun get(variant: ChessVariant, name: String?) = when (name) {
+            "normal" -> ChessboardState(variant.genFEN(false))
+            null -> ChessboardState(variant.genFEN(false))
+            "chess960" -> ChessboardState(variant.genFEN(true))
+            else -> {
+                if (name.startsWith("fen ")) try {
+                    ChessboardState(FEN.parseFromString(name.drop(4)))
+                } catch (e: IllegalArgumentException) {
+                    println("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
+                    ChessboardState(variant.genFEN(false))
+                } else {
+                    println("Invalid chessboard configuration $name, defaulted to normal!")
+                    ChessboardState(variant.genFEN(false))
                 }
             }
-
         }
     }
+}
+
+class Chessboard(game: ChessGame, override val data: ChessboardState) : Component(game) {
+
 
     private val squares = (Pair(0, 0)..Pair(7, 7)).map { (i, j) -> Pos(i, j) }.associateWith { Square(it, game) }
 
@@ -73,11 +73,11 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     val moveHistory: List<MoveData>
         get() = moves
 
-    val initialFEN = settings.genFEN(game)
+    val initialFEN = data.initialFEN
 
     val chess960: Boolean
         get() {
-            if (settings.chess960)
+            if (initialFEN.chess960)
                 return true
             val whiteKing = kingOf(white)
             val blackKing = kingOf(black)
@@ -131,7 +131,7 @@ class Chessboard(private val game: ChessGame, private val settings: Settings) : 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.START)
-            setFromFEN(settings.genFEN(game))
+            setFromFEN(initialFEN)
     }
 
     operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uuid == pieceUniqueId }

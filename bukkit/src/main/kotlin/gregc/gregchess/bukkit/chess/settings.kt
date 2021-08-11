@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
-    fun <T, R> chooseOrParse(opts: Map<T, R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
+    inline fun <T, R> chooseOrParse(opts: Map<T, R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
 
     private fun getChessVariant(key: NamespacedKey): ChessVariant? =
         ChessModule.getOrNull(key.namespace)?.variants?.get(key.key)
@@ -23,7 +23,7 @@ object SettingsManager {
             val simpleCastling = section.getBoolean("SimpleCastling", false)
             val variant = section.getString("Variant")?.toKey()?.let(::getChessVariant) ?: ChessVariant.Normal
             val components = ChessModule.modules.flatMap {
-                it.bukkit.getSettings(variant.requiredComponents + variant.optionalComponents, section)
+                it.bukkit.getSettings(variant, variant.requiredComponents + variant.optionalComponents, section)
             }
             GameSettings(name, simpleCastling, variant, components)
         }

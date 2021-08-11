@@ -5,16 +5,20 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.randomString
+import kotlinx.serialization.Serializable
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
-class ScoreboardManager(private val game: ChessGame) : Component {
-    object Settings : Component.Settings<ScoreboardManager> {
-        override fun getComponent(game: ChessGame) = ScoreboardManager(game)
-    }
+@Serializable
+object ScoreboardManagerData: ComponentData<ScoreboardManager> {
+    override fun getComponent(game: ChessGame) = ScoreboardManager(game, this)
+}
+
+class ScoreboardManager(game: ChessGame, override val data: ScoreboardManagerData) : Component(game) {
 
     companion object {
         private val TITLE = Message(config, "Scoreboard.Title")

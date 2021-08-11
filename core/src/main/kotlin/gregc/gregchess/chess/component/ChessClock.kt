@@ -3,143 +3,105 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.chess.*
 import gregc.gregchess.minutes
 import gregc.gregchess.seconds
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.LocalDateTime
 
-
-class ChessClock(private val game: ChessGame, private val settings: Settings) : Component {
-
+@Serializable
+data class TimeControl(
+    val type: Type,
+    val initialTime: @Contextual Duration,
+    val increment: @Contextual Duration = 0.seconds
+) {
     enum class Type(val usesIncrement: Boolean = true) {
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
     }
 
-
-    class Settings(val type: Type, val initialTime: Duration, val increment: Duration = 0.seconds) :
-        Component.Settings<ChessClock> {
-
-        fun getPGN() = buildString {
-            if (type == Type.SIMPLE) {
-                append("1/", initialTime.seconds)
-            } else {
-                append(initialTime.seconds)
-                if (!increment.isZero)
-                    append("+", increment.seconds)
-            }
-        }
-
-        override fun getComponent(game: ChessGame) = ChessClock(game, this)
-
-        companion object {
-
-            fun parse(name: String): Settings? = when (name) {
-                "none" -> null
-                else -> Regex("""(\d+)\+(\d+)""").find(name)?.let {
-                    Settings(Type.INCREMENT, it.groupValues[1].toLong().minutes, it.groupValues[2].toInt().seconds)
-                } ?: run {
-                    println("Invalid chessboard configuration $name, defaulted to none!")
-                    null
-                }
-            }
-        }
-    }
-
-    data class Time(
-        var diff: Duration,
-        var start: LocalDateTime = LocalDateTime.now(),
-        var end: LocalDateTime = LocalDateTime.now() + diff,
-        var begin: LocalDateTime? = null
-    ) {
-        fun reset() {
-            start = LocalDateTime.now()
-            end = LocalDateTime.now() + diff
-        }
-
-        operator fun plusAssign(addition: Duration) {
-            diff += addition
-            end += addition
-        }
-
-        fun set(time: Duration) {
-            diff = time
-            end = LocalDateTime.now() + time
-        }
-
-        fun getRemaining(isActive: Boolean, time: LocalDateTime): Duration = if (isActive) {
-            Duration.between(if (begin == null || time > begin) time else begin, end)
+    fun getPGN() = buildString {
+        if (type == Type.SIMPLE) {
+            append("1/", initialTime.seconds)
         } else {
-            diff
+            append(initialTime.seconds)
+            if (!increment.isZero)
+                append("+", increment.seconds)
         }
     }
 
-    private val time = bySides { Time(settings.initialTime) }
+    companion object {
+
+        fun parseOrNull(name: String): TimeControl? = Regex("""(\d+)\+(\d+)""").find(name)?.let {
+            TimeControl(Type.INCREMENT, it.groupValues[1].toLong().minutes, it.groupValues[2].toInt().seconds)
+        }
+    }
+
+}
+
+@Serializable
+data class ChessClockData(
+    val timeControl: TimeControl,
+    val timeRemaining: MutableBySides<@Contextual Duration> = mutableBySides(timeControl.initialTime),
+    var currentTurnLength: @Contextual Duration = 0.seconds
+) : ComponentData<ChessClock> {
+    override fun getComponent(game: ChessGame) = ChessClock(game, this)
+}
+
+class ChessClock(game: ChessGame, override val data: ChessClockData) : Component(game) {
+    private val time = data.timeRemaining
+    private val timeControl = data.timeControl
+
+    private var lastTime: LocalDateTime = LocalDateTime.now()
 
     private var started = false
-    private var stopTime: LocalDateTime? = null
-
-    fun getTimeRemaining(s: Side) =
-        time[s].getRemaining(s == game.currentTurn && started, stopTime ?: LocalDateTime.now())
+    private var stopped = false
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) {
-        if (e == GameBaseEvent.START && settings.type == Type.FIXED) startTimer()
-        else if (e == GameBaseEvent.STOP) stopTime = LocalDateTime.now()
-        else if (e == GameBaseEvent.UPDATE)
-            for (it in Side.values())
-                if (getTimeRemaining(it).isNegative) game.variant.timeout(game, it)
+        if (e == GameBaseEvent.START && timeControl.type == TimeControl.Type.FIXED) started = true
+        else if (e == GameBaseEvent.STOP) stopped = true
+        else if (e == GameBaseEvent.UPDATE) updateTimer()
     }
 
-    private fun startTimer() {
-        Side.forEach { time[it].reset() }
-        if (settings.type == Type.FIXED) {
-            time[game.currentTurn].begin = LocalDateTime.now() + settings.increment
-            time[game.currentTurn] += settings.increment
+    private fun updateTimer() {
+        if (!started)
+            return
+        if (stopped)
+            return
+        val now = LocalDateTime.now()
+        val dt = Duration.between(now, lastTime)
+        lastTime = now
+        data.currentTurnLength += dt
+        if (timeControl.type != TimeControl.Type.SIMPLE) {
+            time[game.currentTurn] -= dt
+        } else {
+            time[game.currentTurn] -= maxOf(minOf(dt, data.currentTurnLength - timeControl.increment), 0.seconds)
         }
-        started = true
+        for ((s, t) in time.toIndexedList())
+            if (t.isNegative)
+                game.variant.timeout(game, s)
     }
 
     @ChessEventHandler
     fun endTurn(e: TurnEvent) {
         if (e != TurnEvent.END)
             return
-        val increment = if (started) settings.increment else 0.seconds
+        val increment = if (started) timeControl.increment else 0.seconds
         if (!started)
-            startTimer()
-        val now = LocalDateTime.now()
+            started = true
         val turn = game.currentTurn
-        time[!turn].start = now
-        time[!turn].end = now + time[!turn].diff
-        when (settings.type) {
-            Type.FIXED -> {
-                time[turn].diff = settings.initialTime
+        when (timeControl.type) {
+            TimeControl.Type.FIXED -> {
+                time[turn] = timeControl.initialTime
             }
-            Type.INCREMENT -> {
-                time[turn].diff = Duration.between(now, time[turn].end + increment)
+            TimeControl.Type.INCREMENT -> {
+                time[turn] += increment
             }
-            Type.BRONSTEIN -> {
-                val reset = Duration.between(time[turn].start, now)
-                time[turn].diff =
-                    Duration.between(
-                        now,
-                        time[turn].end + if (increment > reset) reset else increment
-                    )
+            TimeControl.Type.BRONSTEIN -> {
+                time[turn] += minOf(increment, data.currentTurnLength)
             }
-            Type.SIMPLE -> {
-                time[!turn] += increment
-                time[!turn].begin = now + increment
-                time[turn].diff = Duration.between(
-                    if (time[turn].begin == null || now > time[turn].begin) now
-                    else time[turn].begin,
-                    time[turn].end
-                )
+            TimeControl.Type.SIMPLE -> {
             }
         }
-    }
-
-    fun addTime(side: Side, addition: Duration) {
-        time[side] += addition
-    }
-
-    fun setTime(side: Side, seconds: Duration) {
-        time[side].set(seconds)
+        data.currentTurnLength = 0.seconds
     }
 }
