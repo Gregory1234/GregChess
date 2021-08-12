@@ -1,17 +1,16 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
 import io.mockk.spyk
 
 fun testSettings(
     name: String, board: String? = null, variant: ChessVariant = ChessVariant.Normal,
-    extra: List<Component.Settings<*>> = emptyList()
+    extra: List<ComponentData<*>> = emptyList()
 ): GameSettings {
     val components = buildList {
-        this += Chessboard.Settings[board]
+        this += ChessboardState[variant, board]
         this.addAll(extra)
     }
     return GameSettings(name, false, variant, components)
@@ -23,11 +22,11 @@ fun ChessGame.AddPlayersScope.test(name: String, side: Side) {
     addPlayer(TestPlayer(name, side, game))
 }
 
-class TestComponent : Component {
+object TestComponentData : ComponentData<TestComponent> {
+    override fun getComponent(game: ChessGame): TestComponent = spyk(TestComponent(game, this))
+}
 
-    object Settings : Component.Settings<TestComponent> {
-        override fun getComponent(game: ChessGame): TestComponent = spyk(TestComponent())
-    }
+class TestComponent(game: ChessGame, override val data: TestComponentData) : Component(game) {
 
     @ChessEventHandler
     @Suppress("UNUSED_PARAMETER")

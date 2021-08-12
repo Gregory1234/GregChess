@@ -23,7 +23,6 @@ enum class TurnEvent(val ending: Boolean) : ChessEvent {
 }
 
 enum class GameBaseEvent : ChessEvent {
-    PRE_INIT,
     START,
     RUNNING,
     UPDATE,
@@ -47,7 +46,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
                 settings.components.filterIsInstance(it.java).firstOrNull()
                     ?: throw ComponentDataNotFoundException(it)
             }
-            callEvent(GameBaseEvent.PRE_INIT)
+            components.forEach { it.validate() }
         } catch (e: Exception) {
             panic(e)
             throw e

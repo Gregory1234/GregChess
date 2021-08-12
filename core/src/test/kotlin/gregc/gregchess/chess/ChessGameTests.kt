@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.*
 
 private val basicSettings = testSettings("basic")
-private val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponent.Settings))
+private val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponentData))
 private fun spyVariantSettings() = testSettings("spy variant", variant = spyk(TestVariant))
 
 private fun mkGame(
@@ -27,7 +27,7 @@ private fun mkGame(settings: GameSettings = basicSettings, players: BySides<Stri
 
 fun componentExclude(c: TestComponent) {
     excludeRecords {
-        c.handleEvents(GameBaseEvent.PRE_INIT)
+        c.validate()
     }
 }
 
@@ -83,7 +83,7 @@ class ChessGameTests : FreeSpec({
                 val g = mkGame(spyComponentSettings).start()
                 val c = g.getComponent<TestComponent>()!!
                 verifySequence {
-                    c.handleEvents(GameBaseEvent.PRE_INIT)
+                    c.validate()
                     c.handleEvents(GameBaseEvent.START)
                     c.handleEvents(GameBaseEvent.RUNNING)
                     c.handleTurn(TurnEvent.START)

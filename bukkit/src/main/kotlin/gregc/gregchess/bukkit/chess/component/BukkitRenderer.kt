@@ -127,10 +127,8 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         )
     }
 
-    @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) {
-        if (e == GameBaseEvent.PRE_INIT)
-            game.requireComponent<Arena.Usage>()
+    override fun validate() {
+        game.requireComponent<Arena.Usage>()
     }
 
     @ChessEventHandler

@@ -139,20 +139,15 @@ class Arena(val name: String, @Transient var game: ChessGame? = null) : Componen
         }
 
         @ChessEventHandler
-        fun handleEvents(e: GameBaseEvent) {
-            if (e == GameBaseEvent.PRE_INIT)
-                addGame()
+        override fun validate() {
+            game.requireComponent<BukkitRenderer>()
+            arena.game = game
         }
 
         @ChessEventHandler
         fun onStop(e: GameStopStageEvent) {
             if (e == GameStopStageEvent.VERY_END) removeGame()
             else if (e == GameStopStageEvent.PANIC) evacuate()
-        }
-
-        private fun addGame() {
-            game.requireComponent<BukkitRenderer>()
-            arena.game = game
         }
 
         private fun removeGame() {

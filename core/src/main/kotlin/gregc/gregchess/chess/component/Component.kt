@@ -8,6 +8,8 @@ interface ComponentData<out T : Component> {
 }
 abstract class Component(protected val game: ChessGame) {
     abstract val data: ComponentData<*>
+
+    open fun validate() {}
 }
 
 class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
