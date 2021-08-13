@@ -148,7 +148,9 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.START) {
+            updateMoves()
             pieces.forEach { it.sendCreated() }
+            squares.values.forEach(Square::update)
         }
     }
 

@@ -30,11 +30,11 @@ class BukkitGregChessAdapter(game: ChessGame, override val data: BukkitGregChess
 
     @ChessEventHandler
     fun addProperties(e: AddPropertiesEvent) {
-        game.settings.getComponent<ChessClockData>()?.apply {
+        game.clock?.apply {
             if (timeControl.type == TimeControl.Type.FIXED) {
-                e.game(TIME_REMAINING_SIMPLE) { timeRemaining[game.currentTurn].format(timeFormat) ?: timeFormat }
+                e.game(TIME_REMAINING_SIMPLE) { timeRemaining(game.currentTurn).format(timeFormat) ?: timeFormat }
             } else {
-                e.player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) ?: timeFormat }
+                e.player(TIME_REMAINING) { timeRemaining(it).format(timeFormat) ?: timeFormat }
             }
         }
         game.getComponent<ThreeChecks.CheckCounter>()?.apply {

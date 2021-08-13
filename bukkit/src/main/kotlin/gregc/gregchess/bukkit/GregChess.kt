@@ -227,8 +227,8 @@ object GregChess : Listener {
                         val side = Side.valueOf(nextArg())
                         val time = this[1].asDurationOrNull().cNotNull(WRONG_ARGUMENT)
                         when (nextArg().lowercase()) {
-                            "add" -> clock.data.timeRemaining[side] += time
-                            "set" -> clock.data.timeRemaining[side] = time
+                            "add" -> clock.addTimer(side, time)
+                            "set" -> clock.setTimer(side, time)
                             else -> cWrongArgument()
                         }
                         player.sendMessage(TIME_OP_DONE)

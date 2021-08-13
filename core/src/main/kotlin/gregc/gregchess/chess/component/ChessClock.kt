@@ -41,15 +41,18 @@ data class TimeControl(
 @Serializable
 data class ChessClockData(
     val timeControl: TimeControl,
-    val timeRemaining: MutableBySides<Duration> = mutableBySides(timeControl.initialTime),
-    var currentTurnLength: Duration = 0.seconds
+    val timeRemaining: BySides<Duration> = bySides(timeControl.initialTime),
+    val currentTurnLength: Duration = 0.seconds
 ) : ComponentData<ChessClock> {
     override fun getComponent(game: ChessGame) = ChessClock(game, this)
 }
 
-class ChessClock(game: ChessGame, override val data: ChessClockData) : Component(game) {
-    private val time = data.timeRemaining
-    private val timeControl = data.timeControl
+class ChessClock(game: ChessGame, settings: ChessClockData) : Component(game) {
+    private val time = mutableBySides { settings.timeRemaining[it] }
+    val timeControl = settings.timeControl
+    private var currentTurnLength = settings.currentTurnLength
+
+    override val data get() = ChessClockData(timeControl, bySides { time[it] }, currentTurnLength)
 
     private var lastTime: LocalDateTime = LocalDateTime.now()
 
@@ -63,19 +66,29 @@ class ChessClock(game: ChessGame, override val data: ChessClockData) : Component
         else if (e == GameBaseEvent.UPDATE) updateTimer()
     }
 
+    fun addTimer(s: Side, d: Duration) {
+        time[s] += d
+    }
+
+    fun setTimer(s: Side, d: Duration) {
+        time[s] = d
+    }
+
+    fun timeRemaining(s: Side) = time[s]
+
     private fun updateTimer() {
         if (!started)
             return
         if (stopped)
             return
         val now = LocalDateTime.now()
-        val dt = Duration.between(now, lastTime)
+        val dt = Duration.between(lastTime, now)
         lastTime = now
-        data.currentTurnLength += dt
+        currentTurnLength += dt
         if (timeControl.type != TimeControl.Type.SIMPLE) {
             time[game.currentTurn] -= dt
         } else {
-            time[game.currentTurn] -= maxOf(minOf(dt, data.currentTurnLength - timeControl.increment), 0.seconds)
+            time[game.currentTurn] -= maxOf(minOf(dt, currentTurnLength - timeControl.increment), 0.seconds)
         }
         for ((s, t) in time.toIndexedList())
             if (t.isNegative)
@@ -98,11 +111,11 @@ class ChessClock(game: ChessGame, override val data: ChessClockData) : Component
                 time[turn] += increment
             }
             TimeControl.Type.BRONSTEIN -> {
-                time[turn] += minOf(increment, data.currentTurnLength)
+                time[turn] += minOf(increment, currentTurnLength)
             }
             TimeControl.Type.SIMPLE -> {
             }
         }
-        data.currentTurnLength = 0.seconds
+        currentTurnLength = 0.seconds
     }
 }
