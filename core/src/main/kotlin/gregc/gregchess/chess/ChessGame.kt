@@ -158,6 +158,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
 
     fun start(): ChessGame {
         state = GameState.Starting(requireReady())
+        requireStarting().currentTurn = board.initialFEN.currentTurn
         callEvent(GameBaseEvent.START)
         state = GameState.Running(requireStarting())
         callEvent(GameBaseEvent.RUNNING)

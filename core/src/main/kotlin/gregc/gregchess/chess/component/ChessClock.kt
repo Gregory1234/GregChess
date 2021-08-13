@@ -1,18 +1,19 @@
+@file:UseSerializers(DurationSerializer::class)
+
 package gregc.gregchess.chess.component
 
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.minutes
-import gregc.gregchess.seconds
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import java.time.Duration
 import java.time.LocalDateTime
 
 @Serializable
 data class TimeControl(
     val type: Type,
-    val initialTime: @Contextual Duration,
-    val increment: @Contextual Duration = 0.seconds
+    val initialTime: Duration,
+    val increment: Duration = 0.seconds
 ) {
     enum class Type(val usesIncrement: Boolean = true) {
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
@@ -40,8 +41,8 @@ data class TimeControl(
 @Serializable
 data class ChessClockData(
     val timeControl: TimeControl,
-    val timeRemaining: MutableBySides<@Contextual Duration> = mutableBySides(timeControl.initialTime),
-    var currentTurnLength: @Contextual Duration = 0.seconds
+    val timeRemaining: MutableBySides<Duration> = mutableBySides(timeControl.initialTime),
+    var currentTurnLength: Duration = 0.seconds
 ) : ComponentData<ChessClock> {
     override fun getComponent(game: ChessGame) = ChessClock(game, this)
 }

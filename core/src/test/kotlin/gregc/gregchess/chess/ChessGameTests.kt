@@ -66,10 +66,11 @@ class ChessGameTests : FreeSpec({
                     c wasNot Called
                 }
             }
-            "only get required components and fen from variant" {
+            "only get required components, piece types and fen from variant" {
                 val g = mkGame(spyVariantSettings())
                 verifyAll {
                     g.variant.requiredComponents
+                    g.variant.pieceTypes
                     g.variant.genFEN(any())
                 }
             }

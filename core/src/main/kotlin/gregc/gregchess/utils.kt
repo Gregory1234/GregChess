@@ -70,3 +70,11 @@ open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val re
     }
 
 }
+
+object DurationSerializer: KSerializer<Duration> {
+    override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Duration", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: Duration) = encoder.encodeString(value.toString())
+
+    override fun deserialize(decoder: Decoder): Duration = Duration.parse(decoder.decodeString())
+}

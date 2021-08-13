@@ -80,7 +80,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     val info
         get() = PieceInfo(pos, piece, hasMoved)
 
-    init {
+    fun sendCreated() {
         game.callEvent(PieceEvent.Created(this))
     }
 

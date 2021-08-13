@@ -288,6 +288,12 @@ object GregChess : Listener {
                     }
 
                 }
+                "serial" -> {
+                    cPlayer(player)
+                    perms()
+                    endArgs()
+                    println(player.currentGame?.serializeToJson())
+                }
                 "info" -> {
                     cWrongArgument {
                         when (nextArg().lowercase()) {
@@ -324,7 +330,7 @@ object GregChess : Listener {
 
             when (args.size) {
                 1 -> ifPermissionPrefix(
-                    "duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move",
+                    "duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move", "serial",
                     "skip", "load", "save", "time", "uci", "spectate", "reload", "dev", "undo", "debug", "admin"
                 ) + ifInfo("info")
                 2 -> when (args[0]) {

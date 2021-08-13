@@ -6,6 +6,8 @@ import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.snakeToPascal
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
@@ -60,6 +62,22 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Variant: ${variant.name}\n")
     append("Components: ${components.joinToString { it.javaClass.simpleName }}")
 }
+
+@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+@Suppress("UNCHECKED_CAST")
+private fun <T: Any> Json.serializeWeird(v: T): JsonElement {
+    return JsonObject(mapOf(
+        "type" to encodeToJsonElement(v::class.serializer().descriptor.serialName),
+        "data" to encodeToJsonElement(v::class.serializerOrNull()!! as KSerializer<T>, v)
+    ))
+}
+
+fun ChessGame.serializeToJson(config: Json = Json): String = config.encodeToString(JsonObject(mapOf(
+    "uuid" to config.encodeToJsonElement(uuid.toString()),
+    "white" to config.encodeToJsonElement(players[white].name),
+    "black" to config.encodeToJsonElement(players[black].name),
+    "components" to JsonArray(components.map { config.serializeWeird(it.data) })
+)))
 
 val EndReason<*>.configName get() = name.snakeToPascal()
 val GameResults.name

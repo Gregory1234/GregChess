@@ -75,6 +75,12 @@ data class FEN(
     fun forEachSquare(pieceTypes: Collection<PieceType>, f: (PieceInfo) -> Unit) =
         boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(pieceTypes, p)) }
 
+    fun toPieces(pieceTypes: Collection<PieceType>): Map<Pos, PieceInfo> = buildMap {
+        forEachSquare(pieceTypes) {
+            set(it.pos, it)
+        }
+    }
+
     override fun toString() = buildString {
         append(boardState.state)
         append(" ")

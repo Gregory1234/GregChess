@@ -41,6 +41,7 @@ permissions:
       greg-chess.chess.reload: true
       greg-chess.chess.dev: true
       greg-chess.chess.debug: true
+      greg-chess.chess.serial: true
       greg-chess.chess.info.*: true
       greg-chess.chess.admin: true
   greg-chess.chess.duel:
@@ -96,6 +97,9 @@ permissions:
     default: true
   greg-chess.chess.debug:
     description: Can use /chess debug
+    default: op
+  greg-chess.chess.serial:
+    description: Can use /chess serial
     default: op
   greg-chess.chess.info.*:
     description: Can always use /chess info

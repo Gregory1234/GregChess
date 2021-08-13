@@ -13,50 +13,69 @@ class SetFenEvent(val FEN: FEN) : ChessEvent
 
 @Serializable
 data class ChessboardState(
-    val initialFEN: FEN = FEN()
-): ComponentData<Chessboard> {
+    val initialFEN: FEN,
+    val pieces: Map<Pos, PieceInfo>,
+    val halfmoveClock: UInt = initialFEN.halfmoveClock,
+    val fullmoveClock: UInt = initialFEN.fullmoveClock,
+    val boardHashes: Map<Int, Int> = emptyMap(),
+    val capturedPieces: List<CapturedPiece> = emptyList()
+) : ComponentData<Chessboard> {
+    constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
+            this(fen ?: variant.genFEN(chess960), (fen ?: variant.genFEN(chess960)).toPieces(variant.pieceTypes))
+
     override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
     companion object {
 
         operator fun get(variant: ChessVariant, name: String?) = when (name) {
-            "normal" -> ChessboardState(variant.genFEN(false))
-            null -> ChessboardState(variant.genFEN(false))
-            "chess960" -> ChessboardState(variant.genFEN(true))
+            "normal" -> ChessboardState(variant)
+            null -> ChessboardState(variant)
+            "chess960" -> ChessboardState(variant, chess960 = true)
             else -> {
                 if (name.startsWith("fen ")) try {
-                    ChessboardState(FEN.parseFromString(name.drop(4)))
+                    ChessboardState(variant, FEN.parseFromString(name.drop(4)))
                 } catch (e: IllegalArgumentException) {
                     println("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
-                    ChessboardState(variant.genFEN(false))
+                    ChessboardState(variant)
                 } else {
                     println("Invalid chessboard configuration $name, defaulted to normal!")
-                    ChessboardState(variant.genFEN(false))
+                    ChessboardState(variant)
                 }
             }
         }
     }
 }
 
-class Chessboard(game: ChessGame, override val data: ChessboardState) : Component(game) {
+class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(game) {
 
 
-    private val squares = (Pair(0, 0)..Pair(7, 7)).map { (i, j) -> Pos(i, j) }.associateWith { Square(it, game) }
+    private val squares = (Pair(0, 0)..Pair(7, 7)).map { (i, j) -> Pos(i, j) }.associateWith { p ->
+        Square(p, game).also {
+            val piece = initialState.pieces[p]
+            if (piece != null)
+                it.piece = BoardPiece(piece.piece, it, piece.hasMoved)
+        }
+    }
 
     private val boardState
         get() = FEN.BoardState.fromPieces(squares.mapNotNull { (p, s) -> s.piece?.info?.let { Pair(p, it) } }.toMap())
 
-    private var movesSinceLastCapture = 0u
-    var fullMoveCounter = 0u
+    val initialFEN = initialState.initialFEN
+    var fullmoveClock = initialState.fullmoveClock
         private set
-    var halfMoveCounter = 0u
+    var halfmoveClock = initialState.halfmoveClock
         private set
-    private val boardHashes = mutableMapOf<Int, Int>()
+    private val boardHashes = initialState.boardHashes.toMutableMap()
+    private val capturedPieces = initialState.capturedPieces.toMutableList()
 
-    private val capturedPieces = mutableListOf<CapturedPiece>()
+    override val data
+        get() = ChessboardState(
+            initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces
+        )
 
-    val pieces: List<BoardPiece>
-        get() = squares.values.mapNotNull { it.piece }
+    val pieces: List<BoardPiece> get() = squares.values.mapNotNull { it.piece }
+
+    private val piecesByPos get() = squares.mapNotNull { it.value.piece?.info }.associateBy { it.pos }
 
     operator fun plusAssign(piece: BoardPiece) {
         piece.square.piece = piece
@@ -72,8 +91,6 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
 
     val moveHistory: List<MoveData>
         get() = moves
-
-    val initialFEN = data.initialFEN
 
     val chess960: Boolean
         get() {
@@ -107,7 +124,7 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
     fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (game.currentTurn == black) {
-                fullMoveCounter++
+                fullmoveClock++
             }
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
             for (s in squares.values)
@@ -130,8 +147,9 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) {
-        if (e == GameBaseEvent.START)
-            setFromFEN(initialFEN)
+        if (e == GameBaseEvent.START) {
+            pieces.forEach { it.sendCreated() }
+        }
     }
 
     operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uuid == pieceUniqueId }
@@ -167,9 +185,9 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
             this += BoardPiece(p, this[pos]!!, hm)
         }
 
-        movesSinceLastCapture = fen.halfmoveClock
+        halfmoveClock = fen.halfmoveClock
 
-        fullMoveCounter = fen.fullmoveClock
+        fullmoveClock = fen.fullmoveClock
 
         if (fen.currentTurn != game.currentTurn)
             game.nextTurn()
@@ -184,6 +202,7 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
         boardHashes.clear()
         addBoardHash(fen)
         game.variant.chessboardSetup(this)
+        pieces.forEach { it.sendCreated() }
         game.callEvent(SetFenEvent(fen))
         squares.values.forEach(Square::update)
     }
@@ -201,8 +220,8 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
             game.currentTurn,
             bySides(::castling),
             squares.values.firstOrNull { s -> s.flags.any { it.type == PawnMovement.EN_PASSANT && it.timeLeft >= 0 } }?.pos,
-            movesSinceLastCapture,
-            fullMoveCounter
+            halfmoveClock,
+            fullmoveClock
         )
     }
 
@@ -212,7 +231,7 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
     }
 
     fun checkForFiftyMoveRule() {
-        if (movesSinceLastCapture >= 100u)
+        if (halfmoveClock >= 100u)
             game.stop(drawBy(EndReason.FIFTY_MOVES))
     }
 
@@ -223,21 +242,17 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
     }
 
     fun resetMovesSinceLastCapture(): () -> Unit {
-        val m = movesSinceLastCapture
-        halfMoveCounter++
-        movesSinceLastCapture = 0u
+        val m = halfmoveClock
+        halfmoveClock = 0u
         return {
-            movesSinceLastCapture = m
-            halfMoveCounter--
+            halfmoveClock = m
         }
     }
 
     fun increaseMovesSinceLastCapture(): () -> Unit {
-        movesSinceLastCapture++
-        halfMoveCounter++
+        halfmoveClock++
         return {
-            movesSinceLastCapture--
-            halfMoveCounter--
+            halfmoveClock--
         }
     }
 
@@ -248,7 +263,7 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
             game.variant.undoLastMove(it)
             if (game.currentTurn == white)
-                fullMoveCounter--
+                fullmoveClock--
             moves.removeLast()
             lastMove?.render()
             game.previousTurn()

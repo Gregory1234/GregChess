@@ -62,7 +62,7 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
                     if (lastMove?.piece?.side == white) {
                         val wLast = lastMove
                         game.players.forEachReal { p ->
-                            p.sendLastMoves(fullMoveCounter + 1u, wLast, null)
+                            p.sendLastMoves(fullmoveClock + 1u, wLast, null)
                         }
                     }
                 }
@@ -112,7 +112,7 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
                     val wLast = (if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2])
                     val bLast = lastMove
                     game.players.forEachReal { p ->
-                        p.sendLastMoves(game.board.fullMoveCounter, wLast, bLast)
+                        p.sendLastMoves(game.board.fullmoveClock, wLast, bLast)
                     }
                 }
             }
