@@ -57,11 +57,17 @@ class Registry<K, T>(private val module: ChessModule, val type: RegistryType<K, 
     }
 
     operator fun get(key: K) = members[key]!!
+    fun getValue(key: K) = get(key)
     fun getOrNull(key: K) = members[key]
-    @JvmName("getKey")
+    fun getValueOrNull(key: K) = getOrNull(key)
+    @JvmName("getKeyKt")
+    @JvmSynthetic
     operator fun get(v: T) = reversed[v]!!
-    @JvmName("getKeyOrNull")
+    fun getKey(v: T) = get(v)
+    @JvmName("getKeyOrNullKt")
+    @JvmSynthetic
     fun getOrNull(v: T) = reversed[v]
+    fun getKeyOrNull(v: T) = get(v)
 
     val keys: Set<K> get() = members.keys
     val values: Set<T> get() = reversed.keys

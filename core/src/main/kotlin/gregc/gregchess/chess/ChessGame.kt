@@ -43,8 +43,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
         try {
             requireComponent<Chessboard>()
             for (it in variant.requiredComponents) {
-                settings.components.filterIsInstance(it.java).firstOrNull()
-                    ?: throw ComponentDataNotFoundException(it)
+                components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentNotFoundException(it)
             }
             components.forEach { it.validate() }
         } catch (e: Exception) {

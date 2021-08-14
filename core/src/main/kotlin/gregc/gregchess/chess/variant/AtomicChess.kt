@@ -112,6 +112,5 @@ object AtomicChess : ChessVariant() {
         move.undo()
     }
 
-    override val requiredComponents: Collection<KClass<out ComponentData<*>>>
-        get() = listOf(ExplosionManagerData::class)
+    override val requiredComponents: Set<KClass<out Component>> = setOf(ExplosionManager::class)
 }

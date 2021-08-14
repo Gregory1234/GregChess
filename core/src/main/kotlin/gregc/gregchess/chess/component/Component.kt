@@ -13,7 +13,7 @@ abstract class Component(protected val game: ChessGame) {
     open fun validate() {}
 }
 
-val KClass<out Component>.componentDataClass get() = RegistryType.COMPONENT_CLASS[this]
+val KClass<out Component>.componentDataClass get() = componentModule[RegistryType.COMPONENT_DATA_CLASS][this]
 val KClass<out Component>.componentModule get() = RegistryType.COMPONENT_CLASS.getModule(this)
 val KClass<out Component>.componentName get() = RegistryType.COMPONENT_CLASS[this]
 
@@ -24,4 +24,3 @@ val KClass<out ComponentData<*>>.componentModule get() = RegistryType.COMPONENT_
 val KClass<out ComponentData<*>>.componentName get() = componentClass.componentName
 
 class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
-class ComponentDataNotFoundException(cl: KClass<out ComponentData<*>>) : Exception(cl.toString())

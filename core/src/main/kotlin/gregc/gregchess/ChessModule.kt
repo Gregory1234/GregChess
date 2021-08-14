@@ -69,6 +69,8 @@ object GregChessModule : ChessModule("gregchess") {
     private fun registerComponents() {
         registerComponent<Chessboard, ChessboardState>("chessboard")
         registerComponent<ChessClock, ChessClockData>("clock")
+        registerComponent<ThreeChecks.CheckCounter, ThreeChecks.CheckCounterData>("check_counter")
+        registerComponent<AtomicChess.ExplosionManager, AtomicChess.ExplosionManagerData>("explosion_manager")
     }
 
     override fun load() {

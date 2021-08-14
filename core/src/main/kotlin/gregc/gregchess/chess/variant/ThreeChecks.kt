@@ -51,7 +51,6 @@ object ThreeChecks : ChessVariant() {
         Normal.checkForGameEnd(game)
     }
 
-    override val requiredComponents: Collection<KClass<out ComponentData<*>>>
-        get() = listOf(CheckCounterData::class)
+    override val requiredComponents: Set<KClass<out Component>> = setOf(CheckCounter::class)
 
 }
