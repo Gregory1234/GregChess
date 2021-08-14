@@ -5,12 +5,15 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.snakeToPascal
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
+import kotlin.reflect.KClass
 
 val Side.configName get() = name.snakeToPascal()
 
@@ -53,30 +56,35 @@ fun BoardPiece.getInfo() = buildTextComponent {
     }
 }
 
+val KClass<out Component>.componentId get() = componentModule.namespace + ":" + componentName
+@get:JvmName("getComponentDataId")
+val KClass<out ComponentData<*>>.componentId get() = componentModule.namespace + ":" + componentName
+
+val ChessVariant.id get() = module.namespace + ":" + name
+
 fun ChessGame.getInfo() = buildTextComponent {
     appendCopy("UUID: $uuid\n", uuid)
     append("Players: ${players.toList().joinToString { "${it.name} as ${it.side.configName}" }}\n")
     append("Spectators: ${spectators.spectators.joinToString { it.name }}\n")
     append("Arena: ${arena.name}\n")
     append("Preset: ${settings.name}\n")
-    append("Variant: ${variant.name}\n")
-    append("Components: ${components.joinToString { it.javaClass.simpleName }}")
+    append("Variant: ${variant.id}\n")
+    append("Components: ${components.joinToString { it::class.componentId }}")
 }
 
 @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 @Suppress("UNCHECKED_CAST")
-private fun <T: Any> Json.serializeWeird(v: T): JsonElement {
-    return JsonObject(mapOf(
-        "type" to encodeToJsonElement(v::class.serializer().descriptor.serialName),
-        "data" to encodeToJsonElement(v::class.serializerOrNull()!! as KSerializer<T>, v)
-    ))
+private fun <T: ComponentData<*>> Json.serializeComponent(v: T) = buildJsonObject {
+    put("type", encodeToJsonElement(v::class.componentId))
+    if(v::class.objectInstance == null)
+        put("data", encodeToJsonElement(v::class.serializerOrNull()!! as KSerializer<T>, v))
 }
 
 fun ChessGame.serializeToJson(config: Json = Json): String = config.encodeToString(JsonObject(mapOf(
     "uuid" to config.encodeToJsonElement(uuid.toString()),
     "white" to config.encodeToJsonElement(players[white].name),
     "black" to config.encodeToJsonElement(players[black].name),
-    "components" to JsonArray(components.map { config.serializeWeird(it.data) })
+    "components" to JsonArray(components.map { config.serializeComponent(it.data) })
 )))
 
 val EndReason<*>.configName get() = name.snakeToPascal()

@@ -1,6 +1,7 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
 
 interface ChessModuleExtension {
@@ -43,6 +44,11 @@ fun ChessModule.register(id: String, flagType: ChessFlagType) = register(Registr
 fun <T> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
     register(RegistryType.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
 
+inline fun <reified T: Component, reified D: ComponentData<T>> ChessModule.registerComponent(id: String) {
+    register(RegistryType.COMPONENT_CLASS, id, T::class)
+    register(RegistryType.COMPONENT_DATA_CLASS, T::class, D::class)
+}
+
 object GregChessModule : ChessModule("gregchess") {
     private val registries = mutableMapOf<RegistryType<*, *>, Registry<*, *>>()
 
@@ -60,11 +66,17 @@ object GregChessModule : ChessModule("gregchess") {
         register("three_checks", ThreeChecks)
     }
 
+    private fun registerComponents() {
+        registerComponent<Chessboard, ChessboardState>("chessboard")
+        registerComponent<ChessClock, ChessClockData>("clock")
+    }
+
     override fun load() {
         PieceType
         EndReason
         MoveNameTokenType
         PawnMovement
+        registerComponents()
         registerVariants()
     }
 }

@@ -3,6 +3,7 @@ package gregc.gregchess.fabric
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.fabric.chess.*
+import gregc.gregchess.fabric.chess.component.*
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks
@@ -47,19 +48,23 @@ object FabricGregChessModule : ChessModuleExtension {
     val CHESSBOARD_BROKEN =
         GregChessModule.register("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY, true))
 
-    private fun registerItems() {
-        GregChessModule.apply {
-            registerShort(PieceType.PAWN)
-            registerTall(PieceType.KNIGHT, Rarity.UNCOMMON)
-            registerTall(PieceType.BISHOP, Rarity.UNCOMMON)
-            registerTall(PieceType.ROOK, Rarity.RARE)
-            registerTall(PieceType.QUEEN, Rarity.RARE)
-            registerTall(PieceType.KING, Rarity.EPIC)
-        }
+    private fun registerItems() = with(GregChessModule) {
+        registerShort(PieceType.PAWN)
+        registerTall(PieceType.KNIGHT, Rarity.UNCOMMON)
+        registerTall(PieceType.BISHOP, Rarity.UNCOMMON)
+        registerTall(PieceType.ROOK, Rarity.RARE)
+        registerTall(PieceType.QUEEN, Rarity.RARE)
+        registerTall(PieceType.KING, Rarity.EPIC)
+    }
+
+    private fun registerComponents() = with(GregChessModule) {
+        registerComponent<FabricRenderer, FabricRendererSettings>("fabric_renderer")
+        registerComponent<PlayerManager, PlayerManagerData>("player_manager")
     }
 
     override fun load() {
         registerItems()
+        registerComponents()
     }
 
 }

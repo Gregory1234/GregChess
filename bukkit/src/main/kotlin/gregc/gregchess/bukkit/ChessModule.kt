@@ -80,10 +80,21 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
             this += BukkitGregChessAdapterData
         }
 
+    private fun registerComponents() = with(GregChessModule) {
+        registerComponent<BukkitEventRelay, BukkitEventRelayData>("bukkit_event_relay")
+        registerComponent<BukkitGregChessAdapter, BukkitGregChessAdapterData>("bukkit_adapter")
+        registerComponent<BukkitRenderer, BukkitRendererSettings>("bukkit_renderer")
+        registerComponent<PlayerManager, PlayerManagerData>("player_manager")
+        registerComponent<ScoreboardManager, ScoreboardManagerData>("scoreboard_manager")
+        registerComponent<SpectatorManager, SpectatorManagerData>("spectator_manager")
+        registerComponent<Arena.Usage, Arena>("arena")
+    }
+
     override fun load() {
         ArenaManager
         ChessGameManager
-        ScoreboardManager.Companion
+        ScoreboardManager
+        registerComponents()
     }
 }
 

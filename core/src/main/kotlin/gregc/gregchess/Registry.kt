@@ -1,7 +1,10 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.variant.ChessVariant
+import kotlin.reflect.KClass
 
 class RegistryType<K, T>(val name: String, val base: RegistryType<*, K>? = null) {
     internal val valueModule = mutableMapOf<T, ChessModule>()
@@ -27,6 +30,10 @@ class RegistryType<K, T>(val name: String, val base: RegistryType<*, K>? = null)
         val FLAG_TYPE = RegistryType<String, ChessFlagType>("flag_type")
         @JvmField
         val MOVE_NAME_TOKEN_TYPE = RegistryType<String, MoveNameTokenType<*>>("move_name_token_type")
+        @JvmField
+        val COMPONENT_CLASS = RegistryType<String, KClass<out Component>>("component_class")
+        @JvmField
+        val COMPONENT_DATA_CLASS = RegistryType<KClass<out Component>, KClass<out ComponentData<*>>>("component_data_class", COMPONENT_CLASS)
     }
 }
 
