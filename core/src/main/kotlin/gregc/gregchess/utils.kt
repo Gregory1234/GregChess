@@ -55,7 +55,7 @@ interface NameRegistered {
     val name: String
 }
 
-open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryType: RegistryType<String, T>) :
+open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryType: NameRegistryType<T>) :
     KSerializer<T> {
 
     override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor(name, PrimitiveKind.STRING)

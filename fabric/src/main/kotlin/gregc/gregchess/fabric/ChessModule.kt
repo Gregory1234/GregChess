@@ -13,9 +13,9 @@ import net.minecraft.util.registry.Registry
 
 object FabricRegistryTypes {
     @JvmField
-    val PIECE_BLOCK = RegistryType<PieceType, BySides<PieceBlock>>("piece_block", RegistryType.PIECE_TYPE)
+    val PIECE_BLOCK = ConnectedRegistryType<PieceType, BySides<PieceBlock>>("piece_block", RegistryType.PIECE_TYPE)
     @JvmField
-    val PIECE_ITEM = RegistryType<PieceType, BySides<BlockItem>>("piece_item", RegistryType.PIECE_TYPE)
+    val PIECE_ITEM = ConnectedRegistryType<PieceType, BySides<BlockItem>>("piece_item", RegistryType.PIECE_TYPE)
 }
 
 val ChessModule.pieceBlocks get() = this[FabricRegistryTypes.PIECE_BLOCK]

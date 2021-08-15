@@ -19,11 +19,11 @@ typealias MoveNameTokenInterpreter<T> = (T) -> String
 
 object BukkitRegistryTypes {
     @JvmField
-    val PROPERTY_TYPE = RegistryType<String, PropertyType>("property_type")
+    val PROPERTY_TYPE = NameRegistryType<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER = RegistryType<KClass<out ComponentData<*>>, SettingsParser<out ComponentData<*>>>("settings_parser", RegistryType.COMPONENT_DATA_CLASS)
+    val SETTINGS_PARSER = SingleConnectedRegistryType<KClass<out ComponentData<*>>, SettingsParser<out ComponentData<*>>>("settings_parser", RegistryType.COMPONENT_DATA_CLASS)
     @JvmField
-    val MOVE_NAME_TOKEN_STRING = RegistryType<MoveNameTokenType<*>, MoveNameTokenInterpreter<*>>("move_name_token_string", RegistryType.MOVE_NAME_TOKEN_TYPE)
+    val MOVE_NAME_TOKEN_STRING = SingleConnectedRegistryType<MoveNameTokenType<*>, MoveNameTokenInterpreter<*>>("move_name_token_string", RegistryType.MOVE_NAME_TOKEN_TYPE)
 }
 
 fun ChessModule.register(id: String, propertyType: PropertyType) =

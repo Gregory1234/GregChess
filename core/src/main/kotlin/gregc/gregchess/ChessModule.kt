@@ -16,8 +16,8 @@ abstract class ChessModule(val namespace: String) {
     }
     val extensions = mutableSetOf<ChessModuleExtension>()
 
-    abstract operator fun <K, T> get(t: RegistryType<K, T>): Registry<K, T>
-    fun <K, T, R: T> register(t: RegistryType<K, T>, key: K, v: R): R {
+    abstract operator fun <K, T, R: Registry<K, T, R>> get(t: RegistryType<K, T, R>): R
+    fun <K, T, V: T, R : Registry<K, T, R>> register(t: RegistryType<K, T, R>, key: K, v: V): V {
         this[t][key] = v
         return v
     }
@@ -50,11 +50,11 @@ inline fun <reified T: Component, reified D: ComponentData<T>> ChessModule.regis
 }
 
 object GregChessModule : ChessModule("gregchess") {
-    private val registries = mutableMapOf<RegistryType<*, *>, Registry<*, *>>()
+    private val registries = mutableMapOf<RegistryType<*, *, *>, Registry<*, *, *>>()
 
     @Suppress("UNCHECKED_CAST")
-    override fun <K, T> get(t: RegistryType<K, T>): Registry<K, T> =
-        registries.getOrPut(t) { Registry(this, t) } as Registry<K, T>
+    override fun <K, T, R: Registry<K, T, R>> get(t: RegistryType<K, T, R>): R =
+        registries.getOrPut(t) { t.createRegistry(this) } as R
 
     private fun registerVariants() {
         register("normal", ChessVariant.Normal)
