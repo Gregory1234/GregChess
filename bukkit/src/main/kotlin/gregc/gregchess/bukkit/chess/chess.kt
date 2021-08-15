@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.component.spectators
@@ -36,8 +35,9 @@ val PieceType.structure
 
 val Piece.item get() = type.getItem(side)
 
-val MoveNameToken<*>.localName
-    get() = ChessModule.modules.firstNotNullOfOrNull { it.bukkit.moveNameTokenToString(this) } ?: pgn
+@Suppress("UNCHECKED_CAST")
+val <T> MoveNameToken<T>.localName
+    get() = (type.module[BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING][type] as MoveNameTokenInterpreter<T>)(value)
 val MoveName.localName get() = joinToString("") { it.localName }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)

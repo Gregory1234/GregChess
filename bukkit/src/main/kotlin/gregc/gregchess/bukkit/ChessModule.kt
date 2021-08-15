@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.MoveNameTokenType
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
 import org.bukkit.NamespacedKey
@@ -15,11 +15,15 @@ class SettingsParserContext(val variant: ChessVariant, val section: Configuratio
 
 typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
+typealias MoveNameTokenInterpreter<T> = (T) -> String
+
 object BukkitRegistryTypes {
     @JvmField
     val PROPERTY_TYPE = RegistryType<String, PropertyType>("property_type")
     @JvmField
     val SETTINGS_PARSER = RegistryType<KClass<out ComponentData<*>>, SettingsParser<out ComponentData<*>>>("settings_parser", RegistryType.COMPONENT_DATA_CLASS)
+    @JvmField
+    val MOVE_NAME_TOKEN_STRING = RegistryType<MoveNameTokenType<*>, MoveNameTokenInterpreter<*>>("move_name_token_string", RegistryType.MOVE_NAME_TOKEN_TYPE)
 }
 
 fun ChessModule.register(id: String, propertyType: PropertyType) =
@@ -31,18 +35,16 @@ inline fun <reified T : ComponentData<*>> ChessModule.registerSettings(noinline 
 inline fun <reified T : ComponentData<*>> ChessModule.registerConstSettings(settings: T) =
     registerSettings { settings }
 
+fun <T> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameTokenInterpreter<T> = token.toPgnString) =
+    register(BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING, token, str)
+
 abstract class BukkitChessModuleExtension(val plugin: Plugin) : ChessModuleExtension {
     open val config: ConfigurationSection get() = plugin.config
 
     open val hookedComponents: Set<KClass<out Component>> = emptySet()
-
-    open fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String? = null
 }
 
 val ChessModule.bukkit get() = extensions.filterIsInstance<BukkitChessModuleExtension>().first()
-
-fun BukkitChessModuleExtension.moveNameTokenToString(token: MoveNameToken<*>) =
-    moveNameTokenToString(token.type, token.value)
 
 interface BukkitChessPlugin {
     fun onInitialize()
@@ -50,16 +52,6 @@ interface BukkitChessPlugin {
 
 object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
     private val NO_ARENAS = err("NoArenas")
-
-    override fun moveNameTokenToString(type: MoveNameTokenType<*>, value: Any?): String? =
-        if (type == MoveNameTokenType.CAPTURE)
-            config.getPathString("Chess.Capture")
-        else if ((type == MoveNameTokenType.PROMOTION || type == MoveNameTokenType.PIECE_TYPE) && value is PieceType)
-            value.localChar.uppercase()
-        else if (type == MoveNameTokenType.EN_PASSANT)
-            " e.p."
-        else
-            null
 
     private val clockSettings: Map<String, ChessClockData>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
@@ -93,6 +85,18 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
         registerConstSettings(BukkitGregChessAdapterData)
     }
 
+    private fun registerMoveNameTokenStrings() = with(GregChessModule) {
+        register(MoveNameTokenType.PIECE_TYPE) { it.localChar.uppercase() }
+        register(MoveNameTokenType.UNIQUENESS_COORDINATE)
+        register(MoveNameTokenType.CAPTURE) { config.getPathString("Chess.Capture") }
+        register(MoveNameTokenType.TARGET)
+        register(MoveNameTokenType.PROMOTION) { it.localChar.uppercase() }
+        register(MoveNameTokenType.CHECK)
+        register(MoveNameTokenType.CHECKMATE)
+        register(MoveNameTokenType.CASTLE)
+        register(MoveNameTokenType.EN_PASSANT) { " e.p." }
+    }
+
     private fun registerComponents() = with(GregChessModule) {
         registerComponent<BukkitEventRelay, BukkitEventRelayData>("bukkit_event_relay")
         registerComponent<BukkitGregChessAdapter, BukkitGregChessAdapterData>("bukkit_adapter")
@@ -109,6 +113,7 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
         ScoreboardManager
         registerComponents()
         registerSettings()
+        registerMoveNameTokenStrings()
     }
 }
 
