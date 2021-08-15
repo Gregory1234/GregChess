@@ -22,7 +22,7 @@ val Side.queen get() = PieceType.QUEEN.of(this)
 val Side.king get() = PieceType.KING.of(this)
 
 @Serializable
-data class CapturedPos(val by: Side, val pos: Pair<Int, Int>)
+data class CapturedPos(val by: Side, val row: Int, val pos: Int)
 
 @Serializable
 class CapturedPiece(val piece: Piece, val pos: CapturedPos) {

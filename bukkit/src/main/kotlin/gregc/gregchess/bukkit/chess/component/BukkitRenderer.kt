@@ -66,8 +66,8 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     private val CapturedPos.loc
         get() = when (by) {
-            Side.WHITE -> Loc(8 + data.boardSize - 1 - 2 * pos.first, 101, 8 - 3 - 2 * pos.second)
-            Side.BLACK -> Loc(8 + 2 * pos.first, 101, 8 + data.boardSize + 2 + 2 * pos.second)
+            Side.WHITE -> Loc(8 + data.boardSize - 1 - 2 * pos, 101, 8 - 3 - 2 * row)
+            Side.BLACK -> Loc(8 + 2 * pos, 101, 8 + data.boardSize + 2 + 2 * row)
         } + data.offset
 
     private val world get() = game.arena.world

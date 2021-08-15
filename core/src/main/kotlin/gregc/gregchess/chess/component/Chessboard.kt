@@ -19,7 +19,7 @@ data class ChessboardState(
     val fullmoveClock: UInt = initialFEN.fullmoveClock,
     val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
     val capturedPieces: List<CapturedPiece> = emptyList(),
-    val flags: List<Pair<Pos, ChessFlag>> = listOfNotNull(initialFEN.enPassantSquare?.to(ChessFlag(PawnMovement.EN_PASSANT, 0)))
+    val flags: List<PosFlag> = listOfNotNull(initialFEN.enPassantSquare?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 0)) })
 ) : ComponentData<Chessboard> {
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
             this(fen ?: variant.genFEN(chess960), (fen ?: variant.genFEN(chess960)).toPieces(variant.pieceTypes))
@@ -72,14 +72,14 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     override val data
         get() = ChessboardState(
-            initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, flagsWithPos
+            initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, posFlags
         )
 
     val pieces: List<BoardPiece> get() = squares.values.mapNotNull { it.piece }
 
     private val piecesByPos get() = squares.mapNotNull { it.value.piece?.info }.associateBy { it.pos }
 
-    private val flagsWithPos get() = squares.values.flatMap { s -> s.flags.map { s.pos to it } }
+    private val posFlags get() = squares.values.flatMap { it.posFlags }
 
     operator fun plusAssign(piece: BoardPiece) {
         piece.square.piece = piece
@@ -278,10 +278,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun nextCapturedPos(type: PieceType, by: Side): CapturedPos {
         val cap = capturedPieces.filter { it.pos.by == by }
-        return CapturedPos(
-            by,
-            if (type == PieceType.PAWN) Pair(cap.count { it.type == PieceType.PAWN }, 1)
-            else Pair(cap.count { it.type != PieceType.PAWN }, 0)
-        )
+        val h = if (type == PieceType.PAWN)
+            Pair(cap.count { it.type == PieceType.PAWN }, 1)
+        else
+            Pair(cap.count { it.type != PieceType.PAWN }, 0)
+        return CapturedPos(by, h.second, h.first)
     }
 }

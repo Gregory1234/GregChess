@@ -30,7 +30,7 @@ open class MoveCandidate(
     val piece: BoardPiece, val target: Square, val floor: Floor,
     val pass: Collection<Pos>, val help: Collection<BoardPiece> = emptyList(), val needed: Collection<Pos> = pass,
     val flagsNeeded: Collection<Pair<Pos, ChessFlagType>> = emptyList(),
-    val flagsAdded: Collection<Pair<Pos, ChessFlag>> = emptyList(),
+    val flagsAdded: Collection<PosFlag> = emptyList(),
     val control: Square? = target, val promotions: Collection<Piece>? = null,
     val mustCapture: Boolean = false, val display: Square = target
 ) {
@@ -382,7 +382,7 @@ class PawnMovement(private val config: PawnMovementConfig = PawnMovementConfig()
                     val pass = piece.pos + piece.side.dir
                     this += MoveCandidate(
                         piece, t, ifProm(promotions, Floor.MOVE), listOf(pass),
-                        control = null, promotions = promotions, flagsAdded = listOf(pass to ChessFlag(EN_PASSANT))
+                        control = null, promotions = promotions, flagsAdded = listOf(PosFlag(pass, ChessFlag(EN_PASSANT)))
                     )
                 }
             for (s in listOf(-1, 1)) {

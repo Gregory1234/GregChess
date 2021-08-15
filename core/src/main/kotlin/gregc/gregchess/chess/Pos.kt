@@ -125,9 +125,15 @@ class ChessFlagType(val startTime: UInt): NameRegistered {
 @Serializable
 data class ChessFlag(val type: ChessFlagType, var timeLeft: Int = type.startTime.toInt())
 
+@Serializable
+data class PosFlag(val pos: Pos, val flag: ChessFlag)
+
 data class Square(val pos: Pos, val game: ChessGame) {
     var piece: BoardPiece? = null
     val flags = mutableListOf<ChessFlag>()
+
+    val posFlags get() = flags.map { PosFlag(pos, it) }
+
     var bakedMoves: List<MoveCandidate>? = null
     var bakedLegalMoves: List<MoveCandidate>? = null
 
