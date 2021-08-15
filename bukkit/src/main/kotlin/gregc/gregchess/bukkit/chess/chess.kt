@@ -1,17 +1,17 @@
 package gregc.gregchess.bukkit.chess
 
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.snakeToPascal
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
-import org.bukkit.Material
-import org.bukkit.Sound
+import org.bukkit.*
 import org.bukkit.inventory.ItemStack
+import java.util.*
 import kotlin.reflect.KClass
 
 val Side.configName get() = name.snakeToPascal()
@@ -77,15 +77,39 @@ fun ChessGame.getInfo() = buildTextComponent {
 private fun <T: ComponentData<*>> Json.serializeComponent(v: T) = buildJsonObject {
     put("type", encodeToJsonElement(v::class.componentId))
     if(v::class.objectInstance == null)
-        put("data", encodeToJsonElement(v::class.serializerOrNull()!! as KSerializer<T>, v))
+        put("data", encodeToJsonElement(v::class.serializer() as KSerializer<T>, v))
 }
 
 fun ChessGame.serializeToJson(config: Json = Json): String = config.encodeToString(JsonObject(mapOf(
     "uuid" to config.encodeToJsonElement(uuid.toString()),
-    "white" to config.encodeToJsonElement(players[white].name),
-    "black" to config.encodeToJsonElement(players[black].name),
+    "white" to config.encodeToJsonElement((players[white] as BukkitPlayer).player.uniqueId.toString()),
+    "black" to config.encodeToJsonElement((players[black] as BukkitPlayer).player.uniqueId.toString()),
+    "preset" to config.encodeToJsonElement(settings.name),
+    "variant" to config.encodeToJsonElement(settings.variant),
+    "simpleCastling" to config.encodeToJsonElement(settings.simpleCastling),
     "components" to JsonArray(components.map { config.serializeComponent(it.data) })
 )))
+
+@OptIn(InternalSerializationApi::class)
+fun Json.deserializeComponent(s: JsonElement): ComponentData<*> {
+    val type: String = decodeFromJsonElement(s.jsonObject["type"]!!)
+    val cl = ChessModule[type.substringBefore(":")][RegistryType.COMPONENT_CLASS][type.substringAfter(":")].componentDataClass
+    return cl.objectInstance ?: decodeFromJsonElement(cl.serializer(), s.jsonObject["data"]!!)
+}
+
+fun String.recreateGameFromJson(config: Json = Json): ChessGame = config.decodeFromString<JsonObject>(this).run {
+    val uuid = UUID.fromString(config.decodeFromJsonElement(get("uuid")!!))
+    val white = Bukkit.getPlayer(UUID.fromString(config.decodeFromJsonElement(get("white")!!)))!!
+    val black = Bukkit.getPlayer(UUID.fromString(config.decodeFromJsonElement(get("black")!!)))!!
+    val preset: String = config.decodeFromJsonElement(get("preset")!!)
+    val variant: ChessVariant = config.decodeFromJsonElement(get("variant")!!)
+    val simpleCastling: Boolean = config.decodeFromJsonElement(get("simpleCastling")!!)
+    val components = get("components")!!.jsonArray.map { config.deserializeComponent(it) }
+    ChessGame(GameSettings(preset, simpleCastling, variant, components), uuid).addPlayers {
+        bukkit(white, Side.WHITE, white == black)
+        bukkit(black, Side.BLACK, white == black)
+    }.start()
+}
 
 val EndReason<*>.configName get() = name.snakeToPascal()
 val GameResults.name

@@ -11,6 +11,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
+import java.io.File
 import java.util.*
 
 object GregChess : Listener {
@@ -292,7 +293,25 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
-                    println(player.currentGame?.serializeToJson())
+                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    println(game.serializeToJson())
+                }
+                "serialsave" -> {
+                    cPlayer(player)
+                    perms()
+                    val name = lastArg()
+                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                    val f = File(plugin.dataFolder, "snapshots/$name.json")
+                    f.parentFile.mkdirs()
+                    f.createNewFile()
+                    f.writeText(game.serializeToJson())
+                }
+                "serialload" -> {
+                    cPlayer(player)
+                    perms()
+                    val name = lastArg()
+                    val f = File(plugin.dataFolder, "snapshots/$name.json")
+                    f.readText().recreateGameFromJson()
                 }
                 "info" -> {
                     cWrongArgument {
@@ -330,7 +349,7 @@ object GregChess : Listener {
 
             when (args.size) {
                 1 -> ifPermissionPrefix(
-                    "duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move", "serial",
+                    "duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move", "serial", "serialsave", "serialload",
                     "skip", "load", "save", "time", "uci", "spectate", "reload", "dev", "undo", "debug", "admin"
                 ) + ifInfo("info")
                 2 -> when (args[0]) {

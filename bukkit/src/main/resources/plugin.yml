@@ -101,6 +101,12 @@ permissions:
   greg-chess.chess.serial:
     description: Can use /chess serial
     default: op
+  greg-chess.chess.serialsave:
+    description: Can use /chess serialsave
+    default: op
+  greg-chess.chess.serialload:
+    description: Can use /chess serialload
+    default: op
   greg-chess.chess.info.*:
     description: Can always use /chess info
     default: op
