@@ -160,7 +160,7 @@ data class Square(val pos: Pos, val game: ChessGame) {
         game.callEvent(FloorUpdateEvent(pos, floor))
     }
 
-    override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, floor=$floor)"
+    override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, floor=$floor, flags=$flags)"
 
     fun empty() {
         piece?.clear()
@@ -168,6 +168,7 @@ data class Square(val pos: Pos, val game: ChessGame) {
         variantMarker = null
         previousMoveMarker = null
         moveMarker = null
+        flags.clear()
     }
 
     fun neighbours() = pos.neighbours().mapNotNull { this.board[it] }

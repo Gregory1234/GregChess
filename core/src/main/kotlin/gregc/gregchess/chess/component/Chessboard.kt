@@ -17,8 +17,9 @@ data class ChessboardState(
     val pieces: Map<Pos, PieceInfo>,
     val halfmoveClock: UInt = initialFEN.halfmoveClock,
     val fullmoveClock: UInt = initialFEN.fullmoveClock,
-    val boardHashes: Map<Int, Int> = emptyMap(),
-    val capturedPieces: List<CapturedPiece> = emptyList()
+    val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
+    val capturedPieces: List<CapturedPiece> = emptyList(),
+    val flags: List<Pair<Pos, ChessFlag>> = listOfNotNull(initialFEN.enPassantSquare?.to(ChessFlag(PawnMovement.EN_PASSANT, 0)))
 ) : ComponentData<Chessboard> {
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
             this(fen ?: variant.genFEN(chess960), (fen ?: variant.genFEN(chess960)).toPieces(variant.pieceTypes))
@@ -50,10 +51,11 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
 
     private val squares = (Pair(0, 0)..Pair(7, 7)).map { (i, j) -> Pos(i, j) }.associateWith { p ->
-        Square(p, game).also {
+        Square(p, game).also { s ->
             val piece = initialState.pieces[p]
             if (piece != null)
-                it.piece = BoardPiece(piece.piece, it, piece.hasMoved)
+                s.piece = BoardPiece(piece.piece, s, piece.hasMoved)
+            s.flags.addAll(initialState.flags.mapNotNull { (p, f) -> if (p == s.pos) f else null })
         }
     }
 
@@ -70,12 +72,14 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     override val data
         get() = ChessboardState(
-            initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces
+            initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, flagsWithPos
         )
 
     val pieces: List<BoardPiece> get() = squares.values.mapNotNull { it.piece }
 
     private val piecesByPos get() = squares.mapNotNull { it.value.piece?.info }.associateBy { it.pos }
+
+    private val flagsWithPos get() = squares.values.flatMap { s -> s.flags.map { s.pos to it } }
 
     operator fun plusAssign(piece: BoardPiece) {
         piece.square.piece = piece
