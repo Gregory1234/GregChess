@@ -150,7 +150,6 @@ class BukkitPlayer(val player: Player, side: Side, val silent: Boolean, game: Ch
         val newSquare = game.board[pos] ?: return
         val piece = held ?: return
         val moves = piece.square.bakedLegalMoves ?: return
-        println(moves.map { it.display.pos })
         if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
         held = null
         player.inventory.setItem(0, null)

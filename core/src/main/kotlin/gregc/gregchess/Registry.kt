@@ -29,10 +29,14 @@ abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) {
 
 abstract class Registry<K, T, R : Registry<K, T, R>>(val module: ChessModule) {
     abstract operator fun set(key: K, value: T)
+
     abstract fun getValueOrNull(key: K): T?
     fun getOrNull(key: K): T? = getValueOrNull(key)
     fun getValue(key: K): T = getValueOrNull(key)!!
     operator fun get(key: K): T = getOrNull(key)!!
+
+    open fun validate() {}
+
     abstract val keys: Set<K>
     abstract val values: Collection<T>
 }
@@ -116,6 +120,8 @@ class ConnectedRegistry<K, T>(module: ChessModule, val type: ConnectedRegistryTy
     override fun getValueOrNull(key: K): T? = members[key]
     override fun getKeyOrNull(value: T): K? = reversed[value]
 
+    override fun validate() = require(module[type.base].values.all { it in members })
+
     override val keys: Set<K> get() = members.keys
     override val values: Set<T> get() = reversed.keys
 }
@@ -135,6 +141,8 @@ class SingleConnectedRegistry<K, T>(module: ChessModule, val type: SingleConnect
     }
 
     override fun getValueOrNull(key: K): T? = members[key]
+
+    override fun validate() = require(module[type.base].values.all { it in members })
 
     override val keys: Set<K> get() = members.keys
     override val values: Collection<T> get() = members.values

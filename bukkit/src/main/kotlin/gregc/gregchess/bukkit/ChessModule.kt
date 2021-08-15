@@ -42,6 +42,11 @@ abstract class BukkitChessModuleExtension(val plugin: Plugin) : ChessModuleExten
     open val config: ConfigurationSection get() = plugin.config
 
     open val hookedComponents: Set<KClass<out Component>> = emptySet()
+
+    override fun validate(main: ChessModule) {
+        val components = main[RegistryType.COMPONENT_CLASS].values
+        require(hookedComponents.all { it in components })
+    }
 }
 
 val ChessModule.bukkit get() = extensions.filterIsInstance<BukkitChessModuleExtension>().first()
