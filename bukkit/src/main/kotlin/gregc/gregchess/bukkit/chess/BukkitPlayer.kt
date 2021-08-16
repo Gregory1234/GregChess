@@ -154,7 +154,7 @@ class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
 
     val player: Player = info.player
 
-    private val silent = this.info == opponent.info
+    private val silent get() = this.info == opponent.info
 
     companion object {
         private val IN_CHECK_MSG = message("InCheck")
