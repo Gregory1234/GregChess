@@ -105,10 +105,7 @@ fun String.recreateGameFromJson(config: Json = Json): ChessGame = config.decodeF
     val variant: ChessVariant = config.decodeFromJsonElement(get("variant")!!)
     val simpleCastling: Boolean = config.decodeFromJsonElement(get("simpleCastling")!!)
     val components = get("components")!!.jsonArray.map { config.deserializeComponent(it) }
-    ChessGame(GameSettings(preset, simpleCastling, variant, components), uuid).addPlayers {
-        bukkit(white, Side.WHITE, white == black)
-        bukkit(black, Side.BLACK, white == black)
-    }.start()
+    ChessGame(GameSettings(preset, simpleCastling, variant, components), bySides(white.cpi, black.cpi), uuid).start()
 }
 
 val EndReason<*>.configName get() = name.snakeToPascal()

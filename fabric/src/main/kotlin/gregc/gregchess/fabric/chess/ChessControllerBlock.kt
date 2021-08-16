@@ -143,11 +143,10 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
-        currentGame = ChessGame(ChessGameManager.settings(ChessVariant.Normal, FabricRendererSettings(this)))
-            .addPlayers {
-                fabric(whitePlayer, white)
-                fabric(blackPlayer, black)
-            }.start()
+        currentGame = ChessGame(
+            ChessGameManager.settings(ChessVariant.Normal, FabricRendererSettings(this)),
+            bySides(whitePlayer.cpi, blackPlayer.cpi)
+        ).start()
     }
 
 }

@@ -99,10 +99,7 @@ object GregChess : Listener {
                                 if (settings != null) {
                                     val res = duelRequest.call(RequestData(player, opponent, settings.name))
                                     if (res == RequestResponse.ACCEPT) {
-                                        ChessGame(settings).addPlayers {
-                                            bukkit(player, white, player == opponent)
-                                            bukkit(opponent, black, player == opponent)
-                                        }.start()
+                                        ChessGame(settings, bySides(player.cpi, opponent.cpi)).start()
                                     }
                                 }
                             }
@@ -118,10 +115,7 @@ object GregChess : Listener {
                     interact {
                         val settings = player.openSettingsMenu()
                         if (settings != null)
-                            ChessGame(settings).addPlayers {
-                                bukkit(player, white, false)
-                                engine(Stockfish(), black)
-                            }.start()
+                            ChessGame(settings, bySides(player.cpi, Stockfish())).start()
                     }
                 }
                 "resign" -> {

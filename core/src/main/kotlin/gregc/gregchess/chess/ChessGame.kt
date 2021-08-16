@@ -2,7 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.upperFirst
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
@@ -27,11 +26,10 @@ enum class GameBaseEvent : ChessEvent {
     RUNNING,
     UPDATE,
     STOP,
-    STOPPED,
     PANIC
 }
 
-class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) {
+class ChessGame(val settings: GameSettings, val playerinfo: BySides<ChessPlayerInfo>, val uuid: UUID = UUID.randomUUID()) {
 
     override fun toString() = "ChessGame(uuid=$uuid)"
 
@@ -65,11 +63,13 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
 
     inline fun <reified T : Component> requireComponent(): T = requireComponent(T::class)
 
+    val players = bySides { playerinfo[it].getPlayer(it, this) }
+
     private var state: GameState = GameState.Initial
 
     private inline fun <reified T> require(): T = (state as? T) ?: run {
         val e = WrongStateException(state, T::class.java)
-        if (state !is GameState.Stopping && state !is GameState.Running) {
+        if (state !is GameState.Stopped && state !is GameState.Running) {
             panic(e)
         } else {
             stop(drawBy(EndReason.ERROR))
@@ -79,64 +79,23 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
 
     private fun requireInitial() = require<GameState.Initial>()
 
-    private fun requireReady() = require<GameState.Ready>()
-
-    private fun requireStarting() = require<GameState.Starting>()
-
     private fun requireRunning() = require<GameState.Running>()
 
-    private fun requireStopping() = require<GameState.Stopping>()
+    private fun requireStopped() = require<GameState.Stopped>()
 
     fun callEvent(e: ChessEvent) = components.forEach { it.callEvent(e) }
 
-    var currentTurn: Side
-        get() = require<GameState.WithCurrentPlayer>().currentTurn
-        set(v) {
-            requireRunning().currentTurn = v
-        }
+    var currentTurn: Side = board.initialFEN.currentTurn
 
-    val currentPlayer: ChessPlayer
-        get() = require<GameState.WithCurrentPlayer>().currentPlayer
+    val currentPlayer: ChessPlayer get() = players[currentTurn]
 
-    val currentOpponent: ChessPlayer
-        get() = require<GameState.WithCurrentPlayer>().currentOpponent
-
-    inner class AddPlayersScope {
-        private val players = mutableBySides<ChessPlayer?>(null)
-        val game = this@ChessGame
-
-        fun addPlayer(p: ChessPlayer) {
-            if (players[p.side] != null)
-                throw IllegalStateException("${p.side.name.lowercase().upperFirst()} player already added")
-            players[p.side] = p
-        }
-
-        fun engine(engine: ChessEngine, side: Side) =
-            addPlayer(EnginePlayer(engine, side, game))
-
-        fun build(): BySides<ChessPlayer> = bySides {
-            players[it] ?: throw IllegalStateException("player has not been initialized")
-        }
-
-    }
-
-    fun addPlayers(init: AddPlayersScope.() -> Unit): ChessGame {
-        requireInitial()
-        state = GameState.Ready(AddPlayersScope().run {
-            init()
-            build()
-        })
-        return this
-    }
+    val currentOpponent: ChessPlayer get() = players[!currentTurn]
 
     val startTime: LocalDateTime
         get() = require<GameState.WithStartTime>().startTime
 
     val running: Boolean
         get() = state.running
-
-    val players: BySides<ChessPlayer>
-        get() = require<GameState.WithPlayers>().players
 
     fun nextTurn() {
         requireRunning()
@@ -156,10 +115,9 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
     }
 
     fun start(): ChessGame {
-        state = GameState.Starting(requireReady())
-        requireStarting().currentTurn = board.initialFEN.currentTurn
+        requireInitial()
         callEvent(GameBaseEvent.START)
-        state = GameState.Running(requireStarting())
+        state = GameState.Running()
         callEvent(GameBaseEvent.RUNNING)
         startTurn()
         return this
@@ -186,13 +144,8 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
         get() = (state as? GameState.Ended)?.results
 
     fun stop(results: GameResults) {
-        state = GameState.Stopping(state as? GameState.Running ?: run { requireStopping(); return }, results)
+        state = GameState.Stopped(state as? GameState.Running ?: run { requireStopped(); return }, results)
         callEvent(GameBaseEvent.STOP)
-    }
-
-    fun finishStopping() {
-        state = GameState.Stopped(requireStopping())
-        callEvent(GameBaseEvent.STOPPED)
     }
 
     private fun panic(e: Exception) {
@@ -201,7 +154,7 @@ class ChessGame(val settings: GameSettings, val uuid: UUID = UUID.randomUUID()) 
         state = GameState.Error(state, e)
     }
 
-    operator fun get(side: Side): ChessPlayer = require<GameState.WithPlayers>()[side]
+    operator fun get(side: Side): ChessPlayer = players[side]
 
     fun finishMove(move: MoveCandidate, promotion: Piece?) {
         requireRunning()

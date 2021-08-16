@@ -16,11 +16,13 @@ fun testSettings(
     return GameSettings(name, false, variant, components)
 }
 
-class TestPlayer(name: String, side: Side, game: ChessGame) : ChessPlayer(name, side, game)
+val String.cpi get() = TestPlayerInfo(this)
 
-fun ChessGame.AddPlayersScope.test(name: String, side: Side) {
-    addPlayer(TestPlayer(name, side, game))
+data class TestPlayerInfo(override val name: String): ChessPlayerInfo {
+    override fun getPlayer(side: Side, game: ChessGame): ChessPlayer = TestPlayer(this, side, game)
 }
+
+class TestPlayer(info: TestPlayerInfo, side: Side, game: ChessGame) : ChessPlayer(info, side, game)
 
 object TestComponentData : ComponentData<TestComponent> {
     override fun getComponent(game: ChessGame): TestComponent = spyk(TestComponent(game, this))

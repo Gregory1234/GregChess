@@ -2,8 +2,15 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.interact
 
+interface ChessPlayerInfo {
+    val name: String
+    fun getPlayer(side: Side, game: ChessGame): ChessPlayer
+}
 
-abstract class ChessPlayer(val name: String, val side: Side, val game: ChessGame) {
+
+abstract class ChessPlayer(val info: ChessPlayerInfo, val side: Side, val game: ChessGame) {
+
+    val name = info.name
 
     var held: BoardPiece? = null
         set(v) {
@@ -38,10 +45,9 @@ abstract class ChessPlayer(val name: String, val side: Side, val game: ChessGame
 
 }
 
-class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) :
-    ChessPlayer(engine.name, side, game) {
+class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : ChessPlayer(engine, side, game) {
 
-    override fun toString() = "EnginePlayer(name=$name, side=$side)"
+    override fun toString() = "EnginePlayer(engine=$engine, side=$side)"
 
     override fun stop() = engine.stop()
 

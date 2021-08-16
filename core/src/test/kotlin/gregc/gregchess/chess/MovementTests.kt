@@ -27,10 +27,7 @@ private val arbPieceType = PieceType.run { Arb.of(PAWN, KNIGHT, BISHOP, ROOK, QU
 
 private val arbPiece = Arb.bind(arbPieceType, Arb.enum<Side>()) { type, s -> Piece(type, s) }
 
-private val game = ChessGame(testSettings("basic", variant = CaptureAll)).addPlayers {
-    test("a", white)
-    test("b", black)
-}.start()
+private val game = ChessGame(testSettings("basic", variant = CaptureAll), bySides("a".cpi, "b".cpi)).start()
 
 private fun clearBoard(vararg pieces: PieceInfo) {
     game.board.setFromFEN(FEN.parseFromString("8/8/8/8/8/8/8/8 w - - 0 1"))

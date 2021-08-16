@@ -3,7 +3,8 @@ package gregc.gregchess.fabric.chess.component
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
-import gregc.gregchess.fabric.chess.*
+import gregc.gregchess.fabric.chess.ChessGameManager
+import gregc.gregchess.fabric.chess.forEachUnique
 
 object PlayerManagerData : ComponentData<PlayerManager> {
     override fun getComponent(game: ChessGame) = PlayerManager(game, this)
@@ -22,12 +23,9 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
             }
             GameBaseEvent.STOP -> {
                 players.forEachUnique {
-                    it.player.showGameResults(it.side, results!!)
+                    //it.player.showGameResults(it.side, results!!)
                 }
                 players.forEach(ChessPlayer::stop)
-                finishStopping()
-            }
-            GameBaseEvent.STOPPED -> {
                 ChessGameManager -= game
             }
             else -> {

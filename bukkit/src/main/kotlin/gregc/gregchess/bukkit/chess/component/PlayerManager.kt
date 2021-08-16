@@ -81,7 +81,7 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
                 if (results.endReason.quick) {
                     callEvent(GameStopStageEvent.CLEAR)
                     players.forEach(ChessPlayer::stop)
-                    finishStopping()
+                    callEvent(GameStopStageEvent.VERY_END)
                     return
                 }
                 interact {
@@ -90,11 +90,8 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
                     callEvent(GameStopStageEvent.CLEAR)
                     waitTick()
                     players.forEach(ChessPlayer::stop)
-                    finishStopping()
+                    callEvent(GameStopStageEvent.VERY_END)
                 }
-            }
-            GameBaseEvent.STOPPED -> {
-                callEvent(GameStopStageEvent.VERY_END)
             }
             GameBaseEvent.PANIC -> {
                 callEvent(GameStopStageEvent.PANIC)

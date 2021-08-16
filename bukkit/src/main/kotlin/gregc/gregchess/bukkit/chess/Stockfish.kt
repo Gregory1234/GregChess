@@ -1,9 +1,14 @@
+@file:UseSerializers(DurationSerializer::class)
+
 package gregc.gregchess.bukkit.chess
 
+import gregc.gregchess.DurationSerializer
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.*
+import kotlinx.serialization.*
 import java.util.concurrent.*
 
+@Serializable
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
 
     object Config {
@@ -12,11 +17,11 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
         val engineName get() = config.getPathString("Chess.Stockfish.Name")
     }
 
-    private val process: Process = ProcessBuilder(Config.stockfishCommand).start()
+    @Transient private val process: Process = ProcessBuilder(Config.stockfishCommand).start()
 
-    private val reader = process.inputStream.bufferedReader()
+    @Transient private val reader = process.inputStream.bufferedReader()
 
-    private val executor = Executors.newCachedThreadPool()
+    @Transient private val executor = Executors.newCachedThreadPool()
 
     private fun <T> runTimeout(block: Callable<T>) = executor.submit(block)[moveTime.seconds / 2 + 3, TimeUnit.SECONDS]
 

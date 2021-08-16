@@ -11,19 +11,8 @@ private val basicSettings = testSettings("basic")
 private val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponentData))
 private fun spyVariantSettings() = testSettings("spy variant", variant = spyk(TestVariant))
 
-private fun mkGame(
-    settings: GameSettings = basicSettings,
-    players: List<Pair<String, Side>> = listOf("a" to white, "b" to black)
-) = ChessGame(settings).addPlayers {
-    for ((n, s) in players)
-        test(n, s)
-}
-
-private fun mkGame(settings: GameSettings = basicSettings, players: BySides<String>) =
-    ChessGame(settings).addPlayers {
-        for ((s, n) in players.toIndexedList())
-            test(n, s)
-    }
+private fun mkGame(settings: GameSettings = basicSettings, players: BySides<String> = bySides("a", "b")) =
+    ChessGame(settings, bySides {players[it].cpi})
 
 fun componentExclude(c: TestComponent) {
     excludeRecords {
@@ -34,47 +23,6 @@ fun componentExclude(c: TestComponent) {
 class ChessGameTests : FreeSpec({
 
     "ChessGame" - {
-        "initializing should" - {
-            "succeed if" - {
-                "provided 2 players on different sides" {
-                    mkGame()
-                }
-            }
-            "fail if" - {
-                "provided 1 players" {
-                    mkGame()
-                }
-                "provided 2 players on the same side" {
-                    shouldThrowExactly<IllegalStateException> {
-                        mkGame(players = listOf("a" to white, "b" to white, "c" to black))
-                    }
-                }
-                "already initialized" {
-                    shouldThrowExactly<WrongStateException> {
-                        mkGame().addPlayers {
-                            test("a", white)
-                            test("b", black)
-                        }
-                    }
-                }
-            }
-            "not call components" {
-                val g = mkGame(spyComponentSettings)
-                val c = g.getComponent<TestComponent>()!!
-                componentExclude(c)
-                verify {
-                    c wasNot Called
-                }
-            }
-            "only get required components, piece types and fen from variant" {
-                val g = mkGame(spyVariantSettings())
-                verifyAll {
-                    g.variant.requiredComponents
-                    g.variant.pieceTypes
-                    g.variant.genFEN(any())
-                }
-            }
-        }
         "starting should" - {
             "make the game runring" {
                 val g = mkGame().start()
@@ -91,11 +39,6 @@ class ChessGameTests : FreeSpec({
                 }
             }
             "fail if" - {
-                "not initialized yet" {
-                    shouldThrowExactly<WrongStateException> {
-                        ChessGame(basicSettings).start()
-                    }
-                }
                 "already running" {
                     shouldThrowExactly<WrongStateException> {
                         mkGame().start().start()
@@ -124,10 +67,8 @@ class ChessGameTests : FreeSpec({
                 val c = g.getComponent<TestComponent>()!!
                 clearRecords(c)
                 g.stop(white.wonBy(TEST_END_REASON))
-                g.finishStopping()
                 verifySequence {
                     c.handleEvents(GameBaseEvent.STOP)
-                    c.handleEvents(GameBaseEvent.STOPPED)
                 }
             }
             "fail if" - {
@@ -136,17 +77,6 @@ class ChessGameTests : FreeSpec({
                         val g = mkGame()
                         val reason = white.wonBy(TEST_END_REASON)
                         g.stop(reason)
-                        g.finishStopping()
-                    }
-                }
-                "already stopped" {
-                    shouldThrowExactly<WrongStateException> {
-                        val g = mkGame().start()
-                        val reason = white.wonBy(TEST_END_REASON)
-                        g.stop(reason)
-                        g.finishStopping()
-                        g.stop(reason)
-                        g.finishStopping()
                     }
                 }
             }

@@ -4,9 +4,17 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.interact
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import java.util.*
 
 private class ExtraPlayerInfo(val player: Player) {
     companion object {
@@ -123,8 +131,30 @@ suspend fun Player.openPawnPromotionMenu(promotions: Collection<Piece>) =
         ScreenOption(p.item, p, i.toInvPos())
     }) ?: promotions.first()
 
-class BukkitPlayer(val player: Player, side: Side, val silent: Boolean, game: ChessGame):
-    ChessPlayer(player.name, side, game) {
+val Player.cpi get() = BukkitPlayerInfo(this)
+
+@Serializable(with = BukkitPlayerInfo.Serializer::class)
+data class BukkitPlayerInfo(val player: Player): ChessPlayerInfo {
+    object Serializer: KSerializer<BukkitPlayerInfo> {
+        override val descriptor = PrimitiveSerialDescriptor("BukkitPlayerInfo", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: BukkitPlayerInfo) = encoder.encodeString(value.uuid.toString())
+
+        override fun deserialize(decoder: Decoder) =
+            BukkitPlayerInfo(Bukkit.getPlayer(UUID.fromString(decoder.decodeString()))!!)
+    }
+
+    override val name: String get() = player.name
+    val uuid: UUID get() = player.uniqueId
+    override fun getPlayer(side: Side, game: ChessGame) = BukkitPlayer(this, side, game)
+}
+
+class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
+    ChessPlayer(info, side, game) {
+
+    val player: Player = info.player
+
+    private val silent = this.info == opponent.info
 
     companion object {
         private val IN_CHECK_MSG = message("InCheck")
@@ -193,10 +223,6 @@ class BukkitPlayer(val player: Player, side: Side, val silent: Boolean, game: Ch
         })
         player.sendMessage(YOU_ARE_PLAYING_AS_MSG[side])
     }
-}
-
-fun ChessGame.AddPlayersScope.bukkit(player: Player, side: Side, silent: Boolean) {
-    addPlayer(BukkitPlayer(player, side, silent, game))
 }
 
 inline fun BySides<ChessPlayer>.forEachReal(block: (Player) -> Unit) {

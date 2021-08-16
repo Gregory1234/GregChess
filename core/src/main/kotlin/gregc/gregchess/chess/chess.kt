@@ -83,10 +83,12 @@ inline fun <T> bySides(block: (Side) -> T) = bySides(block(white), block(black))
 
 class NoEngineMoveException(fen: FEN) : Exception(fen.toString())
 
-interface ChessEngine {
-    val name: String
+
+
+interface ChessEngine: ChessPlayerInfo {
     fun stop()
     fun setOption(name: String, value: String)
     fun sendCommand(command: String)
     suspend fun getMove(fen: FEN): String
+    override fun getPlayer(side: Side, game: ChessGame) = EnginePlayer(this, side, game)
 }
