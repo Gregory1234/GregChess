@@ -33,10 +33,40 @@ sealed class GameScore(val pgn: String) {
 
     }
 
-    @Serializable(with = Serializer::class)
-    class Victory(val winner: Side): GameScore(victoryPgn(winner))
-    @Serializable(with = Serializer::class)
-    object Draw: GameScore("1/2-1/2")
+    @Serializable(with = Victory.Serializer::class)
+    class Victory(val winner: Side): GameScore(victoryPgn(winner)) {
+        object Serializer: KSerializer<Victory> {
+            override val descriptor: SerialDescriptor
+                get() = PrimitiveSerialDescriptor("GameScore.Victory", PrimitiveKind.STRING)
+
+            override fun serialize(encoder: Encoder, value: Victory) {
+                encoder.encodeString(value.pgn)
+            }
+
+            override fun deserialize(decoder: Decoder): Victory = when(decoder.decodeString()) {
+                victoryPgn(white) -> Victory(white)
+                victoryPgn(black) -> Victory(black)
+                else -> throw IllegalStateException()
+            }
+        }
+    }
+    @Serializable(with = Draw.Serializer::class)
+    object Draw: GameScore("1/2-1/2") {
+        object Serializer: KSerializer<Draw> {
+            override val descriptor: SerialDescriptor
+                get() = PrimitiveSerialDescriptor("GameScore.Draw", PrimitiveKind.STRING)
+
+            override fun serialize(encoder: Encoder, value: Draw) {
+                encoder.encodeString(value.pgn)
+            }
+
+            override fun deserialize(decoder: Decoder): Draw = when(decoder.decodeString()) {
+                Draw.pgn -> Draw
+                else -> throw IllegalStateException()
+            }
+
+        }
+    }
 }
 
 typealias DetEndReason = EndReason<GameScore.Victory>
