@@ -8,14 +8,10 @@ object Antichess : ChessVariant() {
     @JvmField
     val STALEMATE_VICTORY = GregChessModule.register("stalemate_victory", DetEndReason(EndReason.Type.NORMAL))
 
-    object AntichessPawnConfig : PawnMovementConfig() {
-        override fun promotions(piece: PieceInfo): List<Piece> =
-            listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
-                .map { it.of(piece.side) }
-    }
+    private val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
 
     override fun getPieceMoves(piece: BoardPiece): List<Move> = when (piece.type) {
-        PieceType.PAWN -> PawnMovement(AntichessPawnConfig).generate(piece)
+        PieceType.PAWN -> PawnMovement(promotions = { p -> promotions.map { it.of(p.side) } }).generate(piece)
         else -> Normal.getPieceMoves(piece)
     }
 

@@ -12,6 +12,9 @@ interface MoveTrait {
 }
 
 //@Serializable
+class NameTrait(override val nameTokens: List<MoveNameToken<*>>): MoveTrait
+
+//@Serializable
 class CheckTrait(override val nameTokens: MutableList<MoveNameToken<*>> = mutableListOf()): MoveTrait {
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if (remaining.all { it is CheckTrait }) {
@@ -51,7 +54,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var capt
 class PawnOriginTrait(override val nameTokens: MutableList<MoveNameToken<*>> = mutableListOf()): MoveTrait {
     override fun setup(game: ChessGame, move: Move) {
         move.getTrait<CaptureTrait>()?.let {
-            if (it.captured != null && nameTokens.isEmpty()) {
+            if (game.board[it.capture]?.piece != null && nameTokens.isEmpty()) {
                 nameTokens += MoveNameTokenType.UNIQUENESS_COORDINATE.of(UniquenessCoordinate(file = move.piece.pos.file))
             }
         }
