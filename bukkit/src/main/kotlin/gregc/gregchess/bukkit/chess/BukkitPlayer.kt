@@ -3,6 +3,7 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
+import gregc.gregchess.interact
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -186,9 +187,12 @@ class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
         if (newSquare == piece.square) return
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
-        // TODO: add support for promotions
-        // move.promotions?.let { player.openPawnPromotionMenu(it) }
-        game.finishMove(move)
+        interact {
+            move.getTrait<PromotionTrait>()?.apply {
+                promotion = promotions?.let { player.openPawnPromotionMenu(it) }
+            }
+            game.finishMove(move)
+        }
     }
 
     private var firstTurn = true

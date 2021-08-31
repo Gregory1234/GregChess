@@ -117,11 +117,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         this.hasMoved = hasMoved
     }
 
-    fun demote(piece: BoardPiece) {
-        game.callEvent(PieceEvent.Promoted(this, square.piece!!))
-        square.piece = piece
-    }
-
     fun resurrect(captured: CapturedPiece) {
         board -= captured
         square.piece = this

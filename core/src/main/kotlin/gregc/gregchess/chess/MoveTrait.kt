@@ -11,6 +11,30 @@ interface MoveTrait {
     fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
 }
 
+@Serializable
+class PromotionTrait(val promotions: List<Piece>?, var promotion: Piece? = null): MoveTrait {
+    override val nameTokens: Collection<MoveNameToken<*>>
+        get() = listOfNotNull(promotion?.type?.let { MoveNameTokenType.PROMOTION.of(it) })
+
+    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        if ((promotions == null) != (promotion == null))
+            return false
+        if (promotions?.contains(promotion) == false)
+            return false
+        promotion?.let {
+            game.board[move.piece.pos]?.piece?.promote(it)
+        }
+        return true
+    }
+
+    override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        if (game.board[move.piece.pos]?.piece == null)
+            return false
+        game.board[move.piece.pos]?.piece?.promote(move.piece.piece)
+        return true
+    }
+}
+
 //@Serializable
 class NameTrait(override val nameTokens: List<MoveNameToken<*>>): MoveTrait
 

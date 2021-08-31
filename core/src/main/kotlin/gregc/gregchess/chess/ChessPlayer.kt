@@ -57,9 +57,9 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : Chess
                 val str = engine.getMove(game.board.getFEN())
                 val origin = Pos.parseFromString(str.take(2))
                 val target = Pos.parseFromString(str.drop(2).take(2))
-                //val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
+                val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
                 val move = game.board.getMoves(origin).first { it.display == target }
-                // TODO: add promotion choosing for engines
+                move.getTrait<PromotionTrait>()?.promotion = promotion?.of(move.piece.side)
                 game.finishMove(move)
             } catch (e: Exception) {
                 e.printStackTrace()

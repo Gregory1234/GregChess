@@ -65,40 +65,44 @@ class PawnMovement(
     }
 
     override fun generate(piece: BoardPiece): List<Move> = buildList {
+        fun promotions(pos: Pos) = if (pos.rank in listOf(0, 7)) promotions(piece.info) else null
+
         val dir = piece.side.dir
         val pos = piece.pos
         val forward = pos + dir
         if (forward.isValid()) {
-            add(Move(piece.info, forward, Floor.MOVE,
+            add(Move(piece.info, forward, ifProm(promotions(forward), Floor.MOVE),
                 listOf(pos), listOf(forward), listOf(forward), listOf(forward),
                 emptyList(), emptyList(),
-                listOf(PawnOriginTrait(), TargetTrait(forward), CheckTrait()),
+                listOf(PawnOriginTrait(), PromotionTrait(promotions(forward)), TargetTrait(forward), CheckTrait()),
                 defaultOrder
             ))
         }
         val forward2 = pos + dir * 2
         if (forward2.isValid() && canDouble(piece.info)) {
-            add(Move(piece.info, forward2, Floor.MOVE,
+            add(Move(piece.info, forward2, ifProm(promotions(forward), Floor.MOVE),
                 listOf(pos), listOf(forward2), listOf(forward, forward2), listOf(forward, forward2),
                 emptyList(), listOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
-                listOf(PawnOriginTrait(), TargetTrait(forward2), CheckTrait()),
+                listOf(PawnOriginTrait(), PromotionTrait(promotions(forward2)), TargetTrait(forward2), CheckTrait()),
                 defaultOrder
             ))
         }
         for (s in BoardSide.values()) {
             val capture = pos + dir + s.dir
             if (capture.isValid()) {
-                add(Move(piece.info, capture, Floor.CAPTURE,
+                add(Move(piece.info, capture, ifProm(promotions(forward), Floor.CAPTURE),
                     listOf(pos), listOf(capture), emptyList(), listOf(capture),
                     emptyList(), emptyList(),
-                    listOf(PawnOriginTrait(), CaptureTrait(capture, true), TargetTrait(capture), CheckTrait()),
+                    listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
+                        CaptureTrait(capture, true), TargetTrait(capture), CheckTrait()),
                     defaultOrder
                 ))
                 val enPassant = pos + s.dir
-                add(Move(piece.info, capture, Floor.CAPTURE,
+                add(Move(piece.info, capture, ifProm(promotions(forward), Floor.CAPTURE),
                     listOf(pos), listOf(capture), emptyList(), listOf(capture),
                     listOf(Pair(capture, EN_PASSANT)), emptyList(),
-                    listOf(PawnOriginTrait(), CaptureTrait(enPassant, true), TargetTrait(capture),
+                    listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
+                        CaptureTrait(enPassant, true), TargetTrait(capture),
                         NameTrait(listOf(MoveNameTokenType.EN_PASSANT.mk)), CheckTrait()),
                     defaultOrder + MoveNameTokenType.EN_PASSANT
                 ))

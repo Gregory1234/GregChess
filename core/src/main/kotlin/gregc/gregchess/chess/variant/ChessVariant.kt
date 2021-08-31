@@ -48,7 +48,9 @@ open class ChessVariant: NameRegistered {
             return MoveLegality.IN_CHECK
         val pins = Normal.pinningMoves(!piece.side, myKing.square)
         if (pins.any { pin ->
-                pin.neededEmpty.filter { game.board[it]?.piece != null }.all { it in stopBlocking } && startBlocking.none { it in pin.neededEmpty }
+                capture != pin.piece.pos &&
+                        pin.neededEmpty.filter { game.board[it]?.piece != null }
+                            .all { it in stopBlocking } && startBlocking.none { it in pin.neededEmpty }
             })
             return MoveLegality.PINNED
         return MoveLegality.LEGAL
