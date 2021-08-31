@@ -177,7 +177,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun updateMoves() {
         for ((_, square) in squares) {
-            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p).map { it.apply { setup(game) } } }
+            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p) }
+        }
+        for ((_, square) in squares) {
+            square.bakedMoves?.forEach { it.setup(game) }
         }
         for ((_, square) in squares) {
             square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it, game) }
@@ -247,6 +250,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     }
 
     fun resetMovesSinceLastCapture(): () -> Unit {
+        // TODO: start handling halfmoveClock in moves
         val m = halfmoveClock
         halfmoveClock = 0u
         return {

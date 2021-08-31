@@ -5,18 +5,25 @@ import gregc.gregchess.register
 
 fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Floor.CAPTURE
 
-/*fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
+val defaultOrder = with (MoveNameTokenType) { listOf(PIECE_TYPE, UNIQUENESS_COORDINATE, TARGET, CHECK, CHECKMATE) }
+
+fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map {
-        MoveCandidate(piece, it, defaultColor(it), emptyList())
+        Move(piece.info, it.pos, defaultColor(it),
+            listOf(piece.pos), listOf(it.pos), emptyList(), emptyList(),
+            emptyList(), emptyList(),
+            listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), CheckTrait()),
+            defaultOrder
+        )
     }
-*/
+
 
 fun interface MoveScheme {
     fun generate(piece: BoardPiece): List<Move>
 }
 
 class JumpMovement(private val dirs: Collection<Dir>) : MoveScheme {
-    override fun generate(piece: BoardPiece): List<Move> = emptyList()
+    override fun generate(piece: BoardPiece): List<Move> = jumps(piece, dirs)
 }
 
 class RayMovement(private val dirs: Collection<Dir>) : MoveScheme {
