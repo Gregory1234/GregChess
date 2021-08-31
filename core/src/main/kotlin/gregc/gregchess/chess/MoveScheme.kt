@@ -17,6 +17,21 @@ fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
         )
     }
 
+fun rays(piece: BoardPiece, dirs: Collection<Dir>) =
+    dirs.flatMap { dir ->
+        PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
+            piece.square.board[pos]?.let {
+                Move(piece.info, it.pos, defaultColor(it),
+                    listOf(piece.pos), listOf(it.pos),
+                    PosSteps(piece.pos + dir, dir, index), PosSteps(piece.pos + dir, dir, index+1),
+                    emptyList(), emptyList(),
+                    listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), CheckTrait()),
+                    defaultOrder
+                )
+            }
+        }
+    }
+
 
 fun interface MoveScheme {
     fun generate(piece: BoardPiece): List<Move>
@@ -27,7 +42,7 @@ class JumpMovement(private val dirs: Collection<Dir>) : MoveScheme {
 }
 
 class RayMovement(private val dirs: Collection<Dir>) : MoveScheme {
-    override fun generate(piece: BoardPiece): List<Move> = emptyList()
+    override fun generate(piece: BoardPiece): List<Move> = rays(piece, dirs)
 }
 
 object KingMovement : MoveScheme {

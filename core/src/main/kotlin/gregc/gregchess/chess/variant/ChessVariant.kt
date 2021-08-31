@@ -107,7 +107,7 @@ open class ChessVariant: NameRegistered {
     object Normal : ChessVariant() {
 
         fun pinningMoves(by: Side, pos: Square) =
-            allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m -> m.neededEmpty.isNotEmpty() }
+            allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m -> m.neededEmpty.any { pos.board[it]?.piece != null } }
 
         fun checkingMoves(by: Side, pos: Square) =
             allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m ->
