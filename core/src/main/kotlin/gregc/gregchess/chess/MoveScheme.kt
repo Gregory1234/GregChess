@@ -46,8 +46,38 @@ class RayMovement(private val dirs: Collection<Dir>) : MoveScheme {
 
 object KingMovement : MoveScheme {
 
-    override fun generate(piece: BoardPiece): List<Move> {
-        return emptyList()
+    private fun castles(piece: BoardPiece, rook: BoardPiece, side: BoardSide, display: Pos, pieceTarget: Pos, rookTarget: Pos) = Move(
+        piece.info, display, Floor.SPECIAL,
+        listOf(piece.pos, rook.pos), listOf(pieceTarget, rookTarget),
+        ((between(piece.pos.file, pieceTarget.file) + pieceTarget.file + between(rook.pos.file, rookTarget.file) + rookTarget.file).distinct() - rook.pos.file - piece.pos.file).map { Pos(it, piece.pos.rank) },
+        (between(piece.pos.file, pieceTarget.file) + pieceTarget.file + piece.pos.file).map { Pos(it, piece.pos.rank) },
+        emptyList(), emptyList(),
+        listOf(CastlesTrait(rook.info, side, pieceTarget, rookTarget), CheckTrait()),
+        listOf(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE)
+    )
+
+    override fun generate(piece: BoardPiece): List<Move> = buildList {
+        addAll(jumps(piece, rotationsOf(1, 0) + rotationsOf(1, 1)))
+        if (!piece.hasMoved) {
+            for (rook in piece.square.board.piecesOf(piece.side, PieceType.ROOK)) {
+                if (rook.pos.rank == piece.pos.rank && !rook.hasMoved) {
+                    val side = if (rook.pos.file < piece.pos.file) queenside else kingside
+                    if (piece.square.game.settings.simpleCastling) {
+                        TODO()
+                    } else {
+                        val target = when(side) {
+                            BoardSide.QUEENSIDE -> piece.pos.copy(file = 2)
+                            BoardSide.KINGSIDE -> piece.pos.copy(file = 6)
+                        }
+                        val rookTarget = when(side) {
+                            BoardSide.QUEENSIDE -> piece.pos.copy(file = 3)
+                            BoardSide.KINGSIDE -> piece.pos.copy(file = 5)
+                        }
+                        add(castles(piece, rook, side, if (piece.square.board.chess960) rook.pos else target, target, rookTarget))
+                    }
+                }
+            }
+        }
     }
 
 }
@@ -99,7 +129,7 @@ class PawnMovement(
                 ))
                 val enPassant = pos + s.dir
                 add(Move(piece.info, capture, ifProm(promotions(forward), Floor.CAPTURE),
-                    listOf(pos), listOf(capture), emptyList(), listOf(capture),
+                    listOf(pos, enPassant), listOf(capture), emptyList(), listOf(capture),
                     listOf(Pair(capture, EN_PASSANT)), emptyList(),
                     listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
                         CaptureTrait(enPassant, true), TargetTrait(capture),

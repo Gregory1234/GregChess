@@ -12,6 +12,44 @@ interface MoveTrait {
 }
 
 @Serializable
+class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, val rookTarget: Pos): MoveTrait {
+    override val nameTokens = listOf(MoveNameTokenType.CASTLE.of(side))
+    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        val boardPiece = game.board[move.piece.pos]?.piece
+        val boardRook = game.board[rook.pos]?.piece
+        val targetSquare = game.board[target]
+        val rookTargetSquare = game.board[rookTarget]
+        if (boardPiece == null || boardRook == null ||
+            targetSquare == null || (target != rook.pos && targetSquare.piece != null) ||
+            rookTargetSquare == null || (rookTarget != move.piece.pos && rookTargetSquare.piece != null)
+        )
+            return false
+        BoardPiece.autoMove(mapOf(
+            boardPiece to targetSquare,
+            boardRook to rookTargetSquare
+        ))
+        return true
+    }
+
+    override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        val boardPiece = game.board[target]?.piece
+        val boardRook = game.board[rookTarget]?.piece
+        val targetSquare = game.board[move.piece.pos]
+        val rookTargetSquare = game.board[rook.pos]
+        if (boardPiece == null || boardRook == null ||
+            targetSquare == null || (target != rook.pos && targetSquare.piece != null) ||
+            rookTargetSquare == null || (rookTarget != move.piece.pos && rookTargetSquare.piece != null)
+        )
+            return false
+        BoardPiece.autoMove(mapOf(
+            boardPiece to targetSquare,
+            boardRook to rookTargetSquare
+        ))
+        return true
+    }
+}
+
+@Serializable
 class PromotionTrait(val promotions: List<Piece>?, var promotion: Piece? = null): MoveTrait {
     override val nameTokens: Collection<MoveNameToken<*>>
         get() = listOfNotNull(promotion?.type?.let { MoveNameTokenType.PROMOTION.of(it) })
