@@ -64,16 +64,17 @@ object AtomicChess : ChessVariant() {
     private fun checkingMoves(by: Side, pos: Square) =
         if (nextToKing(by, pos.pos, pos.board)) emptyList() else Normal.checkingMoves(by, pos)
 
-    override fun finishMove(move: MoveCandidate) {
-        if (move.captured != null)
-            move.game.getComponent<ExplosionManager>()?.explode(move.target.pos)
+    override fun finishMove(move: Move, game: ChessGame) {
+        if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it]?.piece } != null)
+            move.getTrait<TargetTrait>()?.target?.let { game.getComponent<ExplosionManager>()?.explode(it) }
     }
 
-    override fun getLegality(move: MoveCandidate): MoveLegality = with(move) {
+    override fun getLegality(move: Move, game: ChessGame): MoveLegality = with(move) {
 
-        if (!Normal.isValid(this))
+        if (!Normal.isValid(this, game))
             return MoveLegality.INVALID
-
+        // TODO: fix this
+        /*
         if (piece.type == PieceType.KING) {
             if (captured != null)
                 return MoveLegality.SPECIAL
@@ -94,7 +95,7 @@ object AtomicChess : ChessVariant() {
             return MoveLegality.IN_CHECK
         val pins = pinningMoves(!piece.side, myKing.square).filter { origin.pos in it.pass }
         if (pins.any { target.pos !in it.pass && target != it.origin })
-            return MoveLegality.PINNED
+            return MoveLegality.PINNED*/
         return MoveLegality.LEGAL
     }
 
@@ -106,10 +107,10 @@ object AtomicChess : ChessVariant() {
         Normal.checkForGameEnd(game)
     }
 
-    override fun undoLastMove(move: MoveData) {
-        if (move.captured)
-            move.origin.game.requireComponent<ExplosionManager>().reverseExplosion()
-        move.undo()
+    override fun undoLastMove(move: Move, game: ChessGame) {
+        if (move.getTrait<CaptureTrait>()?.captured != null)
+            game.requireComponent<ExplosionManager>().reverseExplosion()
+        move.undo(game)
     }
 
     override val requiredComponents: Set<KClass<out Component>> = setOf(ExplosionManager::class)

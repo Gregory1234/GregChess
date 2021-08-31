@@ -156,12 +156,12 @@ class ChessGame(val settings: GameSettings, val playerinfo: BySides<ChessPlayerI
 
     operator fun get(side: Side): ChessPlayer = players[side]
 
-    fun finishMove(move: MoveCandidate, promotion: Piece?) {
+    fun finishMove(move: Move) {
         requireRunning()
-        val data = move.execute(promotion)
-        board.lastMove?.clear()
-        board.lastMove = data
-        board.lastMove?.render()
+        move.execute(this)
+        board.lastMove?.hideDone(board)
+        board.lastMove = move
+        board.lastMove?.showDone(board)
         nextTurn()
     }
 

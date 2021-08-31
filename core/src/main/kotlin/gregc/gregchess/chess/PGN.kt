@@ -12,7 +12,7 @@ class PGN internal constructor(private val tags: List<TagPair>, private val move
     class MoveTree internal constructor(
         private val initial: Side,
         private val initialMove: UInt,
-        private val moves: List<MoveData>,
+        private val moves: List<Move>,
         private val result: String?
     ) {
         override fun toString() = buildString {

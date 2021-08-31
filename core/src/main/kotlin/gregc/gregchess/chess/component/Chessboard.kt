@@ -91,10 +91,9 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     operator fun get(pos: Pos) = squares[pos]
 
-    private val moves: MutableList<MoveData> = mutableListOf()
+    private val moves: MutableList<Move> = mutableListOf()
 
-    val moveHistory: List<MoveData>
-        get() = moves
+    val moveHistory: List<Move> get() = moves
 
     val chess960: Boolean
         get() {
@@ -178,10 +177,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun updateMoves() {
         for ((_, square) in squares) {
-            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p) }
+            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p).map { it.apply { setup(game) } } }
         }
         for ((_, square) in squares) {
-            square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it) }
+            square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it, game) }
         }
     }
 
@@ -264,14 +263,14 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun undoLastMove() {
         lastMove?.let {
-            it.clear()
+            it.hideDone(this)
             val hash = getFEN().hashed()
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
-            game.variant.undoLastMove(it)
+            game.variant.undoLastMove(it, game)
             if (game.currentTurn == white)
                 fullmoveClock--
             moves.removeLast()
-            lastMove?.render()
+            lastMove?.showDone(this)
             game.previousTurn()
         }
     }

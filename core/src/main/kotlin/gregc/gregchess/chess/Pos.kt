@@ -122,6 +122,7 @@ class ChessFlagType(val startTime: UInt): NameRegistered {
     override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 }
 
+//TODO: change time left into age
 @Serializable
 data class ChessFlag(val type: ChessFlagType, var timeLeft: Int = type.startTime.toInt())
 
@@ -134,8 +135,8 @@ data class Square(val pos: Pos, val game: ChessGame) {
 
     val posFlags get() = flags.map { PosFlag(pos, it) }
 
-    var bakedMoves: List<MoveCandidate>? = null
-    var bakedLegalMoves: List<MoveCandidate>? = null
+    var bakedMoves: List<Move>? = null
+    var bakedLegalMoves: List<Move>? = null
 
     private val baseFloor = if ((pos.file + pos.rank) % 2 == 0) Floor.DARK else Floor.LIGHT
     var variantMarker: Floor? = null

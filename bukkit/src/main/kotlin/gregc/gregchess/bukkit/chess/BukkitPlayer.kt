@@ -3,7 +3,6 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
-import gregc.gregchess.interact
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -114,7 +113,7 @@ fun Player.sendPGN(pgn: PGN) {
     spigot().sendMessage(message)
 }
 
-fun Player.sendLastMoves(num: UInt, wLast: MoveData?, bLast: MoveData?) {
+fun Player.sendLastMoves(num: UInt, wLast: Move?, bLast: Move?) {
     sendMessage(buildString {
         append(num - 1u)
         append(". ")
@@ -177,18 +176,19 @@ class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
 
     fun makeMove(pos: Pos) {
         if (!game.running) return
+        // TODO: clean this up
         val newSquare = game.board[pos] ?: return
         val piece = held ?: return
         val moves = piece.square.bakedLegalMoves ?: return
-        if (newSquare != piece.square && newSquare !in moves.map { it.display }) return
+        if (newSquare != piece.square && pos !in moves.map { it.display }) return
         held = null
         player.inventory.setItem(0, null)
         if (newSquare == piece.square) return
-        val chosenMoves = moves.filter { it.display == newSquare }
+        val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
-        interact {
-            game.finishMove(move, move.promotions?.let { player.openPawnPromotionMenu(it) })
-        }
+        // TODO: add support for promotions
+        // move.promotions?.let { player.openPawnPromotionMenu(it) }
+        game.finishMove(move)
     }
 
     private var firstTurn = true

@@ -16,12 +16,12 @@ abstract class ChessPlayer(val info: ChessPlayerInfo, val side: Side, val game: 
         set(v) {
             v?.let {
                 it.square.moveMarker = Floor.NOTHING
-                it.square.bakedLegalMoves?.forEach(MoveCandidate::render)
+                it.square.bakedLegalMoves?.forEach { m -> m.show(game.board) }
                 it.pickUp()
             }
             field?.let {
                 it.square.moveMarker = null
-                it.square.bakedLegalMoves?.forEach(MoveCandidate::clear)
+                it.square.bakedLegalMoves?.forEach { m -> m.hide(game.board) }
                 it.placeDown()
             }
             field = v
@@ -57,9 +57,10 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : Chess
                 val str = engine.getMove(game.board.getFEN())
                 val origin = Pos.parseFromString(str.take(2))
                 val target = Pos.parseFromString(str.drop(2).take(2))
-                val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
-                val move = game.board.getMoves(origin).first { it.display.pos == target }
-                game.finishMove(move, promotion?.of(side))
+                //val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
+                val move = game.board.getMoves(origin).first { it.display == target }
+                // TODO: add promotion choosing for engines
+                game.finishMove(move)
             } catch (e: Exception) {
                 e.printStackTrace()
                 game.stop(drawBy(EndReason.ERROR))

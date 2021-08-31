@@ -18,21 +18,21 @@ object HordeChess : ChessVariant() {
         }
     }
 
-    override fun getPieceMoves(piece: BoardPiece): List<MoveCandidate> = when (piece.type) {
+    override fun getPieceMoves(piece: BoardPiece): List<Move> = when (piece.type) {
         PieceType.PAWN -> PawnMovement(HordePawnConfig).generate(piece)
         else -> Normal.getPieceMoves(piece)
     }
 
-    override fun getLegality(move: MoveCandidate): MoveLegality = when {
-        move.piece.side == black -> Normal.getLegality(move)
-        Normal.isValid(move) -> MoveLegality.LEGAL
+    override fun getLegality(move: Move, game: ChessGame): MoveLegality = when {
+        move.piece.side == black -> Normal.getLegality(move, game)
+        Normal.isValid(move, game) -> MoveLegality.LEGAL
         else -> MoveLegality.INVALID
     }
 
     override fun isInCheck(king: BoardPiece) = king.side == black && Normal.isInCheck(king)
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(black).all { getMoves(it.pos).none(game.variant::isLegal) }) {
+        if (piecesOf(black).all { getMoves(it.pos).none { m -> game.variant.isLegal(m, game) } }) {
             if (isInCheck(game, black))
                 game.stop(white.wonBy(EndReason.CHECKMATE))
             else

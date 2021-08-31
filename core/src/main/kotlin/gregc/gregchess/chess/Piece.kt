@@ -25,7 +25,7 @@ val Side.king get() = PieceType.KING.of(this)
 data class CapturedPos(val by: Side, val row: Int, val pos: Int)
 
 @Serializable
-class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
+data class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
     val type get() = piece.type
     val side get() = piece.side
 
