@@ -19,7 +19,8 @@ data class ChessboardState(
     val fullmoveClock: UInt = initialFEN.fullmoveClock,
     val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
     val capturedPieces: List<CapturedPiece> = emptyList(),
-    val flags: List<PosFlag> = listOfNotNull(initialFEN.enPassantSquare?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 0)) })
+    val flags: List<PosFlag> = listOfNotNull(initialFEN.enPassantSquare?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 0)) }),
+    val moveHistory: List<Move> = emptyList()
 ) : ComponentData<Chessboard> {
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
             this(fen ?: variant.genFEN(chess960), (fen ?: variant.genFEN(chess960)).toPieces(variant.pieceTypes))
@@ -71,7 +72,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     override val data
         get() = ChessboardState(
-            initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, posFlags
+            initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, posFlags, moveHistory
         )
 
     val pieces: List<BoardPiece> get() = squares.values.mapNotNull { it.piece }
@@ -90,7 +91,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     operator fun get(pos: Pos) = squares[pos]
 
-    private val moves: MutableList<Move> = mutableListOf()
+    private val moves: MutableList<Move> = initialState.moveHistory.toMutableList()
 
     val moveHistory: List<Move> get() = moves
 

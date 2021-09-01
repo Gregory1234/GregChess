@@ -31,6 +31,7 @@ tasks {
             freeCompilerArgs = listOf(
                 "-Xopt-in=kotlin.ExperimentalStdlibApi",
                 "-Xopt-in=kotlin.contracts.ExperimentalContracts",
+                "-Xopt-in=kotlin.RequiresOptIn",
                 "-Xjvm-default=all",
                 "-Xlambdas=indy",
                 "-progressive")

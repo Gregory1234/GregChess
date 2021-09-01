@@ -5,14 +5,14 @@ import kotlinx.serialization.Serializable
 class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>): Exception(traits.toList().toString())
 
 interface MoveTrait {
-    val nameTokens: Collection<MoveNameToken<*>>
+    val nameTokens: MoveName
     fun setup(game: ChessGame, move: Move) {}
     fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
     fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
 }
-//@Serializable
+@Serializable
 class DefaultHalfmoveClockTrait(var halfmoveClock: UInt? = null): MoveTrait {
-    override val nameTokens = emptyList<MoveNameToken<*>>()
+    override val nameTokens = MoveName()
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if (remaining.any { it is CaptureTrait })
             return false
@@ -33,7 +33,7 @@ class DefaultHalfmoveClockTrait(var halfmoveClock: UInt? = null): MoveTrait {
 
 @Serializable
 class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, val rookTarget: Pos): MoveTrait {
-    override val nameTokens = listOf(MoveNameTokenType.CASTLE.of(side))
+    override val nameTokens = MoveName(listOf(MoveNameTokenType.CASTLE.of(side)))
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         val boardPiece = game.board[move.piece.pos]?.piece
         val boardRook = game.board[rook.pos]?.piece
@@ -73,8 +73,7 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
 
 @Serializable
 class PromotionTrait(val promotions: List<Piece>?, var promotion: Piece? = null): MoveTrait {
-    override val nameTokens: Collection<MoveNameToken<*>>
-        get() = listOfNotNull(promotion?.type?.let { MoveNameTokenType.PROMOTION.of(it) })
+    override val nameTokens = MoveName(listOfNotNull(promotion?.type?.let { MoveNameTokenType.PROMOTION.of(it) }))
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if ((promotions == null) != (promotion == null))
@@ -95,15 +94,15 @@ class PromotionTrait(val promotions: List<Piece>?, var promotion: Piece? = null)
     }
 }
 
-//@Serializable
-class NameTrait(override val nameTokens: List<MoveNameToken<*>>): MoveTrait
+@Serializable
+class NameTrait(override val nameTokens: MoveName): MoveTrait
 
-//@Serializable
-class CheckTrait(override val nameTokens: MutableList<MoveNameToken<*>> = mutableListOf()): MoveTrait {
+@Serializable
+class CheckTrait(override val nameTokens: MoveName = MoveName()): MoveTrait {
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if (remaining.all { it is CheckTrait }) {
             if (nameTokens.isEmpty()) {
-                nameTokens += emptyList<MoveNameToken<*>>().checkForChecks(move.piece.side, game)
+                nameTokens += checkForChecks(move.piece.side, game)
             }
             return true
         }
@@ -113,7 +112,7 @@ class CheckTrait(override val nameTokens: MutableList<MoveNameToken<*>> = mutabl
 
 @Serializable
 class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var captured: PieceInfo? = null, var capturedPiece: CapturedPiece? = null): MoveTrait  {
-    override val nameTokens get() = listOfNotNull(MoveNameTokenType.CAPTURE.mk.takeIf { captured != null })
+    override val nameTokens get() = MoveName(listOfNotNull(MoveNameTokenType.CAPTURE.mk.takeIf { captured != null }))
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         game.board[capture]?.piece?.let {
@@ -134,8 +133,8 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var capt
     }
 }
 
-//@Serializable
-class PawnOriginTrait(override val nameTokens: MutableList<MoveNameToken<*>> = mutableListOf()): MoveTrait {
+@Serializable
+class PawnOriginTrait(override val nameTokens: MoveName = MoveName()): MoveTrait {
     override fun setup(game: ChessGame, move: Move) {
         move.getTrait<CaptureTrait>()?.let {
             if (game.board[it.capture]?.piece != null && nameTokens.isEmpty()) {
@@ -145,8 +144,8 @@ class PawnOriginTrait(override val nameTokens: MutableList<MoveNameToken<*>> = m
     }
 }
 
-//@Serializable
-class PieceOriginTrait(override val nameTokens: MutableList<MoveNameToken<*>> = mutableListOf()): MoveTrait {
+@Serializable
+class PieceOriginTrait(override val nameTokens: MoveName = MoveName()): MoveTrait {
     override fun setup(game: ChessGame, move: Move) {
         if (nameTokens.isEmpty()) {
             nameTokens += MoveNameTokenType.PIECE_TYPE.of(move.piece.type)
@@ -158,7 +157,7 @@ class PieceOriginTrait(override val nameTokens: MutableList<MoveNameToken<*>> = 
 
 @Serializable
 class TargetTrait(val target: Pos, var hasMoved: Boolean = true): MoveTrait {
-    override val nameTokens = listOf(MoveNameTokenType.TARGET.of(target))
+    override val nameTokens = MoveName(listOf(MoveNameTokenType.TARGET.of(target)))
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         game.board[target].let { t ->

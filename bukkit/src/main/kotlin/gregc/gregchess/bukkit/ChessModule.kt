@@ -35,7 +35,7 @@ inline fun <reified T : ComponentData<*>> ChessModule.registerSettings(noinline 
 inline fun <reified T : ComponentData<*>> ChessModule.registerConstSettings(settings: T) =
     registerSettings { settings }
 
-fun <T> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameTokenInterpreter<T> = token.toPgnString) =
+fun <T: Any> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameTokenInterpreter<T> = token.toPgnString) =
     register(BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING, token, str)
 
 abstract class BukkitChessModuleExtension(val plugin: Plugin) : ChessModuleExtension {

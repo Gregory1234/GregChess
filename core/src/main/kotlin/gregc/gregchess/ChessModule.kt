@@ -47,7 +47,7 @@ fun ChessModule.register(id: String, variant: ChessVariant) = register(RegistryT
 
 fun ChessModule.register(id: String, flagType: ChessFlagType) = register(RegistryType.FLAG_TYPE, id, flagType)
 
-fun <T> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
+fun <T: Any> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
     register(RegistryType.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
 
 inline fun <reified T: Component, reified D: ComponentData<T>> ChessModule.registerComponent(id: String) {
