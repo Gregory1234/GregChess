@@ -172,7 +172,8 @@ object GregChess : Listener {
                         val key = this[1].toKey()
                         val piece = ChessModule[key.namespace].pieceTypes[key.key]
                         square.piece?.capture(p.side)
-                        square.piece = BoardPiece(piece.of(Side.valueOf(this[0])), square)
+                        game.board += PieceInfo(square.pos, piece.of(Side.valueOf(this[0])), false)
+                        square.piece?.sendCreated()
                         game.board.updateMoves()
                         player.sendMessage(BOARD_OP_DONE)
                     }

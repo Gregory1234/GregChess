@@ -18,7 +18,8 @@ object Antichess : ChessVariant() {
     override fun getLegality(move: Move, game: ChessGame): MoveLegality {
         if (!Normal.isValid(move, game))
             return MoveLegality.INVALID
-        // TODO: block castling
+        if (move.getTrait<CastlesTrait>() != null)
+            return MoveLegality.INVALID
         if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it]?.piece } != null)
             return MoveLegality.LEGAL
         return if (game.board.piecesOf(move.piece.side).none { m ->

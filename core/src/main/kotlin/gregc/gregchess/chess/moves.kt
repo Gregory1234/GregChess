@@ -26,15 +26,17 @@ data class Move(
 
     fun execute(game: ChessGame) {
         var remainingTraits = traits
-        for ((p, f) in flagsAdded) {
-            game.board[p]?.flags?.plusAssign(f)
-        }
         for (pass in 0u..255u) {
             remainingTraits = remainingTraits.filter {
                 !it.execute(game, this, pass.toUByte(), remainingTraits)
             }
-            if (remainingTraits.isEmpty())
+            if (remainingTraits.isEmpty()) {
+                game.variant.finishMove(this, game)
+                for ((p, f) in flagsAdded) {
+                    game.board[p]?.flags?.plusAssign(f)
+                }
                 return
+            }
         }
         throw TraitsCouldNotExecuteException(remainingTraits)
     }

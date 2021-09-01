@@ -65,7 +65,7 @@ object AtomicChess : ChessVariant() {
         if (nextToKing(by, pos.pos, pos.board)) emptyList() else Normal.checkingMoves(by, pos)
 
     override fun finishMove(move: Move, game: ChessGame) {
-        if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it]?.piece } != null)
+        if (move.getTrait<CaptureTrait>()?.captured != null)
             move.getTrait<TargetTrait>()?.target?.let { game.getComponent<ExplosionManager>()?.explode(it) }
     }
 
@@ -73,13 +73,12 @@ object AtomicChess : ChessVariant() {
 
         if (!Normal.isValid(this, game))
             return MoveLegality.INVALID
-        // TODO: fix this
-        /*
+        val captured = getTrait<CaptureTrait>()?.let { game.board[it.capture]?.piece }
         if (piece.type == PieceType.KING) {
             if (captured != null)
                 return MoveLegality.SPECIAL
 
-            if ((pass + target.pos).mapNotNull { game.board[it] }.all {
+            if (passedThrough.mapNotNull { game.board[it] }.all {
                     checkingMoves(!piece.side, it).isEmpty()
                 }) MoveLegality.LEGAL else MoveLegality.IN_CHECK
         }
@@ -87,15 +86,20 @@ object AtomicChess : ChessVariant() {
         val myKing = game.board.kingOf(piece.side) ?: return MoveLegality.IN_CHECK
 
         if (captured != null)
-            if (myKing.pos in target.pos.neighbours())
+            if (myKing.pos in captured.pos.neighbours())
                 return MoveLegality.SPECIAL
 
         val checks = checkingMoves(!piece.side, myKing.square)
-        if (checks.any { target.pos !in it.pass && target != it.origin })
+        val capture = getTrait<CaptureTrait>()?.capture
+        if (checks.any { ch -> capture != ch.piece.pos && startBlocking.none { it in ch.neededEmpty } })
             return MoveLegality.IN_CHECK
-        val pins = pinningMoves(!piece.side, myKing.square).filter { origin.pos in it.pass }
-        if (pins.any { target.pos !in it.pass && target != it.origin })
-            return MoveLegality.PINNED*/
+        val pins = pinningMoves(!piece.side, myKing.square)
+        if (pins.any { pin ->
+                capture != pin.piece.pos &&
+                        pin.neededEmpty.filter { game.board[it]?.piece != null }
+                            .all { it in stopBlocking } && startBlocking.none { it in pin.neededEmpty }
+            })
+            return MoveLegality.PINNED
         return MoveLegality.LEGAL
     }
 

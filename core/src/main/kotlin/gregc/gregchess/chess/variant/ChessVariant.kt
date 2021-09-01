@@ -109,10 +109,14 @@ open class ChessVariant: NameRegistered {
     object Normal : ChessVariant() {
 
         fun pinningMoves(by: Side, pos: Square) =
-            allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m -> m.neededEmpty.any { pos.board[it]?.piece != null } }
+            allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m ->
+                !m.flagsNeeded.any { (p, f) -> pos.board[p].let { s -> s?.flags?.any { it.type == f && it.timeLeft >= 0 } == false } } &&
+                m.neededEmpty.any { pos.board[it]?.piece != null }
+            }
 
         fun checkingMoves(by: Side, pos: Square) =
             allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m ->
+                !m.flagsNeeded.any { (p, f) -> pos.board[p].let { s -> s?.flags?.any { it.type == f && it.timeLeft >= 0 } == false } } &&
                 m.neededEmpty.mapNotNull { pos.board[it]?.piece }.all { it.side == !m.piece.side && it.type == PieceType.KING }
             }
 
