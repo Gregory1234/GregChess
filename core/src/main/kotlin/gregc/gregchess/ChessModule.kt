@@ -55,6 +55,9 @@ inline fun <reified T: Component, reified D: ComponentData<T>> ChessModule.regis
     register(RegistryType.COMPONENT_DATA_CLASS, T::class, D::class)
 }
 
+inline fun <reified T: MoveTrait> ChessModule.registerMoveTrait(id: String) =
+    register(RegistryType.MOVE_TRAIT_CLASS, id, T::class)
+
 object GregChessModule : ChessModule("gregchess") {
 
     private fun registerVariants() {
@@ -74,6 +77,18 @@ object GregChessModule : ChessModule("gregchess") {
         registerComponent<AtomicChess.ExplosionManager, AtomicChess.ExplosionManagerData>("explosion_manager")
     }
 
+    private fun registerMoveTraits() {
+        registerMoveTrait<DefaultHalfmoveClockTrait>("halfmove_clock")
+        registerMoveTrait<CastlesTrait>("castles")
+        registerMoveTrait<PromotionTrait>("promotion")
+        registerMoveTrait<NameTrait>("name")
+        registerMoveTrait<CheckTrait>("check")
+        registerMoveTrait<CaptureTrait>("capture")
+        registerMoveTrait<PawnOriginTrait>("pawn_move")
+        registerMoveTrait<PieceOriginTrait>("piece_move")
+        registerMoveTrait<TargetTrait>("target")
+    }
+
     override fun load() {
         PieceType
         EndReason
@@ -81,5 +96,6 @@ object GregChessModule : ChessModule("gregchess") {
         PawnMovement
         registerComponents()
         registerVariants()
+        registerMoveTraits()
     }
 }

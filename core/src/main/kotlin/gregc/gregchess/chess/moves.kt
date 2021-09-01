@@ -7,6 +7,7 @@ import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlin.reflect.KClass
 
+// TODO: serialize flagsAdded in a way that doesn't go out of sync
 @Serializable
 data class Move(
     val piece: PieceInfo, val display: Pos, val floor: Floor,

@@ -1,15 +1,67 @@
 package gregc.gregchess.chess
 
-import kotlinx.serialization.Serializable
+import gregc.gregchess.ChessModule
+import gregc.gregchess.RegistryType
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
 
 class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>): Exception(traits.toList().toString())
 
+@Serializable(with = MoveTraitSerializer::class)
 interface MoveTrait {
     val nameTokens: MoveName
     fun setup(game: ChessGame, move: Move) {}
     fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
     fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
 }
+
+@OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
+@Suppress("UNCHECKED_CAST")
+object MoveTraitSerializer: KSerializer<MoveTrait> {
+    override val descriptor: SerialDescriptor
+        get() = buildClassSerialDescriptor("MoveTrait") {
+            element<String>("type")
+            element("value", buildSerialDescriptor("MoveTraitValue", SerialKind.CONTEXTUAL))
+        }
+
+    override fun serialize(encoder: Encoder, value: MoveTrait) {
+        val actualSerializer = value::class.serializer()
+        val id = RegistryType.MOVE_TRAIT_CLASS.getModule(value::class).namespace + ":" + RegistryType.MOVE_TRAIT_CLASS[value::class]
+        encoder.encodeStructure(descriptor) {
+            encodeStringElement(descriptor, 0, id)
+            encodeSerializableElement(descriptor, 1, actualSerializer as KSerializer<MoveTrait>, value)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): MoveTrait = decoder.decodeStructure(descriptor) {
+        var type: String? = null
+        var ret: MoveTrait? = null
+        if (decodeSequentially()) {
+            type = decodeStringElement(descriptor, 0)
+            val serializer = ChessModule[type.substringBefore(":")][RegistryType.MOVE_TRAIT_CLASS][type.substringAfter(":")].serializer()
+            return decodeSerializableElement(descriptor, 1, serializer)
+        }
+
+        mainLoop@ while (true) {
+            when (val index = decodeElementIndex(descriptor)) {
+                CompositeDecoder.DECODE_DONE -> {
+                    break@mainLoop
+                }
+                0 -> {
+                    type = decodeStringElement(descriptor, index)
+                }
+                1 -> {
+                    val serializer = ChessModule[type!!.substringBefore(":")][RegistryType.MOVE_TRAIT_CLASS][type.substringAfter(":")].serializer()
+                    ret = decodeSerializableElement(descriptor, index, serializer)
+                }
+                else -> throw SerializationException("Invalid index")
+            }
+        }
+        ret!!
+    }
+}
+
 @Serializable
 class DefaultHalfmoveClockTrait(var halfmoveClock: UInt? = null): MoveTrait {
     override val nameTokens = MoveName()

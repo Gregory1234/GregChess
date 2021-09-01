@@ -94,7 +94,7 @@ class PawnMovement(
         @JvmField
         val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType(1u))
         private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
-        private val enPassantOrder = NameOrder(defaultOrder.nameOrder + MoveNameTokenType.EN_PASSANT)
+        private val pawnOrder = with (MoveNameTokenType) { NameOrder(listOf(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)) }
     }
 
     override fun generate(piece: BoardPiece): List<Move> = buildList {
@@ -108,7 +108,7 @@ class PawnMovement(
                 listOf(pos), listOf(forward), listOf(forward), listOf(forward),
                 emptyList(), emptyList(),
                 listOf(PawnOriginTrait(), PromotionTrait(promotions(forward)), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait()),
-                defaultOrder
+                pawnOrder
             ))
         }
         val forward2 = pos + dir * 2
@@ -117,7 +117,7 @@ class PawnMovement(
                 listOf(pos), listOf(forward2), listOf(forward, forward2), listOf(forward, forward2),
                 emptyList(), listOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
                 listOf(PawnOriginTrait(), PromotionTrait(promotions(forward2)), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait()),
-                defaultOrder
+                pawnOrder
             ))
         }
         for (s in BoardSide.values()) {
@@ -128,7 +128,7 @@ class PawnMovement(
                     emptyList(), emptyList(),
                     listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
                         CaptureTrait(capture, true), TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()),
-                    defaultOrder
+                    pawnOrder
                 ))
                 val enPassant = pos + s.dir
                 add(Move(piece.info, capture, ifProm(promotions(forward), Floor.CAPTURE),
@@ -137,7 +137,7 @@ class PawnMovement(
                     listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
                         CaptureTrait(enPassant, true), TargetTrait(capture),
                         NameTrait(MoveName(listOf(MoveNameTokenType.EN_PASSANT.mk))), DefaultHalfmoveClockTrait(), CheckTrait()),
-                    enPassantOrder
+                    pawnOrder
                 ))
             }
         }

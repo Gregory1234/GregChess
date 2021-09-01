@@ -24,6 +24,8 @@ abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) {
         val COMPONENT_CLASS = NameRegistryType<KClass<out Component>>("component_class")
         @JvmField
         val COMPONENT_DATA_CLASS = ConnectedRegistryType<KClass<out Component>, KClass<out ComponentData<*>>>("component_data_class", COMPONENT_CLASS)
+        @JvmField
+        val MOVE_TRAIT_CLASS = NameRegistryType<KClass<out MoveTrait>>("move_trait_class")
     }
 }
 
