@@ -11,8 +11,8 @@ fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
         Move(piece.info, it.pos, defaultColor(it),
             listOf(piece.pos), listOf(it.pos), emptyList(), listOf(it.pos),
             emptyList(), emptyList(),
-            listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), CheckTrait()),
-            defaultOrder
+            listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), DefaultHalfmoveClockTrait(), CheckTrait()),
+            defaultOrder,
         )
     }
 
@@ -24,7 +24,7 @@ fun rays(piece: BoardPiece, dirs: Collection<Dir>) =
                     listOf(piece.pos), listOf(it.pos),
                     PosSteps(piece.pos + dir, dir, index), PosSteps(piece.pos + dir, dir, index+1),
                     emptyList(), emptyList(),
-                    listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), CheckTrait()),
+                    listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), DefaultHalfmoveClockTrait(), CheckTrait()),
                     defaultOrder
                 )
             }
@@ -52,7 +52,7 @@ object KingMovement : MoveScheme {
         ((between(piece.pos.file, pieceTarget.file) + pieceTarget.file + between(rook.pos.file, rookTarget.file) + rookTarget.file).distinct() - rook.pos.file - piece.pos.file).map { Pos(it, piece.pos.rank) },
         (between(piece.pos.file, pieceTarget.file) + pieceTarget.file + piece.pos.file).map { Pos(it, piece.pos.rank) },
         emptyList(), emptyList(),
-        listOf(CastlesTrait(rook.info, side, pieceTarget, rookTarget), CheckTrait()),
+        listOf(CastlesTrait(rook.info, side, pieceTarget, rookTarget), DefaultHalfmoveClockTrait(), CheckTrait()),
         listOf(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE)
     )
 
@@ -104,7 +104,7 @@ class PawnMovement(
             add(Move(piece.info, forward, ifProm(promotions(forward), Floor.MOVE),
                 listOf(pos), listOf(forward), listOf(forward), listOf(forward),
                 emptyList(), emptyList(),
-                listOf(PawnOriginTrait(), PromotionTrait(promotions(forward)), TargetTrait(forward), CheckTrait()),
+                listOf(PawnOriginTrait(), PromotionTrait(promotions(forward)), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait()),
                 defaultOrder
             ))
         }
@@ -113,7 +113,7 @@ class PawnMovement(
             add(Move(piece.info, forward2, ifProm(promotions(forward), Floor.MOVE),
                 listOf(pos), listOf(forward2), listOf(forward, forward2), listOf(forward, forward2),
                 emptyList(), listOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
-                listOf(PawnOriginTrait(), PromotionTrait(promotions(forward2)), TargetTrait(forward2), CheckTrait()),
+                listOf(PawnOriginTrait(), PromotionTrait(promotions(forward2)), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait()),
                 defaultOrder
             ))
         }
@@ -124,7 +124,7 @@ class PawnMovement(
                     listOf(pos), listOf(capture), emptyList(), listOf(capture),
                     emptyList(), emptyList(),
                     listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
-                        CaptureTrait(capture, true), TargetTrait(capture), CheckTrait()),
+                        CaptureTrait(capture, true), TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()),
                     defaultOrder
                 ))
                 val enPassant = pos + s.dir
@@ -133,7 +133,7 @@ class PawnMovement(
                     listOf(Pair(capture, EN_PASSANT)), emptyList(),
                     listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
                         CaptureTrait(enPassant, true), TargetTrait(capture),
-                        NameTrait(listOf(MoveNameTokenType.EN_PASSANT.mk)), CheckTrait()),
+                        NameTrait(listOf(MoveNameTokenType.EN_PASSANT.mk)), DefaultHalfmoveClockTrait(), CheckTrait()),
                     defaultOrder + MoveNameTokenType.EN_PASSANT
                 ))
             }

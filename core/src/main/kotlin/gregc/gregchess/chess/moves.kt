@@ -9,7 +9,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlin.reflect.KClass
 
-
 //@Serializable
 data class Move(
     val piece: PieceInfo, val display: Pos, val floor: Floor,
@@ -53,8 +52,9 @@ data class Move(
             remainingTraits = remainingTraits.filter {
                 !it.undo(game, this, pass.toUByte(), remainingTraits)
             }
-            if (remainingTraits.isEmpty())
+            if (remainingTraits.isEmpty()) {
                 return
+            }
         }
         throw TraitsCouldNotExecuteException(remainingTraits)
     }

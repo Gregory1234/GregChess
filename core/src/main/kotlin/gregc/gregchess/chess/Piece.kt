@@ -142,6 +142,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
             }
             for ((piece, target) in moves) {
                 target.piece = piece
+                piece.hasMoved = true
             }
             org.keys.firstOrNull()?.game?.callEvent(PieceEvent.MultiMoved(org))
         }

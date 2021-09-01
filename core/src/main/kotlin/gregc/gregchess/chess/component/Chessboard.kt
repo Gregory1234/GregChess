@@ -66,7 +66,6 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     var fullmoveClock = initialState.fullmoveClock
         private set
     var halfmoveClock = initialState.halfmoveClock
-        private set
     private val boardHashes = initialState.boardHashes.toMutableMap()
     private val capturedPieces = initialState.capturedPieces.toMutableList()
 
@@ -247,22 +246,6 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         val hash = fen.hashed()
         boardHashes[hash] = (boardHashes[hash] ?: 0) + 1
         return boardHashes[hash]!!
-    }
-
-    fun resetMovesSinceLastCapture(): () -> Unit {
-        // TODO: start handling halfmoveClock in moves
-        val m = halfmoveClock
-        halfmoveClock = 0u
-        return {
-            halfmoveClock = m
-        }
-    }
-
-    fun increaseMovesSinceLastCapture(): () -> Unit {
-        halfmoveClock++
-        return {
-            halfmoveClock--
-        }
     }
 
     fun undoLastMove() {

@@ -10,6 +10,26 @@ interface MoveTrait {
     fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
     fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
 }
+//@Serializable
+class DefaultHalfmoveClockTrait(var halfmoveClock: UInt? = null): MoveTrait {
+    override val nameTokens = emptyList<MoveNameToken<*>>()
+    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        if (remaining.any { it is CaptureTrait })
+            return false
+        halfmoveClock = game.board.halfmoveClock
+        if (move.piece.type == PieceType.PAWN || move.getTrait<CaptureTrait>()?.captured != null) {
+            game.board.halfmoveClock = 0u
+        } else {
+            game.board.halfmoveClock++
+        }
+        return true
+    }
+
+    override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        game.board.halfmoveClock = halfmoveClock!!
+        return true
+    }
+}
 
 @Serializable
 class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, val rookTarget: Pos): MoveTrait {
@@ -45,6 +65,8 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
             boardPiece to targetSquare,
             boardRook to rookTargetSquare
         ))
+        boardPiece.force(false)
+        boardRook.force(false)
         return true
     }
 }
@@ -135,7 +157,7 @@ class PieceOriginTrait(override val nameTokens: MutableList<MoveNameToken<*>> = 
 }
 
 @Serializable
-class TargetTrait(val target: Pos): MoveTrait {
+class TargetTrait(val target: Pos, var hasMoved: Boolean = true): MoveTrait {
     override val nameTokens = listOf(MoveNameTokenType.TARGET.of(target))
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
@@ -145,6 +167,7 @@ class TargetTrait(val target: Pos): MoveTrait {
             game.board[move.piece.pos]?.piece.let { p ->
                 if (p == null)
                     return false
+                hasMoved = p.hasMoved
                 p.move(t)
             }
         }
@@ -159,6 +182,7 @@ class TargetTrait(val target: Pos): MoveTrait {
                 if (p == null)
                     return false
                 p.move(t)
+                p.force(hasMoved)
             }
         }
         return true
