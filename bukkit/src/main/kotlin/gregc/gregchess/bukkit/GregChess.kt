@@ -170,7 +170,7 @@ object GregChess : Listener {
                         else
                             game.board[Pos.parseFromString(this[2])]!!
                         val key = this[1].toKey()
-                        val piece = ChessModule[key.namespace].pieceTypes[key.key]
+                        val piece = RegistryType.PIECE_TYPE[key.namespace,key.key]
                         square.piece?.capture(p.side)
                         game.board += PieceInfo(square.pos, piece.of(Side.valueOf(this[0])), false)
                         square.piece?.sendCreated()

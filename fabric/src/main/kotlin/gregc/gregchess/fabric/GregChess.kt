@@ -58,7 +58,7 @@ object GregChess : ModInitializer {
 
         PIECE_ENTITY_TYPE = BlockEntityType.Builder.create(
             { a, b -> PieceBlockEntity(a, b) },
-            *ChessModule.modules.flatMap { m -> m.pieceBlocks.values.flatMap { it.toList() } }.toTypedArray()
+            *ChessModule.modules.flatMap { m -> m[FabricRegistryTypes.PIECE_BLOCK].values.flatMap { it.toList() } }.toTypedArray()
         ).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
 
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)

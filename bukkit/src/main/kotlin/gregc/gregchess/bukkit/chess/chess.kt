@@ -55,8 +55,6 @@ fun BoardPiece.getInfo() = buildTextComponent {
 }
 
 val KClass<out Component>.componentId get() = componentModule.namespace + ":" + componentName
-@get:JvmName("getComponentDataId")
-val KClass<out ComponentData<*>>.componentId get() = componentModule.namespace + ":" + componentName
 
 val ChessVariant.id get() = module.namespace + ":" + name
 

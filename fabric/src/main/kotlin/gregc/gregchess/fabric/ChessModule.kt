@@ -18,9 +18,6 @@ object FabricRegistryTypes {
     val PIECE_ITEM = ConnectedRegistryType<PieceType, BySides<BlockItem>>("piece_item", RegistryType.PIECE_TYPE)
 }
 
-val ChessModule.pieceBlocks get() = this[FabricRegistryTypes.PIECE_BLOCK]
-val ChessModule.pieceItems get() = this[FabricRegistryTypes.PIECE_ITEM]
-
 fun ChessModule.registerShort(t: PieceType) {
     val blocks = bySides { ShortPieceBlock(t.of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)) }
     register(FabricRegistryTypes.PIECE_BLOCK, t, blocks)

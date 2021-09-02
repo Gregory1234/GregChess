@@ -35,14 +35,11 @@ abstract class ChessModule(val namespace: String) {
     }
 }
 
-val ChessModule.pieceTypes get() = this[RegistryType.PIECE_TYPE]
 fun ChessModule.register(id: String, pieceType: PieceType) = register(RegistryType.PIECE_TYPE, id, pieceType)
 
-val ChessModule.endReasons get() = this[RegistryType.END_REASON]
 fun <T: GameScore> ChessModule.register(id: String, endReason: EndReason<T>) =
     register(RegistryType.END_REASON, id, endReason)
 
-val ChessModule.variants get() = this[RegistryType.VARIANT]
 fun ChessModule.register(id: String, variant: ChessVariant) = register(RegistryType.VARIANT, id, variant)
 
 fun ChessModule.register(id: String, flagType: ChessFlagType) = register(RegistryType.FLAG_TYPE, id, flagType)
