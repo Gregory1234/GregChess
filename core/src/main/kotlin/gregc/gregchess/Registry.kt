@@ -160,3 +160,13 @@ class SingleConnectedRegistry<K, T>(module: ChessModule, val type: SingleConnect
     override val keys: Set<K> get() = members.keys
     override val values: Collection<T> get() = members.values
 }
+
+class ChainRegistryView<K, I, T>(val base: RegistryView<K, I>, val extension: RegistryView<I, T>): RegistryView<K, T> {
+    override fun getOrNull(module: ChessModule, key: K): T? = base.getOrNull(module, key)?.let { extension.getOrNull(module, it) }
+}
+
+class DoubleChainRegistryView<K, I, T>(val base: DoubleRegistryView<K, I>, val extension: DoubleRegistryView<I, T>): DoubleRegistryView<K, T> {
+    override fun getOrNull(module: ChessModule, key: K): T? = base.getOrNull(module, key)?.let { extension.getOrNull(module, it) }
+    override fun getModuleOrNull(value: T): ChessModule? = extension.getModuleOrNull(value)
+    override fun getOrNull(value: T): K? = extension.getOrNull(value)?.let { base.getOrNull(it) }
+}
