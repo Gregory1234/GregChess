@@ -7,7 +7,6 @@ import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlin.reflect.KClass
 
-// TODO: serialize flagsAdded in a way that doesn't go out of sync
 @Serializable
 data class Move(
     val piece: PieceInfo, val display: Pos, val floor: Floor,
@@ -31,7 +30,7 @@ data class Move(
             if (remainingTraits.isEmpty()) {
                 game.variant.finishMove(this, game)
                 for ((p, f) in flagsAdded) {
-                    game.board[p]?.flags?.plusAssign(f)
+                    game.board[p]?.flags?.plusAssign(f.copy())
                 }
                 return
             }
@@ -318,30 +317,3 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
     val rankStr get() = rank?.let { (it + 1).toString() }
     override fun toString(): String = fileStr.orEmpty() + rankStr.orEmpty()
 }
-
-fun getUniquenessCoordinate(piece: BoardPiece, target: Square): UniquenessCoordinate {
-    val game = target.game
-    val pieces = game.board.pieces.filter { it.side == piece.side && it.type == piece.type }
-    val consideredPieces = pieces.filter { p ->
-        p.square.bakedMoves.orEmpty().any { it.getTrait<TargetTrait>()?.target == target.pos && game.variant.isLegal(it, piece.square.game) }
-    }
-    return when {
-        consideredPieces.size == 1 -> UniquenessCoordinate()
-        consideredPieces.count { it.pos.file == piece.pos.file } == 1 -> UniquenessCoordinate(file = piece.pos.file)
-        consideredPieces.count { it.pos.rank == piece.pos.rank } == 1 -> UniquenessCoordinate(rank = piece.pos.rank)
-        else -> UniquenessCoordinate(piece.pos)
-    }
-}
-
-fun checkForChecks(side: Side, game: ChessGame): List<MoveNameToken<*>> {
-    game.board.updateMoves()
-    val pieces = game.board.piecesOf(!side)
-    val inCheck = game.variant.isInCheck(game, !side)
-    val noMoves = pieces.all { game.board.getMoves(it.pos).none { m -> game.variant.isLegal(m, game) } }
-    return when {
-        inCheck && noMoves -> listOf(MoveNameTokenType.CHECKMATE.mk)
-        inCheck -> listOf(MoveNameTokenType.CHECK.mk)
-        else -> emptyList()
-    }
-}
-

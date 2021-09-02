@@ -122,7 +122,6 @@ class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean): NameRegistered {
     override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 }
 
-//TODO: change time left into age
 @Serializable
 data class ChessFlag(val type: ChessFlagType, var age: UInt = 0u) {
     val active get() = type.isActive(age)
