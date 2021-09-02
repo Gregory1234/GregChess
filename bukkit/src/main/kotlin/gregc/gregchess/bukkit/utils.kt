@@ -53,7 +53,7 @@ inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) 
     err(e)
 }
 
-inline fun JavaPlugin.addCommand(name: String, crossinline command: CommandArgs.() -> Unit) {
+fun JavaPlugin.addCommand(name: String, command: CommandArgs.() -> Unit) {
     getCommand(name)?.setExecutor { sender, _, _, args ->
         cTry(sender) {
             command(CommandArgs(sender, args))
@@ -62,7 +62,7 @@ inline fun JavaPlugin.addCommand(name: String, crossinline command: CommandArgs.
     }
 }
 
-inline fun JavaPlugin.addCommandTab(name: String, crossinline tabCompleter: CommandArgs.() -> List<String>?) {
+fun JavaPlugin.addCommandTab(name: String, tabCompleter: CommandArgs.() -> List<String>?) {
     getCommand(name)?.setTabCompleter { sender, _, _, args ->
         tabCompleter(CommandArgs(sender, args))?.toMutableList()
     }
