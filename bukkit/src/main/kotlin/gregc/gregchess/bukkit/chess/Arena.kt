@@ -15,10 +15,10 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.generator.ChunkGenerator
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.Scoreboard
+import org.intellij.lang.annotations.Language
 import java.util.*
 
 internal data class PlayerData(
@@ -110,6 +110,14 @@ class Arena(val name: String, @Transient var game: ChessGame? = null) : Componen
 
         private val spectatorData = defData.copy(gameMode = GameMode.SPECTATOR)
         private val adminData = defData.copy(gameMode = GameMode.CREATIVE)
+        @Language("Json")
+        private val generatorSettings = """
+            {
+              "structures": {"structures": {}}, 
+              "layers": [],
+              "biome":"the_void"
+            }
+            """.trimIndent()
     }
 
     class Usage(val arena: Arena, game: ChessGame) : Component(game) {
@@ -184,23 +192,18 @@ class Arena(val name: String, @Transient var game: ChessGame? = null) : Componen
 
     override fun getComponent(game: ChessGame): Usage = Usage(this, game)
 
-    object WorldGen : ChunkGenerator() {
-        override fun generateChunkData(world: World, random: Random, chunkX: Int, chunkZ: Int, biome: BiomeGrid) =
-            createChunkData(world)
-
-        override fun shouldGenerateCaves() = false
-        override fun shouldGenerateMobs() = false
-        override fun shouldGenerateDecorations() = false
-        override fun shouldGenerateStructures() = false
-    }
 
     val world: World = run {
+        // TODO: allow for creating arenas in existing worlds at specified coordinates, and without generating a chessboard every time
         val world = Bukkit.getWorld(name)
 
         (if (world != null) {
             world
         } else {
-            val ret = Bukkit.createWorld(WorldCreator(name).generator(WorldGen))!!
+            val wc = WorldCreator(name)
+            wc.type(WorldType.FLAT)
+            wc.generatorSettings(generatorSettings)
+            val ret = wc.createWorld()!!
             println("Created arena $name")
             ret
         }).apply {
