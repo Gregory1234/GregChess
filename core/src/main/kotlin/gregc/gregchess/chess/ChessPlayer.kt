@@ -1,12 +1,15 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.interact
+import gregc.gregchess.*
+import kotlinx.serialization.Serializable
 
+@Serializable(with = ChessPlayerInfoSerializer::class)
 interface ChessPlayerInfo {
     val name: String
     fun getPlayer(side: Side, game: ChessGame): ChessPlayer
 }
 
+object ChessPlayerInfoSerializer: ClassRegisteredSerializer<ChessPlayerInfo>("ChessPlayerInfo", RegistryType.PLAYER_TYPE)
 
 abstract class ChessPlayer(val info: ChessPlayerInfo, val side: Side, val game: ChessGame) {
 

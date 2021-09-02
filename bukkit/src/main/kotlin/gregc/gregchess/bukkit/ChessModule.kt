@@ -115,6 +115,11 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
         registerComponent<Arena.Usage, Arena>("arena")
     }
 
+    private fun registerPlayerTypes() = with(GregChessModule) {
+        registerPlayerType<BukkitPlayerInfo>("bukkit")
+        registerPlayerType<Stockfish>("stockfish")
+    }
+
     override fun load() {
         ArenaManager
         ChessGameManager
@@ -122,6 +127,7 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
         registerComponents()
         registerSettings()
         registerMoveNameTokenStrings()
+        registerPlayerTypes()
     }
 }
 

@@ -55,6 +55,9 @@ inline fun <reified T: Component, reified D: ComponentData<T>> ChessModule.regis
 inline fun <reified T: MoveTrait> ChessModule.registerMoveTrait(id: String) =
     register(RegistryType.MOVE_TRAIT_CLASS, id, T::class)
 
+inline fun <reified T: ChessPlayerInfo> ChessModule.registerPlayerType(id: String) =
+    register(RegistryType.PLAYER_TYPE, id, T::class)
+
 object GregChessModule : ChessModule("gregchess") {
 
     private fun registerVariants() {

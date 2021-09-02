@@ -35,6 +35,8 @@ abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String): Regi
         val COMPONENT_DATA_CLASS = ConnectedRegistryType<KClass<out Component>, KClass<out ComponentData<*>>>("component_data_class", COMPONENT_CLASS)
         @JvmField
         val MOVE_TRAIT_CLASS = NameRegistryType<KClass<out MoveTrait>>("move_trait_class")
+        @JvmField
+        val PLAYER_TYPE = NameRegistryType<KClass<out ChessPlayerInfo>>("player_type")
     }
 }
 
