@@ -110,19 +110,19 @@ open class ChessVariant: NameRegistered {
 
         fun pinningMoves(by: Side, pos: Square) =
             allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m ->
-                !m.flagsNeeded.any { (p, f) -> pos.board[p].let { s -> s?.flags?.any { it.type == f && it.timeLeft >= 0 } == false } } &&
+                !m.flagsNeeded.any { (p, f) -> pos.board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } } &&
                 m.neededEmpty.any { pos.board[it]?.piece != null }
             }
 
         fun checkingMoves(by: Side, pos: Square) =
             allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m ->
-                !m.flagsNeeded.any { (p, f) -> pos.board[p].let { s -> s?.flags?.any { it.type == f && it.timeLeft >= 0 } == false } } &&
+                !m.flagsNeeded.any { (p, f) -> pos.board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } } &&
                 m.neededEmpty.mapNotNull { pos.board[it]?.piece }.all { it.side == !m.piece.side && it.type == PieceType.KING }
             }
 
         fun isValid(move: Move, game: ChessGame): Boolean = with(move) {
             val board = game.board
-            if (flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.type == f && it.timeLeft >= 0 } == false } })
+            if (flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } })
                 return false
 
             if (neededEmpty.any { p -> board[p]?.piece != null })

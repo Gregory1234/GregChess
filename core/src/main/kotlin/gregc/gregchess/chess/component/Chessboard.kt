@@ -19,7 +19,7 @@ data class ChessboardState(
     val fullmoveClock: UInt = initialFEN.fullmoveClock,
     val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
     val capturedPieces: List<CapturedPiece> = emptyList(),
-    val flags: List<PosFlag> = listOfNotNull(initialFEN.enPassantSquare?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 0)) }),
+    val flags: List<PosFlag> = listOfNotNull(initialFEN.enPassantSquare?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 1u)) }),
     val moveHistory: List<Move> = emptyList()
 ) : ComponentData<Chessboard> {
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
@@ -132,15 +132,13 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
             for (s in squares.values)
                 for (f in s.flags)
-                    f.timeLeft--
+                    f.age++
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
+                s.flags.removeIf { it.age == 0u }
                 for (f in s.flags) {
-                    f.timeLeft++
-                }
-                s.flags.removeIf { f ->
-                    f.type.startTime.toInt() <= f.timeLeft
+                    f.age--
                 }
             }
         }
@@ -202,7 +200,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
 
         if (fen.enPassantSquare != null) {
-            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(PawnMovement.EN_PASSANT, 0))
+            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(PawnMovement.EN_PASSANT, 1u))
         }
 
         updateMoves()
@@ -227,7 +225,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             boardState,
             game.currentTurn,
             bySides(::castling),
-            squares.values.firstOrNull { s -> s.flags.any { it.type == PawnMovement.EN_PASSANT && it.timeLeft >= 0 } }?.pos,
+            squares.values.firstOrNull { s -> s.flags.any { it.type == PawnMovement.EN_PASSANT && it.active } }?.pos,
             halfmoveClock,
             fullmoveClock
         )

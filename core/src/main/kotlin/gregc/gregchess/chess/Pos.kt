@@ -113,7 +113,7 @@ enum class Floor {
 data class FloorUpdateEvent(val pos: Pos, val floor: Floor) : ChessEvent
 
 @Serializable(with = ChessFlagType.Serializer::class)
-class ChessFlagType(val startTime: UInt): NameRegistered {
+class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean): NameRegistered {
     object Serializer: NameRegisteredSerializer<ChessFlagType>("ChessFlagType", RegistryType.FLAG_TYPE)
 
     override val module get() = RegistryType.FLAG_TYPE.getModule(this)
@@ -124,7 +124,9 @@ class ChessFlagType(val startTime: UInt): NameRegistered {
 
 //TODO: change time left into age
 @Serializable
-data class ChessFlag(val type: ChessFlagType, var timeLeft: Int = type.startTime.toInt())
+data class ChessFlag(val type: ChessFlagType, var age: UInt = 0u) {
+    val active get() = type.isActive(age)
+}
 
 @Serializable
 data class PosFlag(val pos: Pos, val flag: ChessFlag)

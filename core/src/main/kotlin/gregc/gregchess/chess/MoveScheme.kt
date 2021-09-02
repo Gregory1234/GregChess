@@ -92,7 +92,7 @@ class PawnMovement(
     companion object {
         private val defaultPromotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
         @JvmField
-        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType(1u))
+        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u})
         private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
         private val pawnOrder = with (MoveNameTokenType) { NameOrder(listOf(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)) }
     }
