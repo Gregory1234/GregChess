@@ -112,54 +112,9 @@ class MoveNameTokenType<T: Any> private constructor(val cl: KClass<T>, @JvmField
 @JvmInline
 @Serializable(with = NameOrder.Serializer::class)
 value class NameOrder(val nameOrder: List<MoveNameTokenType<*>>) {
-    object Serializer: KSerializer<NameOrder> {
-        @OptIn(ExperimentalSerializationApi::class)
-        override val descriptor: SerialDescriptor
-            get() = object : SerialDescriptor {
-                override val elementsCount: Int = 1
-                override val kind: SerialKind = StructureKind.LIST
-                override val serialName: String = "NameOrder"
-
-                override fun getElementName(index: Int): String = index.toString()
-                override fun getElementIndex(name: String): Int = name.toInt()
-
-                override fun isElementOptional(index: Int): Boolean {
-                    require(index >= 0)
-                    return false
-                }
-
-                override fun getElementAnnotations(index: Int): List<Annotation> {
-                    require(index >= 0)
-                    return emptyList()
-                }
-
-                override fun getElementDescriptor(index: Int): SerialDescriptor {
-                    require(index >= 0)
-                    return MoveNameTokenType.Serializer.descriptor
-                }
-
-            }
-
-        override fun serialize(encoder: Encoder, value: NameOrder) {
-            val size = value.nameOrder.size
-            val composite = encoder.beginCollection(descriptor, size)
-            val iterator = value.nameOrder.iterator()
-            for (index in 0 until size)
-                composite.encodeSerializableElement(descriptor, index, MoveNameTokenType.Serializer, iterator.next())
-            composite.endStructure(descriptor)
-        }
-
-        override fun deserialize(decoder: Decoder): NameOrder {
-            val builder = mutableListOf<MoveNameTokenType<*>>()
-            val compositeDecoder = decoder.beginStructure(descriptor)
-            while (true) {
-                val index = compositeDecoder.decodeElementIndex(descriptor)
-                if (index == CompositeDecoder.DECODE_DONE) break
-                builder.add(index, compositeDecoder.decodeSerializableElement(descriptor, index, MoveNameTokenType.Serializer))
-            }
-            compositeDecoder.endStructure(descriptor)
-            return NameOrder(builder)
-        }
+    object Serializer : CustomListSerializer<NameOrder, MoveNameTokenType<*>>("MoveName", MoveNameTokenType.Serializer) {
+        override fun construct(list: List<MoveNameTokenType<*>>) = NameOrder(list)
+        override fun elements(custom: NameOrder) = custom.nameOrder
     }
 
     fun reorder(tokens: List<MoveNameToken<*>>): MoveName {
@@ -225,53 +180,9 @@ data class MoveNameToken<T: Any>(val type: MoveNameTokenType<T>, val value: T) {
 @Serializable(with = MoveName.Serializer::class)
 value class MoveName(val tokens: MutableList<MoveNameToken<*>>) {
     constructor(tokens: Collection<MoveNameToken<*>> = emptyList()): this(tokens.toMutableList())
-    object Serializer : KSerializer<MoveName> {
-        @OptIn(ExperimentalSerializationApi::class)
-        override val descriptor: SerialDescriptor
-            get() = object : SerialDescriptor {
-                override val elementsCount: Int = 1
-                override val kind: SerialKind = StructureKind.LIST
-                override val serialName: String = "MoveName"
-
-                override fun getElementName(index: Int): String = index.toString()
-                override fun getElementIndex(name: String): Int = name.toInt()
-
-                override fun isElementOptional(index: Int): Boolean {
-                    require(index >= 0)
-                    return false
-                }
-
-                override fun getElementAnnotations(index: Int): List<Annotation> {
-                    require(index >= 0)
-                    return emptyList()
-                }
-
-                override fun getElementDescriptor(index: Int): SerialDescriptor {
-                    require(index >= 0)
-                    return MoveNameToken.Serializer.descriptor
-                }
-            }
-
-        override fun serialize(encoder: Encoder, value: MoveName) {
-            val size = value.tokens.size
-            val composite = encoder.beginCollection(descriptor, size)
-            val iterator = value.tokens.iterator()
-            for (index in 0 until size)
-                composite.encodeSerializableElement(descriptor, index, MoveNameToken.Serializer, iterator.next())
-            composite.endStructure(descriptor)
-        }
-
-        override fun deserialize(decoder: Decoder): MoveName {
-            val builder = mutableListOf<MoveNameToken<*>>()
-            val compositeDecoder = decoder.beginStructure(descriptor)
-            while (true) {
-                val index = compositeDecoder.decodeElementIndex(descriptor)
-                if (index == CompositeDecoder.DECODE_DONE) break
-                builder.add(index, compositeDecoder.decodeSerializableElement(descriptor, index, MoveNameToken.Serializer))
-            }
-            compositeDecoder.endStructure(descriptor)
-            return MoveName(builder)
-        }
+    object Serializer : CustomListSerializer<MoveName, MoveNameToken<*>>("MoveName", MoveNameToken.Serializer) {
+        override fun construct(list: List<MoveNameToken<*>>) = MoveName(list)
+        override fun elements(custom: MoveName) = custom.tokens
     }
 
     val pgn get() = tokens.joinToString("") { it.pgn }

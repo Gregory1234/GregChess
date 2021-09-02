@@ -6,8 +6,17 @@ import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlin.reflect.KClass
 
-abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) {
+interface RegistryView<K, T> {
+    operator fun get(namespace: String, key: K): T = get(ChessModule[namespace], key)
+    fun getOrNull(namespace: String, key: K): T? = ChessModule.getOrNull(namespace)?.let { getOrNull(it, key) }
+    operator fun get(module: ChessModule, key: K): T = getOrNull(module, key)!!
+    fun getOrNull(module: ChessModule, key: K): T?
+}
+
+abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String): RegistryView<K, T> {
     abstract fun createRegistry(module: ChessModule): R
+
+    override fun getOrNull(module: ChessModule, key: K): T? = module[this].getOrNull(key)
 
     companion object {
         @JvmField
@@ -43,12 +52,14 @@ abstract class Registry<K, T, R : Registry<K, T, R>>(val module: ChessModule) {
     abstract val values: Collection<T>
 }
 
-abstract class DoubleRegistryType<K, T, R: DoubleRegistry<K, T, R>>(name: String): RegistryType<K, T, R>(name) {
-    abstract fun getModuleOrNull(value: T): ChessModule?
-    abstract fun getOrNull(value: T): K?
+interface DoubleRegistryView<K, T>: RegistryView<K, T> {
+    fun getModuleOrNull(value: T): ChessModule?
+    fun getOrNull(value: T): K?
     fun getModule(value: T): ChessModule = getModuleOrNull(value)!!
     operator fun get(value: T): K = getOrNull(value)!!
 }
+
+abstract class DoubleRegistryType<K, T, R: DoubleRegistry<K, T, R>>(name: String): RegistryType<K, T, R>(name), DoubleRegistryView<K, T>
 
 abstract class DoubleRegistry<K, T, R: DoubleRegistry<K, T, R>>(module: ChessModule): Registry<K, T, R>(module) {
     abstract fun getKeyOrNull(value: T): K?
