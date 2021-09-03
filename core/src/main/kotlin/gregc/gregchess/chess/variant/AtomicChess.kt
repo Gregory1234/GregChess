@@ -58,11 +58,11 @@ object AtomicChess : ChessVariant() {
         return wk != null && nextToKing(black, wk, board)
     }
 
-    private fun pinningMoves(by: Side, pos: Square) =
-        if (kingHug(pos.board)) emptyList() else Normal.pinningMoves(by, pos)
+    private fun pinningMoves(by: Side, pos: Pos, board: Chessboard) =
+        if (kingHug(board)) emptyList() else Normal.pinningMoves(by, pos, board)
 
-    private fun checkingMoves(by: Side, pos: Square) =
-        if (nextToKing(by, pos.pos, pos.board)) emptyList() else Normal.checkingMoves(by, pos)
+    private fun checkingMoves(by: Side, pos: Pos, board: Chessboard) =
+        if (nextToKing(by, pos, board)) emptyList() else Normal.checkingMoves(by, pos, board)
 
     override fun getPieceMoves(piece: BoardPiece): List<Move> = Normal.getPieceMoves(piece).map {
         if (it.getTrait<CaptureTrait>() != null)
@@ -80,9 +80,10 @@ object AtomicChess : ChessVariant() {
             if (captured != null)
                 return MoveLegality.SPECIAL
 
-            if (passedThrough.mapNotNull { game.board[it] }.all {
-                    checkingMoves(!piece.side, it).isEmpty()
-                }) MoveLegality.LEGAL else MoveLegality.IN_CHECK
+            if (passedThrough.all { checkingMoves(!piece.side, it, game.board).isEmpty() })
+                MoveLegality.LEGAL
+            else
+                MoveLegality.IN_CHECK
         }
 
         val myKing = game.board.kingOf(piece.side) ?: return MoveLegality.IN_CHECK
@@ -91,11 +92,11 @@ object AtomicChess : ChessVariant() {
             if (myKing.pos in captured.pos.neighbours())
                 return MoveLegality.SPECIAL
 
-        val checks = checkingMoves(!piece.side, myKing.square)
+        val checks = checkingMoves(!piece.side, myKing.pos, game.board)
         val capture = getTrait<CaptureTrait>()?.capture
         if (checks.any { ch -> capture != ch.piece.pos && startBlocking.none { it in ch.neededEmpty } })
             return MoveLegality.IN_CHECK
-        val pins = pinningMoves(!piece.side, myKing.square)
+        val pins = pinningMoves(!piece.side, myKing.pos, game.board)
         if (pins.any { pin ->
                 capture != pin.piece.pos &&
                         pin.neededEmpty.filter { game.board[it]?.piece != null }
@@ -105,7 +106,7 @@ object AtomicChess : ChessVariant() {
         return MoveLegality.LEGAL
     }
 
-    override fun isInCheck(king: BoardPiece): Boolean = checkingMoves(!king.side, king.square).isNotEmpty()
+    override fun isInCheck(king: BoardPiece): Boolean = checkingMoves(!king.side, king.pos, king.square.board).isNotEmpty()
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.kingOf(!game.currentTurn) == null)

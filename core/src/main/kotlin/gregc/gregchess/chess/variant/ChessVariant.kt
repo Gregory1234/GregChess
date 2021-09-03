@@ -34,17 +34,18 @@ open class ChessVariant: NameRegistered {
             return MoveLegality.INVALID
 
         if (piece.type == PieceType.KING) {
-            return if (passedThrough.mapNotNull { game.board[it] }.all {
-                    Normal.checkingMoves(!piece.side, it).isEmpty()
-                }) MoveLegality.LEGAL else MoveLegality.IN_CHECK
+            return if (passedThrough.all { Normal.checkingMoves(!piece.side, it, game.board).isEmpty() })
+                MoveLegality.LEGAL
+            else
+                MoveLegality.IN_CHECK
         }
 
         val myKing = game.tryOrStopNull(game.board.kingOf(piece.side))
-        val checks = Normal.checkingMoves(!piece.side, myKing.square)
+        val checks = Normal.checkingMoves(!piece.side, myKing.pos, game.board)
         val capture = getTrait<CaptureTrait>()?.capture
         if (checks.any { ch -> capture != ch.piece.pos && startBlocking.none { it in ch.neededEmpty } })
             return MoveLegality.IN_CHECK
-        val pins = Normal.pinningMoves(!piece.side, myKing.square)
+        val pins = Normal.pinningMoves(!piece.side, myKing.pos, game.board)
         if (pins.any { pin ->
                 capture != pin.piece.pos &&
                         pin.neededEmpty.filter { game.board[it]?.piece != null }
@@ -54,7 +55,7 @@ open class ChessVariant: NameRegistered {
         return MoveLegality.LEGAL
     }
 
-    open fun isInCheck(king: BoardPiece): Boolean = Normal.checkingMoves(!king.side, king.square).isNotEmpty()
+    open fun isInCheck(king: BoardPiece): Boolean = Normal.checkingMoves(!king.side, king.pos, king.square.board).isNotEmpty()
 
     open fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none { m -> game.variant.isLegal(m, game) } }) {
@@ -104,16 +105,16 @@ open class ChessVariant: NameRegistered {
 
     object Normal : ChessVariant() {
 
-        fun pinningMoves(by: Side, pos: Square) =
-            allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m ->
-                !m.flagsNeeded.any { (p, f) -> pos.board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } } &&
-                m.neededEmpty.any { pos.board[it]?.piece != null }
+        fun pinningMoves(by: Side, pos: Pos, board: Chessboard) =
+            allMoves(by, board).filter { it.getTrait<CaptureTrait>()?.capture == pos }.filter { m ->
+                !m.flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } } &&
+                m.neededEmpty.any { board[it]?.piece != null }
             }
 
-        fun checkingMoves(by: Side, pos: Square) =
-            allMoves(by, pos.board).filter { it.getTrait<CaptureTrait>()?.capture == pos.pos }.filter { m ->
-                !m.flagsNeeded.any { (p, f) -> pos.board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } } &&
-                m.neededEmpty.mapNotNull { pos.board[it]?.piece }.all { it.side == !m.piece.side && it.type == PieceType.KING }
+        fun checkingMoves(by: Side, pos: Pos, board: Chessboard) =
+            allMoves(by, board).filter { it.getTrait<CaptureTrait>()?.capture == pos }.filter { m ->
+                !m.flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } } &&
+                m.neededEmpty.mapNotNull { board[it]?.piece }.all { it.side == !m.piece.side && it.type == PieceType.KING }
             }
 
         fun isValid(move: Move, game: ChessGame): Boolean = with(move) {
