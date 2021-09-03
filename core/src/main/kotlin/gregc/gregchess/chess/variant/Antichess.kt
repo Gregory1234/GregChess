@@ -2,6 +2,7 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.register
 
 object Antichess : ChessVariant() {
@@ -27,7 +28,7 @@ object Antichess : ChessVariant() {
             }) MoveLegality.LEGAL else MoveLegality.SPECIAL
     }
 
-    override fun isInCheck(king: BoardPiece) = false
+    override fun isInCheck(king: PieceInfo, board: Chessboard) = false
 
     override fun isInCheck(game: ChessGame, side: Side) = false
 

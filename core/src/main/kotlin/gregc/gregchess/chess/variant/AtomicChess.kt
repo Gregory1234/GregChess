@@ -106,7 +106,7 @@ object AtomicChess : ChessVariant() {
         return MoveLegality.LEGAL
     }
 
-    override fun isInCheck(king: BoardPiece): Boolean = checkingMoves(!king.side, king.pos, king.square.board).isNotEmpty()
+    override fun isInCheck(king: PieceInfo, board: Chessboard): Boolean = checkingMoves(!king.side, king.pos, board).isNotEmpty()
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.kingOf(!game.currentTurn) == null)
