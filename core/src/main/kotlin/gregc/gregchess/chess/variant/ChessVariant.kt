@@ -83,7 +83,7 @@ open class ChessVariant: NameRegistered {
             game.stop(side.lostBy(EndReason.TIMEOUT))
     }
 
-    open fun getPieceMoves(piece: BoardPiece): List<Move> = piece.type.moveScheme.generate(piece)
+    open fun getPieceMoves(piece: PieceInfo, board: Chessboard): List<Move> = piece.type.moveScheme.generate(piece, board)
 
     open fun isInCheck(game: ChessGame, side: Side): Boolean {
         val king = game.board.kingOf(side)

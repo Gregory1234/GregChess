@@ -11,10 +11,10 @@ object Antichess : ChessVariant() {
 
     private val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
 
-    override fun getPieceMoves(piece: BoardPiece): List<Move> = when (piece.type) {
-        PieceType.PAWN -> PawnMovement(promotions = { p -> promotions.map { it.of(p.side) } }).generate(piece)
-        PieceType.KING -> Normal.getPieceMoves(piece).filter { it.getTrait<CastlesTrait>() == null }
-        else -> Normal.getPieceMoves(piece)
+    override fun getPieceMoves(piece: PieceInfo, board: Chessboard): List<Move> = when (piece.type) {
+        PieceType.PAWN -> PawnMovement(promotions = { p -> promotions.map { it.of(p.side) } }).generate(piece, board)
+        PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.getTrait<CastlesTrait>() == null }
+        else -> Normal.getPieceMoves(piece, board)
     }
 
     override fun getLegality(move: Move, game: ChessGame): MoveLegality {

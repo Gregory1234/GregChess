@@ -64,11 +64,8 @@ object AtomicChess : ChessVariant() {
     private fun checkingMoves(by: Side, pos: Pos, board: Chessboard) =
         if (nextToKing(by, pos, board)) emptyList() else Normal.checkingMoves(by, pos, board)
 
-    override fun getPieceMoves(piece: BoardPiece): List<Move> = Normal.getPieceMoves(piece).map {
-        if (it.getTrait<CaptureTrait>() != null)
-            it.copy(traits = it.traits + ExplosionTrait())
-        else
-            it
+    override fun getPieceMoves(piece: PieceInfo, board: Chessboard): List<Move> = Normal.getPieceMoves(piece, board).map {
+        if (it.getTrait<CaptureTrait>() != null) it.copy(traits = it.traits + ExplosionTrait()) else it
     }
 
     override fun getLegality(move: Move, game: ChessGame): MoveLegality = with(move) {

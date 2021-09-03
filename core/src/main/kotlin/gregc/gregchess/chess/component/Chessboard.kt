@@ -175,7 +175,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun updateMoves() {
         for ((_, square) in squares) {
-            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p) }
+            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p.info, this) }
         }
         for ((_, square) in squares) {
             square.bakedMoves?.forEach { it.setup(game) }
