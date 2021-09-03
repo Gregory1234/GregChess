@@ -5,7 +5,8 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.MoveNameTokenType
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.variant.*
+import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.chess.variant.ThreeChecks
 import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
@@ -89,7 +90,6 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
         registerSettings { BukkitRendererSettings(section.getInt("TileSize", 3)) }
         registerConstSettings(BukkitEventRelayData)
         registerSettings { ThreeChecks.CheckCounterData(section.getInt("CheckLimit", 3).toUInt()) }
-        registerConstSettings(AtomicChess.ExplosionManagerData)
         registerConstSettings(BukkitGregChessAdapterData)
     }
 

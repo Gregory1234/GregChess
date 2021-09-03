@@ -3,11 +3,15 @@ package gregc.gregchess.chess
 import gregc.gregchess.ClassRegisteredSerializer
 import gregc.gregchess.RegistryType
 import kotlinx.serialization.Serializable
+import kotlin.reflect.KClass
 
-class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>): Exception(traits.toList().toString())
+class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>):
+    Exception(traits.toList().map { RegistryType.MOVE_TRAIT_CLASS.getModule(it::class).namespace + ":" + RegistryType.MOVE_TRAIT_CLASS[it::class] }.toString())
 
 @Serializable(with = MoveTraitSerializer::class)
 interface MoveTrait {
+    val shouldComeBefore: Collection<KClass<out MoveTrait>> get() = emptyList()
+    val shouldComeAfter: Collection<KClass<out MoveTrait>> get() = emptyList()
     val nameTokens: MoveName
     fun setup(game: ChessGame, move: Move) {}
     fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
@@ -19,9 +23,10 @@ object MoveTraitSerializer: ClassRegisteredSerializer<MoveTrait>("MoveTrait", Re
 @Serializable
 class DefaultHalfmoveClockTrait(var halfmoveClock: UInt? = null): MoveTrait {
     override val nameTokens = MoveName()
+
+    override val shouldComeBefore = listOf(CaptureTrait::class)
+
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        if (remaining.any { it is CaptureTrait })
-            return false
         halfmoveClock = game.board.halfmoveClock
         if (move.piece.type == PieceType.PAWN || move.getTrait<CaptureTrait>()?.captured != null) {
             game.board.halfmoveClock = 0u
@@ -81,6 +86,8 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
 class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? = null): MoveTrait {
     override val nameTokens = MoveName(listOfNotNull(promotion?.type?.let { MoveNameTokenType.PROMOTION.of(it) }))
 
+    override val shouldComeAfter = listOf(TargetTrait::class)
+
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if ((promotions == null) != (promotion == null))
             return false
@@ -93,9 +100,11 @@ class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? 
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        if (game.board[move.piece.pos]?.piece == null)
-            return false
-        game.board[move.piece.pos]?.piece?.promote(move.piece.piece)
+        if (promotion != null) {
+            if (game.board[move.piece.pos]?.piece == null)
+                return false
+            game.board[move.piece.pos]?.piece?.promote(move.piece.piece)
+        }
         return true
     }
 }
@@ -191,12 +200,14 @@ class PieceOriginTrait(override val nameTokens: MoveName = MoveName()): MoveTrai
 class TargetTrait(val target: Pos, var hasMoved: Boolean = false): MoveTrait {
     override val nameTokens = MoveName(listOf(MoveNameTokenType.TARGET.of(target)))
 
+    override val shouldComeBefore = listOf(CaptureTrait::class)
+
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         game.board[target].let { t ->
             if (t == null || t.piece != null)
                 return false
             game.board[move.piece.pos]?.piece.let { p ->
-                if (p == null)
+                if (p?.piece != move.piece.piece)
                     return false
                 hasMoved = p.hasMoved
                 p.move(t)
@@ -210,7 +221,7 @@ class TargetTrait(val target: Pos, var hasMoved: Boolean = false): MoveTrait {
             if (t == null || t.piece != null)
                 return false
             game.board[target]?.piece.let { p ->
-                if (p == null)
+                if (p?.piece != move.piece.piece)
                     return false
                 p.move(t)
                 p.force(hasMoved)

@@ -74,7 +74,6 @@ object GregChessModule : ChessModule("gregchess") {
         registerComponent<Chessboard, ChessboardState>("chessboard")
         registerComponent<ChessClock, ChessClockData>("clock")
         registerComponent<ThreeChecks.CheckCounter, ThreeChecks.CheckCounterData>("check_counter")
-        registerComponent<AtomicChess.ExplosionManager, AtomicChess.ExplosionManagerData>("explosion_manager")
     }
 
     private fun registerMoveTraits() {
@@ -87,6 +86,7 @@ object GregChessModule : ChessModule("gregchess") {
         registerMoveTrait<PawnOriginTrait>("pawn_move")
         registerMoveTrait<PieceOriginTrait>("piece_move")
         registerMoveTrait<TargetTrait>("target")
+        registerMoveTrait<AtomicChess.ExplosionTrait>("explosion")
     }
 
     override fun load() {

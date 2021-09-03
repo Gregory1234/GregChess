@@ -24,8 +24,13 @@ data class Move(
     fun execute(game: ChessGame) {
         var remainingTraits = traits
         for (pass in 0u..255u) {
-            remainingTraits = remainingTraits.filter {
-                !it.execute(game, this, pass.toUByte(), remainingTraits)
+            remainingTraits = remainingTraits.filterNot { mt ->
+                if (remainingTraits.any { it::class in mt.shouldComeBefore })
+                    false
+                else if (remainingTraits.any { mt::class in it.shouldComeAfter })
+                    false
+                else
+                    mt.execute(game, this, pass.toUByte(), remainingTraits)
             }
             if (remainingTraits.isEmpty()) {
                 game.variant.finishMove(this, game)
@@ -43,8 +48,13 @@ data class Move(
     fun undo(game: ChessGame) {
         var remainingTraits = traits
         for (pass in 0u..255u) {
-            remainingTraits = remainingTraits.filter {
-                !it.undo(game, this, pass.toUByte(), remainingTraits)
+            remainingTraits = remainingTraits.filterNot { mt ->
+                if (remainingTraits.any { it::class in mt.shouldComeAfter })
+                    false
+                else if (remainingTraits.any { mt::class in it.shouldComeBefore })
+                    false
+                else
+                    mt.undo(game, this, pass.toUByte(), remainingTraits)
             }
             if (remainingTraits.isEmpty()) {
                 return

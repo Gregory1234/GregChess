@@ -12,13 +12,12 @@ object Antichess : ChessVariant() {
 
     override fun getPieceMoves(piece: BoardPiece): List<Move> = when (piece.type) {
         PieceType.PAWN -> PawnMovement(promotions = { p -> promotions.map { it.of(p.side) } }).generate(piece)
+        PieceType.KING -> Normal.getPieceMoves(piece).filter { it.getTrait<CastlesTrait>() == null }
         else -> Normal.getPieceMoves(piece)
     }
 
     override fun getLegality(move: Move, game: ChessGame): MoveLegality {
         if (!Normal.isValid(move, game))
-            return MoveLegality.INVALID
-        if (move.getTrait<CastlesTrait>() != null)
             return MoveLegality.INVALID
         if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it]?.piece } != null)
             return MoveLegality.LEGAL
