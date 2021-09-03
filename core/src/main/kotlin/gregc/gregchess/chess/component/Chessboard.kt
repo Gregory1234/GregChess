@@ -174,6 +174,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     }
 
     fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
+    fun getLegalMoves(pos: Pos) = squares[pos]?.bakedLegalMoves.orEmpty()
 
     fun updateMoves() {
         for ((_, square) in squares) {

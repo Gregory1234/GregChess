@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.chess.component.Chessboard
 import kotlinx.serialization.Serializable
 import java.util.*
 
@@ -37,6 +38,12 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val type get() = piece.type
     val side get() = piece.side
     val char get() = piece.char
+
+    fun pickUp(board: Chessboard) = board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
+
+    fun placeDown(board: Chessboard) = board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
+
+
 }
 
 sealed class PieceEvent(val piece: PieceInfo) : ChessEvent {
@@ -78,7 +85,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         get() = PieceInfo(pos, piece, hasMoved)
 
     fun sendCreated() {
-        board.callEvent(PieceEvent.Created(info))
+        board.callPieceEvent(PieceEvent.Created(info))
     }
 
     fun move(target: Square) {
@@ -90,24 +97,20 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         val from = square.pos
         square = target
         hasMoved = true
-        board.callEvent(PieceEvent.Moved(info, from))
+        board.callPieceEvent(PieceEvent.Moved(info, from))
     }
-
-    fun pickUp() = board.callEvent(PieceEvent.Action(info, PieceEvent.ActionType.PICK_UP))
-
-    fun placeDown() = board.callEvent(PieceEvent.Action(info, PieceEvent.ActionType.PLACE_DOWN))
 
     fun capture(by: Side): CapturedPiece {
         clear()
         val captured = CapturedPiece(piece, board.nextCapturedPos(type, by))
         board += captured
-        board.callEvent(PieceEvent.Captured(info, captured))
+        board.callPieceEvent(PieceEvent.Captured(info, captured))
         return captured
     }
 
     fun promote(promotion: Piece) {
         square.piece = BoardPiece(promotion, square)
-        board.callEvent(PieceEvent.Promoted(info, square.piece!!.info))
+        board.callPieceEvent(PieceEvent.Promoted(info, square.piece!!.info))
     }
 
     fun force(hasMoved: Boolean) {
@@ -117,11 +120,11 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     fun resurrect(captured: CapturedPiece) {
         board -= captured
         square.piece = this
-        board.callEvent(PieceEvent.Resurrected(info, captured))
+        board.callPieceEvent(PieceEvent.Resurrected(info, captured))
     }
 
     fun clear() {
-        board.callEvent(PieceEvent.Cleared(info))
+        board.callPieceEvent(PieceEvent.Cleared(info))
         square.piece = null
     }
 
@@ -141,7 +144,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
                 target.piece = piece
                 piece.hasMoved = true
             }
-            moves.keys.firstOrNull()?.board?.callEvent(PieceEvent.MultiMoved(org))
+            moves.keys.firstOrNull()?.board?.callPieceEvent(PieceEvent.MultiMoved(org))
         }
     }
 }

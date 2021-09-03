@@ -15,17 +15,17 @@ abstract class ChessPlayer(val info: ChessPlayerInfo, val side: Side, val game: 
 
     val name = info.name
 
-    var held: BoardPiece? = null
+    var held: PieceInfo? = null
         set(v) {
             v?.let {
-                it.square.moveMarker = Floor.NOTHING
-                it.square.bakedLegalMoves?.forEach { m -> m.show(game.board) }
-                it.pickUp()
+                game.board[it.pos]?.moveMarker = Floor.NOTHING
+                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.show(game.board) }
+                it.pickUp(game.board)
             }
             field?.let {
-                it.square.moveMarker = null
-                it.square.bakedLegalMoves?.forEach { m -> m.hide(game.board) }
-                it.placeDown()
+                game.board[it.pos]?.moveMarker = null
+                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.hide(game.board) }
+                it.placeDown(game.board)
             }
             field = v
         }
