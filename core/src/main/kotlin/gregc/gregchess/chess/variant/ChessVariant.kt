@@ -29,8 +29,6 @@ open class ChessVariant: NameRegistered {
 
     open fun chessboardSetup(board: Chessboard) {}
 
-    open fun finishMove(move: Move, game: ChessGame) {}
-
     open fun getLegality(move: Move, game: ChessGame): MoveLegality = with(move) {
         if (!Normal.isValid(move, game))
             return MoveLegality.INVALID
@@ -83,8 +81,6 @@ open class ChessVariant: NameRegistered {
         else
             game.stop(side.lostBy(EndReason.TIMEOUT))
     }
-
-    open fun undoLastMove(move: Move, game: ChessGame) = move.undo(game)
 
     open fun getPieceMoves(piece: BoardPiece): List<Move> = piece.type.moveScheme.generate(piece)
 

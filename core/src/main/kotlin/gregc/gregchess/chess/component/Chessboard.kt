@@ -129,17 +129,17 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             if (game.currentTurn == black) {
                 fullmoveClock++
             }
-            addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
             for (s in squares.values)
                 for (f in s.flags)
                     f.age++
+            addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
-                s.flags.removeIf { it.age == 0u }
                 for (f in s.flags) {
                     f.age--
                 }
+                s.flags.removeIf { it.age == 0u }
             }
         }
         if (e.ending)
@@ -252,7 +252,8 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             it.hideDone(this)
             val hash = getFEN().hashed()
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
-            game.variant.undoLastMove(it, game)
+            it.undo(game)
+            // TODO: this is possibly incorrect
             if (game.currentTurn == white)
                 fullmoveClock--
             moves.removeLast()

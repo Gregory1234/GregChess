@@ -33,7 +33,7 @@ data class Move(
                     mt.execute(game, this, pass.toUByte(), remainingTraits)
             }
             if (remainingTraits.isEmpty()) {
-                game.variant.finishMove(this, game)
+                // TODO: move this into traits
                 for ((p, f) in flagsAdded) {
                     game.board[p]?.flags?.plusAssign(f.copy())
                 }
