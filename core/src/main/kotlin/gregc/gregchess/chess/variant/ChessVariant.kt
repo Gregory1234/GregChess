@@ -12,10 +12,10 @@ open class ChessVariant: NameRegistered {
 
     object Serializer: NameRegisteredSerializer<ChessVariant>("ChessVariant", RegistryType.VARIANT)
 
-    override val module get() = RegistryType.VARIANT.getModule(this)
-    override val name get() = RegistryType.VARIANT[this]
+    final override val module get() = RegistryType.VARIANT.getModule(this)
+    final override val name get() = RegistryType.VARIANT[this]
 
-    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
+    final override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
 
     enum class MoveLegality(val prettyName: String) {
         INVALID("Invalid moves"),

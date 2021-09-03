@@ -10,9 +10,9 @@ import kotlin.reflect.KClass
 @Serializable
 data class Move(
     val piece: PieceInfo, val display: Pos, val floor: Floor,
-    val stopBlocking: Collection<Pos>, val startBlocking: Collection<Pos>,
-    val neededEmpty: Collection<Pos>, val passedThrough: Collection<Pos>,
-    val flagsNeeded: Collection<Pair<Pos, ChessFlagType>>, val flagsAdded: Collection<PosFlag>,
+    val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
+    val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>, // TODO: better way of storing this with serialization in mind
+    val flagsNeeded: Set<Pair<Pos, ChessFlagType>>, val flagsAdded: Set<PosFlag>,
     val traits: List<MoveTrait>, val nameOrder: NameOrder) {
     fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
     inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)

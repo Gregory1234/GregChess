@@ -9,8 +9,8 @@ val defaultOrder = with (MoveNameTokenType) { NameOrder(listOf(PIECE_TYPE, UNIQU
 fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { piece.square.board[it] }.map {
         Move(piece.info, it.pos, defaultColor(it),
-            listOf(piece.pos), listOf(it.pos), emptyList(), listOf(it.pos),
-            emptyList(), emptyList(),
+            setOf(piece.pos), setOf(it.pos), emptySet(), setOf(it.pos),
+            emptySet(), emptySet(),
             listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), DefaultHalfmoveClockTrait(), CheckTrait()),
             defaultOrder,
         )
@@ -21,9 +21,9 @@ fun rays(piece: BoardPiece, dirs: Collection<Dir>) =
         PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
             piece.square.board[pos]?.let {
                 Move(piece.info, it.pos, defaultColor(it),
-                    listOf(piece.pos), listOf(it.pos),
-                    PosSteps(piece.pos + dir, dir, index), PosSteps(piece.pos + dir, dir, index+1),
-                    emptyList(), emptyList(),
+                    setOf(piece.pos), setOf(it.pos),
+                    PosSteps(piece.pos + dir, dir, index).toSet(), PosSteps(piece.pos + dir, dir, index+1).toSet(),
+                    emptySet(), emptySet(),
                     listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), DefaultHalfmoveClockTrait(), CheckTrait()),
                     defaultOrder
                 )
@@ -50,10 +50,10 @@ object KingMovement : MoveScheme {
 
     private fun castles(piece: BoardPiece, rook: BoardPiece, side: BoardSide, display: Pos, pieceTarget: Pos, rookTarget: Pos) = Move(
         piece.info, display, Floor.SPECIAL,
-        listOf(piece.pos, rook.pos), listOf(pieceTarget, rookTarget),
-        ((between(piece.pos.file, pieceTarget.file) + pieceTarget.file + between(rook.pos.file, rookTarget.file) + rookTarget.file).distinct() - rook.pos.file - piece.pos.file).map { Pos(it, piece.pos.rank) },
-        (between(piece.pos.file, pieceTarget.file) + pieceTarget.file + piece.pos.file).map { Pos(it, piece.pos.rank) },
-        emptyList(), emptyList(),
+        setOf(piece.pos, rook.pos), setOf(pieceTarget, rookTarget),
+        ((between(piece.pos.file, pieceTarget.file) + pieceTarget.file + between(rook.pos.file, rookTarget.file) + rookTarget.file).distinct() - rook.pos.file - piece.pos.file).map { Pos(it, piece.pos.rank) }.toSet(),
+        (between(piece.pos.file, pieceTarget.file) + pieceTarget.file + piece.pos.file).map { Pos(it, piece.pos.rank) }.toSet(),
+        emptySet(), emptySet(),
         listOf(CastlesTrait(rook.info, side, pieceTarget, rookTarget), DefaultHalfmoveClockTrait(), CheckTrait()),
         castlesOrder
     )
@@ -105,8 +105,8 @@ class PawnMovement(
         val forward = pos + dir
         if (forward.isValid()) {
             add(Move(piece.info, forward, ifProm(promotions(forward), Floor.MOVE),
-                listOf(pos), listOf(forward), listOf(forward), listOf(forward),
-                emptyList(), emptyList(),
+                setOf(pos), setOf(forward), setOf(forward), setOf(forward),
+                emptySet(), emptySet(),
                 listOf(PawnOriginTrait(), PromotionTrait(promotions(forward)), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait()),
                 pawnOrder
             ))
@@ -114,8 +114,8 @@ class PawnMovement(
         val forward2 = pos + dir * 2
         if (forward2.isValid() && canDouble(piece.info)) {
             add(Move(piece.info, forward2, ifProm(promotions(forward), Floor.MOVE),
-                listOf(pos), listOf(forward2), listOf(forward, forward2), listOf(forward, forward2),
-                emptyList(), listOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
+                setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2),
+                emptySet(), setOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
                 listOf(PawnOriginTrait(), PromotionTrait(promotions(forward2)), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait()),
                 pawnOrder
             ))
@@ -124,16 +124,16 @@ class PawnMovement(
             val capture = pos + dir + s.dir
             if (capture.isValid()) {
                 add(Move(piece.info, capture, ifProm(promotions(forward), Floor.CAPTURE),
-                    listOf(pos), listOf(capture), emptyList(), listOf(capture),
-                    emptyList(), emptyList(),
+                    setOf(pos), setOf(capture), emptySet(), setOf(capture),
+                    emptySet(), emptySet(),
                     listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
                         CaptureTrait(capture, true), TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()),
                     pawnOrder
                 ))
                 val enPassant = pos + s.dir
                 add(Move(piece.info, capture, ifProm(promotions(forward), Floor.CAPTURE),
-                    listOf(pos, enPassant), listOf(capture), emptyList(), listOf(capture),
-                    listOf(Pair(capture, EN_PASSANT)), emptyList(),
+                    setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture),
+                    setOf(Pair(capture, EN_PASSANT)), emptySet(),
                     listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
                         CaptureTrait(enPassant, true), TargetTrait(capture),
                         NameTrait(MoveName(listOf(MoveNameTokenType.EN_PASSANT.mk))), DefaultHalfmoveClockTrait(), CheckTrait()),

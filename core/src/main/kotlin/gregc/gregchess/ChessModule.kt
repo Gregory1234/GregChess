@@ -87,6 +87,7 @@ object GregChessModule : ChessModule("gregchess") {
         registerMoveTrait<PieceOriginTrait>("piece_move")
         registerMoveTrait<TargetTrait>("target")
         registerMoveTrait<AtomicChess.ExplosionTrait>("explosion")
+        registerMoveTrait<ThreeChecks.CheckCounterTrait>("check_counter")
     }
 
     override fun load() {
