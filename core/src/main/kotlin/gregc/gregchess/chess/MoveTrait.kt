@@ -86,7 +86,7 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
 class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? = null): MoveTrait {
     override val nameTokens = MoveName(listOfNotNull(promotion?.type?.let { MoveNameTokenType.PROMOTION.of(it) }))
 
-    override val shouldComeAfter = listOf(TargetTrait::class)
+    override val shouldComeBefore = listOf(TargetTrait::class)
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if ((promotions == null) != (promotion == null))
@@ -94,16 +94,16 @@ class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? 
         if (promotions?.contains(promotion) == false)
             return false
         promotion?.let {
-            game.board[move.piece.pos]?.piece?.promote(it)
+            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.promote(it)
         }
         return true
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if (promotion != null) {
-            if (game.board[move.piece.pos]?.piece == null)
+            if (game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece == null)
                 return false
-            game.board[move.piece.pos]?.piece?.promote(move.piece.piece)
+            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.promote(move.piece.piece)
         }
         return true
     }
