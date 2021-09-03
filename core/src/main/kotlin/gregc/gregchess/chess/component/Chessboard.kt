@@ -95,6 +95,8 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     val moveHistory: List<Move> get() = moves
 
+    val simpleCastling: Boolean get() = game.settings.simpleCastling
+
     val chess960: Boolean
         get() {
             if (initialFEN.chess960)
@@ -270,4 +272,6 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             Pair(cap.count { it.type != PieceType.PAWN }, 0)
         return CapturedPos(by, h.second, h.first)
     }
+
+    fun callPieceEvent(e: PieceEvent) = game.callEvent(e)
 }

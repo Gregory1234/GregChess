@@ -65,8 +65,7 @@ object KingMovement : MoveScheme {
             for (rook in board.piecesOf(piece.side, PieceType.ROOK)) {
                 if (rook.pos.rank == piece.pos.rank && !rook.hasMoved) {
                     val side = if (rook.pos.file < piece.pos.file) queenside else kingside
-                    // TODO: fix this hack
-                    if (board[Pos(0,0)]!!.game.settings.simpleCastling) {
+                    if (board.simpleCastling) {
                         TODO()
                     } else {
                         val target = when(side) {

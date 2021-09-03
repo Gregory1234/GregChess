@@ -39,21 +39,21 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val char get() = piece.char
 }
 
-sealed class PieceEvent(val piece: BoardPiece) : ChessEvent {
-    class Created(piece: BoardPiece) : PieceEvent(piece)
-    class Cleared(piece: BoardPiece) : PieceEvent(piece)
+sealed class PieceEvent(val piece: PieceInfo) : ChessEvent {
+    class Created(piece: PieceInfo) : PieceEvent(piece)
+    class Cleared(piece: PieceInfo) : PieceEvent(piece)
 
     enum class ActionType {
         PICK_UP, PLACE_DOWN
     }
 
-    class Action(piece: BoardPiece, val type: ActionType) : PieceEvent(piece)
+    class Action(piece: PieceInfo, val type: ActionType) : PieceEvent(piece)
 
-    class Moved(piece: BoardPiece, val from: Pos) : PieceEvent(piece)
-    class Captured(piece: BoardPiece, val captured: CapturedPiece) : PieceEvent(piece)
-    class Promoted(piece: BoardPiece, val promotion: BoardPiece) : PieceEvent(piece)
-    class Resurrected(piece: BoardPiece, val captured: CapturedPiece) : PieceEvent(piece)
-    class MultiMoved(val moves: Map<BoardPiece, Pos>) : PieceEvent(moves.keys.first())
+    class Moved(piece: PieceInfo, val from: Pos) : PieceEvent(piece)
+    class Captured(piece: PieceInfo, val captured: CapturedPiece) : PieceEvent(piece)
+    class Promoted(piece: PieceInfo, val promotion: PieceInfo) : PieceEvent(piece)
+    class Resurrected(piece: PieceInfo, val captured: CapturedPiece) : PieceEvent(piece)
+    class MultiMoved(val moves: Map<PieceInfo, Pos>) : PieceEvent(moves.keys.first())
 }
 
 class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
@@ -71,9 +71,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     override fun toString() = "Piece(uniqueId=$uuid, pos=$pos, type=$type, side=$side, hasMoved=$hasMoved)"
 
-    private val game
-        get() = square.game
-
     private val board
         get() = square.board
 
@@ -81,7 +78,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         get() = PieceInfo(pos, piece, hasMoved)
 
     fun sendCreated() {
-        game.callEvent(PieceEvent.Created(this))
+        board.callEvent(PieceEvent.Created(info))
     }
 
     fun move(target: Square) {
@@ -93,24 +90,24 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         val from = square.pos
         square = target
         hasMoved = true
-        game.callEvent(PieceEvent.Moved(this, from))
+        board.callEvent(PieceEvent.Moved(info, from))
     }
 
-    fun pickUp() = game.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
+    fun pickUp() = board.callEvent(PieceEvent.Action(info, PieceEvent.ActionType.PICK_UP))
 
-    fun placeDown() = game.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
+    fun placeDown() = board.callEvent(PieceEvent.Action(info, PieceEvent.ActionType.PLACE_DOWN))
 
     fun capture(by: Side): CapturedPiece {
         clear()
         val captured = CapturedPiece(piece, board.nextCapturedPos(type, by))
         board += captured
-        game.callEvent(PieceEvent.Captured(this, captured))
+        board.callEvent(PieceEvent.Captured(info, captured))
         return captured
     }
 
     fun promote(promotion: Piece) {
         square.piece = BoardPiece(promotion, square)
-        game.callEvent(PieceEvent.Promoted(this, square.piece!!))
+        board.callEvent(PieceEvent.Promoted(info, square.piece!!.info))
     }
 
     fun force(hasMoved: Boolean) {
@@ -120,17 +117,17 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     fun resurrect(captured: CapturedPiece) {
         board -= captured
         square.piece = this
-        game.callEvent(PieceEvent.Resurrected(this, captured))
+        board.callEvent(PieceEvent.Resurrected(info, captured))
     }
 
     fun clear() {
-        game.callEvent(PieceEvent.Cleared(this))
+        board.callEvent(PieceEvent.Cleared(info))
         square.piece = null
     }
 
     companion object {
         fun autoMove(moves: Map<BoardPiece, Square>) {
-            val org = moves.mapValues { (p, _) -> p.pos }
+            val org = moves.map { (p, _) -> p.info to p.pos }.toMap()
             for ((piece, target) in moves) {
                 piece.hasMoved = true
                 target.piece?.let { p ->
@@ -144,7 +141,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
                 target.piece = piece
                 piece.hasMoved = true
             }
-            org.keys.firstOrNull()?.game?.callEvent(PieceEvent.MultiMoved(org))
+            moves.keys.firstOrNull()?.board?.callEvent(PieceEvent.MultiMoved(org))
         }
     }
 }
