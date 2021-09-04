@@ -39,7 +39,7 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val char get() = piece.char
 
     fun checkExists(board: Chessboard) {
-        require(board[pos]?.piece?.info == this)
+        require(board[pos]?.piece == this)
     }
 
     fun pickUp(board: Chessboard) {
@@ -157,20 +157,3 @@ sealed class PieceEvent : ChessEvent {
 }
 
 class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
-
-class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false) {
-    val type = piece.type
-    val side = piece.side
-
-    var square: Square = initSquare
-        private set
-    val pos
-        get() = square.pos
-    var hasMoved = hasMoved
-        private set
-
-    override fun toString() = "Piece(pos=$pos, type=$type, side=$side, hasMoved=$hasMoved)"
-
-    val info
-        get() = PieceInfo(pos, piece, hasMoved)
-}

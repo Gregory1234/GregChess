@@ -12,7 +12,7 @@ object CaptureAll : ChessVariant() {
     override fun timeout(game: ChessGame, side: Side) = game.stop(side.lostBy(EndReason.TIMEOUT))
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none { m -> game.variant.isLegal(m, game) } }) {
+        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
             game.stop(drawBy(EndReason.STALEMATE))
         }
         checkForRepetition()

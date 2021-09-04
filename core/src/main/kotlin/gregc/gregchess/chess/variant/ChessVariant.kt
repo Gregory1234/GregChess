@@ -58,7 +58,7 @@ open class ChessVariant: NameRegistered {
     open fun isInCheck(king: PieceInfo, board: Chessboard): Boolean = Normal.checkingMoves(!king.side, king.pos, board).isNotEmpty()
 
     open fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none { m -> game.variant.isLegal(m, game) } }) {
+        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
             if (isInCheck(game, !game.currentTurn))
                 game.stop(game.currentTurn.wonBy(EndReason.CHECKMATE))
             else
@@ -101,7 +101,7 @@ open class ChessVariant: NameRegistered {
 
     open val optionalComponents: Set<KClass<out Component>> get() = emptySet()
 
-    protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { board.getMoves(it.pos) }
+    protected fun allMoves(side: Side, board: Chessboard) = board.piecesOf(side).flatMap { it.getMoves(board) }
 
     object Normal : ChessVariant() {
 

@@ -26,10 +26,10 @@ object AtomicChess : ChessVariant() {
             if (captureTrait.captured == null)
                 return true
             val pos = targetTrait.target
-            game.board[pos]?.piece?.info?.explode(move.piece.side, game.board)
+            game.board[pos]?.piece?.explode(move.piece.side, game.board)
             game.board[pos]?.neighbours()?.forEach {
                 if (it.piece?.type != PieceType.PAWN)
-                    it.piece?.info?.explode(move.piece.side, game.board)
+                    it.piece?.explode(move.piece.side, game.board)
             }
             game.callEvent(ExplosionEvent(pos))
             return true

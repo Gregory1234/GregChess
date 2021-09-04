@@ -131,7 +131,7 @@ data class ChessFlag(val type: ChessFlagType, var age: UInt = 0u) {
 data class PosFlag(val pos: Pos, val flag: ChessFlag)
 
 data class Square(val pos: Pos, val game: ChessGame) {
-    var piece: BoardPiece? = null
+    var piece: PieceInfo? = null
     val flags = mutableListOf<ChessFlag>()
 
     val posFlags get() = flags.map { PosFlag(pos, it) }
@@ -171,7 +171,7 @@ data class Square(val pos: Pos, val game: ChessGame) {
     override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, floor=$floor, flags=$flags)"
 
     fun empty() {
-        piece?.info?.clear(board)
+        piece?.clear(board)
         bakedMoves = null
         variantMarker = null
         previousMoveMarker = null

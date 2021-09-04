@@ -53,14 +53,13 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     private val squares = (Pair(0, 0)..Pair(7, 7)).map { (i, j) -> Pos(i, j) }.associateWith { p ->
         Square(p, game).also { s ->
             val piece = initialState.pieces[p]
-            if (piece != null)
-                s.piece = BoardPiece(piece.piece, s, piece.hasMoved)
+            s.piece = piece
             s.flags.addAll(initialState.flags.mapNotNull { (p, f) -> if (p == s.pos) f else null })
         }
     }
 
     private val boardState
-        get() = FEN.BoardState.fromPieces(squares.mapNotNull { (p, s) -> s.piece?.info?.let { Pair(p, it) } }.toMap())
+        get() = FEN.BoardState.fromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it) } }.toMap())
 
     val initialFEN = initialState.initialFEN
     var fullmoveClock = initialState.fullmoveClock
@@ -74,18 +73,14 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, posFlags, moveHistory
         )
 
-    val pieces: List<PieceInfo> get() = squares.values.mapNotNull { it.piece?.info }
+    val pieces: List<PieceInfo> get() = squares.values.mapNotNull { it.piece }
 
-    private val piecesByPos get() = squares.mapNotNull { it.value.piece?.info }.associateBy { it.pos }
+    private val piecesByPos get() = squares.mapNotNull { it.value.piece }.associateBy { it.pos }
 
     private val posFlags get() = squares.values.flatMap { it.posFlags }
 
-    operator fun plusAssign(piece: BoardPiece) {
-        piece.square.piece = piece
-    }
-
     operator fun plusAssign(piece: PieceInfo) {
-        this += BoardPiece(piece.piece, this[piece.pos]!!, piece.hasMoved)
+        this[piece.pos]?.piece = piece
     }
 
     operator fun get(pos: Pos) = squares[pos]
@@ -174,7 +169,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun updateMoves() {
         for ((_, square) in squares) {
-            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p.info, this) }
+            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p, this) }
         }
         for ((_, square) in squares) {
             square.bakedMoves?.forEach { it.setup(game) }
@@ -186,9 +181,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun setFromFEN(fen: FEN) {
         squares.values.forEach(Square::empty)
-        fen.forEachSquare(game.variant.pieceTypes) { (pos, p, hm) ->
-            this += BoardPiece(p, this[pos]!!, hm)
-        }
+        fen.forEachSquare(game.variant.pieceTypes) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
 

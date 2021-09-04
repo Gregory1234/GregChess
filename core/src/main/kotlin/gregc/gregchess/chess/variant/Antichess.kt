@@ -35,7 +35,7 @@ object Antichess : ChessVariant() {
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(!game.currentTurn).isEmpty())
             game.stop(game.currentTurn.lostBy(EndReason.ALL_PIECES_LOST))
-        if (piecesOf(!game.currentTurn).all { getMoves(it.pos).none { m -> game.variant.isLegal(m, game) } })
+        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } })
             game.stop(game.currentTurn.lostBy(STALEMATE_VICTORY))
         checkForRepetition()
         checkForFiftyMoveRule()

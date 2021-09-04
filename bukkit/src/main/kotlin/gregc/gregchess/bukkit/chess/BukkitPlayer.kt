@@ -171,14 +171,14 @@ class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
         if (!game.running) return
         val piece = game.board[pos]?.piece ?: return
         if (piece.side != side) return
-        held = piece.info
+        held = piece
         player.inventory.setItem(0, piece.piece.item)
     }
 
     fun makeMove(pos: Pos) {
         if (!game.running) return
         val piece = held ?: return
-        val moves = game.board.getLegalMoves(piece.pos)
+        val moves = piece.getLegalMoves(game.board)
         if (pos != piece.pos && pos !in moves.map { it.display }) return
         held = null
         player.inventory.setItem(0, null)

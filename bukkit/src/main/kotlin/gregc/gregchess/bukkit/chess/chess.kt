@@ -45,7 +45,7 @@ fun PieceInfo.getInfo(game: ChessGame) = buildTextComponent {
     append("Position: $pos\n")
     append(if (hasMoved) "Has moved\n" else "Has not moved\n")
     appendCopy("Game: ${game.uuid}\n", game.uuid)
-    val moves = game.board.getMoves(pos)
+    val moves = getLegalMoves(game.board)
     append("All moves: ${moves.joinToString { it.name.localName }}")
     moves.groupBy { m -> game.variant.getLegality(m, game) }.forEach { (l, m) ->
         append("\n${l.prettyName}: ${m.joinToString { it.name.localName }}")

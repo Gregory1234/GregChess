@@ -57,8 +57,8 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
         )
             return false
         PieceInfo.autoMove(mapOf(
-            boardPiece.info to targetSquare.pos,
-            boardRook.info to rookTargetSquare.pos
+            boardPiece to targetSquare.pos,
+            boardRook to rookTargetSquare.pos
         ), game.board)
         return true
     }
@@ -75,11 +75,11 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
         )
             return false
         PieceInfo.autoMove(mapOf(
-            boardPiece.info to targetSquare.pos,
-            boardRook.info to rookTargetSquare.pos
+            boardPiece to targetSquare.pos,
+            boardRook to rookTargetSquare.pos
         ), game.board)
-        boardPiece.info.copyInPlace(game.board, hasMoved = false)
-        boardRook.info.copyInPlace(game.board, hasMoved = false)
+        boardPiece.copyInPlace(game.board, hasMoved = false)
+        boardRook.copyInPlace(game.board, hasMoved = false)
         return true
     }
 }
@@ -97,7 +97,7 @@ class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? 
             return false
         promotion?.let {
             // TODO: clean this up
-            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.info?.promote(it, game.board)
+            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.promote(it, game.board)
         }
         return true
     }
@@ -107,7 +107,7 @@ class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? 
             // TODO: clean this up
             if (game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece == null)
                 return false
-            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.info?.promote(move.piece.piece, game.board)
+            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.promote(move.piece.piece, game.board)
         }
         return true
     }
@@ -120,7 +120,7 @@ private fun checkForChecks(side: Side, game: ChessGame): MoveNameToken<Unit>? {
     game.board.updateMoves()
     val pieces = game.board.piecesOf(!side)
     val inCheck = game.variant.isInCheck(game, !side)
-    val noMoves = pieces.all { game.board.getMoves(it.pos).none { m -> game.variant.isLegal(m, game) } }
+    val noMoves = pieces.all { it.getMoves(game.board).none { m -> game.variant.isLegal(m, game) } }
     return when {
         inCheck && noMoves -> MoveNameTokenType.CHECKMATE.mk
         inCheck -> MoveNameTokenType.CHECK.mk
@@ -147,7 +147,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var capt
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         game.board[capture]?.piece?.let {
-            captured = it.info.capture(move.piece.side, game.board)
+            captured = it.capture(move.piece.side, game.board)
         }
         return true
     }
@@ -213,7 +213,7 @@ class TargetTrait(val target: Pos, var hasMoved: Boolean = false): MoveTrait {
                 if (p?.piece != move.piece.piece)
                     return false
                 hasMoved = p.hasMoved
-                p.info.move(t.pos, game.board)
+                p.move(t.pos, game.board)
             }
         }
         return true
@@ -227,7 +227,7 @@ class TargetTrait(val target: Pos, var hasMoved: Boolean = false): MoveTrait {
             game.board[target]?.piece.let { p ->
                 if (p?.piece != move.piece.piece)
                     return false
-                p.info.move(t.pos, game.board).copyInPlace(game.board, hasMoved = hasMoved)
+                p.move(t.pos, game.board).copyInPlace(game.board, hasMoved = hasMoved)
             }
         }
         return true
