@@ -87,7 +87,7 @@ open class ChessVariant: NameRegistered {
 
     open fun isInCheck(game: ChessGame, side: Side): Boolean {
         val king = game.board.kingOf(side)
-        return king != null && isInCheck(king.info, game.board)
+        return king != null && isInCheck(king, game.board)
     }
 
     fun isLegal(move: Move, game: ChessGame) = getLegality(move, game) == MoveLegality.LEGAL

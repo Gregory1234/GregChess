@@ -176,7 +176,7 @@ class PawnOriginTrait(override val nameTokens: MoveName = MoveName()): MoveTrait
 private fun getUniquenessCoordinate(piece: PieceInfo, target: Pos, game: ChessGame): UniquenessCoordinate {
     val pieces = game.board.pieces.filter { it.side == piece.side && it.type == piece.type }
     val consideredPieces = pieces.filter { p ->
-        p.square.bakedMoves.orEmpty().any { it.getTrait<TargetTrait>()?.target == target && game.variant.isLegal(it, game) }
+        p.getMoves(game.board).any { it.getTrait<TargetTrait>()?.target == target && game.variant.isLegal(it, game) }
     }
     return when {
         consideredPieces.size == 1 -> UniquenessCoordinate()

@@ -2,7 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.chess.component.Chessboard
 import kotlinx.serialization.Serializable
-import java.util.*
 
 @Serializable
 data class Piece(val type: PieceType, val side: Side) {
@@ -98,6 +97,9 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         return new
     }
 
+    fun getMoves(board: Chessboard) = board.getMoves(pos)
+    fun getLegalMoves(board: Chessboard) = board.getLegalMoves(pos)
+
     companion object {
         fun autoMove(moves: Map<PieceInfo, Pos>, board: Chessboard): Map<PieceInfo, PieceInfo> {
             val pieces = moves.keys
@@ -156,7 +158,7 @@ sealed class PieceEvent : ChessEvent {
 
 class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
 
-class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false, val uuid: UUID = UUID.randomUUID()) {
+class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false) {
     val type = piece.type
     val side = piece.side
 
@@ -167,10 +169,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     var hasMoved = hasMoved
         private set
 
-    override fun toString() = "Piece(uniqueId=$uuid, pos=$pos, type=$type, side=$side, hasMoved=$hasMoved)"
-
-    private val board
-        get() = square.board
+    override fun toString() = "Piece(pos=$pos, type=$type, side=$side, hasMoved=$hasMoved)"
 
     val info
         get() = PieceInfo(pos, piece, hasMoved)

@@ -4,7 +4,6 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.rangeTo
 import kotlinx.serialization.Serializable
-import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
@@ -75,7 +74,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, posFlags, moveHistory
         )
 
-    val pieces: List<BoardPiece> get() = squares.values.mapNotNull { it.piece }
+    val pieces: List<PieceInfo> get() = squares.values.mapNotNull { it.piece?.info }
 
     private val piecesByPos get() = squares.mapNotNull { it.value.piece?.info }.associateBy { it.pos }
 
@@ -152,13 +151,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.START) {
             updateMoves()
-            pieces.forEach { it.info.sendCreated(this) }
+            pieces.forEach { it.sendCreated(this) }
             squares.values.forEach(Square::update)
         }
     }
-
-    operator fun contains(pieceUniqueId: UUID) = pieces.any { it.uuid == pieceUniqueId }
-    operator fun get(pieceUniqueId: UUID) = pieces.firstOrNull { it.uuid == pieceUniqueId }
 
     fun piecesOf(side: Side) = pieces.filter { it.side == side }
     fun piecesOf(side: Side, type: PieceType) = pieces.filter { it.side == side && it.type == type }
@@ -211,7 +207,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         boardHashes.clear()
         addBoardHash(fen)
         game.variant.chessboardSetup(this)
-        pieces.forEach { it.info.sendCreated(this) }
+        pieces.forEach { it.sendCreated(this) }
         game.callEvent(SetFenEvent(fen))
         squares.values.forEach(Square::update)
     }

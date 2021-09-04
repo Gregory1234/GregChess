@@ -76,7 +76,7 @@ object KingMovement : MoveScheme {
                             BoardSide.QUEENSIDE -> piece.pos.copy(file = 3)
                             BoardSide.KINGSIDE -> piece.pos.copy(file = 5)
                         }
-                        add(castles(piece, rook.info, side, if (board.chess960) rook.pos else target, target, rookTarget))
+                        add(castles(piece, rook, side, if (board.chess960) rook.pos else target, target, rookTarget))
                     }
                 }
             }

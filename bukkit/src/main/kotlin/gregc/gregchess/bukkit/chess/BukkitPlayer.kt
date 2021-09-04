@@ -206,7 +206,7 @@ class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
             firstTurn = false
             return
         }
-        val inCheck = king?.let { game.variant.isInCheck(it.info, game.board) } == true
+        val inCheck = king?.let { game.variant.isInCheck(it, game.board) } == true
         sendTitleList(buildList {
             if (inCheck)
                 this += IN_CHECK_TITLE to true

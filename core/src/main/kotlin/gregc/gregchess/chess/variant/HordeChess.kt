@@ -7,7 +7,7 @@ object HordeChess : ChessVariant() {
 
     override fun chessboardSetup(board: Chessboard) {
         for (it in board.piecesOf(white, PieceType.PAWN)) {
-            it.info.copyInPlace(board, hasMoved = false)
+            it.copyInPlace(board, hasMoved = false)
         }
     }
 
