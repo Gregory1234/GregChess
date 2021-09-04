@@ -6,6 +6,7 @@ import gregc.gregchess.bukkit.chess.component.GameEndEvent
 import gregc.gregchess.bukkit.chess.component.TurnEndEvent
 import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -312,7 +313,7 @@ object GregChess : Listener {
                     cWrongArgument {
                         when (nextArg().lowercase()) {
                             "game" -> player.spigot().sendMessage(selectGame().getInfo())
-                            "piece" -> player.spigot().sendMessage(selectPiece().getInfo())
+                            "piece" -> player.spigot().sendMessage(selectPiece().getInfo((player as Player).currentGame!!)) // TODO: clean this up
                             else -> cWrongArgument()
                         }
                     }
@@ -372,20 +373,13 @@ object GregChess : Listener {
                 cPlayer(player)
                 perms("info.ingame")
                 val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                game.board[game.renderer.getPos(player.location.toLoc())]?.piece.cNotNull(PIECE_NOT_FOUND)
+                game.board[game.renderer.getPos(player.location.toLoc())]?.piece?.info.cNotNull(PIECE_NOT_FOUND)
             }
             1 -> {
-                if (isValidUUID(nextArg())) {
-                    perms("info.remote")
-                    val game = ChessGameManager.firstGame { UUID.fromString(latestArg()) in it.board }
-                        .cNotNull(PIECE_NOT_FOUND)
-                    game.board[UUID.fromString(latestArg())]!!
-                } else {
-                    cPlayer(player)
-                    perms("info.ingame")
-                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    game.board[Pos.parseFromString(latestArg())]?.piece.cNotNull(PIECE_NOT_FOUND)
-                }
+                cPlayer(player)
+                perms("info.ingame")
+                val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
+                game.board[Pos.parseFromString(latestArg())]?.piece?.info.cNotNull(PIECE_NOT_FOUND)
             }
             else -> throw CommandException(WRONG_ARGUMENTS_NUMBER)
         }

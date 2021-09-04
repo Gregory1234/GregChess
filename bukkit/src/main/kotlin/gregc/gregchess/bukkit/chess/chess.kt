@@ -40,14 +40,12 @@ val MoveName.localName get() = tokens.joinToString("") { it.localName }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
-fun BoardPiece.getInfo() = buildTextComponent {
+fun PieceInfo.getInfo(game: ChessGame) = buildTextComponent {
     append("Type: $side $type\n")
-    appendCopy("UUID: $uuid\n", uuid)
     append("Position: $pos\n")
     append(if (hasMoved) "Has moved\n" else "Has not moved\n")
-    val game = square.game
     appendCopy("Game: ${game.uuid}\n", game.uuid)
-    val moves = square.bakedMoves.orEmpty()
+    val moves = game.board.getMoves(pos)
     append("All moves: ${moves.joinToString { it.name.localName }}")
     moves.groupBy { m -> game.variant.getLegality(m, game) }.forEach { (l, m) ->
         append("\n${l.prettyName}: ${m.joinToString { it.name.localName }}")
