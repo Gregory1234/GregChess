@@ -138,13 +138,12 @@ class CheckTrait(override val nameTokens: MoveName = MoveName()): MoveTrait {
 }
 
 @Serializable
-class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var captured: PieceInfo? = null, var capturedPiece: CapturedPiece? = null): MoveTrait  {
+class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var captured: CapturedBoardPiece? = null): MoveTrait  {
     override val nameTokens get() = MoveName(listOfNotNull(MoveNameTokenType.CAPTURE.mk.takeIf { captured != null }))
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         game.board[capture]?.piece?.let {
-            captured = it.info
-            capturedPiece = it.capture(move.piece.side)
+            captured = it.info.capture(move.piece.side, game.board)
         }
         return true
     }
@@ -153,8 +152,8 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var capt
         captured?.let {
             if (game.board[it.pos]?.piece != null)
                 return false
-            game.board += it
-            game.board[it.pos]?.piece?.resurrect(capturedPiece!!)
+            game.board += it.piece
+            game.board[it.pos]?.piece?.resurrect(it.captured)
         }
         return true
     }

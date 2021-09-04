@@ -154,7 +154,7 @@ object GregChess : Listener {
                     else
                         cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()
-                    p.game.board[pos]?.piece?.capture(p.side)
+                    p.game.board[pos]?.piece?.info?.capture(p.side, p.game.board)
                     p.game.board.updateMoves()
                     player.sendMessage(BOARD_OP_DONE)
                 }
@@ -171,7 +171,7 @@ object GregChess : Listener {
                             game.board[Pos.parseFromString(this[2])]!!
                         val key = this[1].toKey()
                         val piece = RegistryType.PIECE_TYPE[key.namespace,key.key]
-                        square.piece?.capture(p.side)
+                        square.piece?.info?.capture(p.side, square.board)
                         game.board += PieceInfo(square.pos, piece.of(Side.valueOf(this[0])), false)
                         square.piece?.info?.sendCreated(game.board)
                         game.board.updateMoves()
@@ -185,7 +185,7 @@ object GregChess : Listener {
                     val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     val game = p.game
                     cWrongArgument {
-                        game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
+                        game.board[Pos.parseFromString(this[2])]?.piece?.info?.capture(p.side, game.board)
                         game.board[Pos.parseFromString(this[1])]?.piece?.info?.move(Pos.parseFromString(this[2]), game.board)
                         game.board.updateMoves()
                         player.sendMessage(BOARD_OP_DONE)

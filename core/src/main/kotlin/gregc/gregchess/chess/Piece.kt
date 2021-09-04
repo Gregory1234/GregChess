@@ -75,6 +75,14 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         board.callPieceEvent(PieceEvent.Moved(new, pos))
         return new
     }
+
+    fun capture(by: Side, board: Chessboard): CapturedBoardPiece {
+        clear(board)
+        val captured = CapturedBoardPiece(this, board.nextCapturedPos(type, by))
+        board += captured.captured
+        board.callPieceEvent(PieceEvent.Captured(captured))
+        return captured
+    }
 }
 
 // TODO: make component2 CapturedPiece
@@ -125,13 +133,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     val info
         get() = PieceInfo(pos, piece, hasMoved)
 
-    fun capture(by: Side): CapturedPiece {
-        info.clear(board)
-        val captured = CapturedPiece(piece, board.nextCapturedPos(type, by))
-        board += captured
-        board.callPieceEvent(PieceEvent.Captured(CapturedBoardPiece(info, captured.pos)))
-        return captured
-    }
 
     fun promote(promotion: Piece) {
         square.piece = BoardPiece(promotion, square)

@@ -16,8 +16,8 @@ object AtomicChess : ChessVariant() {
 
         override val shouldComeBefore = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
 
-        private fun BoardPiece.explode() {
-            exploded += CapturedBoardPiece(info, capture(square.game.currentTurn).pos)
+        private fun PieceInfo.explode(by: Side, board: Chessboard) {
+            exploded += capture(by, board)
         }
 
         override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
@@ -26,10 +26,10 @@ object AtomicChess : ChessVariant() {
             if (captureTrait.captured == null)
                 return true
             val pos = targetTrait.target
-            game.board[pos]?.piece?.explode()
+            game.board[pos]?.piece?.info?.explode(move.piece.side, game.board)
             game.board[pos]?.neighbours()?.forEach {
                 if (it.piece?.type != PieceType.PAWN)
-                    it.piece?.explode()
+                    it.piece?.info?.explode(move.piece.side, game.board)
             }
             game.callEvent(ExplosionEvent(pos))
             return true
