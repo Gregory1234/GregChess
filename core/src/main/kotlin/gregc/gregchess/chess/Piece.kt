@@ -77,6 +77,16 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     }
 }
 
+// TODO: make component2 CapturedPiece
+@Serializable
+data class CapturedBoardPiece(val piece: PieceInfo, val capturedPos: CapturedPos) {
+    val captured: CapturedPiece = CapturedPiece(piece.piece, capturedPos)
+    val type: PieceType get() = piece.type
+    val side: Side get() = piece.side
+    val pos: Pos get() = piece.pos
+    val hasMoved: Boolean get() = piece.hasMoved
+}
+
 sealed class PieceEvent(val piece: PieceInfo) : ChessEvent {
     class Created(piece: PieceInfo) : PieceEvent(piece)
     class Cleared(piece: PieceInfo) : PieceEvent(piece)
@@ -88,9 +98,9 @@ sealed class PieceEvent(val piece: PieceInfo) : ChessEvent {
     class Action(piece: PieceInfo, val type: ActionType) : PieceEvent(piece)
 
     class Moved(piece: PieceInfo, val from: Pos) : PieceEvent(piece)
-    class Captured(piece: PieceInfo, val captured: CapturedPiece) : PieceEvent(piece)
+    class Captured(val captured: CapturedBoardPiece) : PieceEvent(captured.piece) // TODO: make captured.pos less confusing
     class Promoted(piece: PieceInfo, val promotion: PieceInfo) : PieceEvent(piece)
-    class Resurrected(piece: PieceInfo, val captured: CapturedPiece) : PieceEvent(piece)
+    class Resurrected(val captured: CapturedBoardPiece) : PieceEvent(captured.piece)
     class MultiMoved(val moves: Map<PieceInfo, Pos>) : PieceEvent(moves.keys.first())
 }
 
@@ -119,7 +129,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         info.clear(board)
         val captured = CapturedPiece(piece, board.nextCapturedPos(type, by))
         board += captured
-        board.callPieceEvent(PieceEvent.Captured(info, captured))
+        board.callPieceEvent(PieceEvent.Captured(CapturedBoardPiece(info, captured.pos)))
         return captured
     }
 
@@ -135,7 +145,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     fun resurrect(captured: CapturedPiece) {
         board -= captured
         square.piece = this
-        board.callPieceEvent(PieceEvent.Resurrected(info, captured))
+        board.callPieceEvent(PieceEvent.Resurrected(CapturedBoardPiece(info, captured.pos)))
     }
 
     companion object {

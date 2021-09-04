@@ -10,15 +10,14 @@ object AtomicChess : ChessVariant() {
 
     class ExplosionEvent(val pos: Pos) : ChessEvent
 
-    // TODO: create a better class for a pair of PieceInfo and CapturedPiece
     @Serializable
-    class ExplosionTrait(val exploded: MutableList<Pair<PieceInfo, CapturedPiece>> = mutableListOf()): MoveTrait {
+    class ExplosionTrait(val exploded: MutableList<CapturedBoardPiece> = mutableListOf()): MoveTrait {
         override val nameTokens: MoveName get() = MoveName()
 
         override val shouldComeBefore = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
 
         private fun BoardPiece.explode() {
-            exploded += Pair(info, capture(square.game.currentTurn))
+            exploded += CapturedBoardPiece(info, capture(square.game.currentTurn).pos)
         }
 
         override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
@@ -37,11 +36,11 @@ object AtomicChess : ChessVariant() {
         }
 
         override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-            for ((p, c) in exploded) {
+            for (p in exploded) {
                 if (game.board[p.pos]?.piece != null)
                     return false
-                game.board += p
-                game.board[p.pos]?.piece?.resurrect(c)
+                game.board += p.piece
+                game.board[p.pos]?.piece?.resurrect(p.captured)
             }
             return true
         }

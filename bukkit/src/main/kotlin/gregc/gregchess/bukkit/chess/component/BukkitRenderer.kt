@@ -171,7 +171,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
             }
             is PieceEvent.Captured -> {
                 clearPiece(loc)
-                piece.render(e.captured.pos.loc)
+                piece.render(e.captured.capturedPos.loc)
                 playPieceSound(pos, "Capture", piece.type)
             }
             is PieceEvent.Promoted -> {
@@ -180,7 +180,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
             }
             is PieceEvent.Resurrected -> {
                 piece.render(loc)
-                clearPiece(e.captured.pos.loc)
+                clearPiece(e.captured.capturedPos.loc)
                 playPieceSound(pos, "Move", piece.type)
             }
             is PieceEvent.MultiMoved -> {
