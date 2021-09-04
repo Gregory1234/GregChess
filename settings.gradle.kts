@@ -14,15 +14,6 @@ pluginManagement {
         id("org.jetbrains.dokka") version dokkaVersion
     }
 }
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        val jacksonOverrideVersion: String by settings
-        classpath("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonOverrideVersion")
-    }
-}
 dependencyResolutionManagement {
     repositories {
         mavenCentral()

@@ -2,6 +2,7 @@
 plugins {
     kotlin("jvm") apply false
     id("org.jetbrains.dokka")
+    id("fabric-loom") apply false
 }
 
 allprojects {
