@@ -43,6 +43,8 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 
     fun placeDown(board: Chessboard) = board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
 
+    fun sendCreated(board: Chessboard) = board.callPieceEvent(PieceEvent.Created(this))
+
 
 }
 
@@ -83,10 +85,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     val info
         get() = PieceInfo(pos, piece, hasMoved)
-
-    fun sendCreated() {
-        board.callPieceEvent(PieceEvent.Created(info))
-    }
 
     fun move(target: Square) {
         target.piece?.let {

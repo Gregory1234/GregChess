@@ -152,7 +152,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.START) {
             updateMoves()
-            pieces.forEach { it.sendCreated() }
+            pieces.forEach { it.info.sendCreated(this) }
             squares.values.forEach(Square::update)
         }
     }
@@ -211,7 +211,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         boardHashes.clear()
         addBoardHash(fen)
         game.variant.chessboardSetup(this)
-        pieces.forEach { it.sendCreated() }
+        pieces.forEach { it.info.sendCreated(this) }
         game.callEvent(SetFenEvent(fen))
         squares.values.forEach(Square::update)
     }

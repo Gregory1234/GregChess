@@ -173,7 +173,7 @@ object GregChess : Listener {
                         val piece = RegistryType.PIECE_TYPE[key.namespace,key.key]
                         square.piece?.capture(p.side)
                         game.board += PieceInfo(square.pos, piece.of(Side.valueOf(this[0])), false)
-                        square.piece?.sendCreated()
+                        square.piece?.info?.sendCreated(game.board)
                         game.board.updateMoves()
                         player.sendMessage(BOARD_OP_DONE)
                     }
