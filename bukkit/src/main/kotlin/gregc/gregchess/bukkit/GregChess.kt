@@ -66,6 +66,7 @@ object GregChess : Listener {
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
+        ExtensionType.extensionTypes += BukkitChessModuleExtension.BUKKIT
         for (p in plugin.server.pluginManager.plugins)
             if (p is BukkitChessPlugin)
                 p.onInitialize()

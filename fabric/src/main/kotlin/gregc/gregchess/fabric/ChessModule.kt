@@ -40,7 +40,13 @@ fun ChessModule.registerTall(t: PieceType, rarity: Rarity) {
     }
 }
 
-object FabricGregChessModule : ChessModuleExtension {
+abstract class FabricChessModuleExtension(module: ChessModule) : ChessModuleExtension(module, FABRIC) {
+    companion object {
+        internal val FABRIC = ExtensionType("fabric")
+    }
+}
+
+object FabricGregChessModule : FabricChessModuleExtension(GregChessModule) {
     @JvmField
     val CHESSBOARD_BROKEN =
         GregChessModule.register("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY, true))

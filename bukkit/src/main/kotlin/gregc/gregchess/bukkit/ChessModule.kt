@@ -42,13 +42,17 @@ inline fun <reified T : ComponentData<*>> ChessModule.registerConstSettings(sett
 fun <T: Any> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameTokenInterpreter<T> = token.toPgnString) =
     register(BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING, token, str)
 
-abstract class BukkitChessModuleExtension(val plugin: Plugin) : ChessModuleExtension {
+abstract class BukkitChessModuleExtension(module: ChessModule, val plugin: Plugin) : ChessModuleExtension(module, BUKKIT) {
+    companion object {
+        internal val BUKKIT = ExtensionType("bukkit")
+    }
+
     open val config: ConfigurationSection get() = plugin.config
 
     open val hookedComponents: Set<KClass<out Component>> = emptySet()
 
-    override fun validate(main: ChessModule) {
-        val components = main[RegistryType.COMPONENT_CLASS].values
+    override fun validate() {
+        val components = module[RegistryType.COMPONENT_CLASS].values
         require(hookedComponents.all { it in components })
     }
 }
@@ -59,7 +63,7 @@ interface BukkitChessPlugin {
     fun onInitialize()
 }
 
-object BukkitGregChessModule : BukkitChessModuleExtension(GregChess.plugin) {
+object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregChess.plugin) {
     private val NO_ARENAS = err("NoArenas")
 
     private val clockSettings: Map<String, ChessClockData>

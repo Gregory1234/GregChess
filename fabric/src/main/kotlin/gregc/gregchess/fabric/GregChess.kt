@@ -1,6 +1,7 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.ChessModule
+import gregc.gregchess.ExtensionType
 import gregc.gregchess.chess.pawn
 import gregc.gregchess.chess.white
 import gregc.gregchess.fabric.chess.*
@@ -53,6 +54,8 @@ object GregChess : ModInitializer {
         }
 
     override fun onInitialize() {
+
+        ExtensionType.extensionTypes += FabricChessModuleExtension.FABRIC
 
         EntrypointUtils.invoke("chess", ChessInitializer::class.java, ChessInitializer::onInitializeChess)
 

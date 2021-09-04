@@ -4,9 +4,17 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
 
-interface ChessModuleExtension {
-    fun load()
-    fun validate(main: ChessModule) {}
+class ExtensionType(val name: String) {
+    companion object {
+        val extensionTypes = mutableSetOf<ExtensionType>()
+    }
+    override fun toString() = "$name@${hashCode().toString(16)}"
+}
+
+abstract class ChessModuleExtension(val module: ChessModule, val extensionType: ExtensionType) {
+    abstract fun load()
+    open fun validate() {}
+    final override fun toString() = "${module.namespace}:${extensionType.name}@${hashCode().toString(16)}"
 }
 
 abstract class ChessModule(val namespace: String) {
@@ -27,12 +35,25 @@ abstract class ChessModule(val namespace: String) {
     }
     protected abstract fun load()
     fun fullLoad() {
+        // TODO: stop using println
         load()
-        extensions.forEach { it.load() }
-        registries.values.forEach { it.validate() }
-        extensions.forEach { it.validate(this) }
-        modules += this
         println("Loaded chess module $this")
+        require(ExtensionType.extensionTypes.all { t -> extensions.count { e -> e.extensionType == t } == 1 })
+        extensions.forEach {
+            if (it.extensionType in ExtensionType.extensionTypes) {
+                it.load()
+                println("Loaded chess extension $it")
+            } else {
+                println("Unknown extension $it")
+            }
+        }
+        registries.values.forEach { it.validate() }
+        println("Validated chess module $this")
+        extensions.forEach {
+            it.validate()
+            println("Validated chess extension $it")
+        }
+        modules += this
     }
 
     final override fun toString() = "$namespace@${hashCode().toString(16)}"
