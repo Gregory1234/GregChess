@@ -40,7 +40,7 @@ val MoveName.localName get() = tokens.joinToString("") { it.localName }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
-fun PieceInfo.getInfo(game: ChessGame) = buildTextComponent {
+fun BoardPiece.getInfo(game: ChessGame) = buildTextComponent {
     append("Type: $side $type\n")
     append("Position: $pos\n")
     append(if (hasMoved) "Has moved\n" else "Has not moved\n")

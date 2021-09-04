@@ -7,7 +7,7 @@ object CaptureAll : ChessVariant() {
     override fun getLegality(move: Move, game: ChessGame): MoveLegality =
         if (Normal.isValid(move, game)) MoveLegality.LEGAL else MoveLegality.INVALID
 
-    override fun isInCheck(king: PieceInfo, board: Chessboard): Boolean = false
+    override fun isInCheck(king: BoardPiece, board: Chessboard): Boolean = false
 
     override fun timeout(game: ChessGame, side: Side) = game.stop(side.lostBy(EndReason.TIMEOUT))
 

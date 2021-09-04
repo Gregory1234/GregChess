@@ -17,7 +17,7 @@ data class FEN(
     @Serializable
     value class BoardState(val state: String) {
         companion object {
-            fun fromPieces(pieces: Map<Pos, PieceInfo>): BoardState {
+            fun fromPieces(pieces: Map<Pos, BoardPiece>): BoardState {
                 val rows = List(8) { ri ->
                     var e = 0
                     buildString {
@@ -65,17 +65,17 @@ data class FEN(
             BoardState(state.split('/').mapIndexed(block).joinToString("/"))
     }
 
-    private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): PieceInfo {
+    private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): BoardPiece {
         val type = PieceType.chooseByChar(pieceTypes, this)
         val side = if (isUpperCase()) white else black
         val hasMoved = type.hasMoved(this@FEN, p, side)
-        return PieceInfo(p, type.of(side), hasMoved)
+        return BoardPiece(p, type.of(side), hasMoved)
     }
 
-    fun forEachSquare(pieceTypes: Collection<PieceType>, f: (PieceInfo) -> Unit) =
+    fun forEachSquare(pieceTypes: Collection<PieceType>, f: (BoardPiece) -> Unit) =
         boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(pieceTypes, p)) }
 
-    fun toPieces(pieceTypes: Collection<PieceType>): Map<Pos, PieceInfo> = buildMap {
+    fun toPieces(pieceTypes: Collection<PieceType>): Map<Pos, BoardPiece> = buildMap {
         forEachSquare(pieceTypes) {
             set(it.pos, it)
         }

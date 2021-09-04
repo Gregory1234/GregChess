@@ -11,12 +11,12 @@ object HordeChess : ChessVariant() {
         }
     }
 
-    private fun pawnCanDouble(piece: PieceInfo): Boolean = when (piece.side) {
+    private fun pawnCanDouble(piece: BoardPiece): Boolean = when (piece.side) {
         Side.WHITE -> piece.pos.rank <= 1
         Side.BLACK -> piece.pos.rank >= 6
     }
 
-    override fun getPieceMoves(piece: PieceInfo, board: Chessboard): List<Move> = when (piece.type) {
+    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when (piece.type) {
         PieceType.PAWN -> PawnMovement(canDouble = { pawnCanDouble(it) }).generate(piece, board)
         else -> Normal.getPieceMoves(piece, board)
     }
@@ -27,7 +27,7 @@ object HordeChess : ChessVariant() {
         else -> MoveLegality.INVALID
     }
 
-    override fun isInCheck(king: PieceInfo, board: Chessboard) = king.side == black && Normal.isInCheck(king, board)
+    override fun isInCheck(king: BoardPiece, board: Chessboard) = king.side == black && Normal.isInCheck(king, board)
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(black).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {

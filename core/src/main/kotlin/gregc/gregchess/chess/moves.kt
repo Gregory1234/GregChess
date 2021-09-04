@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 
 @Serializable
 data class Move(
-    val piece: PieceInfo, val display: Pos, val floor: Floor,
+    val piece: BoardPiece, val display: Pos, val floor: Floor,
     val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
     val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>, // TODO: better way of storing this with serialization in mind
     val flagsNeeded: Set<Pair<Pos, ChessFlagType>>, val flagsAdded: Set<PosFlag>,

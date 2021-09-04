@@ -33,7 +33,7 @@ data class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
 }
 
 @Serializable
-data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
+data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val type get() = piece.type
     val side get() = piece.side
     val char get() = piece.char
@@ -63,7 +63,7 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         board[pos]?.piece = null
     }
 
-    fun move(target: Pos, board: Chessboard): PieceInfo {
+    fun move(target: Pos, board: Chessboard): BoardPiece {
         checkExists(board)
         board[target]?.piece?.let {
             throw PieceAlreadyOccupiesSquareException(it.piece, target)
@@ -82,17 +82,17 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         return captured
     }
 
-    fun promote(promotion: Piece, board: Chessboard): PieceInfo {
+    fun promote(promotion: Piece, board: Chessboard): BoardPiece {
         checkExists(board)
         val new = copyInPlace(board, piece = promotion, hasMoved = false)
         board.callPieceEvent(PieceEvent.Promoted(this, new))
         return new
     }
 
-    fun copyInPlace(board: Chessboard, pos: Pos = this.pos, piece: Piece = this.piece, hasMoved: Boolean = this.hasMoved): PieceInfo {
+    fun copyInPlace(board: Chessboard, pos: Pos = this.pos, piece: Piece = this.piece, hasMoved: Boolean = this.hasMoved): BoardPiece {
         checkExists(board)
         board[this.pos]?.piece = null
-        val new = PieceInfo(pos, piece, hasMoved)
+        val new = BoardPiece(pos, piece, hasMoved)
         board += new
         return new
     }
@@ -101,7 +101,7 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     fun getLegalMoves(board: Chessboard) = board.getLegalMoves(pos)
 
     companion object {
-        fun autoMove(moves: Map<PieceInfo, Pos>, board: Chessboard): Map<PieceInfo, PieceInfo> {
+        fun autoMove(moves: Map<BoardPiece, Pos>, board: Chessboard): Map<BoardPiece, BoardPiece> {
             val pieces = moves.keys
             for (piece in pieces) {
                 piece.checkExists(board)
@@ -121,14 +121,14 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 
 // TODO: make component2 CapturedPiece
 @Serializable
-data class CapturedBoardPiece(val piece: PieceInfo, val capturedPos: CapturedPos) {
+data class CapturedBoardPiece(val piece: BoardPiece, val capturedPos: CapturedPos) {
     val captured: CapturedPiece = CapturedPiece(piece.piece, capturedPos)
     val type: PieceType get() = piece.type
     val side: Side get() = piece.side
     val pos: Pos get() = piece.pos
     val hasMoved: Boolean get() = piece.hasMoved
 
-    fun resurrect(board: Chessboard): PieceInfo {
+    fun resurrect(board: Chessboard): BoardPiece {
         board[pos]?.piece?.let {
             throw PieceAlreadyOccupiesSquareException(it.piece, pos)
         }
@@ -140,20 +140,20 @@ data class CapturedBoardPiece(val piece: PieceInfo, val capturedPos: CapturedPos
 }
 
 sealed class PieceEvent : ChessEvent {
-    class Created(val piece: PieceInfo) : PieceEvent()
-    class Cleared(val piece: PieceInfo) : PieceEvent()
+    class Created(val piece: BoardPiece) : PieceEvent()
+    class Cleared(val piece: BoardPiece) : PieceEvent()
 
     enum class ActionType {
         PICK_UP, PLACE_DOWN
     }
 
-    class Action(val piece: PieceInfo, val type: ActionType) : PieceEvent()
+    class Action(val piece: BoardPiece, val type: ActionType) : PieceEvent()
 
-    class Moved(val piece: PieceInfo, val from: Pos) : PieceEvent()
+    class Moved(val piece: BoardPiece, val from: Pos) : PieceEvent()
     class Captured(val piece: CapturedBoardPiece) : PieceEvent()
-    class Promoted(val piece: PieceInfo, val promotion: PieceInfo) : PieceEvent()
+    class Promoted(val piece: BoardPiece, val promotion: BoardPiece) : PieceEvent()
     class Resurrected(val piece: CapturedBoardPiece) : PieceEvent()
-    class MultiMoved(val moves: Map<PieceInfo, PieceInfo>) : PieceEvent()
+    class MultiMoved(val moves: Map<BoardPiece, BoardPiece>) : PieceEvent()
 }
 
 class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")

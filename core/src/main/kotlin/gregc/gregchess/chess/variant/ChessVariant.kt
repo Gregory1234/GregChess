@@ -55,7 +55,7 @@ open class ChessVariant: NameRegistered {
         return MoveLegality.LEGAL
     }
 
-    open fun isInCheck(king: PieceInfo, board: Chessboard): Boolean = Normal.checkingMoves(!king.side, king.pos, board).isNotEmpty()
+    open fun isInCheck(king: BoardPiece, board: Chessboard): Boolean = Normal.checkingMoves(!king.side, king.pos, board).isNotEmpty()
 
     open fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
@@ -83,7 +83,7 @@ open class ChessVariant: NameRegistered {
             game.stop(side.lostBy(EndReason.TIMEOUT))
     }
 
-    open fun getPieceMoves(piece: PieceInfo, board: Chessboard): List<Move> = piece.type.moveScheme.generate(piece, board)
+    open fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = piece.type.moveScheme.generate(piece, board)
 
     open fun isInCheck(game: ChessGame, side: Side): Boolean {
         val king = game.board.kingOf(side)

@@ -11,7 +11,7 @@ object Antichess : ChessVariant() {
 
     private val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
 
-    override fun getPieceMoves(piece: PieceInfo, board: Chessboard): List<Move> = when (piece.type) {
+    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when (piece.type) {
         PieceType.PAWN -> PawnMovement(promotions = { p -> promotions.map { it.of(p.side) } }).generate(piece, board)
         PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.getTrait<CastlesTrait>() == null }
         else -> Normal.getPieceMoves(piece, board)
@@ -28,7 +28,7 @@ object Antichess : ChessVariant() {
             }) MoveLegality.LEGAL else MoveLegality.SPECIAL
     }
 
-    override fun isInCheck(king: PieceInfo, board: Chessboard) = false
+    override fun isInCheck(king: BoardPiece, board: Chessboard) = false
 
     override fun isInCheck(game: ChessGame, side: Side) = false
 

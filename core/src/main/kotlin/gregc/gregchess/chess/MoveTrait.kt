@@ -43,7 +43,7 @@ class DefaultHalfmoveClockTrait(var halfmoveClock: UInt? = null): MoveTrait {
 }
 
 @Serializable
-class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, val rookTarget: Pos): MoveTrait {
+class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, val rookTarget: Pos): MoveTrait {
     override val nameTokens = MoveName(listOf(MoveNameTokenType.CASTLE.of(side)))
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         // TODO: clean this up
@@ -56,7 +56,7 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
             rookTargetSquare == null || (rookTarget != move.piece.pos && rookTargetSquare.piece != null)
         )
             return false
-        PieceInfo.autoMove(mapOf(
+        BoardPiece.autoMove(mapOf(
             boardPiece to targetSquare.pos,
             boardRook to rookTargetSquare.pos
         ), game.board)
@@ -74,7 +74,7 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
             rookTargetSquare == null || (rookTarget != move.piece.pos && rookTargetSquare.piece != null)
         )
             return false
-        PieceInfo.autoMove(mapOf(
+        BoardPiece.autoMove(mapOf(
             boardPiece to targetSquare.pos,
             boardRook to rookTargetSquare.pos
         ), game.board)
@@ -173,7 +173,7 @@ class PawnOriginTrait(override val nameTokens: MoveName = MoveName()): MoveTrait
     }
 }
 
-private fun getUniquenessCoordinate(piece: PieceInfo, target: Pos, game: ChessGame): UniquenessCoordinate {
+private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessGame): UniquenessCoordinate {
     val pieces = game.board.pieces.filter { it.side == piece.side && it.type == piece.type }
     val consideredPieces = pieces.filter { p ->
         p.getMoves(game.board).any { it.getTrait<TargetTrait>()?.target == target && game.variant.isLegal(it, game) }

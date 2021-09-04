@@ -13,7 +13,7 @@ class SetFenEvent(val FEN: FEN) : ChessEvent
 @Serializable
 data class ChessboardState(
     val initialFEN: FEN,
-    val pieces: Map<Pos, PieceInfo>,
+    val pieces: Map<Pos, BoardPiece>,
     val halfmoveClock: UInt = initialFEN.halfmoveClock,
     val fullmoveClock: UInt = initialFEN.fullmoveClock,
     val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
@@ -73,13 +73,13 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, posFlags, moveHistory
         )
 
-    val pieces: List<PieceInfo> get() = squares.values.mapNotNull { it.piece }
+    val pieces: List<BoardPiece> get() = squares.values.mapNotNull { it.piece }
 
     private val piecesByPos get() = squares.mapNotNull { it.value.piece }.associateBy { it.pos }
 
     private val posFlags get() = squares.values.flatMap { it.posFlags }
 
-    operator fun plusAssign(piece: PieceInfo) {
+    operator fun plusAssign(piece: BoardPiece) {
         this[piece.pos]?.piece = piece
     }
 

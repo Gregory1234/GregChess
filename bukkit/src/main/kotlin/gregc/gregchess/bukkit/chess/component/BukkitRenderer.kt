@@ -83,7 +83,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
     }
 
-    private fun PieceInfo.render() = piece.render(pos.loc)
+    private fun BoardPiece.render() = piece.render(pos.loc)
 
     private fun CapturedPiece.render() = piece.render(pos.loc)
 
@@ -93,7 +93,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         }
     }
 
-    private fun PieceInfo.clearRender() = clearPiece(pos.loc)
+    private fun BoardPiece.clearRender() = clearPiece(pos.loc)
 
     private fun CapturedPiece.clearRender() = clearPiece(pos.loc)
 
@@ -102,7 +102,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     private fun playPieceSound(pos: Pos, sound: String, type: PieceType) =
         world.playSound(pos.location, type.getSound(sound), 3.0f, 1.0f)
 
-    private fun PieceInfo.playSound(sound: String) = playPieceSound(pos, sound, type)
+    private fun BoardPiece.playSound(sound: String) = playPieceSound(pos, sound, type)
 
     @ChessEventHandler
     fun handleExplosion(e: AtomicChess.ExplosionEvent) {

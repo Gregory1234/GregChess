@@ -65,7 +65,7 @@ object ThreeChecks : ChessVariant() {
     @JvmField
     val CHECK_LIMIT = GregChessModule.register("check_limit", DetEndReason(EndReason.Type.NORMAL))
 
-    override fun getPieceMoves(piece: PieceInfo, board: Chessboard): List<Move> = Normal.getPieceMoves(piece, board).map {
+    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = Normal.getPieceMoves(piece, board).map {
         it.copy(traits = it.traits + CheckCounterTrait())
     }
 

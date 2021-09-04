@@ -7,7 +7,7 @@ fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Flo
 
 val defaultOrder = with (MoveNameTokenType) { NameOrder(listOf(PIECE_TYPE, UNIQUENESS_COORDINATE, CAPTURE, TARGET, CHECK, CHECKMATE)) }
 
-fun jumps(piece: PieceInfo, board: Chessboard, dirs: Collection<Dir>) =
+fun jumps(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { board[it] }.map {
         Move(piece, it.pos, defaultColor(it),
             setOf(piece.pos), setOf(it.pos), emptySet(), setOf(it.pos),
@@ -17,7 +17,7 @@ fun jumps(piece: PieceInfo, board: Chessboard, dirs: Collection<Dir>) =
         )
     }
 
-fun rays(piece: PieceInfo, board: Chessboard, dirs: Collection<Dir>) =
+fun rays(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
     dirs.flatMap { dir ->
         PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
             board[pos]?.let {
@@ -34,22 +34,22 @@ fun rays(piece: PieceInfo, board: Chessboard, dirs: Collection<Dir>) =
 
 
 fun interface MoveScheme {
-    fun generate(piece: PieceInfo, board: Chessboard): List<Move>
+    fun generate(piece: BoardPiece, board: Chessboard): List<Move>
 }
 
 class JumpMovement(private val dirs: Collection<Dir>) : MoveScheme {
-    override fun generate(piece: PieceInfo, board: Chessboard): List<Move> = jumps(piece, board, dirs)
+    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = jumps(piece, board, dirs)
 }
 
 class RayMovement(private val dirs: Collection<Dir>) : MoveScheme {
-    override fun generate(piece: PieceInfo, board: Chessboard): List<Move> = rays(piece, board, dirs)
+    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = rays(piece, board, dirs)
 }
 
 object KingMovement : MoveScheme {
 
     private val castlesOrder = NameOrder(listOf(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE))
 
-    private fun castles(piece: PieceInfo, rook: PieceInfo, side: BoardSide, display: Pos, pieceTarget: Pos, rookTarget: Pos) = Move(
+    private fun castles(piece: BoardPiece, rook: BoardPiece, side: BoardSide, display: Pos, pieceTarget: Pos, rookTarget: Pos) = Move(
         piece, display, Floor.SPECIAL,
         setOf(piece.pos, rook.pos), setOf(pieceTarget, rookTarget),
         ((between(piece.pos.file, pieceTarget.file) + pieceTarget.file + between(rook.pos.file, rookTarget.file) + rookTarget.file).distinct() - rook.pos.file - piece.pos.file).map { Pos(it, piece.pos.rank) }.toSet(),
@@ -59,7 +59,7 @@ object KingMovement : MoveScheme {
         castlesOrder
     )
 
-    override fun generate(piece: PieceInfo, board: Chessboard): List<Move> = buildList {
+    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
         addAll(jumps(piece, board, rotationsOf(1, 0) + rotationsOf(1, 1)))
         if (!piece.hasMoved) {
             for (rook in board.piecesOf(piece.side, PieceType.ROOK)) {
@@ -87,8 +87,8 @@ object KingMovement : MoveScheme {
 
 
 class PawnMovement(
-    private val canDouble: (PieceInfo) -> Boolean = { !it.hasMoved },
-    private val promotions: (PieceInfo) -> List<Piece> = { p -> defaultPromotions.map { it.of(p.side) } }
+    private val canDouble: (BoardPiece) -> Boolean = { !it.hasMoved },
+    private val promotions: (BoardPiece) -> List<Piece> = { p -> defaultPromotions.map { it.of(p.side) } }
 ) : MoveScheme {
     companion object {
         private val defaultPromotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
@@ -98,7 +98,7 @@ class PawnMovement(
         private val pawnOrder = with (MoveNameTokenType) { NameOrder(listOf(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)) }
     }
 
-    override fun generate(piece: PieceInfo, board: Chessboard): List<Move> = buildList {
+    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
         fun promotions(pos: Pos) = if (pos.rank in listOf(0, 7)) promotions(piece) else null
 
         val dir = piece.side.dir

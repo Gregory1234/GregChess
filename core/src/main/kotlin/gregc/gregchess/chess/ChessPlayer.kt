@@ -15,7 +15,7 @@ abstract class ChessPlayer(val info: ChessPlayerInfo, val side: Side, val game: 
 
     val name = info.name
 
-    var held: PieceInfo? = null
+    var held: BoardPiece? = null
         set(v) {
             v?.let {
                 game.board[it.pos]?.moveMarker = Floor.NOTHING

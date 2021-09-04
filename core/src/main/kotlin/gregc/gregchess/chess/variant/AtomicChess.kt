@@ -16,7 +16,7 @@ object AtomicChess : ChessVariant() {
 
         override val shouldComeBefore = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
 
-        private fun PieceInfo.explode(by: Side, board: Chessboard) {
+        private fun BoardPiece.explode(by: Side, board: Chessboard) {
             exploded += capture(by, board)
         }
 
@@ -62,7 +62,7 @@ object AtomicChess : ChessVariant() {
     private fun checkingMoves(by: Side, pos: Pos, board: Chessboard) =
         if (nextToKing(by, pos, board)) emptyList() else Normal.checkingMoves(by, pos, board)
 
-    override fun getPieceMoves(piece: PieceInfo, board: Chessboard): List<Move> = Normal.getPieceMoves(piece, board).map {
+    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = Normal.getPieceMoves(piece, board).map {
         if (it.getTrait<CaptureTrait>() != null) it.copy(traits = it.traits + ExplosionTrait()) else it
     }
 
@@ -101,7 +101,7 @@ object AtomicChess : ChessVariant() {
         return MoveLegality.LEGAL
     }
 
-    override fun isInCheck(king: PieceInfo, board: Chessboard): Boolean = checkingMoves(!king.side, king.pos, board).isNotEmpty()
+    override fun isInCheck(king: BoardPiece, board: Chessboard): Boolean = checkingMoves(!king.side, king.pos, board).isNotEmpty()
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.kingOf(!game.currentTurn) == null)
