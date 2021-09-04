@@ -93,6 +93,16 @@ data class CapturedBoardPiece(val piece: PieceInfo, val capturedPos: CapturedPos
     val side: Side get() = piece.side
     val pos: Pos get() = piece.pos
     val hasMoved: Boolean get() = piece.hasMoved
+
+    fun resurrect(board: Chessboard): PieceInfo {
+        board[pos]?.piece?.let {
+            throw PieceAlreadyOccupiesSquareException(it.piece, pos)
+        }
+        board -= captured
+        board += piece
+        board.callPieceEvent(PieceEvent.Resurrected(this))
+        return piece
+    }
 }
 
 sealed class PieceEvent(val piece: PieceInfo) : ChessEvent {
@@ -141,12 +151,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     fun force(hasMoved: Boolean) {
         this.hasMoved = hasMoved
-    }
-
-    fun resurrect(captured: CapturedPiece) {
-        board -= captured
-        square.piece = this
-        board.callPieceEvent(PieceEvent.Resurrected(CapturedBoardPiece(info, captured.pos)))
     }
 
     companion object {

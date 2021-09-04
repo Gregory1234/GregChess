@@ -39,8 +39,7 @@ object AtomicChess : ChessVariant() {
             for (p in exploded) {
                 if (game.board[p.pos]?.piece != null)
                     return false
-                game.board += p.piece
-                game.board[p.pos]?.piece?.resurrect(p.captured)
+                p.resurrect(game.board)
             }
             return true
         }

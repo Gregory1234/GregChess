@@ -152,8 +152,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var capt
         captured?.let {
             if (game.board[it.pos]?.piece != null)
                 return false
-            game.board += it.piece
-            game.board[it.pos]?.piece?.resurrect(it.captured)
+            it.resurrect(game.board)
         }
         return true
     }
