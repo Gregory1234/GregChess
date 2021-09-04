@@ -186,7 +186,7 @@ object GregChess : Listener {
                     val game = p.game
                     cWrongArgument {
                         game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side)
-                        game.board[Pos.parseFromString(this[1])]?.piece?.move(game.board[Pos.parseFromString(this[2])]!!)
+                        game.board[Pos.parseFromString(this[1])]?.piece?.info?.move(Pos.parseFromString(this[2]), game.board)
                         game.board.updateMoves()
                         player.sendMessage(BOARD_OP_DONE)
                     }

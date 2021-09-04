@@ -39,15 +39,41 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val side get() = piece.side
     val char get() = piece.char
 
-    fun pickUp(board: Chessboard) = board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
+    fun checkExists(board: Chessboard) {
+        require(board[pos]?.piece?.info == this)
+    }
 
-    fun placeDown(board: Chessboard) = board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
+    fun pickUp(board: Chessboard) {
+        checkExists(board)
+        board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
+    }
 
-    fun sendCreated(board: Chessboard) = board.callPieceEvent(PieceEvent.Created(this))
+    fun placeDown(board: Chessboard) {
+        checkExists(board)
+        board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
+    }
+
+    fun sendCreated(board: Chessboard) {
+        checkExists(board)
+        board.callPieceEvent(PieceEvent.Created(this))
+    }
 
     fun clear(board: Chessboard) {
+        checkExists(board)
         board.callPieceEvent(PieceEvent.Cleared(this))
         board[pos]?.piece = null
+    }
+
+    fun move(target: Pos, board: Chessboard): PieceInfo {
+        checkExists(board)
+        board[target]?.piece?.let {
+            throw PieceAlreadyOccupiesSquareException(it.piece, target)
+        }
+        val new = copy(pos = target, hasMoved = true)
+        board += new
+        board[pos]?.piece = null
+        board.callPieceEvent(PieceEvent.Moved(new, pos))
+        return new
     }
 }
 
@@ -88,18 +114,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     val info
         get() = PieceInfo(pos, piece, hasMoved)
-
-    fun move(target: Square) {
-        target.piece?.let {
-            throw PieceAlreadyOccupiesSquareException(it.piece, target.pos)
-        }
-        target.piece = this
-        square.piece = null
-        val from = square.pos
-        square = target
-        hasMoved = true
-        board.callPieceEvent(PieceEvent.Moved(info, from))
-    }
 
     fun capture(by: Side): CapturedPiece {
         info.clear(board)

@@ -203,6 +203,7 @@ class TargetTrait(val target: Pos, var hasMoved: Boolean = false): MoveTrait {
     override val shouldComeBefore = listOf(CaptureTrait::class)
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        // TODO: clean this up
         game.board[target].let { t ->
             if (t == null || t.piece != null)
                 return false
@@ -210,21 +211,22 @@ class TargetTrait(val target: Pos, var hasMoved: Boolean = false): MoveTrait {
                 if (p?.piece != move.piece.piece)
                     return false
                 hasMoved = p.hasMoved
-                p.move(t)
+                p.info.move(t.pos, game.board)
             }
         }
         return true
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        // TODO: clean this up
         game.board[move.piece.pos].let { t ->
             if (t == null || t.piece != null)
                 return false
             game.board[target]?.piece.let { p ->
                 if (p?.piece != move.piece.piece)
                     return false
-                p.move(t)
-                p.force(hasMoved)
+                p.info.move(t.pos, game.board)
+                game.board[move.piece.pos]?.piece?.force(hasMoved)
             }
         }
         return true
