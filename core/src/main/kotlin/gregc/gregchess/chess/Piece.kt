@@ -45,7 +45,10 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 
     fun sendCreated(board: Chessboard) = board.callPieceEvent(PieceEvent.Created(this))
 
-
+    fun clear(board: Chessboard) {
+        board.callPieceEvent(PieceEvent.Cleared(this))
+        board[pos]?.piece = null
+    }
 }
 
 sealed class PieceEvent(val piece: PieceInfo) : ChessEvent {
@@ -99,7 +102,7 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
     }
 
     fun capture(by: Side): CapturedPiece {
-        clear()
+        info.clear(board)
         val captured = CapturedPiece(piece, board.nextCapturedPos(type, by))
         board += captured
         board.callPieceEvent(PieceEvent.Captured(info, captured))
@@ -119,11 +122,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
         board -= captured
         square.piece = this
         board.callPieceEvent(PieceEvent.Resurrected(info, captured))
-    }
-
-    fun clear() {
-        board.callPieceEvent(PieceEvent.Cleared(info))
-        square.piece = null
     }
 
     companion object {
