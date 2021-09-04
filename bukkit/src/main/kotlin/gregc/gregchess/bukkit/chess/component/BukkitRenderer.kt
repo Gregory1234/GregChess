@@ -83,16 +83,26 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
     }
 
+    private fun PieceInfo.render() = piece.render(pos.loc)
+
+    private fun CapturedPiece.render() = piece.render(pos.loc)
+
     private fun clearPiece(loc: Loc) {
         for (i in 0..10) {
             fill(FillVolume(world, Material.AIR, loc.copy(y = loc.y + i)))
         }
     }
 
+    private fun PieceInfo.clearRender() = clearPiece(pos.loc)
+
+    private fun CapturedPiece.clearRender() = clearPiece(pos.loc)
+
     private val Pos.location get() = loc.toLocation(world)
 
     private fun playPieceSound(pos: Pos, sound: String, type: PieceType) =
         world.playSound(pos.location, type.getSound(sound), 3.0f, 1.0f)
+
+    private fun PieceInfo.playSound(sound: String) = playPieceSound(pos, sound, type)
 
     @ChessEventHandler
     fun handleExplosion(e: AtomicChess.ExplosionEvent) {
@@ -148,48 +158,45 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) {
-        val pos = e.piece.pos
-        val loc = pos.loc
-        val piece = e.piece.piece
         when (e) {
-            is PieceEvent.Created -> piece.render(loc)
-            is PieceEvent.Cleared -> clearPiece(loc)
+            is PieceEvent.Created -> e.piece.render()
+            is PieceEvent.Cleared -> e.piece.clearRender()
             is PieceEvent.Action -> when (e.type) {
                 PieceEvent.ActionType.PICK_UP -> {
-                    clearPiece(loc)
-                    playPieceSound(pos, "PickUp", piece.type)
+                    e.piece.clearRender()
+                    e.piece.playSound("PickUp")
                 }
                 PieceEvent.ActionType.PLACE_DOWN -> {
-                    piece.render(loc)
-                    playPieceSound(pos, "Move", piece.type)
+                    e.piece.render()
+                    e.piece.playSound("Move")
                 }
             }
             is PieceEvent.Moved -> {
                 clearPiece(e.from.loc)
-                piece.render(loc)
-                playPieceSound(pos, "Move", piece.type)
+                e.piece.render()
+                e.piece.playSound("Move")
             }
             is PieceEvent.Captured -> {
-                clearPiece(loc)
-                piece.render(e.captured.capturedPos.loc)
-                playPieceSound(pos, "Capture", piece.type)
+                e.piece.piece.clearRender()
+                e.piece.captured.render()
+                e.piece.piece.playSound("Capture")
             }
             is PieceEvent.Promoted -> {
-                clearPiece(loc)
-                e.promotion.piece.render(e.promotion.pos.loc)
+                e.piece.clearRender()
+                e.promotion.render()
             }
             is PieceEvent.Resurrected -> {
-                piece.render(loc)
-                clearPiece(e.captured.capturedPos.loc)
-                playPieceSound(pos, "Move", piece.type)
+                e.piece.piece.render()
+                e.piece.captured.clearRender()
+                e.piece.piece.playSound("Move")
             }
             is PieceEvent.MultiMoved -> {
                 for ((o, _) in e.moves) {
-                    clearPiece(o.pos.loc)
+                    o.clearRender()
                 }
                 for ((_, t) in e.moves) {
-                    t.piece.render(t.pos.loc)
-                    playPieceSound(t.pos, "Move", t.type)
+                    t.render()
+                    t.playSound("Move")
                 }
             }
         }

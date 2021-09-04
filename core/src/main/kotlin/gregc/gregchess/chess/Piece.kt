@@ -137,21 +137,21 @@ data class CapturedBoardPiece(val piece: PieceInfo, val capturedPos: CapturedPos
     }
 }
 
-sealed class PieceEvent(val piece: PieceInfo) : ChessEvent {
-    class Created(piece: PieceInfo) : PieceEvent(piece)
-    class Cleared(piece: PieceInfo) : PieceEvent(piece)
+sealed class PieceEvent : ChessEvent {
+    class Created(val piece: PieceInfo) : PieceEvent()
+    class Cleared(val piece: PieceInfo) : PieceEvent()
 
     enum class ActionType {
         PICK_UP, PLACE_DOWN
     }
 
-    class Action(piece: PieceInfo, val type: ActionType) : PieceEvent(piece)
+    class Action(val piece: PieceInfo, val type: ActionType) : PieceEvent()
 
-    class Moved(piece: PieceInfo, val from: Pos) : PieceEvent(piece)
-    class Captured(val captured: CapturedBoardPiece) : PieceEvent(captured.piece) // TODO: make captured.pos less confusing
-    class Promoted(piece: PieceInfo, val promotion: PieceInfo) : PieceEvent(piece)
-    class Resurrected(val captured: CapturedBoardPiece) : PieceEvent(captured.piece)
-    class MultiMoved(val moves: Map<PieceInfo, PieceInfo>) : PieceEvent(moves.values.first()) // TODO: remove the unsafe first
+    class Moved(val piece: PieceInfo, val from: Pos) : PieceEvent()
+    class Captured(val piece: CapturedBoardPiece) : PieceEvent()
+    class Promoted(val piece: PieceInfo, val promotion: PieceInfo) : PieceEvent()
+    class Resurrected(val piece: CapturedBoardPiece) : PieceEvent()
+    class MultiMoved(val moves: Map<PieceInfo, PieceInfo>) : PieceEvent()
 }
 
 class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
