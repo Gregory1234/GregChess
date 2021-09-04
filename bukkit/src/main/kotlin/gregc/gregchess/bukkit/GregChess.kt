@@ -6,7 +6,6 @@ import gregc.gregchess.bukkit.chess.component.GameEndEvent
 import gregc.gregchess.bukkit.chess.component.TurnEndEvent
 import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -313,7 +312,7 @@ object GregChess : Listener {
                     cWrongArgument {
                         when (nextArg().lowercase()) {
                             "game" -> player.spigot().sendMessage(selectGame().getInfo())
-                            "piece" -> player.spigot().sendMessage(selectPiece().getInfo((player as Player).currentGame!!)) // TODO: clean this up
+                            "piece" -> player.spigot().sendMessage(selectPiece().let { (p, g) -> p.getInfo(g) })
                             else -> cWrongArgument()
                         }
                     }
@@ -373,13 +372,13 @@ object GregChess : Listener {
                 cPlayer(player)
                 perms("info.ingame")
                 val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                game.board[game.renderer.getPos(player.location.toLoc())]?.piece.cNotNull(PIECE_NOT_FOUND)
+                Pair(game.board[game.renderer.getPos(player.location.toLoc())]?.piece.cNotNull(PIECE_NOT_FOUND), game)
             }
             1 -> {
                 cPlayer(player)
                 perms("info.ingame")
                 val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                game.board[Pos.parseFromString(latestArg())]?.piece.cNotNull(PIECE_NOT_FOUND)
+                Pair(game.board[Pos.parseFromString(latestArg())]?.piece.cNotNull(PIECE_NOT_FOUND), game)
             }
             else -> throw CommandException(WRONG_ARGUMENTS_NUMBER)
         }
