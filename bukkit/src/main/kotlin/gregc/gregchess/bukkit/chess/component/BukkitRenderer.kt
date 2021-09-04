@@ -184,12 +184,12 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
                 playPieceSound(pos, "Move", piece.type)
             }
             is PieceEvent.MultiMoved -> {
-                for ((_, f) in e.moves) {
-                    clearPiece(f.loc)
+                for ((o, _) in e.moves) {
+                    clearPiece(o.pos.loc)
                 }
-                for ((p, _) in e.moves) {
-                    p.piece.render(p.pos.loc)
-                    playPieceSound(p.pos, "Move", p.type)
+                for ((_, t) in e.moves) {
+                    t.piece.render(t.pos.loc)
+                    playPieceSound(t.pos, "Move", t.type)
                 }
             }
         }

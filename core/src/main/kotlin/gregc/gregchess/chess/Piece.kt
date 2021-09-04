@@ -97,6 +97,24 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         board += new
         return new
     }
+
+    companion object {
+        fun autoMove(moves: Map<PieceInfo, Pos>, board: Chessboard): Map<PieceInfo, PieceInfo> {
+            val pieces = moves.keys
+            for (piece in pieces) {
+                piece.checkExists(board)
+                board[piece.pos]?.piece = null
+            }
+            for ((piece, target) in moves)
+                if (board[target]?.piece != null && target !in pieces.map { it.pos })
+                    throw PieceAlreadyOccupiesSquareException(piece.piece, target)
+            val new = moves.mapValues { (piece, target) ->
+                piece.copy(pos = target, hasMoved = true).also { board += it }
+            }
+            board.callPieceEvent(PieceEvent.MultiMoved(new))
+            return new
+        }
+    }
 }
 
 // TODO: make component2 CapturedPiece
@@ -133,7 +151,7 @@ sealed class PieceEvent(val piece: PieceInfo) : ChessEvent {
     class Captured(val captured: CapturedBoardPiece) : PieceEvent(captured.piece) // TODO: make captured.pos less confusing
     class Promoted(piece: PieceInfo, val promotion: PieceInfo) : PieceEvent(piece)
     class Resurrected(val captured: CapturedBoardPiece) : PieceEvent(captured.piece)
-    class MultiMoved(val moves: Map<PieceInfo, Pos>) : PieceEvent(moves.keys.first())
+    class MultiMoved(val moves: Map<PieceInfo, PieceInfo>) : PieceEvent(moves.values.first()) // TODO: remove the unsafe first
 }
 
 class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
@@ -156,24 +174,4 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     val info
         get() = PieceInfo(pos, piece, hasMoved)
-
-    companion object {
-        fun autoMove(moves: Map<BoardPiece, Square>) {
-            val org = moves.map { (p, _) -> p.info to p.pos }.toMap()
-            for ((piece, target) in moves) {
-                piece.hasMoved = true
-                target.piece?.let { p ->
-                    if (moves.keys.none { it.square == target })
-                        throw PieceAlreadyOccupiesSquareException(p.piece, target.pos)
-                }
-                piece.square.piece = null
-                piece.square = target
-            }
-            for ((piece, target) in moves) {
-                target.piece = piece
-                piece.hasMoved = true
-            }
-            moves.keys.firstOrNull()?.board?.callPieceEvent(PieceEvent.MultiMoved(org))
-        }
-    }
 }

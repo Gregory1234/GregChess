@@ -46,6 +46,7 @@ class DefaultHalfmoveClockTrait(var halfmoveClock: UInt? = null): MoveTrait {
 class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, val rookTarget: Pos): MoveTrait {
     override val nameTokens = MoveName(listOf(MoveNameTokenType.CASTLE.of(side)))
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        // TODO: clean this up
         val boardPiece = game.board[move.piece.pos]?.piece
         val boardRook = game.board[rook.pos]?.piece
         val targetSquare = game.board[target]
@@ -55,14 +56,15 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
             rookTargetSquare == null || (rookTarget != move.piece.pos && rookTargetSquare.piece != null)
         )
             return false
-        BoardPiece.autoMove(mapOf(
-            boardPiece to targetSquare,
-            boardRook to rookTargetSquare
-        ))
+        PieceInfo.autoMove(mapOf(
+            boardPiece.info to targetSquare.pos,
+            boardRook.info to rookTargetSquare.pos
+        ), game.board)
         return true
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        // TODO: clean this up
         val boardPiece = game.board[target]?.piece
         val boardRook = game.board[rookTarget]?.piece
         val targetSquare = game.board[move.piece.pos]
@@ -72,10 +74,10 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
             rookTargetSquare == null || (rookTarget != move.piece.pos && rookTargetSquare.piece != null)
         )
             return false
-        BoardPiece.autoMove(mapOf(
-            boardPiece to targetSquare,
-            boardRook to rookTargetSquare
-        ))
+        PieceInfo.autoMove(mapOf(
+            boardPiece.info to targetSquare.pos,
+            boardRook.info to rookTargetSquare.pos
+        ), game.board)
         boardPiece.info.copyInPlace(game.board, hasMoved = false)
         boardRook.info.copyInPlace(game.board, hasMoved = false)
         return true
