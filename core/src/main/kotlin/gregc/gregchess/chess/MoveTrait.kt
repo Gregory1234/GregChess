@@ -94,16 +94,18 @@ class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? 
         if (promotions?.contains(promotion) == false)
             return false
         promotion?.let {
-            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.promote(it)
+            // TODO: clean this up
+            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.info?.promote(it, game.board)
         }
         return true
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if (promotion != null) {
+            // TODO: clean this up
             if (game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece == null)
                 return false
-            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.promote(move.piece.piece)
+            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.info?.promote(move.piece.piece, game.board)
         }
         return true
     }
