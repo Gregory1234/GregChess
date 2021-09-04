@@ -39,7 +39,8 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val char get() = piece.char
 
     fun checkExists(board: Chessboard) {
-        require(board[pos]?.piece == this)
+        if (board[pos]?.piece != this)
+            throw PieceDoesNotExistException(this)
     }
 
     fun pickUp(board: Chessboard) {
@@ -66,7 +67,7 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     fun move(target: Pos, board: Chessboard): BoardPiece {
         checkExists(board)
         board[target]?.piece?.let {
-            throw PieceAlreadyOccupiesSquareException(it.piece, target)
+            throw PieceAlreadyOccupiesSquareException(it)
         }
         val new = copyInPlace(board, pos = target, hasMoved = true)
         board.callPieceEvent(PieceEvent.Moved(new, pos))
@@ -109,7 +110,7 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
             }
             for ((piece, target) in moves)
                 if (board[target]?.piece != null && target !in pieces.map { it.pos })
-                    throw PieceAlreadyOccupiesSquareException(piece.piece, target)
+                    throw PieceAlreadyOccupiesSquareException(piece)
             val new = moves.mapValues { (piece, target) ->
                 piece.copy(pos = target, hasMoved = true).also { board += it }
             }
@@ -130,7 +131,7 @@ data class CapturedBoardPiece(val piece: BoardPiece, val capturedPos: CapturedPo
 
     fun resurrect(board: Chessboard): BoardPiece {
         board[pos]?.piece?.let {
-            throw PieceAlreadyOccupiesSquareException(it.piece, pos)
+            throw PieceAlreadyOccupiesSquareException(it)
         }
         board -= captured
         board += piece
@@ -156,4 +157,5 @@ sealed class PieceEvent : ChessEvent {
     class MultiMoved(val moves: Map<BoardPiece, BoardPiece>) : PieceEvent()
 }
 
-class PieceAlreadyOccupiesSquareException(val piece: Piece, val pos: Pos) : Exception("$pos, $piece")
+class PieceDoesNotExistException(val piece: BoardPiece) : Exception(piece.toString())
+class PieceAlreadyOccupiesSquareException(val piece: BoardPiece) : Exception(piece.toString())

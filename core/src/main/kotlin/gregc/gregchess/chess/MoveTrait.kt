@@ -18,6 +18,18 @@ interface MoveTrait {
     fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
 }
 
+inline fun tryPiece(f: () -> Unit): Boolean =
+    try {
+        f()
+        true
+    } catch (e: PieceDoesNotExistException) {
+        false
+    } catch (e: PieceAlreadyOccupiesSquareException) {
+        false
+    }
+
+// TODO: make some setters in MoveTraits private
+
 object MoveTraitSerializer: ClassRegisteredSerializer<MoveTrait>("MoveTrait", RegistryType.MOVE_TRAIT_CLASS)
 
 @Serializable
@@ -43,49 +55,36 @@ class DefaultHalfmoveClockTrait(var halfmoveClock: UInt? = null): MoveTrait {
 }
 
 @Serializable
-class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, val rookTarget: Pos): MoveTrait {
+class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, val rookTarget: Pos,
+                   var resulting: BoardPiece? = null, var rookResulting: BoardPiece? = null): MoveTrait {
+
     override val nameTokens = MoveName(listOf(MoveNameTokenType.CASTLE.of(side)))
+
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        // TODO: clean this up
-        val boardPiece = game.board[move.piece.pos]?.piece
-        val boardRook = game.board[rook.pos]?.piece
-        val targetSquare = game.board[target]
-        val rookTargetSquare = game.board[rookTarget]
-        if (boardPiece == null || boardRook == null ||
-            targetSquare == null || (target != rook.pos && targetSquare.piece != null) ||
-            rookTargetSquare == null || (rookTarget != move.piece.pos && rookTargetSquare.piece != null)
-        )
-            return false
-        BoardPiece.autoMove(mapOf(
-            boardPiece to targetSquare.pos,
-            boardRook to rookTargetSquare.pos
-        ), game.board)
-        return true
+        return tryPiece {
+            BoardPiece.autoMove(mapOf(move.piece to target, rook to rookTarget), game.board).map { (o, t) ->
+                when (o) {
+                    rook -> rookResulting = t
+                    move.piece -> resulting = t
+                }
+            }
+        }
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        // TODO: clean this up
-        val boardPiece = game.board[target]?.piece
-        val boardRook = game.board[rookTarget]?.piece
-        val targetSquare = game.board[move.piece.pos]
-        val rookTargetSquare = game.board[rook.pos]
-        if (boardPiece == null || boardRook == null ||
-            targetSquare == null || (target != rook.pos && targetSquare.piece != null) ||
-            rookTargetSquare == null || (rookTarget != move.piece.pos && rookTargetSquare.piece != null)
-        )
-            return false
-        BoardPiece.autoMove(mapOf(
-            boardPiece to targetSquare.pos,
-            boardRook to rookTargetSquare.pos
-        ), game.board)
-        boardPiece.copyInPlace(game.board, hasMoved = false)
-        boardRook.copyInPlace(game.board, hasMoved = false)
-        return true
+        return tryPiece {
+            BoardPiece.autoMove(mapOf(
+                (resulting ?: return false) to move.piece.pos,
+                (rookResulting ?: return false) to rook.pos
+            ), game.board).map { (_, t) ->
+                t.copyInPlace(game.board, hasMoved = false)
+            }
+        }
     }
 }
 
 @Serializable
-class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? = null): MoveTrait {
+class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? = null, var promoted: BoardPiece? = null): MoveTrait {
     override val nameTokens = MoveName(listOfNotNull(promotion?.type?.let { MoveNameTokenType.PROMOTION.of(it) }))
 
     override val shouldComeBefore = listOf(TargetTrait::class)
@@ -95,21 +94,18 @@ class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? 
             return false
         if (promotions?.contains(promotion) == false)
             return false
-        promotion?.let {
-            // TODO: clean this up
-            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.promote(it, game.board)
+        return tryPiece {
+            promotion?.let {
+                promoted = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).promote(it, game.board)
+            }
         }
-        return true
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        if (promotion != null) {
-            // TODO: clean this up
-            if (game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece == null)
-                return false
-            game.board[move.getTrait<TargetTrait>()?.target ?: move.piece.pos]?.piece?.promote(move.piece.piece, game.board)
+        return tryPiece {
+            promoted?.promote(move.piece.piece, game.board)
+                ?.copyInPlace(game.board, hasMoved = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).hasMoved)
         }
-        return true
     }
 }
 
@@ -199,37 +195,21 @@ class PieceOriginTrait(override val nameTokens: MoveName = MoveName()): MoveTrai
 }
 
 @Serializable
-class TargetTrait(val target: Pos, var hasMoved: Boolean = false): MoveTrait {
+class TargetTrait(val target: Pos, var resulting: BoardPiece? = null): MoveTrait {
     override val nameTokens = MoveName(listOf(MoveNameTokenType.TARGET.of(target)))
 
     override val shouldComeBefore = listOf(CaptureTrait::class)
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        // TODO: clean this up
-        game.board[target].let { t ->
-            if (t == null || t.piece != null)
-                return false
-            game.board[move.piece.pos]?.piece.let { p ->
-                if (p?.piece != move.piece.piece)
-                    return false
-                hasMoved = p.hasMoved
-                p.move(t.pos, game.board)
-            }
+        return tryPiece {
+            resulting = move.piece.move(target, game.board)
         }
-        return true
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        // TODO: clean this up
-        game.board[move.piece.pos].let { t ->
-            if (t == null || t.piece != null)
-                return false
-            game.board[target]?.piece.let { p ->
-                if (p?.piece != move.piece.piece)
-                    return false
-                p.move(t.pos, game.board).copyInPlace(game.board, hasMoved = hasMoved)
-            }
+        return tryPiece {
+            (resulting ?: return false).move(move.piece.pos, game.board)
+                .copyInPlace(game.board, hasMoved = move.piece.hasMoved)
         }
-        return true
     }
 }
