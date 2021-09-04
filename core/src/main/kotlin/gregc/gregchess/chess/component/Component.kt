@@ -13,6 +13,20 @@ abstract class Component(protected val game: ChessGame) {
     abstract val data: ComponentData<*>
 
     open fun validate() {}
+
+    final override fun toString(): String = buildString {
+        val cl = this@Component::class
+        append(cl.componentModule.namespace)
+        append(":")
+        append(cl.componentName)
+        append("@")
+        append(cl.hashCode())
+        append("(game.uuid=")
+        append(game.uuid)
+        append(", data=")
+        append(data)
+        append(")")
+    }
 }
 
 object ComponentDataSerializer: ClassRegisteredSerializer<ComponentData<*>>("ComponentData", COMPONENT_DATA_CLASS_VIEW)

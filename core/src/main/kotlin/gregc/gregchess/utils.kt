@@ -20,10 +20,6 @@ fun Int.towards(other: Int, amount: Int) =
 
 operator fun <E> List<E>.component6(): E = this[5]
 
-fun isValidUUID(s: String) =
-    Regex("""^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}${'$'}""")
-        .matches(s)
-
 operator fun Pair<Int, Int>.rangeTo(other: Pair<Int, Int>) = (first..other.first).flatMap { i ->
     (second..other.second).map { j -> Pair(i, j) }
 }
@@ -58,13 +54,13 @@ interface NameRegistered {
 open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryView: RegistryView<String, T>) :
     KSerializer<T> {
 
-    override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor(name, PrimitiveKind.STRING)
+    final override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor(name, PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: T) {
+    final override fun serialize(encoder: Encoder, value: T) {
         encoder.encodeString(value.module.namespace + ":" + value.name)
     }
 
-    override fun deserialize(decoder: Decoder): T {
+    final override fun deserialize(decoder: Decoder): T {
         val (namespace, name) = decoder.decodeString().split(":")
         return registryView[namespace, name]
     }
@@ -74,13 +70,13 @@ open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val re
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 @Suppress("UNCHECKED_CAST")
 open class ClassRegisteredSerializer<T: Any>(val name: String, val registryType: DoubleRegistryView<String, KClass<out T>>): KSerializer<T> {
-    override val descriptor: SerialDescriptor
+    final override val descriptor: SerialDescriptor
         get() = buildClassSerialDescriptor(name) {
             element<String>("type")
             element("value", buildSerialDescriptor(name + "Value", SerialKind.CONTEXTUAL))
         }
 
-    override fun serialize(encoder: Encoder, value: T) {
+    final override fun serialize(encoder: Encoder, value: T) {
         val cl = value::class
         val actualSerializer = cl.serializer()
         val id = registryType.getModule(cl).namespace + ":" + registryType[cl]
@@ -90,7 +86,7 @@ open class ClassRegisteredSerializer<T: Any>(val name: String, val registryType:
         }
     }
 
-    override fun deserialize(decoder: Decoder): T = decoder.decodeStructure(descriptor) {
+    final override fun deserialize(decoder: Decoder): T = decoder.decodeStructure(descriptor) {
         var type: String? = null
         var ret: T? = null
         if (decodeSequentially()) {
@@ -120,7 +116,7 @@ open class ClassRegisteredSerializer<T: Any>(val name: String, val registryType:
 
 abstract class CustomListSerializer<L, E>(val name: String, val elementSerializer: KSerializer<E>): KSerializer<L> {
     @OptIn(ExperimentalSerializationApi::class)
-    override val descriptor: SerialDescriptor
+    final override val descriptor: SerialDescriptor
         get() = object : SerialDescriptor {
             override val elementsCount: Int = 1
             override val kind: SerialKind = StructureKind.LIST
@@ -149,7 +145,7 @@ abstract class CustomListSerializer<L, E>(val name: String, val elementSerialize
 
     abstract fun elements(custom: L): List<E>
 
-    override fun serialize(encoder: Encoder, value: L) {
+    final override fun serialize(encoder: Encoder, value: L) {
         val size = elements(value).size
         val composite = encoder.beginCollection(descriptor, size)
         val iterator = elements(value).iterator()
@@ -158,7 +154,7 @@ abstract class CustomListSerializer<L, E>(val name: String, val elementSerialize
         composite.endStructure(descriptor)
     }
 
-    override fun deserialize(decoder: Decoder): L {
+    final override fun deserialize(decoder: Decoder): L {
         val builder = mutableListOf<E>()
         val compositeDecoder = decoder.beginStructure(descriptor)
         while (true) {

@@ -15,8 +15,10 @@ interface RegistryView<K, T> {
 
 abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String): RegistryView<K, T> {
     abstract fun createRegistry(module: ChessModule): R
-
-    override fun getOrNull(module: ChessModule, key: K): T? = module[this].getOrNull(key)
+    final override operator fun get(namespace: String, key: K): T = get(ChessModule[namespace], key)
+    final override fun getOrNull(namespace: String, key: K): T? = ChessModule.getOrNull(namespace)?.let { getOrNull(it, key) }
+    final override operator fun get(module: ChessModule, key: K): T = module[this][key]
+    final override fun getOrNull(module: ChessModule, key: K): T? = module[this].getOrNull(key)
 
     companion object {
         @JvmField

@@ -3,32 +3,30 @@ package gregc.gregchess.chess
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
 
-fun defaultColor(square: Square) = if (square.piece == null) Floor.MOVE else Floor.CAPTURE
+fun defaultColor(pos: Pos, board: Chessboard) = if (board[pos]?.piece == null) Floor.MOVE else Floor.CAPTURE
 
 val defaultOrder = with (MoveNameTokenType) { NameOrder(listOf(PIECE_TYPE, UNIQUENESS_COORDINATE, CAPTURE, TARGET, CHECK, CHECKMATE)) }
 
 fun jumps(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
-    dirs.map { piece.pos + it }.filter { it.isValid() }.mapNotNull { board[it] }.map {
-        Move(piece, it.pos, defaultColor(it),
-            setOf(piece.pos), setOf(it.pos), emptySet(), setOf(it.pos),
+    dirs.map { piece.pos + it }.filter { it.isValid() }.map {
+        Move(piece, it, defaultColor(it, board),
+            setOf(piece.pos), setOf(it), emptySet(), setOf(it),
             emptySet(), emptySet(),
-            listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), DefaultHalfmoveClockTrait(), CheckTrait()),
+            listOf(PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
             defaultOrder,
         )
     }
 
 fun rays(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
     dirs.flatMap { dir ->
-        PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, pos ->
-            board[pos]?.let {
-                Move(piece, it.pos, defaultColor(it),
-                    setOf(piece.pos), setOf(it.pos),
-                    PosSteps(piece.pos + dir, dir, index).toSet(), PosSteps(piece.pos + dir, dir, index+1).toSet(),
-                    emptySet(), emptySet(),
-                    listOf(PieceOriginTrait(), CaptureTrait(it.pos), TargetTrait(it.pos), DefaultHalfmoveClockTrait(), CheckTrait()),
-                    defaultOrder
-                )
-            }
+        PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, it ->
+            Move(piece, it, defaultColor(it, board),
+                setOf(piece.pos), setOf(it),
+                PosSteps(piece.pos + dir, dir, index).toSet(), PosSteps(piece.pos + dir, dir, index+1).toSet(),
+                emptySet(), emptySet(),
+                listOf(PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
+                defaultOrder
+            )
         }
     }
 

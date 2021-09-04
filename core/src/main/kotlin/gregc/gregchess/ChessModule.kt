@@ -32,7 +32,10 @@ abstract class ChessModule(val namespace: String) {
         registries.values.forEach { it.validate() }
         extensions.forEach { it.validate(this) }
         modules += this
+        println("Loaded chess module $this")
     }
+
+    final override fun toString() = "$namespace@${hashCode().toString(16)}"
 }
 
 fun ChessModule.register(id: String, pieceType: PieceType) = register(RegistryType.PIECE_TYPE, id, pieceType)
