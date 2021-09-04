@@ -1,7 +1,12 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.chess.component.Chessboard
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.*
 
 @Serializable
 data class Piece(val type: PieceType, val side: Side) {
@@ -120,14 +125,16 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     }
 }
 
-// TODO: make component2 CapturedPiece
-@Serializable
-data class CapturedBoardPiece(val piece: BoardPiece, val capturedPos: CapturedPos) {
-    val captured: CapturedPiece = CapturedPiece(piece.piece, capturedPos)
+@Serializable(with = CapturedBoardPiece.Serializer::class)
+data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece) {
+    constructor(piece: BoardPiece, capturedPos: CapturedPos): this(piece, CapturedPiece(piece.piece, capturedPos))
+    init {
+        require(piece.piece == captured.piece)
+    }
+
     val type: PieceType get() = piece.type
     val side: Side get() = piece.side
     val pos: Pos get() = piece.pos
-    val hasMoved: Boolean get() = piece.hasMoved
 
     fun resurrect(board: Chessboard): BoardPiece {
         board[pos]?.piece?.let {
@@ -137,6 +144,40 @@ data class CapturedBoardPiece(val piece: BoardPiece, val capturedPos: CapturedPo
         board += piece
         board.callPieceEvent(PieceEvent.Resurrected(this))
         return piece
+    }
+
+    object Serializer : KSerializer<CapturedBoardPiece> {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("CapturedBoardPiece") {
+            element("piece", Piece.serializer().descriptor)
+            element("pos", Pos.serializer().descriptor)
+            element("hasMoved", Boolean.serializer().descriptor)
+            element("capturedPos", CapturedPos.serializer().descriptor)
+        }
+
+        override fun serialize(encoder: Encoder, value: CapturedBoardPiece) = encoder.encodeStructure(descriptor) {
+            encodeSerializableElement(descriptor, 0, Piece.serializer(), value.piece.piece)
+            encodeSerializableElement(descriptor, 1, Pos.serializer(), value.pos)
+            encodeBooleanElement(descriptor, 2, value.piece.hasMoved)
+            encodeSerializableElement(descriptor, 3, CapturedPos.serializer(), value.captured.pos)
+        }
+
+        override fun deserialize(decoder: Decoder): CapturedBoardPiece = decoder.decodeStructure(descriptor) {
+            var piece: Piece? = null
+            var pos: Pos? = null
+            var hasMoved: Boolean? = null
+            var capturedPos: CapturedPos? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> piece = decodeSerializableElement(descriptor, index, Piece.serializer())
+                    1 -> pos = decodeSerializableElement(descriptor, index, Pos.serializer())
+                    2 -> hasMoved = decodeBooleanElement(descriptor, index)
+                    3 -> capturedPos = decodeSerializableElement(descriptor, index, CapturedPos.serializer())
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            CapturedBoardPiece(BoardPiece(pos!!, piece!!, hasMoved!!), CapturedPiece(piece, capturedPos!!))
+        }
     }
 }
 
