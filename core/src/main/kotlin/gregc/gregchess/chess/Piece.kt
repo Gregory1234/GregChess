@@ -69,9 +69,7 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         board[target]?.piece?.let {
             throw PieceAlreadyOccupiesSquareException(it.piece, target)
         }
-        val new = copy(pos = target, hasMoved = true)
-        board += new
-        board[pos]?.piece = null
+        val new = copyInPlace(board, pos = target, hasMoved = true)
         board.callPieceEvent(PieceEvent.Moved(new, pos))
         return new
     }
@@ -87,10 +85,16 @@ data class PieceInfo(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 
     fun promote(promotion: Piece, board: Chessboard): PieceInfo {
         checkExists(board)
-        val new = copy(piece = promotion, hasMoved = false)
-        board[pos]?.piece = null
-        board += new
+        val new = copyInPlace(board, piece = promotion, hasMoved = false)
         board.callPieceEvent(PieceEvent.Promoted(this, new))
+        return new
+    }
+
+    fun copyInPlace(board: Chessboard, pos: Pos = this.pos, piece: Piece = this.piece, hasMoved: Boolean = this.hasMoved): PieceInfo {
+        checkExists(board)
+        board[this.pos]?.piece = null
+        val new = PieceInfo(pos, piece, hasMoved)
+        board += new
         return new
     }
 }
@@ -152,10 +156,6 @@ class BoardPiece(val piece: Piece, initSquare: Square, hasMoved: Boolean = false
 
     val info
         get() = PieceInfo(pos, piece, hasMoved)
-
-    fun force(hasMoved: Boolean) {
-        this.hasMoved = hasMoved
-    }
 
     companion object {
         fun autoMove(moves: Map<BoardPiece, Square>) {

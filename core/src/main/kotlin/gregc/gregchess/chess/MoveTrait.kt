@@ -76,8 +76,8 @@ class CastlesTrait(val rook: PieceInfo, val side: BoardSide, val target: Pos, va
             boardPiece to targetSquare,
             boardRook to rookTargetSquare
         ))
-        boardPiece.force(false)
-        boardRook.force(false)
+        boardPiece.info.copyInPlace(game.board, hasMoved = false)
+        boardRook.info.copyInPlace(game.board, hasMoved = false)
         return true
     }
 }
@@ -225,8 +225,7 @@ class TargetTrait(val target: Pos, var hasMoved: Boolean = false): MoveTrait {
             game.board[target]?.piece.let { p ->
                 if (p?.piece != move.piece.piece)
                     return false
-                p.info.move(t.pos, game.board)
-                game.board[move.piece.pos]?.piece?.force(hasMoved)
+                p.info.move(t.pos, game.board).copyInPlace(game.board, hasMoved = hasMoved)
             }
         }
         return true
