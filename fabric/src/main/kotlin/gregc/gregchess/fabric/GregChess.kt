@@ -83,6 +83,10 @@ object GregChess : ModInitializer {
                 (client.player as PlayerExtraInfo).readExtraInfo(nbt)
         }
 
+        ServerLifecycleEvents.SERVER_STARTING.register {
+            ChessGameManager.server = it
+        }
+
         ServerLifecycleEvents.SERVER_STOPPING.register {
             ChessGameManager.save(it)
             ChessGameManager.clear()

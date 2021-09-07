@@ -4,6 +4,7 @@ import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.component.ChessboardState
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.chess.component.FabricRendererSettings
 import gregc.gregchess.fabric.chess.component.PlayerManagerData
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
@@ -13,15 +14,32 @@ import java.util.*
 
 object ChessGameManager {
 
+    private val gregchessPath = WorldSavePathCreator.create("gregchess")
+
     private val loadedGames = mutableMapOf<UUID, ChessGame>()
 
-    operator fun get(uuid: UUID): ChessGame? = loadedGames[uuid]
+    lateinit var server: MinecraftServer
+
+    operator fun get(uuid: UUID): ChessGame? = loadedGames.getOrPut(uuid) {
+        GregChess.logger.info("loading game $uuid")
+        val f = server.getSavePath(gregchessPath).resolve(uuid.toString()).toFile()
+        if (f.exists()) {
+            val json = Json {
+                serializersModule = defaultModule(server)
+            }
+            f.readText().recreateGameFromJson(json).also {
+                GregChess.logger.info("loaded game $it")
+            }
+        } else return null
+    }
 
     operator fun plusAssign(game: ChessGame) {
+        GregChess.logger.info("added game $game")
         loadedGames[game.uuid] = game
     }
 
     operator fun minusAssign(game: ChessGame) {
+        GregChess.logger.info("removed game $game")
         loadedGames.remove(game.uuid, game)
     }
 
@@ -36,7 +54,6 @@ object ChessGameManager {
         return GameSettings("", false, ChessVariant.Normal, components)
     }
 
-    private val gregchessPath = WorldSavePathCreator.create("gregchess")
 
     fun save(server: MinecraftServer) {
         val json = Json {
@@ -47,6 +64,7 @@ object ChessGameManager {
             val f = server.getSavePath(gregchessPath).resolve(u.toString()).toFile()
             f.parentFile.mkdirs()
             f.writeText(g.serializeToJson(json))
+            GregChess.logger.info("saved game $g")
         }
     }
 

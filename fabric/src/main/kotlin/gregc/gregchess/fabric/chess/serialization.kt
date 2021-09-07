@@ -16,7 +16,6 @@ import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 import net.minecraft.world.World
 import java.util.*
 
@@ -28,8 +27,10 @@ fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModul
             encoder.encodeString(value.registryKey.value.toString())
         }
 
-        override fun deserialize(decoder: Decoder): World =
-            server.registryManager[Registry.WORLD_KEY][Identifier(decoder.decodeString())]!!
+        override fun deserialize(decoder: Decoder): World {
+            val id = Identifier(decoder.decodeString())
+            return server.worlds.first { it.registryKey.value == id }
+        }
     })
 }
 

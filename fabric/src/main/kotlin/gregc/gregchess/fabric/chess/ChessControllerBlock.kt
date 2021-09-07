@@ -28,13 +28,19 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import java.util.*
 import kotlin.math.abs
 import kotlin.math.min
 
 
 class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChess.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder {
+    var currentGameUUID: UUID? by BlockEntityDirtyDelegate(null)
     var currentGame: ChessGame? = null
+        set(v) {
+            field = v
+            currentGameUUID = v?.uuid
+        }
     var chessboardStart: BlockPos? by BlockEntityDirtyDelegate(null)
 
     override fun writeNbt(nbt: NbtCompound): NbtCompound {
@@ -143,6 +149,10 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
+        if (currentGame != null) {
+            println("Already has game $currentGame")
+            return
+        }
         currentGame = ChessGame(
             ChessGameManager.settings(ChessVariant.Normal, FabricRendererSettings(this)),
             bySides(whitePlayer.cpi, blackPlayer.cpi)
