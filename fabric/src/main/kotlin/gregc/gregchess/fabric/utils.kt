@@ -1,6 +1,7 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.GregLogger
+import gregc.gregchess.Loc
 import gregc.gregchess.chess.Piece
 import gregc.gregchess.fabric.chess.id
 import gregc.gregchess.fabric.chess.pieceOfId
@@ -8,6 +9,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import org.apache.logging.log4j.Logger
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -54,5 +56,7 @@ class Log4jGregLogger(val logger: Logger): GregLogger {
     override fun info(msg: String) = logger.info(msg)
     override fun warn(msg: String) = logger.warn(msg)
     override fun err(msg: String) = logger.error(msg)
-
 }
+
+val BlockPos.loc get() = Loc(x, y, z)
+val Loc.blockpos get() = BlockPos(x, y, z)

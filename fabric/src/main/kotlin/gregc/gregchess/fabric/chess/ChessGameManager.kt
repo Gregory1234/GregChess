@@ -6,6 +6,9 @@ import gregc.gregchess.chess.component.ChessboardState
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.chess.component.FabricRendererSettings
 import gregc.gregchess.fabric.chess.component.PlayerManagerData
+import gregc.gregchess.fabric.mixin.WorldSavePathCreator
+import kotlinx.serialization.json.Json
+import net.minecraft.server.MinecraftServer
 import java.util.*
 
 object ChessGameManager {
@@ -31,6 +34,20 @@ object ChessGameManager {
             this += r
         }
         return GameSettings("", false, ChessVariant.Normal, components)
+    }
+
+    private val gregchessPath = WorldSavePathCreator.create("gregchess")
+
+    fun save(server: MinecraftServer) {
+        val json = Json {
+            serializersModule = defaultModule(server)
+        }
+
+        for ((u, g) in loadedGames) {
+            val f = server.getSavePath(gregchessPath).resolve(u.toString()).toFile()
+            f.parentFile.mkdirs()
+            f.writeText(g.serializeToJson(json))
+        }
     }
 
 }

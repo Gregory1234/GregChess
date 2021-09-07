@@ -84,6 +84,7 @@ object GregChess : ModInitializer {
         }
 
         ServerLifecycleEvents.SERVER_STOPPING.register {
+            ChessGameManager.save(it)
             ChessGameManager.clear()
         }
 

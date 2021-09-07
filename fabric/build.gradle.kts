@@ -3,6 +3,7 @@ import java.net.URL
 
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization")
     id("fabric-loom")
     id("org.jetbrains.dokka")
 }
@@ -43,6 +44,7 @@ tasks {
             freeCompilerArgs = listOf(
                 "-Xopt-in=kotlin.ExperimentalStdlibApi",
                 "-Xopt-in=kotlin.contracts.ExperimentalContracts",
+                "-Xopt-in=kotlin.RequiresOptIn",
                 "-Xjvm-default=all",
                 "-Xlambdas=indy",
                 "-progressive")

@@ -5,7 +5,9 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.fabric.chess.ChessGameManager
 import gregc.gregchess.fabric.chess.forEachUnique
+import kotlinx.serialization.Serializable
 
+@Serializable
 object PlayerManagerData : ComponentData<PlayerManager> {
     override fun getComponent(game: ChessGame) = PlayerManager(game, this)
 }

@@ -68,6 +68,7 @@ object FabricGregChessModule : FabricChessModuleExtension(GregChessModule) {
     override fun load() {
         registerItems()
         registerComponents()
+        GregChessModule.registerPlayerType<FabricPlayerInfo>("fabric")
     }
 
 }
