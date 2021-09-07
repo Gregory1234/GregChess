@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric
 
+import gregc.gregchess.GregLogger
 import gregc.gregchess.chess.Piece
 import gregc.gregchess.fabric.chess.id
 import gregc.gregchess.fabric.chess.pieceOfId
@@ -7,6 +8,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.Identifier
+import org.apache.logging.log4j.Logger
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -47,3 +49,10 @@ var PlayerEntity.heldPiece
     set(v) {
         (this as PlayerExtraInfo).`gregchess$heldPiece` = v
     }
+
+class Log4jGregLogger(val logger: Logger): GregLogger {
+    override fun info(msg: String) = logger.info(msg)
+    override fun warn(msg: String) = logger.warn(msg)
+    override fun err(msg: String) = logger.error(msg)
+
+}

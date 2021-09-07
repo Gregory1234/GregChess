@@ -25,6 +25,7 @@ abstract class ChessModule(val namespace: String) {
     }
     val extensions = mutableSetOf<ChessModuleExtension>()
     private val registries = mutableMapOf<RegistryType<*, *, *>, Registry<*, *, *>>()
+    var logger: GregLogger = SystemGregLogger()
 
     @Suppress("UNCHECKED_CAST")
     operator fun <K, T, R: Registry<K, T, R>> get(t: RegistryType<K, T, R>): R =
@@ -35,23 +36,22 @@ abstract class ChessModule(val namespace: String) {
     }
     protected abstract fun load()
     fun fullLoad() {
-        // TODO: stop using println
         load()
-        println("Loaded chess module $this")
+        logger.info("Loaded chess module $this")
         require(ExtensionType.extensionTypes.all { t -> extensions.count { e -> e.extensionType == t } == 1 })
         extensions.forEach {
             if (it.extensionType in ExtensionType.extensionTypes) {
                 it.load()
-                println("Loaded chess extension $it")
+                logger.info("Loaded chess extension $it")
             } else {
-                println("Unknown extension $it")
+                logger.warn("Unknown extension $it")
             }
         }
         registries.values.forEach { it.validate() }
-        println("Validated chess module $this")
+        logger.info("Validated chess module $this")
         extensions.forEach {
             it.validate()
-            println("Validated chess extension $it")
+            logger.info("Validated chess extension $it")
         }
         modules += this
     }

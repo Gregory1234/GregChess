@@ -1,5 +1,6 @@
 package gregc.gregchess.chess.component
 
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.rangeTo
@@ -36,10 +37,10 @@ data class ChessboardState(
                 if (name.startsWith("fen ")) try {
                     ChessboardState(variant, FEN.parseFromString(name.drop(4)))
                 } catch (e: IllegalArgumentException) {
-                    println("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
+                    GregChessModule.logger.warn("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
                     ChessboardState(variant)
                 } else {
-                    println("Invalid chessboard configuration $name, defaulted to normal!")
+                    GregChessModule.logger.warn("Invalid chessboard configuration $name, defaulted to normal!")
                     ChessboardState(variant)
                 }
             }

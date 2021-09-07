@@ -204,7 +204,7 @@ class Arena(val name: String, @Transient var game: ChessGame? = null) : Componen
             wc.type(WorldType.FLAT)
             wc.generatorSettings(generatorSettings)
             val ret = wc.createWorld()!!
-            println("Created arena $name")
+            GregChess.logger.info("Created arena $name")
             ret
         }).apply {
             pvp = false

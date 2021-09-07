@@ -41,6 +41,19 @@ fun String.snakeToPascal(): String {
 fun String.isValidName(): Boolean = all { it == '_' || it in ('A'..'Z') }
 fun String.isValidId(): Boolean = all { it == '_' || it in ('a'..'z') }
 
+interface GregLogger {
+    fun info(msg: String)
+    fun warn(msg: String)
+    fun err(msg: String)
+}
+
+class SystemGregLogger: GregLogger {
+    @Suppress("ReplaceJavaStaticMethodWithKotlinAnalog")
+    override fun info(msg: String) = System.out.println(msg)
+    override fun warn(msg: String) = System.err.println(msg)
+    override fun err(msg: String) = System.err.println(msg)
+}
+
 @Serializable
 data class Loc(val x: Int, val y: Int, val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)

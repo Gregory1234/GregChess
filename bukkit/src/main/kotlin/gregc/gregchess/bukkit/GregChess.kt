@@ -34,10 +34,13 @@ object GregChess : Listener {
         }
 
         override fun onInitialize() {
+            GregChessModule.logger = JavaGregLogger(GregChess.logger)
             GregChessModule.extensions += BukkitGregChessModule
             GregChessModule.fullLoad()
         }
     }
+
+    val logger get() = plugin.logger
 
     val plugin get() = Plugin.INSTANCE
 
@@ -290,7 +293,7 @@ object GregChess : Listener {
                     perms()
                     endArgs()
                     val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    println(game.serializeToJson())
+                    logger.info(game.serializeToJson())
                 }
                 "serialsave" -> {
                     cPlayer(player)

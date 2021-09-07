@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.Loc
-import gregc.gregchess.minutes
+import gregc.gregchess.*
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
@@ -13,6 +12,7 @@ import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.util.logging.Logger
 import kotlin.contracts.contract
 import kotlin.math.*
 
@@ -225,3 +225,9 @@ val config: ConfigurationSection get() = GregChess.plugin.config
 
 fun ConfigurationSection.getPathString(path: String, vararg args: String) =
     getString(path)?.format(*args)?.chatColor() ?: ((currentPath ?: "") + "-" + path)
+
+class JavaGregLogger(val logger: Logger): GregLogger {
+    override fun info(msg: String) = logger.info(msg)
+    override fun warn(msg: String) = logger.warning(msg)
+    override fun err(msg: String) = logger.severe(msg)
+}
