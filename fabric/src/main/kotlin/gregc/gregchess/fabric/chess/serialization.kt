@@ -3,6 +3,7 @@
 
 package gregc.gregchess.fabric.chess
 
+import drawer.nbt.NbtFormat
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.ComponentDataSerializer
 import gregc.gregchess.chess.variant.ChessVariant
@@ -12,12 +13,11 @@ import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
-import java.util.*
 
 fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModule {
     contextual(World::class, object : KSerializer<World> {
@@ -37,21 +37,22 @@ fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModul
 
 // TODO: remove the repetition
 
-fun ChessGame.serializeToJson(config: Json): String = config.encodeToString(JsonObject(mapOf(
-    "uuid" to config.encodeToJsonElement(uuid.toString()),
-    "players" to config.encodeToJsonElement(BySides.serializer(ChessPlayerInfoSerializer), bySides { players[it].info }),
-    "preset" to config.encodeToJsonElement(settings.name),
-    "variant" to config.encodeToJsonElement(settings.variant),
-    "simpleCastling" to config.encodeToJsonElement(settings.simpleCastling),
-    "components" to config.encodeToJsonElement(ListSerializer(ComponentDataSerializer), components.map { it.data })
-)))
+fun ChessGame.serializeToNbt(config: NbtFormat): NbtCompound = NbtCompound().apply {
+    putUuid("uuid", uuid)
+    put("players", config.serialize(BySides.serializer(ChessPlayerInfoSerializer), bySides { players[it].info }))
+    putString("preset", settings.name)
+    // TODO: clean this up
+    putString("variant", settings.variant.module.namespace + ":" + settings.variant.name)
+    putBoolean("simpleCastling", settings.simpleCastling)
+    put("components", config.serialize(ListSerializer(ComponentDataSerializer), components.map { it.data }))
+}
 
-fun String.recreateGameFromJson(config: Json): ChessGame = config.decodeFromString<JsonObject>(this).run {
-    val uuid = UUID.fromString(config.decodeFromJsonElement(get("uuid")!!))
-    val players: BySides<ChessPlayerInfo> = config.decodeFromJsonElement(BySides.serializer(ChessPlayerInfoSerializer), get("players")!!)
-    val preset: String = config.decodeFromJsonElement(get("preset")!!)
-    val variant: ChessVariant = config.decodeFromJsonElement(get("variant")!!)
-    val simpleCastling: Boolean = config.decodeFromJsonElement(get("simpleCastling")!!)
-    val components = config.decodeFromJsonElement(ListSerializer(ComponentDataSerializer), get("components")!!)
-    ChessGame(GameSettings(preset, simpleCastling, variant, components), players, uuid).start()
+fun NbtCompound.recreateGameFromNbt(config: NbtFormat): ChessGame {
+    val uuid = getUuid("uuid")
+    val players: BySides<ChessPlayerInfo> = config.deserialize(BySides.serializer(ChessPlayerInfoSerializer), get("players")!!)
+    val preset: String = getString("preset")
+    val variant: ChessVariant = config.deserialize(ChessVariant.serializer(), get("variant")!!)
+    val simpleCastling: Boolean = getBoolean("simpleCastling")
+    val components = config.deserialize(ListSerializer(ComponentDataSerializer), get("components")!!)
+    return ChessGame(GameSettings(preset, simpleCastling, variant, components), players, uuid).start()
 }

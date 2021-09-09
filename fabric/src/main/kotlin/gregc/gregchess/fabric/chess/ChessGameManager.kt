@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric.chess
 
+import drawer.nbt.NbtFormat
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.component.ChessboardState
@@ -8,7 +9,7 @@ import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.chess.component.FabricRendererSettings
 import gregc.gregchess.fabric.chess.component.PlayerManagerData
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
-import kotlinx.serialization.json.Json
+import net.minecraft.nbt.NbtIo
 import net.minecraft.server.MinecraftServer
 import java.util.*
 
@@ -20,17 +21,20 @@ object ChessGameManager {
 
     internal lateinit var server: MinecraftServer
 
-    private fun gameFile(uuid: UUID) = server.getSavePath(gregchessPath).resolve(uuid.toString()).toFile()
+    private fun gameFile(uuid: UUID) = server.getSavePath(gregchessPath).resolve("$uuid.dat").toFile()
 
     operator fun get(uuid: UUID): ChessGame? = loadedGames.getOrPut(uuid) {
         GregChess.logger.info("loading game $uuid")
         val f = gameFile(uuid)
         if (f.exists()) {
-            val json = Json {
-                serializersModule = defaultModule(server)
-            }
-            f.readText().recreateGameFromJson(json).also {
-                GregChess.logger.info("loaded game $it")
+            val nbt = NbtFormat(defaultModule(server))
+            try {
+                NbtIo.readCompressed(f).recreateGameFromNbt(nbt).also {
+                    GregChess.logger.info("loaded game $it")
+                }
+            }catch (e: Exception) {
+                e.printStackTrace()
+                return null
             }
         } else return null
     }
@@ -62,15 +66,16 @@ object ChessGameManager {
 
 
     fun save() {
-        val json = Json {
-            serializersModule = defaultModule(server)
-        }
-
-        for ((u, g) in loadedGames) {
-            val f = gameFile(u)
-            f.parentFile.mkdirs()
-            f.writeText(g.serializeToJson(json))
-            GregChess.logger.info("saved game $g")
+        val nbt = NbtFormat(defaultModule(server))
+        try {
+            for ((u, g) in loadedGames) {
+                val f = gameFile(u)
+                f.parentFile.mkdirs()
+                NbtIo.writeCompressed(g.serializeToNbt(nbt), f)
+                GregChess.logger.info("saved game $g")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
