@@ -18,11 +18,13 @@ object ChessGameManager {
 
     private val loadedGames = mutableMapOf<UUID, ChessGame>()
 
-    lateinit var server: MinecraftServer
+    internal lateinit var server: MinecraftServer
+
+    private fun gameFile(uuid: UUID) = server.getSavePath(gregchessPath).resolve(uuid.toString()).toFile()
 
     operator fun get(uuid: UUID): ChessGame? = loadedGames.getOrPut(uuid) {
         GregChess.logger.info("loading game $uuid")
-        val f = server.getSavePath(gregchessPath).resolve(uuid.toString()).toFile()
+        val f = gameFile(uuid)
         if (f.exists()) {
             val json = Json {
                 serializersModule = defaultModule(server)
@@ -41,6 +43,10 @@ object ChessGameManager {
     operator fun minusAssign(game: ChessGame) {
         GregChess.logger.info("removed game $game")
         loadedGames.remove(game.uuid, game)
+        val file = gameFile(game.uuid)
+        if (file.exists()) {
+            file.delete()
+        }
     }
 
     fun clear() = loadedGames.clear()
@@ -55,13 +61,13 @@ object ChessGameManager {
     }
 
 
-    fun save(server: MinecraftServer) {
+    fun save() {
         val json = Json {
             serializersModule = defaultModule(server)
         }
 
         for ((u, g) in loadedGames) {
-            val f = server.getSavePath(gregchessPath).resolve(u.toString()).toFile()
+            val f = gameFile(u)
             f.parentFile.mkdirs()
             f.writeText(g.serializeToJson(json))
             GregChess.logger.info("saved game $g")
