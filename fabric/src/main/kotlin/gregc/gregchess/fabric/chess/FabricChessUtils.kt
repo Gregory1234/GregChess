@@ -1,6 +1,6 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.RegistryType
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.fabric.FabricRegistryTypes
 import net.minecraft.util.Identifier

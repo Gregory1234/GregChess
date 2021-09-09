@@ -114,10 +114,9 @@ data class FloorUpdateEvent(val pos: Pos, val floor: Floor) : ChessEvent
 class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean): NameRegistered {
     object Serializer: NameRegisteredSerializer<ChessFlagType>("ChessFlagType", RegistryType.FLAG_TYPE)
 
-    override val module get() = RegistryType.FLAG_TYPE.getModule(this)
-    override val name get() = RegistryType.FLAG_TYPE[this]
+    override val key get() = RegistryType.FLAG_TYPE[this]
 
-    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
+    override fun toString(): String = "$key@${hashCode().toString(16)}"
 }
 
 @Serializable

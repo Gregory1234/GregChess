@@ -13,10 +13,9 @@ class PieceType(
 
     object Serializer: NameRegisteredSerializer<PieceType>("PieceType", RegistryType.PIECE_TYPE)
 
-    override val module get() = RegistryType.PIECE_TYPE.getModule(this)
-    override val name get() = RegistryType.PIECE_TYPE[this]
+    override val key get() = RegistryType.PIECE_TYPE[this]
 
-    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
+    override fun toString(): String = "$key@${hashCode().toString(16)}"
 
     companion object {
 

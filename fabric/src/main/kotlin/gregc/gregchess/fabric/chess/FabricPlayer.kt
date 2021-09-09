@@ -1,6 +1,7 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.name
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind

@@ -81,10 +81,9 @@ class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false): Name
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
     }
 
-    override val module get() = RegistryType.END_REASON.getModule(this)
-    override val name get() = RegistryType.END_REASON[this]
+    override val key get() = RegistryType.END_REASON[this]
 
-    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
+    override fun toString(): String = "$key@${hashCode().toString(16)}"
 
     companion object {
         @JvmField

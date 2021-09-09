@@ -84,10 +84,9 @@ class MoveNameTokenType<T: Any> private constructor(val cl: KClass<T>, @JvmField
 
     object Serializer: NameRegisteredSerializer<MoveNameTokenType<*>>("MoveNameTokenType", RegistryType.MOVE_NAME_TOKEN_TYPE)
 
-    override val module get() = RegistryType.MOVE_NAME_TOKEN_TYPE.getModule(this)
-    override val name get() = RegistryType.MOVE_NAME_TOKEN_TYPE[this]
+    override val key get() = RegistryType.MOVE_NAME_TOKEN_TYPE[this]
 
-    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
+    override fun toString(): String = "$key@${hashCode().toString(16)}"
 
     fun of(v: T) = MoveNameToken(this, v)
 

@@ -60,9 +60,11 @@ data class Loc(val x: Int, val y: Int, val z: Int) {
 }
 
 interface NameRegistered {
-    val module: ChessModule
-    val name: String
+    val key: RegistryKey<String>
 }
+
+val NameRegistered.name get() = key.key
+val NameRegistered.module get() = key.module
 
 open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryView: RegistryView<String, T>) :
     KSerializer<T> {
@@ -70,7 +72,7 @@ open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val re
     final override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor(name, PrimitiveKind.STRING)
 
     final override fun serialize(encoder: Encoder, value: T) {
-        encoder.encodeString(value.module.namespace + ":" + value.name)
+        encoder.encodeString(value.key.toString())
     }
 
     final override fun deserialize(decoder: Decoder): T {

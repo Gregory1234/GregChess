@@ -31,7 +31,7 @@ abstract class ChessModule(val namespace: String) {
     operator fun <K, T, R: Registry<K, T, R>> get(t: RegistryType<K, T, R>): R =
         registries.getOrPut(t) { t.createRegistry(this) } as R
     fun <K, T, V: T, R : Registry<K, T, R>> register(t: RegistryType<K, T, R>, key: K, v: V): V {
-        this[t][key] = v
+        t[this, key] = v
         return v
     }
     protected abstract fun load()

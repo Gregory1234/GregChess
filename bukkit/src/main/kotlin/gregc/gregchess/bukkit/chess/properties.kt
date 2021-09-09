@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit.chess
 
+import gregc.gregchess.NameRegistered
 import gregc.gregchess.bukkit.BukkitRegistryTypes
 import gregc.gregchess.chess.ChessEvent
 import gregc.gregchess.chess.Side
@@ -21,11 +22,10 @@ class AddPropertiesEvent(
     }
 }
 
-class PropertyType {
-    val module get() = BukkitRegistryTypes.PROPERTY_TYPE.getModule(this)
-    val name get() = BukkitRegistryTypes.PROPERTY_TYPE[this]
+class PropertyType: NameRegistered {
+    override val key get() = BukkitRegistryTypes.PROPERTY_TYPE[this]
 
-    override fun toString(): String = "${module.namespace}:$name@${hashCode().toString(16)}"
+    override fun toString(): String = "$key@${hashCode().toString(16)}"
 }
 
 abstract class PlayerProperty(val type: PropertyType) {
