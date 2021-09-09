@@ -15,7 +15,7 @@ fun ChessGame.serializeToJson(config: Json = Json): String = config.encodeToStri
     "uuid" to config.encodeToJsonElement(uuid.toString()),
     "players" to config.encodeToJsonElement(BySides.serializer(ChessPlayerInfoSerializer), bySides { players[it].info }),
     "preset" to config.encodeToJsonElement(settings.name),
-    "variant" to config.encodeToJsonElement(settings.variant),
+    "variant" to config.encodeToJsonElement(variant),
     "simpleCastling" to config.encodeToJsonElement(settings.simpleCastling),
     "components" to config.encodeToJsonElement(ListSerializer(ComponentDataSerializer), components.map { it.data })
 )))

@@ -25,8 +25,6 @@ data class Pos(val file: Int, val rank: Int) {
     override fun toString() = "$fileStr$rankStr"
     operator fun plus(diff: Dir) = plus(diff.first, diff.second)
     fun plus(df: Int, dr: Int) = Pos(file + df, rank + dr)
-    fun plusF(df: Int) = plus(df, 0)
-    fun plusR(dr: Int) = plus(0, dr)
     val fileStr get() = "${'a' + file}"
     val rankStr get() = (rank + 1).toString()
 
@@ -130,7 +128,7 @@ data class ChessFlag(val type: ChessFlagType, var age: UInt = 0u) {
 @Serializable
 data class PosFlag(val pos: Pos, val flag: ChessFlag)
 
-data class Square(val pos: Pos, val game: ChessGame) {
+class Square(val pos: Pos, val game: ChessGame) {
     var piece: BoardPiece? = null
     val flags = mutableListOf<ChessFlag>()
 

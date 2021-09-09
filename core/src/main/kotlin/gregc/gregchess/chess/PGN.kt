@@ -4,8 +4,8 @@ import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.snakeToPascal
 import java.time.format.DateTimeFormatter
 
-class PGN internal constructor(private val tags: List<TagPair>, private val moves: MoveTree) {
-    class TagPair internal constructor(val name: String, val value: String) {
+class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {
+    private class TagPair(val name: String, val value: String) {
         override fun toString() = "[$name \"$value\"]\n"
     }
 

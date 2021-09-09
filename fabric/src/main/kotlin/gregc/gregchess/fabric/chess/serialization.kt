@@ -42,7 +42,7 @@ fun ChessGame.serializeToNbt(config: NbtFormat): NbtCompound = NbtCompound().app
     put("players", config.serialize(BySides.serializer(ChessPlayerInfoSerializer), bySides { players[it].info }))
     putString("preset", settings.name)
     // TODO: clean this up
-    putString("variant", settings.variant.module.namespace + ":" + settings.variant.name)
+    putString("variant", variant.module.namespace + ":" + variant.name)
     putBoolean("simpleCastling", settings.simpleCastling)
     put("components", config.serialize(ListSerializer(ComponentDataSerializer), components.map { it.data }))
 }
