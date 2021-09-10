@@ -202,3 +202,5 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         }
     }
 }
+
+val ChessGame.renderer get() = requireComponent<BukkitRenderer>()

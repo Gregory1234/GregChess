@@ -16,9 +16,7 @@ abstract class Component(protected val game: ChessGame) {
 
     final override fun toString(): String = buildString {
         val cl = this@Component::class
-        append(cl.componentModule.namespace)
-        append(":")
-        append(cl.componentName)
+        append(cl.componentKey)
         append("@")
         append(cl.hashCode())
         append("(game.uuid=")
@@ -34,13 +32,17 @@ object ComponentDataSerializer: ClassRegisteredSerializer<ComponentData<*>>("Com
 private val COMPONENT_DATA_CLASS_VIEW = DoubleChainRegistryView(RegistryType.COMPONENT_CLASS, RegistryType.COMPONENT_DATA_CLASS)
 
 val KClass<out Component>.componentDataClass get() = RegistryType.COMPONENT_DATA_CLASS[componentModule, this]
-val KClass<out Component>.componentModule get() = RegistryType.COMPONENT_CLASS.getModule(this)
-val KClass<out Component>.componentName get() = RegistryType.COMPONENT_CLASS[this]
+val KClass<out Component>.componentKey get() = RegistryType.COMPONENT_CLASS[this]
+val KClass<out Component>.componentModule get() = componentKey.module
+val KClass<out Component>.componentName get() = componentKey.key
 
-val KClass<out ComponentData<*>>.componentClass get() = RegistryType.COMPONENT_DATA_CLASS[this]
+val KClass<out ComponentData<*>>.componentClass get() = componentDataKey.key
+val KClass<out ComponentData<*>>.componentDataKey get() = RegistryType.COMPONENT_DATA_CLASS[this]
+@get:JvmName("getComponentDataDoubleKey")
+val KClass<out ComponentData<*>>.componentKey get() = COMPONENT_DATA_CLASS_VIEW[this]
 @get:JvmName("getComponentDataModule")
-val KClass<out ComponentData<*>>.componentModule get() = RegistryType.COMPONENT_DATA_CLASS.getModule(this)
+val KClass<out ComponentData<*>>.componentModule get() = componentDataKey.module
 @get:JvmName("getComponentDataName")
-val KClass<out ComponentData<*>>.componentName get() = COMPONENT_DATA_CLASS_VIEW[this]
+val KClass<out ComponentData<*>>.componentName get() = componentKey.key
 
 class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())

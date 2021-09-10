@@ -31,10 +31,4 @@ sealed class GameState(val started: Boolean, val stopped: Boolean, val running: 
 
 }
 
-fun BySides<ChessPlayer>.validate() {
-    for ((s, p) in toIndexedList())
-        if (p.side != s)
-            throw IllegalStateException("Player's side wrong!")
-}
-
 class WrongStateException(s: GameState, cls: Class<*>) : Exception("expected ${cls.name}, got $s")

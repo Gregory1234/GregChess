@@ -10,7 +10,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
         override fun toString() = "[$name \"$value\"]\n"
     }
 
-    class MoveTree internal constructor(
+    private class MoveTree(
         private val initial: Side,
         private val initialMove: UInt,
         private val moves: List<Move>,
@@ -41,6 +41,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
     operator fun get(name: String) = tags.firstOrNull { it.name == name }?.value
 
     companion object {
+        // TODO: custom pgn tags
         fun generate(game: ChessGame): PGN {
             val tags = mutableListOf<TagPair>()
             tags += TagPair("Event", "Casual game")

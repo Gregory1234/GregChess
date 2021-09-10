@@ -5,12 +5,10 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.chess.component.componentKey
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
-import kotlin.reflect.KClass
 
 val Side.configName get() = name.snakeToPascal()
 
@@ -52,18 +50,14 @@ fun BoardPiece.getInfo(game: ChessGame) = buildTextComponent {
     }
 }
 
-val KClass<out Component>.componentId get() = componentModule.namespace + ":" + componentName
-
-val ChessVariant.id get() = module.namespace + ":" + name
-
 fun ChessGame.getInfo() = buildTextComponent {
     appendCopy("UUID: $uuid\n", uuid)
     append("Players: ${players.toList().joinToString { "${it.name} as ${it.side.configName}" }}\n")
     append("Spectators: ${spectators.spectators.joinToString { it.name }}\n")
     append("Arena: ${arena.name}\n")
     append("Preset: ${settings.name}\n")
-    append("Variant: ${variant.id}\n")
-    append("Components: ${components.joinToString { it::class.componentId }}")
+    append("Variant: ${variant.key}\n")
+    append("Components: ${components.joinToString { it::class.componentKey.toString() }}")
 }
 
 val EndReason<*>.configName get() = name.snakeToPascal()
@@ -79,5 +73,3 @@ val GameResults.message
     }
 
 val PropertyType.localName get() = module.bukkit.config.getPathString("Scoreboard.${name.snakeToPascal()}")
-
-val ChessGame.renderer get() = requireComponent<BukkitRenderer>()

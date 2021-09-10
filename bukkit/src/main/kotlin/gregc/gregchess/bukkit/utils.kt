@@ -219,8 +219,6 @@ fun Duration.format(formatString: String): String? = try {
     null
 }
 
-internal fun String.toKey(): NamespacedKey = NamespacedKey.fromString(this, GregChess.plugin)!!
-
 val config: ConfigurationSection get() = GregChess.plugin.config
 
 fun ConfigurationSection.getPathString(path: String, vararg args: String) =

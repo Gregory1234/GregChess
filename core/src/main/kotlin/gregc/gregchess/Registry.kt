@@ -21,6 +21,15 @@ data class RegistryKey<K>(val module: ChessModule, val key: K) {
     override fun toString() = "${module.namespace}:$key"
 }
 
+fun String.toKey(): RegistryKey<String> {
+    val sections = split(":")
+    return when(sections.size) {
+        1 -> RegistryKey(GregChessModule, this)
+        2 -> RegistryKey(sections[0], sections[1])
+        else -> throw IllegalArgumentException(this)
+    }
+}
+
 abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String): RegistryView<K, T> {
     abstract fun createRegistry(module: ChessModule): R
     final override operator fun get(key: RegistryKey<K>): T = key.module[this][key.key]

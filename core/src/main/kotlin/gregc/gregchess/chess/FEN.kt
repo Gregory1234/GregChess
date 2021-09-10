@@ -3,6 +3,7 @@ package gregc.gregchess.chess
 import gregc.gregchess.component6
 import kotlinx.serialization.Serializable
 
+// TODO: clean all of this up
 @Serializable
 data class FEN(
     val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),

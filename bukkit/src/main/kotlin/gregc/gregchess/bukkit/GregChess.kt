@@ -2,8 +2,7 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.component.GameEndEvent
-import gregc.gregchess.bukkit.chess.component.TurnEndEvent
+import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
@@ -174,7 +173,7 @@ object GregChess : Listener {
                         else
                             game.board[Pos.parseFromString(this[2])]!!
                         val key = this[1].toKey()
-                        val piece = RegistryType.PIECE_TYPE[key.namespace,key.key]
+                        val piece = RegistryType.PIECE_TYPE[key]
                         square.piece?.capture(p.side, square.board)
                         game.board += BoardPiece(square.pos, piece.of(Side.valueOf(this[0])), false)
                         square.piece?.sendCreated(game.board)
