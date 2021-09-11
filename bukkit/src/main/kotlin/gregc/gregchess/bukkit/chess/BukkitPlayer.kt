@@ -4,10 +4,9 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.interact
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.md_5.bungee.api.chat.ClickEvent
@@ -135,13 +134,15 @@ val Player.cpi get() = BukkitPlayerInfo(this)
 
 @Serializable(with = BukkitPlayerInfo.Serializer::class)
 data class BukkitPlayerInfo(val player: Player): ChessPlayerInfo {
+    @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     object Serializer: KSerializer<BukkitPlayerInfo> {
-        override val descriptor = PrimitiveSerialDescriptor("BukkitPlayerInfo", PrimitiveKind.STRING)
+        override val descriptor = buildSerialDescriptor("BukkitPlayerInfo", SerialKind.CONTEXTUAL)
 
-        override fun serialize(encoder: Encoder, value: BukkitPlayerInfo) = encoder.encodeString(value.uuid.toString())
+        override fun serialize(encoder: Encoder, value: BukkitPlayerInfo) =
+            encoder.encodeSerializableValue(encoder.serializersModule.getContextual(UUID::class)!!, value.uuid)
 
         override fun deserialize(decoder: Decoder) =
-            BukkitPlayerInfo(Bukkit.getPlayer(UUID.fromString(decoder.decodeString()))!!)
+            BukkitPlayerInfo(Bukkit.getPlayer(decoder.decodeSerializableValue(decoder.serializersModule.getContextual(UUID::class)!!))!!)
     }
 
     override val name: String get() = player.name

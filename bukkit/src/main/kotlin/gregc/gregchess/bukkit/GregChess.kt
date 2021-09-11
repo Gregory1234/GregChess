@@ -4,6 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
+import kotlinx.serialization.json.Json
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -292,7 +293,7 @@ object GregChess : Listener {
                     perms()
                     endArgs()
                     val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    logger.info(game.serializeToJson())
+                    logger.info(game.serializeToJson(Json { serializersModule = defaultModule() }))
                 }
                 "serialsave" -> {
                     cPlayer(player)
@@ -302,14 +303,14 @@ object GregChess : Listener {
                     val f = File(plugin.dataFolder, "snapshots/$name.json")
                     f.parentFile.mkdirs()
                     f.createNewFile()
-                    f.writeText(game.serializeToJson())
+                    f.writeText(game.serializeToJson(Json { serializersModule = defaultModule() }))
                 }
                 "serialload" -> {
                     cPlayer(player)
                     perms()
                     val name = lastArg()
                     val f = File(plugin.dataFolder, "snapshots/$name.json")
-                    f.readText().recreateGameFromJson()
+                    f.readText().recreateGameFromJson(Json { serializersModule = defaultModule() })
                 }
                 "info" -> {
                     cWrongArgument {

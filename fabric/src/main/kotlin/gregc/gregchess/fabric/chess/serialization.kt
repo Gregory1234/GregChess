@@ -7,6 +7,7 @@ import drawer.nbt.NbtFormat
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.ComponentDataSerializer
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.fabric.UUIDAsIntArraySerializer
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -18,6 +19,7 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
+import java.util.*
 
 fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModule {
     contextual(World::class, object : KSerializer<World> {
@@ -32,6 +34,7 @@ fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModul
             return server.worlds.first { it.registryKey.value == id }
         }
     })
+    contextual(UUID::class, UUIDAsIntArraySerializer)
 }
 
 

@@ -3,16 +3,22 @@
 
 package gregc.gregchess.bukkit.chess
 
+import gregc.gregchess.bukkit.UUIDAsStringSerializer
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.ComponentDataSerializer
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.*
+import kotlinx.serialization.modules.SerializersModule
 import java.util.*
 
+fun defaultModule() = SerializersModule {
+    contextual(UUID::class, UUIDAsStringSerializer)
+}
+
 fun ChessGame.serializeToJson(config: Json = Json): String = config.encodeToString(JsonObject(mapOf(
-    "uuid" to config.encodeToJsonElement(uuid.toString()),
+    "uuid" to config.encodeToJsonElement(config.serializersModule.getContextual(UUID::class)!!, uuid),
     "players" to config.encodeToJsonElement(BySides.serializer(ChessPlayerInfoSerializer), bySides { players[it].info }),
     "preset" to config.encodeToJsonElement(settings.name),
     "variant" to config.encodeToJsonElement(variant),
@@ -21,7 +27,7 @@ fun ChessGame.serializeToJson(config: Json = Json): String = config.encodeToStri
 )))
 
 fun String.recreateGameFromJson(config: Json = Json): ChessGame = config.decodeFromString<JsonObject>(this).run {
-    val uuid = UUID.fromString(config.decodeFromJsonElement(get("uuid")!!))
+    val uuid = config.decodeFromJsonElement(config.serializersModule.getContextual(UUID::class)!!, get("uuid")!!)
     val players: BySides<ChessPlayerInfo> = config.decodeFromJsonElement(BySides.serializer(ChessPlayerInfoSerializer), get("players")!!)
     val preset: String = config.decodeFromJsonElement(get("preset")!!)
     val variant: ChessVariant = config.decodeFromJsonElement(get("variant")!!)

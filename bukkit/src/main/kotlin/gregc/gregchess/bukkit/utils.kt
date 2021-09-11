@@ -1,6 +1,11 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
@@ -12,6 +17,7 @@ import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.util.*
 import java.util.logging.Logger
 import kotlin.contracts.contract
 import kotlin.math.*
@@ -228,4 +234,14 @@ class JavaGregLogger(val logger: Logger): GregLogger {
     override fun info(msg: String) = logger.info(msg)
     override fun warn(msg: String) = logger.warning(msg)
     override fun err(msg: String) = logger.severe(msg)
+}
+
+object UUIDAsStringSerializer: KSerializer<UUID> {
+    override val descriptor = PrimitiveSerialDescriptor("UUIDAsString", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: UUID) {
+        encoder.encodeString(value.toString())
+    }
+
+    override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
 }

@@ -2,12 +2,8 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.name
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.LiteralText
 import java.util.*
@@ -16,16 +12,8 @@ fun ServerPlayerEntity.showGameResults(side: Side, results: GameResults) {
     sendMessage(LiteralText(results.endReason.name), false)
 }
 
-@Serializable(with = FabricPlayerInfo.Serializer::class)
-data class FabricPlayerInfo(val uuid: UUID): ChessPlayerInfo {
-    object Serializer: KSerializer<FabricPlayerInfo> {
-        override val descriptor = PrimitiveSerialDescriptor("FabricPlayerInfo", PrimitiveKind.STRING)
-
-        override fun serialize(encoder: Encoder, value: FabricPlayerInfo) = encoder.encodeString(value.uuid.toString())
-
-        override fun deserialize(decoder: Decoder) =
-            FabricPlayerInfo(UUID.fromString(decoder.decodeString()))
-    }
+@Serializable
+data class FabricPlayerInfo(val uuid: @Contextual UUID): ChessPlayerInfo {
 
     override val name: String get() = "fabric player"
     override fun getPlayer(side: Side, game: ChessGame) = FabricPlayer(this, side, game)
