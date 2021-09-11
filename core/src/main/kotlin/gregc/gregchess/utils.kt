@@ -76,8 +76,7 @@ open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val re
     }
 
     final override fun deserialize(decoder: Decoder): T {
-        val (namespace, name) = decoder.decodeString().split(":")
-        return registryView[namespace, name]
+        return registryView[decoder.decodeString().toKey()]
     }
 
 }
@@ -94,7 +93,7 @@ open class ClassRegisteredSerializer<T: Any>(val name: String, val registryType:
     final override fun serialize(encoder: Encoder, value: T) {
         val cl = value::class
         val actualSerializer = cl.serializer()
-        val id = registryType.getModule(cl).namespace + ":" + registryType[cl]
+        val id = registryType[cl].toString()
         encoder.encodeStructure(descriptor) {
             encodeStringElement(descriptor, 0, id)
             encodeSerializableElement(descriptor, 1, actualSerializer as KSerializer<T>, value)
@@ -106,7 +105,7 @@ open class ClassRegisteredSerializer<T: Any>(val name: String, val registryType:
         var ret: T? = null
         if (decodeSequentially()) {
             type = decodeStringElement(descriptor, 0)
-            val serializer = registryType[type.substringBefore(":"), type.substringAfter(":")].serializer()
+            val serializer = registryType[type.toKey()].serializer()
             return decodeSerializableElement(descriptor, 1, serializer)
         }
 
@@ -119,7 +118,7 @@ open class ClassRegisteredSerializer<T: Any>(val name: String, val registryType:
                     type = decodeStringElement(descriptor, index)
                 }
                 1 -> {
-                    val serializer = registryType[type!!.substringBefore(":"), type.substringAfter(":")].serializer()
+                    val serializer = registryType[type!!.toKey()].serializer()
                     ret = decodeSerializableElement(descriptor, index, serializer)
                 }
                 else -> throw SerializationException("Invalid index")

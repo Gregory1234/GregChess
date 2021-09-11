@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>):
-    Exception(traits.toList().map { RegistryType.MOVE_TRAIT_CLASS.getModule(it::class).namespace + ":" + RegistryType.MOVE_TRAIT_CLASS[it::class] }.toString())
+    Exception(traits.toList().map { RegistryType.MOVE_TRAIT_CLASS[it::class] }.toString())
 
 @Serializable(with = MoveTraitSerializer::class)
 interface MoveTrait {

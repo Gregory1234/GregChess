@@ -42,6 +42,7 @@ fun ChessModule.registerTall(t: PieceType, rarity: Rarity) {
 
 abstract class FabricChessModuleExtension(module: ChessModule) : ChessModuleExtension(module, FABRIC) {
     companion object {
+        @JvmField
         internal val FABRIC = ExtensionType("fabric")
     }
 }

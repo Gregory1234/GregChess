@@ -44,6 +44,7 @@ fun <T: Any> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameToke
 
 abstract class BukkitChessModuleExtension(module: ChessModule, val plugin: Plugin) : ChessModuleExtension(module, BUKKIT) {
     companion object {
+        @JvmField
         internal val BUKKIT = ExtensionType("bukkit")
     }
 
