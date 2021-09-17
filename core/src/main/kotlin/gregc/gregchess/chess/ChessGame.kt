@@ -29,7 +29,11 @@ enum class GameBaseEvent : ChessEvent {
     PANIC
 }
 
-class ChessGame(val settings: GameSettings, val playerinfo: BySides<ChessPlayerInfo>, val uuid: UUID = UUID.randomUUID()) {
+class ChessGame(
+    val settings: GameSettings,
+    val playerinfo: BySides<ChessPlayerInfo>,
+    val uuid: UUID = UUID.randomUUID()
+) : ChessEventCaller {
 
     override fun toString() = "ChessGame(uuid=$uuid)"
 
@@ -83,7 +87,7 @@ class ChessGame(val settings: GameSettings, val playerinfo: BySides<ChessPlayerI
 
     private fun requireStopped() = require<GameState.Stopped>()
 
-    fun callEvent(e: ChessEvent) = components.forEach { it.callEvent(e) }
+    override fun callEvent(e: ChessEvent) = components.forEach { it.handleEvent(e) }
 
     var currentTurn: Side = board.initialFEN.currentTurn
 

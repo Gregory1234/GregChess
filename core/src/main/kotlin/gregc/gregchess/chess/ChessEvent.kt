@@ -10,8 +10,12 @@ interface ChessEvent
 @Retention(AnnotationRetention.RUNTIME)
 annotation class ChessEventHandler
 
+interface ChessEventCaller {
+    fun callEvent(e: ChessEvent)
+}
+
 interface ChessListener {
-    fun callEvent(e: ChessEvent) {
+    fun handleEvent(e: ChessEvent) {
         for (f in this::class.members) {
             if (f.annotations.any { it is ChessEventHandler } && f.parameters.size == 2 &&
                 f.parameters[1].type.isSupertypeOf(e::class.starProjectedType)

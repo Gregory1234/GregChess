@@ -50,22 +50,22 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 
     fun pickUp(board: Chessboard) {
         checkExists(board)
-        board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
+        board.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
     }
 
     fun placeDown(board: Chessboard) {
         checkExists(board)
-        board.callPieceEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
+        board.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
     }
 
     fun sendCreated(board: Chessboard) {
         checkExists(board)
-        board.callPieceEvent(PieceEvent.Created(this))
+        board.callEvent(PieceEvent.Created(this))
     }
 
     fun clear(board: Chessboard) {
         checkExists(board)
-        board.callPieceEvent(PieceEvent.Cleared(this))
+        board.callEvent(PieceEvent.Cleared(this))
         board[pos]?.piece = null
     }
 
@@ -75,7 +75,7 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
             throw PieceAlreadyOccupiesSquareException(it)
         }
         val new = copyInPlace(board, pos = target, hasMoved = true)
-        board.callPieceEvent(PieceEvent.Moved(new, pos))
+        board.callEvent(PieceEvent.Moved(new, pos))
         return new
     }
 
@@ -84,14 +84,14 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         clear(board)
         val captured = CapturedBoardPiece(this, board.nextCapturedPos(type, by))
         board += captured.captured
-        board.callPieceEvent(PieceEvent.Captured(captured))
+        board.callEvent(PieceEvent.Captured(captured))
         return captured
     }
 
     fun promote(promotion: Piece, board: Chessboard): BoardPiece {
         checkExists(board)
         val new = copyInPlace(board, piece = promotion, hasMoved = false)
-        board.callPieceEvent(PieceEvent.Promoted(this, new))
+        board.callEvent(PieceEvent.Promoted(this, new))
         return new
     }
 
@@ -119,7 +119,7 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
             val new = moves.mapValues { (piece, target) ->
                 piece.copy(pos = target, hasMoved = true).also { board += it }
             }
-            board.callPieceEvent(PieceEvent.MultiMoved(new))
+            board.callEvent(PieceEvent.MultiMoved(new))
             return new
         }
     }
@@ -142,7 +142,7 @@ data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece
         }
         board -= captured
         board += piece
-        board.callPieceEvent(PieceEvent.Resurrected(this))
+        board.callEvent(PieceEvent.Resurrected(this))
         return piece
     }
 

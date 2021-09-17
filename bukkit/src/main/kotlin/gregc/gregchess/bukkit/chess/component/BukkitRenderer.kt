@@ -83,9 +83,9 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     private fun BoardPiece.playSound(sound: String) = playPieceSound(pos, sound, type)
 
-    override fun callEvent(e: ChessEvent) {
-        arena.callEvent(e)
-        super.callEvent(e)
+    override fun handleEvent(e: ChessEvent) {
+        arena.handleEvent(e)
+        super.handleEvent(e)
     }
 
     @ChessEventHandler

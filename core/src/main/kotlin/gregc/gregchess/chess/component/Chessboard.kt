@@ -202,7 +202,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         addBoardHash(fen)
         game.variant.chessboardSetup(this)
         pieces.forEach { it.sendCreated(this) }
-        game.callEvent(SetFenEvent(fen))
+        callEvent(SetFenEvent(fen))
         squares.values.forEach(Square::update)
     }
 
@@ -263,6 +263,4 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             Pair(cap.count { it.type != PieceType.PAWN }, 0)
         return CapturedPos(by, h.second, h.first)
     }
-
-    fun callPieceEvent(e: PieceEvent) = game.callEvent(e)
 }
