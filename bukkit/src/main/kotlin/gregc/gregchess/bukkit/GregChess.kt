@@ -74,7 +74,7 @@ object GregChess : Listener {
             if (p is BukkitChessPlugin)
                 p.onInitialize()
         ChessGameManager.start()
-        ArenaManager.start()
+        Arena.reloadArenas()
         RequestManager.start()
 
         plugin.addCommand("chess") {
@@ -261,7 +261,7 @@ object GregChess : Listener {
                     perms()
                     endArgs()
                     plugin.reloadConfig()
-                    ArenaManager.reload()
+                    Arena.reloadArenas()
                     player.sendMessage(CONFIG_RELOADED.get())
                 }
                 "dev" -> {

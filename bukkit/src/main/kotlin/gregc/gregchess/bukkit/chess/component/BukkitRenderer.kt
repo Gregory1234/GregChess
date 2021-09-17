@@ -8,18 +8,15 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.variant.AtomicChess
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.bukkit.Material
 import org.bukkit.World
 import kotlin.math.floor
 
 @Serializable
 data class BukkitRendererSettings(
-    val tileSize: Int,
-    val offset: Loc = Loc(0, 0, 0)
+    @Transient val arena: Arena = Arena.cNextArena()
 ) : ComponentData<BukkitRenderer> {
-    val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
-    val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
-    val boardSize get() = 8 * tileSize
     override fun getComponent(game: ChessGame) = BukkitRenderer(game, this)
 }
 
@@ -36,47 +33,29 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
                     for (k in vol.start.z..vol.stop.z)
                         vol.world.getBlockAt(i, j, k).type = vol.mat
         }
-
-        private fun fillBorder(vol: FillVolume) {
-            for (i in vol.start.x..vol.stop.x)
-                for (j in (vol.start.y..vol.stop.y).reversed())
-                    for (k in vol.start.z..vol.stop.z)
-                        if (i in listOf(vol.start.x, vol.stop.x) || k in listOf(vol.start.z, vol.stop.z))
-                            vol.world.getBlockAt(i, j, k).type = vol.mat
-        }
-
-        private val defaultSpawnLocation = Loc(4, 101, 4)
     }
 
-    val spawnLocation
-        get() = defaultSpawnLocation + data.offset
+    val arena: Arena get() = data.arena
+    private val tileSize get() = arena.tileSize
+    private val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
+    private val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
+    private val boardSize get() = 8 * tileSize
+    private val boardStart get() = arena.boardStart
+    private val capturedStart get() = arena.capturedStart
 
     fun getPos(loc: Loc) =
-        Pos(
-            file = (8 + data.boardSize - 1 - loc.x + data.offset.x).floorDiv(data.tileSize),
-            rank = (loc.z - data.offset.z - 8).floorDiv(data.tileSize)
-        )
+        Pos(file = 7 - (loc.x - boardStart.x).floorDiv(tileSize), rank = (loc.z - boardStart.z).floorDiv(tileSize))
 
     private val Pos.loc
-        get() = Loc(
-            x = 8 + data.boardSize - 1 - data.highHalfTile - file * data.tileSize,
-            y = 102,
-            z = rank * data.tileSize + 8 + data.lowHalfTile
-        ) + data.offset
+        get() = Loc(boardSize - 2 - file * tileSize, 1, 1 + rank * tileSize) + boardStart
 
     private val CapturedPos.loc
-        get() = when (by) {
-            Side.WHITE -> Loc(8 + data.boardSize - 1 - 2 * pos, 101, 8 - 3 - 2 * row)
-            Side.BLACK -> Loc(8 + 2 * pos, 101, 8 + data.boardSize + 2 + 2 * row)
-        } + data.offset
+        get() = capturedStart[by] + when (by) {
+            Side.WHITE -> Loc(- 2 * pos, 0, - 2 * row)
+            Side.BLACK -> Loc(2 * pos, 0, 2 * row)
+        }
 
-    private val world get() = game.arena.world
-
-    private fun fill(from: Loc, to: Loc, mat: Material) =
-        fill(FillVolume(world, mat, from + data.offset, to + data.offset))
-
-    private fun fillBorder(from: Loc, to: Loc, mat: Material) =
-        fillBorder(FillVolume(world, mat, from + data.offset, to + data.offset))
+    private val world get() = arena.world
 
     private fun Piece.render(loc: Loc) {
         for ((i, m) in type.structure[side].withIndex())
@@ -104,6 +83,11 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     private fun BoardPiece.playSound(sound: String) = playPieceSound(pos, sound, type)
 
+    override fun callEvent(e: ChessEvent) {
+        arena.callEvent(e)
+        super.callEvent(e)
+    }
+
     @ChessEventHandler
     fun handleExplosion(e: AtomicChess.ExplosionEvent) {
         world.createExplosion(e.pos.location, 4.0f, false, false)
@@ -111,46 +95,25 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     private fun Pos.fillFloor(floor: Floor) {
         val (x, y, z) = loc
-        val mi = -data.lowHalfTile
-        val ma = data.highHalfTile
+        val mi = -lowHalfTile
+        val ma = highHalfTile
         fill(FillVolume(world, floor.material, Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma)))
     }
 
-    private fun renderBoardBase() {
-        fill(
-            Loc(0, 100, 0),
-            Loc(8 + data.boardSize + 8 - 1, 100, 8 + data.boardSize + 8 - 1),
-            Material.DARK_OAK_PLANKS
-        )
-        fillBorder(
-            Loc(8 - 1, 101, 8 - 1),
-            Loc(8 + data.boardSize, 101, 8 + data.boardSize),
-            Material.DARK_OAK_PLANKS
-        )
-    }
-
-    private fun removeBoard() {
-        fill(
-            Loc(0, 100, 0),
-            Loc(8 + data.boardSize + 8 - 1, 105, 8 + data.boardSize + 8 - 1),
-            Material.AIR
-        )
-    }
-
     override fun validate() {
-        game.requireComponent<Arena.Usage>()
-    }
-
-    @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) {
-        if (e == GameStartStageEvent.START)
-            renderBoardBase()
+        arena.game = game
     }
 
     @ChessEventHandler
     fun onStop(e: GameStopStageEvent)  {
-        if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC)
-            removeBoard()
+        if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC) {
+            game.board.pieces.forEach {
+                it.clearRender()
+            }
+            game.board.data.capturedPieces.forEach {
+                it.clearRender()
+            }
+        }
     }
 
     @ChessEventHandler
@@ -202,5 +165,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         }
     }
 }
+
+val ChessGame.arena get() = renderer.arena
 
 val ChessGame.renderer get() = requireComponent<BukkitRenderer>()

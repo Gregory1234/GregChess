@@ -65,7 +65,6 @@ interface BukkitChessPlugin {
 }
 
 object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregChess.plugin) {
-    private val NO_ARENAS = err("NoArenas")
 
     private val clockSettings: Map<String, ChessClockData>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
@@ -77,12 +76,11 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregC
         }
 
     override val hookedComponents: Set<KClass<out Component>>
-        get() = setOf(Arena.Usage::class, Chessboard::class, ChessClock::class, PlayerManager::class,
+        get() = setOf(Chessboard::class, ChessClock::class, PlayerManager::class,
             SpectatorManager::class, ScoreboardManager::class, BukkitRenderer::class,
             BukkitEventRelay::class, BukkitGregChessAdapter::class)
 
     private fun registerSettings() = with(GregChessModule) {
-        registerSettings { ArenaManager.freeAreas.firstOrNull().cNotNull(NO_ARENAS) }
         registerSettings { ChessboardState[variant, section.getString("Board")] }
         registerSettings {
             SettingsManager.chooseOrParse(clockSettings, section.getString("Clock")) {
@@ -92,7 +90,7 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregC
         registerConstSettings(PlayerManagerData)
         registerConstSettings(SpectatorManagerData)
         registerConstSettings(ScoreboardManagerData)
-        registerSettings { BukkitRendererSettings(section.getInt("TileSize", 3)) }
+        registerSettings { BukkitRendererSettings() }
         registerConstSettings(BukkitEventRelayData)
         registerSettings { ThreeChecks.CheckCounterData(section.getInt("CheckLimit", 3).toUInt()) }
         registerConstSettings(BukkitGregChessAdapterData)
@@ -117,7 +115,6 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregC
         registerComponent<PlayerManager, PlayerManagerData>("player_manager")
         registerComponent<ScoreboardManager, ScoreboardManagerData>("scoreboard_manager")
         registerComponent<SpectatorManager, SpectatorManagerData>("spectator_manager")
-        registerComponent<Arena.Usage, Arena>("arena")
     }
 
     private fun registerPlayerTypes() = with(GregChessModule) {
@@ -126,7 +123,7 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregC
     }
 
     override fun load() {
-        ArenaManager
+        Arena
         ChessGameManager
         ScoreboardManager
         registerComponents()

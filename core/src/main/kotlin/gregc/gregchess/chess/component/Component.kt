@@ -2,6 +2,7 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.ChessListener
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -9,7 +10,7 @@ import kotlin.reflect.KClass
 interface ComponentData<out T : Component> {
     fun getComponent(game: ChessGame): T
 }
-abstract class Component(protected val game: ChessGame) {
+abstract class Component(protected val game: ChessGame): ChessListener {
     abstract val data: ComponentData<*>
 
     open fun validate() {}

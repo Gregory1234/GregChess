@@ -2,7 +2,7 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.chess.component.BukkitRenderer
+import gregc.gregchess.bukkit.chess.component.arena
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
