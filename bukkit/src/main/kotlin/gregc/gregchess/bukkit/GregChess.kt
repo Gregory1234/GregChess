@@ -4,6 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
+import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
@@ -66,6 +67,7 @@ object GregChess : Listener {
 
     private fun CommandArgs.perms(c: String = latestArg().lowercase()) = player.cPerms("greg-chess.chess.$c")
 
+    @OptIn(ExperimentalSerializationApi::class)
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
@@ -76,6 +78,8 @@ object GregChess : Listener {
         ChessGameManager.start()
         Arena.reloadArenas()
         RequestManager.start()
+
+        val json = Json { serializersModule = defaultModule() }
 
         plugin.addCommand("chess") {
             when (nextArg().lowercase()) {
@@ -293,7 +297,7 @@ object GregChess : Listener {
                     perms()
                     endArgs()
                     val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    logger.info(game.serializeToJson(Json { serializersModule = defaultModule() }))
+                    logger.info(json.encodeToString(game))
                 }
                 "serialsave" -> {
                     cPlayer(player)
@@ -303,14 +307,14 @@ object GregChess : Listener {
                     val f = File(plugin.dataFolder, "snapshots/$name.json")
                     f.parentFile.mkdirs()
                     f.createNewFile()
-                    f.writeText(game.serializeToJson(Json { serializersModule = defaultModule() }))
+                    f.writeText(json.encodeToString(game))
                 }
                 "serialload" -> {
                     cPlayer(player)
                     perms()
                     val name = lastArg()
                     val f = File(plugin.dataFolder, "snapshots/$name.json")
-                    f.readText().recreateGameFromJson(Json { serializersModule = defaultModule() })
+                    json.decodeFromString<ChessGame>(f.readText()).start()
                 }
                 "info" -> {
                     cWrongArgument {

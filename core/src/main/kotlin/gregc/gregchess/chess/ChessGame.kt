@@ -2,6 +2,10 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
@@ -29,11 +33,66 @@ enum class GameBaseEvent : ChessEvent {
     PANIC
 }
 
+@Serializable(with = ChessGame.Serializer::class)
 class ChessGame(
     val settings: GameSettings,
     val playerinfo: BySides<ChessPlayerInfo>,
     val uuid: UUID = UUID.randomUUID()
 ) : ChessEventCaller {
+    // TODO: make the serializer more complete
+    @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
+    object Serializer: KSerializer<ChessGame> {
+        override val descriptor = buildClassSerialDescriptor("ChessGame") {
+            element("uuid", buildSerialDescriptor("ChessGameUUID", SerialKind.CONTEXTUAL))
+            element("players", BySides.serializer(ChessPlayerInfoSerializer).descriptor)
+            element<String>("preset")
+            element<ChessVariant>("variant")
+            element<Boolean>("simpleCastling")
+            element("components", ListSerializer(ComponentDataSerializer).descriptor)
+        }
+
+        override fun serialize(encoder: Encoder, value: ChessGame) = encoder.encodeStructure(descriptor) {
+            encodeSerializableElement(descriptor, 0, encoder.serializersModule.serializer(), value.uuid)
+            encodeSerializableElement(descriptor, 1, BySides.serializer(ChessPlayerInfoSerializer), value.playerinfo)
+            encodeStringElement(descriptor, 2, value.settings.name)
+            encodeSerializableElement(descriptor, 3, ChessVariant.serializer(), value.variant)
+            encodeBooleanElement(descriptor, 4, value.settings.simpleCastling)
+            encodeSerializableElement(descriptor, 5, ListSerializer(ComponentDataSerializer), value.components.map { it.data })
+        }
+
+        override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
+            var uuid: UUID? = null
+            var players: BySides<ChessPlayerInfo>? = null
+            var preset: String? = null
+            var variant: ChessVariant? = null
+            var simpleCastling: Boolean? = null
+            var components: List<ComponentData<*>>? = null
+            if (decodeSequentially()) { // sequential decoding protocol
+                uuid = decodeSerializableElement(descriptor, 0, decoder.serializersModule.serializer())
+                players = decodeSerializableElement(descriptor, 1, BySides.serializer(ChessPlayerInfoSerializer))
+                preset = decodeStringElement(descriptor, 2)
+                variant = decodeSerializableElement(descriptor, 3, ChessVariant.serializer())
+                simpleCastling = decodeBooleanElement(descriptor, 4)
+                components = decodeSerializableElement(descriptor, 5, ListSerializer(ComponentDataSerializer))
+            } else {
+                while (true) {
+                    when (val index = decodeElementIndex(descriptor)) {
+                        0 -> uuid = decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
+                        1 -> players =
+                            decodeSerializableElement(descriptor, index, BySides.serializer(ChessPlayerInfoSerializer))
+                        2 -> preset = decodeStringElement(descriptor, index)
+                        3 -> variant = decodeSerializableElement(descriptor, index, ChessVariant.serializer())
+                        4 -> simpleCastling = decodeBooleanElement(descriptor, index)
+                        5 -> components =
+                            decodeSerializableElement(descriptor, index, ListSerializer(ComponentDataSerializer))
+                        CompositeDecoder.DECODE_DONE -> break
+                        else -> error("Unexpected index: $index")
+                    }
+                }
+            }
+            ChessGame(GameSettings(preset!!, simpleCastling!!, variant!!, components!!), players!!, uuid!!)
+        }
+    }
 
     override fun toString() = "ChessGame(uuid=$uuid)"
 

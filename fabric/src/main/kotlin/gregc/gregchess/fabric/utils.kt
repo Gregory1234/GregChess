@@ -4,14 +4,17 @@ import gregc.gregchess.GregLogger
 import gregc.gregchess.Loc
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.IntArraySerializer
-import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.modules.SerializersModule
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtHelper
 import net.minecraft.nbt.NbtIntArray
+import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
 import org.apache.logging.log4j.Logger
 import java.util.*
 import kotlin.properties.ReadWriteProperty
@@ -49,4 +52,20 @@ object UUIDAsIntArraySerializer: KSerializer<UUID> {
     }
 
     override fun deserialize(decoder: Decoder): UUID = NbtHelper.toUuid(NbtIntArray(decoder.decodeSerializableValue(IntArraySerializer())))
+}
+
+fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModule {
+    contextual(World::class, object : KSerializer<World> {
+        override val descriptor = PrimitiveSerialDescriptor("World", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: World) {
+            encoder.encodeString(value.registryKey.value.toString())
+        }
+
+        override fun deserialize(decoder: Decoder): World {
+            val id = Identifier(decoder.decodeString())
+            return server.worlds.first { it.registryKey.value == id }
+        }
+    })
+    contextual(UUID::class, UUIDAsIntArraySerializer)
 }

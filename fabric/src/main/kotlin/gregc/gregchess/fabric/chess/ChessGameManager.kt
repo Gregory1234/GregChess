@@ -7,8 +7,10 @@ import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.chess.component.FabricRendererSettings
 import gregc.gregchess.fabric.chess.component.PlayerManagerData
+import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
-import gregc.gregchess.fabric.nbt.Nbt
+import gregc.gregchess.fabric.nbt.*
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtIo
 import net.minecraft.server.MinecraftServer
 import java.util.*
@@ -29,7 +31,7 @@ object ChessGameManager {
         if (f.exists()) {
             val nbt = Nbt(defaultModule(server))
             try {
-                NbtIo.readCompressed(f).recreateGameFromNbt(nbt).also {
+                nbt.decodeFromNbtElement<ChessGame>(NbtIo.readCompressed(f)).start().also {
                     GregChess.logger.info("loaded game $it")
                 }
             }catch (e: Exception) {
@@ -71,7 +73,7 @@ object ChessGameManager {
             for ((u, g) in loadedGames) {
                 val f = gameFile(u)
                 f.parentFile.mkdirs()
-                NbtIo.writeCompressed(g.serializeToNbt(nbt), f)
+                NbtIo.writeCompressed(nbt.encodeToNbtElement(g) as NbtCompound, f)
                 GregChess.logger.info("saved game $g")
             }
         } catch (e: Exception) {
