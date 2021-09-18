@@ -30,9 +30,6 @@ dependencies {
     val fabricLibGuiVersion: String by project
     modImplementation("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
     include("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
-    val fabricDrawerVersion: String by project
-    modImplementation("io.github.natanfudge:fabric-drawer:$fabricDrawerVersion")
-    include("io.github.natanfudge:fabric-drawer:$fabricDrawerVersion")
     implementation(project(":core"))
     include(project(":core"))
 }

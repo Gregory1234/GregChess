@@ -1,6 +1,5 @@
 package gregc.gregchess.fabric.chess
 
-import drawer.nbt.NbtFormat
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.component.ChessboardState
@@ -9,6 +8,7 @@ import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.chess.component.FabricRendererSettings
 import gregc.gregchess.fabric.chess.component.PlayerManagerData
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
+import gregc.gregchess.fabric.nbt.Nbt
 import net.minecraft.nbt.NbtIo
 import net.minecraft.server.MinecraftServer
 import java.util.*
@@ -27,7 +27,7 @@ object ChessGameManager {
         GregChess.logger.info("loading game $uuid")
         val f = gameFile(uuid)
         if (f.exists()) {
-            val nbt = NbtFormat(defaultModule(server))
+            val nbt = Nbt(defaultModule(server))
             try {
                 NbtIo.readCompressed(f).recreateGameFromNbt(nbt).also {
                     GregChess.logger.info("loaded game $it")
@@ -66,7 +66,7 @@ object ChessGameManager {
 
 
     fun save() {
-        val nbt = NbtFormat(defaultModule(server))
+        val nbt = Nbt(defaultModule(server))
         try {
             for ((u, g) in loadedGames) {
                 val f = gameFile(u)

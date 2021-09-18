@@ -1,14 +1,15 @@
 package gregc.gregchess.fabric
 
-import drawer.ForNbtIntArray
 import gregc.gregchess.GregLogger
 import gregc.gregchess.Loc
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.IntArraySerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtHelper
+import net.minecraft.nbt.NbtIntArray
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import org.apache.logging.log4j.Logger
@@ -39,14 +40,13 @@ class Log4jGregLogger(val logger: Logger): GregLogger {
 val BlockPos.loc get() = Loc(x, y, z)
 val Loc.blockpos get() = BlockPos(x, y, z)
 
-// TODO: create custom nbt serialization library to support true int arrays
 object UUIDAsIntArraySerializer: KSerializer<UUID> {
     override val descriptor: SerialDescriptor
-        get() = ForNbtIntArray.descriptor
+        get() = IntArraySerializer().descriptor
 
     override fun serialize(encoder: Encoder, value: UUID) {
-        encoder.encodeSerializableValue(ForNbtIntArray, NbtHelper.fromUuid(value))
+        encoder.encodeSerializableValue(IntArraySerializer(), NbtHelper.fromUuid(value).intArray)
     }
 
-    override fun deserialize(decoder: Decoder): UUID = NbtHelper.toUuid(decoder.decodeSerializableValue(ForNbtIntArray))
+    override fun deserialize(decoder: Decoder): UUID = NbtHelper.toUuid(NbtIntArray(decoder.decodeSerializableValue(IntArraySerializer())))
 }
