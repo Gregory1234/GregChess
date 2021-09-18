@@ -33,8 +33,8 @@ class BukkitEventRelay(game: ChessGame, override val data: BukkitEventRelayData)
             Bukkit.getPluginManager().callEvent(TurnEndEvent(game, game.currentPlayer))
     }
 
-    @ChessEventHandler
-    fun handleEvent(e: ChessEvent) {
+    override fun handleEvent(e: ChessEvent) {
+        super.handleEvent(e)
         Bukkit.getPluginManager().callEvent(ChessGameEvent(game, e))
     }
 
