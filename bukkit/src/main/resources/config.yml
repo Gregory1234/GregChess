@@ -1,6 +1,4 @@
 ChessArenas:
-  arena1:
-    world: arena1
 
 Request:
   Accept: "&a[Accept]"

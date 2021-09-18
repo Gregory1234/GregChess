@@ -20,9 +20,21 @@ abstract class Arena(val name: String): ChessListener {
         private val arenas = mutableListOf<Arena>()
 
         private fun parseArena(section: ConfigurationSection, name: String): Arena? {
-            // TODO: generalize this
             GregChess.logger.info("Loading arena $name")
-            return SimpleArena(name, Bukkit.getWorld(name) ?: return null, 3, Loc(0, 101, 0))
+
+            val start = Loc(
+                section.getInt("Start.x", 0),
+                section.getInt("Start.y", 101),
+                section.getInt("Start.z", 0)
+            )
+
+            val world = Bukkit.getWorld(section.getString("World") ?: return null) ?: return null
+
+            val tileSize = section.getInt("TileSize", 3)
+
+            GregChess.logger.info("Loaded arena $name")
+
+            return SimpleArena(name, world, tileSize, start)
         }
 
         fun reloadArenas() {
@@ -39,6 +51,11 @@ abstract class Arena(val name: String): ChessListener {
         fun nextArena(): Arena? = arenas.toList().firstOrNull { it.game == null }
 
         fun cNextArena(): Arena = nextArena().cNotNull(NO_ARENAS)
+
+        @JvmStatic
+        protected val returnWorld: World
+            get() = BukkitGregChessModule.config.getString("ReturnWorld")?.let { Bukkit.getWorld(it)!! }
+                ?: Bukkit.getWorlds().first()
     }
 
     var game: ChessGame? = null
@@ -76,7 +93,7 @@ class SimpleArena(
     }
 
     private fun Player.leave() {
-        teleport(Bukkit.getWorld("world")!!.spawnLocation) // TODO: make this better
+        teleport(returnWorld.spawnLocation)
         gameMode = GameMode.SURVIVAL
         allowFlight = false
         isFlying = false
@@ -101,6 +118,7 @@ class SimpleArena(
     private fun Player.reset() {
         teleport(spawnLocation)
         inventory.clear()
+        inventory.setItem(0, chess?.held?.piece?.item)
         if (isAdmin)
             gameMode = GameMode.CREATIVE
         else {
