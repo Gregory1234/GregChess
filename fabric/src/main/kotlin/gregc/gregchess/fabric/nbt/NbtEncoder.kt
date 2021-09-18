@@ -1,3 +1,5 @@
+@file:OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+
 package gregc.gregchess.fabric.nbt
 
 import kotlinx.serialization.*
@@ -23,11 +25,9 @@ interface NbtCompositeEncoder : CompositeEncoder {
     fun encodeNbtElementElement(descriptor: SerialDescriptor, index: Int, value: NbtElement)
 }
 
-@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 class NbtElementEncoder(override val serializersModule: SerializersModule, private val consumer: (NbtElement?) -> Unit) : NbtEncoder {
+
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder = beginCompound()
-
-
     override fun beginCollection(descriptor: SerialDescriptor, collectionSize: Int): CompositeEncoder = when(descriptor.kind) {
         StructureKind.LIST -> beginList()
         StructureKind.MAP -> beginMap()
@@ -53,14 +53,13 @@ class NbtElementEncoder(override val serializersModule: SerializersModule, priva
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) = consumer(NbtString.of(enumDescriptor.getElementName(index)))
     override fun encodeString(value: String) = consumer(NbtString.of(value))
 
-    @ExperimentalSerializationApi
     override fun encodeInline(inlineDescriptor: SerialDescriptor): Encoder = this
-    @ExperimentalSerializationApi
     override fun encodeNull() = consumer(null)
 
     override fun encodeByteArray(value: ByteArray) = consumer(NbtByteArray(value))
     override fun encodeIntArray(value: IntArray) = consumer(NbtIntArray(value))
     override fun encodeLongArray(value: LongArray) = consumer(NbtLongArray(value))
+
     override fun encodeNbtElement(value: NbtElement) = consumer(value)
 
     override fun <T> encodeSerializableValue(serializer: SerializationStrategy<T>, value: T) = when (serializer) {
@@ -95,11 +94,9 @@ abstract class AbstractNbtCompositeEncoder : NbtCompositeEncoder {
     override fun encodeStringElement(descriptor: SerialDescriptor, index: Int, value: String) =
         encodeNbtElementElement(descriptor, index, NbtString.of(value))
 
-    @ExperimentalSerializationApi
     override fun encodeInlineElement(descriptor: SerialDescriptor, index: Int): Encoder =
         NbtElementEncoder(serializersModule) { if (it != null) encodeNbtElementElement(descriptor, index, it) }
 
-    @ExperimentalSerializationApi
     override fun <T : Any> encodeNullableSerializableElement(
         descriptor: SerialDescriptor,
         index: Int,
@@ -130,7 +127,6 @@ abstract class AbstractNbtCompositeEncoder : NbtCompositeEncoder {
         encodeNbtElementElement(descriptor, index, NbtLongArray(value))
 }
 
-@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 class NbtCompoundEncoder(override val serializersModule: SerializersModule, private val result: NbtCompound, private val consumer: (NbtCompound) -> Unit) : AbstractNbtCompositeEncoder() {
 
     override fun endStructure(descriptor: SerialDescriptor) = consumer(result)
@@ -141,7 +137,6 @@ class NbtCompoundEncoder(override val serializersModule: SerializersModule, priv
 
 }
 
-@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 class NbtListEncoder(override val serializersModule: SerializersModule, private val result: NbtList, private val consumer: (NbtList) -> Unit) : AbstractNbtCompositeEncoder() {
 
     override fun endStructure(descriptor: SerialDescriptor) = consumer(result)
@@ -151,7 +146,6 @@ class NbtListEncoder(override val serializersModule: SerializersModule, private 
 
 }
 
-@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 class NbtMapEncoder(override val serializersModule: SerializersModule, private val result: NbtCompound, private val consumer: (NbtCompound) -> Unit) : AbstractNbtCompositeEncoder() {
 
     override fun endStructure(descriptor: SerialDescriptor) = consumer(result)

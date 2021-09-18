@@ -7,8 +7,8 @@ import net.minecraft.nbt.NbtElement
 
 @OptIn(ExperimentalSerializationApi::class)
 sealed interface NbtFormat : SerialFormat {
-    fun <T> encodeToNbtElement(serializer: SerializationStrategy<T>, value: T): NbtElement
-    fun <T> decodeFromNbtElement(deserializer: DeserializationStrategy<T>, nbt: NbtElement): T
+    fun <T> encodeToNbtElement(serializer: SerializationStrategy<T>, value: T): NbtElement?
+    fun <T> decodeFromNbtElement(deserializer: DeserializationStrategy<T>, nbt: NbtElement?): T
 }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -16,16 +16,16 @@ class Nbt(
     override val serializersModule: SerializersModule = EmptySerializersModule
 ) : NbtFormat {
 
-    override fun <T> encodeToNbtElement(serializer: SerializationStrategy<T>, value: T): NbtElement {
+    override fun <T> encodeToNbtElement(serializer: SerializationStrategy<T>, value: T): NbtElement? {
         var result : NbtElement? = null
         NbtElementEncoder(serializersModule) { result = it }.encodeSerializableValue(serializer, value)
-        return result!!
+        return result
     }
 
-    override fun <T> decodeFromNbtElement(deserializer: DeserializationStrategy<T>, nbt: NbtElement): T {
-        TODO("Not yet implemented")
+    override fun <T> decodeFromNbtElement(deserializer: DeserializationStrategy<T>, nbt: NbtElement?): T {
+        return NbtElementDecoder(serializersModule, nbt).decodeSerializableValue(deserializer)
     }
 }
 
 inline fun <reified T> Nbt.encodeToNbtElement(value: T) = encodeToNbtElement(serializersModule.serializer(), value)
-inline fun <reified T> Nbt.decodeFromNbtElement(nbt: NbtElement): T = decodeFromNbtElement(serializersModule.serializer(), nbt)
+inline fun <reified T> Nbt.decodeFromNbtElement(nbt: NbtElement?): T = decodeFromNbtElement(serializersModule.serializer(), nbt)
