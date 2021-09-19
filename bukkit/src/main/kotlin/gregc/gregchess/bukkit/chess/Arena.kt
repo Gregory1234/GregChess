@@ -62,7 +62,8 @@ abstract class Arena(val name: String) : ChessListener {
 
         @JvmStatic
         protected val returnWorld: World
-            get() = BukkitGregChessModule.config.getString("ReturnWorld")?.let { Bukkit.getWorld(it)!! }
+            get() = BukkitGregChessModule.config.getString("ReturnWorld")
+                ?.let { requireNotNull(Bukkit.getWorld(it)) { "Return world $it not found" } }
                 ?: Bukkit.getWorlds().first()
     }
 

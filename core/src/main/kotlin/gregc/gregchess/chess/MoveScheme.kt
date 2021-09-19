@@ -26,7 +26,7 @@ fun rays(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
             Move(
                 piece, it, defaultColor(it, board),
                 setOf(piece.pos), setOf(it),
-                PosSteps(piece.pos + dir, dir, index).toSet(), PosSteps(piece.pos + dir, dir, index + 1).toSet(),
+                PosSteps(piece.pos + dir, dir, index), PosSteps(piece.pos + dir, dir, index + 1),
                 emptySet(), emptySet(),
                 listOf(
                     PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()

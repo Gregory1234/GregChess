@@ -30,6 +30,7 @@ data class FEN(
                     else -> {
                         val pos = Pos(file, 7 - rowIndex)
                         f(char.toPiece(pieceTypes, pos))
+                        file++
                     }
                 }
             }

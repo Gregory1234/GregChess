@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 data class Move(
     val piece: BoardPiece, val display: Pos, val floor: Floor,
     val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
-    val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>, // TODO: better way of storing this
+    val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
     val flagsNeeded: Set<Pair<Pos, ChessFlagType>>, val flagsAdded: Set<PosFlag>,
     val traits: List<MoveTrait>, val nameOrder: NameOrder
 ) {

@@ -39,12 +39,13 @@ class NbtElementDecoder(override val serializersModule: SerializersModule, priva
 
     override fun decodeNotNullMark(): Boolean = decodeNullableNbtElement() != null
 
+
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder = when (descriptor.kind) {
         StructureKind.LIST -> beginList()
         StructureKind.MAP -> beginMap()
         StructureKind.CLASS -> beginCompound()
         StructureKind.OBJECT -> beginCompound()
-        else -> TODO()
+        else -> throw IllegalArgumentException("Unknown structure descriptor kind ${descriptor.kind}")
     }
 
     private fun beginCompound() = NbtCompoundDecoder(serializersModule, nbtElement as NbtCompound)

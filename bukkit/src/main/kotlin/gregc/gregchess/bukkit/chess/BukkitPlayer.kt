@@ -144,7 +144,7 @@ data class BukkitPlayerInfo(val player: Player) : ChessPlayerInfo {
 
         override fun deserialize(decoder: Decoder): BukkitPlayerInfo {
             val uuid: UUID = decoder.decodeSerializableValue(decoder.serializersModule.serializer())
-            return BukkitPlayerInfo(Bukkit.getPlayer(uuid)!!)
+            return BukkitPlayerInfo(Bukkit.getPlayer(uuid).cNotNull(PLAYER_NOT_FOUND))
         }
     }
 

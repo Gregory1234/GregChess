@@ -35,7 +35,7 @@ class NbtElementEncoder(
         when (descriptor.kind) {
             StructureKind.LIST -> beginList()
             StructureKind.MAP -> beginMap()
-            else -> TODO()
+            else -> throw IllegalArgumentException("Unknown collection descriptor kind ${descriptor.kind}")
         }
 
     private fun beginCompound() = NbtCompoundEncoder(serializersModule, NbtCompound(), consumer)

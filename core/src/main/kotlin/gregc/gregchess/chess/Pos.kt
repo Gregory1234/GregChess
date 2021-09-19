@@ -41,7 +41,7 @@ data class Pos(val file: Int, val rank: Int) {
     }
 }
 
-class PosSteps(val start: Pos, private val jump: Dir, override val size: Int) : Collection<Pos> {
+class PosSteps(val start: Pos, private val jump: Dir, override val size: Int) : Set<Pos> {
     class PosIterator(val start: Pos, private val jump: Dir, private var remaining: Int) : Iterator<Pos> {
         private var value = start
 
