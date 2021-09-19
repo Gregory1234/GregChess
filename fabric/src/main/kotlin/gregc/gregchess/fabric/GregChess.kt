@@ -1,7 +1,7 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.ExtensionType
-import gregc.gregchess.chess.pawn
+import gregc.gregchess.chess.PieceType
 import gregc.gregchess.chess.white
 import gregc.gregchess.fabric.chess.*
 import net.fabricmc.api.ModInitializer
@@ -28,7 +28,7 @@ object GregChess : ModInitializer {
 
     @JvmField
     val CHESS_GROUP: ItemGroup = FabricItemGroupBuilder.build(ident("chess")) {
-        white.pawn.item.defaultStack
+        white(PieceType.PAWN).item.defaultStack
     }
 
     init {

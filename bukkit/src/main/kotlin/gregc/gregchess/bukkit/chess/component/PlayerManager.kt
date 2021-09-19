@@ -59,7 +59,7 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
                 val results = results!!
                 callEvent(GameStopStageEvent.STOP)
                 with(game.board) {
-                    if (lastMove?.piece?.side == white) {
+                    if (lastMove?.piece?.side == Side.WHITE) {
                         val wLast = lastMove
                         game.players.forEachReal { p ->
                             p.sendLastMoves(fullmoveClock + 1u, wLast, null)

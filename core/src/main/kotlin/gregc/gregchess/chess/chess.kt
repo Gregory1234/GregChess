@@ -59,7 +59,7 @@ data class MutableBySides<T> internal constructor(var white: T, var black: T) {
 
 fun <T> mutableBySides(white: T, black: T) = MutableBySides(white, black)
 fun <T> mutableBySides(both: T) = MutableBySides(both, both)
-inline fun <T> mutableBySides(block: (Side) -> T) = mutableBySides(block(white), block(black))
+inline fun <T> mutableBySides(block: (Side) -> T) = mutableBySides(block(Side.WHITE), block(Side.BLACK))
 
 @Serializable
 data class BySides<out T> internal constructor(val white: T, val black: T) {
@@ -79,7 +79,7 @@ data class BySides<out T> internal constructor(val white: T, val black: T) {
 
 fun <T> bySides(white: T, black: T) = BySides(white, black)
 fun <T> bySides(both: T) = BySides(both, both)
-inline fun <T> bySides(block: (Side) -> T) = bySides(block(white), block(black))
+inline fun <T> bySides(block: (Side) -> T) = bySides(block(Side.WHITE), block(Side.BLACK))
 
 class NoEngineMoveException(fen: FEN) : Exception(fen.toString())
 

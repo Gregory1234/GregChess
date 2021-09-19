@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FEN(
     val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
-    val currentTurn: Side = white,
+    val currentTurn: Side = Side.WHITE,
     val castlingRights: BySides<List<Int>> = bySides(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: UInt = 0u,
@@ -68,7 +68,7 @@ data class FEN(
 
     private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): BoardPiece {
         val type = PieceType.chooseByChar(pieceTypes, this)
-        val side = if (isUpperCase()) white else black
+        val side = if (isUpperCase()) Side.WHITE else Side.BLACK
         val hasMoved = type.hasMoved(this@FEN, p, side)
         return BoardPiece(p, type.of(side), hasMoved)
     }

@@ -47,7 +47,7 @@ class ChessGameTests : FreeSpec({
                 "already stopped" {
                     shouldThrowExactly<WrongStateException> {
                         val g = mkGame().start()
-                        val reason = white.wonBy(TEST_END_REASON)
+                        val reason = whiteWonBy(TEST_END_REASON)
                         g.stop(reason)
                         g.start()
                     }
@@ -57,7 +57,7 @@ class ChessGameTests : FreeSpec({
         "stopping should" - {
             "save end reason" {
                 val g = mkGame().start()
-                val reason = white.wonBy(TEST_END_REASON)
+                val reason = whiteWonBy(TEST_END_REASON)
                 g.stop(reason)
                 g.results shouldBe reason
                 g.running.shouldBeFalse()
@@ -66,7 +66,7 @@ class ChessGameTests : FreeSpec({
                 val g = mkGame(spyComponentSettings).start()
                 val c = g.getComponent<TestComponent>()!!
                 clearRecords(c)
-                g.stop(white.wonBy(TEST_END_REASON))
+                g.stop(whiteWonBy(TEST_END_REASON))
                 verifySequence {
                     c.handleEvents(GameBaseEvent.STOP)
                 }
@@ -75,7 +75,7 @@ class ChessGameTests : FreeSpec({
                 "not running yet" {
                     shouldThrowExactly<WrongStateException> {
                         val g = mkGame()
-                        val reason = white.wonBy(TEST_END_REASON)
+                        val reason = whiteWonBy(TEST_END_REASON)
                         g.stop(reason)
                     }
                 }

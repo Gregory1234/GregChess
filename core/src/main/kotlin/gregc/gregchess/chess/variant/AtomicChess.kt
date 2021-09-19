@@ -52,8 +52,8 @@ object AtomicChess : ChessVariant() {
         pos in board.kingOf(side)?.pos?.neighbours().orEmpty()
 
     private fun kingHug(board: Chessboard): Boolean {
-        val wk = board.kingOf(white)?.pos
-        return wk != null && nextToKing(black, wk, board)
+        val wk = board.kingOf(Side.WHITE)?.pos
+        return wk != null && nextToKing(Side.BLACK, wk, board)
     }
 
     private fun pinningMoves(by: Side, pos: Pos, board: Chessboard) =

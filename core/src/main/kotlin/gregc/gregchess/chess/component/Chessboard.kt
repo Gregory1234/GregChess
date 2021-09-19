@@ -96,10 +96,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         get() {
             if (initialFEN.chess960)
                 return true
-            val whiteKing = kingOf(white)
-            val blackKing = kingOf(black)
-            val whiteRooks = piecesOf(white, PieceType.ROOK).filter { !it.hasMoved }
-            val blackRooks = piecesOf(black, PieceType.ROOK).filter { !it.hasMoved }
+            val whiteKing = kingOf(Side.WHITE)
+            val blackKing = kingOf(Side.BLACK)
+            val whiteRooks = piecesOf(Side.WHITE, PieceType.ROOK).filter { !it.hasMoved }
+            val blackRooks = piecesOf(Side.BLACK, PieceType.ROOK).filter { !it.hasMoved }
             if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != Pos(4, 0))
                 return true
             if (blackKing != null && !blackKing.hasMoved && blackKing.pos != Pos(4, 7))
@@ -247,7 +247,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
             it.undo(game)
             // TODO: this is possibly incorrect
-            if (game.currentTurn == white)
+            if (game.currentTurn == Side.WHITE)
                 fullmoveClock--
             moves.removeLast()
             lastMove?.showDone(this)

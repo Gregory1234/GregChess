@@ -26,8 +26,8 @@ sealed class GameScore(val pgn: String) {
 
         override fun deserialize(decoder: Decoder): GameScore = when(decoder.decodeString()) {
             Draw.pgn -> Draw
-            victoryPgn(white) -> Victory(white)
-            victoryPgn(black) -> Victory(black)
+            victoryPgn(Side.WHITE) -> Victory(Side.WHITE)
+            victoryPgn(Side.BLACK) -> Victory(Side.BLACK)
             else -> throw IllegalStateException()
         }
 
@@ -44,8 +44,8 @@ sealed class GameScore(val pgn: String) {
             }
 
             override fun deserialize(decoder: Decoder): Victory = when(decoder.decodeString()) {
-                victoryPgn(white) -> Victory(white)
-                victoryPgn(black) -> Victory(black)
+                victoryPgn(Side.WHITE) -> Victory(Side.WHITE)
+                victoryPgn(Side.BLACK) -> Victory(Side.BLACK)
                 else -> throw IllegalStateException()
             }
         }
@@ -117,6 +117,8 @@ class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false): Name
 
 fun Side.wonBy(reason: DetEndReason, vararg args: String): GameResults = GameResultsWith(reason, GameScore.Victory(this), args.toList())
 fun Side.lostBy(reason: DetEndReason, vararg args: String): GameResults = (!this).wonBy(reason, *args)
+fun whiteWonBy(reason: DetEndReason, vararg args: String): GameResults = Side.WHITE.wonBy(reason, *args)
+fun blackWonBy(reason: DetEndReason, vararg args: String): GameResults = Side.BLACK.wonBy(reason, *args)
 fun drawBy(reason: DrawEndReason, vararg args: String): GameResults = GameResultsWith(reason, GameScore.Draw, args.toList())
 fun DrawEndReason.of(vararg args: String): GameResults = GameResultsWith(this, GameScore.Draw, args.toList())
 

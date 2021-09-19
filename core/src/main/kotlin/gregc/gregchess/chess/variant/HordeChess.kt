@@ -6,7 +6,7 @@ import gregc.gregchess.chess.component.Chessboard
 object HordeChess : ChessVariant() {
 
     override fun chessboardSetup(board: Chessboard) {
-        for (it in board.piecesOf(white, PieceType.PAWN)) {
+        for (it in board.piecesOf(Side.WHITE, PieceType.PAWN)) {
             it.copyInPlace(board, hasMoved = false)
         }
     }
@@ -30,14 +30,14 @@ object HordeChess : ChessVariant() {
     override fun isInCheck(king: BoardPiece, board: Chessboard) = king.side == black && Normal.isInCheck(king, board)
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(black).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
-            if (isInCheck(game, black))
-                game.stop(white.wonBy(EndReason.CHECKMATE))
+        if (piecesOf(Side.BLACK).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
+            if (isInCheck(game, Side.BLACK))
+                game.stop(whiteWonBy(EndReason.CHECKMATE))
             else
                 game.stop(drawBy(EndReason.STALEMATE))
         }
-        if (piecesOf(white).isEmpty())
-            game.stop(black.wonBy(EndReason.ALL_PIECES_LOST))
+        if (piecesOf(Side.WHITE).isEmpty())
+            game.stop(blackWonBy(EndReason.ALL_PIECES_LOST))
         checkForRepetition()
         checkForFiftyMoveRule()
     }

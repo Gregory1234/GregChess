@@ -13,8 +13,8 @@ object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
     override fun getOrNull(key: RegistryKey<String>): Piece? {
         val (module, name) = key
         return when(name.take(6)) {
-            "white_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(white)
-            "black_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(black)
+            "white_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Side.WHITE)
+            "black_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Side.BLACK)
             else -> null
         }
     }
@@ -25,10 +25,10 @@ object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
         }
 
     override val values: Set<Piece>
-        get() = RegistryType.PIECE_TYPE.values.flatMap { listOf(it.of(white), it.of(black)) }.toSet()
+        get() = RegistryType.PIECE_TYPE.values.flatMap { listOf(white(it), black(it)) }.toSet()
 
     override fun valuesOf(module: ChessModule): Set<Piece> =
-        RegistryType.PIECE_TYPE.valuesOf(module).flatMap { listOf(it.of(white), it.of(black)) }.toSet()
+        RegistryType.PIECE_TYPE.valuesOf(module).flatMap { listOf(white(it), black(it)) }.toSet()
 
     override val keys: Set<RegistryKey<String>>
         get() = values.map { get(it) }.toSet()
@@ -49,12 +49,8 @@ data class Piece(val type: PieceType, val side: Side) : NameRegistered {
 
 fun PieceType.of(side: Side) = Piece(this, side)
 
-val Side.pawn get() = PieceType.PAWN.of(this)
-val Side.knight get() = PieceType.KNIGHT.of(this)
-val Side.bishop get() = PieceType.BISHOP.of(this)
-val Side.rook get() = PieceType.ROOK.of(this)
-val Side.queen get() = PieceType.QUEEN.of(this)
-val Side.king get() = PieceType.KING.of(this)
+fun white(type: PieceType) = type.of(Side.WHITE)
+fun black(type: PieceType) = type.of(Side.BLACK)
 
 @Serializable
 data class CapturedPos(val by: Side, val row: Int, val pos: Int)
@@ -63,8 +59,6 @@ data class CapturedPos(val by: Side, val row: Int, val pos: Int)
 data class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
     val type get() = piece.type
     val side get() = piece.side
-
-    override fun toString() = "CapturedPiece(type=$type, side=$side, pos=$pos)"
 }
 
 @Serializable
@@ -165,6 +159,8 @@ data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece
     val type: PieceType get() = piece.type
     val side: Side get() = piece.side
     val pos: Pos get() = piece.pos
+
+    override fun toString(): String = "CapturedBoardPiece(piece=$piece, pos=$pos, captured.pos=${captured.pos})"
 
     fun resurrect(board: Chessboard): BoardPiece {
         board[pos]?.piece?.let {

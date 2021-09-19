@@ -65,8 +65,8 @@ open class ChessVariant: NameRegistered {
         }
         checkForRepetition()
         checkForFiftyMoveRule()
-        val whitePieces = piecesOf(white)
-        val blackPieces = piecesOf(white)
+        val whitePieces = piecesOf(Side.WHITE)
+        val blackPieces = piecesOf(Side.BLACK)
         if (whitePieces.size == 1 && blackPieces.size == 1)
             game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
         if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
