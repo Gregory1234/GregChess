@@ -11,8 +11,8 @@ private val basicSettings = testSettings("basic")
 private val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponentData))
 private fun spyVariantSettings() = testSettings("spy variant", variant = spyk(TestVariant))
 
-private fun mkGame(settings: GameSettings = basicSettings, players: BySides<String> = bySides("a", "b")) =
-    ChessGame(settings, bySides {players[it].cpi})
+private fun mkGame(settings: GameSettings = basicSettings, players: ByColor<String> = byColor("a", "b")) =
+    ChessGame(settings, byColor {players[it].cpi})
 
 fun componentExclude(c: TestComponent) {
     excludeRecords {

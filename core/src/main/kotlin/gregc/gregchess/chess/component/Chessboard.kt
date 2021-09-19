@@ -217,7 +217,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         return FEN(
             boardState,
             game.currentTurn,
-            bySides(::castling),
+            byColor(::castling),
             squares.values.firstOrNull { s -> s.flags.any { it.type == PawnMovement.EN_PASSANT && it.active } }?.pos,
             halfmoveClock,
             fullmoveCounter

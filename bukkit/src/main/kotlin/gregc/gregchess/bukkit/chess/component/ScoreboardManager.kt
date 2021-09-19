@@ -42,7 +42,7 @@ class ScoreboardManager(game: ChessGame, override val data: ScoreboardManagerDat
     private val playerProperties = mutableMapOf<PropertyType, PlayerProperty>()
 
     private val gamePropertyTeams = mutableMapOf<PropertyType, Team>()
-    private val playerPropertyTeams = mutableMapOf<PropertyType, BySides<Team>>()
+    private val playerPropertyTeams = mutableMapOf<PropertyType, ByColor<Team>>()
 
     private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get())
 
@@ -100,7 +100,7 @@ class ScoreboardManager(game: ChessGame, override val data: ScoreboardManagerDat
             objective.getScore(generalFormat(t.localName)).score = i--
         }
         for (t in playerProperties.keys) {
-            playerPropertyTeams[t] = bySides { s ->
+            playerPropertyTeams[t] = byColor { s ->
                 newTeam().apply { addEntry(format(s, t.localName)) }
             }
         }

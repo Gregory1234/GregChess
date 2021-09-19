@@ -30,7 +30,7 @@ object PlayerManagerData : ComponentData<PlayerManager> {
 }
 
 class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Component(game) {
-    internal var quick: BySides<Boolean> = bySides(false)
+    internal var quick: ByColor<Boolean> = byColor(false)
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = with(game) {
@@ -119,9 +119,9 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
 
 val ChessGame.playerManager get() = requireComponent<PlayerManager>()
 
-fun ChessGame.stop(results: GameResults, quick: BySides<Boolean>) {
+fun ChessGame.stop(results: GameResults, quick: ByColor<Boolean>) {
     playerManager.quick = quick
     stop(results)
 }
 
-fun ChessGame.quickStop(results: GameResults) = stop(results, bySides(true))
+fun ChessGame.quickStop(results: GameResults) = stop(results, byColor(true))

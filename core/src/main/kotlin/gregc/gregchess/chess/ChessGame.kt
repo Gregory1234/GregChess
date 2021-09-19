@@ -36,7 +36,7 @@ enum class GameBaseEvent : ChessEvent {
 @Serializable(with = ChessGame.Serializer::class)
 class ChessGame(
     val settings: GameSettings,
-    val playerinfo: BySides<ChessPlayerInfo>,
+    val playerinfo: ByColor<ChessPlayerInfo>,
     val uuid: UUID = UUID.randomUUID()
 ) : ChessEventCaller {
     // TODO: make the serializer more complete
@@ -44,7 +44,7 @@ class ChessGame(
     object Serializer: KSerializer<ChessGame> {
         override val descriptor = buildClassSerialDescriptor("ChessGame") {
             element("uuid", buildSerialDescriptor("ChessGameUUID", SerialKind.CONTEXTUAL))
-            element("players", BySides.serializer(ChessPlayerInfoSerializer).descriptor)
+            element("players", ByColor.serializer(ChessPlayerInfoSerializer).descriptor)
             element<String>("preset")
             element<ChessVariant>("variant")
             element<Boolean>("simpleCastling")
@@ -53,7 +53,7 @@ class ChessGame(
 
         override fun serialize(encoder: Encoder, value: ChessGame) = encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, encoder.serializersModule.serializer(), value.uuid)
-            encodeSerializableElement(descriptor, 1, BySides.serializer(ChessPlayerInfoSerializer), value.playerinfo)
+            encodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerInfoSerializer), value.playerinfo)
             encodeStringElement(descriptor, 2, value.settings.name)
             encodeSerializableElement(descriptor, 3, ChessVariant.serializer(), value.variant)
             encodeBooleanElement(descriptor, 4, value.settings.simpleCastling)
@@ -62,14 +62,14 @@ class ChessGame(
 
         override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
             var uuid: UUID? = null
-            var players: BySides<ChessPlayerInfo>? = null
+            var players: ByColor<ChessPlayerInfo>? = null
             var preset: String? = null
             var variant: ChessVariant? = null
             var simpleCastling: Boolean? = null
             var components: List<ComponentData<*>>? = null
             if (decodeSequentially()) { // sequential decoding protocol
                 uuid = decodeSerializableElement(descriptor, 0, decoder.serializersModule.serializer())
-                players = decodeSerializableElement(descriptor, 1, BySides.serializer(ChessPlayerInfoSerializer))
+                players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerInfoSerializer))
                 preset = decodeStringElement(descriptor, 2)
                 variant = decodeSerializableElement(descriptor, 3, ChessVariant.serializer())
                 simpleCastling = decodeBooleanElement(descriptor, 4)
@@ -79,7 +79,7 @@ class ChessGame(
                     when (val index = decodeElementIndex(descriptor)) {
                         0 -> uuid = decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
                         1 -> players =
-                            decodeSerializableElement(descriptor, index, BySides.serializer(ChessPlayerInfoSerializer))
+                            decodeSerializableElement(descriptor, index, ByColor.serializer(ChessPlayerInfoSerializer))
                         2 -> preset = decodeStringElement(descriptor, index)
                         3 -> variant = decodeSerializableElement(descriptor, index, ChessVariant.serializer())
                         4 -> simpleCastling = decodeBooleanElement(descriptor, index)
@@ -126,7 +126,7 @@ class ChessGame(
 
     inline fun <reified T : Component> requireComponent(): T = requireComponent(T::class)
 
-    val players = bySides { playerinfo[it].getPlayer(it, this) }
+    val players = byColor { playerinfo[it].getPlayer(it, this) }
 
     private var state: GameState = GameState.Initial
 

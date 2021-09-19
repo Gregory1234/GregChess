@@ -63,7 +63,7 @@ abstract class Arena(val name: String): ChessListener {
     abstract val world: World
     abstract val boardStart: Loc
     abstract val tileSize: Int
-    abstract val capturedStart: BySides<Loc>
+    abstract val capturedStart: ByColor<Loc>
 
 }
 
@@ -76,7 +76,7 @@ class SimpleArena(
     offset: Loc
 ) : Arena(name) {
     override val boardStart: Loc = offset + Loc(8,0,8)
-    override val capturedStart = bySides(
+    override val capturedStart = byColor(
         boardStart + Loc(8 * tileSize - 1, 0, -3),
         boardStart + Loc(0, 0, 8 * tileSize + 2)
     )

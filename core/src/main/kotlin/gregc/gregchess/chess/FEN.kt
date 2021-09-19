@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class FEN(
     val boardState: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
     val currentTurn: Color = Color.WHITE,
-    val castlingRights: BySides<List<Int>> = bySides(listOf(0, 7)),
+    val castlingRights: ByColor<List<Int>> = byColor(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: UInt = 0u,
     val fullmoveCounter: UInt = 1u,
@@ -114,7 +114,7 @@ data class FEN(
             return FEN(
                 board,
                 Color.parseFromChar(turn[0]),
-                bySides(
+                byColor(
                     parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
                     parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() })
                 ),
@@ -141,7 +141,7 @@ data class FEN(
             val pawns = PieceType.PAWN.char.toString().repeat(8)
             return FEN(
                 "$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}",
-                castlingRights = bySides(listOf(r1, r2)),
+                castlingRights = byColor(listOf(r1, r2)),
                 chess960 = true
             )
         }

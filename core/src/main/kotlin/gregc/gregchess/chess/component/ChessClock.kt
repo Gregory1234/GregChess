@@ -41,18 +41,18 @@ data class TimeControl(
 @Serializable
 data class ChessClockData(
     val timeControl: TimeControl,
-    val timeRemaining: BySides<Duration> = bySides(timeControl.initialTime),
+    val timeRemaining: ByColor<Duration> = byColor(timeControl.initialTime),
     val currentTurnLength: Duration = 0.seconds
 ) : ComponentData<ChessClock> {
     override fun getComponent(game: ChessGame) = ChessClock(game, this)
 }
 
 class ChessClock(game: ChessGame, settings: ChessClockData) : Component(game) {
-    private val time = mutableBySides { settings.timeRemaining[it] }
+    private val time = mutableByColor { settings.timeRemaining[it] }
     val timeControl = settings.timeControl
     private var currentTurnLength = settings.currentTurnLength
 
-    override val data get() = ChessClockData(timeControl, bySides { time[it] }, currentTurnLength)
+    override val data get() = ChessClockData(timeControl, byColor { time[it] }, currentTurnLength)
 
     private var lastTime: LocalDateTime = LocalDateTime.now()
 

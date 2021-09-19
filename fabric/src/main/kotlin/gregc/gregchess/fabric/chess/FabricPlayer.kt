@@ -30,11 +30,11 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
 
 val ServerPlayerEntity.cpi get() = FabricPlayerInfo(uuid)
 
-inline fun BySides<ChessPlayer>.forEachReal(block: (UUID) -> Unit) {
+inline fun ByColor<ChessPlayer>.forEachReal(block: (UUID) -> Unit) {
     toList().filterIsInstance<FabricPlayer>().map { it.uuid }.distinct().forEach(block)
 }
 
-inline fun BySides<ChessPlayer>.forEachUnique(block: (FabricPlayer) -> Unit) {
+inline fun ByColor<ChessPlayer>.forEachUnique(block: (FabricPlayer) -> Unit) {
     val players = toList().filterIsInstance<FabricPlayer>()
     if (players.size == 2 && players.all {it.info == players[0].info})
         players.filter { it.hasTurn }.forEach(block)

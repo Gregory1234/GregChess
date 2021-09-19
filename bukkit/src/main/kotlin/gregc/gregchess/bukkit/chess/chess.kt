@@ -15,7 +15,7 @@ val Color.configName get() = name.snakeToPascal()
 fun PieceType.getItem(color: Color): ItemStack {
     val item = ItemStack(itemMaterial[color])
     val meta = item.itemMeta!!
-    meta.setDisplayName(config.getPathString("Chess.Side.${color.configName}.Piece", localName))
+    meta.setDisplayName(config.getPathString("Chess.Color.${color.configName}.Piece", localName))
     item.itemMeta = meta
     return item
 }
@@ -25,9 +25,9 @@ val PieceType.section get() = module.bukkit.config.getConfigurationSection("Ches
 val PieceType.localChar get() = section.getString("Char")!!.single()
 val PieceType.localName get() = section.getPathString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
-val PieceType.itemMaterial get() = bySides { Material.valueOf(section.getString("Item.${it.configName}")!!) }
+val PieceType.itemMaterial get() = byColor { Material.valueOf(section.getString("Item.${it.configName}")!!) }
 val PieceType.structure
-    get() = bySides { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
+    get() = byColor { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
 
 val Piece.item get() = type.getItem(color)
 

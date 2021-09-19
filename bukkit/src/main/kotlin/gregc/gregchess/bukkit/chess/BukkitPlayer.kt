@@ -72,7 +72,7 @@ fun Player.sendMessage(msg: Message) = sendMessage(msg.get())
 
 fun Player.sendTitleFull(title: String?, subtitle: String?) = sendTitle(title, subtitle, 10, 70, 20)
 
-private val SPECTATOR_WINNER = bySides { title("Spectator.${it.configName}Won") }
+private val SPECTATOR_WINNER = byColor { title("Spectator.${it.configName}Won") }
 private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")
 
 fun Player.showGameResults(results: GameResults) {
@@ -159,10 +159,10 @@ class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame):
 
     companion object {
         private val IN_CHECK_MSG = message("InCheck")
-        private val YOU_ARE_PLAYING_AS_MSG = bySides { message("YouArePlayingAs.${it.configName}") }
+        private val YOU_ARE_PLAYING_AS_MSG = byColor { message("YouArePlayingAs.${it.configName}") }
 
         private val IN_CHECK_TITLE = title("InCheck")
-        private val YOU_ARE_PLAYING_AS_TITLE = bySides { title("YouArePlayingAs.${it.configName}") }
+        private val YOU_ARE_PLAYING_AS_TITLE = byColor { title("YouArePlayingAs.${it.configName}") }
         private val YOUR_TURN = title("YourTurn")
     }
 
@@ -228,11 +228,11 @@ class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame):
     }
 }
 
-inline fun BySides<ChessPlayer>.forEachReal(block: (Player) -> Unit) {
+inline fun ByColor<ChessPlayer>.forEachReal(block: (Player) -> Unit) {
     toList().filterIsInstance<BukkitPlayer>().map { it.player }.distinct().forEach(block)
 }
 
-inline fun BySides<ChessPlayer>.forEachUnique(block: (BukkitPlayer) -> Unit) {
+inline fun ByColor<ChessPlayer>.forEachUnique(block: (BukkitPlayer) -> Unit) {
     val players = toList().filterIsInstance<BukkitPlayer>()
     if (players.size == 2 && players.all {it.player == players[0].player})
         players.filter { it.hasTurn }.forEach(block)

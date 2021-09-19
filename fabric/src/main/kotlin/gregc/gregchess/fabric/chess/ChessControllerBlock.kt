@@ -155,7 +155,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         }
         currentGame = ChessGame(
             ChessGameManager.settings(ChessVariant.Normal, FabricRendererSettings(this)),
-            bySides(whitePlayer.cpi, blackPlayer.cpi)
+            byColor(whitePlayer.cpi, blackPlayer.cpi)
         ).start()
     }
 

@@ -28,19 +28,15 @@ enum class BoardSide(private val direction: Int, val castles: String) {
 }
 
 @Serializable
-data class MutableBySides<T> internal constructor(var white: T, var black: T) {
+data class MutableByColor<T> internal constructor(var white: T, var black: T) {
     operator fun get(color: Color) = when (color) {
         Color.WHITE -> white
         Color.BLACK -> black
     }
 
     operator fun set(color: Color, value: T) = when (color) {
-        Color.WHITE -> {
-            white = value
-        }
-        Color.BLACK -> {
-            black = value
-        }
+        Color.WHITE -> white = value
+        Color.BLACK -> black = value
     }
 
     fun toList(): List<T> = listOf(white, black)
@@ -51,12 +47,12 @@ data class MutableBySides<T> internal constructor(var white: T, var black: T) {
     }
 }
 
-fun <T> mutableBySides(white: T, black: T) = MutableBySides(white, black)
-fun <T> mutableBySides(both: T) = MutableBySides(both, both)
-inline fun <T> mutableBySides(block: (Color) -> T) = mutableBySides(block(Color.WHITE), block(Color.BLACK))
+fun <T> mutableByColor(white: T, black: T) = MutableByColor(white, black)
+fun <T> mutableByColor(both: T) = MutableByColor(both, both)
+inline fun <T> mutableByColor(block: (Color) -> T) = mutableByColor(block(Color.WHITE), block(Color.BLACK))
 
 @Serializable
-data class BySides<out T> internal constructor(val white: T, val black: T) {
+data class ByColor<out T> internal constructor(val white: T, val black: T) {
 
     operator fun get(color: Color) = when (color) {
         Color.WHITE -> white
@@ -71,9 +67,9 @@ data class BySides<out T> internal constructor(val white: T, val black: T) {
     }
 }
 
-fun <T> bySides(white: T, black: T) = BySides(white, black)
-fun <T> bySides(both: T) = BySides(both, both)
-inline fun <T> bySides(block: (Color) -> T) = bySides(block(Color.WHITE), block(Color.BLACK))
+fun <T> byColor(white: T, black: T) = ByColor(white, black)
+fun <T> byColor(both: T) = ByColor(both, both)
+inline fun <T> byColor(block: (Color) -> T) = byColor(block(Color.WHITE), block(Color.BLACK))
 
 class NoEngineMoveException(fen: FEN) : Exception(fen.toString())
 

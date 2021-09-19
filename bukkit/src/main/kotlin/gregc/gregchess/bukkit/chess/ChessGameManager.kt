@@ -43,7 +43,7 @@ object ChessGameManager : Listener {
             cRequire(player.isSpectating, YOU_NOT_IN_GAME)
             player.spectatedGame = null
         } else {
-            g.game.stop(g.color.lostBy(EndReason.WALKOVER), bySides { it == g.color })
+            g.game.stop(g.color.lostBy(EndReason.WALKOVER), byColor { it == g.color })
         }
     }
 
