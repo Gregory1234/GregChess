@@ -5,8 +5,7 @@ import gregc.gregchess.chess.component.Chessboard
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 
 object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
@@ -177,10 +176,10 @@ data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece
 
     object Serializer : KSerializer<CapturedBoardPiece> {
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor("CapturedBoardPiece") {
-            element("piece", Piece.serializer().descriptor)
-            element("pos", Pos.serializer().descriptor)
-            element("hasMoved", Boolean.serializer().descriptor)
-            element("capturedPos", CapturedPos.serializer().descriptor)
+            element<Piece>("piece")
+            element<Pos>("pos")
+            element<Boolean>("hasMoved")
+            element<CapturedPos>("capturedPos")
         }
 
         override fun serialize(encoder: Encoder, value: CapturedBoardPiece) = encoder.encodeStructure(descriptor) {

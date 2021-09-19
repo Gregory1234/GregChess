@@ -1,5 +1,6 @@
 package gregc.gregchess
 
+import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.MoveNameToken
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
@@ -108,25 +109,22 @@ open class ClassRegisteredSerializer<T : Any>(
     final override fun deserialize(decoder: Decoder): T = decoder.decodeStructure(descriptor) {
         var type: String? = null
         var ret: T? = null
-        if (decodeSequentially()) {
+
+        if (decodeSequentially()) { // sequential decoding protocol
             type = decodeStringElement(descriptor, 0)
             val serializer = registryType[type.toKey()].serializer()
-            return decodeSerializableElement(descriptor, 1, serializer)
-        }
-
-        mainLoop@ while (true) {
-            when (val index = decodeElementIndex(descriptor)) {
-                CompositeDecoder.DECODE_DONE -> {
-                    break@mainLoop
+            ret = decodeSerializableElement(descriptor, 1, serializer)
+        } else {
+            while (true) {
+                when (val index = decodeElementIndex(ChessGame.Serializer.descriptor)) {
+                    0 -> type = decodeStringElement(descriptor, index)
+                    1 -> {
+                        val serializer = registryType[type!!.toKey()].serializer()
+                        ret = decodeSerializableElement(descriptor, index, serializer)
+                    }
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
                 }
-                0 -> {
-                    type = decodeStringElement(descriptor, index)
-                }
-                1 -> {
-                    val serializer = registryType[type!!.toKey()].serializer()
-                    ret = decodeSerializableElement(descriptor, index, serializer)
-                }
-                else -> throw SerializationException("Invalid index")
             }
         }
         ret!!

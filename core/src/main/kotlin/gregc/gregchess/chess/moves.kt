@@ -175,20 +175,23 @@ data class MoveNameToken<T : Any>(val type: MoveNameTokenType<T>, val value: T) 
                 return MoveNameToken(type, decodeSerializableElement(descriptor, 1, serializer))
             }
 
-            mainLoop@ while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    CompositeDecoder.DECODE_DONE -> {
-                        break@mainLoop
+            if (decodeSequentially()) { // sequential decoding protocol
+                type = decodeSerializableElement(descriptor, 0, MoveNameTokenType.Serializer)
+                val serializer = type.cl.serializer()
+                type as MoveNameTokenType<Any>
+                ret = MoveNameToken(type, decodeSerializableElement(descriptor, 1, serializer))
+            } else {
+                while (true) {
+                    when (val index = decodeElementIndex(ChessGame.Serializer.descriptor)) {
+                        0 -> type = decodeSerializableElement(descriptor, index, MoveNameTokenType.Serializer)
+                        1 -> {
+                            val serializer = type!!.cl.serializer()
+                            type as MoveNameTokenType<Any>
+                            ret = MoveNameToken(type, decodeSerializableElement(descriptor, index, serializer))
+                        }
+                        CompositeDecoder.DECODE_DONE -> break
+                        else -> error("Unexpected index: $index")
                     }
-                    0 -> {
-                        type = decodeSerializableElement(descriptor, index, MoveNameTokenType.Serializer)
-                    }
-                    1 -> {
-                        val serializer = type!!.cl.serializer()
-                        type as MoveNameTokenType<Any>
-                        ret = MoveNameToken(type, decodeSerializableElement(descriptor, index, serializer))
-                    }
-                    else -> throw SerializationException("Invalid index")
                 }
             }
             ret!!
