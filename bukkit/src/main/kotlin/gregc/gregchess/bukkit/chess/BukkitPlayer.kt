@@ -87,9 +87,9 @@ private val YOU_WON = title("Player.YouWon")
 private val YOU_LOST = title("Player.YouLost")
 private val YOU_DREW = title("Player.YouDrew")
 
-fun Player.showGameResults(side: Side, results: GameResults) {
+fun Player.showGameResults(color: Color, results: GameResults) {
     val wld = when (results.score) {
-        GameScore.Victory(side) -> YOU_WON
+        GameScore.Victory(color) -> YOU_WON
         GameScore.Draw -> YOU_DREW
         else -> YOU_LOST
     }
@@ -147,11 +147,11 @@ data class BukkitPlayerInfo(val player: Player): ChessPlayerInfo {
 
     override val name: String get() = player.name
     val uuid: UUID get() = player.uniqueId
-    override fun getPlayer(side: Side, game: ChessGame) = BukkitPlayer(this, side, game)
+    override fun getPlayer(color: Color, game: ChessGame) = BukkitPlayer(this, color, game)
 }
 
-class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
-    ChessPlayer(info, side, game) {
+class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame):
+    ChessPlayer(info, color, game) {
 
     val player: Player = info.player
 
@@ -171,7 +171,7 @@ class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
     fun pickUp(pos: Pos) {
         if (!game.running) return
         val piece = game.board[pos]?.piece ?: return
-        if (piece.side != side) return
+        if (piece.color != color) return
         held = piece
         player.inventory.setItem(0, piece.piece.item)
     }
@@ -220,11 +220,11 @@ class BukkitPlayer(info: BukkitPlayerInfo, side: Side, game: ChessGame):
 
     override fun init() {
         sendTitleList(buildList {
-            this += YOU_ARE_PLAYING_AS_TITLE[side] to false
+            this += YOU_ARE_PLAYING_AS_TITLE[color] to false
             if (hasTurn)
                 this += YOUR_TURN to true
         })
-        player.sendMessage(YOU_ARE_PLAYING_AS_MSG[side])
+        player.sendMessage(YOU_ARE_PLAYING_AS_MSG[color])
     }
 }
 

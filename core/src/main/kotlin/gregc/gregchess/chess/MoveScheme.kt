@@ -60,9 +60,9 @@ object KingMovement : MoveScheme {
     override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
         addAll(jumps(piece, board, rotationsOf(1, 0) + rotationsOf(1, 1)))
         if (!piece.hasMoved) {
-            for (rook in board.piecesOf(piece.side, PieceType.ROOK)) {
+            for (rook in board.piecesOf(piece.color, PieceType.ROOK)) {
                 if (rook.pos.rank == piece.pos.rank && !rook.hasMoved) {
-                    val side = if (rook.pos.file < piece.pos.file) queenside else kingside
+                    val side = if (rook.pos.file < piece.pos.file) BoardSide.QUEENSIDE else BoardSide.KINGSIDE
                     if (board.simpleCastling) {
                         TODO()
                     } else {
@@ -86,7 +86,7 @@ object KingMovement : MoveScheme {
 
 class PawnMovement(
     private val canDouble: (BoardPiece) -> Boolean = { !it.hasMoved },
-    private val promotions: (BoardPiece) -> List<Piece> = { p -> defaultPromotions.map { it.of(p.side) } }
+    private val promotions: (BoardPiece) -> List<Piece> = { p -> defaultPromotions.map { it.of(p.color) } }
 ) : MoveScheme {
     companion object {
         private val defaultPromotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
@@ -99,7 +99,7 @@ class PawnMovement(
     override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
         fun promotions(pos: Pos) = if (pos.rank in listOf(0, 7)) promotions(piece) else null
 
-        val dir = piece.side.dir
+        val dir = piece.color.forward
         val pos = piece.pos
         val forward = pos + dir
         if (forward.isValid()) {

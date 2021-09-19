@@ -13,15 +13,15 @@ object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
     override fun getOrNull(key: RegistryKey<String>): Piece? {
         val (module, name) = key
         return when(name.take(6)) {
-            "white_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Side.WHITE)
-            "black_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Side.BLACK)
+            "white_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Color.WHITE)
+            "black_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Color.BLACK)
             else -> null
         }
     }
 
     override fun getOrNull(value: Piece): RegistryKey<String>? =
         RegistryType.PIECE_TYPE.getOrNull(value.type)?.let { (module, name) ->
-            RegistryKey(module, "${value.side.toString().lowercase()}_$name")
+            RegistryKey(module, "${value.color.toString().lowercase()}_$name")
         }
 
     override val values: Set<Piece>
@@ -35,36 +35,36 @@ object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
 }
 
 @Serializable(with = Piece.Serializer::class)
-data class Piece(val type: PieceType, val side: Side) : NameRegistered {
+data class Piece(val type: PieceType, val color: Color) : NameRegistered {
     override val key: RegistryKey<String> get() = PieceRegistryView[this]
 
     object Serializer : NameRegisteredSerializer<Piece>("Piece", PieceRegistryView)
 
     val char
-        get() = when (side) {
-            Side.WHITE -> type.char.uppercaseChar()
-            Side.BLACK -> type.char
+        get() = when (color) {
+            Color.WHITE -> type.char.uppercaseChar()
+            Color.BLACK -> type.char
         }
 }
 
-fun PieceType.of(side: Side) = Piece(this, side)
+fun PieceType.of(color: Color) = Piece(this, color)
 
-fun white(type: PieceType) = type.of(Side.WHITE)
-fun black(type: PieceType) = type.of(Side.BLACK)
+fun white(type: PieceType) = type.of(Color.WHITE)
+fun black(type: PieceType) = type.of(Color.BLACK)
 
 @Serializable
-data class CapturedPos(val by: Side, val row: Int, val pos: Int)
+data class CapturedPos(val by: Color, val row: Int, val pos: Int)
 
 @Serializable
 data class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
     val type get() = piece.type
-    val side get() = piece.side
+    val color get() = piece.color
 }
 
 @Serializable
 data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val type get() = piece.type
-    val side get() = piece.side
+    val color get() = piece.color
     val char get() = piece.char
 
     fun checkExists(board: Chessboard) {
@@ -103,7 +103,7 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         return new
     }
 
-    fun capture(by: Side, board: Chessboard): CapturedBoardPiece {
+    fun capture(by: Color, board: Chessboard): CapturedBoardPiece {
         checkExists(board)
         clear(board)
         val captured = CapturedBoardPiece(this, board.nextCapturedPos(type, by))
@@ -157,7 +157,7 @@ data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece
     }
 
     val type: PieceType get() = piece.type
-    val side: Side get() = piece.side
+    val color: Color get() = piece.color
     val pos: Pos get() = piece.pos
 
     override fun toString(): String = "CapturedBoardPiece(piece=$piece, pos=$pos, captured.pos=${captured.pos})"

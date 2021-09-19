@@ -2,27 +2,24 @@ package gregc.gregchess.chess
 
 import kotlinx.serialization.Serializable
 
-enum class Side(val char: Char, val direction: Int) {
+enum class Color(val char: Char, private val direction: Int) {
     WHITE('w', 1),
     BLACK('b', -1);
 
-    operator fun not(): Side = if (this == WHITE) BLACK else WHITE
-    operator fun inc(): Side = not()
+    operator fun not(): Color = if (this == WHITE) BLACK else WHITE
+    operator fun inc(): Color = not()
 
-    val dir get() = Dir(0, direction)
+    val forward get() = Dir(0, direction)
 
     companion object {
         fun parseFromChar(c: Char) =
             values().firstOrNull { it.char == c }
                 ?: throw IllegalArgumentException(c.toString())
 
-        inline fun forEach(block: (Side) -> Unit) = values().forEach(block)
+        inline fun forEach(block: (Color) -> Unit) = values().forEach(block)
     }
 
 }
-
-val white get() = Side.WHITE
-val black get() = Side.BLACK
 
 enum class BoardSide(private val direction: Int, val castles: String) {
     QUEENSIDE(-1, "O-O-O"), KINGSIDE(1, "O-O");
@@ -30,27 +27,24 @@ enum class BoardSide(private val direction: Int, val castles: String) {
     val dir get() = Dir(direction, 0)
 }
 
-val kingside get() = BoardSide.KINGSIDE
-val queenside get() = BoardSide.KINGSIDE
-
 @Serializable
 data class MutableBySides<T> internal constructor(var white: T, var black: T) {
-    operator fun get(side: Side) = when (side) {
-        Side.WHITE -> white
-        Side.BLACK -> black
+    operator fun get(color: Color) = when (color) {
+        Color.WHITE -> white
+        Color.BLACK -> black
     }
 
-    operator fun set(side: Side, value: T) = when (side) {
-        Side.WHITE -> {
+    operator fun set(color: Color, value: T) = when (color) {
+        Color.WHITE -> {
             white = value
         }
-        Side.BLACK -> {
+        Color.BLACK -> {
             black = value
         }
     }
 
     fun toList(): List<T> = listOf(white, black)
-    fun toIndexedList(): List<Pair<Side, T>> = listOf(Side.WHITE to white, Side.BLACK to black)
+    fun toIndexedList(): List<Pair<Color, T>> = listOf(Color.WHITE to white, Color.BLACK to black)
     inline fun forEach(f: (T) -> Unit) {
         f(white)
         f(black)
@@ -59,18 +53,18 @@ data class MutableBySides<T> internal constructor(var white: T, var black: T) {
 
 fun <T> mutableBySides(white: T, black: T) = MutableBySides(white, black)
 fun <T> mutableBySides(both: T) = MutableBySides(both, both)
-inline fun <T> mutableBySides(block: (Side) -> T) = mutableBySides(block(Side.WHITE), block(Side.BLACK))
+inline fun <T> mutableBySides(block: (Color) -> T) = mutableBySides(block(Color.WHITE), block(Color.BLACK))
 
 @Serializable
 data class BySides<out T> internal constructor(val white: T, val black: T) {
 
-    operator fun get(side: Side) = when (side) {
-        Side.WHITE -> white
-        Side.BLACK -> black
+    operator fun get(color: Color) = when (color) {
+        Color.WHITE -> white
+        Color.BLACK -> black
     }
 
     fun toList(): List<T> = listOf(white, black)
-    fun toIndexedList(): List<Pair<Side, T>> = listOf(Side.WHITE to white, Side.BLACK to black)
+    fun toIndexedList(): List<Pair<Color, T>> = listOf(Color.WHITE to white, Color.BLACK to black)
     inline fun forEach(f: (T) -> Unit) {
         f(white)
         f(black)
@@ -79,7 +73,7 @@ data class BySides<out T> internal constructor(val white: T, val black: T) {
 
 fun <T> bySides(white: T, black: T) = BySides(white, black)
 fun <T> bySides(both: T) = BySides(both, both)
-inline fun <T> bySides(block: (Side) -> T) = bySides(block(Side.WHITE), block(Side.BLACK))
+inline fun <T> bySides(block: (Color) -> T) = bySides(block(Color.WHITE), block(Color.BLACK))
 
 class NoEngineMoveException(fen: FEN) : Exception(fen.toString())
 
@@ -90,5 +84,5 @@ interface ChessEngine: ChessPlayerInfo {
     fun setOption(name: String, value: String)
     fun sendCommand(command: String)
     suspend fun getMove(fen: FEN): String
-    override fun getPlayer(side: Side, game: ChessGame) = EnginePlayer(this, side, game)
+    override fun getPlayer(color: Color, game: ChessGame) = EnginePlayer(this, color, game)
 }

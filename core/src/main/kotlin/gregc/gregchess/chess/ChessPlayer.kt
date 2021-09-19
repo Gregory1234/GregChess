@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
 @Serializable(with = ChessPlayerInfoSerializer::class)
 interface ChessPlayerInfo {
     val name: String
-    fun getPlayer(side: Side, game: ChessGame): ChessPlayer
+    fun getPlayer(color: Color, game: ChessGame): ChessPlayer
 }
 
 object ChessPlayerInfoSerializer: ClassRegisteredSerializer<ChessPlayerInfo>("ChessPlayerInfo", RegistryType.PLAYER_TYPE)
 
-abstract class ChessPlayer(val info: ChessPlayerInfo, val side: Side, val game: ChessGame) {
+abstract class ChessPlayer(val info: ChessPlayerInfo, val color: Color, val game: ChessGame) {
 
     val name = info.name
 
@@ -31,16 +31,16 @@ abstract class ChessPlayer(val info: ChessPlayerInfo, val side: Side, val game: 
         }
 
     val opponent
-        get() = game[!side]
+        get() = game[!color]
 
     val hasTurn
-        get() = game.currentTurn == side
+        get() = game.currentTurn == color
 
     val pieces
-        get() = game.board.piecesOf(side)
+        get() = game.board.piecesOf(color)
 
     val king
-        get() = game.board.kingOf(side)
+        get() = game.board.kingOf(color)
 
     open fun init() {}
     open fun stop() {}
@@ -48,9 +48,9 @@ abstract class ChessPlayer(val info: ChessPlayerInfo, val side: Side, val game: 
 
 }
 
-class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : ChessPlayer(engine, side, game) {
+class EnginePlayer(val engine: ChessEngine, color: Color, game: ChessGame) : ChessPlayer(engine, color, game) {
 
-    override fun toString() = "EnginePlayer(engine=$engine, side=$side)"
+    override fun toString() = "EnginePlayer(engine=$engine, color=$color)"
 
     override fun stop() = engine.stop()
 
@@ -62,7 +62,7 @@ class EnginePlayer(val engine: ChessEngine, side: Side, game: ChessGame) : Chess
                 val target = Pos.parseFromString(str.drop(2).take(2))
                 val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
                 val move = game.board.getMoves(origin).first { it.display == target }
-                move.getTrait<PromotionTrait>()?.promotion = promotion?.of(move.piece.side)
+                move.getTrait<PromotionTrait>()?.promotion = promotion?.of(move.piece.color)
                 game.finishMove(move)
             } catch (e: Exception) {
                 e.printStackTrace()

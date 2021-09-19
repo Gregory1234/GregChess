@@ -96,10 +96,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         get() {
             if (initialFEN.chess960)
                 return true
-            val whiteKing = kingOf(Side.WHITE)
-            val blackKing = kingOf(Side.BLACK)
-            val whiteRooks = piecesOf(Side.WHITE, PieceType.ROOK).filter { !it.hasMoved }
-            val blackRooks = piecesOf(Side.BLACK, PieceType.ROOK).filter { !it.hasMoved }
+            val whiteKing = kingOf(Color.WHITE)
+            val blackKing = kingOf(Color.BLACK)
+            val whiteRooks = piecesOf(Color.WHITE, PieceType.ROOK).filter { !it.hasMoved }
+            val blackRooks = piecesOf(Color.BLACK, PieceType.ROOK).filter { !it.hasMoved }
             if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != Pos(4, 0))
                 return true
             if (blackKing != null && !blackKing.hasMoved && blackKing.pos != Pos(4, 7))
@@ -123,7 +123,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     @ChessEventHandler
     fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
-            if (game.currentTurn == black) {
+            if (game.currentTurn == Color.BLACK) {
                 fullmoveCounter++
             }
             for (s in squares.values)
@@ -152,10 +152,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         }
     }
 
-    fun piecesOf(side: Side) = pieces.filter { it.side == side }
-    fun piecesOf(side: Side, type: PieceType) = pieces.filter { it.side == side && it.type == type }
+    fun piecesOf(color: Color) = pieces.filter { it.color == color }
+    fun piecesOf(color: Color, type: PieceType) = pieces.filter { it.color == color && it.type == type }
 
-    fun kingOf(side: Side) = piecesOf(side).firstOrNull { it.type == PieceType.KING }
+    fun kingOf(color: Color) = piecesOf(color).firstOrNull { it.type == PieceType.KING }
 
     operator fun plusAssign(captured: CapturedPiece) {
         capturedPieces += captured
@@ -207,10 +207,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     }
 
     fun getFEN(): FEN {
-        fun castling(side: Side) =
-            if (kingOf(side)?.hasMoved == false)
-                piecesOf(side, PieceType.ROOK)
-                    .filter { !it.hasMoved && it.pos.rank == kingOf(side)?.pos?.rank }
+        fun castling(color: Color) =
+            if (kingOf(color)?.hasMoved == false)
+                piecesOf(color, PieceType.ROOK)
+                    .filter { !it.hasMoved && it.pos.rank == kingOf(color)?.pos?.rank }
                     .map { it.pos.file }
             else emptyList()
 
@@ -246,7 +246,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             val hash = getFEN().hashed()
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
             it.undo(game)
-            if (game.currentTurn == Side.WHITE)
+            if (game.currentTurn == Color.WHITE)
                 fullmoveCounter--
             moves.removeLast()
             lastMove?.showDone(this)
@@ -254,7 +254,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         }
     }
 
-    fun nextCapturedPos(type: PieceType, by: Side): CapturedPos {
+    fun nextCapturedPos(type: PieceType, by: Color): CapturedPos {
         val cap = capturedPieces.filter { it.pos.by == by }
         val h = if (type == PieceType.PAWN)
             Pair(cap.count { it.type == PieceType.PAWN }, 1)

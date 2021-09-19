@@ -131,7 +131,7 @@ object GregChess : Listener {
                     perms()
                     endArgs()
                     val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
-                    p.game.stop(p.side.lostBy(EndReason.RESIGNATION))
+                    p.game.stop(p.color.lostBy(EndReason.RESIGNATION))
                 }
                 "leave" -> {
                     cPlayer(player)
@@ -162,7 +162,7 @@ object GregChess : Listener {
                     else
                         cWrongArgument { Pos.parseFromString(nextArg()) }
                     endArgs()
-                    p.game.board[pos]?.piece?.capture(p.side, p.game.board)
+                    p.game.board[pos]?.piece?.capture(p.color, p.game.board)
                     p.game.board.updateMoves()
                     player.sendMessage(BOARD_OP_DONE)
                 }
@@ -179,7 +179,7 @@ object GregChess : Listener {
                             game.board[Pos.parseFromString(this[1])]!!
                         val key = this[0].toKey()
                         val piece = PieceRegistryView[key]
-                        square.piece?.capture(p.side, square.board)
+                        square.piece?.capture(p.color, square.board)
                         game.board += BoardPiece(square.pos, piece, false)
                         square.piece?.sendCreated(game.board)
                         game.board.updateMoves()
@@ -193,7 +193,7 @@ object GregChess : Listener {
                     val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     val game = p.game
                     cWrongArgument {
-                        game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.side, game.board)
+                        game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.color, game.board)
                         game.board[Pos.parseFromString(this[1])]?.piece?.move(Pos.parseFromString(this[2]), game.board)
                         game.board.updateMoves()
                         player.sendMessage(BOARD_OP_DONE)
@@ -228,11 +228,11 @@ object GregChess : Listener {
                     val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
                     val clock = game.clock.cNotNull(CLOCK_NOT_FOUND)
                     cWrongArgument {
-                        val side = Side.valueOf(nextArg())
+                        val color = Color.valueOf(nextArg())
                         val time = this[1].asDurationOrNull().cNotNull(WRONG_ARGUMENT)
                         when (nextArg().lowercase()) {
-                            "add" -> clock.addTimer(side, time)
-                            "set" -> clock.setTimer(side, time)
+                            "add" -> clock.addTimer(color, time)
+                            "set" -> clock.setTimer(color, time)
                             else -> cWrongArgument()
                         }
                         player.sendMessage(TIME_OP_DONE)
@@ -358,7 +358,7 @@ object GregChess : Listener {
                 2 -> when (args[0]) {
                     "duel" -> ifPermission("duel")
                     "spawn" -> ifPermission("spawn", PieceRegistryView.keys.toTypedArray())
-                    "time" -> ifPermission("time", Side.values())
+                    "time" -> ifPermission("time", Color.values())
                     "uci" -> ifPermission("uci", arrayOf("set", "send"))
                     "spectate" -> ifPermission("spectate")
                     "info" -> ifInfo("game", "piece")

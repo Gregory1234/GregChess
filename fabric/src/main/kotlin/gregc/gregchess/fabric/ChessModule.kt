@@ -19,7 +19,7 @@ object FabricRegistryTypes {
 }
 
 fun ChessModule.registerShort(t: PieceType) {
-    Side.forEach {
+    Color.forEach {
         val p = t.of(it)
         val block = ShortPieceBlock(p, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
         register(FabricRegistryTypes.PIECE_BLOCK, p, block)
@@ -31,7 +31,7 @@ fun ChessModule.registerShort(t: PieceType) {
 }
 
 fun ChessModule.registerTall(t: PieceType, rarity: Rarity) {
-    Side.forEach {
+    Color.forEach {
         val p = t.of(it)
         val block = TallPieceBlock(p, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
         register(FabricRegistryTypes.PIECE_BLOCK, p, block)

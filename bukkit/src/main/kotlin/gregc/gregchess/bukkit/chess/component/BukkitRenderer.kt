@@ -51,14 +51,14 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     private val CapturedPos.loc
         get() = capturedStart[by] + when (by) {
-            Side.WHITE -> Loc(- 2 * pos, 0, - 2 * row)
-            Side.BLACK -> Loc(2 * pos, 0, 2 * row)
+            Color.WHITE -> Loc(- 2 * pos, 0, - 2 * row)
+            Color.BLACK -> Loc(2 * pos, 0, 2 * row)
         }
 
     private val world get() = arena.world
 
     private fun Piece.render(loc: Loc) {
-        for ((i, m) in type.structure[side].withIndex())
+        for ((i, m) in type.structure[color].withIndex())
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
     }
 

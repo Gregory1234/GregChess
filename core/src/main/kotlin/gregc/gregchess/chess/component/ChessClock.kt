@@ -66,15 +66,15 @@ class ChessClock(game: ChessGame, settings: ChessClockData) : Component(game) {
         else if (e == GameBaseEvent.UPDATE) updateTimer()
     }
 
-    fun addTimer(s: Side, d: Duration) {
+    fun addTimer(s: Color, d: Duration) {
         time[s] += d
     }
 
-    fun setTimer(s: Side, d: Duration) {
+    fun setTimer(s: Color, d: Duration) {
         time[s] = d
     }
 
-    fun timeRemaining(s: Side) = time[s]
+    fun timeRemaining(s: Color) = time[s]
 
     private fun updateTimer() {
         if (!started)

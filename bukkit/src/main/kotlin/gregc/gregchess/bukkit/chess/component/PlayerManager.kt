@@ -59,7 +59,7 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
                 val results = results!!
                 callEvent(GameStopStageEvent.STOP)
                 with(game.board) {
-                    if (lastMove?.piece?.side == Side.WHITE) {
+                    if (lastMove?.piece?.color == Color.WHITE) {
                         val wLast = lastMove
                         game.players.forEachReal { p ->
                             p.sendLastMoves(fullmoveCounter + 1u, wLast, null)
@@ -69,9 +69,9 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
                 val pgn = PGN.generate(game)
                 players.forEachUnique {
                     interact {
-                        it.player.showGameResults(it.side, results)
+                        it.player.showGameResults(it.color, results)
                         if (!results.endReason.quick)
-                            wait((if (quick[it.side]) 0 else 3).seconds)
+                            wait((if (quick[it.color]) 0 else 3).seconds)
                         callEvent(PlayerEvent(it.player, PlayerDirection.LEAVE))
                         it.player.sendPGN(pgn)
                         it.player.games -= game
@@ -104,7 +104,7 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
     @ChessEventHandler
     fun handleTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
-            if (game.currentTurn == black) {
+            if (game.currentTurn == Color.BLACK) {
                 with(game.board) {
                     val wLast = (if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2])
                     val bLast = lastMove

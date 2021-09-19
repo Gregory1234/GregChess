@@ -119,10 +119,10 @@ class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? 
 @Serializable
 class NameTrait(override val nameTokens: MoveName): MoveTrait
 
-private fun checkForChecks(side: Side, game: ChessGame): MoveNameToken<Unit>? {
+private fun checkForChecks(color: Color, game: ChessGame): MoveNameToken<Unit>? {
     game.board.updateMoves()
-    val pieces = game.board.piecesOf(!side)
-    val inCheck = game.variant.isInCheck(game, !side)
+    val pieces = game.board.piecesOf(!color)
+    val inCheck = game.variant.isInCheck(game, !color)
     val noMoves = pieces.all { it.getMoves(game.board).none { m -> game.variant.isLegal(m, game) } }
     return when {
         inCheck && noMoves -> MoveNameTokenType.CHECKMATE.mk
@@ -140,7 +140,7 @@ class CheckTrait: MoveTrait {
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if (remaining.all { it is CheckTrait }) {
             if (nameTokens.isEmpty())
-                checkForChecks(move.piece.side, game)?.let { nameTokens += it }
+                checkForChecks(move.piece.color, game)?.let { nameTokens += it }
             return true
         }
         return false
@@ -153,7 +153,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var capt
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         game.board[capture]?.piece?.let {
-            captured = it.capture(move.piece.side, game.board)
+            captured = it.capture(move.piece.color, game.board)
         }
         return true
     }
@@ -182,7 +182,7 @@ class PawnOriginTrait: MoveTrait {
 }
 
 private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessGame): UniquenessCoordinate {
-    val pieces = game.board.pieces.filter { it.side == piece.side && it.type == piece.type }
+    val pieces = game.board.pieces.filter { it.color == piece.color && it.type == piece.type }
     val consideredPieces = pieces.filter { p ->
         p.getMoves(game.board).any { it.getTrait<TargetTrait>()?.target == target && game.variant.isLegal(it, game) }
     }

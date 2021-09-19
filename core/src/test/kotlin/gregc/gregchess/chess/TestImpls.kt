@@ -19,10 +19,10 @@ fun testSettings(
 val String.cpi get() = TestPlayerInfo(this)
 
 data class TestPlayerInfo(override val name: String): ChessPlayerInfo {
-    override fun getPlayer(side: Side, game: ChessGame): ChessPlayer = TestPlayer(this, side, game)
+    override fun getPlayer(color: Color, game: ChessGame): ChessPlayer = TestPlayer(this, color, game)
 }
 
-class TestPlayer(info: TestPlayerInfo, side: Side, game: ChessGame) : ChessPlayer(info, side, game)
+class TestPlayer(info: TestPlayerInfo, color: Color, game: ChessGame) : ChessPlayer(info, color, game)
 
 object TestComponentData : ComponentData<TestComponent> {
     override fun getComponent(game: ChessGame): TestComponent = spyk(TestComponent(game, this))

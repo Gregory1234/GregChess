@@ -25,7 +25,7 @@ class ScoreboardManager(game: ChessGame, override val data: ScoreboardManagerDat
         private fun whiteFormat(s: String) = config.getPathString("Scoreboard.Format.White", s)
         private fun blackFormat(s: String) = config.getPathString("Scoreboard.Format.Black", s)
         private fun generalFormat(s: String) = config.getPathString("Scoreboard.Format.General", s)
-        private fun format(side: Side, s: String) = config.getPathString("Scoreboard.Format.${side.configName}", s)
+        private fun format(color: Color, s: String) = config.getPathString("Scoreboard.Format.${color.configName}", s)
 
         private val playerPrefix get() = config.getPathString("Scoreboard.PlayerPrefix")
 

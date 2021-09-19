@@ -18,14 +18,14 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
     }
 
     private class MoveTree(
-        private val initial: Side,
+        private val initial: Color,
         private val initialMove: UInt,
         private val moves: List<Move>,
         private val result: String?
     ) {
         override fun toString() = buildString {
-            val indexShift = if (initial == Side.WHITE) (initialMove * 2u - 2u) else (initialMove * 2u - 1u)
-            if (initial == black) {
+            val indexShift = if (initial == Color.WHITE) (initialMove * 2u - 2u) else (initialMove * 2u - 1u)
+            if (initial == Color.BLACK) {
                 append(initialMove, ". ")
             }
             for ((index, moveData) in moves.withIndex()) {
@@ -55,8 +55,8 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(game.startTime)
             tags += TagPair("Date", date)
             tags += TagPair("Round", "1")
-            tags += TagPair("White", game[Side.WHITE].name)
-            tags += TagPair("Black", game[Side.BLACK].name)
+            tags += TagPair("White", game[Color.WHITE].name)
+            tags += TagPair("Black", game[Color.BLACK].name)
 
             val result = game.results?.score?.pgn
 

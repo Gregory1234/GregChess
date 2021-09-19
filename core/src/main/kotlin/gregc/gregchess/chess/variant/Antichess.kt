@@ -12,7 +12,7 @@ object Antichess : ChessVariant() {
     private val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
 
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when (piece.type) {
-        PieceType.PAWN -> PawnMovement(promotions = { p -> promotions.map { it.of(p.side) } }).generate(piece, board)
+        PieceType.PAWN -> PawnMovement(promotions = { p -> promotions.map { it.of(p.color) } }).generate(piece, board)
         PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.getTrait<CastlesTrait>() == null }
         else -> Normal.getPieceMoves(piece, board)
     }
@@ -22,7 +22,7 @@ object Antichess : ChessVariant() {
             return MoveLegality.INVALID
         if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it]?.piece } != null)
             return MoveLegality.LEGAL
-        return if (game.board.piecesOf(move.piece.side).none { m ->
+        return if (game.board.piecesOf(move.piece.color).none { m ->
                 m.getMoves(game.board).filter { Normal.isValid(it, game) }
                     .any { mv -> mv.getTrait<CaptureTrait>()?.capture?.let { game.board[it]?.piece } != null }
             }) MoveLegality.LEGAL else MoveLegality.SPECIAL
@@ -30,7 +30,7 @@ object Antichess : ChessVariant() {
 
     override fun isInCheck(king: BoardPiece, board: Chessboard) = false
 
-    override fun isInCheck(game: ChessGame, side: Side) = false
+    override fun isInCheck(game: ChessGame, color: Color) = false
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(!game.currentTurn).isEmpty())
@@ -41,5 +41,5 @@ object Antichess : ChessVariant() {
         checkForFiftyMoveRule()
     }
 
-    override fun timeout(game: ChessGame, side: Side) = game.stop(side.wonBy(EndReason.TIMEOUT))
+    override fun timeout(game: ChessGame, color: Color) = game.stop(color.wonBy(EndReason.TIMEOUT))
 }

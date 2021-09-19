@@ -10,12 +10,12 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
-val Side.configName get() = name.snakeToPascal()
+val Color.configName get() = name.snakeToPascal()
 
-fun PieceType.getItem(side: Side): ItemStack {
-    val item = ItemStack(itemMaterial[side])
+fun PieceType.getItem(color: Color): ItemStack {
+    val item = ItemStack(itemMaterial[color])
     val meta = item.itemMeta!!
-    meta.setDisplayName(config.getPathString("Chess.Side.${side.configName}.Piece", localName))
+    meta.setDisplayName(config.getPathString("Chess.Side.${color.configName}.Piece", localName))
     item.itemMeta = meta
     return item
 }
@@ -29,7 +29,7 @@ val PieceType.itemMaterial get() = bySides { Material.valueOf(section.getString(
 val PieceType.structure
     get() = bySides { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
 
-val Piece.item get() = type.getItem(side)
+val Piece.item get() = type.getItem(color)
 
 @Suppress("UNCHECKED_CAST")
 val <T: Any> MoveNameToken<T>.localName
@@ -39,7 +39,7 @@ val MoveName.localName get() = tokens.joinToString("") { it.localName }
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
 fun BoardPiece.getInfo(game: ChessGame) = buildTextComponent {
-    append("Type: $side $type\n")
+    append("Type: $color $type\n")
     append("Position: $pos\n")
     append(if (hasMoved) "Has moved\n" else "Has not moved\n")
     appendCopy("Game: ${game.uuid}\n", game.uuid)
@@ -52,7 +52,7 @@ fun BoardPiece.getInfo(game: ChessGame) = buildTextComponent {
 
 fun ChessGame.getInfo() = buildTextComponent {
     appendCopy("UUID: $uuid\n", uuid)
-    append("Players: ${players.toList().joinToString { "${it.name} as ${it.side.configName}" }}\n")
+    append("Players: ${players.toList().joinToString { "${it.name} as ${it.color.configName}" }}\n")
     append("Spectators: ${spectators.spectators.joinToString { it.name }}\n")
     append("Arena: ${arena.name}\n")
     append("Preset: ${settings.name}\n")

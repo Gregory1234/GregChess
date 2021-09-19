@@ -25,7 +25,7 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
             }
             GameBaseEvent.STOP -> {
                 players.forEachUnique {
-                    //it.player.showGameResults(it.side, results!!)
+                    //it.player.showGameResults(it.color, results!!)
                 }
                 players.forEach(ChessPlayer::stop)
                 ChessGameManager -= game

@@ -3,15 +3,15 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.NameRegistered
 import gregc.gregchess.bukkit.BukkitRegistryTypes
 import gregc.gregchess.chess.ChessEvent
-import gregc.gregchess.chess.Side
+import gregc.gregchess.chess.Color
 
 class AddPropertiesEvent(
     private val playerProperties: MutableMap<PropertyType, PlayerProperty>,
     private val gameProperties: MutableMap<PropertyType, GameProperty>
 ) : ChessEvent {
-    fun player(id: PropertyType, f: (Side) -> String) {
+    fun player(id: PropertyType, f: (Color) -> String) {
         playerProperties[id] = object : PlayerProperty(id) {
-            override fun invoke(s: Side) = f(s)
+            override fun invoke(s: Color) = f(s)
         }
     }
 
@@ -29,7 +29,7 @@ class PropertyType: NameRegistered {
 }
 
 abstract class PlayerProperty(val type: PropertyType) {
-    abstract operator fun invoke(s: Side): String
+    abstract operator fun invoke(s: Color): String
 }
 
 abstract class GameProperty(val type: PropertyType) {

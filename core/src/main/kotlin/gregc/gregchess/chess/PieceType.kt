@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 class PieceType(
     val char: Char,
     val moveScheme: MoveScheme,
-    val hasMoved: (FEN, Pos, Side) -> Boolean,
+    val hasMoved: (FEN, Pos, Color) -> Boolean,
     val minor: Boolean
 ): NameRegistered {
 
@@ -19,12 +19,12 @@ class PieceType(
 
     companion object {
 
-        private val assumeNotMoved = { _: FEN, _: Pos, _: Side -> false }
-        private val rookHasMoved = { fen: FEN, p: Pos, s: Side -> p.file !in fen.castlingRights[s] }
-        private val pawnHasMoved = { _: FEN, p: Pos, s: Side ->
+        private val assumeNotMoved = { _: FEN, _: Pos, _: Color -> false }
+        private val rookHasMoved = { fen: FEN, p: Pos, s: Color -> p.file !in fen.castlingRights[s] }
+        private val pawnHasMoved = { _: FEN, p: Pos, s: Color ->
             when (s) {
-                Side.WHITE -> p.rank != 1
-                Side.BLACK -> p.rank != 6
+                Color.WHITE -> p.rank != 1
+                Color.BLACK -> p.rank != 6
             }
         }
 

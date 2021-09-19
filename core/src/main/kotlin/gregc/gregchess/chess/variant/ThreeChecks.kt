@@ -21,12 +21,12 @@ object ThreeChecks : ChessVariant() {
 
         override val data get() = CheckCounterData(limit, bySides { checks[it] })
 
-        fun registerCheck(side: Side) {
-            checks[side]++
+        fun registerCheck(color: Color) {
+            checks[color]++
         }
 
-        fun removeCheck(side: Side) {
-            checks[side]--
+        fun removeCheck(color: Color) {
+            checks[color]--
         }
 
         fun checkForGameEnd() {
@@ -35,7 +35,7 @@ object ThreeChecks : ChessVariant() {
                     game.stop(s.lostBy(CHECK_LIMIT, limit.toString()))
         }
 
-        operator fun get(s: Side) = checks[s]
+        operator fun get(s: Color) = checks[s]
     }
 
     @Serializable
@@ -45,8 +45,8 @@ object ThreeChecks : ChessVariant() {
         override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
             if (remaining.all { it is CheckTrait || it is CheckCounterTrait }) {
                 game.board.updateMoves()
-                if (game.variant.isInCheck(game, !move.piece.side)) {
-                    game.requireComponent<CheckCounter>().registerCheck(!move.piece.side)
+                if (game.variant.isInCheck(game, !move.piece.color)) {
+                    game.requireComponent<CheckCounter>().registerCheck(!move.piece.color)
                     checkRegistered = true
                 }
                 return true
@@ -56,7 +56,7 @@ object ThreeChecks : ChessVariant() {
 
         override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
             if (checkRegistered) {
-                game.requireComponent<CheckCounter>().removeCheck(!move.piece.side)
+                game.requireComponent<CheckCounter>().removeCheck(!move.piece.color)
             }
             return true
         }

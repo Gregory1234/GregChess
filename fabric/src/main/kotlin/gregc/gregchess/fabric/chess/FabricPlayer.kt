@@ -8,7 +8,7 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.LiteralText
 import java.util.*
 
-fun ServerPlayerEntity.showGameResults(side: Side, results: GameResults) {
+fun ServerPlayerEntity.showGameResults(color: Color, results: GameResults) {
     sendMessage(LiteralText(results.endReason.name), false)
 }
 
@@ -16,15 +16,15 @@ fun ServerPlayerEntity.showGameResults(side: Side, results: GameResults) {
 data class FabricPlayerInfo(val uuid: @Contextual UUID): ChessPlayerInfo {
 
     override val name: String get() = "fabric player"
-    override fun getPlayer(side: Side, game: ChessGame) = FabricPlayer(this, side, game)
+    override fun getPlayer(color: Color, game: ChessGame) = FabricPlayer(this, color, game)
 }
 
-class FabricPlayer(info: FabricPlayerInfo, side: Side, game: ChessGame) :
-    ChessPlayer(info, side, game) {
+class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
+    ChessPlayer(info, color, game) {
     val uuid = info.uuid
 
     override fun init() {
-        //player.sendMessage(LiteralText(side.name),false)
+        //player.sendMessage(LiteralText(color.name),false)
     }
 }
 

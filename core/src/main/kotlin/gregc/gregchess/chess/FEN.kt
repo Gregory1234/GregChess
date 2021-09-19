@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FEN(
     val boardState: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
-    val currentTurn: Side = Side.WHITE,
+    val currentTurn: Color = Color.WHITE,
     val castlingRights: BySides<List<Int>> = bySides(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: UInt = 0u,
@@ -16,9 +16,9 @@ data class FEN(
 
     private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): BoardPiece {
         val type = PieceType.chooseByChar(pieceTypes, this)
-        val side = if (isUpperCase()) Side.WHITE else Side.BLACK
-        val hasMoved = type.hasMoved(this@FEN, p, side)
-        return BoardPiece(p, type.of(side), hasMoved)
+        val color = if (isUpperCase()) Color.WHITE else Color.BLACK
+        val hasMoved = type.hasMoved(this@FEN, p, color)
+        return BoardPiece(p, type.of(color), hasMoved)
     }
 
     fun forEachSquare(pieceTypes: Collection<PieceType>, f: (BoardPiece) -> Unit) =
@@ -113,7 +113,7 @@ data class FEN(
             if (fullmove.toInt() <= 0) throw IllegalArgumentException(fen)
             return FEN(
                 board,
-                Side.parseFromChar(turn[0]),
+                Color.parseFromChar(turn[0]),
                 bySides(
                     parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
                     parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() })

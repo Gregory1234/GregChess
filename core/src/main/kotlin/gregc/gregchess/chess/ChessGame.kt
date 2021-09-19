@@ -148,7 +148,7 @@ class ChessGame(
 
     override fun callEvent(e: ChessEvent) = components.forEach { it.handleEvent(e) }
 
-    var currentTurn: Side = board.initialFEN.currentTurn
+    var currentTurn: Color = board.initialFEN.currentTurn
 
     val currentPlayer: ChessPlayer get() = players[currentTurn]
 
@@ -217,7 +217,7 @@ class ChessGame(
         state = GameState.Error(state, e)
     }
 
-    operator fun get(side: Side): ChessPlayer = players[side]
+    operator fun get(color: Color): ChessPlayer = players[color]
 
     fun finishMove(move: Move) {
         requireRunning()
