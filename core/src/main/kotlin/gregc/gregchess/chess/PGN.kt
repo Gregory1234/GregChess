@@ -6,7 +6,14 @@ import gregc.gregchess.snakeToPascal
 import java.time.format.DateTimeFormatter
 
 class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {
-    private class TagPair(val name: String, val value: String) {
+    class GenerateEvent internal constructor(private val tags: MutableList<TagPair>) : ChessEvent {
+        operator fun set(name: String, value: String) {
+            require(tags.none { it.name == name })
+            tags += TagPair(name, value)
+        }
+    }
+
+    internal class TagPair(val name: String, val value: String) {
         override fun toString() = "[$name \"$value\"]\n"
     }
 
@@ -41,7 +48,6 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
     operator fun get(name: String) = tags.firstOrNull { it.name == name }?.value
 
     companion object {
-        // TODO: custom pgn tags
         fun generate(game: ChessGame): PGN {
             val tags = mutableListOf<TagPair>()
             tags += TagPair("Event", "Casual game")
@@ -78,6 +84,8 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
 
             if (variant.isNotBlank())
                 tags += TagPair("Variant", variant)
+
+            game.callEvent(GenerateEvent(tags))
 
             val tree = MoveTree(
                 game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveCounter,
