@@ -16,7 +16,7 @@ data class ChessboardState(
     val initialFEN: FEN,
     val pieces: Map<Pos, BoardPiece>,
     val halfmoveClock: UInt = initialFEN.halfmoveClock,
-    val fullmoveClock: UInt = initialFEN.fullmoveClock,
+    val fullmoveCounter: UInt = initialFEN.fullmoveCounter,
     val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
     val capturedPieces: List<CapturedPiece> = emptyList(),
     val flags: List<PosFlag> = listOfNotNull(initialFEN.enPassantSquare?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 1u)) }),
@@ -60,10 +60,10 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     }
 
     private val boardState
-        get() = FEN.BoardState.fromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it) } }.toMap())
+        get() = FEN.boardStateFromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it.piece) } }.toMap())
 
     val initialFEN = initialState.initialFEN
-    var fullmoveClock = initialState.fullmoveClock
+    var fullmoveCounter = initialState.fullmoveCounter
         private set
     var halfmoveClock = initialState.halfmoveClock
     private val boardHashes = initialState.boardHashes.toMutableMap()
@@ -71,7 +71,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     override val data
         get() = ChessboardState(
-            initialFEN, piecesByPos, halfmoveClock, fullmoveClock, boardHashes, capturedPieces, posFlags, moveHistory
+            initialFEN, piecesByPos, halfmoveClock, fullmoveCounter, boardHashes, capturedPieces, posFlags, moveHistory
         )
 
     val pieces: List<BoardPiece> get() = squares.values.mapNotNull { it.piece }
@@ -124,7 +124,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (game.currentTurn == black) {
-                fullmoveClock++
+                fullmoveCounter++
             }
             for (s in squares.values)
                 for (f in s.flags)
@@ -186,7 +186,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
         halfmoveClock = fen.halfmoveClock
 
-        fullmoveClock = fen.fullmoveClock
+        fullmoveCounter = fen.fullmoveCounter
 
         if (fen.currentTurn != game.currentTurn)
             game.nextTurn()
@@ -220,7 +220,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             bySides(::castling),
             squares.values.firstOrNull { s -> s.flags.any { it.type == PawnMovement.EN_PASSANT && it.active } }?.pos,
             halfmoveClock,
-            fullmoveClock
+            fullmoveCounter
         )
     }
 
@@ -246,9 +246,8 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             val hash = getFEN().hashed()
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
             it.undo(game)
-            // TODO: this is possibly incorrect
             if (game.currentTurn == Side.WHITE)
-                fullmoveClock--
+                fullmoveCounter--
             moves.removeLast()
             lastMove?.showDone(this)
             game.previousTurn()

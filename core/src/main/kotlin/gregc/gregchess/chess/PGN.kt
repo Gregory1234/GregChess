@@ -80,7 +80,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
                 tags += TagPair("Variant", variant)
 
             val tree = MoveTree(
-                game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveClock,
+                game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveCounter,
                 game.board.moveHistory.filter { it.name.isNotEmpty() }, result
             )
 

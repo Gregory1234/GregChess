@@ -3,68 +3,16 @@ package gregc.gregchess.chess
 import gregc.gregchess.component6
 import kotlinx.serialization.Serializable
 
-// TODO: clean all of this up
 @Serializable
 data class FEN(
-    val boardState: BoardState = BoardState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
+    val boardState: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
     val currentTurn: Side = Side.WHITE,
     val castlingRights: BySides<List<Int>> = bySides(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: UInt = 0u,
-    val fullmoveClock: UInt = 1u,
+    val fullmoveCounter: UInt = 1u,
     val chess960: Boolean = false
 ) {
-    @JvmInline
-    @Serializable
-    value class BoardState(val state: String) {
-        companion object {
-            fun fromPieces(pieces: Map<Pos, BoardPiece>): BoardState {
-                val rows = List(8) { ri ->
-                    var e = 0
-                    buildString {
-                        for (i in 0 until 8) {
-                            val p = pieces[Pos(i, ri)]
-                            if (p == null)
-                                e++
-                            else {
-                                if (e != 0)
-                                    append(e.digitToChar())
-                                e = 0
-                                append(p.char)
-                            }
-                        }
-                        if (e != 0)
-                            append(e.digitToChar())
-                    }
-                }
-                return BoardState(rows.reversed().joinToString("/"))
-            }
-        }
-
-        init {
-            if (state.count { it == '/' } != 7)
-                throw IllegalArgumentException(state)
-        }
-
-        fun forEachIndexed(block: (Pos, Char?) -> Unit) {
-            val rows = state.split('/')
-            rows.forEachIndexed { ri, r ->
-                var i = 0
-                for (c in r) {
-                    if (c in '1'..'8') {
-                        repeat(c.digitToInt()) { j -> block(Pos(i + j, 7 - ri), null) }
-                        i += c.digitToInt()
-                    } else {
-                        block(Pos(i, 7 - ri), c)
-                        i++
-                    }
-                }
-            }
-        }
-
-        fun mapIndexed(block: (Int, String) -> String) =
-            BoardState(state.split('/').mapIndexed(block).joinToString("/"))
-    }
 
     private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): BoardPiece {
         val type = PieceType.chooseByChar(pieceTypes, this)
@@ -74,7 +22,18 @@ data class FEN(
     }
 
     fun forEachSquare(pieceTypes: Collection<PieceType>, f: (BoardPiece) -> Unit) =
-        boardState.forEachIndexed { p, c -> if (c != null) f(c.toPiece(pieceTypes, p)) }
+        boardState.split("/").forEachIndexed { rowIndex, row ->
+            var file = 0
+            row.forEach { char ->
+                when (char) {
+                    in '1'..'8' -> file += char.digitToInt()
+                    else -> {
+                        val pos = Pos(file, 7 - rowIndex)
+                        f(char.toPiece(pieceTypes, pos))
+                    }
+                }
+            }
+        }
 
     fun toPieces(pieceTypes: Collection<PieceType>): Map<Pos, BoardPiece> = buildMap {
         forEachSquare(pieceTypes) {
@@ -83,7 +42,7 @@ data class FEN(
     }
 
     override fun toString() = buildString {
-        append(boardState.state)
+        append(boardState)
         append(" ")
         append(currentTurn.char)
         append(" ")
@@ -94,7 +53,7 @@ data class FEN(
         append(" ")
         append(halfmoveClock)
         append(" ")
-        append(fullmoveClock)
+        append(fullmoveCounter)
     }
 
     fun toHash() = buildString {
@@ -153,7 +112,7 @@ data class FEN(
             if (halfmove.toInt() < 0) throw IllegalArgumentException(fen)
             if (fullmove.toInt() <= 0) throw IllegalArgumentException(fen)
             return FEN(
-                BoardState(board),
+                board,
                 Side.parseFromChar(turn[0]),
                 bySides(
                     parseCastlingRights(board.split("/").first(), castling.filter { it.isUpperCase() }),
@@ -181,10 +140,35 @@ data class FEN(
             val row = String(types.mapNotNull { it }.toCharArray())
             val pawns = PieceType.PAWN.char.toString().repeat(8)
             return FEN(
-                BoardState("$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}"),
+                "$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}",
                 castlingRights = bySides(listOf(r1, r2)),
                 chess960 = true
             )
+        }
+
+        fun boardStateFromPieces(pieces: Map<Pos, Piece>): String = buildString {
+            for (rank in 7 downTo 0) {
+                var space = 0
+                fun commit() {
+                    if (space != 0)
+                        append(space.digitToChar())
+                    space = 0
+                }
+
+                for (file in 0..7) {
+                    val pos = Pos(file, rank)
+                    val piece = pieces[pos]
+                    if (piece != null) {
+                        commit()
+                        append(piece.char)
+                    } else {
+                        space++
+                    }
+                }
+                commit()
+                if (rank != 0)
+                    append('/')
+            }
         }
     }
 }
