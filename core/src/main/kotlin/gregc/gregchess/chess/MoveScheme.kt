@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
+import kotlin.math.abs
 
 fun defaultColor(pos: Pos, board: Chessboard) = if (board[pos]?.piece == null) Floor.MOVE else Floor.CAPTURE
 
@@ -53,27 +54,49 @@ object KingMovement : MoveScheme {
     private val castlesOrder =
         NameOrder(listOf(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE))
 
-    // TODO: clean this up
     private fun castles(
-        piece: BoardPiece,
-        rook: BoardPiece,
-        side: BoardSide,
-        display: Pos,
-        pieceTarget: Pos,
-        rookTarget: Pos
+        piece: BoardPiece, rook: BoardPiece, side: BoardSide, display: Pos, pieceTarget: Pos, rookTarget: Pos
     ) = Move(
         piece, display, Floor.SPECIAL,
         setOf(piece.pos, rook.pos), setOf(pieceTarget, rookTarget),
-        ((between(piece.pos.file, pieceTarget.file) + pieceTarget.file + between(
-            rook.pos.file,
-            rookTarget.file
-        ) + rookTarget.file).distinct() - rook.pos.file - piece.pos.file).map { Pos(it, piece.pos.rank) }.toSet(),
-        (between(piece.pos.file, pieceTarget.file) + pieceTarget.file + piece.pos.file).map { Pos(it, piece.pos.rank) }
-            .toSet(),
+        neededEmptyFiles(piece.pos.file, pieceTarget.file, rook.pos.file, rookTarget.file).toPosSet(piece.pos.rank),
+        betweenInc(piece.pos.file, pieceTarget.file).toList().toPosSet(piece.pos.rank),
         emptySet(), emptySet(),
         listOf(CastlesTrait(rook, side, pieceTarget, rookTarget), DefaultHalfmoveClockTrait(), CheckTrait()),
         castlesOrder
     )
+
+    private fun Collection<Int>.toPosSet(rank: Int) = map { Pos(it, rank) }.toSet()
+
+    private fun neededEmptyFiles(piece: Int, pieceTarget: Int, rook: Int, rookTarget: Int) =
+        (between(piece, pieceTarget) + pieceTarget + between(rook, rookTarget) + rookTarget).distinct() - rook - piece
+
+    private fun normalCastles(piece: BoardPiece, rook: BoardPiece, side: BoardSide, chess960: Boolean): Move {
+        val target = when (side) {
+            BoardSide.QUEENSIDE -> piece.pos.copy(file = 2)
+            BoardSide.KINGSIDE -> piece.pos.copy(file = 6)
+        }
+        val rookTarget = when (side) {
+            BoardSide.QUEENSIDE -> piece.pos.copy(file = 3)
+            BoardSide.KINGSIDE -> piece.pos.copy(file = 5)
+        }
+        return castles(piece, rook, side, if (chess960) rook.pos else target, target, rookTarget)
+    }
+
+    private fun simplifiedCastles(piece: BoardPiece, rook: BoardPiece, side: BoardSide): Move =
+        if (abs(piece.pos.file-rook.pos.file) == 1) {
+            castles(piece, rook, side, rook.pos, rook.pos, piece.pos)
+        } else {
+            val target = when (side) {
+                BoardSide.QUEENSIDE -> piece.pos.copy(file = piece.pos.file - 2)
+                BoardSide.KINGSIDE -> piece.pos.copy(file = piece.pos.file + 2)
+            }
+            val rookTarget = when (side) {
+                BoardSide.QUEENSIDE -> piece.pos.copy(file = piece.pos.file - 1)
+                BoardSide.KINGSIDE -> piece.pos.copy(file = piece.pos.file + 2)
+            }
+            castles(piece, rook, side, target, target, rookTarget)
+        }
 
     override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
         addAll(jumps(piece, board, rotationsOf(1, 0) + rotationsOf(1, 1)))
@@ -81,19 +104,10 @@ object KingMovement : MoveScheme {
             for (rook in board.piecesOf(piece.color, PieceType.ROOK)) {
                 if (rook.pos.rank == piece.pos.rank && !rook.hasMoved) {
                     val side = if (rook.pos.file < piece.pos.file) BoardSide.QUEENSIDE else BoardSide.KINGSIDE
-                    if (board.simpleCastling) {
-                        TODO()
-                    } else {
-                        val target = when (side) {
-                            BoardSide.QUEENSIDE -> piece.pos.copy(file = 2)
-                            BoardSide.KINGSIDE -> piece.pos.copy(file = 6)
-                        }
-                        val rookTarget = when (side) {
-                            BoardSide.QUEENSIDE -> piece.pos.copy(file = 3)
-                            BoardSide.KINGSIDE -> piece.pos.copy(file = 5)
-                        }
-                        add(castles(piece, rook, side, if (board.chess960) rook.pos else target, target, rookTarget))
-                    }
+                    add(
+                        if (board.simpleCastling) simplifiedCastles(piece, rook, side)
+                        else normalCastles(piece, rook, side, board.chess960)
+                    )
                 }
             }
         }

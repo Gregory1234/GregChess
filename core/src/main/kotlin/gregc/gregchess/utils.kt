@@ -15,6 +15,8 @@ fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
 
 fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
 
+fun betweenInc(i: Int, j: Int): IntRange = if (i > j) (j..i) else (i..j)
+
 fun Int.towards(other: Int, amount: Int) =
     if (this > other) this - amount else if (this < other) this + amount else this
 
