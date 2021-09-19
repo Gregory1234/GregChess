@@ -1,6 +1,5 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.ChessModule
 import gregc.gregchess.ExtensionType
 import gregc.gregchess.chess.pawn
 import gregc.gregchess.chess.white
@@ -40,8 +39,7 @@ object GregChess : ModInitializer {
 
     @JvmField
     val PIECE_ENTITY_TYPE: BlockEntityType<*> = BlockEntityType.Builder.create(
-        { a, b -> PieceBlockEntity(a, b) },
-        *ChessModule.modules.flatMap { m -> m[FabricRegistryTypes.PIECE_BLOCK].values.flatMap { it.toList() } }.toTypedArray()
+        { a, b -> PieceBlockEntity(a, b) }, *FabricRegistryTypes.PIECE_BLOCK.values.toTypedArray()
     ).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
 
     @JvmField

@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -8,8 +9,37 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 
-@Serializable
-data class Piece(val type: PieceType, val side: Side) {
+object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
+    override fun getOrNull(key: RegistryKey<String>): Piece? {
+        val (module, name) = key
+        return when(name.take(6)) {
+            "white_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(white)
+            "black_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(black)
+            else -> null
+        }
+    }
+
+    override fun getOrNull(value: Piece): RegistryKey<String>? =
+        RegistryType.PIECE_TYPE.getOrNull(value.type)?.let { (module, name) ->
+            RegistryKey(module, "${value.side.toString().lowercase()}_$name")
+        }
+
+    override val values: Set<Piece>
+        get() = RegistryType.PIECE_TYPE.values.flatMap { listOf(it.of(white), it.of(black)) }.toSet()
+
+    override fun valuesOf(module: ChessModule): Set<Piece> =
+        RegistryType.PIECE_TYPE.valuesOf(module).flatMap { listOf(it.of(white), it.of(black)) }.toSet()
+
+    override val keys: Set<RegistryKey<String>>
+        get() = values.map { get(it) }.toSet()
+}
+
+@Serializable(with = Piece.Serializer::class)
+data class Piece(val type: PieceType, val side: Side) : NameRegistered {
+    override val key: RegistryKey<String> get() = PieceRegistryView[this]
+
+    object Serializer : NameRegisteredSerializer<Piece>("Piece", PieceRegistryView)
+
     val char
         get() = when (side) {
             Side.WHITE -> type.char.uppercaseChar()

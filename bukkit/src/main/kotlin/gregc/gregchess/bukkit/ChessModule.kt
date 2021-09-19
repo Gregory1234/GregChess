@@ -7,7 +7,6 @@ import gregc.gregchess.chess.MoveNameTokenType
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.chess.variant.ThreeChecks
-import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass
@@ -131,8 +130,4 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregC
         registerMoveNameTokenStrings()
         registerPlayerTypes()
     }
-}
-
-val ChessModule.Companion.pieceTypes get() = modules.flatMap { m ->
-    m[RegistryType.PIECE_TYPE].keys.map { NamespacedKey(m.bukkit.plugin, it) }
 }

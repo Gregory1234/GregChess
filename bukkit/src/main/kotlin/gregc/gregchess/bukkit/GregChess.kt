@@ -169,18 +169,18 @@ object GregChess : Listener {
                 "spawn" -> {
                     cPlayer(player)
                     perms()
-                    cArgs(args, 3, 4)
+                    cArgs(args, 2, 3)
                     val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     val game = p.game
                     cWrongArgument {
-                        val square = if (args.size == 3)
+                        val square = if (args.size == 2)
                             game.board[game.renderer.getPos(player.location.toLoc())]!!
                         else
-                            game.board[Pos.parseFromString(this[2])]!!
-                        val key = this[1].toKey()
-                        val piece = RegistryType.PIECE_TYPE[key]
+                            game.board[Pos.parseFromString(this[1])]!!
+                        val key = this[0].toKey()
+                        val piece = PieceRegistryView[key]
                         square.piece?.capture(p.side, square.board)
-                        game.board += BoardPiece(square.pos, piece.of(Side.valueOf(this[0])), false)
+                        game.board += BoardPiece(square.pos, piece, false)
                         square.piece?.sendCreated(game.board)
                         game.board.updateMoves()
                         player.sendMessage(BOARD_OP_DONE)
@@ -357,7 +357,7 @@ object GregChess : Listener {
                 ) + ifInfo("info")
                 2 -> when (args[0]) {
                     "duel" -> ifPermission("duel")
-                    "spawn" -> ifPermission("spawn", Side.values())
+                    "spawn" -> ifPermission("spawn", PieceRegistryView.keys.toTypedArray())
                     "time" -> ifPermission("time", Side.values())
                     "uci" -> ifPermission("uci", arrayOf("set", "send"))
                     "spectate" -> ifPermission("spectate")
@@ -365,7 +365,6 @@ object GregChess : Listener {
                     else -> listOf()
                 }
                 3 -> when (args[0]) {
-                    "spawn" -> ifPermission("spawn", ChessModule.pieceTypes.map(Any::toString).toTypedArray())
                     "time" -> ifPermission("time", arrayOf("add", "set"))
                     else -> listOf()
                 }

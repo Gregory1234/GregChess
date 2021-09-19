@@ -13,30 +13,32 @@ import net.minecraft.util.registry.Registry
 
 object FabricRegistryTypes {
     @JvmField
-    val PIECE_BLOCK = ConnectedRegistryType<PieceType, BySides<PieceBlock>>("piece_block", RegistryType.PIECE_TYPE)
+    val PIECE_BLOCK = ConnectedRegistryType<Piece, PieceBlock>("piece_block", PieceRegistryView)
     @JvmField
-    val PIECE_ITEM = ConnectedRegistryType<PieceType, BySides<BlockItem>>("piece_item", RegistryType.PIECE_TYPE)
+    val PIECE_ITEM = ConnectedRegistryType<Piece, BlockItem>("piece_item", PieceRegistryView)
 }
 
 fun ChessModule.registerShort(t: PieceType) {
-    val blocks = bySides { ShortPieceBlock(t.of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)) }
-    register(FabricRegistryTypes.PIECE_BLOCK, t, blocks)
-    val items = bySides { BlockItem(blocks[it], FabricItemSettings().group(GregChess.CHESS_GROUP)) }
-    register(FabricRegistryTypes.PIECE_ITEM, t, items)
     Side.forEach {
-        Registry.register(Registry.BLOCK, t.of(it).id, blocks[it])
-        Registry.register(Registry.ITEM, t.of(it).id, items[it])
+        val p = t.of(it)
+        val block = ShortPieceBlock(p, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
+        register(FabricRegistryTypes.PIECE_BLOCK, p, block)
+        val item = BlockItem(block, FabricItemSettings().group(GregChess.CHESS_GROUP))
+        register(FabricRegistryTypes.PIECE_ITEM, p, item)
+        Registry.register(Registry.BLOCK, p.id, block)
+        Registry.register(Registry.ITEM, p.id, item)
     }
 }
 
 fun ChessModule.registerTall(t: PieceType, rarity: Rarity) {
-    val blocks = bySides { TallPieceBlock(t.of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)) }
-    register(FabricRegistryTypes.PIECE_BLOCK, t, blocks)
-    val items = bySides { BlockItem(blocks[it], FabricItemSettings().group(GregChess.CHESS_GROUP).rarity(rarity)) }
-    register(FabricRegistryTypes.PIECE_ITEM, t, items)
     Side.forEach {
-        Registry.register(Registry.BLOCK, t.of(it).id, blocks[it])
-        Registry.register(Registry.ITEM, t.of(it).id, items[it])
+        val p = t.of(it)
+        val block = TallPieceBlock(p, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
+        register(FabricRegistryTypes.PIECE_BLOCK, p, block)
+        val item = BlockItem(block, FabricItemSettings().group(GregChess.CHESS_GROUP).rarity(rarity))
+        register(FabricRegistryTypes.PIECE_ITEM, p, item)
+        Registry.register(Registry.BLOCK, p.id, block)
+        Registry.register(Registry.ITEM, p.id, item)
     }
 }
 
