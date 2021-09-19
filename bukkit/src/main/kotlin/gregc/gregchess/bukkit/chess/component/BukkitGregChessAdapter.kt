@@ -15,7 +15,7 @@ object BukkitGregChessAdapterData : ComponentData<BukkitGregChessAdapter> {
     override fun getComponent(game: ChessGame) = BukkitGregChessAdapter(game, this)
 }
 
-class BukkitGregChessAdapter(game: ChessGame, override val data: BukkitGregChessAdapterData): Component(game) {
+class BukkitGregChessAdapter(game: ChessGame, override val data: BukkitGregChessAdapterData) : Component(game) {
 
     companion object {
         @JvmField

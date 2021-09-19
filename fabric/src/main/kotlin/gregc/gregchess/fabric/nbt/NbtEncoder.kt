@@ -25,14 +25,18 @@ interface NbtCompositeEncoder : CompositeEncoder {
     fun encodeNbtElementElement(descriptor: SerialDescriptor, index: Int, value: NbtElement)
 }
 
-class NbtElementEncoder(override val serializersModule: SerializersModule, private val consumer: (NbtElement?) -> Unit) : NbtEncoder {
+class NbtElementEncoder(
+    override val serializersModule: SerializersModule,
+    private val consumer: (NbtElement?) -> Unit
+) : NbtEncoder {
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder = beginCompound()
-    override fun beginCollection(descriptor: SerialDescriptor, collectionSize: Int): CompositeEncoder = when(descriptor.kind) {
-        StructureKind.LIST -> beginList()
-        StructureKind.MAP -> beginMap()
-        else -> TODO()
-    }
+    override fun beginCollection(descriptor: SerialDescriptor, collectionSize: Int): CompositeEncoder =
+        when (descriptor.kind) {
+            StructureKind.LIST -> beginList()
+            StructureKind.MAP -> beginMap()
+            else -> TODO()
+        }
 
     private fun beginCompound() = NbtCompoundEncoder(serializersModule, NbtCompound(), consumer)
     private fun beginList() = NbtListEncoder(serializersModule, NbtList(), consumer)
@@ -50,8 +54,9 @@ class NbtElementEncoder(override val serializersModule: SerializersModule, priva
     override fun encodeDouble(value: Double) = consumer(NbtDouble.of(value))
     override fun encodeFloat(value: Float) = consumer(NbtFloat.of(value))
 
-    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) = consumer(NbtString.of(enumDescriptor.getElementName(index)))
     override fun encodeString(value: String) = consumer(NbtString.of(value))
+    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
+        encodeString(enumDescriptor.getElementName(index))
 
     override fun encodeInline(inlineDescriptor: SerialDescriptor): Encoder = this
     override fun encodeNull() = consumer(null)
@@ -74,28 +79,38 @@ abstract class AbstractNbtCompositeEncoder : NbtCompositeEncoder {
     override fun encodeBooleanElement(descriptor: SerialDescriptor, index: Int, value: Boolean) =
         encodeNbtElementElement(descriptor, index, NbtByte.of(value))
 
+
     override fun encodeByteElement(descriptor: SerialDescriptor, index: Int, value: Byte) =
         encodeNbtElementElement(descriptor, index, NbtByte.of(value))
+
     override fun encodeShortElement(descriptor: SerialDescriptor, index: Int, value: Short) =
         encodeNbtElementElement(descriptor, index, NbtShort.of(value))
+
     override fun encodeIntElement(descriptor: SerialDescriptor, index: Int, value: Int) =
         encodeNbtElementElement(descriptor, index, NbtInt.of(value))
+
     override fun encodeLongElement(descriptor: SerialDescriptor, index: Int, value: Long) =
         encodeNbtElementElement(descriptor, index, NbtLong.of(value))
+
 
     override fun encodeCharElement(descriptor: SerialDescriptor, index: Int, value: Char) =
         encodeNbtElementElement(descriptor, index, NbtInt.of(value.code))
 
+
     override fun encodeDoubleElement(descriptor: SerialDescriptor, index: Int, value: Double) =
         encodeNbtElementElement(descriptor, index, NbtDouble.of(value))
+
     override fun encodeFloatElement(descriptor: SerialDescriptor, index: Int, value: Float) =
         encodeNbtElementElement(descriptor, index, NbtFloat.of(value))
+
 
     override fun encodeStringElement(descriptor: SerialDescriptor, index: Int, value: String) =
         encodeNbtElementElement(descriptor, index, NbtString.of(value))
 
+
     override fun encodeInlineElement(descriptor: SerialDescriptor, index: Int): Encoder =
         NbtElementEncoder(serializersModule) { if (it != null) encodeNbtElementElement(descriptor, index, it) }
+
 
     override fun <T : Any> encodeNullableSerializableElement(
         descriptor: SerialDescriptor,
@@ -107,6 +122,7 @@ abstract class AbstractNbtCompositeEncoder : NbtCompositeEncoder {
             encodeSerializableElement(descriptor, index, serializer, value)
     }
 
+
     override fun <T> encodeSerializableElement(
         descriptor: SerialDescriptor,
         index: Int,
@@ -116,18 +132,31 @@ abstract class AbstractNbtCompositeEncoder : NbtCompositeEncoder {
         ByteArraySerializer() -> encodeByteArrayElement(descriptor, index, value as ByteArray)
         IntArraySerializer() -> encodeIntArrayElement(descriptor, index, value as IntArray)
         LongArraySerializer() -> encodeLongArrayElement(descriptor, index, value as LongArray)
-        else -> serializer.serialize(NbtElementEncoder(serializersModule) { if (it != null) encodeNbtElementElement(descriptor, index, it) }, value)
+        else -> serializer.serialize(NbtElementEncoder(serializersModule) {
+            if (it != null) encodeNbtElementElement(
+                descriptor,
+                index,
+                it
+            )
+        }, value)
     }
+
 
     override fun encodeByteArrayElement(descriptor: SerialDescriptor, index: Int, value: ByteArray) =
         encodeNbtElementElement(descriptor, index, NbtByteArray(value))
+
     override fun encodeIntArrayElement(descriptor: SerialDescriptor, index: Int, value: IntArray) =
         encodeNbtElementElement(descriptor, index, NbtIntArray(value))
+
     override fun encodeLongArrayElement(descriptor: SerialDescriptor, index: Int, value: LongArray) =
         encodeNbtElementElement(descriptor, index, NbtLongArray(value))
 }
 
-class NbtCompoundEncoder(override val serializersModule: SerializersModule, private val result: NbtCompound, private val consumer: (NbtCompound) -> Unit) : AbstractNbtCompositeEncoder() {
+class NbtCompoundEncoder(
+    override val serializersModule: SerializersModule,
+    private val result: NbtCompound,
+    private val consumer: (NbtCompound) -> Unit
+) : AbstractNbtCompositeEncoder() {
 
     override fun endStructure(descriptor: SerialDescriptor) = consumer(result)
 
@@ -137,7 +166,11 @@ class NbtCompoundEncoder(override val serializersModule: SerializersModule, priv
 
 }
 
-class NbtListEncoder(override val serializersModule: SerializersModule, private val result: NbtList, private val consumer: (NbtList) -> Unit) : AbstractNbtCompositeEncoder() {
+class NbtListEncoder(
+    override val serializersModule: SerializersModule,
+    private val result: NbtList,
+    private val consumer: (NbtList) -> Unit
+) : AbstractNbtCompositeEncoder() {
 
     override fun endStructure(descriptor: SerialDescriptor) = consumer(result)
 
@@ -146,7 +179,11 @@ class NbtListEncoder(override val serializersModule: SerializersModule, private 
 
 }
 
-class NbtMapEncoder(override val serializersModule: SerializersModule, private val result: NbtCompound, private val consumer: (NbtCompound) -> Unit) : AbstractNbtCompositeEncoder() {
+class NbtMapEncoder(
+    override val serializersModule: SerializersModule,
+    private val result: NbtCompound,
+    private val consumer: (NbtCompound) -> Unit
+) : AbstractNbtCompositeEncoder() {
 
     override fun endStructure(descriptor: SerialDescriptor) = consumer(result)
 

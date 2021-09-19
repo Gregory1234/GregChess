@@ -8,9 +8,9 @@ import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 @Serializable(with = ChessVariant.Serializer::class)
-open class ChessVariant: NameRegistered {
+open class ChessVariant : NameRegistered {
 
-    object Serializer: NameRegisteredSerializer<ChessVariant>("ChessVariant", RegistryType.VARIANT)
+    object Serializer : NameRegisteredSerializer<ChessVariant>("ChessVariant", RegistryType.VARIANT)
 
     final override val key get() = RegistryType.VARIANT[this]
 
@@ -54,7 +54,8 @@ open class ChessVariant: NameRegistered {
         return MoveLegality.LEGAL
     }
 
-    open fun isInCheck(king: BoardPiece, board: Chessboard): Boolean = Normal.checkingMoves(!king.color, king.pos, board).isNotEmpty()
+    open fun isInCheck(king: BoardPiece, board: Chessboard): Boolean =
+        Normal.checkingMoves(!king.color, king.pos, board).isNotEmpty()
 
     open fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
@@ -82,7 +83,8 @@ open class ChessVariant: NameRegistered {
             game.stop(color.lostBy(EndReason.TIMEOUT))
     }
 
-    open fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = piece.type.moveScheme.generate(piece, board)
+    open fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
+        piece.type.moveScheme.generate(piece, board)
 
     open fun isInCheck(game: ChessGame, color: Color): Boolean {
         val king = game.board.kingOf(color)
@@ -107,13 +109,14 @@ open class ChessVariant: NameRegistered {
         fun pinningMoves(by: Color, pos: Pos, board: Chessboard) =
             allMoves(by, board).filter { it.getTrait<CaptureTrait>()?.capture == pos }.filter { m ->
                 !m.flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } } &&
-                m.neededEmpty.any { board[it]?.piece != null }
+                        m.neededEmpty.any { board[it]?.piece != null }
             }
 
         fun checkingMoves(by: Color, pos: Pos, board: Chessboard) =
             allMoves(by, board).filter { it.getTrait<CaptureTrait>()?.capture == pos }.filter { m ->
                 !m.flagsNeeded.any { (p, f) -> board[p].let { s -> s?.flags?.any { it.type == f && it.active } == false } } &&
-                m.neededEmpty.mapNotNull { board[it]?.piece }.all { it.color == !m.piece.color && it.type == PieceType.KING }
+                        m.neededEmpty.mapNotNull { board[it]?.piece }
+                            .all { it.color == !m.piece.color && it.type == PieceType.KING }
             }
 
         fun isValid(move: Move, game: ChessGame): Boolean = with(move) {

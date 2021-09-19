@@ -25,17 +25,21 @@ interface NbtCompositeDecoder : CompositeDecoder {
     fun decodeLongArrayElement(descriptor: SerialDescriptor, index: Int): LongArray
     fun decodeNbtElementElement(descriptor: SerialDescriptor, index: Int): NbtElement =
         decodeNullableNbtElementElement(descriptor, index)!!
+
     fun decodeNullableNbtElementElement(descriptor: SerialDescriptor, index: Int): NbtElement?
 }
 
-private inline fun <reified T: NbtElement, R> nbtAsOr(el: NbtElement?, fromString: (String) -> R, normal: (T) -> R): R =
+private inline fun <reified T : NbtElement, R> nbtAsOr(
+    el: NbtElement?, fromString: (String) -> R, normal: (T) -> R
+): R =
     (el as? T)?.let { normal(it) } ?: fromString((el as NbtKey).asString())
 
-class NbtElementDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtElement?) : NbtDecoder {
+class NbtElementDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtElement?) :
+    NbtDecoder {
 
     override fun decodeNotNullMark(): Boolean = decodeNullableNbtElement() != null
 
-    override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder = when(descriptor.kind){
+    override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder = when (descriptor.kind) {
         StructureKind.LIST -> beginList()
         StructureKind.MAP -> beginMap()
         StructureKind.CLASS -> beginCompound()
@@ -56,11 +60,12 @@ class NbtElementDecoder(override val serializersModule: SerializersModule, priva
 
     override fun decodeChar(): Char = nbtAsOr<NbtInt, Int>(nbtElement, { it.toInt() }, { it.intValue() }).toChar()
 
-    override fun decodeDouble(): Double = nbtAsOr<NbtDouble, Double>(nbtElement, { it.toDouble() }, { it.doubleValue() })
+    override fun decodeDouble() = nbtAsOr<NbtDouble, Double>(nbtElement, { it.toDouble() }, { it.doubleValue() })
     override fun decodeFloat(): Float = nbtAsOr<NbtFloat, Float>(nbtElement, { it.toFloat() }, { it.floatValue() })
 
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int =
         enumDescriptor.getElementIndex(decodeString())
+
     override fun decodeString(): String = nbtAsOr<NbtString, String>(nbtElement, { it }, { it.asString() })
 
 
@@ -86,28 +91,38 @@ abstract class AbstractNbtCompositeDecoder : NbtCompositeDecoder {
     override fun decodeBooleanElement(descriptor: SerialDescriptor, index: Int): Boolean =
         nbtAsOr<NbtByte, Int>(decodeNbtElementElement(descriptor, index), { it.toInt() }, { it.intValue() }) != 0
 
+
     override fun decodeByteElement(descriptor: SerialDescriptor, index: Int): Byte =
         nbtAsOr<NbtByte, Byte>(decodeNbtElementElement(descriptor, index), { it.toByte() }, { it.byteValue() })
+
     override fun decodeShortElement(descriptor: SerialDescriptor, index: Int): Short =
         nbtAsOr<NbtShort, Short>(decodeNbtElementElement(descriptor, index), { it.toShort() }, { it.shortValue() })
+
     override fun decodeIntElement(descriptor: SerialDescriptor, index: Int): Int =
         nbtAsOr<NbtInt, Int>(decodeNbtElementElement(descriptor, index), { it.toInt() }, { it.intValue() })
+
     override fun decodeLongElement(descriptor: SerialDescriptor, index: Int): Long =
         nbtAsOr<NbtLong, Long>(decodeNbtElementElement(descriptor, index), { it.toLong() }, { it.longValue() })
+
 
     override fun decodeCharElement(descriptor: SerialDescriptor, index: Int): Char =
         nbtAsOr<NbtInt, Int>(decodeNbtElementElement(descriptor, index), { it.toInt() }, { it.intValue() }).toChar()
 
+
     override fun decodeDoubleElement(descriptor: SerialDescriptor, index: Int): Double =
         nbtAsOr<NbtDouble, Double>(decodeNbtElementElement(descriptor, index), { it.toDouble() }, { it.doubleValue() })
+
     override fun decodeFloatElement(descriptor: SerialDescriptor, index: Int): Float =
         nbtAsOr<NbtFloat, Float>(decodeNbtElementElement(descriptor, index), { it.toFloat() }, { it.floatValue() })
+
 
     override fun decodeStringElement(descriptor: SerialDescriptor, index: Int): String =
         nbtAsOr<NbtString, String>(decodeNbtElementElement(descriptor, index), { it }, { it.asString() })
 
+
     override fun decodeInlineElement(descriptor: SerialDescriptor, index: Int): Decoder =
         NbtElementDecoder(serializersModule, decodeNbtElementElement(descriptor, index))
+
 
     override fun <T : Any> decodeNullableSerializableElement(
         descriptor: SerialDescriptor,
@@ -119,6 +134,7 @@ abstract class AbstractNbtCompositeDecoder : NbtCompositeDecoder {
         return if (el != null) deserializer.deserialize(NbtElementDecoder(serializersModule, el)) else null
     }
 
+
     @Suppress("UNCHECKED_CAST")
     override fun <T> decodeSerializableElement(
         descriptor: SerialDescriptor,
@@ -129,13 +145,17 @@ abstract class AbstractNbtCompositeDecoder : NbtCompositeDecoder {
         ByteArraySerializer() -> decodeByteArrayElement(descriptor, index) as T
         IntArraySerializer() -> decodeIntArrayElement(descriptor, index) as T
         LongArraySerializer() -> decodeLongArrayElement(descriptor, index) as T
-        else -> deserializer.deserialize(NbtElementDecoder(serializersModule, decodeNbtElementElement(descriptor, index)))
+        else ->
+            deserializer.deserialize(NbtElementDecoder(serializersModule, decodeNbtElementElement(descriptor, index)))
     }
+
 
     override fun decodeByteArrayElement(descriptor: SerialDescriptor, index: Int): ByteArray =
         (decodeNbtElementElement(descriptor, index) as NbtByteArray).byteArray
+
     override fun decodeIntArrayElement(descriptor: SerialDescriptor, index: Int): IntArray =
         (decodeNbtElementElement(descriptor, index) as NbtIntArray).intArray
+
     override fun decodeLongArrayElement(descriptor: SerialDescriptor, index: Int): LongArray =
         (decodeNbtElementElement(descriptor, index) as NbtLongArray).longArray
 
@@ -143,7 +163,8 @@ abstract class AbstractNbtCompositeDecoder : NbtCompositeDecoder {
     }
 }
 
-class NbtCompoundDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtCompound) : AbstractNbtCompositeDecoder() {
+class NbtCompoundDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtCompound) :
+    AbstractNbtCompositeDecoder() {
     private var index = 0
 
     override fun decodeNullableNbtElementElement(descriptor: SerialDescriptor, index: Int): NbtElement? =
@@ -160,20 +181,25 @@ class NbtCompoundDecoder(override val serializersModule: SerializersModule, priv
     }
 }
 
-class NbtListDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtList) : AbstractNbtCompositeDecoder() {
+class NbtListDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtList) :
+    AbstractNbtCompositeDecoder() {
     private var index = 0
 
-    override fun decodeNullableNbtElementElement(descriptor: SerialDescriptor, index: Int): NbtElement? = nbtElement[index]
+    override fun decodeNullableNbtElementElement(descriptor: SerialDescriptor, index: Int): NbtElement? =
+        nbtElement[index]
 
-    override fun decodeElementIndex(descriptor: SerialDescriptor): Int = if (++index > nbtElement.size) CompositeDecoder.DECODE_DONE else index - 1
+    override fun decodeElementIndex(descriptor: SerialDescriptor): Int =
+        if (++index > nbtElement.size) CompositeDecoder.DECODE_DONE else index - 1
 }
 
-private class NbtKey(val string: String): NbtElement by NbtString.of(string) {
+private class NbtKey(val string: String) : NbtElement by NbtString.of(string) {
     override fun toString(): String = asString()
     override fun asString(): String = string
 }
 
-class NbtMapDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtCompound) : AbstractNbtCompositeDecoder() {
+class NbtMapDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtCompound) :
+    AbstractNbtCompositeDecoder() {
+
     private val keys = nbtElement.keys.toList()
     private val values = keys.map { nbtElement[it] }
     private var index = 0

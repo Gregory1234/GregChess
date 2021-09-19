@@ -19,7 +19,7 @@ data class ChessboardState(
     val fullmoveCounter: UInt = initialFEN.fullmoveCounter,
     val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
     val capturedPieces: List<CapturedPiece> = emptyList(),
-    val flags: List<PosFlag> = listOfNotNull(initialFEN.enPassantSquare?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 1u)) }),
+    val flags: List<PosFlag> = enPassantFlag(initialFEN.enPassantSquare),
     val moveHistory: List<Move> = emptyList()
 ) : ComponentData<Chessboard> {
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
@@ -28,6 +28,9 @@ data class ChessboardState(
     override fun getComponent(game: ChessGame) = Chessboard(game, this)
 
     companion object {
+
+        private fun enPassantFlag(square: Pos?) =
+            listOfNotNull(square?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 1u)) })
 
         operator fun get(variant: ChessVariant, name: String?) = when (name) {
             "normal" -> ChessboardState(variant)

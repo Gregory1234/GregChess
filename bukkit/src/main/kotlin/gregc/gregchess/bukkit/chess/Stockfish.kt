@@ -17,11 +17,14 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
         val engineName get() = config.getPathString("Chess.Stockfish.Name")
     }
 
-    @Transient private val process: Process = ProcessBuilder(Config.stockfishCommand).start()
+    @Transient
+    private val process: Process = ProcessBuilder(Config.stockfishCommand).start()
 
-    @Transient private val reader = process.inputStream.bufferedReader()
+    @Transient
+    private val reader = process.inputStream.bufferedReader()
 
-    @Transient private val executor = Executors.newCachedThreadPool()
+    @Transient
+    private val executor = Executors.newCachedThreadPool()
 
     private fun <T> runTimeout(block: Callable<T>) = executor.submit(block)[moveTime.seconds / 2 + 3, TimeUnit.SECONDS]
 

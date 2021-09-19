@@ -27,7 +27,8 @@ object HordeChess : ChessVariant() {
         else -> MoveLegality.INVALID
     }
 
-    override fun isInCheck(king: BoardPiece, board: Chessboard) = king.color == Color.BLACK && Normal.isInCheck(king, board)
+    override fun isInCheck(king: BoardPiece, board: Chessboard) =
+        king.color == Color.BLACK && Normal.isInCheck(king, board)
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(Color.BLACK).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
@@ -47,7 +48,7 @@ object HordeChess : ChessVariant() {
     override fun genFEN(chess960: Boolean): FEN {
         val base = Normal.genFEN(chess960)
         val replacement = "///1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP".split("/")
-        val state = base.boardState.split("/").mapIndexed { i,r -> replacement[i].ifEmpty { r } }.joinToString("/")
+        val state = base.boardState.split("/").mapIndexed { i, r -> replacement[i].ifEmpty { r } }.joinToString("/")
         return base.copy(boardState = state, castlingRights = base.castlingRights.copy(black = emptyList()))
     }
 }

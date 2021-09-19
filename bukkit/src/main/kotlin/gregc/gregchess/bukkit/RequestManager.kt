@@ -140,7 +140,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     }
 
     fun quietRemove(p: Player) {
-        for(r in requests.values) {
+        for (r in requests.values) {
             if (r.sender == p || r.receiver == p) {
                 requests.remove(r.uuid)
                 r.cont.resume(RequestResponse.QUIT)

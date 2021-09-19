@@ -7,7 +7,7 @@ import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-private fun victoryPgn(winner: Color) = when(winner) {
+private fun victoryPgn(winner: Color) = when (winner) {
     Color.WHITE -> "1-0"
     Color.BLACK -> "0-1"
 }
@@ -16,7 +16,7 @@ private fun victoryPgn(winner: Color) = when(winner) {
 sealed class GameScore(val pgn: String) {
     override fun toString(): String = pgn
 
-    object Serializer: KSerializer<GameScore> {
+    object Serializer : KSerializer<GameScore> {
         override val descriptor: SerialDescriptor
             get() = PrimitiveSerialDescriptor("GameScore", PrimitiveKind.STRING)
 
@@ -24,7 +24,7 @@ sealed class GameScore(val pgn: String) {
             encoder.encodeString(value.pgn)
         }
 
-        override fun deserialize(decoder: Decoder): GameScore = when(decoder.decodeString()) {
+        override fun deserialize(decoder: Decoder): GameScore = when (decoder.decodeString()) {
             Draw.pgn -> Draw
             victoryPgn(Color.WHITE) -> Victory(Color.WHITE)
             victoryPgn(Color.BLACK) -> Victory(Color.BLACK)
@@ -34,8 +34,8 @@ sealed class GameScore(val pgn: String) {
     }
 
     @Serializable(with = Victory.Serializer::class)
-    class Victory(val winner: Color): GameScore(victoryPgn(winner)) {
-        object Serializer: KSerializer<Victory> {
+    class Victory(val winner: Color) : GameScore(victoryPgn(winner)) {
+        object Serializer : KSerializer<Victory> {
             override val descriptor: SerialDescriptor
                 get() = PrimitiveSerialDescriptor("GameScore.Victory", PrimitiveKind.STRING)
 
@@ -43,7 +43,7 @@ sealed class GameScore(val pgn: String) {
                 encoder.encodeString(value.pgn)
             }
 
-            override fun deserialize(decoder: Decoder): Victory = when(decoder.decodeString()) {
+            override fun deserialize(decoder: Decoder): Victory = when (decoder.decodeString()) {
                 victoryPgn(Color.WHITE) -> Victory(Color.WHITE)
                 victoryPgn(Color.BLACK) -> Victory(Color.BLACK)
                 else -> throw IllegalStateException()
@@ -51,8 +51,8 @@ sealed class GameScore(val pgn: String) {
         }
     }
     @Serializable(with = Draw.Serializer::class)
-    object Draw: GameScore("1/2-1/2") {
-        object Serializer: KSerializer<Draw> {
+    object Draw : GameScore("1/2-1/2") {
+        object Serializer : KSerializer<Draw> {
             override val descriptor: SerialDescriptor
                 get() = PrimitiveSerialDescriptor("GameScore.Draw", PrimitiveKind.STRING)
 
@@ -60,7 +60,7 @@ sealed class GameScore(val pgn: String) {
                 encoder.encodeString(value.pgn)
             }
 
-            override fun deserialize(decoder: Decoder): Draw = when(decoder.decodeString()) {
+            override fun deserialize(decoder: Decoder): Draw = when (decoder.decodeString()) {
                 Draw.pgn -> Draw
                 else -> throw IllegalStateException()
             }
@@ -73,9 +73,9 @@ typealias DetEndReason = EndReason<GameScore.Victory>
 typealias DrawEndReason = EndReason<GameScore.Draw>
 
 @Serializable(with = EndReason.Serializer::class)
-class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false): NameRegistered {
+class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false) : NameRegistered {
 
-    object Serializer: NameRegisteredSerializer<EndReason<*>>("EndReason", RegistryType.END_REASON)
+    object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", RegistryType.END_REASON)
 
     enum class Type(val pgn: String) {
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
@@ -115,14 +115,25 @@ class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false): Name
     val pgn get() = type.pgn
 }
 
-fun Color.wonBy(reason: DetEndReason, vararg args: String): GameResults = GameResultsWith(reason, GameScore.Victory(this), args.toList())
+fun Color.wonBy(reason: DetEndReason, vararg args: String): GameResults =
+    GameResultsWith(reason, GameScore.Victory(this), args.toList())
+
 fun Color.lostBy(reason: DetEndReason, vararg args: String): GameResults = (!this).wonBy(reason, *args)
+
+
 fun whiteWonBy(reason: DetEndReason, vararg args: String): GameResults = Color.WHITE.wonBy(reason, *args)
 fun blackWonBy(reason: DetEndReason, vararg args: String): GameResults = Color.BLACK.wonBy(reason, *args)
-fun drawBy(reason: DrawEndReason, vararg args: String): GameResults = GameResultsWith(reason, GameScore.Draw, args.toList())
+
+fun drawBy(reason: DrawEndReason, vararg args: String): GameResults =
+    GameResultsWith(reason, GameScore.Draw, args.toList())
+
 fun DrawEndReason.of(vararg args: String): GameResults = GameResultsWith(this, GameScore.Draw, args.toList())
 
 @Serializable
-data class GameResultsWith<out R : GameScore> internal constructor(val endReason: EndReason<out R>, val score: R, val args: List<String>)
+data class GameResultsWith<out R : GameScore> internal constructor(
+    val endReason: EndReason<out R>,
+    val score: R,
+    val args: List<String>
+)
 
 typealias GameResults = GameResultsWith<GameScore>

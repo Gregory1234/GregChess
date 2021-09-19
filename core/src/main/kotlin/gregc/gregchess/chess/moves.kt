@@ -11,9 +11,10 @@ import kotlin.reflect.KClass
 data class Move(
     val piece: BoardPiece, val display: Pos, val floor: Floor,
     val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
-    val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>, // TODO: better way of storing this with serialization in mind
+    val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>, // TODO: better way of storing this
     val flagsNeeded: Set<Pair<Pos, ChessFlagType>>, val flagsAdded: Set<PosFlag>,
-    val traits: List<MoveTrait>, val nameOrder: NameOrder) {
+    val traits: List<MoveTrait>, val nameOrder: NameOrder
+) {
     fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
     inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)
 
@@ -66,13 +67,16 @@ data class Move(
     fun show(board: Chessboard) {
         board[display]?.moveMarker = floor
     }
+
     fun hide(board: Chessboard) {
         board[display]?.moveMarker = null
     }
+
     fun showDone(board: Chessboard) {
         board[piece.pos]?.previousMoveMarker = Floor.LAST_START
         board[display]?.moveMarker = Floor.LAST_END
     }
+
     fun hideDone(board: Chessboard) {
         board[piece.pos]?.previousMoveMarker = null
         board[display]?.moveMarker = null
@@ -80,9 +84,11 @@ data class Move(
 }
 
 @Serializable(with = MoveNameTokenType.Serializer::class)
-class MoveNameTokenType<T: Any> private constructor(val cl: KClass<T>, @JvmField val toPgnString: (T) -> String): NameRegistered {
+class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmField val toPgnString: (T) -> String) :
+    NameRegistered {
 
-    object Serializer: NameRegisteredSerializer<MoveNameTokenType<*>>("MoveNameTokenType", RegistryType.MOVE_NAME_TOKEN_TYPE)
+    object Serializer :
+        NameRegisteredSerializer<MoveNameTokenType<*>>("MoveNameTokenType", RegistryType.MOVE_NAME_TOKEN_TYPE)
 
     override val key get() = RegistryType.MOVE_NAME_TOKEN_TYPE[this]
 
@@ -91,10 +97,12 @@ class MoveNameTokenType<T: Any> private constructor(val cl: KClass<T>, @JvmField
     fun of(v: T) = MoveNameToken(this, v)
 
     companion object {
-        fun <T: Any> build(cl: KClass<T>, toPgnString: (T) -> String = { it.toString() }) =
+        fun <T : Any> build(cl: KClass<T>, toPgnString: (T) -> String = { it.toString() }) =
             MoveNameTokenType(cl, toPgnString)
-        inline fun <reified T: Any> build(noinline toPgnString: (T) -> String = { it.toString() }) =
+
+        inline fun <reified T : Any> build(noinline toPgnString: (T) -> String = { it.toString() }) =
             build(T::class, toPgnString)
+
         fun build(const: String) = build<Unit> { const }
 
         @JvmField
@@ -121,7 +129,9 @@ class MoveNameTokenType<T: Any> private constructor(val cl: KClass<T>, @JvmField
 @JvmInline
 @Serializable(with = NameOrder.Serializer::class)
 value class NameOrder(val nameOrder: List<MoveNameTokenType<*>>) {
-    object Serializer : CustomListSerializer<NameOrder, MoveNameTokenType<*>>("MoveName", MoveNameTokenType.Serializer) {
+    object Serializer :
+        CustomListSerializer<NameOrder, MoveNameTokenType<*>>("MoveName", MoveNameTokenType.Serializer) {
+
         override fun construct(list: List<MoveNameTokenType<*>>) = NameOrder(list)
         override fun elements(custom: NameOrder) = custom.nameOrder
     }
@@ -135,12 +145,12 @@ value class NameOrder(val nameOrder: List<MoveNameTokenType<*>>) {
 val MoveNameTokenType<Unit>.mk get() = of(Unit)
 
 @Serializable(with = MoveNameToken.Serializer::class)
-data class MoveNameToken<T: Any>(val type: MoveNameTokenType<T>, val value: T) {
+data class MoveNameToken<T : Any>(val type: MoveNameTokenType<T>, val value: T) {
     val pgn: String get() = type.toPgnString(value)
 
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     @Suppress("UNCHECKED_CAST")
-    object Serializer: KSerializer<MoveNameToken<*>> {
+    object Serializer : KSerializer<MoveNameToken<*>> {
         override val descriptor: SerialDescriptor
             get() = buildClassSerialDescriptor("MoveNameToken") {
                 element("type", MoveNameTokenType.Serializer.descriptor)
@@ -160,8 +170,9 @@ data class MoveNameToken<T: Any>(val type: MoveNameTokenType<T>, val value: T) {
             var ret: MoveNameToken<*>? = null
             if (decodeSequentially()) {
                 type = decodeSerializableElement(descriptor, 0, MoveNameTokenType.Serializer)
+                type as MoveNameTokenType<Any>
                 val serializer = type.cl.serializer()
-                return MoveNameToken(type as MoveNameTokenType<Any>, decodeSerializableElement(descriptor, 1, serializer))
+                return MoveNameToken(type, decodeSerializableElement(descriptor, 1, serializer))
             }
 
             mainLoop@ while (true) {
@@ -174,7 +185,8 @@ data class MoveNameToken<T: Any>(val type: MoveNameTokenType<T>, val value: T) {
                     }
                     1 -> {
                         val serializer = type!!.cl.serializer()
-                        ret = MoveNameToken(type as MoveNameTokenType<Any>, decodeSerializableElement(descriptor, index, serializer))
+                        type as MoveNameTokenType<Any>
+                        ret = MoveNameToken(type, decodeSerializableElement(descriptor, index, serializer))
                     }
                     else -> throw SerializationException("Invalid index")
                 }
@@ -188,7 +200,8 @@ data class MoveNameToken<T: Any>(val type: MoveNameTokenType<T>, val value: T) {
 @JvmInline
 @Serializable(with = MoveName.Serializer::class)
 value class MoveName(val tokens: MutableList<MoveNameToken<*>>) {
-    constructor(tokens: Collection<MoveNameToken<*>> = emptyList()): this(tokens.toMutableList())
+    constructor(tokens: Collection<MoveNameToken<*>> = emptyList()) : this(tokens.toMutableList())
+
     object Serializer : CustomListSerializer<MoveName, MoveNameToken<*>>("MoveName", MoveNameToken.Serializer) {
         override fun construct(list: List<MoveNameToken<*>>) = MoveName(list)
         override fun elements(custom: MoveName) = custom.tokens
@@ -199,6 +212,7 @@ value class MoveName(val tokens: MutableList<MoveNameToken<*>>) {
     operator fun plusAssign(other: List<MoveNameToken<*>>) {
         tokens += other
     }
+
     operator fun plusAssign(other: MoveNameToken<*>) {
         tokens += other
     }
@@ -208,12 +222,11 @@ value class MoveName(val tokens: MutableList<MoveNameToken<*>>) {
 }
 
 
-
 @Serializable(with = UniquenessCoordinate.Serializer::class)
 data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
     constructor(pos: Pos) : this(pos.file, pos.rank)
 
-    object Serializer: KSerializer<UniquenessCoordinate> {
+    object Serializer : KSerializer<UniquenessCoordinate> {
         override val descriptor: SerialDescriptor
             get() = PrimitiveSerialDescriptor("UniquenessCoordinate", PrimitiveKind.STRING)
 
@@ -225,7 +238,7 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
             val str = decoder.decodeString()
             return if (str.length == 2)
                 UniquenessCoordinate(Pos.parseFromString(str))
-            else when(str.single()) {
+            else when (str.single()) {
                 in '1'..'8' -> UniquenessCoordinate(rank = str.single() - '1')
                 in 'a'..'h' -> UniquenessCoordinate(file = str.single() - 'a')
                 else -> throw IllegalArgumentException(str)

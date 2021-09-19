@@ -14,7 +14,7 @@ import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
 @Serializable
-object ScoreboardManagerData: ComponentData<ScoreboardManager> {
+object ScoreboardManagerData : ComponentData<ScoreboardManager> {
     override fun getComponent(game: ChessGame) = ScoreboardManager(game, this)
 }
 

@@ -22,26 +22,28 @@ interface EnumeratedRegistryView<K, T> : RegistryView<K, T> {
 }
 
 data class RegistryKey<K>(val module: ChessModule, val key: K) {
-    constructor(namespace: String, key: K): this(ChessModule[namespace], key)
+    constructor(namespace: String, key: K) : this(ChessModule[namespace], key)
 
     override fun toString() = "${module.namespace}:$key"
 }
 
 fun String.toKey(): RegistryKey<String> {
     val sections = split(":")
-    return when(sections.size) {
+    return when (sections.size) {
         1 -> RegistryKey(GregChessModule, this)
         2 -> RegistryKey(sections[0], sections[1])
         else -> throw IllegalArgumentException(this)
     }
 }
 
-abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String): EnumeratedRegistryView<K, T> {
+abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) : EnumeratedRegistryView<K, T> {
     abstract fun createRegistry(module: ChessModule): R
     final override operator fun get(key: RegistryKey<K>): T = key.module[this][key.key]
     final override fun getOrNull(key: RegistryKey<K>): T? = key.module[this].getOrNull(key.key)
     final override operator fun get(namespace: String, key: K): T = get(ChessModule[namespace], key)
-    final override fun getOrNull(namespace: String, key: K): T? = ChessModule.getOrNull(namespace)?.let { getOrNull(it, key) }
+    final override fun getOrNull(namespace: String, key: K): T? =
+        ChessModule.getOrNull(namespace)?.let { getOrNull(it, key) }
+
     final override operator fun get(module: ChessModule, key: K): T = module[this][key]
     final override fun getOrNull(module: ChessModule, key: K): T? = module[this].getOrNull(key)
 
@@ -69,7 +71,9 @@ abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String): Enum
         @JvmField
         val COMPONENT_CLASS = NameRegistryType<KClass<out Component>>("component_class")
         @JvmField
-        val COMPONENT_DATA_CLASS = ConnectedRegistryType<KClass<out Component>, KClass<out ComponentData<*>>>("component_data_class", COMPONENT_CLASS)
+        val COMPONENT_DATA_CLASS = ConnectedRegistryType<KClass<out Component>, KClass<out ComponentData<*>>>(
+            "component_data_class", COMPONENT_CLASS
+        )
         @JvmField
         val MOVE_TRAIT_CLASS = NameRegistryType<KClass<out MoveTrait>>("move_trait_class")
         @JvmField
@@ -91,7 +95,7 @@ abstract class Registry<K, T, R : Registry<K, T, R>>(val module: ChessModule) {
     abstract val values: Collection<T>
 }
 
-interface DoubleRegistryView<K, T>: RegistryView<K, T> {
+interface DoubleRegistryView<K, T> : RegistryView<K, T> {
     operator fun get(value: T): RegistryKey<K> = getOrNull(value)!!
     fun getOrNull(value: T): RegistryKey<K>?
     fun getKey(value: T): K = getKeyOrNull(value)!!
@@ -100,17 +104,18 @@ interface DoubleRegistryView<K, T>: RegistryView<K, T> {
     fun getModuleOrNull(value: T): ChessModule? = getOrNull(value)?.module
 }
 
-interface DoubleEnumeratedRegistryView<K, T>: DoubleRegistryView<K, T>, EnumeratedRegistryView<K, T> {
+interface DoubleEnumeratedRegistryView<K, T> : DoubleRegistryView<K, T>, EnumeratedRegistryView<K, T> {
     override val values: Set<T>
     override fun valuesOf(module: ChessModule): Set<T>
 }
 
-abstract class DoubleRegistryType<K, T, R: DoubleRegistry<K, T, R>>(name: String): RegistryType<K, T, R>(name), DoubleEnumeratedRegistryView<K, T> {
+abstract class DoubleRegistryType<K, T, R : DoubleRegistry<K, T, R>>(name: String) : RegistryType<K, T, R>(name),
+    DoubleEnumeratedRegistryView<K, T> {
     abstract override val values: Set<T>
     abstract override fun valuesOf(module: ChessModule): Set<T>
 }
 
-abstract class DoubleRegistry<K, T, R: DoubleRegistry<K, T, R>>(module: ChessModule): Registry<K, T, R>(module) {
+abstract class DoubleRegistry<K, T, R : DoubleRegistry<K, T, R>>(module: ChessModule) : Registry<K, T, R>(module) {
     abstract fun getKeyOrNull(value: T): K?
     @JvmName("getKeyOrNullKt")
     @JvmSynthetic
@@ -122,7 +127,7 @@ abstract class DoubleRegistry<K, T, R: DoubleRegistry<K, T, R>>(module: ChessMod
     abstract override val values: Set<T>
 }
 
-class NameRegistryType<T>(name: String): DoubleRegistryType<String, T, NameRegistry<T>>(name) {
+class NameRegistryType<T>(name: String) : DoubleRegistryType<String, T, NameRegistry<T>>(name) {
     internal val valueEntries = mutableMapOf<T, RegistryKey<String>>()
 
     override fun createRegistry(module: ChessModule) = NameRegistry(module, this)
@@ -134,7 +139,8 @@ class NameRegistryType<T>(name: String): DoubleRegistryType<String, T, NameRegis
     override fun valuesOf(module: ChessModule): Set<T> = module[this].values
 }
 
-class NameRegistry<T>(module: ChessModule, val type: NameRegistryType<T>): DoubleRegistry<String, T, NameRegistry<T>>(module) {
+class NameRegistry<T>(module: ChessModule, val type: NameRegistryType<T>) :
+    DoubleRegistry<String, T, NameRegistry<T>>(module) {
     private val members = mutableMapOf<String, T>()
     private val names = mutableMapOf<T, String>()
 
@@ -155,7 +161,8 @@ class NameRegistry<T>(module: ChessModule, val type: NameRegistryType<T>): Doubl
     override val values: Set<T> get() = names.keys
 }
 
-class ConnectedRegistryType<K, T>(name: String, val base: DoubleEnumeratedRegistryView<*, K>): DoubleRegistryType<K, T, ConnectedRegistry<K, T>>(name) {
+class ConnectedRegistryType<K, T>(name: String, val base: DoubleEnumeratedRegistryView<*, K>) :
+    DoubleRegistryType<K, T, ConnectedRegistry<K, T>>(name) {
     internal val valueEntries = mutableMapOf<T, RegistryKey<K>>()
 
     override fun createRegistry(module: ChessModule) = ConnectedRegistry(module, this)
@@ -167,7 +174,8 @@ class ConnectedRegistryType<K, T>(name: String, val base: DoubleEnumeratedRegist
     override fun valuesOf(module: ChessModule): Set<T> = module[this].values
 }
 
-class ConnectedRegistry<K, T>(module: ChessModule, val type: ConnectedRegistryType<K, T>): DoubleRegistry<K, T, ConnectedRegistry<K, T>>(module) {
+class ConnectedRegistry<K, T>(module: ChessModule, val type: ConnectedRegistryType<K, T>) :
+    DoubleRegistry<K, T, ConnectedRegistry<K, T>>(module) {
     private val members = mutableMapOf<K, T>()
     private val reversed = mutableMapOf<T, K>()
 
@@ -190,12 +198,14 @@ class ConnectedRegistry<K, T>(module: ChessModule, val type: ConnectedRegistryTy
     override val values: Set<T> get() = reversed.keys
 }
 
-class SingleConnectedRegistryType<K, T>(name: String, val base: DoubleRegistryType<*, K, *>): RegistryType<K, T, SingleConnectedRegistry<K, T>>(name) {
+class SingleConnectedRegistryType<K, T>(name: String, val base: DoubleRegistryType<*, K, *>) :
+    RegistryType<K, T, SingleConnectedRegistry<K, T>>(name) {
 
     override fun createRegistry(module: ChessModule) = SingleConnectedRegistry(module, this)
 }
 
-class SingleConnectedRegistry<K, T>(module: ChessModule, val type: SingleConnectedRegistryType<K, T>): Registry<K, T, SingleConnectedRegistry<K, T>>(module) {
+class SingleConnectedRegistry<K, T>(module: ChessModule, val type: SingleConnectedRegistryType<K, T>) :
+    Registry<K, T, SingleConnectedRegistry<K, T>>(module) {
     private val members = mutableMapOf<K, T>()
 
     override fun set(key: K, value: T) {
@@ -213,11 +223,12 @@ class SingleConnectedRegistry<K, T>(module: ChessModule, val type: SingleConnect
     override val values: Collection<T> get() = members.values
 }
 
-class ChainRegistryView<K, I, T>(val base: RegistryView<K, I>, val extension: RegistryView<I, T>): RegistryView<K, T> {
+class ChainRegistryView<K, I, T>(val base: RegistryView<K, I>, val extension: RegistryView<I, T>) : RegistryView<K, T> {
     override fun getOrNull(key: RegistryKey<K>): T? = base.getOrNull(key)?.let { extension.getOrNull(key.module, it) }
 }
 
-class DoubleChainRegistryView<K, I, T>(val base: DoubleRegistryView<K, I>, val extension: DoubleRegistryView<I, T>): DoubleRegistryView<K, T> {
+class DoubleChainRegistryView<K, I, T>(val base: DoubleRegistryView<K, I>, val extension: DoubleRegistryView<I, T>) :
+    DoubleRegistryView<K, T> {
     override fun getOrNull(key: RegistryKey<K>): T? = base.getOrNull(key)?.let { extension.getOrNull(key.module, it) }
     override fun getModuleOrNull(value: T): ChessModule? = extension.getModuleOrNull(value)
     override fun getOrNull(value: T): RegistryKey<K>? = extension.getKeyOrNull(value)?.let { base.getOrNull(it) }

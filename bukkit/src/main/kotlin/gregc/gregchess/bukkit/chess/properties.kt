@@ -22,7 +22,7 @@ class AddPropertiesEvent(
     }
 }
 
-class PropertyType: NameRegistered {
+class PropertyType : NameRegistered {
     override val key get() = BukkitRegistryTypes.PROPERTY_TYPE[this]
 
     override fun toString(): String = "$key@${hashCode().toString(16)}"

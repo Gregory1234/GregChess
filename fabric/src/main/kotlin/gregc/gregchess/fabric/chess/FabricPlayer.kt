@@ -13,7 +13,7 @@ fun ServerPlayerEntity.showGameResults(color: Color, results: GameResults) {
 }
 
 @Serializable
-data class FabricPlayerInfo(val uuid: @Contextual UUID): ChessPlayerInfo {
+data class FabricPlayerInfo(val uuid: @Contextual UUID) : ChessPlayerInfo {
 
     override val name: String get() = "fabric player"
     override fun getPlayer(color: Color, game: ChessGame) = FabricPlayer(this, color, game)
@@ -36,7 +36,7 @@ inline fun ByColor<ChessPlayer>.forEachReal(block: (UUID) -> Unit) {
 
 inline fun ByColor<ChessPlayer>.forEachUnique(block: (FabricPlayer) -> Unit) {
     val players = toList().filterIsInstance<FabricPlayer>()
-    if (players.size == 2 && players.all {it.info == players[0].info})
+    if (players.size == 2 && players.all { it.info == players[0].info })
         players.filter { it.hasTurn }.forEach(block)
     else
         players.forEach(block)

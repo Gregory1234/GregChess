@@ -41,7 +41,7 @@ class ChessGame(
 ) : ChessEventCaller {
     // TODO: make the serializer more complete
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
-    object Serializer: KSerializer<ChessGame> {
+    object Serializer : KSerializer<ChessGame> {
         override val descriptor = buildClassSerialDescriptor("ChessGame") {
             element("uuid", buildSerialDescriptor("ChessGameUUID", SerialKind.CONTEXTUAL))
             element("players", ByColor.serializer(ChessPlayerInfoSerializer).descriptor)
@@ -57,7 +57,7 @@ class ChessGame(
             encodeStringElement(descriptor, 2, value.settings.name)
             encodeSerializableElement(descriptor, 3, ChessVariant.serializer(), value.variant)
             encodeBooleanElement(descriptor, 4, value.settings.simpleCastling)
-            encodeSerializableElement(descriptor, 5, ListSerializer(ComponentDataSerializer), value.components.map { it.data })
+            encodeSerializableElement(descriptor, 5, ListSerializer(ComponentDataSerializer), value.componentData)
         }
 
         override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
@@ -99,6 +99,8 @@ class ChessGame(
     val variant = settings.variant
 
     val components = settings.components.map { it.getComponent(this) }
+
+    val componentData get() = components.map { it.data }
 
     init {
         try {

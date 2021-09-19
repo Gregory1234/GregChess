@@ -17,7 +17,7 @@ class Nbt(
 ) : NbtFormat {
 
     override fun <T> encodeToNbtElement(serializer: SerializationStrategy<T>, value: T): NbtElement? {
-        var result : NbtElement? = null
+        var result: NbtElement? = null
         NbtElementEncoder(serializersModule) { result = it }.encodeSerializableValue(serializer, value)
         return result
     }
@@ -28,4 +28,5 @@ class Nbt(
 }
 
 inline fun <reified T> Nbt.encodeToNbtElement(value: T) = encodeToNbtElement(serializersModule.serializer(), value)
-inline fun <reified T> Nbt.decodeFromNbtElement(nbt: NbtElement?): T = decodeFromNbtElement(serializersModule.serializer(), nbt)
+inline fun <reified T> Nbt.decodeFromNbtElement(nbt: NbtElement?): T =
+    decodeFromNbtElement(serializersModule.serializer(), nbt)

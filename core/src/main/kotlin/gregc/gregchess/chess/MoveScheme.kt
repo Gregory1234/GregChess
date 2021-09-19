@@ -5,11 +5,13 @@ import gregc.gregchess.chess.component.Chessboard
 
 fun defaultColor(pos: Pos, board: Chessboard) = if (board[pos]?.piece == null) Floor.MOVE else Floor.CAPTURE
 
-val defaultOrder = with (MoveNameTokenType) { NameOrder(listOf(PIECE_TYPE, UNIQUENESS_COORDINATE, CAPTURE, TARGET, CHECK, CHECKMATE)) }
+val defaultOrder =
+    with(MoveNameTokenType) { NameOrder(listOf(PIECE_TYPE, UNIQUENESS_COORDINATE, CAPTURE, TARGET, CHECK, CHECKMATE)) }
 
 fun jumps(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.map {
-        Move(piece, it, defaultColor(it, board),
+        Move(
+            piece, it, defaultColor(it, board),
             setOf(piece.pos), setOf(it), emptySet(), setOf(it),
             emptySet(), emptySet(),
             listOf(PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
@@ -20,11 +22,14 @@ fun jumps(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
 fun rays(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
     dirs.flatMap { dir ->
         PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, it ->
-            Move(piece, it, defaultColor(it, board),
+            Move(
+                piece, it, defaultColor(it, board),
                 setOf(piece.pos), setOf(it),
-                PosSteps(piece.pos + dir, dir, index).toSet(), PosSteps(piece.pos + dir, dir, index+1).toSet(),
+                PosSteps(piece.pos + dir, dir, index).toSet(), PosSteps(piece.pos + dir, dir, index + 1).toSet(),
                 emptySet(), emptySet(),
-                listOf(PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
+                listOf(
+                    PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()
+                ),
                 defaultOrder
             )
         }
@@ -45,13 +50,26 @@ class RayMovement(private val dirs: Collection<Dir>) : MoveScheme {
 
 object KingMovement : MoveScheme {
 
-    private val castlesOrder = NameOrder(listOf(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE))
+    private val castlesOrder =
+        NameOrder(listOf(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE))
 
-    private fun castles(piece: BoardPiece, rook: BoardPiece, side: BoardSide, display: Pos, pieceTarget: Pos, rookTarget: Pos) = Move(
+    // TODO: clean this up
+    private fun castles(
+        piece: BoardPiece,
+        rook: BoardPiece,
+        side: BoardSide,
+        display: Pos,
+        pieceTarget: Pos,
+        rookTarget: Pos
+    ) = Move(
         piece, display, Floor.SPECIAL,
         setOf(piece.pos, rook.pos), setOf(pieceTarget, rookTarget),
-        ((between(piece.pos.file, pieceTarget.file) + pieceTarget.file + between(rook.pos.file, rookTarget.file) + rookTarget.file).distinct() - rook.pos.file - piece.pos.file).map { Pos(it, piece.pos.rank) }.toSet(),
-        (between(piece.pos.file, pieceTarget.file) + pieceTarget.file + piece.pos.file).map { Pos(it, piece.pos.rank) }.toSet(),
+        ((between(piece.pos.file, pieceTarget.file) + pieceTarget.file + between(
+            rook.pos.file,
+            rookTarget.file
+        ) + rookTarget.file).distinct() - rook.pos.file - piece.pos.file).map { Pos(it, piece.pos.rank) }.toSet(),
+        (between(piece.pos.file, pieceTarget.file) + pieceTarget.file + piece.pos.file).map { Pos(it, piece.pos.rank) }
+            .toSet(),
         emptySet(), emptySet(),
         listOf(CastlesTrait(rook, side, pieceTarget, rookTarget), DefaultHalfmoveClockTrait(), CheckTrait()),
         castlesOrder
@@ -66,11 +84,11 @@ object KingMovement : MoveScheme {
                     if (board.simpleCastling) {
                         TODO()
                     } else {
-                        val target = when(side) {
+                        val target = when (side) {
                             BoardSide.QUEENSIDE -> piece.pos.copy(file = 2)
                             BoardSide.KINGSIDE -> piece.pos.copy(file = 6)
                         }
-                        val rookTarget = when(side) {
+                        val rookTarget = when (side) {
                             BoardSide.QUEENSIDE -> piece.pos.copy(file = 3)
                             BoardSide.KINGSIDE -> piece.pos.copy(file = 5)
                         }
@@ -91,9 +109,11 @@ class PawnMovement(
     companion object {
         private val defaultPromotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
         @JvmField
-        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u})
+        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u })
         private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
-        private val pawnOrder = with (MoveNameTokenType) { NameOrder(listOf(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)) }
+        private val pawnOrder = with (MoveNameTokenType) {
+            NameOrder(listOf(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT))
+        }
     }
 
     override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
@@ -103,41 +123,64 @@ class PawnMovement(
         val pos = piece.pos
         val forward = pos + dir
         if (forward.isValid()) {
-            add(Move(piece, forward, ifProm(promotions(forward), Floor.MOVE),
-                setOf(pos), setOf(forward), setOf(forward), setOf(forward),
-                emptySet(), emptySet(),
-                listOf(PawnOriginTrait(), PromotionTrait(promotions(forward)), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait()),
-                pawnOrder
-            ))
+            add(
+                Move(
+                    piece, forward, ifProm(promotions(forward), Floor.MOVE),
+                    setOf(pos), setOf(forward), setOf(forward), setOf(forward),
+                    emptySet(), emptySet(),
+                    listOf(
+                        PawnOriginTrait(), PromotionTrait(promotions(forward)), TargetTrait(forward),
+                        DefaultHalfmoveClockTrait(), CheckTrait()
+                    ),
+                    pawnOrder
+                )
+            )
         }
         val forward2 = pos + dir * 2
         if (forward2.isValid() && canDouble(piece)) {
-            add(Move(piece, forward2, ifProm(promotions(forward), Floor.MOVE),
-                setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2),
-                emptySet(), setOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
-                listOf(PawnOriginTrait(), PromotionTrait(promotions(forward2)), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait()),
-                pawnOrder
-            ))
+            add(
+                Move(
+                    piece, forward2, ifProm(promotions(forward), Floor.MOVE),
+                    setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2),
+                    emptySet(), setOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
+                    listOf(
+                        PawnOriginTrait(), PromotionTrait(promotions(forward2)), TargetTrait(forward2),
+                        DefaultHalfmoveClockTrait(), CheckTrait()
+                    ),
+                    pawnOrder
+                )
+            )
         }
         for (s in BoardSide.values()) {
             val capture = pos + dir + s.dir
             if (capture.isValid()) {
-                add(Move(piece, capture, ifProm(promotions(forward), Floor.CAPTURE),
-                    setOf(pos), setOf(capture), emptySet(), setOf(capture),
-                    emptySet(), emptySet(),
-                    listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
-                        CaptureTrait(capture, true), TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()),
-                    pawnOrder
-                ))
+                add(
+                    Move(
+                        piece, capture, ifProm(promotions(forward), Floor.CAPTURE),
+                        setOf(pos), setOf(capture), emptySet(), setOf(capture),
+                        emptySet(), emptySet(),
+                        listOf(
+                            PawnOriginTrait(), PromotionTrait(promotions(capture)), CaptureTrait(capture, true),
+                            TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()
+                        ),
+                        pawnOrder
+                    )
+                )
                 val enPassant = pos + s.dir
-                add(Move(piece, capture, ifProm(promotions(forward), Floor.CAPTURE),
-                    setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture),
-                    setOf(Pair(capture, EN_PASSANT)), emptySet(),
-                    listOf(PawnOriginTrait(), PromotionTrait(promotions(capture)),
-                        CaptureTrait(enPassant, true), TargetTrait(capture),
-                        NameTrait(MoveName(listOf(MoveNameTokenType.EN_PASSANT.mk))), DefaultHalfmoveClockTrait(), CheckTrait()),
-                    pawnOrder
-                ))
+                add(
+                    Move(
+                        piece, capture, ifProm(promotions(forward), Floor.CAPTURE),
+                        setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture),
+                        setOf(Pair(capture, EN_PASSANT)), emptySet(),
+                        listOf(
+                            PawnOriginTrait(), PromotionTrait(promotions(capture)),
+                            CaptureTrait(enPassant, true), TargetTrait(capture),
+                            NameTrait(MoveName(listOf(MoveNameTokenType.EN_PASSANT.mk))),
+                            DefaultHalfmoveClockTrait(), CheckTrait()
+                        ),
+                        pawnOrder
+                    )
+                )
             }
         }
     }

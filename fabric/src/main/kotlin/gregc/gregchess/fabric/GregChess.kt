@@ -32,7 +32,7 @@ object GregChess : ModInitializer {
     }
 
     init {
-        ExtensionType.extensionTypes += FabricChessModuleExtension.FABRIC
+        ExtensionType.extensionTypes += FabricChessExtension.FABRIC
 
         EntrypointUtils.invoke("chess", ChessInitializer::class.java, ChessInitializer::onInitializeChess)
     }

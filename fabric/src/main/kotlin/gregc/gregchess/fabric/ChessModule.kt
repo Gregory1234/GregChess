@@ -42,14 +42,14 @@ fun ChessModule.registerTall(t: PieceType, rarity: Rarity) {
     }
 }
 
-abstract class FabricChessModuleExtension(module: ChessModule) : ChessModuleExtension(module, FABRIC) {
+abstract class FabricChessExtension(module: ChessModule) : ChessExtension(module, FABRIC) {
     companion object {
         @JvmField
         internal val FABRIC = ExtensionType("fabric")
     }
 }
 
-object FabricGregChessModule : FabricChessModuleExtension(GregChessModule) {
+object FabricGregChessModule : FabricChessExtension(GregChessModule) {
     @JvmField
     val CHESSBOARD_BROKEN =
         GregChessModule.register("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY, true))

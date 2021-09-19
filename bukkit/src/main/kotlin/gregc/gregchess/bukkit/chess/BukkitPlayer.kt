@@ -20,6 +20,7 @@ private class ExtraPlayerInfo(val player: Player) {
         private val infos = mutableMapOf<Player, ExtraPlayerInfo>()
         fun of(p: Player) = infos.getOrPut(p) { ExtraPlayerInfo(p) }
     }
+
     var currentGame: ChessGame? = null
     val games = mutableListOf<ChessGame>()
 
@@ -133,16 +134,18 @@ suspend fun Player.openPawnPromotionMenu(promotions: Collection<Piece>) =
 val Player.cpi get() = BukkitPlayerInfo(this)
 
 @Serializable(with = BukkitPlayerInfo.Serializer::class)
-data class BukkitPlayerInfo(val player: Player): ChessPlayerInfo {
+data class BukkitPlayerInfo(val player: Player) : ChessPlayerInfo {
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
-    object Serializer: KSerializer<BukkitPlayerInfo> {
+    object Serializer : KSerializer<BukkitPlayerInfo> {
         override val descriptor = buildSerialDescriptor("BukkitPlayerInfo", SerialKind.CONTEXTUAL)
 
         override fun serialize(encoder: Encoder, value: BukkitPlayerInfo) =
-            encoder.encodeSerializableValue(encoder.serializersModule.getContextual(UUID::class)!!, value.uuid)
+            encoder.encodeSerializableValue(encoder.serializersModule.serializer(), value.uuid)
 
-        override fun deserialize(decoder: Decoder) =
-            BukkitPlayerInfo(Bukkit.getPlayer(decoder.decodeSerializableValue(decoder.serializersModule.getContextual(UUID::class)!!))!!)
+        override fun deserialize(decoder: Decoder): BukkitPlayerInfo {
+            val uuid: UUID = decoder.decodeSerializableValue(decoder.serializersModule.serializer())
+            return BukkitPlayerInfo(Bukkit.getPlayer(uuid)!!)
+        }
     }
 
     override val name: String get() = player.name
@@ -150,8 +153,7 @@ data class BukkitPlayerInfo(val player: Player): ChessPlayerInfo {
     override fun getPlayer(color: Color, game: ChessGame) = BukkitPlayer(this, color, game)
 }
 
-class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame):
-    ChessPlayer(info, color, game) {
+class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame) : ChessPlayer(info, color, game) {
 
     val player: Player = info.player
 
@@ -234,7 +236,7 @@ inline fun ByColor<ChessPlayer>.forEachReal(block: (Player) -> Unit) {
 
 inline fun ByColor<ChessPlayer>.forEachUnique(block: (BukkitPlayer) -> Unit) {
     val players = toList().filterIsInstance<BukkitPlayer>()
-    if (players.size == 2 && players.all {it.player == players[0].player})
+    if (players.size == 2 && players.all { it.player == players[0].player })
         players.filter { it.hasTurn }.forEach(block)
     else
         players.forEach(block)

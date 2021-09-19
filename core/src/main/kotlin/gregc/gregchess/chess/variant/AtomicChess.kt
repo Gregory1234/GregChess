@@ -11,7 +11,7 @@ object AtomicChess : ChessVariant() {
     class ExplosionEvent(val pos: Pos) : ChessEvent
 
     @Serializable
-    class ExplosionTrait(val exploded: MutableList<CapturedBoardPiece> = mutableListOf()): MoveTrait {
+    class ExplosionTrait(val exploded: MutableList<CapturedBoardPiece> = mutableListOf()) : MoveTrait {
         override val nameTokens: MoveName get() = MoveName()
 
         override val shouldComeBefore = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
@@ -62,9 +62,10 @@ object AtomicChess : ChessVariant() {
     private fun checkingMoves(by: Color, pos: Pos, board: Chessboard) =
         if (nextToKing(by, pos, board)) emptyList() else Normal.checkingMoves(by, pos, board)
 
-    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = Normal.getPieceMoves(piece, board).map {
-        if (it.getTrait<CaptureTrait>() != null) it.copy(traits = it.traits + ExplosionTrait()) else it
-    }
+    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
+        Normal.getPieceMoves(piece, board).map {
+            if (it.getTrait<CaptureTrait>() != null) it.copy(traits = it.traits + ExplosionTrait()) else it
+        }
 
     override fun getLegality(move: Move, game: ChessGame): MoveLegality = with(move) {
 
@@ -101,7 +102,8 @@ object AtomicChess : ChessVariant() {
         return MoveLegality.LEGAL
     }
 
-    override fun isInCheck(king: BoardPiece, board: Chessboard): Boolean = checkingMoves(!king.color, king.pos, board).isNotEmpty()
+    override fun isInCheck(king: BoardPiece, board: Chessboard): Boolean =
+        checkingMoves(!king.color, king.pos, board).isNotEmpty()
 
     override fun checkForGameEnd(game: ChessGame) {
         if (game.board.kingOf(!game.currentTurn) == null)

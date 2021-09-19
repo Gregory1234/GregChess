@@ -8,7 +8,7 @@ import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 
-abstract class Arena(val name: String): ChessListener {
+abstract class Arena(val name: String) : ChessListener {
 
     companion object {
         @JvmField
@@ -38,9 +38,17 @@ abstract class Arena(val name: String): ChessListener {
         }
 
         fun reloadArenas() {
-            val newArenas = BukkitGregChessModule.config.getConfigurationSection("ChessArenas")?.getKeys(false)?.mapNotNull { name ->
-                BukkitGregChessModule.config.getConfigurationSection("ChessArenas.$name")?.let { parseArena(it, name) }
-            }.orEmpty()
+            val newArenas = BukkitGregChessModule.config.getConfigurationSection("ChessArenas")
+                ?.getKeys(false)
+                ?.mapNotNull { name ->
+                    val section = BukkitGregChessModule.config.getConfigurationSection("ChessArenas.$name")
+                    if (section != null)
+                        parseArena(section, name)
+                    else {
+                        GregChess.logger.warning("Arena $name has a wrong format")
+                        null
+                    }
+                }.orEmpty()
             arenas.forEach {
                 it.game?.stop(drawBy(ARENA_REMOVED))
             }
@@ -67,7 +75,7 @@ abstract class Arena(val name: String): ChessListener {
 
 }
 
-class ResetPlayerEvent(val player: Player): ChessEvent
+class ResetPlayerEvent(val player: Player) : ChessEvent
 
 class SimpleArena(
     name: String,
@@ -75,7 +83,7 @@ class SimpleArena(
     override val tileSize: Int,
     offset: Loc
 ) : Arena(name) {
-    override val boardStart: Loc = offset + Loc(8,0,8)
+    override val boardStart: Loc = offset + Loc(8, 0, 8)
     override val capturedStart = byColor(
         boardStart + Loc(8 * tileSize - 1, 0, -3),
         boardStart + Loc(0, 0, 8 * tileSize + 2)
@@ -101,7 +109,7 @@ class SimpleArena(
 
     @ChessEventHandler
     fun spectatorEvent(e: SpectatorEvent) {
-        when(e.dir){
+        when (e.dir) {
             PlayerDirection.JOIN -> {
                 e.player.teleport(spawnLocation)
                 e.player.inventory.clear()
@@ -129,7 +137,7 @@ class SimpleArena(
     }
 
     @ChessEventHandler
-    fun playerEvent(e: PlayerEvent) = when(e.dir) {
+    fun playerEvent(e: PlayerEvent) = when (e.dir) {
         PlayerDirection.JOIN -> e.player.reset()
         PlayerDirection.LEAVE -> e.player.leave()
     }

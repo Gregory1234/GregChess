@@ -21,9 +21,14 @@ object BukkitRegistryTypes {
     @JvmField
     val PROPERTY_TYPE = NameRegistryType<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER = SingleConnectedRegistryType<KClass<out ComponentData<*>>, SettingsParser<out ComponentData<*>>>("settings_parser", RegistryType.COMPONENT_DATA_CLASS)
+    val SETTINGS_PARSER =
+        SingleConnectedRegistryType<KClass<out ComponentData<*>>, SettingsParser<out ComponentData<*>>>(
+            "settings_parser", RegistryType.COMPONENT_DATA_CLASS
+        )
     @JvmField
-    val MOVE_NAME_TOKEN_STRING = SingleConnectedRegistryType<MoveNameTokenType<*>, MoveNameTokenInterpreter<*>>("move_name_token_string", RegistryType.MOVE_NAME_TOKEN_TYPE)
+    val MOVE_NAME_TOKEN_STRING = SingleConnectedRegistryType<MoveNameTokenType<*>, MoveNameTokenInterpreter<*>>(
+        "move_name_token_string", RegistryType.MOVE_NAME_TOKEN_TYPE
+    )
 }
 
 fun ChessModule.register(id: String, propertyType: PropertyType) =
@@ -38,10 +43,10 @@ fun <T : ComponentData<*>> ChessModule.registerConstSettings(cl: KClass<T>, sett
 inline fun <reified T : ComponentData<*>> ChessModule.registerConstSettings(settings: T) =
     registerConstSettings(T::class, settings)
 
-fun <T: Any> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameTokenInterpreter<T> = token.toPgnString) =
+fun <T : Any> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameTokenInterpreter<T> = token.toPgnString) =
     register(BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING, token, str)
 
-abstract class BukkitChessModuleExtension(module: ChessModule, val plugin: Plugin) : ChessModuleExtension(module, BUKKIT) {
+abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : ChessExtension(module, BUKKIT) {
     companion object {
         @JvmField
         internal val BUKKIT = ExtensionType("bukkit")
@@ -57,13 +62,13 @@ abstract class BukkitChessModuleExtension(module: ChessModule, val plugin: Plugi
     }
 }
 
-val ChessModule.bukkit get() = extensions.filterIsInstance<BukkitChessModuleExtension>().first()
+val ChessModule.bukkit get() = extensions.filterIsInstance<BukkitChessExtension>().first()
 
 interface BukkitChessPlugin {
     fun onInitialize()
 }
 
-object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregChess.plugin) {
+object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.plugin) {
 
     private val clockSettings: Map<String, ChessClockData>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
@@ -75,9 +80,11 @@ object BukkitGregChessModule : BukkitChessModuleExtension(GregChessModule, GregC
         }
 
     override val hookedComponents: Set<KClass<out Component>>
-        get() = setOf(Chessboard::class, ChessClock::class, PlayerManager::class,
+        get() = setOf(
+            Chessboard::class, ChessClock::class, PlayerManager::class,
             SpectatorManager::class, ScoreboardManager::class, BukkitRenderer::class,
-            BukkitEventRelay::class, BukkitGregChessAdapter::class)
+            BukkitEventRelay::class, BukkitGregChessAdapter::class
+        )
 
     private fun registerSettings() = with(GregChessModule) {
         registerSettings { ChessboardState[variant, section.getString("Board")] }

@@ -28,8 +28,6 @@ data class FabricRendererSettings(
     override fun getComponent(game: ChessGame) = FabricRenderer(game, this)
 }
 
-class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings) : Component(game) {
-
-}
+class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings) : Component(game)
 
 val ChessGame.renderer get() = requireComponent<FabricRenderer>()

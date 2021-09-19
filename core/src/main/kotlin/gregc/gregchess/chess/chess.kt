@@ -74,8 +74,7 @@ inline fun <T> byColor(block: (Color) -> T) = byColor(block(Color.WHITE), block(
 class NoEngineMoveException(fen: FEN) : Exception(fen.toString())
 
 
-
-interface ChessEngine: ChessPlayerInfo {
+interface ChessEngine : ChessPlayerInfo {
     fun stop()
     fun setOption(name: String, value: String)
     fun sendCommand(command: String)

@@ -12,7 +12,7 @@ import kotlinx.serialization.encoding.*
 object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
     override fun getOrNull(key: RegistryKey<String>): Piece? {
         val (module, name) = key
-        return when(name.take(6)) {
+        return when (name.take(6)) {
             "white_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Color.WHITE)
             "black_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Color.BLACK)
             else -> null
@@ -119,7 +119,9 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         return new
     }
 
-    fun copyInPlace(board: Chessboard, pos: Pos = this.pos, piece: Piece = this.piece, hasMoved: Boolean = this.hasMoved): BoardPiece {
+    fun copyInPlace(
+        board: Chessboard, pos: Pos = this.pos, piece: Piece = this.piece, hasMoved: Boolean = this.hasMoved
+    ): BoardPiece {
         checkExists(board)
         board[this.pos]?.piece = null
         val new = BoardPiece(pos, piece, hasMoved)
@@ -151,7 +153,8 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 
 @Serializable(with = CapturedBoardPiece.Serializer::class)
 data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece) {
-    constructor(piece: BoardPiece, capturedPos: CapturedPos): this(piece, CapturedPiece(piece.piece, capturedPos))
+    constructor(piece: BoardPiece, capturedPos: CapturedPos) : this(piece, CapturedPiece(piece.piece, capturedPos))
+
     init {
         require(piece.piece == captured.piece)
     }

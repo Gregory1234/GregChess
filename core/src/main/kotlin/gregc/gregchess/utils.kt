@@ -47,7 +47,7 @@ interface GregLogger {
     fun err(msg: String)
 }
 
-class SystemGregLogger: GregLogger {
+class SystemGregLogger : GregLogger {
     @Suppress("ReplaceJavaStaticMethodWithKotlinAnalog")
     override fun info(msg: String) = System.out.println(msg)
     override fun warn(msg: String) = System.err.println(msg)
@@ -83,7 +83,10 @@ open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val re
 
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 @Suppress("UNCHECKED_CAST")
-open class ClassRegisteredSerializer<T: Any>(val name: String, val registryType: DoubleRegistryView<String, KClass<out T>>): KSerializer<T> {
+open class ClassRegisteredSerializer<T : Any>(
+    val name: String,
+    val registryType: DoubleRegistryView<String, KClass<out T>>
+) : KSerializer<T> {
     final override val descriptor: SerialDescriptor
         get() = buildClassSerialDescriptor(name) {
             element<String>("type")
@@ -128,7 +131,7 @@ open class ClassRegisteredSerializer<T: Any>(val name: String, val registryType:
     }
 }
 
-abstract class CustomListSerializer<L, E>(val name: String, val elementSerializer: KSerializer<E>): KSerializer<L> {
+abstract class CustomListSerializer<L, E>(val name: String, val elementSerializer: KSerializer<E>) : KSerializer<L> {
     @OptIn(ExperimentalSerializationApi::class)
     final override val descriptor: SerialDescriptor
         get() = object : SerialDescriptor {
@@ -181,7 +184,7 @@ abstract class CustomListSerializer<L, E>(val name: String, val elementSerialize
     }
 }
 
-object DurationSerializer: KSerializer<Duration> {
+object DurationSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Duration", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: Duration) = encoder.encodeString(value.toString())

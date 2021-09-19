@@ -71,7 +71,7 @@ object GregChess : Listener {
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
-        ExtensionType.extensionTypes += BukkitChessModuleExtension.BUKKIT
+        ExtensionType.extensionTypes += BukkitChessExtension.BUKKIT
         for (p in plugin.server.pluginManager.plugins)
             if (p is BukkitChessPlugin)
                 p.onInitialize()
@@ -352,7 +352,8 @@ object GregChess : Listener {
 
             when (args.size) {
                 1 -> ifPermissionPrefix(
-                    "duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move", "serial", "serialsave", "serialload",
+                    "duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move",
+                    "serial", "serialsave", "serialload",
                     "skip", "load", "save", "time", "uci", "spectate", "reload", "dev", "undo", "debug", "admin"
                 ) + ifInfo("info")
                 2 -> when (args[0]) {

@@ -34,7 +34,7 @@ object ChessGameManager {
                 nbt.decodeFromNbtElement<ChessGame>(NbtIo.readCompressed(f)).start().also {
                     GregChess.logger.info("loaded game $it")
                 }
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 e.printStackTrace()
                 return null
             }

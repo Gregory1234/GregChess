@@ -51,7 +51,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     private val CapturedPos.loc
         get() = capturedStart[by] + when (by) {
-            Color.WHITE -> Loc(- 2 * pos, 0, - 2 * row)
+            Color.WHITE -> Loc(-2 * pos, 0, -2 * row)
             Color.BLACK -> Loc(2 * pos, 0, 2 * row)
         }
 
@@ -105,7 +105,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent)  {
+    fun onStop(e: GameStopStageEvent) {
         if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC) {
             game.board.pieces.forEach {
                 it.clearRender()

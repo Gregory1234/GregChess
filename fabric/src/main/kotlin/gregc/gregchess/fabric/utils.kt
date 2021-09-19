@@ -34,7 +34,7 @@ class BlockEntityDirtyDelegate<T>(var value: T) : ReadWriteProperty<BlockEntity,
     }
 }
 
-class Log4jGregLogger(val logger: Logger): GregLogger {
+class Log4jGregLogger(val logger: Logger) : GregLogger {
     override fun info(msg: String) = logger.info(msg)
     override fun warn(msg: String) = logger.warn(msg)
     override fun err(msg: String) = logger.error(msg)
@@ -43,7 +43,7 @@ class Log4jGregLogger(val logger: Logger): GregLogger {
 val BlockPos.loc get() = Loc(x, y, z)
 val Loc.blockpos get() = BlockPos(x, y, z)
 
-object UUIDAsIntArraySerializer: KSerializer<UUID> {
+object UUIDAsIntArraySerializer : KSerializer<UUID> {
     override val descriptor: SerialDescriptor
         get() = IntArraySerializer().descriptor
 
@@ -51,7 +51,8 @@ object UUIDAsIntArraySerializer: KSerializer<UUID> {
         encoder.encodeSerializableValue(IntArraySerializer(), NbtHelper.fromUuid(value).intArray)
     }
 
-    override fun deserialize(decoder: Decoder): UUID = NbtHelper.toUuid(NbtIntArray(decoder.decodeSerializableValue(IntArraySerializer())))
+    override fun deserialize(decoder: Decoder): UUID =
+        NbtHelper.toUuid(NbtIntArray(decoder.decodeSerializableValue(IntArraySerializer())))
 }
 
 fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModule {

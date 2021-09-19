@@ -32,7 +32,7 @@ val PieceType.structure
 val Piece.item get() = type.getItem(color)
 
 @Suppress("UNCHECKED_CAST")
-val <T: Any> MoveNameToken<T>.localName
+val <T : Any> MoveNameToken<T>.localName
     get() = (type.module[BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING][type] as MoveNameTokenInterpreter<T>)(value)
 val MoveName.localName get() = tokens.joinToString("") { it.localName }
 
@@ -60,9 +60,9 @@ fun ChessGame.getInfo() = buildTextComponent {
     append("Components: ${components.joinToString { it::class.componentKey.toString() }}")
 }
 
-val EndReason<*>.configName get() = name.snakeToPascal()
 val GameResults.name
-    get() = endReason.module.bukkit.config.getPathString("Chess.EndReason.${endReason.configName}", *args.toTypedArray())
+    get() = endReason.module.bukkit.config
+        .getPathString("Chess.EndReason.${endReason.name.snakeToPascal()}", *args.toTypedArray())
 
 val GameResults.message
     get() = score.let {

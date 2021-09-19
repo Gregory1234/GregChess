@@ -9,9 +9,9 @@ class PieceType(
     val moveScheme: MoveScheme,
     val hasMoved: (FEN, Pos, Color) -> Boolean,
     val minor: Boolean
-): NameRegistered {
+) : NameRegistered {
 
-    object Serializer: NameRegisteredSerializer<PieceType>("PieceType", RegistryType.PIECE_TYPE)
+    object Serializer : NameRegisteredSerializer<PieceType>("PieceType", RegistryType.PIECE_TYPE)
 
     override val key get() = RegistryType.PIECE_TYPE[this]
 
@@ -28,16 +28,21 @@ class PieceType(
             }
         }
 
+        private val bishopDirs = rotationsOf(1, 1)
+        private val rookDirs = rotationsOf(1, 0)
+        private val queenDirs = bishopDirs + rookDirs
+        private val knightDirs = rotationsOf(2, 1)
+
         @JvmField
         val KING = GregChessModule.register("king", PieceType('k', KingMovement, assumeNotMoved, false))
         @JvmField
-        val QUEEN = GregChessModule.register("queen", PieceType('q', RayMovement(rotationsOf(1, 0) + rotationsOf(1, 1)), assumeNotMoved, false))
+        val QUEEN = GregChessModule.register("queen", PieceType('q', RayMovement(queenDirs), assumeNotMoved, false))
         @JvmField
-        val ROOK = GregChessModule.register("rook", PieceType('r', RayMovement(rotationsOf(1, 0)), rookHasMoved, false))
+        val ROOK = GregChessModule.register("rook", PieceType('r', RayMovement(rookDirs), rookHasMoved, false))
         @JvmField
-        val BISHOP = GregChessModule.register("bishop", PieceType('b', RayMovement(rotationsOf(1, 1)), assumeNotMoved, true))
+        val BISHOP = GregChessModule.register("bishop", PieceType('b', RayMovement(bishopDirs), assumeNotMoved, true))
         @JvmField
-        val KNIGHT = GregChessModule.register("knight", PieceType('n', JumpMovement(rotationsOf(2, 1)), assumeNotMoved, true))
+        val KNIGHT = GregChessModule.register("knight", PieceType('n', JumpMovement(knightDirs), assumeNotMoved, true))
         @JvmField
         val PAWN = GregChessModule.register("pawn", PieceType('p', PawnMovement(), pawnHasMoved, false))
 

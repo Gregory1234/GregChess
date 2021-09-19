@@ -9,10 +9,11 @@ class ExtensionType(val name: String) {
     companion object {
         val extensionTypes = mutableSetOf<ExtensionType>()
     }
+
     override fun toString() = "$name@${hashCode().toString(16)}"
 }
 
-abstract class ChessModuleExtension(val module: ChessModule, val extensionType: ExtensionType) {
+abstract class ChessExtension(val module: ChessModule, val extensionType: ExtensionType) {
     abstract fun load()
     open fun validate() {}
     final override fun toString() = "${module.namespace}:${extensionType.name}@${hashCode().toString(16)}"
@@ -24,19 +25,22 @@ abstract class ChessModule(val namespace: String) {
         fun getOrNull(namespace: String) = modules.firstOrNull { it.namespace == namespace }
         operator fun get(namespace: String) = modules.first { it.namespace == namespace }
     }
-    val extensions = mutableSetOf<ChessModuleExtension>()
+
+    val extensions = mutableSetOf<ChessExtension>()
     private val registries = mutableMapOf<RegistryType<*, *, *>, Registry<*, *, *>>()
     var logger: GregLogger = SystemGregLogger()
     var locked: Boolean = false
         private set
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <K, T, R: Registry<K, T, R>> get(t: RegistryType<K, T, R>): R =
+    operator fun <K, T, R : Registry<K, T, R>> get(t: RegistryType<K, T, R>): R =
         registries.getOrPut(t) { t.createRegistry(this) } as R
-    fun <K, T, V: T, R : Registry<K, T, R>> register(t: RegistryType<K, T, R>, key: K, v: V): V {
+
+    fun <K, T, V : T, R : Registry<K, T, R>> register(t: RegistryType<K, T, R>, key: K, v: V): V {
         t[this, key] = v
         return v
     }
+
     protected abstract fun load()
     fun fullLoad() {
         // TODO: add error messages to require blocks
@@ -66,27 +70,27 @@ abstract class ChessModule(val namespace: String) {
 
 fun ChessModule.register(id: String, pieceType: PieceType) = register(RegistryType.PIECE_TYPE, id, pieceType)
 
-fun <T: GameScore> ChessModule.register(id: String, endReason: EndReason<T>) =
+fun <T : GameScore> ChessModule.register(id: String, endReason: EndReason<T>) =
     register(RegistryType.END_REASON, id, endReason)
 
 fun ChessModule.register(id: String, variant: ChessVariant) = register(RegistryType.VARIANT, id, variant)
 
 fun ChessModule.register(id: String, flagType: ChessFlagType) = register(RegistryType.FLAG_TYPE, id, flagType)
 
-fun <T: Any> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
+fun <T : Any> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
     register(RegistryType.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
 
-inline fun <reified T: Component, reified D: ComponentData<T>> ChessModule.registerComponent(id: String) {
+inline fun <reified T : Component, reified D : ComponentData<T>> ChessModule.registerComponent(id: String) {
     T::class.companionObjectInstance
     D::class.companionObjectInstance
     register(RegistryType.COMPONENT_CLASS, id, T::class)
     register(RegistryType.COMPONENT_DATA_CLASS, T::class, D::class)
 }
 
-inline fun <reified T: MoveTrait> ChessModule.registerMoveTrait(id: String) =
+inline fun <reified T : MoveTrait> ChessModule.registerMoveTrait(id: String) =
     register(RegistryType.MOVE_TRAIT_CLASS, id, T::class)
 
-inline fun <reified T: ChessPlayerInfo> ChessModule.registerPlayerType(id: String) =
+inline fun <reified T : ChessPlayerInfo> ChessModule.registerPlayerType(id: String) =
     register(RegistryType.PLAYER_TYPE, id, T::class)
 
 object GregChessModule : ChessModule("gregchess") {

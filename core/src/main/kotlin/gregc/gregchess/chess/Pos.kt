@@ -12,7 +12,7 @@ typealias Dir = Pair<Int, Int>
 
 @Serializable(with = Pos.Serializer::class)
 data class Pos(val file: Int, val rank: Int) {
-    object Serializer: KSerializer<Pos> {
+    object Serializer : KSerializer<Pos> {
         override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Pos", PrimitiveKind.STRING)
 
         override fun serialize(encoder: Encoder, value: Pos) {
@@ -111,8 +111,8 @@ enum class Floor {
 data class FloorUpdateEvent(val pos: Pos, val floor: Floor) : ChessEvent
 
 @Serializable(with = ChessFlagType.Serializer::class)
-class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean): NameRegistered {
-    object Serializer: NameRegisteredSerializer<ChessFlagType>("ChessFlagType", RegistryType.FLAG_TYPE)
+class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
+    object Serializer : NameRegisteredSerializer<ChessFlagType>("ChessFlagType", RegistryType.FLAG_TYPE)
 
     override val key get() = RegistryType.FLAG_TYPE[this]
 

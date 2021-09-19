@@ -10,7 +10,8 @@ import kotlin.reflect.KClass
 object ThreeChecks : ChessVariant() {
 
     @Serializable
-    data class CheckCounterData(val limit: UInt, val checks: ByColor<UInt> = byColor(0u)) : ComponentData<CheckCounter> {
+    data class CheckCounterData(val limit: UInt, val checks: ByColor<UInt> = byColor(0u)) :
+        ComponentData<CheckCounter> {
         override fun getComponent(game: ChessGame) = CheckCounter(game, this)
     }
 
@@ -39,7 +40,7 @@ object ThreeChecks : ChessVariant() {
     }
 
     @Serializable
-    class CheckCounterTrait(var checkRegistered: Boolean = false): MoveTrait {
+    class CheckCounterTrait(var checkRegistered: Boolean = false) : MoveTrait {
         override val nameTokens: MoveName = MoveName()
 
         override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
@@ -65,9 +66,10 @@ object ThreeChecks : ChessVariant() {
     @JvmField
     val CHECK_LIMIT = GregChessModule.register("check_limit", DetEndReason(EndReason.Type.NORMAL))
 
-    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = Normal.getPieceMoves(piece, board).map {
-        it.copy(traits = it.traits + CheckCounterTrait())
-    }
+    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
+        Normal.getPieceMoves(piece, board).map {
+            it.copy(traits = it.traits + CheckCounterTrait())
+        }
 
     override fun checkForGameEnd(game: ChessGame) {
         game.requireComponent<CheckCounter>().checkForGameEnd()

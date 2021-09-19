@@ -9,7 +9,8 @@ interface ChessPlayerInfo {
     fun getPlayer(color: Color, game: ChessGame): ChessPlayer
 }
 
-object ChessPlayerInfoSerializer: ClassRegisteredSerializer<ChessPlayerInfo>("ChessPlayerInfo", RegistryType.PLAYER_TYPE)
+object ChessPlayerInfoSerializer :
+    ClassRegisteredSerializer<ChessPlayerInfo>("ChessPlayerInfo", RegistryType.PLAYER_TYPE)
 
 abstract class ChessPlayer(val info: ChessPlayerInfo, val color: Color, val game: ChessGame) {
 

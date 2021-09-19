@@ -231,13 +231,13 @@ val config: ConfigurationSection get() = GregChess.plugin.config
 fun ConfigurationSection.getPathString(path: String, vararg args: String) =
     getString(path)?.format(*args)?.chatColor() ?: ((currentPath ?: "") + "-" + path)
 
-class JavaGregLogger(val logger: Logger): GregLogger {
+class JavaGregLogger(val logger: Logger) : GregLogger {
     override fun info(msg: String) = logger.info(msg)
     override fun warn(msg: String) = logger.warning(msg)
     override fun err(msg: String) = logger.severe(msg)
 }
 
-object UUIDAsStringSerializer: KSerializer<UUID> {
+object UUIDAsStringSerializer : KSerializer<UUID> {
     override val descriptor = PrimitiveSerialDescriptor("UUIDAsString", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: UUID) {
