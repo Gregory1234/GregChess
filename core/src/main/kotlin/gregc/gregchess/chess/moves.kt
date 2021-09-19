@@ -44,7 +44,7 @@ data class Move(
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 
-    val name: MoveName get() = nameOrder.reorder(traits.flatMap { it.nameTokens.tokens })
+    val name: MoveName get() = nameOrder.reorder(traits.flatMap { it.nameTokens })
 
     fun undo(game: ChessGame) {
         var remainingTraits = traits
@@ -126,21 +126,29 @@ class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmFiel
     }
 }
 
-@JvmInline
-@Serializable(with = NameOrder.Serializer::class)
-value class NameOrder(val nameOrder: List<MoveNameTokenType<*>>) {
-    object Serializer :
-        CustomListSerializer<NameOrder, MoveNameTokenType<*>>("MoveName", MoveNameTokenType.Serializer) {
+@Serializable(with = NameOrderElement.Serializer::class)
+data class NameOrderElement(val type: MoveNameTokenType<*>) {
+    @OptIn(ExperimentalSerializationApi::class)
+    object Serializer : KSerializer<NameOrderElement> {
+        override val descriptor: SerialDescriptor
+            get() = SerialDescriptor("NameOrderElement", MoveNameTokenType.Serializer.descriptor)
 
-        override fun construct(list: List<MoveNameTokenType<*>>) = NameOrder(list)
-        override fun elements(custom: NameOrder) = custom.nameOrder
-    }
+        override fun serialize(encoder: Encoder, value: NameOrderElement) =
+            encoder.encodeSerializableValue(MoveNameTokenType.Serializer, value.type)
 
-    fun reorder(tokens: List<MoveNameToken<*>>): MoveName {
-        val nameTokens = tokens.associateBy { it.type }
-        return MoveName(nameOrder.mapNotNull { nameTokens[it] })
+        override fun deserialize(decoder: Decoder): NameOrderElement =
+            NameOrderElement(decoder.decodeSerializableValue(MoveNameTokenType.Serializer))
     }
 }
+
+typealias NameOrder = List<NameOrderElement>
+
+fun NameOrder.reorder(tokens: List<AnyMoveNameToken>): MoveName {
+    val nameTokens = tokens.associateBy { it.type }
+    return mapNotNull { nameTokens[it.type] }
+}
+
+fun nameOrder(vararg types: MoveNameTokenType<*>) = types.map { NameOrderElement(it) }
 
 val MoveNameTokenType<Unit>.mk get() = of(Unit)
 
@@ -199,31 +207,34 @@ data class MoveNameToken<T : Any>(val type: MoveNameTokenType<T>, val value: T) 
     }
 }
 
-// TODO: make tokens read only in general
-@JvmInline
-@Serializable(with = MoveName.Serializer::class)
-value class MoveName(val tokens: MutableList<MoveNameToken<*>>) {
-    constructor(tokens: Collection<MoveNameToken<*>> = emptyList()) : this(tokens.toMutableList())
+@Serializable(with = AnyMoveNameToken.Serializer::class)
+data class AnyMoveNameToken(val token: MoveNameToken<*>) {
+    val type get() = token.type
 
-    object Serializer : CustomListSerializer<MoveName, MoveNameToken<*>>("MoveName", MoveNameToken.Serializer) {
-        override fun construct(list: List<MoveNameToken<*>>) = MoveName(list)
-        override fun elements(custom: MoveName) = custom.tokens
+    @OptIn(ExperimentalSerializationApi::class)
+    object Serializer : KSerializer<AnyMoveNameToken> {
+        override val descriptor: SerialDescriptor
+            get() = SerialDescriptor("AnyMoveNameToken", MoveNameToken.Serializer.descriptor)
+
+        override fun serialize(encoder: Encoder, value: AnyMoveNameToken) =
+            encoder.encodeSerializableValue(MoveNameToken.Serializer, value.token)
+
+        override fun deserialize(decoder: Decoder): AnyMoveNameToken =
+            AnyMoveNameToken(decoder.decodeSerializableValue(MoveNameToken.Serializer))
     }
-
-    val pgn get() = tokens.joinToString("") { it.pgn }
-
-    operator fun plusAssign(other: List<MoveNameToken<*>>) {
-        tokens += other
-    }
-
-    operator fun plusAssign(other: MoveNameToken<*>) {
-        tokens += other
-    }
-
-    fun isEmpty(): Boolean = tokens.isEmpty()
-    fun isNotEmpty(): Boolean = tokens.isNotEmpty()
 }
 
+typealias MoveName = List<AnyMoveNameToken>
+
+typealias MutableTokenList = MutableList<AnyMoveNameToken>
+
+fun emptyTokenList(): MutableTokenList = mutableListOf()
+
+operator fun MutableTokenList.plusAssign(token: MoveNameToken<*>) = plusAssign(AnyMoveNameToken(token))
+
+fun nameOf(vararg tokens: MoveNameToken<*>): MoveName = tokens.map { AnyMoveNameToken(it) }
+
+val MoveName.pgn get() = joinToString("") { it.token.pgn }
 
 @Serializable(with = UniquenessCoordinate.Serializer::class)
 data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {

@@ -7,7 +7,7 @@ import kotlin.math.abs
 fun defaultColor(pos: Pos, board: Chessboard) = if (board[pos]?.piece == null) Floor.MOVE else Floor.CAPTURE
 
 val defaultOrder =
-    with(MoveNameTokenType) { NameOrder(listOf(PIECE_TYPE, UNIQUENESS_COORDINATE, CAPTURE, TARGET, CHECK, CHECKMATE)) }
+    with(MoveNameTokenType) { nameOrder(PIECE_TYPE, UNIQUENESS_COORDINATE, CAPTURE, TARGET, CHECK, CHECKMATE) }
 
 fun jumps(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.map {
@@ -52,7 +52,7 @@ class RayMovement(private val dirs: Collection<Dir>) : MoveScheme {
 object KingMovement : MoveScheme {
 
     private val castlesOrder =
-        NameOrder(listOf(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE))
+        nameOrder(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE)
 
     private fun castles(
         piece: BoardPiece, rook: BoardPiece, side: BoardSide, display: Pos, pieceTarget: Pos, rookTarget: Pos
@@ -126,7 +126,7 @@ class PawnMovement(
         val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u })
         private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
         private val pawnOrder = with (MoveNameTokenType) {
-            NameOrder(listOf(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT))
+            nameOrder(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)
         }
     }
 
@@ -189,7 +189,7 @@ class PawnMovement(
                         listOf(
                             PawnOriginTrait(), PromotionTrait(promotions(capture)),
                             CaptureTrait(enPassant, true), TargetTrait(capture),
-                            NameTrait(MoveName(listOf(MoveNameTokenType.EN_PASSANT.mk))),
+                            NameTrait(nameOf(MoveNameTokenType.EN_PASSANT.mk)),
                             DefaultHalfmoveClockTrait(), CheckTrait()
                         ),
                         pawnOrder

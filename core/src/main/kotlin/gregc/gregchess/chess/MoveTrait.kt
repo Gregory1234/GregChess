@@ -12,7 +12,7 @@ class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>) :
 interface MoveTrait {
     val shouldComeBefore: Collection<KClass<out MoveTrait>> get() = emptyList()
     val shouldComeAfter: Collection<KClass<out MoveTrait>> get() = emptyList()
-    val nameTokens: MoveName
+    val nameTokens: List<AnyMoveNameToken>
     fun setup(game: ChessGame, move: Move) {}
     fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
     fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
@@ -32,7 +32,7 @@ object MoveTraitSerializer : ClassRegisteredSerializer<MoveTrait>("MoveTrait", R
 
 @Serializable
 class DefaultHalfmoveClockTrait : MoveTrait {
-    override val nameTokens = MoveName()
+    override val nameTokens = emptyList<AnyMoveNameToken>()
 
     override val shouldComeBefore = listOf(CaptureTrait::class)
 
@@ -57,7 +57,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 @Serializable
 class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, val rookTarget: Pos) : MoveTrait {
 
-    override val nameTokens = MoveName(listOf(MoveNameTokenType.CASTLE.of(side)))
+    override val nameTokens = nameOf(MoveNameTokenType.CASTLE.of(side))
 
     var resulting: BoardPiece? = null
         private set
@@ -91,7 +91,8 @@ class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, v
 
 @Serializable
 class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? = null) : MoveTrait {
-    override val nameTokens = MoveName(listOfNotNull(promotion?.type?.let { MoveNameTokenType.PROMOTION.of(it) }))
+    override val nameTokens =
+        listOfNotNull(promotion?.type?.let { AnyMoveNameToken(MoveNameTokenType.PROMOTION.of(it)) })
 
     override val shouldComeBefore = listOf(TargetTrait::class)
 
@@ -137,7 +138,7 @@ private fun checkForChecks(color: Color, game: ChessGame): MoveNameToken<Unit>? 
 @Serializable
 class CheckTrait : MoveTrait {
 
-    override val nameTokens: MoveName = MoveName()
+    override val nameTokens: MutableTokenList = emptyTokenList()
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         if (remaining.all { it is CheckTrait }) {
@@ -153,7 +154,8 @@ class CheckTrait : MoveTrait {
 class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var captured: CapturedBoardPiece? = null) :
     MoveTrait {
 
-    override val nameTokens get() = MoveName(listOfNotNull(MoveNameTokenType.CAPTURE.mk.takeIf { captured != null }))
+    override val nameTokens get() =
+        listOfNotNull(AnyMoveNameToken(MoveNameTokenType.CAPTURE.mk).takeIf { captured != null })
 
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         game.board[capture]?.piece?.let {
@@ -174,7 +176,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var capt
 
 @Serializable
 class PawnOriginTrait : MoveTrait {
-    override val nameTokens: MoveName = MoveName()
+    override val nameTokens = emptyTokenList()
 
     override fun setup(game: ChessGame, move: Move) {
         move.getTrait<CaptureTrait>()?.let {
@@ -200,7 +202,7 @@ private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessG
 
 @Serializable
 class PieceOriginTrait : MoveTrait {
-    override val nameTokens: MoveName = MoveName()
+    override val nameTokens = emptyTokenList()
 
     override fun setup(game: ChessGame, move: Move) {
         if (nameTokens.isEmpty()) {
@@ -215,7 +217,7 @@ class PieceOriginTrait : MoveTrait {
 
 @Serializable
 class TargetTrait(val target: Pos) : MoveTrait {
-    override val nameTokens = MoveName(listOf(MoveNameTokenType.TARGET.of(target)))
+    override val nameTokens = nameOf(MoveNameTokenType.TARGET.of(target))
 
     override val shouldComeBefore = listOf(CaptureTrait::class)
 

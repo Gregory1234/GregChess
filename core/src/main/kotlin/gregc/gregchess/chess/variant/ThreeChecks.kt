@@ -41,7 +41,7 @@ object ThreeChecks : ChessVariant() {
 
     @Serializable
     class CheckCounterTrait(var checkRegistered: Boolean = false) : MoveTrait {
-        override val nameTokens: MoveName = MoveName()
+        override val nameTokens: MoveName = nameOf()
 
         override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
             if (remaining.all { it is CheckTrait || it is CheckCounterTrait }) {

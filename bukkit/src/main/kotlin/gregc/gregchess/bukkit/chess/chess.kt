@@ -34,7 +34,7 @@ val Piece.item get() = type.getItem(color)
 @Suppress("UNCHECKED_CAST")
 val <T : Any> MoveNameToken<T>.localName
     get() = (type.module[BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING][type] as MoveNameTokenInterpreter<T>)(value)
-val MoveName.localName get() = tokens.joinToString("") { it.localName }
+val MoveName.localName get() = joinToString("") { it.token.localName }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
