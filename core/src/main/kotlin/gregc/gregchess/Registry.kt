@@ -114,6 +114,7 @@ class NameRegistry<T>(module: ChessModule, val type: NameRegistryType<T>): Doubl
     private val names = mutableMapOf<T, String>()
 
     override fun set(key: String, value: T) {
+        require(!module.locked)
         require(key.isValidId())
         require(key !in members)
         require(value !in type.valueEntries)
@@ -142,6 +143,7 @@ class ConnectedRegistry<K, T>(module: ChessModule, val type: ConnectedRegistryTy
     private val reversed = mutableMapOf<T, K>()
 
     override fun set(key: K, value: T) {
+        require(!module.locked)
         require(key in module[type.base].values)
         require(key !in members)
         require(value !in type.valueEntries)
@@ -168,6 +170,7 @@ class SingleConnectedRegistry<K, T>(module: ChessModule, val type: SingleConnect
     private val members = mutableMapOf<K, T>()
 
     override fun set(key: K, value: T) {
+        require(!module.locked)
         require(key in module[type.base].values)
         require(key !in members)
         members[key] = value

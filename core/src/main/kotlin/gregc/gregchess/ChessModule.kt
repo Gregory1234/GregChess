@@ -3,6 +3,7 @@ package gregc.gregchess
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
+import kotlin.reflect.full.companionObjectInstance
 
 class ExtensionType(val name: String) {
     companion object {
@@ -26,6 +27,8 @@ abstract class ChessModule(val namespace: String) {
     val extensions = mutableSetOf<ChessModuleExtension>()
     private val registries = mutableMapOf<RegistryType<*, *, *>, Registry<*, *, *>>()
     var logger: GregLogger = SystemGregLogger()
+    var locked: Boolean = false
+        private set
 
     @Suppress("UNCHECKED_CAST")
     operator fun <K, T, R: Registry<K, T, R>> get(t: RegistryType<K, T, R>): R =
@@ -36,6 +39,7 @@ abstract class ChessModule(val namespace: String) {
     }
     protected abstract fun load()
     fun fullLoad() {
+        // TODO: add error messages to require blocks
         load()
         logger.info("Loaded chess module $this")
         require(ExtensionType.extensionTypes.all { t -> extensions.count { e -> e.extensionType == t } == 1 })
@@ -47,6 +51,7 @@ abstract class ChessModule(val namespace: String) {
                 logger.warn("Unknown extension $it")
             }
         }
+        locked = true
         registries.values.forEach { it.validate() }
         logger.info("Validated chess module $this")
         extensions.forEach {
@@ -72,6 +77,8 @@ fun <T: Any> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenTy
     register(RegistryType.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
 
 inline fun <reified T: Component, reified D: ComponentData<T>> ChessModule.registerComponent(id: String) {
+    T::class.companionObjectInstance
+    D::class.companionObjectInstance
     register(RegistryType.COMPONENT_CLASS, id, T::class)
     register(RegistryType.COMPONENT_DATA_CLASS, T::class, D::class)
 }
