@@ -11,6 +11,7 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 
 class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChess.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
@@ -54,6 +55,38 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
         }
         super.markRemoved()
     }
+
+    val tileBlocks: Collection<ChessboardFloorBlockEntity>
+        get() {
+            if (pos == null)
+                return emptyList()
+            fun findOffsets(d: Direction): Int {
+                var off = 1
+                while (true) {
+                    val ent = world?.getBlockEntity(pos.offset(d, off)) as? ChessboardFloorBlockEntity
+                    if (ent == null || ent.boardPos != boardPos)
+                        return off - 1
+                    else
+                        off++
+                }
+            }
+            val minx = findOffsets(Direction.WEST)
+            val maxx = findOffsets(Direction.EAST)
+            val minz = findOffsets(Direction.NORTH)
+            val maxz = findOffsets(Direction.SOUTH)
+            return buildList {
+                for (x in minx..maxx)
+                    for (z in minz..maxz)
+                        (world?.getBlockEntity(pos.offset(Direction.Axis.X, x).offset(Direction.Axis.Z, z))
+                                as? ChessboardFloorBlockEntity)?.let { add(it) }
+            }
+        }
+
+    internal val directPiece: PieceBlockEntity?
+        get() = world?.getBlockEntity(pos.offset(Direction.UP)) as? PieceBlockEntity
+
+    val pieceBlock: PieceBlockEntity?
+        get() = tileBlocks.firstNotNullOfOrNull { it.directPiece }
 }
 
 enum class ChessboardFloor(val floor: Floor?) : StringIdentifiable {

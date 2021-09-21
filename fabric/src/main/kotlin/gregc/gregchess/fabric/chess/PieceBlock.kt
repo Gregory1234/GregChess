@@ -1,7 +1,6 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.Piece
-import gregc.gregchess.fabric.BlockEntityDirtyDelegate
 import gregc.gregchess.fabric.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
@@ -9,7 +8,6 @@ import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.Properties
@@ -18,26 +16,10 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.*
-import java.util.*
 
 class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.PIECE_ENTITY_TYPE, pos, state) {
-    private var gameUUID: UUID? by BlockEntityDirtyDelegate(null)
-    override fun writeNbt(nbt: NbtCompound): NbtCompound {
-        super.writeNbt(nbt)
-
-        gameUUID?.let {
-            nbt.putUuid("GameUUID", it)
-        }
-
-        return nbt
-    }
-
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-
-        if (nbt.containsUuid("GameUUID"))
-            gameUUID = nbt.getUuid("GameUUID")
-    }
+    val piece: Piece
+        get() = (world!!.getBlockState(pos).block as PieceBlock).piece
 }
 
 abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEntity(settings) {

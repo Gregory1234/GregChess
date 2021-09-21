@@ -175,5 +175,22 @@ data class FEN(
                     append('/')
             }
         }
+
+        fun fromPieces(pieces: Map<Pos, Piece>, currentTurn: Color = Color.WHITE, ): FEN {
+            val state = boardStateFromPieces(pieces)
+            val rows = state.split("/")
+            val castling = byColor {
+                val row = rows[byColor(0,7)[it]]
+                val rook = byColor('R','r')[it]
+                val first = row.indexOfFirst { p -> p == rook }
+                val last = row.indexOfLast { p -> p == rook }
+                when (first) {
+                    -1 -> emptyList()
+                    last -> listOf(first)
+                    else -> listOf(first, last)
+                }
+            }
+            return FEN(state, currentTurn, castling)
+        }
     }
 }

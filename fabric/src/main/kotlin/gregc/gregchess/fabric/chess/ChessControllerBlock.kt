@@ -154,9 +154,17 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             return
         }
         currentGame = ChessGame(
-            ChessGameManager.settings(ChessVariant.Normal, FabricRendererSettings(this)),
+            ChessGameManager.settings(ChessVariant.Normal, getBoardState(), FabricRendererSettings(this)),
             byColor(whitePlayer.cpi, blackPlayer.cpi)
         ).start()
+    }
+
+    fun getBoardState(): Map<Pos, Piece> = buildMap {
+        for (t in floorBlockEntities) {
+            val p = t.directPiece
+            if (p != null)
+                put(t.boardPos!!, p.piece)
+        }
     }
 
 }
