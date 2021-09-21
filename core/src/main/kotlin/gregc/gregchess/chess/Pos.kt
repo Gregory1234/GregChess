@@ -34,7 +34,7 @@ data class Pos(val file: Int, val rank: Int) {
 
     companion object {
         fun parseFromString(s: String): Pos {
-            require(s.length != 2 || s[0] !in 'a'..'h' || s[1] !in '1'..'8') { "Bad chessboard coordinate: $s" }
+            require(s.length == 2 && s[0] in 'a'..'h' && s[1] in '1'..'8') { "Bad chessboard coordinate: $s" }
             return Pos(s[0].lowercaseChar() - 'a', s[1] - '1')
         }
     }
@@ -77,7 +77,7 @@ class PosSteps(val start: Pos, private val jump: Dir, override val size: Int) : 
     constructor(start: Pos, jump: Dir) : this(start, jump, calcSize(start, jump))
 
     init {
-        require(size <= calcSize(start, jump))
+        require(size <= calcSize(start, jump)) { "PosSteps size too large" }
     }
 
     override fun contains(element: Pos): Boolean {

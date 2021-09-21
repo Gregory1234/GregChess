@@ -190,7 +190,7 @@ data class MoveNameToken<T : Any>(val type: MoveNameTokenType<T>, val value: T) 
                 ret = MoveNameToken(type, decodeSerializableElement(descriptor, 1, serializer))
             } else {
                 while (true) {
-                    when (val index = decodeElementIndex(ChessGame.Serializer.descriptor)) {
+                    when (val index = decodeElementIndex(descriptor)) {
                         0 -> type = decodeSerializableElement(descriptor, index, MoveNameTokenType.Serializer)
                         1 -> {
                             val serializer = type!!.cl.serializer()

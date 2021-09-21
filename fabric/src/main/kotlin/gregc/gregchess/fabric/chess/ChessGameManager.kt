@@ -31,7 +31,7 @@ object ChessGameManager {
         if (f.exists()) {
             val nbt = Nbt(defaultModule(server))
             try {
-                nbt.decodeFromNbtElement<ChessGame>(NbtIo.readCompressed(f)).start().also {
+                nbt.decodeFromNbtElement<ChessGame>(NbtIo.readCompressed(f)).also {
                     GregChess.logger.info("loaded game $it")
                 }
             } catch (e: Exception) {

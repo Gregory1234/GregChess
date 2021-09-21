@@ -1,6 +1,5 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.ChessGame
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
@@ -115,7 +114,7 @@ open class ClassRegisteredSerializer<T : Any>(
             ret = decodeSerializableElement(descriptor, 1, serializer)
         } else {
             while (true) {
-                when (val index = decodeElementIndex(ChessGame.Serializer.descriptor)) {
+                when (val index = decodeElementIndex(descriptor)) {
                     0 -> type = decodeStringElement(descriptor, index)
                     1 -> {
                         val serializer = registryType[type!!.toKey()].serializer()
