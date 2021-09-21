@@ -1,18 +1,17 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.*
 
 private fun victoryPgn(winner: Color) = when (winner) {
     Color.WHITE -> "1-0"
     Color.BLACK -> "0-1"
 }
 
-@Serializable(with = GameScore.Serializer::class)
 sealed class GameScore(val pgn: String) {
     override fun toString(): String = pgn
 
@@ -33,40 +32,9 @@ sealed class GameScore(val pgn: String) {
 
     }
 
-    @Serializable(with = Victory.Serializer::class)
-    class Victory(val winner: Color) : GameScore(victoryPgn(winner)) {
-        object Serializer : KSerializer<Victory> {
-            override val descriptor: SerialDescriptor
-                get() = PrimitiveSerialDescriptor("GameScore.Victory", PrimitiveKind.STRING)
+    class Victory(val winner: Color) : GameScore(victoryPgn(winner))
 
-            override fun serialize(encoder: Encoder, value: Victory) {
-                encoder.encodeString(value.pgn)
-            }
-
-            override fun deserialize(decoder: Decoder): Victory = when (decoder.decodeString()) {
-                victoryPgn(Color.WHITE) -> Victory(Color.WHITE)
-                victoryPgn(Color.BLACK) -> Victory(Color.BLACK)
-                else -> error("${decoder.decodeString()} is not a valid Victory")
-            }
-        }
-    }
-    @Serializable(with = Draw.Serializer::class)
-    object Draw : GameScore("1/2-1/2") {
-        object Serializer : KSerializer<Draw> {
-            override val descriptor: SerialDescriptor
-                get() = PrimitiveSerialDescriptor("GameScore.Draw", PrimitiveKind.STRING)
-
-            override fun serialize(encoder: Encoder, value: Draw) {
-                encoder.encodeString(value.pgn)
-            }
-
-            override fun deserialize(decoder: Decoder): Draw = when (decoder.decodeString()) {
-                Draw.pgn -> Draw
-                else -> error("${decoder.decodeString()} is not a valid Draw")
-            }
-
-        }
-    }
+    object Draw : GameScore("1/2-1/2")
 }
 
 typealias DetEndReason = EndReason<GameScore.Victory>
@@ -129,11 +97,48 @@ fun drawBy(reason: DrawEndReason, vararg args: String): GameResults =
 
 fun DrawEndReason.of(vararg args: String): GameResults = GameResultsWith(this, GameScore.Draw, args.toList())
 
-@Serializable
+@Serializable(with = GameResultsSerializer::class)
 data class GameResultsWith<out R : GameScore> internal constructor(
     val endReason: EndReason<out R>,
     val score: R,
     val args: List<String>
 )
 
-typealias GameResults = GameResultsWith<GameScore>
+object GameResultsSerializer : KSerializer<GameResults> {
+    override val descriptor = buildClassSerialDescriptor("GameResults") {
+        element("endReason", EndReason.Serializer.descriptor)
+        element("score", GameScore.Serializer.descriptor)
+        element<List<String>>("args")
+    }
+
+    override fun serialize(encoder: Encoder, value: GameResults) = encoder.encodeStructure(descriptor) {
+        encodeSerializableElement(descriptor, 0, EndReason.Serializer, value.endReason)
+        encodeSerializableElement(descriptor, 1, GameScore.Serializer, value.score)
+        encodeSerializableElement(descriptor, 2, ListSerializer(String.serializer()), value.args)
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    override fun deserialize(decoder: Decoder): GameResults = decoder.decodeStructure(descriptor) {
+        var endReason: EndReason<*>? = null
+        var score: GameScore? = null
+        var args: List<String>? = null
+        if (decodeSequentially()) { // sequential decoding protocol
+            endReason = decodeSerializableElement(descriptor, 0, EndReason.Serializer)
+            score = decodeSerializableElement(descriptor, 1, GameScore.Serializer)
+            args = decodeSerializableElement(descriptor, 2, ListSerializer(String.serializer()))
+        } else {
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> endReason = decodeSerializableElement(descriptor, 0, EndReason.Serializer)
+                    1 -> score = decodeSerializableElement(descriptor, 1, GameScore.Serializer)
+                    2 -> args = decodeSerializableElement(descriptor, 2, ListSerializer(String.serializer()))
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+        }
+        GameResultsWith(endReason!!, score!!, args!!)
+    }
+}
+
+typealias GameResults = GameResultsWith<*>

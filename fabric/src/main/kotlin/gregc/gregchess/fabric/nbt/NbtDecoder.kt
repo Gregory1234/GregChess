@@ -162,6 +162,8 @@ abstract class AbstractNbtCompositeDecoder : NbtCompositeDecoder {
 
     override fun endStructure(descriptor: SerialDescriptor) {
     }
+
+    override fun decodeSequentially(): Boolean = true
 }
 
 class NbtCompoundDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtCompound) :

@@ -55,8 +55,8 @@ class ChessGame private constructor(
             element<ChessVariant>("variant")
             element<Boolean>("simpleCastling")
             element<State>("state")
-            element<String>("startTime", isOptional = true)
-            element<GameResults>("results", isOptional = true)
+            element<String?>("startTime")
+            element("results", GameResultsSerializer.descriptor.nullable)
             element("components", ListSerializer(ComponentDataSerializer).descriptor)
         }
 
@@ -67,8 +67,8 @@ class ChessGame private constructor(
             encodeSerializableElement(descriptor, 3, ChessVariant.serializer(), value.variant)
             encodeBooleanElement(descriptor, 4, value.settings.simpleCastling)
             encodeSerializableElement(descriptor, 5, State.serializer(), value.state)
-            encodeNullableSerializableElement(descriptor, 6, String.serializer(), value.startTime?.toString())
-            encodeNullableSerializableElement(descriptor, 7, GameResults.serializer(GameScore.Serializer), value.results)
+            encodeNullableSerializableElement(descriptor, 6, String.serializer().nullable, value.startTime?.toString())
+            encodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable, value.results)
             encodeSerializableElement(descriptor, 8, ListSerializer(ComponentDataSerializer), value.componentData)
         }
 
@@ -89,8 +89,8 @@ class ChessGame private constructor(
                 variant = decodeSerializableElement(descriptor, 3, ChessVariant.serializer())
                 simpleCastling = decodeBooleanElement(descriptor, 4)
                 state = decodeSerializableElement(descriptor, 5, State.serializer())
-                startTime = LocalDateTime.parse(decodeNullableSerializableElement(descriptor, 6, String.serializer().nullable))
-                results = decodeNullableSerializableElement(descriptor, 7, GameResults.serializer(GameScore.Serializer).nullable)
+                startTime = decodeNullableSerializableElement(descriptor, 6, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
+                results = decodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable)
                 components = decodeSerializableElement(descriptor, 8, ListSerializer(ComponentDataSerializer))
             } else {
                 while (true) {
@@ -102,8 +102,8 @@ class ChessGame private constructor(
                         3 -> variant = decodeSerializableElement(descriptor, index, ChessVariant.serializer())
                         4 -> simpleCastling = decodeBooleanElement(descriptor, index)
                         5 -> state = decodeSerializableElement(descriptor, index, State.serializer())
-                        6 -> startTime = LocalDateTime.parse(decodeNullableSerializableElement(descriptor, index, String.serializer().nullable))
-                        7 -> results = decodeNullableSerializableElement(descriptor, index, GameResults.serializer(GameScore.Serializer).nullable)
+                        6 -> startTime = decodeNullableSerializableElement(descriptor, 6, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
+                        7 -> results = decodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable)
                         8 -> components =
                             decodeSerializableElement(descriptor, index, ListSerializer(ComponentDataSerializer))
                         CompositeDecoder.DECODE_DONE -> break
