@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {
     class GenerateEvent internal constructor(private val tags: MutableList<TagPair>) : ChessEvent {
         operator fun set(name: String, value: String) {
-            require(tags.none { it.name == name })
+            require(tags.none { it.name == name }) { "Tag already used: $name" }
             tags += TagPair(name, value)
         }
     }

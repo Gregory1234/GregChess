@@ -13,8 +13,7 @@ enum class Color(val char: Char, private val direction: Int) {
 
     companion object {
         fun parseFromChar(c: Char) =
-            values().firstOrNull { it.char == c }
-                ?: throw IllegalArgumentException(c.toString())
+            requireNotNull(values().firstOrNull { it.char == c }) { "'$c' is not valid color character" }
 
         inline fun forEach(block: (Color) -> Unit) = values().forEach(block)
     }

@@ -47,6 +47,6 @@ class PieceType(
         val PAWN = GregChessModule.register("pawn", PieceType('p', PawnMovement(), pawnHasMoved, false))
 
         fun chooseByChar(values: Collection<PieceType>, c: Char): PieceType =
-            values.firstOrNull { it.char == c.lowercaseChar() } ?: throw IllegalArgumentException(c.toString())
+            requireNotNull(values.firstOrNull { it.char == c.lowercaseChar() }) { "None of the pieces have character: '$c'" }
     }
 }

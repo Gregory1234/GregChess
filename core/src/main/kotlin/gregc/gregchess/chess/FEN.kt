@@ -81,7 +81,7 @@ data class FEN(
                 'k' -> r.indexOfLast { it.lowercaseChar() == 'r' }
                 'q' -> r.indexOfFirst { it.lowercaseChar() == 'r' }
                 in 'a'..'h' -> c - 'a'
-                else -> throw IllegalArgumentException(s)
+                else -> throw IllegalArgumentException("'$s' is not a valid castling ability character")
             }
         }
 
@@ -105,13 +105,17 @@ data class FEN(
             return false
         }
 
+        // TODO: make the error messages better and block exceptions from called functions
         fun parseFromString(fen: String): FEN {
             val parts = fen.split(" ")
-            if (parts.size != 6) throw IllegalArgumentException(fen)
+            require(parts.size == 6) { "Wrong number of parts in FEN, expected 6: \"$fen\""}
             val (board, turn, castling, enPassant, halfmove, fullmove) = parts
-            if (turn.length != 1) throw IllegalArgumentException(fen)
-            if (halfmove.toInt() < 0) throw IllegalArgumentException(fen)
-            if (fullmove.toInt() <= 0) throw IllegalArgumentException(fen)
+            require(turn.length == 1) { "\"$turn\" is not valid color" }
+            require(castling == "-" || castling.all { it.isUpperCase() || it.isLowerCase() }) { "Bad castling ability string: $castling" }
+            requireNotNull(halfmove.toIntOrNull()) { "Halfmove clock has to be an integer: $halfmove" }
+            require(halfmove.toInt() >= 0) { "Halfmove clock can't be negative: $halfmove" }
+            requireNotNull(fullmove.toIntOrNull()) { "Fullmove clock has to be an integer: $fullmove" }
+            require(fullmove.toInt() >= 0) { "Fullmove counter has to be positive: $fullmove" }
             return FEN(
                 board,
                 Color.parseFromChar(turn[0]),

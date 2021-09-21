@@ -58,7 +58,9 @@ abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : C
 
     override fun validate() {
         val components = module[RegistryType.COMPONENT_CLASS].values
-        require(hookedComponents.all { it in components })
+        hookedComponents.forEach {
+            requireValid(it in components) { "External component hooked: ${it.componentKey}" }
+        }
     }
 }
 

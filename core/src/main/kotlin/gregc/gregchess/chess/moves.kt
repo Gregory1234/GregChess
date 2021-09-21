@@ -255,7 +255,7 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
             else when (str.single()) {
                 in '1'..'8' -> UniquenessCoordinate(rank = str.single() - '1')
                 in 'a'..'h' -> UniquenessCoordinate(file = str.single() - 'a')
-                else -> throw IllegalArgumentException(str)
+                else -> error("Bad chessboard coordinate: $str")
             }
         }
     }

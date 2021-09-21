@@ -5,6 +5,9 @@ import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
 import kotlin.reflect.full.companionObjectInstance
 
+class ChessModuleValidationException(val module: ChessModule, val text: String) : Exception("$module: $text")
+class ChessExtensionValidationException(val ext: ChessExtension, val text: String) : Exception("$ext: $text")
+
 class ExtensionType(val name: String) {
     companion object {
         val extensionTypes = mutableSetOf<ExtensionType>()
@@ -15,6 +18,12 @@ class ExtensionType(val name: String) {
 
 abstract class ChessExtension(val module: ChessModule, val extensionType: ExtensionType) {
     abstract fun load()
+
+    protected inline fun requireValid(condition: Boolean, message: () -> String) {
+        if (!condition)
+            throw ChessExtensionValidationException(this, message())
+    }
+
     open fun validate() {}
     final override fun toString() = "${module.namespace}:${extensionType.name}@${hashCode().toString(16)}"
 }
@@ -41,12 +50,20 @@ abstract class ChessModule(val namespace: String) {
         return v
     }
 
+    protected inline fun requireValid(condition: Boolean, message: () -> String) {
+        if (!condition)
+            throw ChessModuleValidationException(this, message())
+    }
+
     protected abstract fun load()
     fun fullLoad() {
-        // TODO: add error messages to require blocks
         load()
         logger.info("Loaded chess module $this")
-        require(ExtensionType.extensionTypes.all { t -> extensions.count { e -> e.extensionType == t } == 1 })
+        ExtensionType.extensionTypes.forEach { et ->
+            val count = extensions.count { e -> e.extensionType == et }
+            requireValid(count != 0) { "Extension $et not registered" }
+            requireValid(count == 1) { "Extension $et registered multiple times: $count" }
+        }
         extensions.forEach {
             if (it.extensionType in ExtensionType.extensionTypes) {
                 it.load()

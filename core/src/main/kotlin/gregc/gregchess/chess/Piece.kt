@@ -4,7 +4,6 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.component.Chessboard
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 
@@ -155,7 +154,7 @@ data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece
     constructor(piece: BoardPiece, capturedPos: CapturedPos) : this(piece, CapturedPiece(piece.piece, capturedPos))
 
     init {
-        require(piece.piece == captured.piece)
+        require(piece.piece == captured.piece) { "Bad piece types" }
     }
 
     val type: PieceType get() = piece.type

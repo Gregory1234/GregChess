@@ -28,7 +28,7 @@ sealed class GameScore(val pgn: String) {
             Draw.pgn -> Draw
             victoryPgn(Color.WHITE) -> Victory(Color.WHITE)
             victoryPgn(Color.BLACK) -> Victory(Color.BLACK)
-            else -> throw IllegalStateException()
+            else -> error("${decoder.decodeString()} is not a valid GameScore")
         }
 
     }
@@ -46,7 +46,7 @@ sealed class GameScore(val pgn: String) {
             override fun deserialize(decoder: Decoder): Victory = when (decoder.decodeString()) {
                 victoryPgn(Color.WHITE) -> Victory(Color.WHITE)
                 victoryPgn(Color.BLACK) -> Victory(Color.BLACK)
-                else -> throw IllegalStateException()
+                else -> error("${decoder.decodeString()} is not a valid Victory")
             }
         }
     }
@@ -62,7 +62,7 @@ sealed class GameScore(val pgn: String) {
 
             override fun deserialize(decoder: Decoder): Draw = when (decoder.decodeString()) {
                 Draw.pgn -> Draw
-                else -> throw IllegalStateException()
+                else -> error("${decoder.decodeString()} is not a valid Draw")
             }
 
         }
