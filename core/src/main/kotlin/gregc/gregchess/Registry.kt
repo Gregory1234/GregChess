@@ -81,6 +81,12 @@ abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) : Enu
     }
 }
 
+class RegistryValidationException(val module: ChessModule, val type: RegistryType<*, *, *>, val text: String)
+    : IllegalStateException("$module:${type.name}: $text")
+class RegistryKeyValidationException(
+    val module: ChessModule, val type: RegistryType<*, *, *>, val key: Any?, val value: Any?, val text: String
+) : IllegalArgumentException("$module:${type.name}: $text: $key - $value")
+
 abstract class Registry<K, T, R : Registry<K, T, R>>(val module: ChessModule) {
     abstract operator fun set(key: K, value: T)
 
@@ -88,6 +94,18 @@ abstract class Registry<K, T, R : Registry<K, T, R>>(val module: ChessModule) {
     fun getOrNull(key: K): T? = getValueOrNull(key)
     fun getValue(key: K): T = getValueOrNull(key)!!
     operator fun get(key: K): T = getOrNull(key)!!
+
+    protected inline fun requireValid(type: RegistryType<K, T, R>, condition: Boolean, message: () -> String) {
+        if (!condition)
+            throw RegistryValidationException(module, type, message())
+    }
+
+    protected inline fun requireValidKey(
+        type: RegistryType<K, T, R>, key: K, value: T, condition: Boolean, message: () -> String
+    ) {
+        if (!condition)
+            throw RegistryKeyValidationException(module, type, key, value, message())
+    }
 
     open fun validate() {}
 
@@ -145,10 +163,10 @@ class NameRegistry<T>(module: ChessModule, val type: NameRegistryType<T>) :
     private val names = mutableMapOf<T, String>()
 
     override fun set(key: String, value: T) {
-        require(!module.locked) { "Module is locked: $module" }
-        require(key.isValidId()) { "Key is invalid: $key" }
-        require(key !in members) { "Key is already registered: $key" }
-        require(value !in type.valueEntries) { "Value is already registered: $value" }
+        requireValidKey(type, key, value, !module.locked) { "Module is locked" }
+        requireValidKey(type, key, value, key.isValidId()) { "Key is invalid" }
+        requireValidKey(type, key, value, key !in members) { "Key is already registered" }
+        requireValidKey(type, key, value, value !in type.valueEntries) { "Value is already registered" }
         members[key] = value
         names[value] = key
         type.valueEntries[value] = RegistryKey(module, key)
@@ -180,10 +198,10 @@ class ConnectedRegistry<K, T>(module: ChessModule, val type: ConnectedRegistryTy
     private val reversed = mutableMapOf<T, K>()
 
     override fun set(key: K, value: T) {
-        require(!module.locked) { "Module is locked: $module" }
-        require(key in type.base.valuesOf(module)) { "Key is invalid: $key" }
-        require(key !in members) { "Key is already registered: $key" }
-        require(value !in type.valueEntries) { "Value is already registered: $value" }
+        requireValidKey(type, key, value, !module.locked) { "Module is locked" }
+        requireValidKey(type, key, value, key in type.base.valuesOf(module)) { "Key is invalid" }
+        requireValidKey(type, key, value, key !in members) { "Key is already registered" }
+        requireValidKey(type, key, value, value !in type.valueEntries) { "Value is already registered" }
         members[key] = value
         reversed[value] = key
         type.valueEntries[value] = RegistryKey(module, key)
@@ -193,7 +211,7 @@ class ConnectedRegistry<K, T>(module: ChessModule, val type: ConnectedRegistryTy
     override fun getKeyOrNull(value: T): K? = reversed[value]
 
     override fun validate() =
-        check(type.base.valuesOf(module).all { it in members }) { "Registry ${type.name} incomplete" }
+        requireValid(type, type.base.valuesOf(module).all { it in members }) { "Registry incomplete" }
 
     override val keys: Set<K> get() = members.keys
     override val values: Set<T> get() = reversed.keys
@@ -210,16 +228,16 @@ class SingleConnectedRegistry<K, T>(module: ChessModule, val type: SingleConnect
     private val members = mutableMapOf<K, T>()
 
     override fun set(key: K, value: T) {
-        require(!module.locked) { "Module is locked: $module" }
-        require(key in type.base.valuesOf(module)) { "Key is invalid: $key" }
-        require(key !in members) { "Key is already registered: $key" }
+        requireValidKey(type, key, value, !module.locked) { "Module is locked" }
+        requireValidKey(type, key, value, key in type.base.valuesOf(module)) { "Key is invalid" }
+        requireValidKey(type, key, value, key !in members) { "Key is already registered" }
         members[key] = value
     }
 
     override fun getValueOrNull(key: K): T? = members[key]
 
     override fun validate() =
-        check(type.base.valuesOf(module).all { it in members }) { "Registry ${type.name} incomplete" }
+        requireValid(type, type.base.valuesOf(module).all { it in members }) { "Registry incomplete" }
 
     override val keys: Set<K> get() = members.keys
     override val values: Collection<T> get() = members.values

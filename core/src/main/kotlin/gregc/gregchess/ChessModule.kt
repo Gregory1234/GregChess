@@ -5,8 +5,8 @@ import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
 import kotlin.reflect.full.companionObjectInstance
 
-class ChessModuleValidationException(val module: ChessModule, val text: String) : Exception("$module: $text")
-class ChessExtensionValidationException(val ext: ChessExtension, val text: String) : Exception("$ext: $text")
+class ChessModuleValidationException(val module: ChessModule, val text: String) : IllegalStateException("$module: $text")
+class ChessExtensionValidationException(val ext: ChessExtension, val text: String) : IllegalStateException("$ext: $text")
 
 class ExtensionType(val name: String) {
     companion object {
@@ -50,7 +50,7 @@ abstract class ChessModule(val namespace: String) {
         return v
     }
 
-    protected inline fun requireValid(condition: Boolean, message: () -> String) {
+    private inline fun requireValid(condition: Boolean, message: () -> String) {
         if (!condition)
             throw ChessModuleValidationException(this, message())
     }
