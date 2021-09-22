@@ -21,7 +21,6 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
             GameBaseEvent.START -> {
                 ChessGameManager += game
                 players.forEachUnique { it.init() }
-                variant.start(game)
             }
             GameBaseEvent.STOP -> {
                 players.forEachUnique {

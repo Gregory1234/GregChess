@@ -43,7 +43,6 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
                 }
                 callEvent(GameStartStageEvent.INIT)
                 players.forEachUnique { it.init() }
-                variant.start(game)
                 callEvent(GameStartStageEvent.START)
             }
             GameBaseEvent.RUNNING -> {

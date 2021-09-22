@@ -1,85 +1,130 @@
 package gregc.gregchess.chess
 
-import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.shouldBe
+import assertk.assertThat
+import assertk.assertions.*
 import io.mockk.*
+import org.junit.jupiter.api.*
 
-private val basicSettings = testSettings("basic")
-private val spyComponentSettings = testSettings("spy component", extra = listOf(TestComponentData))
-private fun spyVariantSettings() = testSettings("spy variant", variant = spyk(TestVariant))
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ChessGameTests {
 
-private fun mkGame(settings: GameSettings = basicSettings, players: ByColor<String> = byColor("a", "b")) =
-    ChessGame(settings, byColor {players[it].cpi})
+    // TODO: move mocks to initialization to make tests faster
+    // TODO: mock Chessboard
 
-fun componentExclude(c: TestComponent) {
-    excludeRecords {
-        c.validate()
+    private val playerA = TestPlayerInfo("A")
+    private val playerB = TestPlayerInfo("B")
+
+    private val normalSettings = testSettings("normal")
+
+    private fun mkGame(settings: GameSettings) = ChessGame(settings, byColor(playerA, playerB))
+
+    @Nested
+    inner class Constructing {
+        @Test
+        fun `should only construct and verify components`() {
+            val cd = spyk(TestComponentData)
+            val g = mkGame(testSettings("spy", extra = listOf(cd)))
+            val c = g.getComponent<TestComponent>()!!
+            verifySequence {
+                cd.getComponent(g)
+                c.validate()
+            }
+        }
+
+        @Test
+        fun `should not make game run`() {
+            val game = mkGame(normalSettings)
+
+            assertThat(game::running).isFalse()
+        }
+    }
+
+    @Nested
+    inner class Starting {
+        @Test
+        fun `should enable running`() {
+            val game = mkGame(normalSettings).start()
+
+            assertThat(game::running).isTrue()
+        }
+
+        @Test
+        fun `should throw when already running`() {
+            val game = mkGame(normalSettings).start()
+
+            assertThrows<IllegalStateException> {
+                game.start()
+            }
+        }
+
+        @Test
+        fun `should throw when stopped`() {
+            val game = mkGame(normalSettings).start()
+
+            game.stop(drawBy(EndReason.DRAW_AGREEMENT))
+
+            assertThrows<IllegalStateException> {
+                game.start()
+            }
+        }
+
+        @Test
+        fun `should start components`() {
+            val g = mkGame(testSettings("spy", extra = listOf(TestComponentData))).start()
+            val c = g.getComponent<TestComponent>()!!
+            excludeRecords {
+                c.handleEvent(match { it is PieceEvent })
+                c.handleEvent(match { it is FloorUpdateEvent })
+            }
+            verifySequence {
+                c.validate()
+                c.handleEvent(GameBaseEvent.START)
+                c.handleEvent(GameBaseEvent.RUNNING)
+                c.handleEvent(TurnEvent.START)
+            }
+        }
+    }
+
+    @Nested
+    inner class Stopping {
+        private val results = drawBy(EndReason.DRAW_AGREEMENT)
+
+        @Test
+        fun `should disable running`() {
+            val game = mkGame(normalSettings).start()
+
+            game.stop(results)
+
+            assertThat(game::running).isFalse()
+        }
+
+        @Test
+        fun `should preserve results`() {
+            val game = mkGame(normalSettings).start()
+
+            game.stop(results)
+
+            assertThat(game::results).isNotNull().isSameAs(results)
+        }
+
+        @Test
+        fun `should throw when not started`() {
+            val game = mkGame(normalSettings)
+
+            assertThrows<IllegalStateException> {
+                game.stop(results)
+            }
+        }
+
+        @Test
+        fun `should throw when already stopped`() {
+            val game = mkGame(normalSettings).start()
+
+            game.stop(results)
+
+            assertThrows<IllegalStateException> {
+                game.stop(results)
+            }
+        }
     }
 }
-
-class ChessGameTests : FreeSpec({
-
-    "ChessGame" - {
-        "starting should" - {
-            "make the game runring" {
-                val g = mkGame().start()
-                g.running.shouldBeTrue()
-            }
-            "start components" {
-                val g = mkGame(spyComponentSettings).start()
-                val c = g.getComponent<TestComponent>()!!
-                verifySequence {
-                    c.validate()
-                    c.handleEvents(GameBaseEvent.START)
-                    c.handleEvents(GameBaseEvent.RUNNING)
-                    c.handleTurn(TurnEvent.START)
-                }
-            }
-            "fail if" - {
-                "already running" {
-                    shouldThrowExactly<WrongStateException> {
-                        mkGame().start().start()
-                    }
-                }
-                "already stopped" {
-                    shouldThrowExactly<WrongStateException> {
-                        val g = mkGame().start()
-                        val reason = whiteWonBy(TEST_END_REASON)
-                        g.stop(reason)
-                        g.start()
-                    }
-                }
-            }
-        }
-        "stopping should" - {
-            "save end reason" {
-                val g = mkGame().start()
-                val reason = whiteWonBy(TEST_END_REASON)
-                g.stop(reason)
-                g.results shouldBe reason
-                g.running.shouldBeFalse()
-            }
-            "stop components" {
-                val g = mkGame(spyComponentSettings).start()
-                val c = g.getComponent<TestComponent>()!!
-                clearRecords(c)
-                g.stop(whiteWonBy(TEST_END_REASON))
-                verifySequence {
-                    c.handleEvents(GameBaseEvent.STOP)
-                }
-            }
-            "fail if" - {
-                "not running yet" {
-                    shouldThrowExactly<WrongStateException> {
-                        val g = mkGame()
-                        val reason = whiteWonBy(TEST_END_REASON)
-                        g.stop(reason)
-                    }
-                }
-            }
-        }
-    }
-})

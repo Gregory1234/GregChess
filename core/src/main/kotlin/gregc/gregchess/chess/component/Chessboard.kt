@@ -22,8 +22,9 @@ data class ChessboardState(
     val flags: List<PosFlag> = enPassantFlag(initialFEN.enPassantSquare),
     val moveHistory: List<Move> = emptyList()
 ) : ComponentData<Chessboard> {
+    private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toPieces(variant.pieceTypes))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
-            this(fen ?: variant.genFEN(chess960), (fen ?: variant.genFEN(chess960)).toPieces(variant.pieceTypes))
+            this(variant, fen ?: variant.genFEN(chess960))
 
     override fun getComponent(game: ChessGame) = Chessboard(game, this)
 

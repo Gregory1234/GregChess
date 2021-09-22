@@ -24,8 +24,6 @@ open class ChessVariant : NameRegistered {
         LEGAL("Legal moves")
     }
 
-    open fun start(game: ChessGame) {}
-
     open fun chessboardSetup(board: Chessboard) {}
 
     open fun getLegality(move: Move, game: ChessGame): MoveLegality = with(move) {

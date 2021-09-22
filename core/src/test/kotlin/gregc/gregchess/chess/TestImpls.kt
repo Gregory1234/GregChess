@@ -30,15 +30,9 @@ object TestComponentData : ComponentData<TestComponent> {
 
 class TestComponent(game: ChessGame, override val data: TestComponentData) : Component(game) {
 
-    @ChessEventHandler
-    @Suppress("UNUSED_PARAMETER")
-    fun handleEvents(e: GameBaseEvent) {
-    }
+    override fun validate() {}
 
-    @ChessEventHandler
-    @Suppress("UNUSED_PARAMETER")
-    fun handleTurn(e: TurnEvent) {
-    }
+    override fun handleEvent(e: ChessEvent) {}
 
 }
 

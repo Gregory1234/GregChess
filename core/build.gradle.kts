@@ -9,10 +9,10 @@ dependencies {
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
     testImplementation(kotlin("test"))
-    val kotestVersion: String by project
-    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-    testImplementation("io.kotest:kotest-property:$kotestVersion")
-    testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
+    val junitVersion: String by project
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+    val assertKVersion: String by project
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertKVersion")
     val mockkVersion: String by project
     testImplementation("io.mockk:mockk:$mockkVersion")
 }
@@ -43,7 +43,6 @@ tasks {
             jvmTarget = jvmVersion
             freeCompilerArgs = listOf(
                 "-Xopt-in=kotlin.ExperimentalStdlibApi",
-                "-Xopt-in=io.kotest.common.ExperimentalKotest",
                 "-Xjvm-default=all",
                 "-progressive")
         }
