@@ -23,6 +23,8 @@ import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.*
 
 class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.PIECE_ENTITY_TYPE, pos, state) {
+    private var moved: Boolean = false
+
     val piece: Piece
         get() = (world!!.getBlockState(pos).block as PieceBlock).piece
 
@@ -33,15 +35,23 @@ class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChe
     val currentGame: ChessGame? get() = chessControllerBlock?.currentGame
 
     override fun markRemoved() {
-        if (world?.isClient == false) {
+        if (world?.isClient == false && !moved) {
             chessControllerBlock?.resetBoard()
         }
         super.markRemoved()
     }
 
+    fun safeBreak(drop: Boolean = false) {
+        moved = true
+        world?.breakBlock(pos, drop)
+    }
+
+    val exists
+        get() = floorBlock?.boardPos?.let { boardPos -> currentGame?.board?.get(boardPos) }?.piece?.piece == piece
+
 }
 
-abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEntity(settings) {
+sealed class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEntity(settings) {
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
 
     override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity? = PieceBlockEntity(pos, state)
@@ -66,6 +76,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
         if (hand != Hand.MAIN_HAND) return ActionResult.PASS
 
         val pieceEntity = world?.getBlockEntity(pos) as? PieceBlockEntity ?: return ActionResult.PASS
+        if (!pieceEntity.exists) return ActionResult.PASS
         val game = pieceEntity.currentGame ?: return ActionResult.PASS
 
         val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
@@ -154,6 +165,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         if (hand != Hand.MAIN_HAND) return ActionResult.PASS
         val realPos = when(state.get(HALF)!!) { DoubleBlockHalf.UPPER -> pos?.down(); DoubleBlockHalf.LOWER -> pos }
         val pieceEntity = (world?.getBlockEntity(realPos) as? PieceBlockEntity) ?: return ActionResult.PASS
+        if (!pieceEntity.exists) return ActionResult.PASS
         val game = pieceEntity.currentGame ?: return ActionResult.PASS
 
         val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS

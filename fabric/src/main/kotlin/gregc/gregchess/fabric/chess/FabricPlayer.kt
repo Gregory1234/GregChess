@@ -46,7 +46,8 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
         val move = chosenMoves.first()
         interact {
             move.getTrait<PromotionTrait>()?.apply {
-                TODO("add a promotion menu")
+                if (promotions != null)
+                    TODO("add a promotion menu")
             }
             game.finishMove(move)
         }

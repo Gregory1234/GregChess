@@ -6,12 +6,15 @@ import gregc.gregchess.fabric.BlockEntityDirtyDelegate
 import gregc.gregchess.fabric.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
-import net.minecraft.util.StringIdentifiable
+import net.minecraft.util.*
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import net.minecraft.world.World
 
 class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChess.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
@@ -113,5 +116,28 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         builder.add(FLOOR)
+    }
+
+    override fun onUse(
+        state: BlockState,
+        world: World?,
+        pos: BlockPos?,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult?
+    ): ActionResult {
+        if (world?.isClient == true) return ActionResult.PASS
+        if (hand != Hand.MAIN_HAND) return ActionResult.PASS
+        val floorEntity = (world?.getBlockEntity(pos) as? ChessboardFloorBlockEntity) ?: return ActionResult.PASS
+        val game = floorEntity.chessControllerBlock?.currentGame ?: return ActionResult.PASS
+
+        val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
+
+        if (cp.held != null) {
+            cp.makeMove(floorEntity.boardPos!!)
+            println("picked up a piece!")
+            return ActionResult.SUCCESS
+        }
+        return ActionResult.PASS
     }
 }
