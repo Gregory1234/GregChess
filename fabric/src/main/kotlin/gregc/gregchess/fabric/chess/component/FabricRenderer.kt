@@ -1,7 +1,7 @@
 package gregc.gregchess.fabric.chess.component
 
 import gregc.gregchess.Loc
-import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.fabric.blockpos
@@ -28,6 +28,17 @@ data class FabricRendererSettings(
     override fun getComponent(game: ChessGame) = FabricRenderer(game, this)
 }
 
-class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings) : Component(game)
+class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings) : Component(game) {
+
+    private val tileBlocks: Map<Pos, List<ChessboardFloorBlockEntity>> by lazy { data.floor.groupBy { it.boardPos!! } }
+
+    @ChessEventHandler
+    fun onFloorUpdate(e: FloorUpdateEvent) {
+        tileBlocks[e.pos]?.forEach {
+            it.updateFloor(e.floor)
+        }
+    }
+
+}
 
 val ChessGame.renderer get() = requireComponent<FabricRenderer>()

@@ -163,6 +163,8 @@ abstract class AbstractNbtCompositeDecoder : NbtCompositeDecoder {
     override fun endStructure(descriptor: SerialDescriptor) {
     }
 
+    abstract override fun decodeCollectionSize(descriptor: SerialDescriptor): Int
+
     override fun decodeSequentially(): Boolean = true
 }
 
@@ -182,6 +184,8 @@ class NbtCompoundDecoder(override val serializersModule: SerializersModule, priv
         }
         return CompositeDecoder.DECODE_DONE
     }
+
+    override fun decodeCollectionSize(descriptor: SerialDescriptor): Int = descriptor.elementsCount
 }
 
 class NbtListDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtList) :
@@ -193,6 +197,8 @@ class NbtListDecoder(override val serializersModule: SerializersModule, private 
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int =
         if (++index > nbtElement.size) CompositeDecoder.DECODE_DONE else index - 1
+
+    override fun decodeCollectionSize(descriptor: SerialDescriptor): Int = nbtElement.size
 }
 
 private class NbtKey(val string: String) : NbtElement by NbtString.of(string) {
@@ -212,4 +218,6 @@ class NbtMapDecoder(override val serializersModule: SerializersModule, private v
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int =
         if (++index > 2 * values.size) CompositeDecoder.DECODE_DONE else index - 1
+
+    override fun decodeCollectionSize(descriptor: SerialDescriptor): Int = values.size
 }

@@ -1,6 +1,7 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.interact
 import gregc.gregchess.name
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -25,6 +26,30 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
 
     override fun init() {
         //player.sendMessage(LiteralText(color.name),false)
+    }
+
+    fun pickUp(pos: Pos) {
+        if (!game.running) return
+        val piece = game.board[pos]?.piece ?: return
+        if (piece.color != color) return
+        held = piece
+    }
+
+    fun makeMove(pos: Pos) {
+        if (!game.running) return
+        val piece = held ?: return
+        val moves = piece.getLegalMoves(game.board)
+        if (pos != piece.pos && pos !in moves.map { it.display }) return
+        held = null
+        if (pos == piece.pos) return
+        val chosenMoves = moves.filter { it.display == pos }
+        val move = chosenMoves.first()
+        interact {
+            move.getTrait<PromotionTrait>()?.apply {
+                TODO("add a promotion menu")
+            }
+            game.finishMove(move)
+        }
     }
 }
 

@@ -1,16 +1,21 @@
 package gregc.gregchess.fabric.chess
 
+import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Piece
 import gregc.gregchess.fabric.GregChess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.Properties
+import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShape
@@ -20,6 +25,20 @@ import net.minecraft.world.*
 class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.PIECE_ENTITY_TYPE, pos, state) {
     val piece: Piece
         get() = (world!!.getBlockState(pos).block as PieceBlock).piece
+
+    val floorBlock get() = world?.getBlockEntity(pos.down()) as? ChessboardFloorBlockEntity
+
+    val chessControllerBlock: ChessControllerBlockEntity? get() = floorBlock?.chessControllerBlock
+
+    val currentGame: ChessGame? get() = chessControllerBlock?.currentGame
+
+    override fun markRemoved() {
+        if (world?.isClient == false) {
+            chessControllerBlock?.resetBoard()
+        }
+        super.markRemoved()
+    }
+
 }
 
 abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEntity(settings) {
@@ -34,7 +53,35 @@ abstract class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEnti
     ): VoxelShape? = VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
 }
 
-class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings)
+class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
+    override fun onUse(
+        state: BlockState?,
+        world: World?,
+        pos: BlockPos?,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult?
+    ): ActionResult {
+        if (world?.isClient == true) return ActionResult.PASS
+        if (hand != Hand.MAIN_HAND) return ActionResult.PASS
+
+        val pieceEntity = world?.getBlockEntity(pos) as? PieceBlockEntity ?: return ActionResult.PASS
+        val game = pieceEntity.currentGame ?: return ActionResult.PASS
+
+        val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
+
+        if (cp.uuid == player.uuid && cp.held == null && cp.color == piece.color) {
+            cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
+            println("picked up a piece!")
+            return ActionResult.SUCCESS
+        } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
+            cp.makeMove(pieceEntity.floorBlock?.boardPos!!)
+            println("Placed back down!")
+            return ActionResult.SUCCESS
+        }
+        return ActionResult.PASS
+    }
+}
 
 class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
 
@@ -93,5 +140,33 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         builder.add(HALF)
+    }
+
+    override fun onUse(
+        state: BlockState,
+        world: World?,
+        pos: BlockPos?,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult?
+    ): ActionResult {
+        if (world?.isClient == true) return ActionResult.PASS
+        if (hand != Hand.MAIN_HAND) return ActionResult.PASS
+        val realPos = when(state.get(HALF)!!) { DoubleBlockHalf.UPPER -> pos?.down(); DoubleBlockHalf.LOWER -> pos }
+        val pieceEntity = (world?.getBlockEntity(realPos) as? PieceBlockEntity) ?: return ActionResult.PASS
+        val game = pieceEntity.currentGame ?: return ActionResult.PASS
+
+        val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
+
+        if (cp.uuid == player.uuid && cp.held == null && cp.color == piece.color) {
+            cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
+            println("picked up a piece!")
+            return ActionResult.SUCCESS
+        } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
+            cp.makeMove(pieceEntity.floorBlock?.boardPos!!)
+            println("Placed back down!")
+            return ActionResult.SUCCESS
+        }
+        return ActionResult.PASS
     }
 }

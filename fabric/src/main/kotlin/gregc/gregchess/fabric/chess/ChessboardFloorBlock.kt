@@ -41,17 +41,13 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
         }
     }
 
-    fun updateFloor() {
-        world?.setBlockState(pos, world!!.getBlockState(pos).with(ChessboardFloorBlock.FLOOR, boardPos?.let {
-            if ((it.rank + it.file) % 2 == 0) ChessboardFloor.DARK else ChessboardFloor.LIGHT
-        } ?: ChessboardFloor.INACTIVE))
+    fun updateFloor(floor: Floor? = boardPos?.let { if ((it.rank + it.file) % 2 == 0) Floor.DARK else Floor.LIGHT }) {
+        world?.setBlockState(pos, world!!.getBlockState(pos).with(ChessboardFloorBlock.FLOOR, floor?.chess ?: ChessboardFloor.INACTIVE))
     }
 
     override fun markRemoved() {
         if (world?.isClient == false) {
-            if (chessControllerBlockPos != null) {
-                (world?.getBlockEntity(chessControllerBlockPos) as? ChessControllerBlockEntity)?.resetBoard()
-            }
+            chessControllerBlock?.resetBoard()
         }
         super.markRemoved()
     }
@@ -87,6 +83,9 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     val pieceBlock: PieceBlockEntity?
         get() = tileBlocks.firstNotNullOfOrNull { it.directPiece }
+
+    val chessControllerBlock: ChessControllerBlockEntity?
+        get() = chessControllerBlockPos?.let { world?.getBlockEntity(it) as? ChessControllerBlockEntity }
 }
 
 enum class ChessboardFloor(val floor: Floor?) : StringIdentifiable {
