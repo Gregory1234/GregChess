@@ -45,7 +45,8 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 
     fun updateFloor(floor: Floor? = boardPos?.let { if ((it.rank + it.file) % 2 == 0) Floor.DARK else Floor.LIGHT }) {
-        world?.setBlockState(pos, world!!.getBlockState(pos).with(ChessboardFloorBlock.FLOOR, floor?.chess ?: ChessboardFloor.INACTIVE))
+        if (world?.getBlockState(pos)?.block is ChessboardFloorBlock)
+            world?.setBlockState(pos, world!!.getBlockState(pos).with(ChessboardFloorBlock.FLOOR, floor?.chess ?: ChessboardFloor.INACTIVE))
     }
 
     override fun markRemoved() {
@@ -135,7 +136,6 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
 
         if (cp.held != null) {
             cp.makeMove(floorEntity.boardPos!!)
-            println("picked up a piece!")
             return ActionResult.SUCCESS
         }
         return ActionResult.PASS

@@ -16,6 +16,7 @@
   "block.gregchess.black_rook": "Black Rook",
   "gui.gregchess.detect_board": "Detect Board",
   "gui.gregchess.start_game": "Start Game",
+  "gui.gregchess.abort_game": "Abort Game",
   "gui.gregchess.no_chessboard": "No Chessboard Detected",
   "gui.gregchess.has_chessboard": "Chessboard Detected"
 }

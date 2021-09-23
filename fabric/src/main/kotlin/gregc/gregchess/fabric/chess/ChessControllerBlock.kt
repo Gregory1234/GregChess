@@ -149,10 +149,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
-        if (currentGame != null) {
-            println("Already has game $currentGame")
-            return
-        }
+        if (currentGame != null) return
         currentGame = ChessGame(
             ChessGameManager.settings(ChessVariant.Normal, getBoardState(), FabricRendererSettings(this)),
             byColor(whitePlayer.cpi, blackPlayer.cpi)
@@ -192,6 +189,12 @@ class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventor
         }
         root.add(startGameButton, 0, 5, 5, 1)
 
+        val abortGameButton = WButton(TranslatableText("gui.gregchess.abort_game"))
+        abortGameButton.onClick = Runnable {
+            ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("abort_game")) {}
+        }
+        root.add(abortGameButton, 0, 7, 5, 1)
+
         val detectBoardButton = WButton(TranslatableText("gui.gregchess.detect_board"))
         detectBoardButton.onClick = Runnable {
             ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("detect_board")) {}
@@ -221,6 +224,16 @@ class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventor
                 }
             }
         }
+
+        ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("abort_game")) {
+            context.run { world, pos ->
+                val entity = world.getBlockEntity(pos)
+                if (entity is ChessControllerBlockEntity && entity.chessboardStart != null) {
+                    entity.currentGame?.stop(drawBy(FabricGregChessModule.ABORTED))
+                }
+            }
+        }
+
         root.validate(this)
     }
 

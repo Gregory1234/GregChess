@@ -83,11 +83,9 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
 
         if (cp.uuid == player.uuid && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
-            println("picked up a piece!")
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
             cp.makeMove(pieceEntity.floorBlock?.boardPos!!)
-            println("Placed back down!")
             return ActionResult.SUCCESS
         }
         return ActionResult.PASS
@@ -172,11 +170,9 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
 
         if (cp.uuid == player.uuid && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
-            println("picked up a piece!")
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
             cp.makeMove(pieceEntity.floorBlock?.boardPos!!)
-            println("Placed back down!")
             return ActionResult.SUCCESS
         }
         return ActionResult.PASS

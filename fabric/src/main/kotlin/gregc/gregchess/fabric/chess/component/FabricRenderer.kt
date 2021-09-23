@@ -17,8 +17,7 @@ data class FabricRendererSettings(
     val controllerLoc: Loc,
     val world: @Contextual World
 ) : ComponentData<FabricRenderer> {
-    constructor(controller: ChessControllerBlockEntity) :
-            this(controller.pos.loc, controller.world!!)
+    constructor(controller: ChessControllerBlockEntity) : this(controller.pos.loc, controller.world!!)
 
     val controller: ChessControllerBlockEntity
         get() = world.getBlockEntity(controllerLoc.blockpos) as ChessControllerBlockEntity
@@ -36,6 +35,18 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
     fun onFloorUpdate(e: FloorUpdateEvent) {
         tileBlocks[e.pos]?.forEach {
             it.updateFloor(e.floor)
+        }
+    }
+
+    @ChessEventHandler
+    fun onBaseEvent(e: GameBaseEvent) {
+        if (e == GameBaseEvent.STOP || e == GameBaseEvent.PANIC) {
+            tileBlocks.forEach { (p,l) ->
+                l.forEach {
+                    it.updateFloor()
+                }
+            }
+            (data.world.getBlockEntity(data.controllerLoc.blockpos) as? ChessControllerBlockEntity)?.currentGame = null
         }
     }
 
