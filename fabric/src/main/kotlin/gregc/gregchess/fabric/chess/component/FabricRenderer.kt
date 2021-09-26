@@ -41,7 +41,7 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
     @ChessEventHandler
     fun onBaseEvent(e: GameBaseEvent) {
         if (e == GameBaseEvent.STOP || e == GameBaseEvent.PANIC) {
-            tileBlocks.forEach { (p,l) ->
+            tileBlocks.forEach { (_,l) ->
                 l.forEach {
                     it.updateFloor()
                 }
@@ -73,7 +73,7 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
             }
             is PieceEvent.Captured -> {
                 val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
-                pieceBlock?.safeBreak(true)
+                pieceBlock?.safeBreak(!data.controller.addPiece(e.piece.piece.piece))
             }
             is PieceEvent.Promoted -> {
                 TODO("Promotion")

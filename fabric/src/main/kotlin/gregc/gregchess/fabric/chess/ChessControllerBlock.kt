@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric.chess
 
+import gregc.gregchess.RegistryType
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.*
@@ -17,6 +18,10 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.client.resource.language.I18n
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.SidedInventory
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.screen.*
 import net.minecraft.server.network.ServerPlayerEntity
@@ -24,6 +29,7 @@ import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -34,7 +40,8 @@ import kotlin.math.min
 
 
 class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
-    BlockEntity(GregChess.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder {
+    BlockEntity(GregChess.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder,
+    ChessControllerInventory {
     var currentGameUUID: UUID? by BlockEntityDirtyDelegate(null)
     var currentGame: ChessGame? = null
         set(v) {
@@ -52,6 +59,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         currentGame?.let {
             nbt.putUuid("GameUUID", it.uuid)
         }
+        Inventories.writeNbt(nbt, items)
 
         return nbt
     }
@@ -65,6 +73,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         if (nbt.containsUuid("GameUUID")) {
             currentGame = ChessGameManager[nbt.getUuid("GameUUID")]
         }
+        Inventories.readNbt(nbt, items)
     }
 
     override fun getDisplayName(): Text = TranslatableText(cachedState.block.translationKey)
@@ -164,6 +173,94 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         }
     }
 
+    private val items: DefaultedList<ItemStack?> =
+        DefaultedList.ofSize(ChessControllerGuiDescription.INVENTORY_SIZE, ItemStack.EMPTY)
+
+    override fun markDirty() = super<BlockEntity>.markDirty()
+
+    override fun getItems(): DefaultedList<ItemStack?> = items
+
+    fun addPiece(p: Piece): Boolean {
+        val slot = ChessControllerGuiDescription.slotOf(p)
+        return if (items[slot].isEmpty) {
+            items[slot] = p.item.defaultStack
+            true
+        } else if (items[slot].item == p.item && items[slot].count < p.item.maxCount) {
+            items[slot].count++
+            true
+        } else
+            false
+    }
+
+    fun removePiece(p: Piece): Boolean {
+        val slot = ChessControllerGuiDescription.slotOf(p)
+        return if (items[slot].item == p.item && items[slot].count == 1) {
+            items[slot] = ItemStack.EMPTY
+            true
+        } else if (items[slot].item == p.item) {
+            items[slot].count--
+            true
+        } else
+            false
+    }
+}
+
+fun interface ChessControllerInventory : SidedInventory {
+
+    fun getItems(): DefaultedList<ItemStack?>
+
+    override fun size(): Int {
+        return getItems().size
+    }
+
+    override fun isEmpty(): Boolean {
+        for (i in 0 until size()) {
+            val stack = getStack(i)
+            if (!stack.isEmpty) {
+                return false
+            }
+        }
+        return true
+    }
+
+    override fun getStack(slot: Int): ItemStack {
+        return getItems()[slot]
+    }
+
+    override fun removeStack(slot: Int, count: Int): ItemStack? {
+        val result = Inventories.splitStack(getItems(), slot, count)
+        if (!result.isEmpty) {
+            markDirty()
+        }
+        return result
+    }
+
+    override fun removeStack(slot: Int): ItemStack? {
+        return Inventories.removeStack(getItems(), slot)
+    }
+
+    override fun setStack(slot: Int, stack: ItemStack) {
+        getItems()[slot] = stack
+        if (stack.count > maxCountPerStack) {
+            stack.count = maxCountPerStack
+        }
+    }
+
+    override fun clear() {
+        getItems().clear()
+    }
+
+    override fun markDirty() {
+    }
+
+    override fun canPlayerUse(player: PlayerEntity?): Boolean = true
+
+    override fun canExtract(slot: Int, stack: ItemStack?, dir: Direction?): Boolean = false
+
+    override fun canInsert(slot: Int, stack: ItemStack?, dir: Direction?): Boolean = false
+
+    override fun getAvailableSlots(side: Direction?): IntArray = intArrayOf()
+
 }
 
 class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext) :
@@ -171,14 +268,23 @@ class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventor
         GregChess.CHESS_CONTROLLER_SCREEN_HANDLER_TYPE,
         syncId,
         playerInventory,
-        null,
+        getBlockInventory(context, INVENTORY_SIZE),
         getBlockPropertyDelegate(context, 1)
     ) {
+
+    companion object {
+        private val pieces: List<Piece> = PieceRegistryView.values.toList()
+
+        @JvmField
+        val INVENTORY_SIZE = pieces.size
+
+        fun slotOf(p: Piece) = pieces.indexOf(p)
+    }
 
     init {
         val root = WGridPanel()
         setRootPanel(root)
-        root.setSize(300, 200)
+        root.setSize(300, 300)
         root.insets = Insets.ROOT_PANEL
 
         val startGameButton = WButton(TranslatableText("gui.gregchess.start_game"))
@@ -205,6 +311,24 @@ class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventor
             I18n.translate(if (propertyDelegate.get(0) == 0) "gui.gregchess.no_chessboard" else "gui.gregchess.has_chessboard")
         }
         root.add(boardStatusLabel, 0, 3, 5, 1)
+
+        val whiteIcon = WItem(Items.WHITE_DYE.defaultStack)
+        root.add(whiteIcon, 0, 9)
+        val blackIcon = WItem(Items.BLACK_DYE.defaultStack)
+        root.add(blackIcon, 0, 10)
+
+        for ((i, piece) in RegistryType.PIECE_TYPE.values.withIndex()) {
+            val icon = WItem(white(piece).item.defaultStack)
+            root.add(icon, i+1, 8)
+            val itemSlotWhite = WItemSlot.of(blockInventory, slotOf(white(piece)))
+            itemSlotWhite.setFilter { it.item == white(piece).item }
+            root.add(itemSlotWhite, i+1, 9)
+            val itemSlotBlack = WItemSlot.of(blockInventory, slotOf(black(piece)))
+            itemSlotBlack.setFilter { it.item == black(piece).item }
+            root.add(itemSlotBlack, i+1, 10)
+        }
+
+        root.add(this.createPlayerInventoryPanel(), 0, 12)
 
         ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("detect_board")) {
             context.run { world, pos ->
