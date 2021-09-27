@@ -5,9 +5,11 @@ import gregc.gregchess.interact
 import gregc.gregchess.name
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import net.minecraft.block.BlockState
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.LiteralText
 import java.util.*
+import kotlin.coroutines.suspendCoroutine
 
 fun ServerPlayerEntity.showGameResults(color: Color, results: GameResults) {
     sendMessage(LiteralText(results.endReason.name), false)
@@ -35,7 +37,7 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
         held = piece
     }
 
-    fun makeMove(pos: Pos) {
+    fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, realPlayer: ServerPlayerEntity, state: BlockState) {
         if (!game.running) return
         val piece = held ?: return
         val moves = piece.getLegalMoves(game.board)
@@ -46,8 +48,11 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
         val move = chosenMoves.first()
         interact {
             move.getTrait<PromotionTrait>()?.apply {
-                if (promotions != null)
-                    TODO("add a promotion menu")
+                if (promotions != null) {
+                    floor.chessControllerBlock?.promotions = promotions!!
+                    realPlayer.openHandledScreen(state.createScreenHandlerFactory(floor.world, floor.pos))
+                    promotion = suspendCoroutine { floor.chessControllerBlock?.promotionContinuation = it }
+                }
             }
             game.finishMove(move)
         }

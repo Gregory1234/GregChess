@@ -70,6 +70,12 @@ object GregChess : ModInitializer {
             ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY)
         }
 
+    @JvmField
+    val PROMOTION_MENU_HANDLER_TYPE: ScreenHandlerType<PromotionMenuGuiDescription> =
+        ScreenHandlerRegistry.registerSimple(ident("promotion_menu")) { syncId, inventory ->
+            PromotionMenuGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY)
+        }
+
     override fun onInitialize() {
 
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)

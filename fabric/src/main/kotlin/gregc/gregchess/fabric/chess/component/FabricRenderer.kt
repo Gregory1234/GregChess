@@ -10,6 +10,7 @@ import gregc.gregchess.fabric.loc
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.minecraft.block.enums.DoubleBlockHalf
+import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
 @Serializable
@@ -50,6 +51,16 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
         }
     }
 
+    private fun BoardPiece.place(loc: BlockPos) {
+        when (val b = piece.block) {
+            is TallPieceBlock -> data.world.apply {
+                setBlockState(loc.up(1), b.defaultState.with(TallPieceBlock.HALF, DoubleBlockHalf.LOWER))
+                setBlockState(loc.up(2), b.defaultState.with(TallPieceBlock.HALF, DoubleBlockHalf.UPPER))
+            }
+            is ShortPieceBlock -> data.world.setBlockState(loc.up(1), b.defaultState)
+        }
+    }
+
     @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) {
         when (e) {
@@ -60,26 +71,28 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
                 val pieceBlock = tileBlocks[e.from]?.firstNotNullOfOrNull { it.directPiece }
                 pieceBlock?.safeBreak()
                 val newBlockPos = tileBlocks[e.piece.pos]?.randomOrNull()?.pos
-                if (newBlockPos != null) {
-                    when (val b = e.piece.piece.block) {
-                        is TallPieceBlock -> data.world.apply {
-                            setBlockState(newBlockPos.up(1), b.defaultState.with(TallPieceBlock.HALF, DoubleBlockHalf.LOWER))
-                            setBlockState(newBlockPos.up(2), b.defaultState.with(TallPieceBlock.HALF, DoubleBlockHalf.UPPER))
-                        }
-                        is ShortPieceBlock -> data.world.setBlockState(newBlockPos.up(1), b.defaultState)
-                    }
-
-                }
+                if (newBlockPos != null)
+                    e.piece.place(newBlockPos)
             }
             is PieceEvent.Captured -> {
                 val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
                 pieceBlock?.safeBreak(!data.controller.addPiece(e.piece.piece.piece))
             }
             is PieceEvent.Promoted -> {
-                TODO("Promotion")
+                val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
+                val blockPos = pieceBlock?.floorBlock?.pos
+                pieceBlock?.safeBreak(!data.controller.addPiece(e.piece.piece))
+                check(data.controller.removePiece(e.promotion.piece)) { "Not enough pieces in the controller" }
+                if (blockPos != null)
+                    e.promotion.place(blockPos)
             }
             is PieceEvent.Resurrected -> {
-                TODO("This doesn't really make sense here...")
+                // TODO: handle this better
+                // TODO: change names of e.piece.piece.piece
+                check(data.controller.removePiece(e.piece.piece.piece)) { "Not enough pieces in the controller" }
+                val newBlockPos = tileBlocks[e.piece.pos]?.randomOrNull()?.pos
+                if (newBlockPos != null)
+                    e.piece.piece.place(newBlockPos)
             }
             is PieceEvent.MultiMoved -> {
                 for ((o, _) in e.moves) {
@@ -88,16 +101,8 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
                 }
                 for ((_, t) in e.moves) {
                     val newBlockPos = tileBlocks[t.pos]?.randomOrNull()?.pos
-                    if (newBlockPos != null) {
-                        when (val b = t.piece.block) {
-                            is TallPieceBlock -> data.world.apply {
-                                setBlockState(newBlockPos.up(1), b.defaultState.with(TallPieceBlock.HALF, DoubleBlockHalf.LOWER))
-                                setBlockState(newBlockPos.up(2), b.defaultState.with(TallPieceBlock.HALF, DoubleBlockHalf.UPPER))
-                            }
-                            is ShortPieceBlock -> data.world.setBlockState(newBlockPos.up(1), b.defaultState)
-                        }
-
-                    }
+                    if (newBlockPos != null)
+                        t.place(newBlockPos)
                 }
             }
         }

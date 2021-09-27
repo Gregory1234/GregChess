@@ -18,5 +18,6 @@
   "gui.gregchess.start_game": "Start Game",
   "gui.gregchess.abort_game": "Abort Game",
   "gui.gregchess.no_chessboard": "No Chessboard Detected",
-  "gui.gregchess.has_chessboard": "Chessboard Detected"
+  "gui.gregchess.has_chessboard": "Chessboard Detected",
+  "gui.gregchess.promotion_menu": "Pawn Promotion"
 }
