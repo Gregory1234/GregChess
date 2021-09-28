@@ -17,7 +17,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
-        maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+        maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") { name = "Spigot" }
     }
 }
 include("core", "bukkit", "fabric")

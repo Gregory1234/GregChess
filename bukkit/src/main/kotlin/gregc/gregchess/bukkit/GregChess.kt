@@ -6,17 +6,17 @@ import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
+import net.axay.kspigot.main.KSpigot
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
-import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 import java.util.*
 
 object GregChess : Listener {
-    class Plugin : JavaPlugin(), BukkitChessPlugin {
+    class Plugin : KSpigot(), BukkitChessPlugin {
         companion object {
             lateinit var INSTANCE: Plugin
                 private set
@@ -26,11 +26,11 @@ object GregChess : Listener {
             INSTANCE = this
         }
 
-        override fun onEnable() {
+        override fun startup() {
             GregChess.onEnable()
         }
 
-        override fun onDisable() {
+        override fun shutdown() {
             GregChess.onDisable()
         }
 

@@ -13,7 +13,7 @@ loom.runConfigs.forEach {
 }
 
 repositories {
-    maven ("https://server.bbkr.space/artifactory/libs-release")
+    maven ("https://server.bbkr.space/artifactory/libs-release") { name = "LibGui" }
 }
 
 dependencies {

@@ -7,8 +7,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
-import net.md_5.bungee.api.chat.ClickEvent
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
@@ -155,33 +153,6 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
 fun cWrongArgument(): Nothing = throw CommandException(WRONG_ARGUMENT)
 
 fun String.chatColor(): String = ChatColor.translateAlternateColorCodes('&', this)
-
-
-class BuildTextComponentScope {
-    val returnValue = TextComponent()
-    fun append(str: String) {
-        returnValue.addExtra(str)
-    }
-
-    fun append(tc: TextComponent) {
-        returnValue.addExtra(tc)
-    }
-
-    fun append(v: Any?, clickEvent: ClickEvent? = null) {
-        val c = TextComponent(v.toString())
-        if (clickEvent != null)
-            c.clickEvent = clickEvent
-        append(c)
-    }
-
-    fun appendCopy(v: Any?, copy: Any?) {
-        append(v, ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, copy.toString()))
-    }
-}
-
-inline fun buildTextComponent(f: BuildTextComponentScope.() -> Unit) =
-    BuildTextComponentScope().apply(f).returnValue
-
 
 fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
 

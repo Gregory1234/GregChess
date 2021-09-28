@@ -6,18 +6,17 @@ import gregc.gregchess.bukkit.chess.component.arena
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
+import net.axay.kspigot.chat.literalText
+import net.axay.kspigot.items.*
 import org.bukkit.Material
 import org.bukkit.Sound
-import org.bukkit.inventory.ItemStack
 
 val Color.configName get() = name.snakeToPascal()
 
-fun PieceType.getItem(color: Color): ItemStack {
-    val item = ItemStack(itemMaterial[color])
-    val meta = item.itemMeta!!
-    meta.setDisplayName(config.getPathString("Chess.Color.${color.configName}.Piece", localName))
-    item.itemMeta = meta
-    return item
+fun PieceType.getItem(color: Color) = itemStack(itemMaterial[color]) {
+    meta {
+        name = config.getPathString("Chess.Color.${color.configName}.Piece", this@getItem.localName)
+    }
 }
 
 val PieceType.configName get() = name.snakeToPascal()
@@ -38,26 +37,30 @@ val MoveName.localName get() = joinToString("") { it.token.localName }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
-fun BoardPiece.getInfo(game: ChessGame) = buildTextComponent {
-    append("Type: $color $type\n")
-    append("Position: $pos\n")
-    append(if (hasMoved) "Has moved\n" else "Has not moved\n")
-    appendCopy("Game: ${game.uuid}\n", game.uuid)
+fun BoardPiece.getInfo(game: ChessGame) = literalText {
+    text("Type: $color $type\n")
+    text("Position: $pos\n")
+    text(if (hasMoved) "Has moved\n" else "Has not moved\n")
+    text("Game: ${game.uuid}\n") {
+        onClickCopy(game.uuid.toString())
+    }
     val moves = getLegalMoves(game.board)
-    append("All moves: ${moves.joinToString { it.name.localName }}")
+    text("All moves: ${moves.joinToString { it.name.localName }}")
     moves.groupBy { m -> game.variant.getLegality(m, game) }.forEach { (l, m) ->
-        append("\n${l.prettyName}: ${m.joinToString { it.name.localName }}")
+        text("\n${l.prettyName}: ${m.joinToString { it.name.localName }}")
     }
 }
 
-fun ChessGame.getInfo() = buildTextComponent {
-    appendCopy("UUID: $uuid\n", uuid)
-    append("Players: ${players.toList().joinToString { "${it.name} as ${it.color.configName}" }}\n")
-    append("Spectators: ${spectators.spectators.joinToString { it.name }}\n")
-    append("Arena: ${arena.name}\n")
-    append("Preset: ${settings.name}\n")
-    append("Variant: ${variant.key}\n")
-    append("Components: ${components.joinToString { it::class.componentKey.toString() }}")
+fun ChessGame.getInfo() = literalText {
+    text("UUID: $uuid\n") {
+        onClickCopy(uuid.toString())
+    }
+    text("Players: ${players.toList().joinToString { "${it.name} as ${it.color.configName}" }}\n")
+    text("Spectators: ${spectators.spectators.joinToString { it.name }}\n")
+    text("Arena: ${arena.name}\n")
+    text("Preset: ${settings.name}\n")
+    text("Variant: ${variant.key}\n")
+    text("Components: ${components.joinToString { it::class.componentKey.toString() }}")
 }
 
 val GameResults.name

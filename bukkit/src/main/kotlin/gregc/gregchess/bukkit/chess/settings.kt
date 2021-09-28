@@ -6,9 +6,9 @@ import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.component.componentDataClass
 import gregc.gregchess.chess.component.componentModule
 import gregc.gregchess.chess.variant.ChessVariant
+import net.axay.kspigot.items.*
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 
 object SettingsManager {
 
@@ -36,9 +36,10 @@ private val CHOOSE_SETTINGS = message("ChooseSettings")
 
 suspend fun Player.openSettingsMenu() =
     openMenu(CHOOSE_SETTINGS, SettingsManager.getSettings().mapIndexed { index, s ->
-        val item = ItemStack(Material.IRON_BLOCK)
-        val meta = item.itemMeta!!
-        meta.setDisplayName(s.name)
-        item.itemMeta = meta
+        val item = itemStack(Material.IRON_BLOCK) {
+            meta {
+                name = s.name
+            }
+        }
         ScreenOption(item, s, index.toInvPos())
     })
