@@ -149,10 +149,15 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) {
-        if (e == GameBaseEvent.START) {
+        if (e == GameBaseEvent.SYNC || e == GameBaseEvent.START) {
             updateMoves()
+            game.variant.chessboardSetup(this)
             pieces.forEach { it.sendCreated(this) }
             squares.values.forEach(Square::update)
+        }
+
+        if (e == GameBaseEvent.SYNC) {
+            lastMove?.showDone(this)
         }
     }
 

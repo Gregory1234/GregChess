@@ -62,7 +62,21 @@ class ChessClock(game: ChessGame, settings: ChessClockData) : Component(game) {
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.START && timeControl.type == TimeControl.Type.FIXED) started = true
-        else if (e == GameBaseEvent.STOP) stopped = true
+        else if (e == GameBaseEvent.SYNC) when (game.state) {
+            ChessGame.State.INITIAL -> {
+                started = false
+                stopped = false
+            }
+            ChessGame.State.RUNNING -> {
+                started = timeControl.type == TimeControl.Type.FIXED
+                stopped = false
+            }
+            ChessGame.State.STOPPED, ChessGame.State.ERROR -> {
+                started = true
+                stopped = true
+            }
+        }
+        else if (e == GameBaseEvent.STOP || e == GameBaseEvent.PANIC) stopped = true
         else if (e == GameBaseEvent.UPDATE) updateTimer()
     }
 

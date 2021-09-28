@@ -4,14 +4,14 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.ChessboardState
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.GregChess
-import gregc.gregchess.fabric.chess.component.FabricRendererSettings
-import gregc.gregchess.fabric.chess.component.PlayerManagerData
+import gregc.gregchess.fabric.chess.component.*
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
 import gregc.gregchess.fabric.nbt.*
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtIo
 import net.minecraft.server.MinecraftServer
+import net.minecraft.server.world.ServerWorld
 import java.util.*
 
 object ChessGameManager {
@@ -77,6 +77,14 @@ object ChessGameManager {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    fun sync(world: ServerWorld) {
+        for (game in loadedGames.values) {
+            if (game.renderer.data.world == world) {
+                game.sync()
+            }
         }
     }
 

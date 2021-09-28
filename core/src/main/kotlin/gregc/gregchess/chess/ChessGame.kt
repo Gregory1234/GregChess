@@ -28,6 +28,7 @@ enum class TurnEvent(val ending: Boolean) : ChessEvent {
 
 enum class GameBaseEvent : ChessEvent {
     START,
+    SYNC,
     RUNNING,
     UPDATE,
     STOP,
@@ -127,6 +128,8 @@ class ChessGame private constructor(
     val componentData get() = components.map { it.data }
 
     init {
+        require((initialState >= State.RUNNING) == (startTime != null)) { "Start time bad" }
+        require((initialState >= State.STOPPED) == (results != null)) { "Results bad" }
         try {
             requireComponent<Chessboard>()
             for (it in variant.requiredComponents) {
@@ -175,12 +178,12 @@ class ChessGame private constructor(
         }
 
     @Serializable
-    private enum class State {
+    enum class State {
         INITIAL, RUNNING, STOPPED, ERROR
     }
 
-    private var state: State = initialState
-        set(v) {
+    var state: State = initialState
+        private set(v) {
             check(v > field) { "Changed state backwards: from $field to $v" }
             field = v
         }
@@ -204,14 +207,17 @@ class ChessGame private constructor(
         startPreviousTurn()
     }
 
-    fun start(): ChessGame {
+    fun sync() = apply {
+        callEvent(GameBaseEvent.SYNC)
+    }
+
+    fun start() = apply {
         requireState(State.INITIAL)
         callEvent(GameBaseEvent.START)
         state = State.RUNNING
         startTime = LocalDateTime.now()
         callEvent(GameBaseEvent.RUNNING)
         startTurn()
-        return this
     }
 
     fun update() {

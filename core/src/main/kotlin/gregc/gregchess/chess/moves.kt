@@ -131,7 +131,7 @@ data class NameOrderElement(val type: MoveNameTokenType<*>) {
     @OptIn(ExperimentalSerializationApi::class)
     object Serializer : KSerializer<NameOrderElement> {
         override val descriptor: SerialDescriptor
-            get() = SerialDescriptor("NameOrderElement", MoveNameTokenType.Serializer.descriptor)
+            get() = PrimitiveSerialDescriptor("NameOrderElement", PrimitiveKind.STRING)
 
         override fun serialize(encoder: Encoder, value: NameOrderElement) =
             encoder.encodeSerializableValue(MoveNameTokenType.Serializer, value.type)

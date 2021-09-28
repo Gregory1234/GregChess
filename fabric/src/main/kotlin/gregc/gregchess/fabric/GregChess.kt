@@ -7,6 +7,7 @@ import gregc.gregchess.fabric.chess.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
 import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointUtils
@@ -93,6 +94,10 @@ object GregChess : ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPING.register {
             ChessGameManager.save()
             ChessGameManager.clear()
+        }
+
+        ServerWorldEvents.LOAD.register { _, world ->
+            ChessGameManager.sync(world)
         }
 
     }

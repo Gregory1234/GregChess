@@ -314,7 +314,7 @@ object GregChess : Listener {
                     perms()
                     val name = lastArg()
                     val f = File(plugin.dataFolder, "snapshots/$name.json")
-                    json.decodeFromString<ChessGame>(f.readText())
+                    json.decodeFromString<ChessGame>(f.readText()).sync()
                 }
                 "info" -> {
                     cWrongArgument {
