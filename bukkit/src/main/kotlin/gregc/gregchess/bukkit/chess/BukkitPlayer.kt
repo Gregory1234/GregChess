@@ -9,8 +9,7 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import net.md_5.bungee.api.chat.ClickEvent
-import net.md_5.bungee.api.chat.TextComponent
+import net.axay.kspigot.chat.literalText
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
@@ -101,17 +100,17 @@ fun Player.showGameResults(color: Color, results: GameResults) {
 private val COPY_FEN = message("CopyFEN")
 
 fun Player.sendFEN(fen: FEN) {
-    val message = TextComponent(COPY_FEN.get())
-    message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, fen.toString())
-    spigot().sendMessage(message)
+    spigot().sendMessage(literalText(COPY_FEN.get()) {
+        onClickCopy(fen.toString())
+    })
 }
 
 private val COPY_PGN = message("CopyPGN")
 
 fun Player.sendPGN(pgn: PGN) {
-    val message = TextComponent(COPY_PGN.get())
-    message.clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, pgn.toString())
-    spigot().sendMessage(message)
+    spigot().sendMessage(literalText(COPY_PGN.get()) {
+        onClickCopy(pgn.toString())
+    })
 }
 
 fun Player.sendLastMoves(num: UInt, wLast: Move?, bLast: Move?) {
