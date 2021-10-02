@@ -3,7 +3,11 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.bukkit.coroutines.BukkitContext
+import gregc.gregchess.bukkit.coroutines.BukkitScope
 import gregc.gregchess.chess.*
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import net.axay.kspigot.main.KSpigot
@@ -40,6 +44,8 @@ object GregChess : Listener {
             GregChessModule.fullLoad()
         }
     }
+
+    val coroutineScope = BukkitScope(plugin, BukkitContext.SYNC)
 
     val logger get() = plugin.logger
 
@@ -102,7 +108,7 @@ object GregChess : Listener {
                             endArgs()
                             val opponent = latestArg().cPlayer()
                             cRequire(!opponent.isInGame, OPPONENT_IN_GAME)
-                            interact {
+                            coroutineScope.launch {
                                 val settings = player.openSettingsMenu()
                                 if (settings != null) {
                                     val res = duelRequest.call(RequestData(player, opponent, settings.name))
@@ -120,7 +126,7 @@ object GregChess : Listener {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     endArgs()
                     cRequire(!player.isInGame, YOU_IN_GAME)
-                    interact {
+                    coroutineScope.launch {
                         val settings = player.openSettingsMenu()
                         if (settings != null)
                             ChessGame(settings, byColor(player.cpi, Stockfish())).start()
@@ -145,7 +151,7 @@ object GregChess : Listener {
                     endArgs()
                     val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     val opponent: BukkitPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
-                    interact {
+                    coroutineScope.launch {
                         drawRequest.invalidSender(player) { !p.hasTurn }
                         val res = drawRequest.call(RequestData(player, opponent.player, ""), true)
                         if (res == RequestResponse.ACCEPT) {
@@ -281,7 +287,7 @@ object GregChess : Listener {
                     val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
                     p.game.board.lastMove.cNotNull(NOTHING_TO_TAKEBACK)
                     val opponent: BukkitPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
-                    interact {
+                    coroutineScope.launch {
                         drawRequest.invalidSender(player) {
                             (p.game.currentOpponent as? BukkitPlayer)?.player != player
                         }
@@ -409,6 +415,7 @@ object GregChess : Listener {
 
     fun onDisable() {
         ChessGameManager.stop()
+        coroutineScope.cancel()
     }
 
     @EventHandler

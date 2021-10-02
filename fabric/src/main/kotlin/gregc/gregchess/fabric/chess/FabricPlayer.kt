@@ -1,8 +1,8 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.interact
 import gregc.gregchess.name
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.minecraft.block.BlockState
@@ -46,7 +46,7 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
         if (pos == piece.pos) return
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
-        interact {
+        game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
                 if (promotions != null) {
                     floor.chessControllerBlock?.promotions = promotions!!

@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.interact
+import kotlinx.coroutines.launch
 import net.axay.kspigot.chat.literalText
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -74,7 +74,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         )
         val duration = section.getString("Duration")?.asDurationOrNull()
         if (duration != null)
-            interact {
+            GregChess.coroutineScope.launch {
                 wait(duration)
                 if (request.uuid in requests)
                     expire(request)

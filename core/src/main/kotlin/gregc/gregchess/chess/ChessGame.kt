@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlinx.serialization.descriptors.*
@@ -145,6 +146,8 @@ class ChessGame private constructor(
     val board get() = requireComponent<Chessboard>()
 
     val clock get() = getComponent<ChessClock>()
+
+    val coroutineScope get() = components.filterIsInstance<CoroutineScope>().first()
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()

@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
-import gregc.gregchess.interact
+import kotlinx.coroutines.launch
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
@@ -187,7 +187,7 @@ class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame) : Ches
         if (pos == piece.pos) return
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
-        interact {
+        game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
                 promotion = promotions?.let { player.openPawnPromotionMenu(it) }
             }

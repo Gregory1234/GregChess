@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.ClassRegisteredSerializer
+import gregc.gregchess.RegistryType
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable(with = ChessPlayerInfoSerializer::class)
@@ -56,7 +58,7 @@ class EnginePlayer(val engine: ChessEngine, color: Color, game: ChessGame) : Che
     override fun stop() = engine.stop()
 
     override fun startTurn() {
-        interact {
+        game.coroutineScope.launch {
             try {
                 val str = engine.getMove(game.board.getFEN())
                 val origin = Pos.parseFromString(str.take(2))

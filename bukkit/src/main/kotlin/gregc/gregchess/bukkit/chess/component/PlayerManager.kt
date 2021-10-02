@@ -2,11 +2,13 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
+import gregc.gregchess.bukkit.coroutines.BukkitContext
+import gregc.gregchess.bukkit.coroutines.BukkitScope
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
-import gregc.gregchess.interact
 import gregc.gregchess.seconds
+import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import org.bukkit.entity.Player
 
@@ -29,7 +31,12 @@ object PlayerManagerData : ComponentData<PlayerManager> {
     override fun getComponent(game: ChessGame) = PlayerManager(game, this)
 }
 
-class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Component(game) {
+class PlayerManager(
+    game: ChessGame,
+    override val data: PlayerManagerData,
+    private val scope: BukkitScope = BukkitScope(GregChess.plugin, BukkitContext.SYNC)
+) : Component(game), CoroutineScope by scope {
+
     internal var quick: ByColor<Boolean> = byColor(false)
 
     private fun onStart() {
@@ -66,7 +73,7 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
         }
         val pgn = PGN.generate(game)
         game.players.forEachUnique {
-            interact {
+            scope.launch {
                 it.player.showGameResults(it.color, results)
                 if (!results.endReason.quick)
                     wait((if (quick[it.color]) 0 else 3).seconds)
@@ -82,18 +89,20 @@ class PlayerManager(game: ChessGame, override val data: PlayerManagerData) : Com
             callEvent(GameStopStageEvent.VERY_END)
             return
         }
-        interact {
+        scope.launch {
             wait((if (quick.white && quick.black) 0 else 3).seconds)
             waitTick()
             callEvent(GameStopStageEvent.CLEAR)
             waitTick()
             game.players.forEach(ChessPlayer::stop)
             callEvent(GameStopStageEvent.VERY_END)
+            scope.cancel()
         }
     }
 
     private fun onPanic() {
         callEvent(GameStopStageEvent.PANIC)
+        scope.cancel()
     }
 
     @ChessEventHandler

@@ -16,8 +16,6 @@ dependencies {
     api("org.spigotmc:spigot-api:$spigotVersion")
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
-    val kotlinxCoroutinesVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
     val kspigotVersion: String by project
     implementation("net.axay:kspigot:$kspigotVersion")
     implementation(kotlin("reflect"))
