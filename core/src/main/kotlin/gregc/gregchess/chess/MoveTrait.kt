@@ -90,31 +90,32 @@ class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, v
 }
 
 @Serializable
-class PromotionTrait(val promotions: List<Piece>? = null, var promotion: Piece? = null) : MoveTrait {
+class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
+
+    var promotion: Piece? = null
+
+    var promoted: BoardPiece? = null
+        private set
+
     override val nameTokens =
         listOfNotNull(promotion?.type?.let { AnyMoveNameToken(MoveNameTokenType.PROMOTION.of(it)) })
 
     override val shouldComeBefore = listOf(TargetTrait::class)
 
-    var promoted: BoardPiece? = null
-        private set
-
     override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        if ((promotions == null) != (promotion == null))
-            return false
-        if (promotions?.contains(promotion) == false)
+        val promotion = promotion ?: return false
+        if (promotion !in promotions)
             return false
         return tryPiece {
-            promotion?.let {
-                promoted = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).promote(it, game.board)
-            }
+            promoted = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).promote(promotion, game.board)
         }
     }
 
     override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
         return tryPiece {
-            promoted?.promote(move.piece.piece, game.board)
-                ?.copyInPlace(game.board, hasMoved = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).hasMoved)
+            val promoted = promoted ?: return false
+            promoted.promote(move.piece.piece, game.board)
+                .copyInPlace(game.board, hasMoved = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).hasMoved)
         }
     }
 }

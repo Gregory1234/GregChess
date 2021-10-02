@@ -188,7 +188,7 @@ class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame) : Ches
         val move = chosenMoves.first()
         game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
-                promotion = promotions?.let { player.openPawnPromotionMenu(it) }
+                promotion = player.openPawnPromotionMenu(promotions)
             }
             game.finishMove(move)
         }

@@ -15,9 +15,13 @@ class BukkitDispatcher(private val plugin: Plugin, private val bukkitContext: Bu
             return
         }
 
-        when(bukkitContext) {
-            BukkitContext.SYNC -> Bukkit.getScheduler().runTask(plugin, block)
-            BukkitContext.ASYNC -> Bukkit.getScheduler().runTaskAsynchronously(plugin, block)
+        if (bukkitContext == BukkitContext.SYNC && Bukkit.isPrimaryThread()) {
+            block.run()
+        } else {
+            when (bukkitContext) {
+                BukkitContext.SYNC -> Bukkit.getScheduler().runTask(plugin, block)
+                BukkitContext.ASYNC -> Bukkit.getScheduler().runTaskAsynchronously(plugin, block)
+            }
         }
     }
 

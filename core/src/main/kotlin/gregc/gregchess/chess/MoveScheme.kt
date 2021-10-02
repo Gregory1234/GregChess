@@ -124,28 +124,22 @@ class PawnMovement(
         private val defaultPromotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
         @JvmField
         val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u })
-        private fun ifProm(promotions: Any?, floor: Floor) = if (promotions == null) floor else Floor.SPECIAL
         private val pawnOrder = with (MoveNameTokenType) {
             nameOrder(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)
         }
     }
 
     override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
-        fun promotions(pos: Pos) = if (pos.rank in listOf(0, 7)) promotions(piece) else null
-
         val dir = piece.color.forward
         val pos = piece.pos
         val forward = pos + dir
         if (forward.isValid()) {
             add(
                 Move(
-                    piece, forward, ifProm(promotions(forward), Floor.MOVE),
+                    piece, forward, Floor.MOVE,
                     setOf(pos), setOf(forward), setOf(forward), setOf(forward),
                     emptySet(), emptySet(),
-                    listOf(
-                        PawnOriginTrait(), PromotionTrait(promotions(forward)), TargetTrait(forward),
-                        DefaultHalfmoveClockTrait(), CheckTrait()
-                    ),
+                    listOf(PawnOriginTrait(), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait()),
                     pawnOrder
                 )
             )
@@ -154,13 +148,10 @@ class PawnMovement(
         if (forward2.isValid() && canDouble(piece)) {
             add(
                 Move(
-                    piece, forward2, ifProm(promotions(forward), Floor.MOVE),
+                    piece, forward2, Floor.MOVE,
                     setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2),
                     emptySet(), setOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
-                    listOf(
-                        PawnOriginTrait(), PromotionTrait(promotions(forward2)), TargetTrait(forward2),
-                        DefaultHalfmoveClockTrait(), CheckTrait()
-                    ),
+                    listOf(PawnOriginTrait(), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait()),
                     pawnOrder
                 )
             )
@@ -170,11 +161,11 @@ class PawnMovement(
             if (capture.isValid()) {
                 add(
                     Move(
-                        piece, capture, ifProm(promotions(forward), Floor.CAPTURE),
+                        piece, capture, Floor.CAPTURE,
                         setOf(pos), setOf(capture), emptySet(), setOf(capture),
                         emptySet(), emptySet(),
                         listOf(
-                            PawnOriginTrait(), PromotionTrait(promotions(capture)), CaptureTrait(capture, true),
+                            PawnOriginTrait(), CaptureTrait(capture, true),
                             TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()
                         ),
                         pawnOrder
@@ -183,12 +174,11 @@ class PawnMovement(
                 val enPassant = pos + s.dir
                 add(
                     Move(
-                        piece, capture, ifProm(promotions(forward), Floor.CAPTURE),
+                        piece, capture, Floor.CAPTURE,
                         setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture),
                         setOf(Pair(capture, EN_PASSANT)), emptySet(),
                         listOf(
-                            PawnOriginTrait(), PromotionTrait(promotions(capture)),
-                            CaptureTrait(enPassant, true), TargetTrait(capture),
+                            PawnOriginTrait(), CaptureTrait(enPassant, true), TargetTrait(capture),
                             NameTrait(nameOf(MoveNameTokenType.EN_PASSANT.mk)),
                             DefaultHalfmoveClockTrait(), CheckTrait()
                         ),
@@ -197,5 +187,10 @@ class PawnMovement(
                 )
             }
         }
+    }.map {
+        if (it.getTrait<TargetTrait>()?.target?.rank in listOf(0, 7))
+            it.copy(floor = Floor.SPECIAL, traits = it.traits + PromotionTrait(promotions(piece)))
+        else
+            it
     }
 }

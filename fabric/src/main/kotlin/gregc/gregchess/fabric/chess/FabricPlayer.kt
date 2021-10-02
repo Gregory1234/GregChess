@@ -48,11 +48,9 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
         val move = chosenMoves.first()
         game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
-                if (promotions != null) {
-                    floor.chessControllerBlock?.promotions = promotions!!
-                    realPlayer.openHandledScreen(state.createScreenHandlerFactory(floor.world, floor.pos))
-                    promotion = suspendCoroutine { floor.chessControllerBlock?.promotionContinuation = it }
-                }
+                floor.chessControllerBlock?.promotions = promotions
+                realPlayer.openHandledScreen(state.createScreenHandlerFactory(floor.world, floor.pos))
+                promotion = suspendCoroutine { floor.chessControllerBlock?.promotionContinuation = it }
             }
             game.finishMove(move)
         }
