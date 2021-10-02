@@ -50,6 +50,7 @@ fun PieceType.of(color: Color) = Piece(this, color)
 fun white(type: PieceType) = type.of(Color.WHITE)
 fun black(type: PieceType) = type.of(Color.BLACK)
 
+// TODO: Remove this
 @Serializable
 data class CapturedPos(val by: Color, val row: Int, val pos: Int)
 

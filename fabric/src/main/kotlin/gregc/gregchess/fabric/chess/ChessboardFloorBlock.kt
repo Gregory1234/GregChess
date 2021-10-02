@@ -23,7 +23,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 
 
-// TODO: make NamedScreenHandlerFactory a seperate thing
+// TODO: make NamedScreenHandlerFactory a separate thing
 class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChess.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory {
     var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)

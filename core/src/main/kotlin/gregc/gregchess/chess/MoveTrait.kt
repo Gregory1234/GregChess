@@ -14,6 +14,8 @@ interface MoveTrait {
     val shouldComeAfter: Collection<KClass<out MoveTrait>> get() = emptyList()
     val nameTokens: List<AnyMoveNameToken>
     fun setup(game: ChessGame, move: Move) {}
+    // TODO: throw exceptions instead of returning false when preconditions aren't met
+    // TODO: remove pass, remaining, and return value
     fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
     fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
 }

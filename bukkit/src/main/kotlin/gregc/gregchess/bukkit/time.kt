@@ -21,6 +21,7 @@ fun runTaskTimer(delay: Duration, period: Duration, callback: CancellableContext
     }.runTaskTimer(GregChess.plugin, delay.toTicks(), period.toTicks())
 }
 
+// TODO: make this less confusing
 suspend fun toSync() = suspendCoroutine<Unit> {
     Bukkit.getScheduler().runTask(GregChess.plugin, Runnable {
         it.resume(Unit)
@@ -33,6 +34,7 @@ suspend fun toAsync() = suspendCoroutine<Unit> {
     })
 }
 
+// TODO: consider switching to kotlin.time
 suspend fun wait(delay: Duration) = suspendCoroutine<Unit> {
     if (delay.isZero) {
         it.resume(Unit)

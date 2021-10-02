@@ -21,7 +21,7 @@ abstract class Arena(val name: String) : ChessListener {
 
         private fun parseArena(section: ConfigurationSection, name: String): Arena? {
             GregChess.logger.info("Loading arena $name")
-
+            // TODO: make this smarter
             val start = Loc(
                 section.getInt("Start.x", 0),
                 section.getInt("Start.y", 101),

@@ -10,13 +10,13 @@ import kotlin.coroutines.suspendCoroutine
 suspend fun <T> Player.openMenu(name: Message, content: List<ScreenOption<T>>): T? = suspendCoroutine {
     openMenu(Menu(name.get(), it, content, null))
 }
-
 class Menu<T>(
     val name: String,
     private val cont: Continuation<T>,
     private val content: List<ScreenOption<T>>,
     private val default: T
 ) : InventoryHolder {
+    // TODO: fix this
     private val inv = Bukkit.createInventory(this, content.size - content.size % 9 + 9, name)
     var finished: Boolean = false
         private set

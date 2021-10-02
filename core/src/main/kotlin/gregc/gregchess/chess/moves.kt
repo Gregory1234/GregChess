@@ -7,6 +7,7 @@ import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlin.reflect.KClass
 
+// TODO: add a way to keep track of moving pieces
 @Serializable
 data class Move(
     val piece: BoardPiece, val display: Pos, val floor: Floor,

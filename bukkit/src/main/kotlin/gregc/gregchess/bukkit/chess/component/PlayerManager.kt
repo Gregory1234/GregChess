@@ -26,11 +26,13 @@ enum class PlayerDirection {
 
 class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
+// TODO: remove simple ComponentData classes
 @Serializable
 object PlayerManagerData : ComponentData<PlayerManager> {
     override fun getComponent(game: ChessGame) = PlayerManager(game, this)
 }
 
+// TODO: simplify or rename
 class PlayerManager(
     game: ChessGame,
     override val data: PlayerManagerData,

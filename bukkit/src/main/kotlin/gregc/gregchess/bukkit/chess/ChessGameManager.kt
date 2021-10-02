@@ -23,8 +23,6 @@ object ChessGameManager : Listener {
 
     private val games = mutableListOf<ChessGame>()
 
-    fun firstGame(predicate: (ChessGame) -> Boolean): ChessGame? = games.firstOrNull(predicate)
-
     operator fun get(uuid: UUID): ChessGame? = games.firstOrNull { it.uuid == uuid }
 
 

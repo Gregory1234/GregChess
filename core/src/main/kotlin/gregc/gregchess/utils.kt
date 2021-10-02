@@ -16,9 +16,6 @@ fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 u
 
 fun betweenInc(i: Int, j: Int): IntRange = if (i > j) (j..i) else (i..j)
 
-fun Int.towards(other: Int, amount: Int) =
-    if (this > other) this - amount else if (this < other) this + amount else this
-
 operator fun <E> List<E>.component6(): E = this[5]
 
 operator fun Pair<Int, Int>.rangeTo(other: Pair<Int, Int>) = (first..other.first).flatMap { i ->
@@ -67,6 +64,7 @@ interface NameRegistered {
 val NameRegistered.name get() = key.key
 val NameRegistered.module get() = key.module
 
+// TODO: make names package qualified
 open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryView: RegistryView<String, T>) :
     KSerializer<T> {
 

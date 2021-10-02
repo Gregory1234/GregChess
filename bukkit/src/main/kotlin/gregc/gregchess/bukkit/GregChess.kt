@@ -86,7 +86,7 @@ object GregChess : Listener {
         RequestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
-
+        // TODO: try using a library for commands
         plugin.addCommand("chess") {
             when (nextArg().lowercase()) {
                 "duel" -> {
