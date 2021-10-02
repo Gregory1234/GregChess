@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit
 
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -74,7 +75,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         val duration = section.getString("Duration")?.asDurationOrNull()
         if (duration != null)
             GregChess.coroutineScope.launch {
-                wait(duration)
+                delay(duration)
                 if (request.uuid in requests)
                     expire(request)
             }

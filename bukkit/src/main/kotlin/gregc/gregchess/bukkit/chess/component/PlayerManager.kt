@@ -1,16 +1,19 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.GregChess
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.coroutines.BukkitContext
 import gregc.gregchess.bukkit.coroutines.BukkitScope
+import gregc.gregchess.bukkit.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.seconds
 import kotlinx.coroutines.*
+import kotlinx.coroutines.time.delay
 import kotlinx.serialization.Serializable
 import org.bukkit.entity.Player
+import org.bukkit.scheduler.BukkitRunnable
 
 enum class GameStartStageEvent : ChessEvent {
     INIT, START, BEGIN
@@ -54,12 +57,14 @@ class PlayerManager(
 
     private fun onRunning() {
         callEvent(GameStartStageEvent.BEGIN)
-        runTaskTimer(0.seconds, 0.1.seconds) {
-            if (game.running)
-                game.update()
-            else
-                cancel()
-        }
+        object : BukkitRunnable() {
+            override fun run() {
+                if (game.running)
+                    game.update()
+                else
+                    cancel()
+            }
+        }.runTaskTimer(GregChess.plugin, 0, 2)
     }
 
     private fun onStop() {
@@ -78,7 +83,7 @@ class PlayerManager(
             scope.launch {
                 it.player.showGameResults(it.color, results)
                 if (!results.endReason.quick)
-                    wait((if (quick[it.color]) 0 else 3).seconds)
+                    delay((if (quick[it.color]) 0 else 3).seconds)
                 callEvent(PlayerEvent(it.player, PlayerDirection.LEAVE))
                 it.player.sendPGN(pgn)
                 it.player.games -= game
@@ -92,10 +97,10 @@ class PlayerManager(
             return
         }
         scope.launch {
-            wait((if (quick.white && quick.black) 0 else 3).seconds)
-            waitTick()
+            delay((if (quick.white && quick.black) 0 else 3).seconds)
+            delay(1.ticks)
             callEvent(GameStopStageEvent.CLEAR)
-            waitTick()
+            delay(1.ticks)
             game.players.forEach(ChessPlayer::stop)
             callEvent(GameStopStageEvent.VERY_END)
             scope.cancel()
