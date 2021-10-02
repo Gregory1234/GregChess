@@ -33,18 +33,23 @@ class PieceType(
         private val queenDirs = bishopDirs + rookDirs
         private val knightDirs = rotationsOf(2, 1)
 
+        private fun register(id: String, type: PieceType) = GregChessModule.register(id, type)
+
         @JvmField
-        val KING = GregChessModule.register("king", PieceType('k', KingMovement, assumeNotMoved, false))
+        val KING = register("king", PieceType('k', KingMovement, assumeNotMoved, false))
         @JvmField
-        val QUEEN = GregChessModule.register("queen", PieceType('q', RayMovement(queenDirs), assumeNotMoved, false))
+        val QUEEN = register("queen", PieceType('q', RayMovement(queenDirs), assumeNotMoved, false))
         @JvmField
-        val ROOK = GregChessModule.register("rook", PieceType('r', RayMovement(rookDirs), rookHasMoved, false))
+        val ROOK = register("rook", PieceType('r', RayMovement(rookDirs), rookHasMoved, false))
         @JvmField
-        val BISHOP = GregChessModule.register("bishop", PieceType('b', RayMovement(bishopDirs), assumeNotMoved, true))
+        val BISHOP = register("bishop", PieceType('b', RayMovement(bishopDirs), assumeNotMoved, true))
         @JvmField
-        val KNIGHT = GregChessModule.register("knight", PieceType('n', JumpMovement(knightDirs), assumeNotMoved, true))
+        val KNIGHT = register("knight", PieceType('n', JumpMovement(knightDirs), assumeNotMoved, true))
+
+        private val pawnMoveScheme = PromotionMovement(PawnMovement(), listOf(QUEEN, ROOK, BISHOP, KNIGHT))
+
         @JvmField
-        val PAWN = GregChessModule.register("pawn", PieceType('p', PawnMovement(), pawnHasMoved, false))
+        val PAWN = register("pawn", PieceType('p', pawnMoveScheme, pawnHasMoved, false))
 
         fun chooseByChar(values: Collection<PieceType>, c: Char): PieceType =
             requireNotNull(values.firstOrNull { it.char == c.lowercaseChar() }) { "None of the pieces have character: '$c'" }

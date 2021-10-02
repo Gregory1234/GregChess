@@ -115,13 +115,29 @@ object KingMovement : MoveScheme {
 
 }
 
+class PromotionMovement(
+    private val base: MoveScheme,
+    private val promotions: (BoardPiece) -> List<Piece>?
+) : MoveScheme {
+    constructor(base: MoveScheme, promotions: List<PieceType>) : this(base, simplePromotions(promotions))
+
+    companion object {
+        fun simplePromotions(promotions: List<PieceType>): (BoardPiece) -> List<Piece>? = { p ->
+            if (p.pos.rank in listOf(0,7)) promotions.map { white(it) } else null
+        }
+    }
+
+    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = base.generate(piece, board).map {
+        val p = promotions(piece.copy(pos = it.getTrait<TargetTrait>()?.target ?: piece.pos))
+        if (p == null) it else it.copy(floor = Floor.SPECIAL, traits = it.traits + PromotionTrait(p))
+    }
+}
+
 
 class PawnMovement(
     private val canDouble: (BoardPiece) -> Boolean = { !it.hasMoved },
-    private val promotions: (BoardPiece) -> List<Piece> = { p -> defaultPromotions.map { it.of(p.color) } }
 ) : MoveScheme {
     companion object {
-        private val defaultPromotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
         @JvmField
         val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u })
         private val pawnOrder = with (MoveNameTokenType) {
@@ -187,10 +203,5 @@ class PawnMovement(
                 )
             }
         }
-    }.map {
-        if (it.getTrait<TargetTrait>()?.target?.rank in listOf(0, 7))
-            it.copy(floor = Floor.SPECIAL, traits = it.traits + PromotionTrait(promotions(piece)))
-        else
-            it
     }
 }

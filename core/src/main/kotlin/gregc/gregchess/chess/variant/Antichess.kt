@@ -12,7 +12,7 @@ object Antichess : ChessVariant() {
     private val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
 
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when (piece.type) {
-        PieceType.PAWN -> PawnMovement(promotions = { p -> promotions.map { it.of(p.color) } }).generate(piece, board)
+        PieceType.PAWN -> PromotionMovement(PawnMovement(), promotions).generate(piece, board)
         PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.getTrait<CastlesTrait>() == null }
         else -> Normal.getPieceMoves(piece, board)
     }

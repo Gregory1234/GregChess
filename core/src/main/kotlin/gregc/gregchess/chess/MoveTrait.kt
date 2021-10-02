@@ -97,8 +97,8 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
     var promoted: BoardPiece? = null
         private set
 
-    override val nameTokens =
-        listOfNotNull(promotion?.type?.let { AnyMoveNameToken(MoveNameTokenType.PROMOTION.of(it)) })
+    override val nameTokens
+        get() = listOfNotNull(promotion?.type?.let { AnyMoveNameToken(MoveNameTokenType.PROMOTION.of(it)) })
 
     override val shouldComeBefore = listOf(TargetTrait::class)
 
