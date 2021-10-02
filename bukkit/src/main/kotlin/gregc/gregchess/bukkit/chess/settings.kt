@@ -6,7 +6,6 @@ import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.component.componentDataClass
 import gregc.gregchess.chess.component.componentModule
 import gregc.gregchess.chess.variant.ChessVariant
-import net.axay.kspigot.items.*
 import org.bukkit.Material
 import org.bukkit.entity.Player
 

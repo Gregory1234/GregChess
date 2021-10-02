@@ -9,7 +9,6 @@ libraries:
   - org.jetbrains.kotlin:kotlin-reflect:@kotlin-version@
   - org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:@serialization-version@
   - org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:@coroutines-version@
-  - net.axay:kspigot:@kspigot-version@
 commands:
   chess:
     description: Main chess command

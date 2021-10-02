@@ -9,7 +9,6 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import net.axay.kspigot.chat.literalText
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
@@ -100,16 +99,16 @@ fun Player.showGameResults(color: Color, results: GameResults) {
 private val COPY_FEN = message("CopyFEN")
 
 fun Player.sendFEN(fen: FEN) {
-    spigot().sendMessage(literalText(COPY_FEN.get()) {
-        onClickCopy(fen.toString())
+    spigot().sendMessage(textComponent(COPY_FEN.get()) {
+        onClickCopy(fen)
     })
 }
 
 private val COPY_PGN = message("CopyPGN")
 
 fun Player.sendPGN(pgn: PGN) {
-    spigot().sendMessage(literalText(COPY_PGN.get()) {
-        onClickCopy(pgn.toString())
+    spigot().sendMessage(textComponent(COPY_PGN.get()) {
+        onClickCopy(pgn)
     })
 }
 

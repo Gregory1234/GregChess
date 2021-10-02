@@ -154,7 +154,7 @@ fun cWrongArgument(): Nothing = throw CommandException(WRONG_ARGUMENT)
 
 fun String.chatColor(): String = ChatColor.translateAlternateColorCodes('&', this)
 
-fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
+internal fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
 
 fun Duration.toTicks(): Long = toMillis() / 50
 
@@ -197,7 +197,7 @@ fun Duration.format(formatString: String): String? = try {
     null
 }
 
-val config: ConfigurationSection get() = GregChess.plugin.config
+internal val config: ConfigurationSection get() = GregChess.plugin.config
 
 fun ConfigurationSection.getPathString(path: String, vararg args: String) =
     getString(path)?.format(*args)?.chatColor() ?: ((currentPath ?: "") + "-" + path)

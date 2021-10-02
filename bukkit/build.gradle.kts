@@ -16,8 +16,8 @@ dependencies {
     api("org.spigotmc:spigot-api:$spigotVersion")
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
-    val kspigotVersion: String by project
-    implementation("net.axay:kspigot:$kspigotVersion")
+    val kotlinxCoroutinesVersion: String by project
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
     implementation(kotlin("reflect"))
     shaded(project(":core"))
 }
@@ -30,7 +30,6 @@ tasks {
         val kotlinVersion: String by project
         val kotlinxSerializationVersion: String by project
         val kotlinxCoroutinesVersion: String by project
-        val kspigotVersion: String by project
         val spigotMinecraftVersion: String by project
         from(sourceSets["main"].resources.srcDirs) {
             include("**/*.yml")
@@ -39,7 +38,6 @@ tasks {
                 "kotlin-version" to kotlinVersion,
                 "serialization-version" to kotlinxSerializationVersion,
                 "coroutines-version" to kotlinxCoroutinesVersion,
-                "kspigot-version" to kspigotVersion,
                 "minecraft-version" to spigotMinecraftVersion
             )
         }

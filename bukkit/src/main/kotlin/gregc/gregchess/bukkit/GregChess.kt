@@ -10,17 +10,17 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
-import net.axay.kspigot.main.KSpigot
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 import java.util.*
 
 object GregChess : Listener {
-    class Plugin : KSpigot(), BukkitChessPlugin {
+    class Plugin : JavaPlugin(), BukkitChessPlugin {
         companion object {
             lateinit var INSTANCE: Plugin
                 private set
@@ -30,11 +30,11 @@ object GregChess : Listener {
             INSTANCE = this
         }
 
-        override fun startup() {
+        override fun onEnable() {
             GregChess.onEnable()
         }
 
-        override fun shutdown() {
+        override fun onDisable() {
             GregChess.onDisable()
         }
 

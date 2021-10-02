@@ -6,8 +6,6 @@ import gregc.gregchess.bukkit.chess.component.arena
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
-import net.axay.kspigot.chat.literalText
-import net.axay.kspigot.items.*
 import org.bukkit.Material
 import org.bukkit.Sound
 
@@ -15,7 +13,7 @@ val Color.configName get() = name.snakeToPascal()
 
 fun PieceType.getItem(color: Color) = itemStack(itemMaterial[color]) {
     meta {
-        name = config.getPathString("Chess.Color.${color.configName}.Piece", this@getItem.localName)
+        name = config.getPathString("Chess.Color.${color.configName}.Piece", localName)
     }
 }
 
@@ -37,12 +35,12 @@ val MoveName.localName get() = joinToString("") { it.token.localName }
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
-fun BoardPiece.getInfo(game: ChessGame) = literalText {
+fun BoardPiece.getInfo(game: ChessGame) = textComponent {
     text("Type: $color $type\n")
     text("Position: $pos\n")
     text(if (hasMoved) "Has moved\n" else "Has not moved\n")
     text("Game: ${game.uuid}\n") {
-        onClickCopy(game.uuid.toString())
+        onClickCopy(game.uuid)
     }
     val moves = getLegalMoves(game.board)
     text("All moves: ${moves.joinToString { it.name.localName }}")
@@ -51,9 +49,9 @@ fun BoardPiece.getInfo(game: ChessGame) = literalText {
     }
 }
 
-fun ChessGame.getInfo() = literalText {
+fun ChessGame.getInfo() = textComponent {
     text("UUID: $uuid\n") {
-        onClickCopy(uuid.toString())
+        onClickCopy(uuid)
     }
     text("Players: ${players.toList().joinToString { "${it.name} as ${it.color.configName}" }}\n")
     text("Spectators: ${spectators.spectators.joinToString { it.name }}\n")

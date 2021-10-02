@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit
 
 import kotlinx.coroutines.launch
-import net.axay.kspigot.chat.literalText
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -47,7 +46,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     }
 
     private fun CommandSender.sendCommandMessage(msg: String, action: String, command: String) {
-        spigot().sendMessage(literalText {
+        spigot().sendMessage(textComponent {
             text(msg.chatColor())
             text(" ")
             text(action.chatColor()) {
