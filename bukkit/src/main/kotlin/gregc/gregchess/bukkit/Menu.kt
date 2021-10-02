@@ -16,8 +16,7 @@ class Menu<T>(
     private val content: List<ScreenOption<T>>,
     private val default: T
 ) : InventoryHolder {
-    // TODO: fix this
-    private val inv = Bukkit.createInventory(this, content.size - content.size % 9 + 9, name)
+    private val inv = Bukkit.createInventory(this, 9 * ((content.maxOfOrNull { it.position.y } ?: 0) + 1), name)
     var finished: Boolean = false
         private set
 
