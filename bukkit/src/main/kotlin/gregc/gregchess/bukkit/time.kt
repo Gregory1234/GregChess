@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit
 
-import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
 import kotlin.coroutines.resume
@@ -19,19 +18,6 @@ fun runTaskTimer(delay: Duration, period: Duration, callback: CancellableContext
             cc.callback()
         }
     }.runTaskTimer(GregChess.plugin, delay.toTicks(), period.toTicks())
-}
-
-// TODO: make this less confusing
-suspend fun toSync() = suspendCoroutine<Unit> {
-    Bukkit.getScheduler().runTask(GregChess.plugin, Runnable {
-        it.resume(Unit)
-    })
-}
-
-suspend fun toAsync() = suspendCoroutine<Unit> {
-    Bukkit.getScheduler().runTaskAsynchronously(GregChess.plugin, Runnable {
-        it.resume(Unit)
-    })
 }
 
 // TODO: consider switching to kotlin.time

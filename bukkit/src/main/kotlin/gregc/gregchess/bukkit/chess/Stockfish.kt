@@ -4,7 +4,11 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.DurationSerializer
 import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.coroutines.BukkitContext
+import gregc.gregchess.bukkit.coroutines.BukkitDispatcher
 import gregc.gregchess.chess.*
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
 import java.util.concurrent.*
 
@@ -63,20 +67,22 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
         readLine()
     }
 
-    override suspend fun getMove(fen: FEN): String {
-        toAsync()
-        sendCommand("position fen $fen")
-        sendCommand("go movetime " + moveTime.toMillis())
-        while (true) {
-            val line = readLine().split(" ")
-            if (line[0] == "bestmove") {
-                if (line[1] != "(none)") {
-                    toSync()
-                    return line[1]
-                } else {
-                    throw NoEngineMoveException(fen)
+    override suspend fun getMove(fen: FEN): String =
+        withContext(BukkitDispatcher(GregChess.plugin, BukkitContext.ASYNC)) {
+            sendCommand("position fen $fen")
+            sendCommand("go movetime " + moveTime.toMillis())
+            var ret: String? = null
+            while (isActive) {
+                val line = readLine().split(" ")
+                if (line[0] == "bestmove") {
+                    if (line[1] != "(none)") {
+                        ret = line[1]
+                        break
+                    } else {
+                        throw NoEngineMoveException(fen)
+                    }
                 }
             }
+            ret ?: throw NoEngineMoveException(fen)
         }
-    }
 }
