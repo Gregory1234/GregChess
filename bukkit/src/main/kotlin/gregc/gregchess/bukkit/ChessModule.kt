@@ -22,8 +22,8 @@ object BukkitRegistryTypes {
     val PROPERTY_TYPE = NameRegistryType<PropertyType>("property_type")
     @JvmField
     val SETTINGS_PARSER =
-        SingleConnectedRegistryType<KClass<out ComponentData<*>>, SettingsParser<out ComponentData<*>>>(
-            "settings_parser", RegistryType.COMPONENT_DATA_CLASS
+        SingleConnectedRegistryType<KClass<out Component>, SettingsParser<out ComponentData<*>>>(
+            "settings_parser", RegistryType.COMPONENT_CLASS
         )
     @JvmField
     val MOVE_NAME_TOKEN_STRING = SingleConnectedRegistryType<MoveNameTokenType<*>, MoveNameTokenInterpreter<*>>(
@@ -34,14 +34,17 @@ object BukkitRegistryTypes {
 fun ChessModule.register(id: String, propertyType: PropertyType) =
     register(BukkitRegistryTypes.PROPERTY_TYPE, id, propertyType)
 
-inline fun <reified T : ComponentData<*>> ChessModule.registerSettings(noinline settings: SettingsParser<T>) =
+inline fun <reified T : Component> ChessModule.registerSettings(noinline settings: SettingsParser<ComponentData<T>>) =
     register(BukkitRegistryTypes.SETTINGS_PARSER, T::class, settings)
 
-fun <T : ComponentData<*>> ChessModule.registerConstSettings(cl: KClass<T>, settings: T) =
+fun <T : Component> ChessModule.registerConstSettings(cl: KClass<T>, settings: ComponentData<T>) =
     register(BukkitRegistryTypes.SETTINGS_PARSER, cl) { settings }
 
-inline fun <reified T : ComponentData<*>> ChessModule.registerConstSettings(settings: T) =
+inline fun <reified T : Component> ChessModule.registerConstSettings(settings: ComponentData<T>) =
     registerConstSettings(T::class, settings)
+
+inline fun <reified T : SimpleComponent> ChessModule.registerSimpleSettings() =
+    registerConstSettings(T::class, SimpleComponentData(T::class))
 
 fun <T : Any> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameTokenInterpreter<T> = token.toPgnString) =
     register(BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING, token, str)
@@ -96,13 +99,13 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
                 TimeControl.parseOrNull(it)?.let { t -> ChessClockData(t) }
             }
         }
-        registerConstSettings(PlayerManagerData)
-        registerConstSettings(SpectatorManagerData)
-        registerConstSettings(ScoreboardManagerData)
+        registerSimpleSettings<PlayerManager>()
+        registerSimpleSettings<SpectatorManager>()
+        registerSimpleSettings<ScoreboardManager>()
         registerSettings { BukkitRendererSettings() }
-        registerConstSettings(BukkitEventRelayData)
+        registerSimpleSettings<BukkitEventRelay>()
         registerSettings { ThreeChecks.CheckCounterData(section.getInt("CheckLimit", 3).toUInt()) }
-        registerConstSettings(BukkitGregChessAdapterData)
+        registerSimpleSettings<BukkitGregChessAdapter>()
     }
 
     private fun registerMoveNameTokenStrings() = with(GregChessModule) {
@@ -118,12 +121,12 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
     }
 
     private fun registerComponents() = with(GregChessModule) {
-        registerComponent<BukkitEventRelay, BukkitEventRelayData>("bukkit_event_relay")
-        registerComponent<BukkitGregChessAdapter, BukkitGregChessAdapterData>("bukkit_adapter")
+        registerSimpleComponent<BukkitEventRelay>("bukkit_event_relay")
+        registerSimpleComponent<BukkitGregChessAdapter>("bukkit_adapter")
         registerComponent<BukkitRenderer, BukkitRendererSettings>("bukkit_renderer")
-        registerComponent<PlayerManager, PlayerManagerData>("player_manager")
-        registerComponent<ScoreboardManager, ScoreboardManagerData>("scoreboard_manager")
-        registerComponent<SpectatorManager, SpectatorManagerData>("spectator_manager")
+        registerSimpleComponent<PlayerManager>("player_manager")
+        registerSimpleComponent<ScoreboardManager>("scoreboard_manager")
+        registerSimpleComponent<SpectatorManager>("spectator_manager")
     }
 
     private fun registerPlayerTypes() = with(GregChessModule) {

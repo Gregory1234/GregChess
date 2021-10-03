@@ -2,21 +2,14 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.chess.showGameResults
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.ComponentData
-import kotlinx.serialization.Serializable
+import gregc.gregchess.chess.component.SimpleComponent
 import org.bukkit.entity.Player
 
 data class SpectatorEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
 class SpectatorNotFoundException(player: Player) : Exception(player.name)
 
-@Serializable
-object SpectatorManagerData : ComponentData<SpectatorManager> {
-    override fun getComponent(game: ChessGame) = SpectatorManager(game, this)
-}
-
-class SpectatorManager(game: ChessGame, override val data: SpectatorManagerData) : Component(game) {
+class SpectatorManager(game: ChessGame) : SimpleComponent(game) {
 
     private val spectatorList = mutableListOf<Player>()
 

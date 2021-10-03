@@ -4,19 +4,21 @@ import gregc.gregchess.Loc
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.toLocation
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.ComponentData
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.AtomicChess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.Material
 import org.bukkit.World
 import kotlin.math.floor
+import kotlin.reflect.KClass
 
 @Serializable
 data class BukkitRendererSettings(
     @Transient val arena: Arena = Arena.cNextArena()
 ) : ComponentData<BukkitRenderer> {
+    override val componentClass: KClass<out BukkitRenderer> get() = BukkitRenderer::class
+
     override fun getComponent(game: ChessGame) = BukkitRenderer(game, this)
 }
 

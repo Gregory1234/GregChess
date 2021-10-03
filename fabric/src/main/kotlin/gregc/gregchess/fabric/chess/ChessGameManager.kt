@@ -2,6 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.ChessboardState
+import gregc.gregchess.chess.component.SimpleComponentData
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.chess.component.*
@@ -59,7 +60,7 @@ object ChessGameManager {
     fun settings(v: ChessVariant, boardState: Map<Pos, Piece>, r: FabricRendererSettings): GameSettings {
         val components = buildList {
             this += ChessboardState(v, FEN.fromPieces(boardState))
-            this += PlayerManagerData
+            this += SimpleComponentData(PlayerManager::class)
             this += r
         }
         return GameSettings("", false, ChessVariant.Normal, components)

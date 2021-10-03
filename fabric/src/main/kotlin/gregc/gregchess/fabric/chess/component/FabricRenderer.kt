@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import kotlin.reflect.KClass
 
 @Serializable
 data class FabricRendererSettings(
@@ -24,6 +25,8 @@ data class FabricRendererSettings(
         get() = world.getBlockEntity(controllerLoc.blockpos) as ChessControllerBlockEntity
 
     val floor: List<ChessboardFloorBlockEntity> get() = controller.floorBlockEntities
+
+    override val componentClass: KClass<out FabricRenderer> get() = FabricRenderer::class
 
     override fun getComponent(game: ChessGame) = FabricRenderer(game, this)
 }

@@ -3,7 +3,6 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.GameSettings
-import gregc.gregchess.chess.component.componentDataClass
 import gregc.gregchess.chess.component.componentModule
 import gregc.gregchess.chess.variant.ChessVariant
 import org.bukkit.Material
@@ -23,7 +22,7 @@ object SettingsManager {
                     ChessModule.modules.flatMap { it.bukkit.hookedComponents }
             val context = SettingsParserContext(variant, section)
             val components = requestedComponents.mapNotNull { req ->
-                val f = BukkitRegistryTypes.SETTINGS_PARSER[req.componentModule, req.componentDataClass]
+                val f = BukkitRegistryTypes.SETTINGS_PARSER[req.componentModule, req]
                 context.f()
             }
             GameSettings(name, simpleCastling, variant, components)

@@ -67,7 +67,7 @@ object FabricGregChessModule : FabricChessExtension(GregChessModule) {
 
     private fun registerComponents() = with(GregChessModule) {
         registerComponent<FabricRenderer, FabricRendererSettings>("fabric_renderer")
-        registerComponent<PlayerManager, PlayerManagerData>("player_manager")
+        registerSimpleComponent<PlayerManager>("player_manager")
     }
 
     override fun load() {

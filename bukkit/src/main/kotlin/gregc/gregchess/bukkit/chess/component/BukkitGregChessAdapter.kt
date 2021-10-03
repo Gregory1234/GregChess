@@ -6,16 +6,11 @@ import gregc.gregchess.bukkit.chess.AddPropertiesEvent
 import gregc.gregchess.bukkit.chess.PropertyType
 import gregc.gregchess.chess.ChessEventHandler
 import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.chess.component.TimeControl
 import gregc.gregchess.chess.variant.ThreeChecks
-import kotlinx.serialization.Serializable
 
-@Serializable
-object BukkitGregChessAdapterData : ComponentData<BukkitGregChessAdapter> {
-    override fun getComponent(game: ChessGame) = BukkitGregChessAdapter(game, this)
-}
-
-class BukkitGregChessAdapter(game: ChessGame, override val data: BukkitGregChessAdapterData) : Component(game) {
+class BukkitGregChessAdapter(game: ChessGame) : SimpleComponent(game) {
 
     companion object {
         @JvmField

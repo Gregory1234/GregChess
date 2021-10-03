@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
+import kotlin.reflect.KClass
 
 class SetFenEvent(val FEN: FEN) : ChessEvent
 
@@ -25,6 +26,8 @@ data class ChessboardState(
     private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toPieces(variant.pieceTypes))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960))
+
+    override val componentClass: KClass<out Chessboard> get() = Chessboard::class
 
     override fun getComponent(game: ChessGame) = Chessboard(game, this)
 

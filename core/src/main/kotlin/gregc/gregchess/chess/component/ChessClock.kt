@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import java.time.Duration
 import java.time.LocalDateTime
+import kotlin.reflect.KClass
 
 @Serializable
 data class TimeControl(
@@ -44,6 +45,8 @@ data class ChessClockData(
     val timeRemaining: ByColor<Duration> = byColor(timeControl.initialTime),
     val currentTurnLength: Duration = 0.seconds
 ) : ComponentData<ChessClock> {
+    override val componentClass: KClass<out ChessClock> get() = ChessClock::class
+
     override fun getComponent(game: ChessGame) = ChessClock(game, this)
 }
 

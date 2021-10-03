@@ -4,6 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.variant.ChessVariant
+import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 
 interface RegistryView<K, T> {
@@ -71,8 +72,12 @@ abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) : Enu
         @JvmField
         val COMPONENT_CLASS = NameRegistryType<KClass<out Component>>("component_class")
         @JvmField
-        val COMPONENT_DATA_CLASS = ConnectedRegistryType<KClass<out Component>, KClass<out ComponentData<*>>>(
+        val COMPONENT_DATA_CLASS = SingleConnectedRegistryType<KClass<out Component>, KClass<out ComponentData<*>>>(
             "component_data_class", COMPONENT_CLASS
+        )
+        @JvmField
+        val COMPONENT_SERIALIZER = SingleConnectedRegistryType<KClass<out Component>, KSerializer<out ComponentData<*>>>(
+            "component_serializer", COMPONENT_CLASS
         )
         @JvmField
         val MOVE_TRAIT_CLASS = NameRegistryType<KClass<out MoveTrait>>("move_trait_class")
