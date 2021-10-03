@@ -40,26 +40,27 @@ object ThreeChecks : ChessVariant() {
     }
 
     @Serializable
-    class CheckCounterTrait(var checkRegistered: Boolean = false) : MoveTrait {
+    class CheckCounterTrait : MoveTrait {
+
+        override val shouldComeLast: Boolean = true
+
         override val nameTokens: MoveName = nameOf()
 
-        override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
-            if (remaining.all { it is CheckTrait || it is CheckCounterTrait }) {
-                game.board.updateMoves()
-                if (game.variant.isInCheck(game, !move.piece.color)) {
-                    game.requireComponent<CheckCounter>().registerCheck(!move.piece.color)
-                    checkRegistered = true
-                }
-                return true
+        var checkRegistered: Boolean = false
+            private set
+
+        override fun execute(game: ChessGame, move: Move) {
+            game.board.updateMoves()
+            if (game.variant.isInCheck(game, !move.piece.color)) {
+                game.requireComponent<CheckCounter>().registerCheck(!move.piece.color)
+                checkRegistered = true
             }
-            return false
         }
 
-        override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
+        override fun undo(game: ChessGame, move: Move) {
             if (checkRegistered) {
                 game.requireComponent<CheckCounter>().removeCheck(!move.piece.color)
             }
-            return true
         }
     }
 

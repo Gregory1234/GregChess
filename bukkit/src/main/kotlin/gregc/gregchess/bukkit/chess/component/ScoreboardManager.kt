@@ -68,6 +68,8 @@ class ScoreboardManager(game: ChessGame, override val data: ScoreboardManagerDat
 
     @ChessEventHandler
     fun onStop(e: GameStopStageEvent) {
+        if (e == GameStopStageEvent.STOP)
+            update()
         if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC)
             stop()
     }

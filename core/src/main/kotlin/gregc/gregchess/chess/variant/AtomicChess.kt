@@ -20,11 +20,10 @@ object AtomicChess : ChessVariant() {
             exploded += capture(by, board)
         }
 
-        override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
-            val captureTrait = move.getTrait<CaptureTrait>() ?: return true
-            val targetTrait = move.getTrait<TargetTrait>() ?: return true
-            if (captureTrait.captured == null)
-                return true
+        override fun execute(game: ChessGame, move: Move) {
+            val captureTrait = move.getTrait<CaptureTrait>() ?: throw TraitPreconditionException(this, "No capture trait")
+            val targetTrait = move.getTrait<TargetTrait>() ?: throw TraitPreconditionException(this, "No target trait")
+            if (captureTrait.captured == null) return
             val pos = targetTrait.target
             game.board[pos]?.piece?.explode(move.piece.color, game.board)
             game.board[pos]?.neighbours()?.forEach {
@@ -32,16 +31,12 @@ object AtomicChess : ChessVariant() {
                     it.piece?.explode(move.piece.color, game.board)
             }
             game.callEvent(ExplosionEvent(pos))
-            return true
         }
 
-        override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
+        override fun undo(game: ChessGame, move: Move) = tryPiece {
             for (p in exploded) {
-                if (game.board[p.pos]?.piece != null)
-                    return false
                 p.resurrect(game.board)
             }
-            return true
         }
     }
 

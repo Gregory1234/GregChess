@@ -31,8 +31,14 @@ data class Move(
                     false
                 else if (remainingTraits.any { mt::class in it.shouldComeAfter })
                     false
-                else
-                    mt.execute(game, this, remainingTraits)
+                else if (!mt.shouldComeFirst && remainingTraits.any { it.shouldComeFirst })
+                    false
+                else if (mt.shouldComeLast && remainingTraits.any { !it.shouldComeLast })
+                    false
+                else {
+                    mt.execute(game, this)
+                    true
+                }
             }
             if (remainingTraits.isEmpty()) {
                 // TODO: move this into traits
@@ -55,8 +61,14 @@ data class Move(
                     false
                 else if (remainingTraits.any { mt::class in it.shouldComeBefore })
                     false
-                else
-                    mt.undo(game, this, remainingTraits)
+                else if (!mt.shouldComeLast && remainingTraits.any { it.shouldComeLast })
+                    false
+                else if (mt.shouldComeFirst && remainingTraits.any { !it.shouldComeFirst })
+                    false
+                else {
+                    mt.undo(game, this)
+                    true
+                }
             }
             if (remainingTraits.isEmpty()) {
                 return
