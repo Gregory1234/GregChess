@@ -151,16 +151,17 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 }
 
 @Serializable(with = CapturedBoardPiece.Serializer::class)
-data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece) {
-    constructor(piece: BoardPiece, capturedPos: CapturedPos) : this(piece, CapturedPiece(piece.piece, capturedPos))
+data class CapturedBoardPiece(val boardPiece: BoardPiece, val captured: CapturedPiece) {
+    constructor(boardPiece: BoardPiece, capturedPos: CapturedPos) : this(boardPiece, CapturedPiece(boardPiece.piece, capturedPos))
 
     init {
-        require(piece.piece == captured.piece) { "Bad piece types" }
+        require(boardPiece.piece == captured.piece) { "Bad piece types" }
     }
 
-    val type: PieceType get() = piece.type
-    val color: Color get() = piece.color
-    val pos: Pos get() = piece.pos
+    val piece: Piece get() = boardPiece.piece
+    val type: PieceType get() = boardPiece.type
+    val color: Color get() = boardPiece.color
+    val pos: Pos get() = boardPiece.pos
 
     override fun toString(): String = "CapturedBoardPiece(piece=$piece, pos=$pos, captured.pos=${captured.pos})"
 
@@ -169,9 +170,9 @@ data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece
             throw PieceAlreadyOccupiesSquareException(it)
         }
         board -= captured
-        board += piece
+        board += boardPiece
         board.callEvent(PieceEvent.Resurrected(this))
-        return piece
+        return boardPiece
     }
 
     object Serializer : KSerializer<CapturedBoardPiece> {
@@ -183,9 +184,9 @@ data class CapturedBoardPiece(val piece: BoardPiece, val captured: CapturedPiece
         }
 
         override fun serialize(encoder: Encoder, value: CapturedBoardPiece) = encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, Piece.serializer(), value.piece.piece)
+            encodeSerializableElement(descriptor, 0, Piece.serializer(), value.piece)
             encodeSerializableElement(descriptor, 1, Pos.serializer(), value.pos)
-            encodeBooleanElement(descriptor, 2, value.piece.hasMoved)
+            encodeBooleanElement(descriptor, 2, value.boardPiece.hasMoved)
             encodeSerializableElement(descriptor, 3, CapturedPos.serializer(), value.captured.pos)
         }
 

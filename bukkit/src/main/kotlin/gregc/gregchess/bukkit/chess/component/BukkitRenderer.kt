@@ -140,18 +140,18 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
                 e.piece.playSound("Move")
             }
             is PieceEvent.Captured -> {
-                e.piece.piece.clearRender()
+                e.piece.boardPiece.clearRender()
                 e.piece.captured.render()
-                e.piece.piece.playSound("Capture")
+                e.piece.boardPiece.playSound("Capture")
             }
             is PieceEvent.Promoted -> {
                 e.piece.clearRender()
                 e.promotion.render()
             }
             is PieceEvent.Resurrected -> {
-                e.piece.piece.render()
+                e.piece.boardPiece.render()
                 e.piece.captured.clearRender()
-                e.piece.piece.playSound("Move")
+                e.piece.boardPiece.playSound("Move")
             }
             is PieceEvent.MultiMoved -> {
                 for ((o, _) in e.moves) {

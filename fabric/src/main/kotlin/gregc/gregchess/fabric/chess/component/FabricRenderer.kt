@@ -76,7 +76,7 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
             }
             is PieceEvent.Captured -> {
                 val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
-                pieceBlock?.safeBreak(!data.controller.addPiece(e.piece.piece.piece))
+                pieceBlock?.safeBreak(!data.controller.addPiece(e.piece.piece))
             }
             is PieceEvent.Promoted -> {
                 val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
@@ -88,11 +88,10 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
             }
             is PieceEvent.Resurrected -> {
                 // TODO: handle this better
-                // TODO: change names of e.piece.piece.piece
-                check(data.controller.removePiece(e.piece.piece.piece)) { "Not enough pieces in the controller" }
+                check(data.controller.removePiece(e.piece.piece)) { "Not enough pieces in the controller" }
                 val newBlockPos = tileBlocks[e.piece.pos]?.randomOrNull()?.pos
                 if (newBlockPos != null)
-                    e.piece.piece.place(newBlockPos)
+                    e.piece.boardPiece.place(newBlockPos)
             }
             is PieceEvent.MultiMoved -> {
                 for ((o, _) in e.moves) {
