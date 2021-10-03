@@ -14,6 +14,8 @@ data class FEN(
     val chess960: Boolean = false
 ) {
 
+    class FENFormatException(val fen: String, cause: Throwable? = null) : IllegalArgumentException(fen, cause)
+
     private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): BoardPiece {
         val type = PieceType.chooseByChar(pieceTypes, this)
         val color = if (isUpperCase()) Color.WHITE else Color.BLACK
@@ -105,8 +107,7 @@ data class FEN(
             return false
         }
 
-        // TODO: make the error messages better and block exceptions from called functions
-        fun parseFromString(fen: String): FEN {
+        fun parseFromString(fen: String): FEN = try {
             val parts = fen.split(" ")
             require(parts.size == 6) { "Wrong number of parts in FEN, expected 6: \"$fen\""}
             val (board, turn, castling, enPassant, halfmove, fullmove) = parts
@@ -116,7 +117,7 @@ data class FEN(
             require(halfmove.toInt() >= 0) { "Halfmove clock can't be negative: $halfmove" }
             requireNotNull(fullmove.toIntOrNull()) { "Fullmove clock has to be an integer: $fullmove" }
             require(fullmove.toInt() >= 0) { "Fullmove counter has to be positive: $fullmove" }
-            return FEN(
+            FEN(
                 board,
                 Color.parseFromChar(turn[0]),
                 byColor(
@@ -128,6 +129,8 @@ data class FEN(
                 fullmove.toUInt(),
                 detectChess960(board, castling)
             )
+        } catch (e : IllegalArgumentException) {
+            throw FENFormatException(fen, e)
         }
 
         fun generateChess960(): FEN {
@@ -176,7 +179,7 @@ data class FEN(
             }
         }
 
-        fun fromPieces(pieces: Map<Pos, Piece>, currentTurn: Color = Color.WHITE, ): FEN {
+        fun fromPieces(pieces: Map<Pos, Piece>, currentTurn: Color = Color.WHITE): FEN {
             val state = boardStateFromPieces(pieces)
             val rows = state.split("/")
             val castling = byColor {

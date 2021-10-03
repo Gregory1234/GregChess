@@ -40,9 +40,8 @@ data class ChessboardState(
             else -> {
                 if (name.startsWith("fen ")) try {
                     ChessboardState(variant, FEN.parseFromString(name.drop(4)))
-                } catch (e: IllegalArgumentException) {
-                    // TODO: display the error message
-                    GregChessModule.logger.warn("Chessboard configuration ${name.drop(4)} is in a wrong format, defaulted to normal!")
+                } catch (e: FEN.FENFormatException) {
+                    GregChessModule.logger.warn("Chessboard configuration ${e.fen} is in a wrong format, defaulted to normal: ${e.cause?.message}!")
                     ChessboardState(variant)
                 } else {
                     GregChessModule.logger.warn("Invalid chessboard configuration $name, defaulted to normal!")

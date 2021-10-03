@@ -20,7 +20,7 @@ object AtomicChess : ChessVariant() {
             exploded += capture(by, board)
         }
 
-        override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
             val captureTrait = move.getTrait<CaptureTrait>() ?: return true
             val targetTrait = move.getTrait<TargetTrait>() ?: return true
             if (captureTrait.captured == null)
@@ -35,7 +35,7 @@ object AtomicChess : ChessVariant() {
             return true
         }
 
-        override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
             for (p in exploded) {
                 if (game.board[p.pos]?.piece != null)
                     return false

@@ -8,29 +8,42 @@ import kotlin.reflect.KClass
 class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>) :
     Exception(traits.toList().map { RegistryType.MOVE_TRAIT_CLASS[it::class] }.toString())
 
+class TraitPreconditionException(trait: MoveTrait, message: String, cause: Throwable? = null) :
+    IllegalStateException("${trait::class.traitKey}: $message", cause)
+
 @Serializable(with = MoveTraitSerializer::class)
 interface MoveTrait {
     val shouldComeBefore: Collection<KClass<out MoveTrait>> get() = emptyList()
     val shouldComeAfter: Collection<KClass<out MoveTrait>> get() = emptyList()
     val nameTokens: List<AnyMoveNameToken>
     fun setup(game: ChessGame, move: Move) {}
-    // TODO: throw exceptions instead of returning false when preconditions aren't met
-    // TODO: remove pass, remaining, and return value
-    fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
-    fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean = true
+    // TODO: remove remaining and return value
+    fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean = true
+    fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean = true
 }
 
-inline fun tryPiece(f: () -> Unit): Boolean =
+private inline fun MoveTrait.tryPiece(f: () -> Unit): Boolean =
     try {
         f()
         true
     } catch (e: PieceDoesNotExistException) {
-        false
+        throw pieceNotExist(e)
     } catch (e: PieceAlreadyOccupiesSquareException) {
-        false
+        pieceOccupiesSquare(e)
     }
 
 object MoveTraitSerializer : ClassRegisteredSerializer<MoveTrait>("MoveTrait", RegistryType.MOVE_TRAIT_CLASS)
+
+private fun MoveTrait.pieceNotExist(e: PieceDoesNotExistException): Nothing =
+    throw TraitPreconditionException(this, "Piece ${e.piece.piece} doesn't exist at ${e.piece.pos}!", e)
+private fun MoveTrait.pieceOccupiesSquare(e: PieceAlreadyOccupiesSquareException): Nothing =
+    throw TraitPreconditionException(this, "Piece ${e.piece.piece} occupies square ${e.piece.pos}!", e)
+private fun MoveTrait.traitNotExecuted(): Nothing =
+    throw TraitPreconditionException(this, "Trait hasn't executed")
+
+val KClass<out MoveTrait>.traitKey get() = RegistryType.MOVE_TRAIT_CLASS[this]
+val KClass<out MoveTrait>.traitModule get() = traitKey.module
+val KClass<out MoveTrait>.traitName get() = traitKey.key
 
 @Serializable
 class DefaultHalfmoveClockTrait : MoveTrait {
@@ -40,7 +53,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
     private var halfmoveClock: UInt = 0u
 
-    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+    override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
         halfmoveClock = game.board.halfmoveClock
         if (move.piece.type == PieceType.PAWN || move.getTrait<CaptureTrait>()?.captured != null) {
             game.board.halfmoveClock = 0u
@@ -50,7 +63,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
         return true
     }
 
-    override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+    override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
         game.board.halfmoveClock = halfmoveClock
         return true
     }
@@ -66,27 +79,23 @@ class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, v
     var rookResulting: BoardPiece? = null
         private set
 
-    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        return tryPiece {
-            BoardPiece.autoMove(mapOf(move.piece to target, rook to rookTarget), game.board).map { (o, t) ->
-                when (o) {
-                    rook -> rookResulting = t
-                    move.piece -> resulting = t
-                }
+    override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean = tryPiece {
+        BoardPiece.autoMove(mapOf(move.piece to target, rook to rookTarget), game.board).map { (o, t) ->
+            when (o) {
+                rook -> rookResulting = t
+                move.piece -> resulting = t
             }
         }
     }
 
-    override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        return tryPiece {
-            BoardPiece.autoMove(
-                mapOf(
-                    (resulting ?: return false) to move.piece.pos,
-                    (rookResulting ?: return false) to rook.pos
-                ), game.board
-            ).map { (_, t) ->
-                t.copyInPlace(game.board, hasMoved = false)
-            }
+    override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>) = tryPiece {
+        BoardPiece.autoMove(
+            mapOf(
+                (resulting ?: traitNotExecuted()) to move.piece.pos,
+                (rookResulting ?: traitNotExecuted()) to rook.pos
+            ), game.board
+        ).map { (_, t) ->
+            t.copyInPlace(game.board, hasMoved = false)
         }
     }
 }
@@ -104,21 +113,18 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
 
     override val shouldComeBefore = listOf(TargetTrait::class)
 
-    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        val promotion = promotion ?: return false
-        if (promotion !in promotions)
-            return false
+    override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
+        val promotion = promotion ?: throw TraitPreconditionException(this, "Promotion not chosen", NullPointerException())
+        if (promotion !in promotions) throw TraitPreconditionException(this, "Promotion not valid: $promotion")
         return tryPiece {
             promoted = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).promote(promotion, game.board)
         }
     }
 
-    override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        return tryPiece {
-            val promoted = promoted ?: return false
-            promoted.promote(move.piece.piece, game.board)
-                .copyInPlace(game.board, hasMoved = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).hasMoved)
-        }
+    override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean = tryPiece {
+        val promoted = promoted ?: traitNotExecuted()
+        promoted.promote(move.piece.piece, game.board)
+            .copyInPlace(game.board, hasMoved = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).hasMoved)
     }
 }
 
@@ -143,7 +149,7 @@ class CheckTrait : MoveTrait {
 
     override val nameTokens: MutableTokenList = emptyTokenList()
 
-    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+    override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
         if (remaining.all { it is CheckTrait }) {
             if (nameTokens.isEmpty())
                 checkForChecks(move.piece.color, game)?.let { nameTokens += it }
@@ -160,20 +166,15 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, var capt
     override val nameTokens get() =
         listOfNotNull(AnyMoveNameToken(MoveNameTokenType.CAPTURE.mk).takeIf { captured != null })
 
-    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+    override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
         game.board[capture]?.piece?.let {
             captured = it.capture(move.piece.color, game.board)
         }
         return true
     }
 
-    override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
-        captured?.let {
-            if (game.board[it.pos]?.piece != null)
-                return false
-            it.resurrect(game.board)
-        }
-        return true
+    override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>) = tryPiece {
+        captured?.resurrect(game.board)
     }
 }
 
@@ -227,15 +228,15 @@ class TargetTrait(val target: Pos) : MoveTrait {
     var resulting: BoardPiece? = null
         private set
 
-    override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+    override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
         return tryPiece {
             resulting = move.piece.move(target, game.board)
         }
     }
 
-    override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+    override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
         return tryPiece {
-            (resulting ?: return false).move(move.piece.pos, game.board)
+            (resulting ?: traitNotExecuted()).move(move.piece.pos, game.board)
                 .copyInPlace(game.board, hasMoved = move.piece.hasMoved)
         }
     }

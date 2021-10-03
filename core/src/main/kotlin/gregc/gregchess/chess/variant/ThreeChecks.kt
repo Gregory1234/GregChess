@@ -43,7 +43,7 @@ object ThreeChecks : ChessVariant() {
     class CheckCounterTrait(var checkRegistered: Boolean = false) : MoveTrait {
         override val nameTokens: MoveName = nameOf()
 
-        override fun execute(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        override fun execute(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
             if (remaining.all { it is CheckTrait || it is CheckCounterTrait }) {
                 game.board.updateMoves()
                 if (game.variant.isInCheck(game, !move.piece.color)) {
@@ -55,7 +55,7 @@ object ThreeChecks : ChessVariant() {
             return false
         }
 
-        override fun undo(game: ChessGame, move: Move, pass: UByte, remaining: List<MoveTrait>): Boolean {
+        override fun undo(game: ChessGame, move: Move, remaining: List<MoveTrait>): Boolean {
             if (checkRegistered) {
                 game.requireComponent<CheckCounter>().removeCheck(!move.piece.color)
             }

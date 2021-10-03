@@ -22,7 +22,7 @@ data class Move(
     fun setup(game: ChessGame) {
         traits.forEach { it.setup(game, this) }
     }
-
+    // TODO: try to recover from exceptions
     fun execute(game: ChessGame) {
         var remainingTraits = traits
         for (pass in 0u..255u) {
@@ -32,7 +32,7 @@ data class Move(
                 else if (remainingTraits.any { mt::class in it.shouldComeAfter })
                     false
                 else
-                    mt.execute(game, this, pass.toUByte(), remainingTraits)
+                    mt.execute(game, this, remainingTraits)
             }
             if (remainingTraits.isEmpty()) {
                 // TODO: move this into traits
@@ -56,7 +56,7 @@ data class Move(
                 else if (remainingTraits.any { mt::class in it.shouldComeBefore })
                     false
                 else
-                    mt.undo(game, this, pass.toUByte(), remainingTraits)
+                    mt.undo(game, this, remainingTraits)
             }
             if (remainingTraits.isEmpty()) {
                 return
