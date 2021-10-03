@@ -5,6 +5,7 @@ import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.*
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
+import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 
 class ChessModuleValidationException(val module: ChessModule, val text: String) : IllegalStateException("$module: $text")
@@ -100,21 +101,30 @@ fun <T : Any> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenT
     register(RegistryType.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
 
 @OptIn(InternalSerializationApi::class)
-inline fun <reified T : Component, reified D : ComponentData<T>> ChessModule.registerComponent(id: String) {
-    T::class.companionObjectInstance
-    D::class.companionObjectInstance
-    register(RegistryType.COMPONENT_CLASS, id, T::class)
-    register(RegistryType.COMPONENT_DATA_CLASS, T::class, D::class)
-    register(RegistryType.COMPONENT_SERIALIZER, T::class, D::class.serializer())
+fun <T : Component, D : ComponentData<T>> ChessModule.registerComponent(
+    id: String, tcl: KClass<T>, dcl: KClass<D>
+) {
+    tcl.companionObjectInstance
+    dcl.companionObjectInstance
+    register(RegistryType.COMPONENT_CLASS, id, tcl)
+    register(RegistryType.COMPONENT_DATA_CLASS, tcl, dcl)
+    register(RegistryType.COMPONENT_SERIALIZER, tcl, dcl.serializer())
+}
+
+inline fun <reified T : Component, reified D : ComponentData<T>> ChessModule.registerComponent(id: String) =
+    registerComponent(id, T::class, D::class)
+
+@OptIn(InternalSerializationApi::class)
+fun <T : SimpleComponent> ChessModule.registerSimpleComponent(id: String, tcl: KClass<T>) {
+    tcl.companionObjectInstance
+    register(RegistryType.COMPONENT_CLASS, id, tcl)
+    register(RegistryType.COMPONENT_DATA_CLASS, tcl, SimpleComponentData::class)
+    register(RegistryType.COMPONENT_SERIALIZER, tcl, SimpleComponentDataSerializer(tcl))
 }
 
 @OptIn(InternalSerializationApi::class)
-inline fun <reified T : SimpleComponent> ChessModule.registerSimpleComponent(id: String) {
-    T::class.companionObjectInstance
-    register(RegistryType.COMPONENT_CLASS, id, T::class)
-    register(RegistryType.COMPONENT_DATA_CLASS, T::class, SimpleComponentData::class)
-    register(RegistryType.COMPONENT_SERIALIZER, T::class, SimpleComponentDataSerializer(T::class))
-}
+inline fun <reified T : SimpleComponent> ChessModule.registerSimpleComponent(id: String) =
+    registerSimpleComponent(id, T::class)
 
 inline fun <reified T : MoveTrait> ChessModule.registerMoveTrait(id: String) =
     register(RegistryType.MOVE_TRAIT_CLASS, id, T::class)
