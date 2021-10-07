@@ -77,7 +77,7 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
 
     private val clockSettings: Map<String, ChessClockData>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
-            val section = gregc.gregchess.bukkit.config.getConfigurationSection("Settings.Clock.$it")!!
+            val section = config.getConfigurationSection("Settings.Clock.$it")!!
             val t = TimeControl.Type.valueOf(section.getString("Type", TimeControl.Type.INCREMENT.toString())!!)
             val initial = section.getString("Initial")?.asDurationOrNull()!!
             val increment = if (t.usesIncrement) section.getString("Increment")?.asDurationOrNull()!! else 0.seconds

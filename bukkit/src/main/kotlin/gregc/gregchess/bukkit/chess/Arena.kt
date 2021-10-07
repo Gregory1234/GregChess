@@ -19,18 +19,17 @@ abstract class Arena(val name: String) : ChessListener {
 
         private val arenas = mutableListOf<Arena>()
 
-        private fun parseArena(section: ConfigurationSection, name: String): Arena? {
+        private fun ConfigurationSection.getLoc(path: String, def: Loc): Loc = getConfigurationSection(path)?.let {
+            Loc(getInt("x", def.x), getInt("y", def.y), getInt("z", def.z))
+        } ?: def
+
+        private fun ConfigurationSection.parseArena(name: String): Arena? {
             GregChess.logger.info("Loading arena $name")
-            // TODO: make this smarter
-            val start = Loc(
-                section.getInt("Start.x", 0),
-                section.getInt("Start.y", 101),
-                section.getInt("Start.z", 0)
-            )
+            val start = getLoc("Start", Loc(0, 101, 0))
 
-            val world = Bukkit.getWorld(section.getString("World") ?: return null) ?: return null
+            val world = Bukkit.getWorld(getString("World") ?: return null) ?: return null
 
-            val tileSize = section.getInt("TileSize", 3)
+            val tileSize = getInt("TileSize", 3)
 
             GregChess.logger.info("Loaded arena $name")
 
@@ -38,12 +37,12 @@ abstract class Arena(val name: String) : ChessListener {
         }
 
         fun reloadArenas() {
-            val newArenas = BukkitGregChessModule.config.getConfigurationSection("ChessArenas")
+            val newArenas = config.getConfigurationSection("ChessArenas")
                 ?.getKeys(false)
                 ?.mapNotNull { name ->
-                    val section = BukkitGregChessModule.config.getConfigurationSection("ChessArenas.$name")
+                    val section = config.getConfigurationSection("ChessArenas.$name")
                     if (section != null)
-                        parseArena(section, name)
+                        section.parseArena(name)
                     else {
                         GregChess.logger.warning("Arena $name has a wrong format")
                         null
@@ -58,6 +57,7 @@ abstract class Arena(val name: String) : ChessListener {
 
         fun nextArena(): Arena? = arenas.toList().firstOrNull { it.game == null }
 
+        // TODO: get rid of c functions
         fun cNextArena(): Arena = nextArena().cNotNull(NO_ARENAS)
 
         @JvmStatic

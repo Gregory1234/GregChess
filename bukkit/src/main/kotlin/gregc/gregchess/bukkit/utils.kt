@@ -156,8 +156,6 @@ fun String.chatColor(): String = ChatColor.translateAlternateColorCodes('&', thi
 
 internal fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
 
-fun Duration.toTicks(): Long = toMillis() / 50
-
 val Int.ticks: Duration get() = Duration.ofMillis(toLong() * 50)
 val Long.ticks: Duration get() = Duration.ofMillis(this * 50)
 val Double.seconds: Duration get() = Duration.ofNanos(floor(this * 1000000000L).toLong())
