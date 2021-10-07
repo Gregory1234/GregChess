@@ -12,7 +12,7 @@ abstract class Arena(val name: String) : ChessListener {
 
     companion object {
         @JvmField
-        val ARENA_REMOVED = GregChessModule.register("arena_removed", DrawEndReason(EndReason.Type.EMERGENCY, true))
+        val ARENA_REMOVED = GregChessModule.register("arena_removed", DrawEndReason(EndReason.Type.EMERGENCY))
 
         @JvmField
         val NO_ARENAS = err("NoArenas")

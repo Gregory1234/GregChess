@@ -51,10 +51,9 @@ abstract class FabricChessExtension(module: ChessModule) : ChessExtension(module
 
 object FabricGregChessModule : FabricChessExtension(GregChessModule) {
     @JvmField
-    val CHESSBOARD_BROKEN =
-        GregChessModule.register("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY, true))
+    val CHESSBOARD_BROKEN = GregChessModule.register("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY))
     @JvmField
-    val ABORTED = GregChessModule.register("aborted", DrawEndReason(EndReason.Type.EMERGENCY, true))
+    val ABORTED = GregChessModule.register("aborted", DrawEndReason(EndReason.Type.EMERGENCY))
 
     private fun registerItems() = with(GregChessModule) {
         registerShort(PieceType.PAWN)

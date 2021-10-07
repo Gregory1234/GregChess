@@ -61,6 +61,9 @@ fun ChessGame.getInfo() = textComponent {
     text("Components: ${components.joinToString { it::class.componentKey.toString() }}")
 }
 
+val EndReason<*>.quick
+    get() = this in module.bukkit.quickEndReasons
+
 val GameResults.name
     get() = endReason.module.bukkit.config
         .getPathString("Chess.EndReason.${endReason.name.snakeToPascal()}", *args.toTypedArray())

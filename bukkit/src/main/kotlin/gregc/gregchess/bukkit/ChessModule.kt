@@ -3,6 +3,7 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.MoveNameTokenType
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
@@ -59,10 +60,16 @@ abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : C
 
     open val hookedComponents: Set<KClass<out Component>> = emptySet()
 
+    open val quickEndReasons: Set<EndReason<*>> = emptySet()
+
     override fun validate() {
         val components = module[RegistryType.COMPONENT_CLASS].values
         hookedComponents.forEach {
             requireValid(it in components) { "External component hooked: ${it.componentKey}" }
+        }
+        val endReasons = module[RegistryType.END_REASON].values
+        quickEndReasons.forEach {
+            requireValid(it in endReasons) { "External end reason made quick: ${it.key}" }
         }
     }
 }
@@ -90,6 +97,9 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
             SpectatorManager::class, ScoreboardManager::class, BukkitRenderer::class,
             BukkitEventRelay::class, BukkitGregChessAdapter::class
         )
+
+    override val quickEndReasons: Set<EndReason<*>>
+        get() = setOf(Arena.ARENA_REMOVED, ChessGameManager.PLUGIN_RESTART)
 
     private fun registerSettings() = with(GregChessModule) {
         registerSettings { ChessboardState[variant, section.getString("Board")] }

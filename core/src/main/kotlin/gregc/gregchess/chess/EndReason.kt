@@ -40,9 +40,8 @@ sealed class GameScore(val pgn: String) {
 typealias DetEndReason = EndReason<GameScore.Victory>
 typealias DrawEndReason = EndReason<GameScore.Draw>
 
-// TODO: remove quick
 @Serializable(with = EndReason.Serializer::class)
-class EndReason<R : GameScore>(val type: Type, val quick: Boolean = false) : NameRegistered {
+class EndReason<R : GameScore>(val type: Type) : NameRegistered {
 
     object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", RegistryType.END_REASON)
 
