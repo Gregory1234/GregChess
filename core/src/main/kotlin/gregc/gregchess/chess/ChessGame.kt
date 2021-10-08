@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +36,8 @@ enum class GameBaseEvent : ChessEvent {
     STOP,
     PANIC
 }
+
+class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : RuntimeException(event.toString(), cause)
 
 @Serializable(with = ChessGame.Serializer::class)
 class ChessGame private constructor(
@@ -139,7 +142,6 @@ class ChessGame private constructor(
             components.forEach { it.validate() }
         } catch (e: Exception) {
             panic(e)
-            throw e
         }
     }
 
@@ -162,7 +164,14 @@ class ChessGame private constructor(
 
     private fun requireState(s: State) = check(state == s)
 
-    override fun callEvent(e: ChessEvent) = components.forEach { it.handleEvent(e) }
+    override fun callEvent(e: ChessEvent) = with(MultiExceptionContext()) {
+        components.forEach {
+            exec {
+                it.handleEvent(e)
+            }
+        }
+        rethrow { ChessEventException(e, it) }
+    }
 
     var currentTurn: Color = board.initialFEN.currentTurn
 
@@ -223,9 +232,11 @@ class ChessGame private constructor(
         startTurn()
     }
 
-    fun update() {
+    fun update() = try {
         requireState(State.RUNNING)
         callEvent(GameBaseEvent.UPDATE)
+    } catch (e: Exception) {
+        panic(e)
     }
 
     private fun startTurn() {
@@ -254,18 +265,21 @@ class ChessGame private constructor(
         callEvent(GameBaseEvent.STOP)
     }
 
-    private fun panic(e: Exception) {
-        e.printStackTrace()
-        callEvent(GameBaseEvent.PANIC)
+    private fun panic(e: Exception): Nothing {
         state = State.ERROR
         results = drawBy(EndReason.ERROR, e.toString())
+        try {
+            callEvent(GameBaseEvent.PANIC)
+        } catch (ex: Exception) {
+            e.addSuppressed(ex)
+        }
+        throw e
     }
 
     fun <E> tryOrStopNull(expr: E?): E = try {
         expr!!
     } catch (e: NullPointerException) {
         panic(e)
-        throw e
     }
 
     operator fun get(color: Color): ChessPlayer = players[color]

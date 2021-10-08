@@ -1,11 +1,10 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
-import gregc.gregchess.randomString
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
@@ -115,14 +114,15 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
             giveScoreboard(p.player)
     }
 
-    private fun update() {
+    private fun update() = with(MultiExceptionContext()) {
         for ((t, v) in gamePropertyTeams)
-            v.suffix = gameProperties[t]!!().chatColor()
+            v.suffix = exec("ERROR", { PropertyException(t, null, it) }) { gameProperties[t]!!().chatColor() }
 
         for ((tp, v) in playerPropertyTeams) {
             for ((s, t) in v.toIndexedList())
-                t.suffix = playerProperties[tp]!!(s).chatColor()
+                t.suffix = exec("ERROR", { PropertyException(tp, s, it) }) { playerProperties[tp]!!(s).chatColor() }
         }
+        rethrow()
     }
 
     private fun stop() {

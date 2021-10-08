@@ -57,6 +57,31 @@ data class Loc(val x: Int, val y: Int, val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
 }
 
+class MultiExceptionContext {
+    private val exceptions = mutableListOf<Exception>()
+
+    fun <R> exec(def: R, mapping: (Exception) -> Exception = { it }, block: () -> R): R = try {
+        block()
+    } catch (e: Exception) {
+        exceptions += mapping(e)
+        def
+    }
+
+    fun exec(mapping: (Exception) -> Exception = { it }, block: () -> Unit) = try {
+        block()
+    } catch (e: Exception) {
+        exceptions += mapping(e)
+    }
+
+    fun rethrow(base: (Exception) -> Exception = { it }) {
+        if (exceptions.isNotEmpty()) {
+            throw base(exceptions.last()).apply {
+                for (e in exceptions.dropLast(1)) addSuppressed(e)
+            }
+        }
+    }
+}
+
 interface NameRegistered {
     val key: RegistryKey<String>
 }

@@ -22,6 +22,9 @@ class AddPropertiesEvent(
     }
 }
 
+class PropertyException(property: PropertyType, color: Color? = null, override val cause: Throwable? = null)
+    : RuntimeException("${color ?: ""} $property", cause)
+
 class PropertyType : NameRegistered {
     override val key get() = BukkitRegistryTypes.PROPERTY_TYPE[this]
 
