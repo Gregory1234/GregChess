@@ -13,7 +13,7 @@ data class Move(
     val piece: BoardPiece, val display: Pos, val floor: Floor,
     val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
     val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
-    val flagsNeeded: Set<Pair<Pos, ChessFlagType>>, val flagsAdded: Set<PosFlag>,
+    val flagsNeeded: Set<Pair<Pos, ChessFlagType>>,
     val traits: List<MoveTrait>, val nameOrder: NameOrder
 ) {
     fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
@@ -40,13 +40,7 @@ data class Move(
                     true
                 }
             }
-            if (remainingTraits.isEmpty()) {
-                // TODO: move this into traits
-                for ((p, f) in flagsAdded) {
-                    game.board[p]?.flags?.plusAssign(f.copy())
-                }
-                return
-            }
+            if (remainingTraits.isEmpty()) return
         }
         throw TraitsCouldNotExecuteException(remainingTraits)
     }

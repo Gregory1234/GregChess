@@ -129,6 +129,16 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
 @Serializable
 class NameTrait(override val nameTokens: MoveName) : MoveTrait
 
+@Serializable
+class FlagTrait(val flags: Collection<PosFlag>) : MoveTrait {
+    override val nameTokens = emptyList<AnyMoveNameToken>()
+
+    override fun execute(game: ChessGame, move: Move) {
+        for ((p, f) in flags)
+            game.board[p]!!.flags += f
+    }
+}
+
 private fun checkForChecks(color: Color, game: ChessGame): MoveNameToken<Unit>? {
     game.board.updateMoves()
     val pieces = game.board.piecesOf(!color)

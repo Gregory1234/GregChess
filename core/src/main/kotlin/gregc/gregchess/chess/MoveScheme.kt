@@ -13,8 +13,7 @@ fun jumps(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.map {
         Move(
             piece, it, defaultColor(it, board),
-            setOf(piece.pos), setOf(it), emptySet(), setOf(it),
-            emptySet(), emptySet(),
+            setOf(piece.pos), setOf(it), emptySet(), setOf(it), emptySet(),
             listOf(PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
             defaultOrder,
         )
@@ -27,7 +26,7 @@ fun rays(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
                 piece, it, defaultColor(it, board),
                 setOf(piece.pos), setOf(it),
                 PosSteps(piece.pos + dir, dir, index), PosSteps(piece.pos + dir, dir, index + 1),
-                emptySet(), emptySet(),
+                emptySet(),
                 listOf(
                     PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()
                 ),
@@ -60,8 +59,7 @@ object KingMovement : MoveScheme {
         piece, display, Floor.SPECIAL,
         setOf(piece.pos, rook.pos), setOf(pieceTarget, rookTarget),
         neededEmptyFiles(piece.pos.file, pieceTarget.file, rook.pos.file, rookTarget.file).toPosSet(piece.pos.rank),
-        betweenInc(piece.pos.file, pieceTarget.file).toList().toPosSet(piece.pos.rank),
-        emptySet(), emptySet(),
+        betweenInc(piece.pos.file, pieceTarget.file).toList().toPosSet(piece.pos.rank), emptySet(),
         listOf(CastlesTrait(rook, side, pieceTarget, rookTarget), DefaultHalfmoveClockTrait(), CheckTrait()),
         castlesOrder
     )
@@ -153,8 +151,7 @@ class PawnMovement(
             add(
                 Move(
                     piece, forward, Floor.MOVE,
-                    setOf(pos), setOf(forward), setOf(forward), setOf(forward),
-                    emptySet(), emptySet(),
+                    setOf(pos), setOf(forward), setOf(forward), setOf(forward), emptySet(),
                     listOf(PawnOriginTrait(), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait()),
                     pawnOrder
                 )
@@ -165,9 +162,11 @@ class PawnMovement(
             add(
                 Move(
                     piece, forward2, Floor.MOVE,
-                    setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2),
-                    emptySet(), setOf(PosFlag(forward, ChessFlag(EN_PASSANT))),
-                    listOf(PawnOriginTrait(), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait()),
+                    setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2), emptySet(),
+                    listOf(
+                        PawnOriginTrait(), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait(),
+                        FlagTrait(listOf(PosFlag(forward, ChessFlag(EN_PASSANT))))
+                    ),
                     pawnOrder
                 )
             )
@@ -178,8 +177,7 @@ class PawnMovement(
                 add(
                     Move(
                         piece, capture, Floor.CAPTURE,
-                        setOf(pos), setOf(capture), emptySet(), setOf(capture),
-                        emptySet(), emptySet(),
+                        setOf(pos), setOf(capture), emptySet(), setOf(capture), emptySet(),
                         listOf(
                             PawnOriginTrait(), CaptureTrait(capture, true),
                             TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()
@@ -192,7 +190,7 @@ class PawnMovement(
                     Move(
                         piece, capture, Floor.CAPTURE,
                         setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture),
-                        setOf(Pair(capture, EN_PASSANT)), emptySet(),
+                        setOf(Pair(capture, EN_PASSANT)),
                         listOf(
                             PawnOriginTrait(), CaptureTrait(enPassant, true), TargetTrait(capture),
                             NameTrait(nameOf(MoveNameTokenType.EN_PASSANT.mk)),
