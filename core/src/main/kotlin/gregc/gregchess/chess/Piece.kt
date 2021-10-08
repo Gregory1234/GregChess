@@ -33,12 +33,14 @@ object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
 }
 
 @Serializable(with = Piece.Serializer::class)
-data class Piece(val type: PieceType, val color: Color) : NameRegistered {
+data class Piece(override val type: PieceType, override val color: Color) : NameRegistered, AnyPiece {
     override val key: RegistryKey<String> get() = PieceRegistryView[this]
 
     object Serializer : NameRegisteredSerializer<Piece>("Piece", PieceRegistryView)
 
-    val char
+    override val piece: Piece get() = this
+
+    override val char
         get() = when (color) {
             Color.WHITE -> type.char.uppercaseChar()
             Color.BLACK -> type.char
@@ -50,21 +52,38 @@ fun PieceType.of(color: Color) = Piece(this, color)
 fun white(type: PieceType) = type.of(Color.WHITE)
 fun black(type: PieceType) = type.of(Color.BLACK)
 
+sealed interface AnyPiece {
+    val piece: Piece
+
+    val type get() = piece.type
+    val color get() = piece.color
+    val char get() = piece.char
+}
+
+sealed interface AnyBoardPiece : AnyPiece {
+    val pos: Pos
+    val hasMoved: Boolean
+}
+
+sealed interface AnyCapturedPiece : AnyPiece {
+    val capturedPos : CapturedPos
+}
+
 // TODO: Remove this
 @Serializable
 data class CapturedPos(val by: Color, val row: Int, val pos: Int)
 
 @Serializable
-data class CapturedPiece(val piece: Piece, val pos: CapturedPos) {
-    val type get() = piece.type
-    val color get() = piece.color
+data class CapturedPiece(override val piece: Piece, val pos: CapturedPos) : AnyCapturedPiece {
+    override val capturedPos: CapturedPos get() = pos
 }
 
 @Serializable
-data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
-    val type get() = piece.type
-    val color get() = piece.color
-    val char get() = piece.char
+data class BoardPiece(
+    override val pos: Pos,
+    override val piece: Piece,
+    override val hasMoved: Boolean
+) : AnyBoardPiece {
 
     fun checkExists(board: Chessboard) {
         if (board[pos]?.piece != this)
@@ -151,19 +170,22 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 }
 
 @Serializable(with = CapturedBoardPiece.Serializer::class)
-data class CapturedBoardPiece(val boardPiece: BoardPiece, val captured: CapturedPiece) {
-    constructor(boardPiece: BoardPiece, capturedPos: CapturedPos) : this(boardPiece, CapturedPiece(boardPiece.piece, capturedPos))
+data class CapturedBoardPiece(
+    val boardPiece: BoardPiece, val captured: CapturedPiece
+) : AnyBoardPiece, AnyCapturedPiece {
+    constructor(boardPiece: BoardPiece, capturedPos: CapturedPos)
+            : this(boardPiece, CapturedPiece(boardPiece.piece, capturedPos))
 
     init {
         require(boardPiece.piece == captured.piece) { "Bad piece types" }
     }
 
-    val piece: Piece get() = boardPiece.piece
-    val type: PieceType get() = boardPiece.type
-    val color: Color get() = boardPiece.color
-    val pos: Pos get() = boardPiece.pos
+    override val piece: Piece get() = boardPiece.piece
+    override val pos: Pos get() = boardPiece.pos
+    override val capturedPos: CapturedPos get() = captured.pos
+    override val hasMoved: Boolean get() = boardPiece.hasMoved
 
-    override fun toString(): String = "CapturedBoardPiece(piece=$piece, pos=$pos, captured.pos=${captured.pos})"
+    override fun toString(): String = "CapturedBoardPiece(piece=$piece, pos=$pos, capturedPos=${capturedPos})"
 
     fun resurrect(board: Chessboard): BoardPiece {
         board[pos]?.piece?.let {
@@ -187,7 +209,7 @@ data class CapturedBoardPiece(val boardPiece: BoardPiece, val captured: Captured
             encodeSerializableElement(descriptor, 0, Piece.serializer(), value.piece)
             encodeSerializableElement(descriptor, 1, Pos.serializer(), value.pos)
             encodeBooleanElement(descriptor, 2, value.boardPiece.hasMoved)
-            encodeSerializableElement(descriptor, 3, CapturedPos.serializer(), value.captured.pos)
+            encodeSerializableElement(descriptor, 3, CapturedPos.serializer(), value.capturedPos)
         }
 
         override fun deserialize(decoder: Decoder): CapturedBoardPiece = decoder.decodeStructure(descriptor) {
