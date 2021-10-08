@@ -149,6 +149,7 @@ object GregChess : Listener {
                     cPlayer(player)
                     perms()
                     endArgs()
+                    cRequire(player.isInGame || player.isSpectating, YOU_NOT_IN_GAME)
                     ChessGameManager.leave(player)
                 }
                 "draw" -> {

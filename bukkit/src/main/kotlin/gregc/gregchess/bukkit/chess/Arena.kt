@@ -56,7 +56,6 @@ abstract class Arena(val name: String) : ChessListener {
 
         fun nextArenaOrNull(): Arena? = arenas.toList().firstOrNull { it.game == null }
 
-        // TODO: get rid of c functions
         fun nextArena(): Arena = nextArenaOrNull() ?: throw NoFreeArenasException()
 
         @JvmStatic

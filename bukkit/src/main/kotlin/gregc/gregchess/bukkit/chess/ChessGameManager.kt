@@ -1,8 +1,9 @@
 package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.GregChessModule
-import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.bukkit.loc
+import gregc.gregchess.bukkit.registerEvents
 import gregc.gregchess.chess.*
 import gregc.gregchess.register
 import org.bukkit.block.BlockFace
@@ -37,20 +38,12 @@ object ChessGameManager : Listener {
 
     fun leave(player: Player) {
         val g = player.chess
-        if (g == null) {
-            cRequire(player.isSpectating, YOU_NOT_IN_GAME)
-            player.spectatedGame = null
-        } else {
-            g.game.stop(g.color.lostBy(EndReason.WALKOVER), byColor { it == g.color })
-        }
+        player.spectatedGame = null
+        g?.game?.stop(g.color.lostBy(EndReason.WALKOVER), byColor { it == g.color })
     }
 
     @EventHandler
-    fun onPlayerLeave(e: PlayerQuitEvent) = try {
-        leave(e.player)
-    } catch (ex: CommandException) {
-
-    }
+    fun onPlayerLeave(e: PlayerQuitEvent) = leave(e.player)
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
