@@ -101,6 +101,15 @@ class PlayerManager(
     }
 
     private fun onPanic() {
+        game.players.forEach(ChessPlayer::stop)
+        val results = game.results!!
+        val pgn = PGN.generate(game)
+        game.players.forEachUnique {
+            it.player.showGameResults(it.color, results)
+            it.player.sendPGN(pgn)
+            it.player.games -= game
+            it.player.currentGame = null
+        }
         callEvent(GameStopStageEvent.PANIC)
         cancel()
     }

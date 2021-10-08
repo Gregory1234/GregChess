@@ -1,8 +1,7 @@
 package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
-import kotlinx.serialization.Serializable
+import gregc.gregchess.chess.component.SimpleComponent
 import org.bukkit.Bukkit
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
@@ -17,8 +16,8 @@ class BukkitEventRelay(game: ChessGame) : SimpleComponent(game) {
 
     @ChessEventHandler
     fun onStop(e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.VERY_END)
-            Bukkit.getPluginManager().callEvent(GameEndEvent(game))
+        if (e == GameStopStageEvent.VERY_END || e == GameStopStageEvent.PANIC)
+            Bukkit.getPluginManager().callEvent(GameEndEvent(game, e == GameStopStageEvent.VERY_END))
     }
 
     @ChessEventHandler
@@ -58,7 +57,7 @@ class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
 }
 
 
-class GameEndEvent(val game: ChessGame) : Event() {
+class GameEndEvent(val game: ChessGame, val normal: Boolean) : Event() {
 
     override fun getHandlers() = handlerList
 
