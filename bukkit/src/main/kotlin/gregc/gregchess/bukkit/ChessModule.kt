@@ -86,8 +86,8 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
             val section = config.getConfigurationSection("Settings.Clock.$it")!!
             val t = TimeControl.Type.valueOf(section.getString("Type", TimeControl.Type.INCREMENT.toString())!!)
-            val initial = section.getString("Initial")?.asDurationOrNull()!!
-            val increment = if (t.usesIncrement) section.getString("Increment")?.asDurationOrNull()!! else 0.seconds
+            val initial = section.getString("Initial")!!.toDuration()
+            val increment = if (t.usesIncrement) section.getString("Increment")!!.toDuration() else 0.seconds
             ChessClockData(TimeControl(t, initial, increment))
         }
 

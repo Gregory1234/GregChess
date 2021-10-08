@@ -27,9 +27,9 @@ class BukkitGregChessAdapter(game: ChessGame) : SimpleComponent(game) {
     fun addProperties(e: AddPropertiesEvent) {
         game.clock?.apply {
             if (timeControl.type == TimeControl.Type.FIXED) {
-                e.game(TIME_REMAINING_SIMPLE) { timeRemaining(game.currentTurn).format(timeFormat) ?: timeFormat }
+                e.game(TIME_REMAINING_SIMPLE) { timeRemaining(game.currentTurn).format(timeFormat) }
             } else {
-                e.player(TIME_REMAINING) { timeRemaining(it).format(timeFormat) ?: timeFormat }
+                e.player(TIME_REMAINING) { timeRemaining(it).format(timeFormat) }
             }
         }
         game.getComponent<ThreeChecks.CheckCounter>()?.apply {

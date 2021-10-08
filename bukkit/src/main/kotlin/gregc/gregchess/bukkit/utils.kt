@@ -146,6 +146,8 @@ fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
 
 inline fun <T> cWrongArgument(block: () -> T): T = try {
     block()
+} catch (e: DurationFormatException) {
+    throw CommandException(WRONG_DURATION_FORMAT, e)
 } catch (e: IllegalArgumentException) {
     throw CommandException(WRONG_ARGUMENT, e)
 }
@@ -162,7 +164,11 @@ val Double.seconds: Duration get() = Duration.ofNanos(floor(this * 1000000000L).
 val Double.milliseconds: Duration get() = Duration.ofNanos(floor(this * 1000000L).toLong())
 val Double.minutes: Duration get() = Duration.ofNanos(floor(this * 60000000000L).toLong())
 
-fun String.asDurationOrNull(): Duration? {
+class DurationFormatException(message: String, cause: Throwable? = null) : IllegalArgumentException(message, cause)
+
+fun String.toDuration(): Duration = toDurationOrNull() ?: throw DurationFormatException(this)
+
+fun String.toDurationOrNull(): Duration? {
     val match1 = Regex("""^(-|\+|)(\d+(?:\.\d+)?)(s|ms|t|m)$""").find(this)
     if (match1 != null) {
         val amount =
@@ -189,10 +195,10 @@ fun String.asDurationOrNull(): Duration? {
 fun Duration.toLocalTime(): LocalTime =
     LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
 
-fun Duration.format(formatString: String): String? = try {
+fun Duration.format(formatString: String): String = try {
     DateTimeFormatter.ofPattern(formatString).format(toLocalTime())
 } catch (e: DateTimeException) {
-    null
+    throw DurationFormatException(formatString, e)
 }
 
 internal val config: ConfigurationSection get() = GregChess.plugin.config

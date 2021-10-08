@@ -39,7 +39,7 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
     override fun setOption(name: String, value: String) {
         when (name) {
             "time" -> {
-                moveTime = value.asDurationOrNull().cNotNull(WRONG_DURATION_FORMAT)
+                moveTime = value.toDuration()
             }
             else -> {
                 process.outputStream.write(("setoption name $name value $value\n").toByteArray())

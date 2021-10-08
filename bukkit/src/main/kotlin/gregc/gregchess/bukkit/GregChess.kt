@@ -235,7 +235,7 @@ object GregChess : Listener {
                     val clock = game.clock.cNotNull(CLOCK_NOT_FOUND)
                     cWrongArgument {
                         val color = Color.valueOf(nextArg())
-                        val time = this[1].asDurationOrNull().cNotNull(WRONG_ARGUMENT)
+                        val time = this[1].toDuration()
                         when (nextArg().lowercase()) {
                             "add" -> clock.addTimer(color, time)
                             "set" -> clock.setTimer(color, time)

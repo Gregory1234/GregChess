@@ -72,7 +72,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
             config.getPathString("Request.Accept"),
             if (simple) acceptCommand else "$acceptCommand ${request.uuid}"
         )
-        val duration = section.getString("Duration")?.asDurationOrNull()
+        val duration = section.getString("Duration")?.toDuration()
         if (duration != null)
             GregChess.coroutineScope.launch {
                 delay(duration)
