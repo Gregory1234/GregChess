@@ -8,14 +8,13 @@ import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 
+class NoFreeArenasException : NoSuchElementException("No free arenas")
+
 abstract class Arena(val name: String) : ChessListener {
 
     companion object {
         @JvmField
         val ARENA_REMOVED = GregChessModule.register("arena_removed", DrawEndReason(EndReason.Type.EMERGENCY))
-
-        @JvmField
-        val NO_ARENAS = err("NoArenas")
 
         private val arenas = mutableListOf<Arena>()
 
@@ -55,10 +54,10 @@ abstract class Arena(val name: String) : ChessListener {
             arenas.addAll(newArenas)
         }
 
-        fun nextArena(): Arena? = arenas.toList().firstOrNull { it.game == null }
+        fun nextArenaOrNull(): Arena? = arenas.toList().firstOrNull { it.game == null }
 
         // TODO: get rid of c functions
-        fun cNextArena(): Arena = nextArena().cNotNull(NO_ARENAS)
+        fun nextArena(): Arena = nextArenaOrNull() ?: throw NoFreeArenasException()
 
         @JvmStatic
         protected val returnWorld: World

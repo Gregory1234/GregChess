@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ClassRegisteredSerializer
-import gregc.gregchess.RegistryType
+import gregc.gregchess.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -68,9 +67,9 @@ class EnginePlayer(val engine: ChessEngine, color: Color, game: ChessGame) : Che
                 move.getTrait<PromotionTrait>()?.promotion = promotion?.of(move.piece.color)
                 game.finishMove(move)
             } catch (e: Exception) {
-                e.printStackTrace()
                 game.stop(drawBy(EndReason.ERROR))
+                throw e
             }
-        }
+        }.passExceptions()
     }
 }

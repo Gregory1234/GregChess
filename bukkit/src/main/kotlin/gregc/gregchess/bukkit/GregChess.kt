@@ -57,6 +57,7 @@ object GregChess : Listener {
     private val PIECE_NOT_FOUND = err("PieceNotFound")
     private val GAME_NOT_FOUND = err("GameNotFound")
     private val NOTHING_TO_TAKEBACK = err("NothingToTakeback")
+    private val NO_ARENAS = err("NoArenas")
 
     private val BOARD_OP_DONE = message("BoardOpDone")
     private val SKIPPED_TURN = message("SkippedTurn")
@@ -109,14 +110,19 @@ object GregChess : Listener {
                             val opponent = latestArg().cPlayer()
                             cRequire(!opponent.isInGame, OPPONENT_IN_GAME)
                             coroutineScope.launch {
-                                val settings = player.openSettingsMenu()
+                                val settings = try {
+                                    player.openSettingsMenu()
+                                } catch (e: NoFreeArenasException) {
+                                    throw CommandException(NO_ARENAS)
+                                }
+
                                 if (settings != null) {
                                     val res = duelRequest.call(RequestData(player, opponent, settings.name))
                                     if (res == RequestResponse.ACCEPT) {
                                         ChessGame(settings, byColor(player.cpi, opponent.cpi)).start()
                                     }
                                 }
-                            }
+                            }.passExceptions()
                         }
                     }
                 }
@@ -130,7 +136,7 @@ object GregChess : Listener {
                         val settings = player.openSettingsMenu()
                         if (settings != null)
                             ChessGame(settings, byColor(player.cpi, Stockfish())).start()
-                    }
+                    }.passExceptions()
                 }
                 "resign" -> {
                     cPlayer(player)
@@ -157,7 +163,7 @@ object GregChess : Listener {
                         if (res == RequestResponse.ACCEPT) {
                             p.game.stop(drawBy(EndReason.DRAW_AGREEMENT))
                         }
-                    }
+                    }.passExceptions()
                 }
                 "capture" -> {
                     cPlayer(player)
@@ -295,7 +301,7 @@ object GregChess : Listener {
                         if (res == RequestResponse.ACCEPT) {
                             p.game.board.undoLastMove()
                         }
-                    }
+                    }.passExceptions()
 
                 }
                 "serial" -> {

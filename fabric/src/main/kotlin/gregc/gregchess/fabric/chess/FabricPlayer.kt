@@ -2,6 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.name
+import gregc.gregchess.passExceptions
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -53,7 +54,7 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
                 promotion = suspendCoroutine { floor.chessControllerBlock?.promotionContinuation = it }
             }
             game.finishMove(move)
-        }
+        }.passExceptions()
     }
 }
 

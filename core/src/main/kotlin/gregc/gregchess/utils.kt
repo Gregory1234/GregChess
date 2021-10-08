@@ -1,5 +1,6 @@
 package gregc.gregchess
 
+import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
@@ -88,6 +89,12 @@ interface NameRegistered {
 
 val NameRegistered.name get() = key.key
 val NameRegistered.module get() = key.module
+
+@OptIn(ExperimentalCoroutinesApi::class, InternalCoroutinesApi::class)
+fun Job.passExceptions() = invokeOnCompletion {
+    if (it != null)
+        throw it
+}
 
 // TODO: make names package qualified
 open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryView: RegistryView<String, T>) :

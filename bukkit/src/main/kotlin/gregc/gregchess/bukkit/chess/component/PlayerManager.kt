@@ -7,6 +7,7 @@ import gregc.gregchess.bukkit.coroutines.BukkitScope
 import gregc.gregchess.bukkit.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.passExceptions
 import gregc.gregchess.seconds
 import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
@@ -81,7 +82,7 @@ class PlayerManager(
                 it.player.sendPGN(pgn)
                 it.player.games -= game
                 it.player.currentGame = null
-            }
+            }.passExceptions()
         }
         if (results.endReason.quick) {
             callEvent(GameStopStageEvent.CLEAR)
@@ -97,7 +98,7 @@ class PlayerManager(
             game.players.forEach(ChessPlayer::stop)
             callEvent(GameStopStageEvent.VERY_END)
             cancel()
-        }
+        }.passExceptions()
     }
 
     private fun onPanic() {

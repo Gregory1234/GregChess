@@ -4,7 +4,8 @@ import gregc.gregchess.Loc
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.toLocation
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.variant.AtomicChess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -15,7 +16,7 @@ import kotlin.reflect.KClass
 
 @Serializable
 data class BukkitRendererSettings(
-    @Transient val arena: Arena = Arena.cNextArena()
+    @Transient val arena: Arena = Arena.nextArena()
 ) : ComponentData<BukkitRenderer> {
     override val componentClass: KClass<out BukkitRenderer> get() = BukkitRenderer::class
 
