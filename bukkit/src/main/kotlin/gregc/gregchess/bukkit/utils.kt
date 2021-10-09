@@ -13,7 +13,6 @@ import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
-import org.bukkit.plugin.java.JavaPlugin
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -21,56 +20,11 @@ import java.util.logging.Logger
 import kotlin.contracts.contract
 import kotlin.math.*
 
-class CommandArgs(val player: CommandSender, val args: Array<String>) {
-    private var index = 0
-
-    fun nextArg(): String {
-        cArgs(args, ++index)
-        return args[index - 1]
-    }
-
-    operator fun get(n: Int): String {
-        cArgs(args, index + n + 1)
-        return args[index + n]
-    }
-
-    fun endArgs() {
-        cArgs(args, max = index)
-    }
-
-    fun lastArg(): String {
-        cArgs(args, ++index, index)
-        return args[index - 1]
-    }
-
-    fun latestArg() = get(-1)
-
-    fun rest() = args.drop(index)
-
-    fun restString() = rest().joinToString(" ")
-
-}
-
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
 } catch (e: CommandException) {
     p.sendMessage(e.error.get())
     err(e)
-}
-
-fun JavaPlugin.addCommand(name: String, command: CommandArgs.() -> Unit) {
-    getCommand(name)?.setExecutor { sender, _, _, args ->
-        cTry(sender) {
-            command(CommandArgs(sender, args))
-        }
-        true
-    }
-}
-
-fun JavaPlugin.addCommandTab(name: String, tabCompleter: CommandArgs.() -> List<String>?) {
-    getCommand(name)?.setTabCompleter { sender, _, _, args ->
-        tabCompleter(CommandArgs(sender, args))?.toMutableList()
-    }
 }
 
 fun Loc.toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
@@ -138,12 +92,6 @@ fun cPlayer(p: CommandSender) {
     cRequire(p is Player, NOT_PLAYER)
 }
 
-fun String.cPlayer() = Bukkit.getPlayer(this).cNotNull(PLAYER_NOT_FOUND)
-
-fun cArgs(args: Array<String>, min: Int = 0, max: Int = Int.MAX_VALUE) {
-    cRequire(args.size in min..max, WRONG_ARGUMENTS_NUMBER)
-}
-
 inline fun <T> cWrongArgument(block: () -> T): T = try {
     block()
 } catch (e: DurationFormatException) {
@@ -151,8 +99,6 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
 } catch (e: IllegalArgumentException) {
     throw CommandException(WRONG_ARGUMENT, e)
 }
-
-fun cWrongArgument(): Nothing = throw CommandException(WRONG_ARGUMENT)
 
 fun String.chatColor(): String = ChatColor.translateAlternateColorCodes('&', this)
 

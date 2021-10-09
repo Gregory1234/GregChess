@@ -3,6 +3,7 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.bukkit.command.*
 import gregc.gregchess.bukkit.coroutines.BukkitContext
 import gregc.gregchess.bukkit.coroutines.BukkitScope
 import gregc.gregchess.chess.*
@@ -11,13 +12,13 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
-import java.util.*
 
 object GregChess : Listener {
     class Plugin : JavaPlugin(), BukkitChessPlugin {
@@ -72,8 +73,6 @@ object GregChess : Listener {
 
     private val duelRequest = RequestManager.register("Duel", "/chess duel accept", "/chess duel cancel")
 
-    private fun CommandArgs.perms(c: String = latestArg().lowercase()) = player.cPerms("greg-chess.chess.$c")
-
     @OptIn(ExperimentalSerializationApi::class)
     fun onEnable() {
         registerEvents()
@@ -87,338 +86,340 @@ object GregChess : Listener {
         RequestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
-        // TODO: try using a library for commands
+        // TODO: fix leave and resign throwing weird exceptions
         plugin.addCommand("chess") {
-            when (nextArg().lowercase()) {
-                "duel" -> {
-                    cPlayer(player)
-                    perms()
-                    cRequire(!player.isInGame, YOU_IN_GAME)
-                    when (nextArg().lowercase()) {
-                        "accept" -> {
+            subcommand("duel") {
+                requirePlayer()
+                requireNoGame()
+                literal("accept") {
+                    argument(UUIDArgument("request")) { req ->
+                        execute<Player> {
                             cWrongArgument {
-                                duelRequest.accept(player, UUID.fromString(lastArg()))
+                                duelRequest.accept(sender, req())
                             }
                         }
-                        "cancel" -> {
+                    }
+                }
+                literal("cancel") {
+                    argument(UUIDArgument("request")) { req ->
+                        execute<Player> {
                             cWrongArgument {
-                                duelRequest.cancel(player, UUID.fromString(lastArg()))
+                                duelRequest.cancel(sender, req())
                             }
                         }
-                        else -> {
-                            endArgs()
-                            val opponent = latestArg().cPlayer()
-                            cRequire(!opponent.isInGame, OPPONENT_IN_GAME)
-                            coroutineScope.launch {
-                                val settings = try {
-                                    player.openSettingsMenu()
-                                } catch (e: NoFreeArenasException) {
-                                    throw CommandException(NO_ARENAS)
-                                }
+                    }
+                }
+                argument(PlayerArgument("opponent")) { opponentArg ->
+                    filter {
+                        it.filter { p -> Bukkit.getPlayer(p)?.isInGame == false }.toSet()
+                    }
 
-                                if (settings != null) {
-                                    val res = duelRequest.call(RequestData(player, opponent, settings.name))
-                                    if (res == RequestResponse.ACCEPT) {
-                                        ChessGame(settings, byColor(player.cpi, opponent.cpi)).start()
-                                    }
-                                }
-                            }.passExceptions()
-                        }
-                    }
-                }
-                "stockfish" -> {
-                    cPlayer(player)
-                    perms()
-                    cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
-                    endArgs()
-                    cRequire(!player.isInGame, YOU_IN_GAME)
-                    coroutineScope.launch {
-                        val settings = player.openSettingsMenu()
-                        if (settings != null)
-                            ChessGame(settings, byColor(player.cpi, Stockfish())).start()
-                    }.passExceptions()
-                }
-                "resign" -> {
-                    cPlayer(player)
-                    perms()
-                    endArgs()
-                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
-                    p.game.stop(p.color.lostBy(EndReason.RESIGNATION))
-                }
-                "leave" -> {
-                    cPlayer(player)
-                    perms()
-                    endArgs()
-                    cRequire(player.isInGame || player.isSpectating, YOU_NOT_IN_GAME)
-                    ChessGameManager.leave(player)
-                }
-                "draw" -> {
-                    cPlayer(player)
-                    perms()
-                    endArgs()
-                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
-                    val opponent: BukkitPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
-                    coroutineScope.launch {
-                        drawRequest.invalidSender(player) { !p.hasTurn }
-                        val res = drawRequest.call(RequestData(player, opponent.player, ""), true)
-                        if (res == RequestResponse.ACCEPT) {
-                            p.game.stop(drawBy(EndReason.DRAW_AGREEMENT))
-                        }
-                    }.passExceptions()
-                }
-                "capture" -> {
-                    cPlayer(player)
-                    perms()
-                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
-                    val pos = if (args.size == 1)
-                        p.game.renderer.getPos(player.location.toLoc())
-                    else
-                        cWrongArgument { Pos.parseFromString(nextArg()) }
-                    endArgs()
-                    p.game.board[pos]?.piece?.capture(p.color, p.game.board)
-                    p.game.board.updateMoves()
-                    player.sendMessage(BOARD_OP_DONE)
-                }
-                "spawn" -> {
-                    cPlayer(player)
-                    perms()
-                    cArgs(args, 2, 3)
-                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
-                    val game = p.game
-                    cWrongArgument {
-                        val square = if (args.size == 2)
-                            game.board[game.renderer.getPos(player.location.toLoc())]!!
-                        else
-                            game.board[Pos.parseFromString(this[1])]!!
-                        val key = this[0].toKey()
-                        val piece = PieceRegistryView[key]
-                        square.piece?.capture(p.color, square.board)
-                        game.board += BoardPiece(square.pos, piece, false)
-                        square.piece?.sendCreated(game.board)
-                        game.board.updateMoves()
-                        player.sendMessage(BOARD_OP_DONE)
-                    }
-                }
-                "move" -> {
-                    cPlayer(player)
-                    perms()
-                    cArgs(args, 3, 3)
-                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
-                    val game = p.game
-                    cWrongArgument {
-                        game.board[Pos.parseFromString(this[2])]?.piece?.capture(p.color, game.board)
-                        game.board[Pos.parseFromString(this[1])]?.piece?.move(Pos.parseFromString(this[2]), game.board)
-                        game.board.updateMoves()
-                        player.sendMessage(BOARD_OP_DONE)
-                    }
-                }
-                "skip" -> {
-                    cPlayer(player)
-                    perms()
-                    endArgs()
-                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    game.nextTurn()
-                    player.sendMessage(SKIPPED_TURN)
-                }
-                "load" -> {
-                    cPlayer(player)
-                    perms()
-                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    game.board.setFromFEN(FEN.parseFromString(restString()))
-                    player.sendMessage(LOADED_FEN)
-                }
-                "save" -> {
-                    cPlayer(player)
-                    perms()
-                    endArgs()
-                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    player.sendFEN(game.board.getFEN())
-                }
-                "time" -> {
-                    cPlayer(player)
-                    perms()
-                    cArgs(args, 4, 4)
-                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    val clock = game.clock.cNotNull(CLOCK_NOT_FOUND)
-                    cWrongArgument {
-                        val color = Color.valueOf(nextArg())
-                        val time = this[1].toDuration()
-                        when (nextArg().lowercase()) {
-                            "add" -> clock.addTimer(color, time)
-                            "set" -> clock.setTimer(color, time)
-                            else -> cWrongArgument()
-                        }
-                        player.sendMessage(TIME_OP_DONE)
-                    }
-                }
-                "uci" -> {
-                    cPlayer(player)
-                    perms()
-                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    val engines = game.players.toList().filterIsInstance<EnginePlayer>()
-                    val engine = engines.firstOrNull().cNotNull(ENGINE_NOT_FOUND)
-                    cWrongArgument {
-                        when (nextArg().lowercase()) {
-                            "set" -> {
-                                engine.engine.setOption(nextArg(), restString())
+                    execute<Player> {
+                        val opponent = opponentArg()
+                        cRequire(!opponent.isInGame, OPPONENT_IN_GAME)
+                        coroutineScope.launch {
+                            val settings = try {
+                                sender.openSettingsMenu()
+                            } catch (e: NoFreeArenasException) {
+                                throw CommandException(NO_ARENAS)
                             }
-                            "send" -> engine.engine.sendCommand(restString())
-                            else -> cWrongArgument()
-                        }
-                        player.sendMessage(ENGINE_COMMAND_SENT)
+
+                            if (settings != null) {
+                                val res = duelRequest.call(RequestData(sender, opponent, settings.name))
+                                if (res == RequestResponse.ACCEPT) {
+                                    ChessGame(settings, byColor(sender.cpi, opponent.cpi)).start()
+                                }
+                            }
+                        }.passExceptions()
                     }
                 }
-                "spectate" -> {
-                    cPlayer(player)
-                    perms()
-                    val toSpectate = lastArg().cPlayer()
-                    player.spectatedGame = toSpectate.currentGame.cNotNull(PLAYER_NOT_IN_GAME)
+            }
+            subcommand("stockfish") {
+                requirePlayer()
+                requireNoGame()
+                execute<Player> {
+                    cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
+                    coroutineScope.launch {
+                        val settings = sender.openSettingsMenu()
+                        if (settings != null)
+                            ChessGame(settings, byColor(sender.cpi, Stockfish())).start()
+                    }.passExceptions()
                 }
-                "reload" -> {
-                    perms()
-                    endArgs()
+            }
+            subcommand("resign") {
+                val pl = requireGame()
+                execute<Player> {
+                    pl().game.stop(pl().color.lostBy(EndReason.RESIGNATION))
+                }
+            }
+            subcommand("leave") {
+                requirePlayer()
+                filter {
+                    if (sender is Player && (sender.isInGame || sender.isSpectating)) it else null
+                }
+                execute<Player> {
+                    cRequire(sender.isInGame || sender.isSpectating, YOU_NOT_IN_GAME)
+                    ChessGameManager.leave(sender)
+                }
+            }
+            subcommand("draw") {
+                val pl = requireGame()
+                val op = requireHumanOpponent()
+                execute<Player> {
+                    coroutineScope.launch {
+                        drawRequest.invalidSender(sender) { !pl().hasTurn }
+                        val res = drawRequest.call(RequestData(sender, op().player, ""), true)
+                        if (res == RequestResponse.ACCEPT) {
+                            pl().game.stop(drawBy(EndReason.DRAW_AGREEMENT))
+                        }
+                    }.passExceptions()
+                }
+            }
+            subcommand("capture") {
+                val pl = requireGame()
+                execute<Player> {
+                    val g = pl().game
+                    val pos = g.renderer.getPos(sender.location.toLoc())
+                    g.board[pos]?.piece?.capture(pl().color, g.board)
+                    g.board.updateMoves()
+                    sender.sendMessage(BOARD_OP_DONE)
+                }
+                argument(PosArgument("pos")) { pos ->
+                    execute<Player> {
+                        val g = pl().game
+                        g.board[pos()]?.piece?.capture(pl().color, g.board)
+                        g.board.updateMoves()
+                        sender.sendMessage(BOARD_OP_DONE)
+                    }
+                }
+            }
+            subcommand("spawn") {
+                val pl = requireGame()
+                argument(RegistryArgument("piece", PieceRegistryView)) { piece ->
+                    execute<Player> {
+                        val g = pl().game
+                        val square = g.board[g.renderer.getPos(sender.location.toLoc())]!!
+                        square.piece?.capture(pl().color, square.board)
+                        g.board += BoardPiece(square.pos, piece(), false)
+                        square.piece?.sendCreated(g.board)
+                        g.board.updateMoves()
+                        sender.sendMessage(BOARD_OP_DONE)
+                    }
+                    argument(PosArgument("pos")) { pos ->
+                        execute<Player> {
+                            val g = pl().game
+                            val square = g.board[pos()]!!
+                            square.piece?.capture(pl().color, square.board)
+                            g.board += BoardPiece(square.pos, piece(), false)
+                            square.piece?.sendCreated(g.board)
+                            g.board.updateMoves()
+                            sender.sendMessage(BOARD_OP_DONE)
+                        }
+                    }
+                }
+            }
+            subcommand("move") {
+                val pl = requireGame()
+                argument(PosArgument("from")) { from ->
+                    argument(PosArgument("to")) { to ->
+                        execute<Player> {
+                            val g = pl().game
+                            g.board[to()]?.piece?.capture(pl().color, g.board)
+                            g.board[from()]?.piece?.move(to(), g.board)
+                            g.board.updateMoves()
+                            sender.sendMessage(BOARD_OP_DONE)
+                        }
+                    }
+                }
+            }
+            subcommand("skip") {
+                val pl = requireGame()
+                execute<Player> {
+                    pl().game.nextTurn()
+                    sender.sendMessage(SKIPPED_TURN)
+                }
+            }
+            subcommand("load") {
+                val pl = requireGame()
+                argument(FENArgument("fen")) { fen ->
+                    execute<Player> {
+                        pl().game.board.setFromFEN(fen())
+                    }
+                }
+            }
+            subcommand("save") {
+                val pl = requireGame()
+                execute<Player> {
+                    sender.sendFEN(pl().game.board.getFEN())
+                }
+            }
+            subcommand("time") {
+                val pl = requireGame()
+                filter {
+                    if ((sender as? Player)?.currentGame?.clock != null) it else null
+                }
+                partialExecute<Player> {
+                    pl().game.clock.cNotNull(CLOCK_NOT_FOUND)
+                }
+                argument(enumArgument<Color>("side")) { side ->
+                    literal("set") {
+                        argument(DurationArgument("time")) { time ->
+                            execute<Player> {
+                                pl().game.clock!!.setTimer(side(), time())
+                                sender.sendMessage(TIME_OP_DONE)
+                            }
+                        }
+                    }
+                    literal("add") {
+                        argument(DurationArgument("time")) { time ->
+                            execute<Player> {
+                                pl().game.clock!!.addTimer(side(), time())
+                                sender.sendMessage(TIME_OP_DONE)
+                            }
+                        }
+                    }
+                }
+            }
+            subcommand("uci") {
+                val pl = requireGame()
+                filter {
+                    if ((sender as? Player)?.currentGame?.players?.toList()?.filterIsInstance<EnginePlayer>()?.firstOrNull() == null) null else it
+                }
+                partialExecute<Player> {
+                    pl().game.players.toList().filterIsInstance<EnginePlayer>().firstOrNull().cNotNull(ENGINE_NOT_FOUND)
+                }
+                literal("set") {
+                    argument(StringArgument("option")) { option ->
+                        argument(GreedyStringArgument("value")) { value ->
+                            execute<Player> {
+                                pl().game.players.toList().filterIsInstance<EnginePlayer>().first().engine.setOption(option(), value())
+                                sender.sendMessage(ENGINE_COMMAND_SENT)
+                            }
+                        }
+                    }
+                }
+                literal("send") {
+                    argument(GreedyStringArgument("command")) { command ->
+                        execute<Player> {
+                            pl().game.players.toList().filterIsInstance<EnginePlayer>().first().engine.sendCommand(command())
+                            sender.sendMessage(ENGINE_COMMAND_SENT)
+                        }
+                    }
+                }
+            }
+            subcommand("spectate") {
+                requirePlayer()
+                requireNoGame()
+                argument(PlayerArgument("spectated")) { spectated ->
+                    filter {
+                        it.filter { p -> Bukkit.getPlayer(p)?.isInGame == true }.toSet()
+                    }
+                    execute<Player> {
+                        sender.spectatedGame = spectated().currentGame.cNotNull(PLAYER_NOT_IN_GAME)
+                    }
+                }
+            }
+            subcommand("reload") {
+                execute {
                     plugin.reloadConfig()
                     Arena.reloadArenas()
-                    player.sendMessage(CONFIG_RELOADED.get())
+                    sender.sendMessage(CONFIG_RELOADED.get())
                 }
-                "dev" -> {
-                    cRequire(Bukkit.getPluginManager().isPluginEnabled("DevHelpPlugin"), WRONG_ARGUMENTS_NUMBER)
-                    perms()
-                    endArgs()
-                    Bukkit.dispatchCommand(player, "devhelp GregChess ${plugin.description.version}")
+            }
+            subcommand("dev") {
+                execute {
+                    Bukkit.dispatchCommand(sender, "devhelp GregChess ${plugin.description.version}")
                 }
-                "undo" -> {
-                    cPlayer(player)
-                    perms()
-                    endArgs()
-                    val p = player.chess.cNotNull(YOU_NOT_IN_GAME)
-                    p.game.board.lastMove.cNotNull(NOTHING_TO_TAKEBACK)
-                    val opponent: BukkitPlayer = p.opponent.cCast(OPPONENT_NOT_HUMAN)
+            }
+            subcommand("undo") {
+                val pl = requireGame()
+                filter {
+                    if ((sender as? Player)?.currentGame?.board?.lastMove == null || sender.chess?.opponent !is BukkitPlayer) null else it
+                }
+                execute<Player> {
+                    val opponent: BukkitPlayer = pl().opponent.cCast(OPPONENT_NOT_HUMAN)
                     coroutineScope.launch {
-                        drawRequest.invalidSender(player) {
-                            (p.game.currentOpponent as? BukkitPlayer)?.player != player
+                        drawRequest.invalidSender(sender) {
+                            (pl().game.currentOpponent as? BukkitPlayer)?.player != sender
                         }
-                        val res = takebackRequest.call(RequestData(player, opponent.player, ""), true)
+                        val res = takebackRequest.call(RequestData(sender, opponent.player, ""), true)
                         if (res == RequestResponse.ACCEPT) {
-                            p.game.board.undoLastMove()
+                            pl().game.board.undoLastMove()
                         }
                     }.passExceptions()
-
                 }
-                "serial" -> {
-                    cPlayer(player)
-                    perms()
-                    endArgs()
-                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    logger.info(json.encodeToString(game))
+            }
+            subcommand("serial") {
+                val pl = requireGame()
+                execute<Player> {
+                    logger.info(json.encodeToString(pl().game))
                 }
-                "serialsave" -> {
-                    cPlayer(player)
-                    perms()
-                    val name = lastArg()
-                    val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                    val f = File(plugin.dataFolder, "snapshots/$name.json")
-                    f.parentFile.mkdirs()
-                    f.createNewFile()
-                    f.writeText(json.encodeToString(game))
+            }
+            subcommand("serialsave") {
+                val pl = requireGame()
+                argument(StringArgument("name")) { name ->
+                    execute<Player> {
+                        val f = File(plugin.dataFolder, "snapshots/${name()}.json")
+                        f.parentFile.mkdirs()
+                        f.createNewFile()
+                        f.writeText(json.encodeToString(pl().game))
+                    }
                 }
-                "serialload" -> {
-                    cPlayer(player)
-                    perms()
-                    val name = lastArg()
-                    val f = File(plugin.dataFolder, "snapshots/$name.json")
-                    json.decodeFromString<ChessGame>(f.readText()).sync()
+            }
+            subcommand("serialload") {
+                requirePlayer()
+                requireNoGame()
+                argument(StringArgument("name")) { name ->
+                    execute<Player> {
+                        val f = File(plugin.dataFolder, "snapshots/${name()}.json")
+                        json.decodeFromString<ChessGame>(f.readText()).sync()
+                    }
                 }
-                "info" -> {
-                    cWrongArgument {
-                        when (nextArg().lowercase()) {
-                            "game" -> player.spigot().sendMessage(selectGame().getInfo())
-                            "piece" -> player.spigot().sendMessage(selectPiece().let { (p, g) -> p.getInfo(g) })
-                            else -> cWrongArgument()
+            }
+            literal("info") {
+                literal("game") {
+                    filter {
+                        if (sender.hasPermission("greg-chess.chess.info.ingame") && (sender as? Player)?.currentGame != null) it else null
+                    }
+                    execute {
+                        (sender as? Player).cNotNull(NOT_PLAYER)
+                        sender.cPerms("greg-chess.chess.info.ingame")
+                    }
+                    execute<Player> {
+                        sender.spigot().sendMessage((sender as? Player)?.currentGame.cNotNull(YOU_NOT_IN_GAME).getInfo())
+                    }
+                    argument(UUIDArgument("game")) { game ->
+                        requirePermission("greg-chess.chess.info.remote")
+                        execute {
+                            sender.spigot().sendMessage(ChessGameManager[game()].cNotNull(GAME_NOT_FOUND).getInfo())
                         }
                     }
                 }
-                "admin" -> {
-                    cPlayer(player)
-                    perms()
-                    endArgs()
-                    player.isAdmin = !player.isAdmin
+                literal("piece") {
+                    requirePermission("greg-chess.chess.info.ingame")
+                    val pl = requireGame()
+                    execute<Player> {
+                        sender.spigot().sendMessage(
+                            pl().game.board[pl().game.renderer.getPos(sender.location.toLoc())]?.piece
+                                .cNotNull(PIECE_NOT_FOUND).getInfo(pl().game)
+                        )
+                    }
+                    argument(PosArgument("pos")) { pos ->
+                        execute<Player> {
+                            sender.spigot().sendMessage(
+                                pl().game.board[pos()]?.piece.cNotNull(PIECE_NOT_FOUND).getInfo(pl().game))
+                        }
+                    }
                 }
-                else -> cWrongArgument()
             }
-        }
-        plugin.addCommandTab("chess") {
-            fun ifPermission(perm: String): List<String>? =
-                if (player.hasPermission("greg-chess.chess.$perm")) null else emptyList()
-
-            fun <T> ifPermission(perm: String, list: Array<T>) =
-                if (player.hasPermission("greg-chess.chess.$perm")) list.map { it.toString() } else emptyList()
-
-            fun <T> ifPermissionPrefix(vararg list: T) =
-                list.map { it.toString() }.filter { player.hasPermission("greg-chess.chess.$it") }
-
-            fun <T> ifInfo(vararg list: T) =
-                if (player.hasPermission("greg-chess.chess.info.ingame") || player.hasPermission("greg-chess.info.chess.remote"))
-                    list.map { it.toString() }
-                else
-                    emptyList()
-
-            when (args.size) {
-                1 -> ifPermissionPrefix(
-                    "duel", "stockfish", "resign", "leave", "draw", "capture", "spawn", "move",
-                    "serial", "serialsave", "serialload",
-                    "skip", "load", "save", "time", "uci", "spectate", "reload", "dev", "undo", "debug", "admin"
-                ) + ifInfo("info")
-                2 -> when (args[0]) {
-                    "duel" -> ifPermission("duel")
-                    "spawn" -> ifPermission("spawn", PieceRegistryView.keys.toTypedArray())
-                    "time" -> ifPermission("time", Color.values())
-                    "uci" -> ifPermission("uci", arrayOf("set", "send"))
-                    "spectate" -> ifPermission("spectate")
-                    "info" -> ifInfo("game", "piece")
-                    else -> listOf()
+            subcommand("admin") {
+                requirePlayer()
+                execute<Player> {
+                    sender.isAdmin = !sender.isAdmin
                 }
-                3 -> when (args[0]) {
-                    "time" -> ifPermission("time", arrayOf("add", "set"))
-                    else -> listOf()
-                }
-                else -> listOf()
-            }?.filter { it.startsWith(args.last()) || it.startsWith("gregchess:" + args.last()) }
+            }
         }
     }
-
-    private fun CommandArgs.selectPiece() =
-        when (rest().size) {
-            0 -> {
-                cPlayer(player)
-                perms("info.ingame")
-                val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                Pair(game.board[game.renderer.getPos(player.location.toLoc())]?.piece.cNotNull(PIECE_NOT_FOUND), game)
-            }
-            1 -> {
-                cPlayer(player)
-                perms("info.ingame")
-                val game = player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-                Pair(game.board[Pos.parseFromString(latestArg())]?.piece.cNotNull(PIECE_NOT_FOUND), game)
-            }
-            else -> throw CommandException(WRONG_ARGUMENTS_NUMBER)
-        }
-
-    private fun CommandArgs.selectGame() =
-        when (rest().size) {
-            0 -> {
-                cPlayer(player)
-                perms("info.ingame")
-                player.currentGame.cNotNull(YOU_NOT_IN_GAME)
-            }
-            1 -> {
-                cWrongArgument {
-                    perms("info.remote")
-                    ChessGameManager[UUID.fromString(nextArg())].cNotNull(GAME_NOT_FOUND)
-                }
-            }
-            else -> throw CommandException(WRONG_ARGUMENTS_NUMBER)
-        }
 
     fun onDisable() {
         ChessGameManager.stop()
