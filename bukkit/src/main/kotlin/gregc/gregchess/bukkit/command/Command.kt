@@ -17,13 +17,13 @@ class CommandBuilder {
     private val onExecutePartial = mutableListOf<ExecutionContext<*>.() -> Unit>()
     private val onExecute = mutableListOf<ExecutionContext<*>.() -> Unit>()
     private val onArgument = mutableListOf<Pair<CommandArgumentType<*>, CommandBuilder>>()
-    private val tabFilter = mutableListOf<ExecutionContext<*>.(Set<String>) -> Set<String>?>()
+    private val validator = mutableListOf<ExecutionContext<*>.() -> Message?>()
     private var index: Int = 0
 
     var canBeLast: Boolean = false
 
-    fun filter(f: ExecutionContext<*>.(Set<String>) -> Set<String>?) {
-        tabFilter += f
+    fun validate(f: ExecutionContext<*>.() -> Message?) {
+        validator += f
     }
 
     fun <T> argument(type: CommandArgumentType<T>, builder: CommandBuilder.(CommandArgument<T>) -> Unit) {
@@ -77,7 +77,7 @@ class CommandBuilder {
         partialExecute(S::class, builder)
     }
 
-    private fun executeOn(strings: List<String>, toExec: MutableList<ExecutionContext<*>.() -> Unit>, context: MutableList<Any?>) {
+    private fun executeOn(strings: List<String>, toExec: MutableList<ExecutionContext<*>.() -> Unit>, toValidate: MutableList<ExecutionContext<*>.() -> Message?>, context: MutableList<Any?>) {
         toExec.addAll(onExecutePartial)
         if (strings.isEmpty() && canBeLast) {
             toExec.addAll(onExecute)
@@ -86,34 +86,59 @@ class CommandBuilder {
         if (strings.isEmpty()) {
             throw CommandException(WRONG_ARGUMENTS_NUMBER)
         }
+        var msg: Message? = null
         for ((arg, com) in onArgument) {
             val parse = arg.tryParse(strings)
             if (parse != null) {
                 context += parse.first
-                return com.executeOn(parse.second, toExec, context)
+                toValidate.addAll(validator)
+                return com.executeOn(parse.second, toExec, toValidate, context)
+            } else {
+                msg = msg ?: arg.failMessage
             }
         }
-        throw CommandException(WRONG_ARGUMENT)
+        throw CommandException(msg ?: WRONG_ARGUMENT)
     }
 
     fun executeOn(sender: CommandSender, strings: List<String>) {
         val toExec = mutableListOf<ExecutionContext<*>.() -> Unit>()
+        val toValidate = mutableListOf<ExecutionContext<*>.() -> Message?>()
         val ctx = mutableListOf<Any?>()
-        executeOn(strings, toExec, ctx)
+        executeOn(strings, toExec, toValidate, ctx)
         val ectx = ExecutionContext(sender, ctx)
+        for (x in toValidate)
+            ectx.x()?.let {
+                throw CommandException(it)
+            }
         for (x in toExec)
             ectx.x()
     }
 
     private fun autocompleteOn(sender: CommandSender, strings: List<String>, ac: MutableSet<String>, context: MutableList<Any?>) {
-        for ((arg, com) in onArgument) {
-            var new = arg.autocomplete(ExecutionContext(sender, context), strings)
+        outLoop@for ((arg, com) in onArgument) {
+            val ctx = ExecutionContext(sender, context)
+            for (v in validator) {
+                if (ctx.v() != null)
+                    continue@outLoop
+            }
+            val new = arg.autocomplete(ctx, strings)?.toMutableList()
             if (new != null) {
-                val ctx = ExecutionContext(sender, context)
-                com.tabFilter.forEach {
-                    new = new?.let { x -> ctx.it(x) }
+                new.removeIf {
+                    var ret = false
+                    val parse = arg.tryParse(strings + listOf(it))
+                    if (parse != null) {
+                        context += parse.first
+                        for (v in com.validator) {
+                            if (ctx.v() != null) {
+                                ret = true
+                                break
+                            }
+                        }
+                        context.removeLast()
+                    }
+                    ret
                 }
-                ac.addAll(new ?: continue)
+                ac.addAll(new)
             } else {
                 val parse = arg.tryParse(strings)
                 if (parse != null) {
@@ -134,7 +159,7 @@ class CommandBuilder {
 
 class CommandArgument<T>(val index: Int, val type: CommandArgumentType<T>)
 
-abstract class CommandArgumentType<R>(val name: String, val failMessage: Message = WRONG_ARGUMENT) {
+abstract class CommandArgumentType<R>(val name: String, val failMessage: Message? = null) {
     abstract fun tryParse(strings: List<String>): Pair<R, List<String>>?
     open fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? = if (tryParse(strings) == null) emptySet() else null
 }
@@ -192,11 +217,8 @@ class PlayerArgument(name: String) : CommandArgumentType<Player>(name, PLAYER_NO
 }
 
 fun CommandBuilder.requirePermission(permission: String) {
-    filter {
-        if (sender.hasPermission(permission)) it else null
-    }
-    partialExecute {
-        sender.cPerms(permission)
+    validate {
+        if (sender.hasPermission(permission)) null else NO_PERMISSION
     }
 }
 

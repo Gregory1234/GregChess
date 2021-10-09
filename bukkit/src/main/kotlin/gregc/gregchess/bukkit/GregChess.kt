@@ -110,13 +110,12 @@ object GregChess : Listener {
                     }
                 }
                 argument(PlayerArgument("opponent")) { opponentArg ->
-                    filter {
-                        it.filter { p -> Bukkit.getPlayer(p)?.isInGame == false }.toSet()
+                    validate {
+                        if (!opponentArg().isInGame) null else OPPONENT_IN_GAME
                     }
 
                     execute<Player> {
                         val opponent = opponentArg()
-                        cRequire(!opponent.isInGame, OPPONENT_IN_GAME)
                         coroutineScope.launch {
                             val settings = try {
                                 sender.openSettingsMenu()
@@ -154,11 +153,10 @@ object GregChess : Listener {
             }
             subcommand("leave") {
                 requirePlayer()
-                filter {
-                    if (sender is Player && (sender.isInGame || sender.isSpectating)) it else null
+                validate {
+                    if (sender !is Player || sender.isInGame || sender.isSpectating) null else YOU_NOT_IN_GAME
                 }
                 execute<Player> {
-                    cRequire(sender.isInGame || sender.isSpectating, YOU_NOT_IN_GAME)
                     ChessGameManager.leave(sender)
                 }
             }
@@ -244,6 +242,7 @@ object GregChess : Listener {
                 argument(FENArgument("fen")) { fen ->
                     execute<Player> {
                         pl().game.board.setFromFEN(fen())
+                        sender.sendMessage(LOADED_FEN)
                     }
                 }
             }
@@ -255,11 +254,8 @@ object GregChess : Listener {
             }
             subcommand("time") {
                 val pl = requireGame()
-                filter {
-                    if ((sender as? Player)?.currentGame?.clock != null) it else null
-                }
-                partialExecute<Player> {
-                    pl().game.clock.cNotNull(CLOCK_NOT_FOUND)
+                validate {
+                    if ((sender as? Player)?.currentGame?.clock != null) null else CLOCK_NOT_FOUND
                 }
                 argument(enumArgument<Color>("side")) { side ->
                     literal("set") {
@@ -282,11 +278,8 @@ object GregChess : Listener {
             }
             subcommand("uci") {
                 val pl = requireGame()
-                filter {
-                    if ((sender as? Player)?.currentGame?.players?.toList()?.filterIsInstance<EnginePlayer>()?.firstOrNull() == null) null else it
-                }
-                partialExecute<Player> {
-                    pl().game.players.toList().filterIsInstance<EnginePlayer>().firstOrNull().cNotNull(ENGINE_NOT_FOUND)
+                validate {
+                    if ((sender as? Player)?.currentGame?.players?.toList()?.filterIsInstance<EnginePlayer>()?.firstOrNull() != null) null else ENGINE_NOT_FOUND
                 }
                 literal("set") {
                     argument(StringArgument("option")) { option ->
@@ -311,11 +304,11 @@ object GregChess : Listener {
                 requirePlayer()
                 requireNoGame()
                 argument(PlayerArgument("spectated")) { spectated ->
-                    filter {
-                        it.filter { p -> Bukkit.getPlayer(p)?.isInGame == true }.toSet()
+                    validate {
+                        if (spectated().isInGame) null else PLAYER_NOT_IN_GAME
                     }
                     execute<Player> {
-                        sender.spectatedGame = spectated().currentGame.cNotNull(PLAYER_NOT_IN_GAME)
+                        sender.spectatedGame = spectated().currentGame!!
                     }
                 }
             }
@@ -323,7 +316,7 @@ object GregChess : Listener {
                 execute {
                     plugin.reloadConfig()
                     Arena.reloadArenas()
-                    sender.sendMessage(CONFIG_RELOADED.get())
+                    sender.sendMessage(CONFIG_RELOADED)
                 }
             }
             subcommand("dev") {
@@ -333,11 +326,14 @@ object GregChess : Listener {
             }
             subcommand("undo") {
                 val pl = requireGame()
-                filter {
-                    if ((sender as? Player)?.currentGame?.board?.lastMove == null || sender.chess?.opponent !is BukkitPlayer) null else it
+                validate {
+                    if ((sender as? Player)?.currentGame?.board?.lastMove != null) null else NOTHING_TO_TAKEBACK
+                }
+                validate {
+                    if ((sender as? Player)?.chess?.opponent is BukkitPlayer) null else OPPONENT_NOT_HUMAN
                 }
                 execute<Player> {
-                    val opponent: BukkitPlayer = pl().opponent.cCast(OPPONENT_NOT_HUMAN)
+                    val opponent = pl().opponent as BukkitPlayer
                     coroutineScope.launch {
                         drawRequest.invalidSender(sender) {
                             (pl().game.currentOpponent as? BukkitPlayer)?.player != sender
@@ -378,14 +374,8 @@ object GregChess : Listener {
             }
             literal("info") {
                 literal("game") {
-                    filter {
-                        if (sender.hasPermission("greg-chess.chess.info.ingame") && (sender as? Player)?.currentGame != null) it else null
-                    }
-                    execute {
-                        (sender as? Player).cNotNull(NOT_PLAYER)
-                        sender.cPerms("greg-chess.chess.info.ingame")
-                    }
                     execute<Player> {
+                        cRequire(sender.hasPermission("greg-chess.chess.info.ingame"), NO_PERMISSION)
                         sender.spigot().sendMessage((sender as? Player)?.currentGame.cNotNull(YOU_NOT_IN_GAME).getInfo())
                     }
                     argument(UUIDArgument("game")) { game ->

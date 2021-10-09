@@ -3,7 +3,8 @@ package gregc.gregchess.bukkit.command
 import gregc.gregchess.EnumeratedRegistryView
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.FEN
+import gregc.gregchess.chess.Pos
 import gregc.gregchess.toKey
 import org.bukkit.entity.Player
 import java.time.Duration
@@ -17,42 +18,29 @@ fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) 
 }
 
 fun CommandBuilder.requirePlayer() {
-    partialExecute {
-        cPlayer(sender)
-    }
-    filter {
-        if (sender is Player) it else null
+    validate {
+        if (sender is Player) null else NOT_PLAYER
     }
 }
 
 fun CommandBuilder.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitPlayer {
-    partialExecute<Player> {
-        sender.chess!!.opponent.cCast<ChessPlayer, BukkitPlayer>(OPPONENT_NOT_HUMAN)
-    }
-    filter {
-        if ((sender as? Player)?.chess?.opponent is BukkitPlayer) it else null
+    validate {
+        if ((sender as? Player)?.chess?.opponent is BukkitPlayer) null else OPPONENT_NOT_HUMAN
     }
     return { sender.chess!!.opponent as BukkitPlayer }
 }
 
 fun CommandBuilder.requireGame(): ExecutionContext<Player>.() -> BukkitPlayer {
-    partialExecute {
-        cPlayer(sender)
-        sender.currentGame.cNotNull(YOU_NOT_IN_GAME)
-    }
-    filter {
-        if (sender is Player && sender.currentGame != null) it else null
+    requirePlayer()
+    validate {
+        if (sender is Player && sender.currentGame != null) null else YOU_NOT_IN_GAME
     }
     return { sender.chess!! }
 }
 
 fun CommandBuilder.requireNoGame() {
-    partialExecute {
-        cPlayer(sender)
-        cRequire(sender.currentGame == null, YOU_IN_GAME)
-    }
-    filter {
-        if (sender is Player && sender.currentGame == null) it else null
+    validate {
+        if (sender !is Player || sender.currentGame == null) null else YOU_IN_GAME
     }
 }
 

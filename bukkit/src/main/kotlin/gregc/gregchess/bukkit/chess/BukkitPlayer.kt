@@ -11,6 +11,7 @@ import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import org.bukkit.Bukkit
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -68,7 +69,7 @@ var Player.spectatedGame
     }
 val Player.isSpectating get() = spectatedGame != null
 
-fun Player.sendMessage(msg: Message) = sendMessage(msg.get())
+fun CommandSender.sendMessage(msg: Message) = sendMessage(msg.get())
 
 fun Player.sendTitleFull(title: String?, subtitle: String?) = sendTitle(title, subtitle, 10, 70, 20)
 
