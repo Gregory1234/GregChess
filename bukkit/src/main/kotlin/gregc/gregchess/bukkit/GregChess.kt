@@ -86,7 +86,7 @@ object GregChess : Listener {
         RequestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
-        // TODO: fix leave and resign throwing weird exceptions
+
         plugin.addCommand("chess") {
             subcommand("duel") {
                 requirePlayer()

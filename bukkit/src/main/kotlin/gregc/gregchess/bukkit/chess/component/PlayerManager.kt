@@ -88,6 +88,7 @@ class PlayerManager(
             callEvent(GameStopStageEvent.CLEAR)
             game.players.forEach(ChessPlayer::stop)
             callEvent(GameStopStageEvent.VERY_END)
+            cancel()
             return
         }
         launch {
@@ -97,8 +98,11 @@ class PlayerManager(
             delay(1.ticks)
             game.players.forEach(ChessPlayer::stop)
             callEvent(GameStopStageEvent.VERY_END)
+        }.invokeOnCompletion {
             cancel()
-        }.passExceptions()
+            if (it != null)
+                throw it
+        }
     }
 
     private fun onPanic() {
