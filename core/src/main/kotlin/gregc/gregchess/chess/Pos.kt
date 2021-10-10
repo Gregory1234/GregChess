@@ -1,6 +1,9 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.piece.BoardPiece
+import gregc.gregchess.rangeTo
+import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.*

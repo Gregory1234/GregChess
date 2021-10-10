@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.component6
 import kotlinx.serialization.Serializable
 

@@ -6,6 +6,7 @@ import gregc.gregchess.bukkit.toLocation
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.AtomicChess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

@@ -7,6 +7,8 @@ import gregc.gregchess.bukkit.command.*
 import gregc.gregchess.bukkit.coroutines.BukkitContext
 import gregc.gregchess.bukkit.coroutines.BukkitScope
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.piece.BoardPiece
+import gregc.gregchess.chess.piece.PieceRegistryView
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.*

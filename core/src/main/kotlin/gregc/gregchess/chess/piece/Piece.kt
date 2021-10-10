@@ -1,7 +1,9 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.piece
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.*

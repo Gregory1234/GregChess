@@ -2,7 +2,11 @@ package gregc.gregchess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.move.*
+import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.variant.*
+import gregc.gregchess.registry.Registry
+import gregc.gregchess.registry.RegistryType
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass

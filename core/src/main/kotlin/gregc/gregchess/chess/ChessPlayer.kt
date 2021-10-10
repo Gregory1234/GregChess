@@ -1,6 +1,10 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.chess.move.PromotionTrait
+import gregc.gregchess.chess.piece.*
+import gregc.gregchess.passExceptions
+import gregc.gregchess.registry.ClassRegisteredSerializer
+import gregc.gregchess.registry.RegistryType
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 

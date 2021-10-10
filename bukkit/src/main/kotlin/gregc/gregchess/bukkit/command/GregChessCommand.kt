@@ -1,11 +1,11 @@
 package gregc.gregchess.bukkit.command
 
-import gregc.gregchess.EnumeratedRegistryView
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
-import gregc.gregchess.toKey
+import gregc.gregchess.registry.EnumeratedRegistryView
+import gregc.gregchess.registry.toKey
 import org.bukkit.entity.Player
 import java.time.Duration
 

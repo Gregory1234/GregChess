@@ -1,7 +1,9 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.move.pgn
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.name
+import gregc.gregchess.registry.name
 import gregc.gregchess.snakeToPascal
 import java.time.format.DateTimeFormatter
 

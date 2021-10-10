@@ -1,9 +1,9 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.NameRegistered
 import gregc.gregchess.bukkit.BukkitRegistryTypes
 import gregc.gregchess.chess.ChessEvent
 import gregc.gregchess.chess.Color
+import gregc.gregchess.registry.NameRegistered
 
 class AddPropertiesEvent(
     private val playerProperties: MutableMap<PropertyType, PlayerProperty>,

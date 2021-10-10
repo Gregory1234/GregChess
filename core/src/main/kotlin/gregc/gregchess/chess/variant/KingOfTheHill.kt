@@ -3,6 +3,7 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.piece.PieceType
 
 object KingOfTheHill : ChessVariant() {
 

@@ -2,6 +2,8 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.piece.BoardPiece
 
 object CaptureAll : ChessVariant() {
     override fun getLegality(move: Move, game: ChessGame): MoveLegality =

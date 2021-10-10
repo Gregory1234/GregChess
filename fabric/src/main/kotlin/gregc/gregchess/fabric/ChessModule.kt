@@ -2,8 +2,10 @@ package gregc.gregchess.fabric
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.component.*
+import gregc.gregchess.registry.ConnectedRegistryType
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks

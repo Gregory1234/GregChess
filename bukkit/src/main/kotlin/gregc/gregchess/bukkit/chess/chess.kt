@@ -1,11 +1,16 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.arena
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
+import gregc.gregchess.chess.move.MoveName
+import gregc.gregchess.chess.move.MoveNameToken
+import gregc.gregchess.chess.piece.*
+import gregc.gregchess.registry.module
+import gregc.gregchess.registry.name
+import gregc.gregchess.snakeToPascal
 import org.bukkit.Material
 import org.bukkit.Sound
 

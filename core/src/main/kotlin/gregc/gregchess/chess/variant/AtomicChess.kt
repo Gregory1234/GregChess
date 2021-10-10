@@ -3,6 +3,8 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.move.*
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.register
 import kotlinx.serialization.Serializable
 
@@ -14,7 +16,7 @@ object AtomicChess : ChessVariant() {
     class ExplosionTrait(private val exploded: MutableList<CapturedBoardPiece> = mutableListOf()) : MoveTrait {
         override val nameTokens: MoveName = nameOf()
 
-        override val shouldComeBefore = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
+        override val shouldComeBefore get() = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
 
         private fun BoardPiece.explode(by: Color, board: Chessboard) {
             exploded += capture(by, board)

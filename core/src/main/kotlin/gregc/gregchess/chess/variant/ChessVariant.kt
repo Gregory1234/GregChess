@@ -1,9 +1,13 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.move.CaptureTrait
+import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.piece.BoardPiece
+import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 

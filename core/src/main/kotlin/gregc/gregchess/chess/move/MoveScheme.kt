@@ -1,7 +1,9 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.move
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.piece.*
 import kotlin.math.abs
 
 fun defaultColor(pos: Pos, board: Chessboard) = if (board[pos]?.piece == null) Floor.MOVE else Floor.CAPTURE

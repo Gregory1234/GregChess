@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.*

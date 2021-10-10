@@ -1,8 +1,8 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.ExtensionType
-import gregc.gregchess.chess.PieceType
-import gregc.gregchess.chess.white
+import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.piece.white
 import gregc.gregchess.fabric.chess.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder

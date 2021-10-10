@@ -2,6 +2,9 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.move.PawnMovement
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.rangeTo
 import kotlinx.serialization.Serializable

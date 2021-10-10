@@ -1,10 +1,12 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.component.componentModule
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.registry.RegistryType
+import gregc.gregchess.registry.toKey
 import org.bukkit.Material
 import org.bukkit.entity.Player
 

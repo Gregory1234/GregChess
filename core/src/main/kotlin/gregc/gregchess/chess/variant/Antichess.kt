@@ -3,6 +3,9 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.move.*
+import gregc.gregchess.chess.piece.BoardPiece
+import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.register
 
 object Antichess : ChessVariant() {

@@ -3,6 +3,9 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.move.PromotionTrait
+import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.passExceptions
 import kotlinx.coroutines.launch
 import kotlinx.serialization.*

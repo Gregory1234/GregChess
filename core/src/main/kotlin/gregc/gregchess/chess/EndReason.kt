@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.GregChessModule
+import gregc.gregchess.register
+import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer

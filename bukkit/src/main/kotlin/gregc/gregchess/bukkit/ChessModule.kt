@@ -4,10 +4,11 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.EndReason
-import gregc.gregchess.chess.MoveNameTokenType
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.chess.variant.ThreeChecks
+import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass

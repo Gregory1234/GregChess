@@ -3,6 +3,8 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.move.*
+import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.register
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass

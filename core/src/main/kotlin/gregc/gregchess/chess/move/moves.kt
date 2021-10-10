@@ -1,7 +1,12 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.move
 
-import gregc.gregchess.*
+import gregc.gregchess.GregChessModule
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.piece.BoardPiece
+import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.register
+import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*

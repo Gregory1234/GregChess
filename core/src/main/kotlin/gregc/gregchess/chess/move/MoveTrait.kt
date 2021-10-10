@@ -1,7 +1,9 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.move
 
-import gregc.gregchess.ClassRegisteredSerializer
-import gregc.gregchess.RegistryType
+import gregc.gregchess.chess.*
+import gregc.gregchess.chess.piece.*
+import gregc.gregchess.registry.ClassRegisteredSerializer
+import gregc.gregchess.registry.RegistryType
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 

@@ -1,9 +1,9 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.*
 import gregc.gregchess.chess.Floor
-import gregc.gregchess.chess.Piece
+import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.fabric.FabricRegistryTypes
+import gregc.gregchess.registry.*
 import net.minecraft.util.Identifier
 
 val NameRegistered.id get() = Identifier(module.namespace, name)

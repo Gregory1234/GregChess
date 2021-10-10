@@ -1,8 +1,9 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.name
+import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.passExceptions
+import gregc.gregchess.registry.name
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable

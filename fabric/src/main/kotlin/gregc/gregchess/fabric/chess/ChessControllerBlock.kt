@@ -1,11 +1,12 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.RegistryType
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.chess.component.FabricRendererSettings
 import gregc.gregchess.rangeTo
+import gregc.gregchess.registry.RegistryType
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.client.CottonInventoryScreen

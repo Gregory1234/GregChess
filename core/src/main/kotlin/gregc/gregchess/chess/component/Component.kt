@@ -1,8 +1,8 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.RegistryType
 import gregc.gregchess.chess.*
-import gregc.gregchess.toKey
+import gregc.gregchess.registry.RegistryType
+import gregc.gregchess.registry.toKey
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
