@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = "gregc"
-    version = "1.0"
+    version = "1.1"
 }
 
 tasks {
@@ -19,7 +19,7 @@ tasks {
                 from(project(":bukkit").getTasksByName("jar", true))
                 into(rootDir)
                 rename {
-                    "${rootProject.name}-$version.jar"
+                    "${rootProject.name}-$version-bukkit.jar"
                 }
             }
         }

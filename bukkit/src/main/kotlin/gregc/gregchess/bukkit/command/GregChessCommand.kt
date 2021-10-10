@@ -12,7 +12,7 @@ import java.time.Duration
 
 fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) {
     literal(name) {
-        requirePermission("greg-chess.chess.$name")
+        requirePermission("gregchess.chess.$name")
         builder()
     }
 }

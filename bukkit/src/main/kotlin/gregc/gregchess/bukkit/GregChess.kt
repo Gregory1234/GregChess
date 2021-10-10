@@ -321,7 +321,7 @@ object GregChess : Listener {
             }
             subcommand("dev") {
                 execute {
-                    Bukkit.dispatchCommand(sender, "devhelp GregChess ${plugin.description.version}")
+                    Bukkit.dispatchCommand(sender, "devhelp GregChess")
                 }
             }
             subcommand("undo") {
@@ -375,18 +375,18 @@ object GregChess : Listener {
             literal("info") {
                 literal("game") {
                     execute<Player> {
-                        cRequire(sender.hasPermission("greg-chess.chess.info.ingame"), NO_PERMISSION)
+                        cRequire(sender.hasPermission("gregchess.chess.info.ingame"), NO_PERMISSION)
                         sender.spigot().sendMessage((sender as? Player)?.currentGame.cNotNull(YOU_NOT_IN_GAME).getInfo())
                     }
                     argument(UUIDArgument("game")) { game ->
-                        requirePermission("greg-chess.chess.info.remote")
+                        requirePermission("gregchess.chess.info.remote")
                         execute {
                             sender.spigot().sendMessage(ChessGameManager[game()].cNotNull(GAME_NOT_FOUND).getInfo())
                         }
                     }
                 }
                 literal("piece") {
-                    requirePermission("greg-chess.chess.info.ingame")
+                    requirePermission("gregchess.chess.info.ingame")
                     val pl = requireGame()
                     execute<Player> {
                         sender.spigot().sendMessage(

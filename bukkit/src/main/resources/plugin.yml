@@ -13,114 +13,114 @@ commands:
   chess:
     description: Main chess command
     usage: /<command> subcommand [arguments]
-    aliases: [greg-chess]
+    aliases: [gregchess]
 permissions:
-  greg-chess.*:
+  gregchess.*:
     description: Can use all GregChess commands
     default: op
     children:
-      greg-chess.chess.*: true
-  greg-chess.chess.*:
+      gregchess.chess.*: true
+  gregchess.chess.*:
     description: Can use all /chess subcommands
     default: op
     children:
-      greg-chess.chess.duel: true
-      greg-chess.chess.stockfish: true
-      greg-chess.chess.resign: true
-      greg-chess.chess.leave: true
-      greg-chess.chess.draw: true
-      greg-chess.chess.capture: true
-      greg-chess.chess.spawn: true
-      greg-chess.chess.move: true
-      greg-chess.chess.skip: true
-      greg-chess.chess.load: true
-      greg-chess.chess.save: true
-      greg-chess.chess.time: true
-      greg-chess.chess.uci: true
-      greg-chess.chess.undo: true
-      greg-chess.chess.spectate: true
-      greg-chess.chess.reload: true
-      greg-chess.chess.dev: true
-      greg-chess.chess.debug: true
-      greg-chess.chess.serial: true
-      greg-chess.chess.info.*: true
-      greg-chess.chess.admin: true
-  greg-chess.chess.duel:
+      gregchess.chess.duel: true
+      gregchess.chess.stockfish: true
+      gregchess.chess.resign: true
+      gregchess.chess.leave: true
+      gregchess.chess.draw: true
+      gregchess.chess.capture: true
+      gregchess.chess.spawn: true
+      gregchess.chess.move: true
+      gregchess.chess.skip: true
+      gregchess.chess.load: true
+      gregchess.chess.save: true
+      gregchess.chess.time: true
+      gregchess.chess.uci: true
+      gregchess.chess.undo: true
+      gregchess.chess.spectate: true
+      gregchess.chess.reload: true
+      gregchess.chess.dev: true
+      gregchess.chess.debug: true
+      gregchess.chess.serial: true
+      gregchess.chess.info.*: true
+      gregchess.chess.admin: true
+  gregchess.chess.duel:
     description: Can use /chess duel
     default: true
-  greg-chess.chess.stockfish:
+  gregchess.chess.stockfish:
     description: Can use /chess stockfish
     default: true
-  greg-chess.chess.resign:
+  gregchess.chess.resign:
     description: Can use /chess resign
     default: true
-  greg-chess.chess.leave:
+  gregchess.chess.leave:
     description: Can use /chess leave
     default: true
-  greg-chess.chess.draw:
+  gregchess.chess.draw:
     description: Can use /chess draw
     default: true
-  greg-chess.chess.capture:
+  gregchess.chess.capture:
     description: Can use /chess capture
     default: op
-  greg-chess.chess.spawn:
+  gregchess.chess.spawn:
     description: Can use /chess spawn
     default: op
-  greg-chess.chess.move:
+  gregchess.chess.move:
     description: Can use /chess move
     default: op
-  greg-chess.chess.skip:
+  gregchess.chess.skip:
     description: Can use /chess skip
     default: op
-  greg-chess.chess.load:
+  gregchess.chess.load:
     description: Can use /chess load
     default: op
-  greg-chess.chess.save:
+  gregchess.chess.save:
     description: Can use /chess save
     default: true
-  greg-chess.chess.time:
+  gregchess.chess.time:
     description: Can use /chess time
     default: op
-  greg-chess.chess.uci:
+  gregchess.chess.uci:
     description: Can use /chess uci
     default: op
-  greg-chess.chess.spectate:
+  gregchess.chess.spectate:
     description: Can use /chess spectate
     default: true
-  greg-chess.chess.reload:
+  gregchess.chess.reload:
     description: Can use /chess reload
     default: op
-  greg-chess.chess.dev:
+  gregchess.chess.dev:
     description: Can use /chess dev
     default: op
-  greg-chess.chess.undo:
+  gregchess.chess.undo:
     description: Can use /chess undo
     default: true
-  greg-chess.chess.debug:
+  gregchess.chess.debug:
     description: Can use /chess debug
     default: op
-  greg-chess.chess.serial:
+  gregchess.chess.serial:
     description: Can use /chess serial
     default: op
-  greg-chess.chess.serialsave:
+  gregchess.chess.serialsave:
     description: Can use /chess serialsave
     default: op
-  greg-chess.chess.serialload:
+  gregchess.chess.serialload:
     description: Can use /chess serialload
     default: op
-  greg-chess.chess.info.*:
+  gregchess.chess.info.*:
     description: Can always use /chess info
     default: op
     children:
-      greg-chess.chess.info.remote: true
-      greg-chess.chess.info.ingame: true
-  greg-chess.chess.info.remote:
+      gregchess.chess.info.remote: true
+      gregchess.chess.info.ingame: true
+  gregchess.chess.info.remote:
     description: Can use /chess info with uuids
     default: op
-  greg-chess.chess.info.ingame:
+  gregchess.chess.info.ingame:
     description: Can use /chess info in-game
     default: op
-  greg-chess.chess.admin:
+  gregchess.chess.admin:
     description: Can use /chess admin
     default: op
 
