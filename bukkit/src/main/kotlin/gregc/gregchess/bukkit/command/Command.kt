@@ -22,6 +22,10 @@ class CommandBuilder {
 
     var canBeLast: Boolean = false
 
+    fun validate(msg: Message, f: ExecutionContext<*>.() -> Boolean) {
+        validate { if (f()) null else msg }
+    }
+
     fun validate(f: ExecutionContext<*>.() -> Message?) {
         validator += f
     }
@@ -79,13 +83,6 @@ class CommandBuilder {
 
     private fun executeOn(strings: List<String>, toExec: MutableList<ExecutionContext<*>.() -> Unit>, toValidate: MutableList<ExecutionContext<*>.() -> Message?>, context: MutableList<Any?>) {
         toExec.addAll(onExecutePartial)
-        if (strings.isEmpty() && canBeLast) {
-            toExec.addAll(onExecute)
-            return
-        }
-        if (strings.isEmpty()) {
-            throw CommandException(WRONG_ARGUMENTS_NUMBER)
-        }
         var msg: Message? = null
         for ((arg, com) in onArgument) {
             val parse = arg.tryParse(strings)
@@ -97,7 +94,11 @@ class CommandBuilder {
                 msg = msg ?: arg.failMessage
             }
         }
-        throw CommandException(msg ?: WRONG_ARGUMENT)
+        if (strings.isEmpty() && canBeLast) {
+            toExec.addAll(onExecute)
+            return
+        }
+        throw CommandException(if (strings.isEmpty() || onArgument.isEmpty()) WRONG_ARGUMENTS_NUMBER else msg ?: WRONG_ARGUMENT)
     }
 
     fun executeOn(sender: CommandSender, strings: List<String>) {
@@ -217,9 +218,7 @@ class PlayerArgument(name: String) : CommandArgumentType<Player>(name, PLAYER_NO
 }
 
 fun CommandBuilder.requirePermission(permission: String) {
-    validate {
-        if (sender.hasPermission(permission)) null else NO_PERMISSION
-    }
+    validate(NO_PERMISSION) { sender.hasPermission(permission) }
 }
 
 fun JavaPlugin.addCommand(name: String, command: CommandBuilder.() -> Unit) {

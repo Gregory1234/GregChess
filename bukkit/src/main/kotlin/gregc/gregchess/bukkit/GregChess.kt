@@ -110,9 +110,7 @@ object GregChess : Listener {
                     }
                 }
                 argument(PlayerArgument("opponent")) { opponentArg ->
-                    validate {
-                        if (!opponentArg().isInGame) null else OPPONENT_IN_GAME
-                    }
+                    validate(OPPONENT_IN_GAME) { !opponentArg().isInGame }
 
                     execute<Player> {
                         val opponent = opponentArg()
@@ -153,9 +151,7 @@ object GregChess : Listener {
             }
             subcommand("leave") {
                 requirePlayer()
-                validate {
-                    if (sender !is Player || sender.isInGame || sender.isSpectating) null else YOU_NOT_IN_GAME
-                }
+                validate(YOU_NOT_IN_GAME) { sender !is Player || sender.isInGame || sender.isSpectating }
                 execute<Player> {
                     ChessGameManager.leave(sender)
                 }
@@ -254,9 +250,7 @@ object GregChess : Listener {
             }
             subcommand("time") {
                 val pl = requireGame()
-                validate {
-                    if ((sender as? Player)?.currentGame?.clock != null) null else CLOCK_NOT_FOUND
-                }
+                validate(CLOCK_NOT_FOUND) { (sender as? Player)?.currentGame?.clock != null }
                 argument(enumArgument<Color>("side")) { side ->
                     literal("set") {
                         argument(DurationArgument("time")) { time ->
@@ -278,8 +272,9 @@ object GregChess : Listener {
             }
             subcommand("uci") {
                 val pl = requireGame()
-                validate {
-                    if ((sender as? Player)?.currentGame?.players?.toList()?.filterIsInstance<EnginePlayer>()?.firstOrNull() != null) null else ENGINE_NOT_FOUND
+                validate(ENGINE_NOT_FOUND) {
+                    (sender as? Player)?.currentGame?.players?.toList()
+                        ?.filterIsInstance<EnginePlayer>()?.firstOrNull() != null
                 }
                 literal("set") {
                     argument(StringArgument("option")) { option ->
@@ -304,9 +299,7 @@ object GregChess : Listener {
                 requirePlayer()
                 requireNoGame()
                 argument(PlayerArgument("spectated")) { spectated ->
-                    validate {
-                        if (spectated().isInGame) null else PLAYER_NOT_IN_GAME
-                    }
+                    validate(PLAYER_NOT_IN_GAME) { spectated().isInGame }
                     execute<Player> {
                         sender.spectatedGame = spectated().currentGame!!
                     }
@@ -326,12 +319,8 @@ object GregChess : Listener {
             }
             subcommand("undo") {
                 val pl = requireGame()
-                validate {
-                    if ((sender as? Player)?.currentGame?.board?.lastMove != null) null else NOTHING_TO_TAKEBACK
-                }
-                validate {
-                    if ((sender as? Player)?.chess?.opponent is BukkitPlayer) null else OPPONENT_NOT_HUMAN
-                }
+                validate(NOTHING_TO_TAKEBACK) { (sender as? Player)?.currentGame?.board?.lastMove != null }
+                validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitPlayer }
                 execute<Player> {
                     val opponent = pl().opponent as BukkitPlayer
                     coroutineScope.launch {
@@ -373,7 +362,14 @@ object GregChess : Listener {
                 }
             }
             literal("info") {
+                validate(NO_PERMISSION) {
+                    sender.hasPermission("gregchess.chess.info.ingame")
+                        || sender.hasPermission("gregchess.chess.info.remote")
+                }
                 literal("game") {
+                    execute {
+                        cRequire(sender is Player, NOT_PLAYER)
+                    }
                     execute<Player> {
                         cRequire(sender.hasPermission("gregchess.chess.info.ingame"), NO_PERMISSION)
                         sender.spigot().sendMessage((sender as? Player)?.currentGame.cNotNull(YOU_NOT_IN_GAME).getInfo())

@@ -18,30 +18,22 @@ fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) 
 }
 
 fun CommandBuilder.requirePlayer() {
-    validate {
-        if (sender is Player) null else NOT_PLAYER
-    }
+    validate(NOT_PLAYER) { sender is Player }
 }
 
 fun CommandBuilder.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitPlayer {
-    validate {
-        if ((sender as? Player)?.chess?.opponent is BukkitPlayer) null else OPPONENT_NOT_HUMAN
-    }
+    validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitPlayer }
     return { sender.chess!!.opponent as BukkitPlayer }
 }
 
 fun CommandBuilder.requireGame(): ExecutionContext<Player>.() -> BukkitPlayer {
     requirePlayer()
-    validate {
-        if (sender is Player && sender.currentGame != null) null else YOU_NOT_IN_GAME
-    }
+    validate(YOU_NOT_IN_GAME) { sender is Player && sender.currentGame != null }
     return { sender.chess!! }
 }
 
 fun CommandBuilder.requireNoGame() {
-    validate {
-        if (sender !is Player || sender.currentGame == null) null else YOU_IN_GAME
-    }
+    validate(YOU_IN_GAME) { sender !is Player || sender.currentGame == null }
 }
 
 class PosArgument(name: String) : CommandArgumentType<Pos>(name) {
