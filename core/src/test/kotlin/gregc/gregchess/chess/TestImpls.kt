@@ -25,6 +25,8 @@ data class TestPlayerInfo(override val name: String): ChessPlayerInfo {
 class TestPlayer(info: TestPlayerInfo, color: Color, game: ChessGame) : ChessPlayer(info, color, game)
 
 object TestComponentData : ComponentData<TestComponent> {
+    override val componentClass = TestComponent::class
+
     override fun getComponent(game: ChessGame): TestComponent = spyk(TestComponent(game, this))
 }
 

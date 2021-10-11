@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import assertk.assertThat
 import assertk.assertions.*
+import gregc.gregchess.chess.piece.PieceEvent
 import io.mockk.*
 import org.junit.jupiter.api.*
 

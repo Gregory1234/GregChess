@@ -13,6 +13,7 @@ allprojects {
 tasks {
     create<DefaultTask>("createSpigotJar") {
         group = "gregchess"
+        dependsOn(":core:test")
         dependsOn(":bukkit:jar")
         doLast {
             copy {
@@ -26,6 +27,7 @@ tasks {
     }
     create<DefaultTask>("createFabricJar") {
         group = "gregchess"
+        dependsOn(":core:test")
         dependsOn(":fabric:remapJar")
         doLast {
             copy {
