@@ -159,6 +159,7 @@ object GregChessModule : ChessModule("gregchess") {
         registerMoveTrait<CastlesTrait>("castles")
         registerMoveTrait<PromotionTrait>("promotion")
         registerMoveTrait<NameTrait>("name")
+        registerMoveTrait<FlagTrait>("flag")
         registerMoveTrait<CheckTrait>("check")
         registerMoveTrait<CaptureTrait>("capture")
         registerMoveTrait<PawnOriginTrait>("pawn_move")

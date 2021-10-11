@@ -268,13 +268,4 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             game.previousTurn()
         }
     }
-
-    fun nextCapturedPos(type: PieceType, by: Color): CapturedPos {
-        val cap = capturedPieces.filter { it.pos.by == by }
-        val h = if (type == PieceType.PAWN)
-            Pair(cap.count { it.type == PieceType.PAWN }, 1)
-        else
-            Pair(cap.count { it.type != PieceType.PAWN }, 0)
-        return CapturedPos(by, h.second, h.first)
-    }
 }

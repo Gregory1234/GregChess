@@ -39,6 +39,10 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         }
     }
 
+    private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()
+
+    private data class CapturedPos(val row: Int, val pos: Int, val by: Color)
+
     val arena: Arena get() = data.arena
     private val tileSize get() = arena.tileSize
     private val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
@@ -68,8 +72,6 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     private fun BoardPiece.render() = piece.render(pos.loc)
 
-    private fun CapturedPiece.render() = piece.render(pos.loc)
-
     private fun clearPiece(loc: Loc) {
         for (i in 0..10) {
             fill(FillVolume(world, Material.AIR, loc.copy(y = loc.y + i)))
@@ -77,8 +79,6 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     }
 
     private fun BoardPiece.clearRender() = clearPiece(pos.loc)
-
-    private fun CapturedPiece.clearRender() = clearPiece(pos.loc)
 
     private val Pos.location get() = loc.toLocation(world)
 
@@ -108,14 +108,51 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         arena.game = game
     }
 
+    private fun addCapturedPiece(piece: CapturedPiece) {
+        val row = when(piece.type) {
+            PieceType.PAWN -> 1
+            else -> 0
+        }
+        var pos = 0
+        while (capturedPieces[CapturedPos(row, pos, piece.capturedBy)] != null) pos++
+        capturedPieces[CapturedPos(row, pos, piece.capturedBy)] = piece
+        piece.piece.render(CapturedPos(row, pos, piece.capturedBy).loc)
+    }
+
+    private fun removeCapturedPiece(piece: CapturedPiece) {
+        val row = when(piece.type) {
+            PieceType.PAWN -> 1
+            else -> 0
+        }
+        var pos = 0
+        while (capturedPieces[CapturedPos(row, pos, piece.capturedBy)] != null) pos++
+        pos--
+        if (pos < 0)
+            throw NoSuchElementException(piece.toString())
+        if (capturedPieces[CapturedPos(row, pos, piece.capturedBy)] != piece)
+            throw NoSuchElementException(piece.toString())
+
+        capturedPieces.remove(CapturedPos(row, pos, piece.capturedBy))
+        clearPiece(CapturedPos(row, pos, piece.capturedBy).loc)
+    }
+
+    @ChessEventHandler
+    fun onStart(e: GameStartStageEvent) {
+        if (e == GameStartStageEvent.BEGIN) {
+            game.board.data.capturedPieces.forEach {
+                addCapturedPiece(it)
+            }
+        }
+    }
+
     @ChessEventHandler
     fun onStop(e: GameStopStageEvent) {
         if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC) {
             game.board.pieces.forEach {
                 it.clearRender()
             }
-            game.board.data.capturedPieces.forEach {
-                it.clearRender()
+            capturedPieces.keys.forEach {
+                clearPiece(it.loc)
             }
         }
     }
@@ -145,7 +182,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
             }
             is PieceEvent.Captured -> {
                 e.piece.boardPiece.clearRender()
-                e.piece.captured.render()
+                addCapturedPiece(e.piece.captured)
                 e.piece.boardPiece.playSound("Capture")
             }
             is PieceEvent.Promoted -> {
@@ -154,7 +191,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
             }
             is PieceEvent.Resurrected -> {
                 e.piece.boardPiece.render()
-                e.piece.captured.clearRender()
+                removeCapturedPiece(e.piece.captured)
                 e.piece.boardPiece.playSound("Move")
             }
             is PieceEvent.MultiMoved -> {
