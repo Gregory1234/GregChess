@@ -17,7 +17,8 @@ import kotlin.reflect.KClass
 
 @Serializable
 data class BukkitRendererSettings(
-    @Transient val arena: Arena = Arena.nextArena()
+    @Transient val arena: Arena = Arena.nextArena(),
+    val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
 ) : ComponentData<BukkitRenderer> {
     override val componentClass: KClass<out BukkitRenderer> get() = BukkitRenderer::class
 
@@ -40,6 +41,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     }
 
     private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()
+    private val rowSize = byColor { mutableListOf<Int>() }
 
     private data class CapturedPos(val row: Int, val pos: Int, val by: Color)
 
@@ -108,34 +110,32 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         arena.game = game
     }
 
-    // TODO: optimize generalize and clean up
     private fun addCapturedPiece(piece: CapturedPiece) {
-        val row = when(piece.type) {
-            PieceType.PAWN -> 1
-            else -> 0
-        }
-        var pos = 0
-        while (capturedPieces[CapturedPos(row, pos, piece.capturedBy)] != null) pos++
-        capturedPieces[CapturedPos(row, pos, piece.capturedBy)] = piece
-        piece.piece.render(CapturedPos(row, pos, piece.capturedBy).loc)
+        val row = data.pieceRows.getOrDefault(piece.type, 0)
+        if (row < 0) throw IndexOutOfBoundsException(row)
+
+        val rows = rowSize[piece.capturedBy]
+        if (rows.size <= row)
+            rows.addAll(List(row - rows.size + 1) { 0 })
+
+        val pos = CapturedPos(row, rows[row], piece.capturedBy)
+        capturedPieces[pos] = piece
+        piece.piece.render(pos.loc)
+        rows[row]++
     }
 
-    // TODO: optimize generalize and clean up
     private fun removeCapturedPiece(piece: CapturedPiece) {
-        val row = when(piece.type) {
-            PieceType.PAWN -> 1
-            else -> 0
-        }
-        var pos = 0
-        while (capturedPieces[CapturedPos(row, pos, piece.capturedBy)] != null) pos++
-        pos--
-        if (pos < 0)
-            throw NoSuchElementException(piece.toString())
-        if (capturedPieces[CapturedPos(row, pos, piece.capturedBy)] != piece)
-            throw NoSuchElementException(piece.toString())
+        val row = data.pieceRows.getOrDefault(piece.type, 0)
+        if (row < 0) throw IndexOutOfBoundsException(row)
 
-        capturedPieces.remove(CapturedPos(row, pos, piece.capturedBy))
-        clearPiece(CapturedPos(row, pos, piece.capturedBy).loc)
+        val rows = rowSize[piece.capturedBy]
+        if (rows.size <= row) throw NoSuchElementException(piece.toString())
+
+        val pos = CapturedPos(row, rows[row] - 1, piece.capturedBy)
+        if (capturedPieces[pos] != piece) throw NoSuchElementException(piece.toString())
+        capturedPieces.remove(pos)
+        clearPiece(pos.loc)
+        rows[row]--
     }
 
     @ChessEventHandler
