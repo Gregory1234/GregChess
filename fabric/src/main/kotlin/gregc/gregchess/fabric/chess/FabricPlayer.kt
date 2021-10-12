@@ -2,7 +2,6 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
-import gregc.gregchess.passExceptions
 import gregc.gregchess.registry.name
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
@@ -48,15 +47,17 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
         if (pos == piece.pos) return
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
-        // TODO: fix JobCancellationException here
         game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
                 floor.chessControllerBlock?.promotions = promotions
                 realPlayer.openHandledScreen(state.createScreenHandlerFactory(floor.world, floor.pos))
                 promotion = suspendCoroutine { floor.chessControllerBlock?.promotionContinuation = it }
             }
+        }.invokeOnCompletion {
+            if (it != null)
+                throw it
             game.finishMove(move)
-        }.passExceptions()
+        }
     }
 }
 

@@ -105,9 +105,11 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
     private fun registerSettings() = with(GregChessModule) {
         registerSettings { ChessboardState[variant, section.getString("Board")] }
         registerSettings {
-            // TODO: report failure
             SettingsManager.chooseOrParse(clockSettings, section.getString("Clock")) {
-                TimeControl.parseOrNull(it)?.let { t -> ChessClockData(t) }
+                TimeControl.parseOrNull(it)?.let { t -> ChessClockData(t) } ?: run {
+                    logger.warn("Bad time control \"$it\", defaulted to none")
+                    null
+                }
             }
         }
         registerSimpleSettings<PlayerManager>()
