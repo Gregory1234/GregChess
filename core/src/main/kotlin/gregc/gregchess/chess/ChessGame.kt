@@ -4,7 +4,8 @@ import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.variant.ChessVariant
-import kotlinx.coroutines.CoroutineScope
+import gregc.gregchess.gregChessCoroutineDispatcherFactory
+import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlinx.serialization.descriptors.*
@@ -150,7 +151,9 @@ class ChessGame private constructor(
 
     val clock get() = getComponent<ChessClock>()
 
-    val coroutineScope get() = components.filterIsInstance<CoroutineScope>().first()
+    val coroutineScope by lazy {
+        CoroutineScope(gregChessCoroutineDispatcherFactory() + SupervisorJob() + CoroutineName("Game $uuid"))
+    }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =
         components.mapNotNull { cl.safeCast(it) }.firstOrNull()

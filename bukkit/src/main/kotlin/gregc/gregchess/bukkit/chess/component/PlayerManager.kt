@@ -2,18 +2,16 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.GregChess
 import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.coroutines.BukkitContext
-import gregc.gregchess.bukkit.coroutines.BukkitScope
 import gregc.gregchess.bukkit.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
 import gregc.gregchess.passExceptions
 import gregc.gregchess.seconds
-import kotlinx.coroutines.*
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
-import kotlin.coroutines.CoroutineContext
 
 enum class GameStartStageEvent : ChessEvent {
     INIT, START, BEGIN
@@ -30,11 +28,7 @@ enum class PlayerDirection {
 class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
 // TODO: simplify or rename
-class PlayerManager(
-    game: ChessGame,
-) : SimpleComponent(game), CoroutineScope {
-
-    override val coroutineContext: CoroutineContext = BukkitScope(GregChess.plugin, BukkitContext.SYNC).coroutineContext
+class PlayerManager(game: ChessGame) : SimpleComponent(game) {
 
     internal var quick: ByColor<Boolean> = byColor(false)
 
@@ -74,7 +68,7 @@ class PlayerManager(
         }
         val pgn = PGN.generate(game)
         game.players.forEachUnique {
-            launch {
+            game.coroutineScope.launch {
                 it.player.showGameResults(it.color, results)
                 if (!results.endReason.quick)
                     delay((if (quick[it.color]) 0 else 3).seconds)
@@ -88,10 +82,10 @@ class PlayerManager(
             callEvent(GameStopStageEvent.CLEAR)
             game.players.forEach(ChessPlayer::stop)
             callEvent(GameStopStageEvent.VERY_END)
-            cancel()
+            game.coroutineScope.cancel()
             return
         }
-        launch {
+        game.coroutineScope.launch {
             delay((if (quick.white && quick.black) 0 else 3).seconds)
             delay(1.ticks)
             callEvent(GameStopStageEvent.CLEAR)
@@ -99,7 +93,7 @@ class PlayerManager(
             game.players.forEach(ChessPlayer::stop)
             callEvent(GameStopStageEvent.VERY_END)
         }.invokeOnCompletion {
-            cancel()
+            game.coroutineScope.cancel()
             if (it != null)
                 throw it
         }
@@ -116,7 +110,7 @@ class PlayerManager(
             it.player.currentGame = null
         }
         callEvent(GameStopStageEvent.PANIC)
-        cancel()
+        game.coroutineScope.cancel()
     }
 
     @ChessEventHandler
@@ -126,6 +120,7 @@ class PlayerManager(
         GameBaseEvent.STOP -> onStop()
         GameBaseEvent.PANIC -> onPanic()
         GameBaseEvent.SYNC -> if (game.state == ChessGame.State.RUNNING) {
+            // TODO: make sync safer
             onStart()
             onRunning()
         } else Unit

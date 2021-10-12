@@ -48,6 +48,7 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
         if (pos == piece.pos) return
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
+        // TODO: fix JobCancellationException here
         game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
                 floor.chessControllerBlock?.promotions = promotions

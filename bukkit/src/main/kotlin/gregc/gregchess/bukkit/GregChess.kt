@@ -4,8 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.command.*
-import gregc.gregchess.bukkit.coroutines.BukkitContext
-import gregc.gregchess.bukkit.coroutines.BukkitScope
+import gregc.gregchess.bukkit.coroutines.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceRegistryView
@@ -43,6 +42,7 @@ object GregChess : Listener {
 
         override fun onInitialize() {
             GregChessModule.logger = JavaGregLogger(GregChess.logger)
+            gregChessCoroutineDispatcherFactory = { BukkitDispatcher(this, BukkitContext.SYNC) }
             GregChessModule.extensions += BukkitGregChessModule
             GregChessModule.fullLoad()
         }

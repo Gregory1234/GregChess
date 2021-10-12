@@ -11,6 +11,10 @@ allprojects {
 }
 
 tasks {
+    project(":core").getTasksByName("test", true).forEach {
+        it.outputs.upToDateWhen { false }
+    }
+
     create<DefaultTask>("createSpigotJar") {
         group = "gregchess"
         dependsOn(":core:test")

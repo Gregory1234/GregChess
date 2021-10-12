@@ -90,6 +90,9 @@ fun Job.passExceptions() = invokeOnCompletion {
         throw it
 }
 
+var gregChessCoroutineDispatcherFactory: () -> CoroutineDispatcher =
+    { throw UnsupportedOperationException("No coroutine dispatcher found") }
+
 object DurationSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Duration", PrimitiveKind.STRING)
 

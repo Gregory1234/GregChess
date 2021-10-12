@@ -108,6 +108,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         arena.game = game
     }
 
+    // TODO: optimize generalize and clean up
     private fun addCapturedPiece(piece: CapturedPiece) {
         val row = when(piece.type) {
             PieceType.PAWN -> 1
@@ -119,6 +120,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         piece.piece.render(CapturedPos(row, pos, piece.capturedBy).loc)
     }
 
+    // TODO: optimize generalize and clean up
     private fun removeCapturedPiece(piece: CapturedPiece) {
         val row = when(piece.type) {
             PieceType.PAWN -> 1
