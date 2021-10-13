@@ -94,7 +94,7 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
 
     override val hookedComponents: Set<KClass<out Component>>
         get() = setOf(
-            Chessboard::class, ChessClock::class, PlayerManager::class,
+            Chessboard::class, ChessClock::class, GameController::class,
             SpectatorManager::class, ScoreboardManager::class, BukkitRenderer::class,
             BukkitEventRelay::class, BukkitGregChessAdapter::class
         )
@@ -112,7 +112,7 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
                 }
             }
         }
-        registerSimpleSettings<PlayerManager>()
+        registerSimpleSettings<GameController>()
         registerSimpleSettings<SpectatorManager>()
         registerSimpleSettings<ScoreboardManager>()
         registerSettings { BukkitRendererSettings() }
@@ -137,7 +137,7 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
         registerSimpleComponent<BukkitEventRelay>("bukkit_event_relay")
         registerSimpleComponent<BukkitGregChessAdapter>("bukkit_adapter")
         registerComponent<BukkitRenderer, BukkitRendererSettings>("bukkit_renderer")
-        registerSimpleComponent<PlayerManager>("player_manager")
+        registerSimpleComponent<GameController>("game_controller")
         registerSimpleComponent<ScoreboardManager>("scoreboard_manager")
         registerSimpleComponent<SpectatorManager>("spectator_manager")
     }

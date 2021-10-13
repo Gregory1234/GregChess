@@ -6,7 +6,7 @@ import gregc.gregchess.fabric.chess.ChessGameManager
 import gregc.gregchess.fabric.chess.forEachUnique
 import kotlinx.coroutines.cancel
 
-class PlayerManager(game: ChessGame) : SimpleComponent(game) {
+class GameController(game: ChessGame) : SimpleComponent(game) {
 
     @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) = with(game) {

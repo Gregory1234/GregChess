@@ -27,7 +27,7 @@ data class Move(
     fun setup(game: ChessGame) {
         traits.forEach { it.setup(game, this) }
     }
-    // TODO: try to recover from exceptions
+
     fun execute(game: ChessGame) {
         var remainingTraits = traits
         for (pass in 0u..255u) {

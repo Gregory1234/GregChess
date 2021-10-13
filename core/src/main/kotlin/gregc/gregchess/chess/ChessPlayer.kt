@@ -1,13 +1,11 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.chess.move.PromotionTrait
-import gregc.gregchess.chess.piece.*
-import gregc.gregchess.passExceptions
+import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.ClassRegisteredSerializer
 import gregc.gregchess.registry.RegistryType
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
+// TODO: replace ChessPlayerInfo with lambdas
 @Serializable(with = ChessPlayerInfoSerializer::class)
 interface ChessPlayerInfo {
     val name: String
@@ -21,6 +19,7 @@ abstract class ChessPlayer(val info: ChessPlayerInfo, val color: Color, val game
 
     val name = info.name
 
+    // TODO: remove held
     var held: BoardPiece? = null
         set(v) {
             v?.let {
@@ -52,28 +51,4 @@ abstract class ChessPlayer(val info: ChessPlayerInfo, val color: Color, val game
     open fun stop() {}
     open fun startTurn() {}
 
-}
-
-class EnginePlayer(val engine: ChessEngine, color: Color, game: ChessGame) : ChessPlayer(engine, color, game) {
-
-    override fun toString() = "EnginePlayer(engine=$engine, color=$color)"
-
-    override fun stop() = engine.stop()
-
-    override fun startTurn() {
-        game.coroutineScope.launch {
-            try {
-                val str = engine.getMove(game.board.getFEN())
-                val origin = Pos.parseFromString(str.take(2))
-                val target = Pos.parseFromString(str.drop(2).take(2))
-                val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
-                val move = game.board.getMoves(origin).first { it.display == target }
-                move.getTrait<PromotionTrait>()?.promotion = promotion?.of(move.piece.color)
-                game.finishMove(move)
-            } catch (e: Exception) {
-                game.stop(drawBy(EndReason.ERROR))
-                throw e
-            }
-        }.passExceptions()
-    }
 }

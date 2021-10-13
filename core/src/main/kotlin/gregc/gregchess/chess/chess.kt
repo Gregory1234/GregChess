@@ -69,14 +69,3 @@ data class ByColor<out T> internal constructor(val white: T, val black: T) {
 fun <T> byColor(white: T, black: T) = ByColor(white, black)
 fun <T> byColor(both: T) = ByColor(both, both)
 inline fun <T> byColor(block: (Color) -> T) = byColor(block(Color.WHITE), block(Color.BLACK))
-
-class NoEngineMoveException(fen: FEN) : Exception(fen.toString())
-
-
-interface ChessEngine : ChessPlayerInfo {
-    fun stop()
-    fun setOption(name: String, value: String)
-    fun sendCommand(command: String)
-    suspend fun getMove(fen: FEN): String
-    override fun getPlayer(color: Color, game: ChessGame) = EnginePlayer(this, color, game)
-}

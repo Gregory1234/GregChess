@@ -27,8 +27,7 @@ enum class PlayerDirection {
 
 class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
-// TODO: simplify or rename
-class PlayerManager(game: ChessGame) : SimpleComponent(game) {
+class GameController(game: ChessGame) : SimpleComponent(game) {
 
     internal var quick: ByColor<Boolean> = byColor(false)
 
@@ -143,10 +142,10 @@ class PlayerManager(game: ChessGame) : SimpleComponent(game) {
     }
 }
 
-val ChessGame.playerManager get() = requireComponent<PlayerManager>()
+val ChessGame.gameController get() = requireComponent<GameController>()
 
 fun ChessGame.stop(results: GameResults, quick: ByColor<Boolean>) {
-    playerManager.quick = quick
+    gameController.quick = quick
     stop(results)
 }
 
