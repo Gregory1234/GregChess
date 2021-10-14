@@ -144,6 +144,18 @@ data class BoardPiece(
     fun getMoves(board: Chessboard) = board.getMoves(pos)
     fun getLegalMoves(board: Chessboard) = board.getLegalMoves(pos)
 
+    fun showMoves(board: Chessboard) {
+        board[pos]?.moveMarker = Floor.NOTHING
+        board[pos]?.bakedLegalMoves?.forEach { m -> m.show(board) }
+        pickUp(board)
+    }
+
+    fun hideMoves(board: Chessboard) {
+        board[pos]?.moveMarker = null
+        board[pos]?.bakedLegalMoves?.forEach { m -> m.hide(board) }
+        placeDown(board)
+    }
+
     companion object {
         fun autoMove(moves: Map<BoardPiece, Pos>, board: Chessboard): Map<BoardPiece, BoardPiece> {
             val pieces = moves.keys

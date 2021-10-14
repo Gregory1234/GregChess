@@ -2,6 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
+import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.name
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
@@ -26,6 +27,13 @@ data class FabricPlayerInfo(val uuid: @Contextual UUID) : ChessPlayerInfo {
 class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
     ChessPlayer(info, color, game) {
     val uuid = info.uuid
+
+    var held: BoardPiece? = null
+        private set(v) {
+            v?.showMoves(game.board)
+            field?.hideMoves(game.board)
+            field = v
+        }
 
     override fun init() {
         //player.sendMessage(LiteralText(color.name),false)

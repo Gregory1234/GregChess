@@ -5,6 +5,7 @@ import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.move.PromotionTrait
+import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.passExceptions
 import kotlinx.coroutines.launch
@@ -161,6 +162,14 @@ class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame) : Ches
     val player: Player = info.player
 
     private val silent get() = this.info == opponent.info
+
+
+    var held: BoardPiece? = null
+        private set(v) {
+            v?.showMoves(game.board)
+            field?.hideMoves(game.board)
+            field = v
+        }
 
     companion object {
         private val IN_CHECK_MSG = message("InCheck")
