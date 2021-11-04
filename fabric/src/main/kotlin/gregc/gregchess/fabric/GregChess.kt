@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
-import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointUtils
+import net.fabricmc.loader.impl.entrypoint.EntrypointUtils
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.datafixer.TypeReferences

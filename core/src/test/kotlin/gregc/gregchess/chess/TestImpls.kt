@@ -6,11 +6,11 @@ import io.mockk.clearMocks
 import io.mockk.spyk
 
 fun testSettings(
-    name: String, board: String? = null, variant: ChessVariant = ChessVariant.Normal,
+    name: String, variant: ChessVariant = ChessVariant.Normal,
     extra: List<ComponentData<*>> = emptyList()
 ): GameSettings {
     val components = buildList {
-        this += ChessboardState[variant, board]
+        this += ChessboardState(variant)
         this.addAll(extra)
     }
     return GameSettings(name, false, variant, components)

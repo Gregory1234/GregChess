@@ -4,6 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.chess.EndReason
+import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.variant.ChessVariant
@@ -103,7 +104,22 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
         get() = setOf(Arena.ARENA_REMOVED, ChessGameManager.PLUGIN_RESTART)
 
     private fun registerSettings() = with(GregChessModule) {
-        registerSettings { ChessboardState[variant, section.getString("Board")] }
+        registerSettings {
+            when(val name = section.getString("Board")) {
+                null -> ChessboardState(variant)
+                "normal" -> ChessboardState(variant)
+                "chess960" -> ChessboardState(variant, chess960 = true)
+                else -> if (name.startsWith("fen ")) try {
+                    ChessboardState(variant, FEN.parseFromString(name.drop(4)))
+                } catch (e: FEN.FENFormatException) {
+                    GregChessModule.logger.warn("Chessboard configuration ${e.fen} is in a wrong format, defaulted to normal: ${e.cause?.message}!")
+                    ChessboardState(variant)
+                } else {
+                    GregChessModule.logger.warn("Invalid chessboard configuration $name, defaulted to normal!")
+                    ChessboardState(variant)
+                }
+            }
+        }
         registerSettings {
             SettingsManager.chooseOrParse(clockSettings, section.getString("Clock")) {
                 TimeControl.parseOrNull(it)?.let { t -> ChessClockData(t) } ?: run {

@@ -1,6 +1,5 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.move.PawnMovement
@@ -16,7 +15,7 @@ import kotlin.reflect.KClass
 class SetFenEvent(val FEN: FEN) : ChessEvent
 
 @Serializable
-data class ChessboardState(
+data class ChessboardState internal constructor (
     val initialFEN: FEN,
     val pieces: Map<Pos, BoardPiece>,
     val halfmoveClock: UInt = initialFEN.halfmoveClock,
@@ -39,22 +38,6 @@ data class ChessboardState(
         private fun enPassantFlag(square: Pos?) =
             listOfNotNull(square?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 1u)) })
 
-        operator fun get(variant: ChessVariant, name: String?) = when (name) {
-            "normal" -> ChessboardState(variant)
-            null -> ChessboardState(variant)
-            "chess960" -> ChessboardState(variant, chess960 = true)
-            else -> {
-                if (name.startsWith("fen ")) try {
-                    ChessboardState(variant, FEN.parseFromString(name.drop(4)))
-                } catch (e: FEN.FENFormatException) {
-                    GregChessModule.logger.warn("Chessboard configuration ${e.fen} is in a wrong format, defaulted to normal: ${e.cause?.message}!")
-                    ChessboardState(variant)
-                } else {
-                    GregChessModule.logger.warn("Invalid chessboard configuration $name, defaulted to normal!")
-                    ChessboardState(variant)
-                }
-            }
-        }
     }
 }
 
