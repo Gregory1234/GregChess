@@ -3,6 +3,7 @@ package gregc.gregchess.chess
 import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.player.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.gregChessCoroutineDispatcherFactory
 import kotlinx.coroutines.*

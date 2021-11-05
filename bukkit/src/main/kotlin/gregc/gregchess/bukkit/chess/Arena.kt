@@ -3,6 +3,7 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.*
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection

@@ -1,10 +1,12 @@
 package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.GregChess
-import gregc.gregchess.bukkit.chess.*
+import gregc.gregchess.bukkit.chess.player.*
+import gregc.gregchess.bukkit.chess.quick
 import gregc.gregchess.bukkit.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.passExceptions
 import gregc.gregchess.seconds
 import kotlinx.coroutines.cancel

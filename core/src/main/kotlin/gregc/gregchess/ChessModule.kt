@@ -4,6 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.player.ChessPlayerInfo
 import gregc.gregchess.chess.variant.*
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.RegistryType

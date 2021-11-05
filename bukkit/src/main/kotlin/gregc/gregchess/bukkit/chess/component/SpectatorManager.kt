@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.bukkit.chess.showGameResults
+import gregc.gregchess.bukkit.chess.player.showGameResults
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
 import org.bukkit.entity.Player

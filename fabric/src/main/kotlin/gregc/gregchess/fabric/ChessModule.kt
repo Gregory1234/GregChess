@@ -5,6 +5,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.component.*
+import gregc.gregchess.fabric.chess.player.FabricPlayerInfo
 import gregc.gregchess.registry.ConnectedRegistryType
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock

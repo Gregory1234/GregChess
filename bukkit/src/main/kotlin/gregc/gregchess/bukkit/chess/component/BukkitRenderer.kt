@@ -2,6 +2,7 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.Loc
 import gregc.gregchess.bukkit.chess.*
+import gregc.gregchess.bukkit.chess.player.PiecePlayerActionEvent
 import gregc.gregchess.bukkit.toLocation
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component

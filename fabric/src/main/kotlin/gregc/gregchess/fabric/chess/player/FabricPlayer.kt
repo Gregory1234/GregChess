@@ -1,8 +1,11 @@
-package gregc.gregchess.fabric.chess
+package gregc.gregchess.fabric.chess.player
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
+import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessPlayerInfo
+import gregc.gregchess.fabric.chess.ChessboardFloorBlockEntity
 import gregc.gregchess.registry.name
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
@@ -24,8 +27,7 @@ data class FabricPlayerInfo(val uuid: @Contextual UUID) : ChessPlayerInfo {
     override fun getPlayer(color: Color, game: ChessGame) = FabricPlayer(this, color, game)
 }
 
-class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
-    ChessPlayer(info, color, game) {
+class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) : ChessPlayer(info, color, game) {
     val uuid = info.uuid
 
     var held: BoardPiece? = null

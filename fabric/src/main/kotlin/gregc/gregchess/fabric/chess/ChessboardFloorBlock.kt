@@ -3,6 +3,7 @@ package gregc.gregchess.fabric.chess
 import gregc.gregchess.chess.Floor
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.fabric.*
+import gregc.gregchess.fabric.chess.player.FabricPlayer
 import io.github.cottonmc.cotton.gui.networking.NetworkSide
 import io.github.cottonmc.cotton.gui.networking.ScreenNetworking
 import net.minecraft.block.*

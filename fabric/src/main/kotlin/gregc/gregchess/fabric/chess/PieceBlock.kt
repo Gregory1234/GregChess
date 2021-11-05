@@ -3,6 +3,7 @@ package gregc.gregchess.fabric.chess
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.chess.player.FabricPlayer
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf

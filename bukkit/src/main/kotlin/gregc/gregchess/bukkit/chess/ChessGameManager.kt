@@ -2,6 +2,7 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.loc
 import gregc.gregchess.bukkit.registerEvents
 import gregc.gregchess.chess.*

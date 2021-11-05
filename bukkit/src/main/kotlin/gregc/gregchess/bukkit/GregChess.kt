@@ -3,11 +3,13 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.command.*
 import gregc.gregchess.bukkit.coroutines.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceRegistryView
+import gregc.gregchess.chess.player.EnginePlayer
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.*

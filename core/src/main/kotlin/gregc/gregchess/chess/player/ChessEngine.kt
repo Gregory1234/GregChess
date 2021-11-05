@@ -1,5 +1,6 @@
-package gregc.gregchess.chess
+package gregc.gregchess.chess.player
 
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.of

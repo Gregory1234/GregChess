@@ -3,6 +3,8 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.bukkit.chess.player.BukkitPlayerInfo
+import gregc.gregchess.bukkit.chess.player.Stockfish
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.component.*

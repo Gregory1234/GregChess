@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit.command
 
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.chess.*
+import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.registry.EnumeratedRegistryView

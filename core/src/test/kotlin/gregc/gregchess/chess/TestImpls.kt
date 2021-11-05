@@ -1,6 +1,8 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessPlayerInfo
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
 import io.mockk.spyk
@@ -15,8 +17,6 @@ fun testSettings(
     }
     return GameSettings(name, false, variant, components)
 }
-
-val String.cpi get() = TestPlayerInfo(this)
 
 data class TestPlayerInfo(override val name: String): ChessPlayerInfo {
     override fun getPlayer(color: Color, game: ChessGame): ChessPlayer = TestPlayer(this, color, game)
