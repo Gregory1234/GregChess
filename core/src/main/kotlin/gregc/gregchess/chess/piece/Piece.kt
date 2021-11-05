@@ -34,18 +34,18 @@ object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
 }
 
 @Serializable(with = Piece.Serializer::class)
-data class Piece(override val type: PieceType, override val color: Color) : NameRegistered, AnyPiece {
+data class Piece(val type: PieceType, val color: Color) : NameRegistered {
     override val key: RegistryKey<String> get() = PieceRegistryView[this]
 
     object Serializer : NameRegisteredSerializer<Piece>("Piece", PieceRegistryView)
 
-    override val piece: Piece get() = this
-
-    override val char
+    val char : Char
         get() = when (color) {
             Color.WHITE -> type.char.uppercaseChar()
             Color.BLACK -> type.char
         }
+
+
 }
 
 fun PieceType.of(color: Color) = Piece(this, color)
@@ -53,31 +53,18 @@ fun PieceType.of(color: Color) = Piece(this, color)
 fun white(type: PieceType) = type.of(Color.WHITE)
 fun black(type: PieceType) = type.of(Color.BLACK)
 
-sealed interface AnyPiece {
-    val piece: Piece
-
-    val type get() = piece.type
-    val color get() = piece.color
-    val char get() = piece.char
-}
-
-sealed interface AnyBoardPiece : AnyPiece {
-    val pos: Pos
-    val hasMoved: Boolean
-}
-
-sealed interface AnyCapturedPiece : AnyPiece {
-    val capturedBy: Color
-}
 @Serializable
-data class CapturedPiece(override val piece: Piece, override val capturedBy: Color) : AnyCapturedPiece
+data class CapturedPiece(val piece: Piece, val capturedBy: Color) {
+    val color: Color get() = piece.color
+    val type: PieceType get() = piece.type
+    val char: Char get() = piece.char
+}
 
 @Serializable
-data class BoardPiece(
-    override val pos: Pos,
-    override val piece: Piece,
-    override val hasMoved: Boolean
-) : AnyBoardPiece {
+data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
+    val color: Color get() = piece.color
+    val type: PieceType get() = piece.type
+    val char: Char get() = piece.char
 
     fun checkExists(board: Chessboard) {
         if (board[pos]?.piece != this)
@@ -176,9 +163,7 @@ data class BoardPiece(
 }
 
 @Serializable(with = CapturedBoardPiece.Serializer::class)
-data class CapturedBoardPiece(
-    val boardPiece: BoardPiece, val captured: CapturedPiece
-) : AnyBoardPiece, AnyCapturedPiece {
+data class CapturedBoardPiece(val boardPiece: BoardPiece, val captured: CapturedPiece) {
     constructor(boardPiece: BoardPiece, capturedBy: Color)
             : this(boardPiece, CapturedPiece(boardPiece.piece, capturedBy))
 
@@ -186,10 +171,13 @@ data class CapturedBoardPiece(
         require(boardPiece.piece == captured.piece) { "Bad piece types" }
     }
 
-    override val piece: Piece get() = boardPiece.piece
-    override val pos: Pos get() = boardPiece.pos
-    override val capturedBy: Color get() = captured.capturedBy
-    override val hasMoved: Boolean get() = boardPiece.hasMoved
+    val piece: Piece get() = boardPiece.piece
+    val pos: Pos get() = boardPiece.pos
+    val capturedBy: Color get() = captured.capturedBy
+    val hasMoved: Boolean get() = boardPiece.hasMoved
+    val color: Color get() = piece.color
+    val type: PieceType get() = piece.type
+    val char: Char get() = piece.char
 
     override fun toString(): String = "CapturedBoardPiece(piece=$piece, pos=$pos, capturedBy=${capturedBy})"
 
