@@ -163,20 +163,22 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     fun onFloorUpdate(e: FloorUpdateEvent) = e.pos.fillFloor(e.floor)
 
     @ChessEventHandler
+    fun onPiecePlayerAction(e: PiecePlayerActionEvent) = when (e.type) {
+        PiecePlayerActionEvent.Type.PICK_UP -> {
+            e.piece.clearRender()
+            e.piece.playSound("PickUp")
+        }
+        PiecePlayerActionEvent.Type.PLACE_DOWN -> {
+            e.piece.render()
+            e.piece.playSound("Move")
+        }
+    }
+
+    @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) {
         when (e) {
             is PieceEvent.Created -> e.piece.render()
             is PieceEvent.Cleared -> e.piece.clearRender()
-            is PieceEvent.Action -> when (e.type) {
-                PieceEvent.ActionType.PICK_UP -> {
-                    e.piece.clearRender()
-                    e.piece.playSound("PickUp")
-                }
-                PieceEvent.ActionType.PLACE_DOWN -> {
-                    e.piece.render()
-                    e.piece.playSound("Move")
-                }
-            }
             is PieceEvent.Moved -> {
                 clearPiece(e.from.loc)
                 e.piece.render()

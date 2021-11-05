@@ -30,8 +30,16 @@ class FabricPlayer(info: FabricPlayerInfo, color: Color, game: ChessGame) :
 
     var held: BoardPiece? = null
         private set(v) {
-            v?.showMoves(game.board)
-            field?.hideMoves(game.board)
+            field?.let {
+                it.checkExists(game.board)
+                game.board[it.pos]?.moveMarker = null
+                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.hide(game.board) }
+            }
+            v?.let {
+                it.checkExists(game.board)
+                game.board[it.pos]?.moveMarker = Floor.NOTHING
+                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.show(game.board) }
+            }
             field = v
         }
 

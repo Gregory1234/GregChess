@@ -157,6 +157,12 @@ data class BukkitPlayerInfo(val player: Player) : ChessPlayerInfo {
     override fun getPlayer(color: Color, game: ChessGame) = BukkitPlayer(this, color, game)
 }
 
+class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent {
+    enum class Type {
+        PICK_UP, PLACE_DOWN
+    }
+}
+
 class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame) : ChessPlayer(info, color, game) {
 
     val player: Player = info.player
@@ -166,8 +172,18 @@ class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame) : Ches
 
     var held: BoardPiece? = null
         private set(v) {
-            v?.showMoves(game.board)
-            field?.hideMoves(game.board)
+            field?.let {
+                it.checkExists(game.board)
+                game.board[it.pos]?.moveMarker = null
+                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.hide(game.board) }
+                game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
+            }
+            v?.let {
+                it.checkExists(game.board)
+                game.board[it.pos]?.moveMarker = Floor.NOTHING
+                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.show(game.board) }
+                game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
+            }
             field = v
         }
 

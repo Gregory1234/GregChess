@@ -71,16 +71,6 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
             throw PieceDoesNotExistException(this)
     }
 
-    fun pickUp(board: Chessboard) {
-        checkExists(board)
-        board.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PICK_UP))
-    }
-
-    fun placeDown(board: Chessboard) {
-        checkExists(board)
-        board.callEvent(PieceEvent.Action(this, PieceEvent.ActionType.PLACE_DOWN))
-    }
-
     fun sendCreated(board: Chessboard) {
         checkExists(board)
         board.callEvent(PieceEvent.Created(this))
@@ -130,18 +120,6 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
 
     fun getMoves(board: Chessboard) = board.getMoves(pos)
     fun getLegalMoves(board: Chessboard) = board.getLegalMoves(pos)
-
-    fun showMoves(board: Chessboard) {
-        board[pos]?.moveMarker = Floor.NOTHING
-        board[pos]?.bakedLegalMoves?.forEach { m -> m.show(board) }
-        pickUp(board)
-    }
-
-    fun hideMoves(board: Chessboard) {
-        board[pos]?.moveMarker = null
-        board[pos]?.bakedLegalMoves?.forEach { m -> m.hide(board) }
-        placeDown(board)
-    }
 
     companion object {
         fun autoMove(moves: Map<BoardPiece, Pos>, board: Chessboard): Map<BoardPiece, BoardPiece> {
@@ -238,12 +216,6 @@ data class CapturedBoardPiece(val boardPiece: BoardPiece, val captured: Captured
 sealed class PieceEvent : ChessEvent {
     class Created(val piece: BoardPiece) : PieceEvent()
     class Cleared(val piece: BoardPiece) : PieceEvent()
-
-    enum class ActionType {
-        PICK_UP, PLACE_DOWN
-    }
-
-    class Action(val piece: BoardPiece, val type: ActionType) : PieceEvent()
 
     class Moved(val piece: BoardPiece, val from: Pos) : PieceEvent()
     class Captured(val piece: CapturedBoardPiece) : PieceEvent()

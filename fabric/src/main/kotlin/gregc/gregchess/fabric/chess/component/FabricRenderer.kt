@@ -71,7 +71,6 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
         when (e) {
             is PieceEvent.Created -> {}
             is PieceEvent.Cleared -> {}
-            is PieceEvent.Action -> {}
             is PieceEvent.Moved -> {
                 val pieceBlock = tileBlocks[e.from]?.firstNotNullOfOrNull { it.directPiece }
                 pieceBlock?.safeBreak()
