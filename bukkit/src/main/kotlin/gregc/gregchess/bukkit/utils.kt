@@ -171,3 +171,14 @@ object UUIDAsStringSerializer : KSerializer<UUID> {
 fun defaultModule() = SerializersModule {
     contextual(UUID::class, UUIDAsStringSerializer)
 }
+
+object PlayerSerializer : KSerializer<Player> {
+    override val descriptor = PrimitiveSerialDescriptor("PlayerAsString", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: Player) {
+        encoder.encodeString(value.uniqueId.toString())
+    }
+
+    // TODO: what if the player is offline?
+    override fun deserialize(decoder: Decoder): Player = Bukkit.getPlayer(UUID.fromString(decoder.decodeString()))!!
+}

@@ -81,7 +81,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         }
         if (results.endReason.quick) {
             callEvent(GameStopStageEvent.CLEAR)
-            game.players.forEach(ChessPlayer::stop)
+            game.players.forEach(ChessPlayer<*>::stop)
             callEvent(GameStopStageEvent.VERY_END)
             game.coroutineScope.cancel()
             return
@@ -91,7 +91,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
             delay(1.ticks)
             callEvent(GameStopStageEvent.CLEAR)
             delay(1.ticks)
-            game.players.forEach(ChessPlayer::stop)
+            game.players.forEach(ChessPlayer<*>::stop)
             callEvent(GameStopStageEvent.VERY_END)
         }.invokeOnCompletion {
             game.coroutineScope.cancel()
@@ -101,7 +101,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
     }
 
     private fun onPanic() {
-        game.players.forEach(ChessPlayer::stop)
+        game.players.forEach(ChessPlayer<*>::stop)
         val results = game.results!!
         val pgn = PGN.generate(game)
         game.players.forEachUnique {

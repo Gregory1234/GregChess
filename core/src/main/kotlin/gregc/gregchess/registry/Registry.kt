@@ -1,13 +1,14 @@
 package gregc.gregchess.registry
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.ChessFlagType
+import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTrait
 import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.player.ChessPlayerInfo
+import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
@@ -87,7 +88,10 @@ abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) : Enu
         @JvmField
         val MOVE_TRAIT_CLASS = NameRegistryType<KClass<out MoveTrait>>("move_trait_class")
         @JvmField
-        val PLAYER_TYPE = NameRegistryType<KClass<out ChessPlayerInfo>>("player_type")
+        val PLAYER_TYPE = NameRegistryType<ChessPlayerType<*>>("player_type")
+        @JvmField
+        val PLAYER_TYPE_CLASS =
+            ConnectedRegistryType<ChessPlayerType<*>, KClass<*>>("player_type_class", PLAYER_TYPE)
     }
 }
 

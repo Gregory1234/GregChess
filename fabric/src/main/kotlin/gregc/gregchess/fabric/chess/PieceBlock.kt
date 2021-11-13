@@ -83,7 +83,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
 
         val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
 
-        if (cp.uuid == player.uuid && cp.held == null && cp.color == piece.color) {
+        if (cp.player == player.uuid && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
@@ -170,7 +170,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
 
         val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
 
-        if (cp.uuid == player.uuid && cp.held == null && cp.color == piece.color) {
+        if (cp.player == player.uuid && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {

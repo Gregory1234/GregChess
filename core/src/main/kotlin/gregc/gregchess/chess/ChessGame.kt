@@ -45,20 +45,20 @@ class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : Run
 @Serializable(with = ChessGame.Serializer::class)
 class ChessGame private constructor(
     val settings: GameSettings,
-    val playerInfo: ByColor<ChessPlayerInfo>,
+    val playerData: ByColor<Any>,
     val uuid: UUID,
     initialState: State,
     startTime: LocalDateTime?,
     results: GameResults?
 ) : ChessEventCaller {
-    constructor(settings: GameSettings, playerInfo: ByColor<ChessPlayerInfo>)
+    constructor(settings: GameSettings, playerInfo: ByColor<Any>)
             : this(settings, playerInfo, UUID.randomUUID(), State.INITIAL, null, null)
 
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     object Serializer : KSerializer<ChessGame> {
         override val descriptor = buildClassSerialDescriptor("ChessGame") {
             element("uuid", buildSerialDescriptor("ChessGameUUID", SerialKind.CONTEXTUAL))
-            element("players", ByColor.serializer(ChessPlayerInfoSerializer).descriptor)
+            element("players", ByColor.serializer(ChessPlayerDataSerializer).descriptor)
             element<String>("preset")
             element<ChessVariant>("variant")
             element<Boolean>("simpleCastling")
@@ -70,7 +70,7 @@ class ChessGame private constructor(
 
         override fun serialize(encoder: Encoder, value: ChessGame) = encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, encoder.serializersModule.serializer(), value.uuid)
-            encodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerInfoSerializer), value.playerInfo)
+            encodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerDataSerializer), value.playerData)
             encodeStringElement(descriptor, 2, value.settings.name)
             encodeSerializableElement(descriptor, 3, ChessVariant.serializer(), value.variant)
             encodeBooleanElement(descriptor, 4, value.settings.simpleCastling)
@@ -82,7 +82,7 @@ class ChessGame private constructor(
 
         override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
             var uuid: UUID? = null
-            var players: ByColor<ChessPlayerInfo>? = null
+            var players: ByColor<Any>? = null
             var preset: String? = null
             var variant: ChessVariant? = null
             var simpleCastling: Boolean? = null
@@ -92,7 +92,7 @@ class ChessGame private constructor(
             var components: List<ComponentData<*>>? = null
             if (decodeSequentially()) { // sequential decoding protocol
                 uuid = decodeSerializableElement(descriptor, 0, decoder.serializersModule.serializer())
-                players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerInfoSerializer))
+                players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerDataSerializer))
                 preset = decodeStringElement(descriptor, 2)
                 variant = decodeSerializableElement(descriptor, 3, ChessVariant.serializer())
                 simpleCastling = decodeBooleanElement(descriptor, 4)
@@ -105,7 +105,7 @@ class ChessGame private constructor(
                     when (val index = decodeElementIndex(descriptor)) {
                         0 -> uuid = decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
                         1 -> players =
-                            decodeSerializableElement(descriptor, index, ByColor.serializer(ChessPlayerInfoSerializer))
+                            decodeSerializableElement(descriptor, index, ByColor.serializer(ChessPlayerDataSerializer))
                         2 -> preset = decodeStringElement(descriptor, index)
                         3 -> variant = decodeSerializableElement(descriptor, index, ChessVariant.serializer())
                         4 -> simpleCastling = decodeBooleanElement(descriptor, index)
@@ -165,7 +165,14 @@ class ChessGame private constructor(
 
     inline fun <reified T : Component> requireComponent(): T = requireComponent(T::class)
 
-    val players = byColor { playerInfo[it].getPlayer(it, this) }
+    @Suppress("UNCHECKED_CAST")
+    val players: ByColor<ChessPlayer<*>> = byColor {
+        val d = playerData[it]
+        val type = playerType(d) as ChessPlayerType<Any>
+        with(type) {
+            d.createPlayer(it, this@ChessGame)
+        }
+    }
 
     private fun requireState(s: State) = check(state == s)
 
@@ -180,9 +187,9 @@ class ChessGame private constructor(
 
     var currentTurn: Color = board.initialFEN.currentTurn
 
-    val currentPlayer: ChessPlayer get() = players[currentTurn]
+    val currentPlayer: ChessPlayer<*> get() = players[currentTurn]
 
-    val currentOpponent: ChessPlayer get() = players[!currentTurn]
+    val currentOpponent: ChessPlayer<*> get() = players[!currentTurn]
 
     var startTime: LocalDateTime? = startTime
         private set(v) {
@@ -286,7 +293,7 @@ class ChessGame private constructor(
         panic(e)
     }
 
-    operator fun get(color: Color): ChessPlayer = players[color]
+    operator fun get(color: Color): ChessPlayer<*> = players[color]
 
     fun finishMove(move: Move) {
         requireState(State.RUNNING)

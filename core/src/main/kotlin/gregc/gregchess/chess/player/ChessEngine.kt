@@ -6,16 +6,26 @@ import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.of
 import gregc.gregchess.passExceptions
 import kotlinx.coroutines.launch
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.serializer
+import kotlin.reflect.KClass
 
-interface ChessEngine : ChessPlayerInfo {
+interface ChessEngine {
+    val name: String
     fun stop()
     fun setOption(name: String, value: String)
     fun sendCommand(command: String)
     suspend fun getMove(fen: FEN): String
-    override fun getPlayer(color: Color, game: ChessGame) = EnginePlayer(this, color, game)
 }
 
-class EnginePlayer(val engine: ChessEngine, color: Color, game: ChessGame) : ChessPlayer(engine, color, game) {
+@OptIn(InternalSerializationApi::class)
+fun <T : ChessEngine> enginePlayerType(cl: KClass<T>) =
+    ChessPlayerType(cl.serializer()) { c, g -> EnginePlayer(this, c, g) }
+
+inline fun <reified T : ChessEngine> enginePlayerType() = enginePlayerType(T::class)
+
+class EnginePlayer<T : ChessEngine>(val engine: T, color: Color, game: ChessGame)
+    : ChessPlayer<T>(engine, color, engine.name, game) {
 
     override fun toString() = "EnginePlayer(engine=$engine, color=$color)"
 

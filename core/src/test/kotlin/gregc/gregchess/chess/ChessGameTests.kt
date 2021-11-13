@@ -12,12 +12,17 @@ class ChessGameTests {
     // TODO: move mocks to initialization to make tests faster
     // TODO: mock Chessboard
 
-    private val playerA = TestPlayerInfo("A")
-    private val playerB = TestPlayerInfo("B")
+    private val playerA = "A"
+    private val playerB = "B"
 
     private val normalSettings = testSettings("normal")
 
     private fun mkGame(settings: GameSettings) = ChessGame(settings, byColor(playerA, playerB))
+
+    @BeforeAll
+    fun setup() {
+        setupRegistry()
+    }
 
     @Nested
     inner class Constructing {

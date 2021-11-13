@@ -1,11 +1,14 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.player.ChessPlayer
-import gregc.gregchess.chess.player.ChessPlayerInfo
+import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.register
 import io.mockk.clearMocks
 import io.mockk.spyk
+import kotlinx.serialization.builtins.serializer
 
 fun testSettings(
     name: String, variant: ChessVariant = ChessVariant.Normal,
@@ -18,11 +21,7 @@ fun testSettings(
     return GameSettings(name, false, variant, components)
 }
 
-data class TestPlayerInfo(override val name: String): ChessPlayerInfo {
-    override fun getPlayer(color: Color, game: ChessGame): ChessPlayer = TestPlayer(this, color, game)
-}
-
-class TestPlayer(info: TestPlayerInfo, color: Color, game: ChessGame) : ChessPlayer(info, color, game)
+class TestPlayer(name: String, color: Color, game: ChessGame) : ChessPlayer<String>(name, color, name, game)
 
 object TestComponentData : ComponentData<TestComponent> {
     override val componentClass = TestComponent::class
@@ -51,4 +50,8 @@ inline fun <T> measureTime(block: () -> T): T {
     val elapsed = System.nanoTime() - start
     println("Elapsed time: ${elapsed.toDouble() / 1_000_000}ms")
     return ret
+}
+
+fun setupRegistry() = with(GregChessModule) {
+    register("test", ChessPlayerType(String.serializer()) { c, g -> TestPlayer(this, c, g) })
 }

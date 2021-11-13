@@ -128,7 +128,7 @@ object GregChess : Listener {
                             if (settings != null) {
                                 val res = duelRequest.call(RequestData(sender, opponent, settings.name))
                                 if (res == RequestResponse.ACCEPT) {
-                                    ChessGame(settings, byColor(sender.cpi, opponent.cpi)).start()
+                                    ChessGame(settings, byColor(sender, opponent)).start()
                                 }
                             }
                         }.passExceptions()
@@ -143,7 +143,7 @@ object GregChess : Listener {
                     coroutineScope.launch {
                         val settings = sender.openSettingsMenu()
                         if (settings != null)
-                            ChessGame(settings, byColor(sender.cpi, Stockfish())).start()
+                            ChessGame(settings, byColor(sender, Stockfish())).start()
                     }.passExceptions()
                 }
             }
@@ -278,13 +278,13 @@ object GregChess : Listener {
                 val pl = requireGame()
                 validate(ENGINE_NOT_FOUND) {
                     (sender as? Player)?.currentGame?.players?.toList()
-                        ?.filterIsInstance<EnginePlayer>()?.firstOrNull() != null
+                        ?.filterIsInstance<EnginePlayer<*>>()?.firstOrNull() != null
                 }
                 literal("set") {
                     argument(StringArgument("option")) { option ->
                         argument(GreedyStringArgument("value")) { value ->
                             execute<Player> {
-                                pl().game.players.toList().filterIsInstance<EnginePlayer>().first().engine.setOption(option(), value())
+                                pl().game.players.toList().filterIsInstance<EnginePlayer<*>>().first().engine.setOption(option(), value())
                                 sender.sendMessage(ENGINE_COMMAND_SENT)
                             }
                         }
@@ -293,7 +293,7 @@ object GregChess : Listener {
                 literal("send") {
                     argument(GreedyStringArgument("command")) { command ->
                         execute<Player> {
-                            pl().game.players.toList().filterIsInstance<EnginePlayer>().first().engine.sendCommand(command())
+                            pl().game.players.toList().filterIsInstance<EnginePlayer<*>>().first().engine.sendCommand(command())
                             sender.sendMessage(ENGINE_COMMAND_SENT)
                         }
                     }

@@ -9,18 +9,10 @@ import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.player.ChessPlayer
-import gregc.gregchess.chess.player.ChessPlayerInfo
 import gregc.gregchess.passExceptions
 import kotlinx.coroutines.launch
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.SerialKind
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import java.util.*
 
 private class ExtraPlayerInfo(val player: Player) {
     companion object {
@@ -138,39 +130,15 @@ suspend fun Player.openPawnPromotionMenu(promotions: Collection<Piece>) =
         ScreenOption(p.item, p, i.toInvPos())
     }) ?: promotions.first()
 
-val Player.cpi get() = BukkitPlayerInfo(this)
-
-@Serializable(with = BukkitPlayerInfo.Serializer::class)
-data class BukkitPlayerInfo(val player: Player) : ChessPlayerInfo {
-    @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
-    object Serializer : KSerializer<BukkitPlayerInfo> {
-        override val descriptor = buildSerialDescriptor("BukkitPlayerInfo", SerialKind.CONTEXTUAL)
-
-        override fun serialize(encoder: Encoder, value: BukkitPlayerInfo) =
-            encoder.encodeSerializableValue(encoder.serializersModule.serializer(), value.uuid)
-
-        override fun deserialize(decoder: Decoder): BukkitPlayerInfo {
-            val uuid: UUID = decoder.decodeSerializableValue(decoder.serializersModule.serializer())
-            return BukkitPlayerInfo(Bukkit.getPlayer(uuid)!!)
-        }
-    }
-
-    override val name: String get() = player.name
-    val uuid: UUID get() = player.uniqueId
-    override fun getPlayer(color: Color, game: ChessGame) = BukkitPlayer(this, color, game)
-}
-
 class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent {
     enum class Type {
         PICK_UP, PLACE_DOWN
     }
 }
 
-class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame) : ChessPlayer(info, color, game) {
+class BukkitPlayer(player: Player, color: Color, game: ChessGame) : ChessPlayer<Player>(player, color, player.name, game) {
 
-    val player: Player = info.player
-
-    private val silent get() = this.info == opponent.info
+    private val silent get() = this.player == opponent.player
 
 
     var held: BoardPiece? = null
@@ -261,11 +229,11 @@ class BukkitPlayer(info: BukkitPlayerInfo, color: Color, game: ChessGame) : Ches
     }
 }
 
-inline fun ByColor<ChessPlayer>.forEachReal(block: (Player) -> Unit) {
+inline fun ByColor<ChessPlayer<*>>.forEachReal(block: (Player) -> Unit) {
     toList().filterIsInstance<BukkitPlayer>().map { it.player }.distinct().forEach(block)
 }
 
-inline fun ByColor<ChessPlayer>.forEachUnique(block: (BukkitPlayer) -> Unit) {
+inline fun ByColor<ChessPlayer<*>>.forEachUnique(block: (BukkitPlayer) -> Unit) {
     val players = toList().filterIsInstance<BukkitPlayer>()
     if (players.size == 2 && players.all { it.player == players[0].player })
         players.filter { it.hasTurn }.forEach(block)

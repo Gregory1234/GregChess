@@ -46,7 +46,7 @@ class GameStartEvent(val game: ChessGame) : Event() {
     }
 }
 
-class TurnEndEvent(val game: ChessGame, val player: ChessPlayer) : Event() {
+class TurnEndEvent(val game: ChessGame, val player: ChessPlayer<*>) : Event() {
     override fun getHandlers() = handlerList
 
     companion object {

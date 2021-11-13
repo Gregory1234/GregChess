@@ -3,9 +3,10 @@ package gregc.gregchess.fabric
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
+import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.component.*
-import gregc.gregchess.fabric.chess.player.FabricPlayerInfo
+import gregc.gregchess.fabric.chess.player.FabricPlayer
 import gregc.gregchess.registry.ConnectedRegistryType
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
@@ -75,7 +76,7 @@ object FabricGregChessModule : FabricChessExtension(GregChessModule) {
     override fun load() {
         registerItems()
         registerComponents()
-        GregChessModule.registerPlayerType<FabricPlayerInfo>("fabric")
+        GregChessModule.register("fabric", ChessPlayerType(UUIDAsIntArraySerializer) { c,g -> FabricPlayer(this, c, g) })
     }
 
 }

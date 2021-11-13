@@ -4,7 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.player.ChessPlayerInfo
+import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.*
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.RegistryType
@@ -134,8 +134,13 @@ inline fun <reified T : SimpleComponent> ChessModule.registerSimpleComponent(id:
 inline fun <reified T : MoveTrait> ChessModule.registerMoveTrait(id: String) =
     register(RegistryType.MOVE_TRAIT_CLASS, id, T::class)
 
-inline fun <reified T : ChessPlayerInfo> ChessModule.registerPlayerType(id: String) =
-    register(RegistryType.PLAYER_TYPE, id, T::class)
+fun <T : Any> ChessModule.register(id: String, type: ChessPlayerType<T>, cl: KClass<T>) {
+    register(RegistryType.PLAYER_TYPE, id, type)
+    register(RegistryType.PLAYER_TYPE_CLASS, type, cl)
+}
+
+inline fun <reified T : Any> ChessModule.register(id: String, type: ChessPlayerType<T>) =
+    register(id, type, T::class)
 
 object GregChessModule : ChessModule("gregchess") {
 

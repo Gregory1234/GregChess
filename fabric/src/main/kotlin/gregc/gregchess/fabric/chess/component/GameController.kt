@@ -20,7 +20,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
                 players.forEachUnique {
                     //it.player.showGameResults(it.color, results!!)
                 }
-                players.forEach(ChessPlayer::stop)
+                players.forEach(ChessPlayer<*>::stop)
                 ChessGameManager -= game
                 game.coroutineScope.cancel()
             }
