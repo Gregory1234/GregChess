@@ -1,8 +1,8 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.passExceptions
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.delay
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerQuitEvent
 import java.util.*
 import kotlin.collections.set
 import kotlin.coroutines.*
+import kotlin.time.ExperimentalTime
 
 object RequestManager : Listener {
 
@@ -57,6 +58,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         })
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun call(request: Request, simple: Boolean) {
         if ((simple || config.getBoolean("Request.SelfAccept", true)) && request.sender == request.receiver) {
             request.cont.resume(RequestResponse.ACCEPT)

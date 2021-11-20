@@ -2,19 +2,22 @@
 
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.DurationSerializer
 import gregc.gregchess.chess.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
-import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.reflect.KClass
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toKotlinDuration
 
 @Serializable
 data class TimeControl(
     val type: Type,
     val initialTime: Duration,
-    val increment: Duration = 0.seconds
+    val increment: Duration = Duration.ZERO
 ) {
     enum class Type(val usesIncrement: Boolean = true) {
         FIXED(false), INCREMENT, BRONSTEIN, SIMPLE
@@ -22,11 +25,11 @@ data class TimeControl(
 
     fun getPGN() = buildString {
         if (type == Type.SIMPLE) {
-            append("1/", initialTime.seconds)
+            append("1/", initialTime.inWholeSeconds)
         } else {
-            append(initialTime.seconds)
-            if (!increment.isZero)
-                append("+", increment.seconds)
+            append(initialTime.inWholeSeconds)
+            if (increment != Duration.ZERO)
+                append("+", increment.inWholeSeconds)
         }
     }
 
@@ -43,7 +46,7 @@ data class TimeControl(
 data class ChessClockData(
     val timeControl: TimeControl,
     val timeRemaining: ByColor<Duration> = byColor(timeControl.initialTime),
-    val currentTurnLength: Duration = 0.seconds
+    val currentTurnLength: Duration = Duration.ZERO
 ) : ComponentData<ChessClock> {
     override val componentClass: KClass<out ChessClock> get() = ChessClock::class
 
@@ -99,16 +102,16 @@ class ChessClock(game: ChessGame, settings: ChessClockData) : Component(game) {
         if (stopped)
             return
         val now = LocalDateTime.now()
-        val dt = Duration.between(lastTime, now)
+        val dt = java.time.Duration.between(lastTime, now).toKotlinDuration()
         lastTime = now
         currentTurnLength += dt
         if (timeControl.type != TimeControl.Type.SIMPLE) {
             time[game.currentTurn] -= dt
         } else {
-            time[game.currentTurn] -= maxOf(minOf(dt, currentTurnLength - timeControl.increment), 0.seconds)
+            time[game.currentTurn] -= maxOf(minOf(dt, currentTurnLength - timeControl.increment), Duration.ZERO)
         }
         for ((s, t) in time.toIndexedList())
-            if (t.isNegative)
+            if (t.isNegative())
                 game.variant.timeout(game, s)
     }
 
@@ -116,7 +119,7 @@ class ChessClock(game: ChessGame, settings: ChessClockData) : Component(game) {
     fun endTurn(e: TurnEvent) {
         if (e != TurnEvent.END)
             return
-        val increment = if (started) timeControl.increment else 0.seconds
+        val increment = if (started) timeControl.increment else Duration.ZERO
         if (!started)
             started = true
         val turn = game.currentTurn
@@ -133,6 +136,6 @@ class ChessClock(game: ChessGame, settings: ChessClockData) : Component(game) {
             TimeControl.Type.SIMPLE -> {
             }
         }
-        currentTurnLength = 0.seconds
+        currentTurnLength = Duration.ZERO
     }
 }

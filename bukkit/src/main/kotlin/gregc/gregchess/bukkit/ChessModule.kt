@@ -17,6 +17,7 @@ import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass
+import kotlin.time.Duration
 
 class SettingsParserContext(val variant: ChessVariant, val section: ConfigurationSection)
 
@@ -93,7 +94,7 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
             val section = config.getConfigurationSection("Settings.Clock.$it")!!
             val t = TimeControl.Type.valueOf(section.getString("Type", TimeControl.Type.INCREMENT.toString())!!)
             val initial = section.getString("Initial")!!.toDuration()
-            val increment = if (t.usesIncrement) section.getString("Increment")!!.toDuration() else 0.seconds
+            val increment = if (t.usesIncrement) section.getString("Increment")!!.toDuration() else Duration.ZERO
             ChessClockData(TimeControl(t, initial, increment))
         }
 

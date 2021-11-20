@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import java.time.Duration
+import kotlin.time.Duration
 
 fun randomString(size: Int) =
     String(CharArray(size) { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() })
@@ -27,11 +27,6 @@ operator fun Pair<Int, Int>.rangeTo(other: Pair<Int, Int>) = (first..other.first
 operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 
 fun String.upperFirst() = replaceFirstChar { it.uppercase() }
-
-val Int.seconds: Duration
-    get() = Duration.ofSeconds(toLong())
-val Long.minutes: Duration
-    get() = Duration.ofMinutes(this)
 
 fun String.snakeToPascal(): String {
     val snakeRegex = "_[a-zA-Z]".toRegex()
@@ -84,10 +79,13 @@ class MultiExceptionContext {
     }
 }
 
+// TODO: make exception handling better
 @OptIn(ExperimentalCoroutinesApi::class, InternalCoroutinesApi::class)
 fun Job.passExceptions() = invokeOnCompletion {
-    if (it != null)
+    if (it != null) {
+        it.printStackTrace()
         throw it
+    }
 }
 
 var gregChessCoroutineDispatcherFactory: () -> CoroutineDispatcher =
@@ -96,7 +94,7 @@ var gregChessCoroutineDispatcherFactory: () -> CoroutineDispatcher =
 object DurationSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Duration", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: Duration) = encoder.encodeString(value.toString())
+    override fun serialize(encoder: Encoder, value: Duration) = encoder.encodeString(value.toIsoString())
 
-    override fun deserialize(decoder: Decoder): Duration = Duration.parse(decoder.decodeString())
+    override fun deserialize(decoder: Decoder): Duration = Duration.parseIsoString(decoder.decodeString())
 }

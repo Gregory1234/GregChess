@@ -29,7 +29,7 @@ inline fun MoveTrait.tryPiece(f: () -> Unit) =
     try {
         f()
     } catch (e: PieceDoesNotExistException) {
-        throw pieceNotExist(e)
+        pieceNotExist(e)
     } catch (e: PieceAlreadyOccupiesSquareException) {
         pieceOccupiesSquare(e)
     }

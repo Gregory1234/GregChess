@@ -13,8 +13,8 @@ import kotlin.reflect.KClass
 interface ChessEngine {
     val name: String
     fun stop()
-    fun setOption(name: String, value: String)
-    fun sendCommand(command: String)
+    suspend fun setOption(name: String, value: String)
+    suspend fun sendCommand(command: String)
     suspend fun getMove(fen: FEN): String
 }
 

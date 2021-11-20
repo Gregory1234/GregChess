@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.*
+import gregc.gregchess.GregLogger
+import gregc.gregchess.Loc
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -13,12 +14,15 @@ import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
-import java.time.*
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.logging.Logger
+import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.math.*
+import kotlin.math.roundToLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
     f()
@@ -70,6 +74,7 @@ class CommandException(val error: Message, cause: Throwable? = null) : Exception
     override val message: String get() = "Uncaught command error: ${error.get()}"
 }
 
+@OptIn(ExperimentalContracts::class)
 fun cRequire(e: Boolean, msg: Message) {
     contract {
         returns() implies e
@@ -80,17 +85,6 @@ fun cRequire(e: Boolean, msg: Message) {
 fun <T> T?.cNotNull(msg: Message): T = this ?: throw CommandException(msg)
 
 inline fun <reified T, reified R : T> T.cCast(msg: Message): R = (this as? R).cNotNull(msg)
-
-fun CommandSender.cPerms(perm: String) {
-    cRequire(hasPermission(perm), NO_PERMISSION)
-}
-
-fun cPlayer(p: CommandSender) {
-    contract {
-        returns() implies (p is Player)
-    }
-    cRequire(p is Player, NOT_PLAYER)
-}
 
 inline fun <T> cWrongArgument(block: () -> T): T = try {
     block()
@@ -104,11 +98,8 @@ fun String.chatColor(): String = ChatColor.translateAlternateColorCodes('&', thi
 
 internal fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChess.plugin)
 
-val Int.ticks: Duration get() = Duration.ofMillis(toLong() * 50)
-val Long.ticks: Duration get() = Duration.ofMillis(this * 50)
-val Double.seconds: Duration get() = Duration.ofNanos(floor(this * 1000000000L).toLong())
-val Double.milliseconds: Duration get() = Duration.ofNanos(floor(this * 1000000L).toLong())
-val Double.minutes: Duration get() = Duration.ofNanos(floor(this * 60000000000L).toLong())
+val Int.ticks: Duration get() = (this * 50).milliseconds
+val Long.ticks: Duration get() = (this * 50).milliseconds
 
 class DurationFormatException(message: String, cause: Throwable? = null) : IllegalArgumentException(message, cause)
 
@@ -138,13 +129,23 @@ fun String.toDurationOrNull(): Duration? {
     return null
 }
 
-fun Duration.toLocalTime(): LocalTime =
-    LocalTime.ofNanoOfDay(max(ceil(toNanos().toDouble() / 1000000.0).toLong() * 1000000, 0))
-
-fun Duration.format(formatString: String): String = try {
-    DateTimeFormatter.ofPattern(formatString).format(toLocalTime())
-} catch (e: DateTimeException) {
-    throw DurationFormatException(formatString, e)
+fun Duration.format(formatString: String): String = toComponents { hours, minutes, seconds, nanoseconds ->
+    formatString.replace(Regex("""\w|'(\w*)'|"""")) {
+        when(it.value) {
+            "H" -> hours.toString()
+            "m" -> minutes.toString()
+            "s" -> seconds.toString()
+            "S" -> nanoseconds.toString().take(3).replace(Regex("0+$"), "")
+            "n" -> nanoseconds.toString()
+            "t" -> (nanoseconds / 50000000).toString()
+            "T" -> (inWholeNanoseconds / 50000000).toString()
+            "\"" -> "'"
+            else -> if (it.value.startsWith("'"))
+                it.groupValues[0]
+            else
+                throw DurationFormatException(formatString)
+        }
+    }
 }
 
 internal val config: ConfigurationSection get() = GregChess.plugin.config

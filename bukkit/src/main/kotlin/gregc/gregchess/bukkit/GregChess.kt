@@ -284,8 +284,11 @@ object GregChess : Listener {
                     argument(StringArgument("option")) { option ->
                         argument(GreedyStringArgument("value")) { value ->
                             execute<Player> {
-                                pl().game.players.toList().filterIsInstance<EnginePlayer<*>>().first().engine.setOption(option(), value())
-                                sender.sendMessage(ENGINE_COMMAND_SENT)
+                                coroutineScope.launch {
+                                    pl().game.players.toList().filterIsInstance<EnginePlayer<*>>()
+                                        .first().engine.setOption(option(), value())
+                                    sender.sendMessage(ENGINE_COMMAND_SENT)
+                                }.passExceptions()
                             }
                         }
                     }
@@ -293,8 +296,11 @@ object GregChess : Listener {
                 literal("send") {
                     argument(GreedyStringArgument("command")) { command ->
                         execute<Player> {
-                            pl().game.players.toList().filterIsInstance<EnginePlayer<*>>().first().engine.sendCommand(command())
-                            sender.sendMessage(ENGINE_COMMAND_SENT)
+                            coroutineScope.launch {
+                                pl().game.players.toList().filterIsInstance<EnginePlayer<*>>()
+                                    .first().engine.sendCommand(command())
+                                sender.sendMessage(ENGINE_COMMAND_SENT)
+                            }.passExceptions()
                         }
                     }
                 }

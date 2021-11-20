@@ -7,7 +7,7 @@ import gregc.gregchess.chess.Pos
 import gregc.gregchess.registry.EnumeratedRegistryView
 import gregc.gregchess.registry.toKey
 import org.bukkit.entity.Player
-import java.time.Duration
+import kotlin.time.Duration
 
 
 fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) {

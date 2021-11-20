@@ -8,12 +8,11 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
 import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.passExceptions
-import gregc.gregchess.seconds
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.delay
+import kotlinx.coroutines.*
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 enum class GameStartStageEvent : ChessEvent {
     INIT, START, BEGIN
@@ -56,6 +55,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         }.runTaskTimer(GregChess.plugin, 0, 2)
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun onStop() {
         val results = game.results!!
         callEvent(GameStopStageEvent.STOP)

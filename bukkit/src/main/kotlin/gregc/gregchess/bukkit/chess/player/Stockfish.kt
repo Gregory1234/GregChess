@@ -9,10 +9,11 @@ import gregc.gregchess.bukkit.coroutines.BukkitDispatcher
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.player.ChessEngine
 import gregc.gregchess.chess.player.NoEngineMoveException
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withContext
+import gregc.gregchess.passExceptions
+import kotlinx.coroutines.*
 import kotlinx.serialization.*
-import java.util.concurrent.*
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 @Serializable
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
@@ -30,49 +31,48 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
     private val reader = process.inputStream.bufferedReader()
 
     @Transient
-    private val executor = Executors.newCachedThreadPool()
-
-    private fun <T> runTimeout(block: Callable<T>) = executor.submit(block)[moveTime.seconds / 2 + 3, TimeUnit.SECONDS]
-
     private var moveTime = 0.2.seconds
 
     override fun stop() = process.destroy()
 
-    override fun setOption(name: String, value: String) {
+    @Suppress("BlockingMethodInNonBlockingContext")
+    private suspend fun readLineRaw(): String = withContext(Dispatchers.IO) { reader.readLine() }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    private suspend fun writeRaw(string: String) = withContext(Dispatchers.IO) {
+        process.outputStream.write(string.toByteArray())
+        process.outputStream.flush()
+    }
+
+    override suspend fun setOption(name: String, value: String) {
         when (name) {
-            "time" -> {
-                moveTime = value.toDuration()
-            }
-            else -> {
-                process.outputStream.write(("setoption name $name value $value\n").toByteArray())
-                process.outputStream.flush()
-            }
+            "time" -> moveTime = value.toDuration()
+            else -> writeRaw("setoption name $name value $value\n")
         }
     }
 
-    override fun sendCommand(command: String) {
-        process.outputStream.write("isready\n".toByteArray())
-        process.outputStream.flush()
-        runTimeout {
-            reader.readLine()
-        }
-        process.outputStream.write(("$command\n").toByteArray())
-        process.outputStream.flush()
+    @OptIn(ExperimentalTime::class)
+    override suspend fun sendCommand(command: String) = withContext(Dispatchers.IO) {
+        writeRaw("isready\n")
+        withTimeout(moveTime / 2 + 3.seconds) { readLineRaw() }
+        writeRaw("$command\n")
     }
 
-    private fun readLine() = runTimeout {
-        val a = reader.readLine()
-        a
+    @OptIn(ExperimentalTime::class)
+    private suspend fun readLine() = withContext(Dispatchers.IO) {
+        withTimeout(moveTime / 2 + 3.seconds) { readLineRaw() }
     }
 
     init {
-        readLine()
+        GregChess.coroutineScope.launch {
+            readLine()
+        }.passExceptions()
     }
 
     override suspend fun getMove(fen: FEN): String =
         withContext(BukkitDispatcher(GregChess.plugin, BukkitContext.ASYNC)) {
             sendCommand("position fen $fen")
-            sendCommand("go movetime " + moveTime.toMillis())
+            sendCommand("go movetime " + moveTime.inWholeMilliseconds)
             var ret: String? = null
             while (isActive) {
                 val line = readLine().split(" ")
