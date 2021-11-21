@@ -276,14 +276,12 @@ fun interface ChessControllerInventory : SidedInventory {
 
 }
 
-class ChessControllerGuiDescription(syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext) :
-    SyncedGuiDescription(
-        GregChess.CHESS_CONTROLLER_SCREEN_HANDLER_TYPE,
-        syncId,
-        playerInventory,
-        getBlockInventory(context, INVENTORY_SIZE),
-        getBlockPropertyDelegate(context, 1)
-    ) {
+class ChessControllerGuiDescription(
+    syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext = ScreenHandlerContext.EMPTY
+) : SyncedGuiDescription(
+    GregChess.CHESS_CONTROLLER_SCREEN_HANDLER_TYPE, syncId, playerInventory,
+    getBlockInventory(context, INVENTORY_SIZE), getBlockPropertyDelegate(context, 1)
+) {
 
     companion object {
         private val pieces: List<Piece> = PieceRegistryView.values.toList()

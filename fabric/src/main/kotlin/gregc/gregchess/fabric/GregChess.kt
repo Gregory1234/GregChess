@@ -15,7 +15,6 @@ import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.datafixer.TypeReferences
 import net.minecraft.item.*
-import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.util.Util
 import net.minecraft.util.registry.Registry
@@ -40,7 +39,7 @@ object GregChess : ModInitializer {
 
     @JvmField
     val PIECE_ENTITY_TYPE: BlockEntityType<*> = BlockEntityType.Builder.create(
-        { a, b -> PieceBlockEntity(a, b) }, *FabricRegistryTypes.PIECE_BLOCK.values.toTypedArray()
+        ::PieceBlockEntity, *FabricRegistryTypes.PIECE_BLOCK.values.toTypedArray()
     ).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
 
     @JvmField
@@ -50,9 +49,8 @@ object GregChess : ModInitializer {
 
     @JvmField
     val CHESSBOARD_FLOOR_ENTITY_TYPE: BlockEntityType<*> =
-        BlockEntityType.Builder.create({ a, b -> ChessboardFloorBlockEntity(a, b) }, CHESSBOARD_FLOOR_BLOCK).build(
-            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chessboard_floor")
-        )
+        BlockEntityType.Builder.create(::ChessboardFloorBlockEntity, CHESSBOARD_FLOOR_BLOCK)
+            .build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chessboard_floor"))
 
     @JvmField
     val CHESS_CONTROLLER_BLOCK: Block = ChessControllerBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
@@ -61,21 +59,16 @@ object GregChess : ModInitializer {
 
     @JvmField
     val CHESS_CONTROLLER_ENTITY_TYPE: BlockEntityType<*> =
-        BlockEntityType.Builder.create({ a, b -> ChessControllerBlockEntity(a, b) }, CHESS_CONTROLLER_BLOCK).build(
-            Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chess_controller")
-        )
+        BlockEntityType.Builder.create(::ChessControllerBlockEntity, CHESS_CONTROLLER_BLOCK)
+            .build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chess_controller"))
 
     @JvmField
     val CHESS_CONTROLLER_SCREEN_HANDLER_TYPE: ScreenHandlerType<ChessControllerGuiDescription> =
-        ScreenHandlerRegistry.registerSimple(ident("chess_controller")) { syncId, inventory ->
-            ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY)
-        }
+        ScreenHandlerRegistry.registerSimple(ident("chess_controller"), ::ChessControllerGuiDescription)
 
     @JvmField
     val PROMOTION_MENU_HANDLER_TYPE: ScreenHandlerType<PromotionMenuGuiDescription> =
-        ScreenHandlerRegistry.registerSimple(ident("promotion_menu")) { syncId, inventory ->
-            PromotionMenuGuiDescription(syncId, inventory, ScreenHandlerContext.EMPTY)
-        }
+        ScreenHandlerRegistry.registerSimple(ident("promotion_menu"), ::PromotionMenuGuiDescription)
 
     override fun onInitialize() {
 

@@ -19,14 +19,12 @@ import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 
-class PromotionMenuGuiDescription(syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext) :
-    SyncedGuiDescription(
-        GregChess.PROMOTION_MENU_HANDLER_TYPE,
-        syncId,
-        playerInventory,
-        null,
-        getBlockPropertyDelegate(context, 0)
-    ) {
+class PromotionMenuGuiDescription(
+    syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext = ScreenHandlerContext.EMPTY
+) : SyncedGuiDescription(
+    GregChess.PROMOTION_MENU_HANDLER_TYPE, syncId, playerInventory,
+    null, getBlockPropertyDelegate(context, 0)
+) {
 
     private val root = WGridPanel()
 
