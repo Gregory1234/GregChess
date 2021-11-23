@@ -77,6 +77,12 @@ tasks {
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
             configureEach {
+                sourceLink {
+                    val relPath = rootProject.projectDir.toPath().relativize(projectDir.toPath())
+                    localDirectory.set(projectDir.resolve("src"))
+                    remoteUrl.set(URL("https://github.com/Gregory1234/GregChess/tree/master/$relPath/src"))
+                    remoteLineSuffix.set("#L")
+                }
                 externalDocumentationLink {
                     url.set(URL("https://cottonmc.github.io/docs/libgui/"))
                     packageListUrl.set(URL("https://cottonmc.github.io/docs/libgui/element-list"))

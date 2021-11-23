@@ -22,6 +22,16 @@ dependencies {
     shaded(project(":core"))
 }
 
+// TODO: make this simpler
+val trueSpigotVersion by lazy {
+    val spigotVersion: String by project
+    val snapshot = groovy.xml.XmlParser().parse("https://hub.spigotmc.org/nexus/content/repositories/snapshots/org/spigotmc/spigot-api/$spigotVersion/maven-metadata.xml")
+        .children().filterIsInstance<groovy.util.Node>().first { it.name() == "versioning" }
+        .children().filterIsInstance<groovy.util.Node>().first { it.name() == "snapshot" }.children().filterIsInstance<groovy.util.Node>()
+    println("Calculating spigot version")
+    spigotVersion.replace("SNAPSHOT", snapshot.first {it.name() == "timestamp"}.text() + "-" + snapshot.first {it.name() == "buildNumber"}.text())
+}
+
 fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("tokens" to mapOf(*args))
 
 tasks {
@@ -63,9 +73,17 @@ tasks {
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
             configureEach {
+                // TODO: remove repetition
+                sourceLink {
+                    val relPath = rootProject.projectDir.toPath().relativize(projectDir.toPath())
+                    localDirectory.set(projectDir.resolve("src"))
+                    remoteUrl.set(URL("https://github.com/Gregory1234/GregChess/tree/master/$relPath/src"))
+                    remoteLineSuffix.set("#L")
+                }
                 externalDocumentationLink {
-                    url.set(URL("https://hub.spigotmc.org/javadocs/spigot/"))
-                    packageListUrl.set(URL("https://hub.spigotmc.org/javadocs/spigot/element-list"))
+                    val spigotVersion: String by project
+                    url.set(URL("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/$spigotVersion/spigot-api-$trueSpigotVersion-javadoc.jar/!"))
+                    packageListUrl.set(URL("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/$spigotVersion/spigot-api-$trueSpigotVersion-javadoc.jar/!/element-list"))
                 }
             }
         }
