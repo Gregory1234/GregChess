@@ -152,8 +152,16 @@ class ChessGame private constructor(
 
     val clock get() = getComponent<ChessClock>()
 
+    // TODO: consider making component and player functions suspended
     val coroutineScope by lazy {
-        CoroutineScope(gregChessCoroutineDispatcherFactory() + SupervisorJob() + CoroutineName("Game $uuid"))
+        CoroutineScope(
+            gregChessCoroutineDispatcherFactory() +
+            SupervisorJob() +
+            CoroutineName("Game $uuid") +
+            CoroutineExceptionHandler { _, e ->
+                e.printStackTrace()
+            }
+        )
     }
 
     fun <T : Component> getComponent(cl: KClass<T>): T? =

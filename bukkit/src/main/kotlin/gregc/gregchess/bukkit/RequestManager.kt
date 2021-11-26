@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.passExceptions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.bukkit.command.CommandSender
@@ -81,7 +80,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
                 delay(duration)
                 if (request.uuid in requests)
                     expire(request)
-            }.passExceptions()
+            }
     }
 
     private operator fun plusAssign(request: Request) = call(request, false)

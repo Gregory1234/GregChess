@@ -1,6 +1,9 @@
 package gregc.gregchess.bukkit.command
 
 import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.coroutines.BukkitContext
+import gregc.gregchess.bukkit.coroutines.BukkitDispatcher
+import kotlinx.coroutines.*
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -81,7 +84,12 @@ class CommandBuilder {
         partialExecute(S::class, builder)
     }
 
-    private fun executeOn(strings: List<String>, toExec: MutableList<ExecutionContext<*>.() -> Unit>, toValidate: MutableList<ExecutionContext<*>.() -> Message?>, context: MutableList<Any?>) {
+    private fun executeOn(
+        strings: List<String>,
+        toExec: MutableList<ExecutionContext<*>.() -> Unit>,
+        toValidate: MutableList<ExecutionContext<*>.() -> Message?>,
+        context: MutableList<Any?>
+    ) {
         toExec.addAll(onExecutePartial)
         var msg: Message? = null
         for ((arg, com) in onArgument) {
@@ -98,7 +106,9 @@ class CommandBuilder {
             toExec.addAll(onExecute)
             return
         }
-        throw CommandException(if (strings.isEmpty() || onArgument.isEmpty()) WRONG_ARGUMENTS_NUMBER else msg ?: WRONG_ARGUMENT)
+        throw CommandException(
+            if (strings.isEmpty() || onArgument.isEmpty()) WRONG_ARGUMENTS_NUMBER else msg ?: WRONG_ARGUMENT
+        )
     }
 
     fun executeOn(sender: CommandSender, strings: List<String>) {
@@ -106,7 +116,16 @@ class CommandBuilder {
         val toValidate = mutableListOf<ExecutionContext<*>.() -> Message?>()
         val ctx = mutableListOf<Any?>()
         executeOn(strings, toExec, toValidate, ctx)
-        val ectx = ExecutionContext(sender, ctx)
+        val ectx = ExecutionContext(sender, ctx, CoroutineScope(
+        BukkitDispatcher(GregChess.plugin, BukkitContext.SYNC) +
+                SupervisorJob(GregChess.coroutineScope.coroutineContext.job) +
+                CoroutineExceptionHandler { _, e ->
+                    if (e is CommandException)
+                        sender.sendMessage(e.error.get())
+                    else
+                        e.printStackTrace()
+                }
+        ))
         for (x in toValidate)
             ectx.x()?.let {
                 throw CommandException(it)
@@ -115,9 +134,14 @@ class CommandBuilder {
             ectx.x()
     }
 
-    private fun autocompleteOn(sender: CommandSender, strings: List<String>, ac: MutableSet<String>, context: MutableList<Any?>) {
-        outLoop@for ((arg, com) in onArgument) {
-            val ctx = ExecutionContext(sender, context)
+    private fun autocompleteOn(
+        sender: CommandSender,
+        strings: List<String>,
+        ac: MutableSet<String>,
+        context: MutableList<Any?>
+    ) {
+        outLoop@ for ((arg, com) in onArgument) {
+            val ctx = ExecutionContext(sender, context, GregChess.coroutineScope)
             for (v in validator) {
                 if (ctx.v() != null)
                     continue@outLoop
@@ -162,11 +186,13 @@ class CommandArgument<T>(val index: Int, val type: CommandArgumentType<T>)
 
 abstract class CommandArgumentType<R>(val name: String, val failMessage: Message? = null) {
     abstract fun tryParse(strings: List<String>): Pair<R, List<String>>?
-    open fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? = if (tryParse(strings) == null) emptySet() else null
+    open fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? =
+        if (tryParse(strings) == null) emptySet() else null
 }
 
 @CommandDsl
-class ExecutionContext<out S : CommandSender>(val sender: S, private val arguments: List<Any?>) {
+class ExecutionContext<out S : CommandSender>(val sender: S, private val arguments: List<Any?>, val coroutineScope: CoroutineScope) {
+
     @Suppress("UNCHECKED_CAST")
     operator fun <T> CommandArgument<T>.invoke(): T = arguments[index] as T
 }
@@ -193,7 +219,8 @@ class LiteralArgument(val value: String, name: String = value) : CommandArgument
     override fun tryParse(strings: List<String>): Pair<Unit, List<String>>? =
         if (strings.firstOrNull() == value) Pair(Unit, strings.drop(1)) else null
 
-    override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? = if (strings.isEmpty()) setOf(value) else null
+    override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? =
+        if (strings.isEmpty()) setOf(value) else null
 }
 
 class EnumArgument<T>(val values: Collection<T>, name: String) : CommandArgumentType<T>(name) {

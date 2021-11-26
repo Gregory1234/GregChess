@@ -9,7 +9,6 @@ import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.player.ChessPlayer
-import gregc.gregchess.passExceptions
 import kotlinx.coroutines.launch
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -192,7 +191,7 @@ class BukkitPlayer(player: Player, color: Color, game: ChessGame) : ChessPlayer<
                 promotion = player.openPawnPromotionMenu(promotions)
             }
             game.finishMove(move)
-        }.passExceptions()
+        }
     }
 
     private var firstTurn = true

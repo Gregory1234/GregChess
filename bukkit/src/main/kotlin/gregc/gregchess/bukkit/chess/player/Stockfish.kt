@@ -9,7 +9,6 @@ import gregc.gregchess.bukkit.coroutines.BukkitDispatcher
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.player.ChessEngine
 import gregc.gregchess.chess.player.NoEngineMoveException
-import gregc.gregchess.passExceptions
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlin.time.Duration.Companion.seconds
@@ -66,7 +65,7 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
     init {
         GregChess.coroutineScope.launch {
             readLine()
-        }.passExceptions()
+        }
     }
 
     override suspend fun getMove(fen: FEN): String =

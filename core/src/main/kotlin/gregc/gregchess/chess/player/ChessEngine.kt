@@ -4,7 +4,6 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.of
-import gregc.gregchess.passExceptions
 import kotlinx.coroutines.launch
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
@@ -45,7 +44,7 @@ class EnginePlayer<T : ChessEngine>(val engine: T, color: Color, game: ChessGame
                 game.stop(drawBy(EndReason.ERROR))
                 throw e
             }
-        }.passExceptions()
+        }
     }
 }
 

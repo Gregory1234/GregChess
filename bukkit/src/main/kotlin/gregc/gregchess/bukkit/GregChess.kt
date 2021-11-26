@@ -10,8 +10,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceRegistryView
 import gregc.gregchess.chess.player.EnginePlayer
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.bukkit.Bukkit
@@ -50,7 +49,9 @@ object GregChess : Listener {
         }
     }
 
-    val coroutineScope = BukkitScope(plugin, BukkitContext.SYNC)
+    val coroutineScope = BukkitScope(plugin, BukkitContext.SYNC) + CoroutineExceptionHandler { _, e ->
+        e.printStackTrace()
+    }
 
     val logger get() = plugin.logger
 
@@ -131,7 +132,7 @@ object GregChess : Listener {
                                     ChessGame(settings, byColor(sender, opponent)).start()
                                 }
                             }
-                        }.passExceptions()
+                        }
                     }
                 }
             }
@@ -144,7 +145,7 @@ object GregChess : Listener {
                         val settings = sender.openSettingsMenu()
                         if (settings != null)
                             ChessGame(settings, byColor(sender, Stockfish())).start()
-                    }.passExceptions()
+                    }
                 }
             }
             subcommand("resign") {
@@ -170,7 +171,7 @@ object GregChess : Listener {
                         if (res == RequestResponse.ACCEPT) {
                             pl().game.stop(drawBy(EndReason.DRAW_AGREEMENT))
                         }
-                    }.passExceptions()
+                    }
                 }
             }
             subcommand("capture") {
@@ -288,7 +289,7 @@ object GregChess : Listener {
                                     pl().game.players.toList().filterIsInstance<EnginePlayer<*>>()
                                         .first().engine.setOption(option(), value())
                                     sender.sendMessage(ENGINE_COMMAND_SENT)
-                                }.passExceptions()
+                                }
                             }
                         }
                     }
@@ -300,7 +301,7 @@ object GregChess : Listener {
                                 pl().game.players.toList().filterIsInstance<EnginePlayer<*>>()
                                     .first().engine.sendCommand(command())
                                 sender.sendMessage(ENGINE_COMMAND_SENT)
-                            }.passExceptions()
+                            }
                         }
                     }
                 }
@@ -341,7 +342,7 @@ object GregChess : Listener {
                         if (res == RequestResponse.ACCEPT) {
                             pl().game.board.undoLastMove()
                         }
-                    }.passExceptions()
+                    }
                 }
             }
             subcommand("serial") {

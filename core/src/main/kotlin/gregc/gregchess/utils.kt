@@ -1,6 +1,6 @@
 package gregc.gregchess
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.*
@@ -76,15 +76,6 @@ class MultiExceptionContext {
                 for (e in exceptions.dropLast(1)) addSuppressed(e)
             }
         }
-    }
-}
-
-// TODO: make exception handling better
-@OptIn(ExperimentalCoroutinesApi::class, InternalCoroutinesApi::class)
-fun Job.passExceptions() = invokeOnCompletion {
-    if (it != null) {
-        it.printStackTrace()
-        throw it
     }
 }
 

@@ -7,7 +7,6 @@ import gregc.gregchess.bukkit.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
 import gregc.gregchess.chess.player.ChessPlayer
-import gregc.gregchess.passExceptions
 import kotlinx.coroutines.*
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
@@ -77,7 +76,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
                 it.player.sendPGN(pgn)
                 it.player.games -= game
                 it.player.currentGame = null
-            }.passExceptions()
+            }
         }
         if (results.endReason.quick) {
             callEvent(GameStopStageEvent.CLEAR)
