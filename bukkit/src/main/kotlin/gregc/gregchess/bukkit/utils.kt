@@ -130,12 +130,14 @@ fun String.toDurationOrNull(): Duration? {
 }
 
 fun Duration.format(formatString: String): String = toComponents { hours, minutes, seconds, nanoseconds ->
-    formatString.replace(Regex("""\w|'(\w*)'|"""")) {
+    formatString.replace(Regex("""HH|mm|ss|S|SS|SSS|\w|'(\w*)'|"""")) {
         when(it.value) {
-            "H" -> hours.toString()
-            "m" -> minutes.toString()
-            "s" -> seconds.toString()
-            "S" -> nanoseconds.toString().take(3).replace(Regex("0+$"), "")
+            "HH" -> hours.toString()
+            "mm" -> minutes.toString().padStart(2,'0')
+            "ss" -> seconds.toString().padStart(2,'0')
+            "SSS" -> nanoseconds.toString().take(3).replace(Regex("0+$"), "").ifEmpty { "0" }
+            "SS" -> nanoseconds.toString().take(2).replace(Regex("0+$"), "").ifEmpty { "0" }
+            "S" -> nanoseconds.toString().take(1).replace(Regex("0+$"), "").ifEmpty { "0" }
             "n" -> nanoseconds.toString()
             "t" -> (nanoseconds / 50000000).toString()
             "T" -> (inWholeNanoseconds / 50000000).toString()
