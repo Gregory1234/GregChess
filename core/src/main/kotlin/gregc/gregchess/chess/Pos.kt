@@ -112,6 +112,35 @@ class PosSteps(val start: Pos, private val jump: Dir, override val size: Int) : 
     override fun iterator() = PosIterator(start, jump, size)
 }
 
+@Serializable(with = UniquenessCoordinate.Serializer::class)
+data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
+    constructor(pos: Pos) : this(pos.file, pos.rank)
+
+    object Serializer : KSerializer<UniquenessCoordinate> {
+        override val descriptor: SerialDescriptor
+            get() = PrimitiveSerialDescriptor("UniquenessCoordinate", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: UniquenessCoordinate) {
+            encoder.encodeString(value.toString())
+        }
+
+        override fun deserialize(decoder: Decoder): UniquenessCoordinate {
+            val str = decoder.decodeString()
+            return if (str.length == 2)
+                UniquenessCoordinate(Pos.parseFromString(str))
+            else when (str.single()) {
+                in '1'..'8' -> UniquenessCoordinate(rank = str.single() - '1')
+                in 'a'..'h' -> UniquenessCoordinate(file = str.single() - 'a')
+                else -> error("Bad chessboard coordinate: $str")
+            }
+        }
+    }
+
+    val fileStr get() = file?.let { "${'a' + it}" }
+    val rankStr get() = rank?.let { (it + 1).toString() }
+    override fun toString(): String = fileStr.orEmpty() + rankStr.orEmpty()
+}
+
 enum class Floor {
     LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END
 }

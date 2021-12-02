@@ -2,8 +2,6 @@ package gregc.gregchess.chess.move
 
 import gregc.gregchess.GregChessModule
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.register
 import gregc.gregchess.registry.*
@@ -11,89 +9,6 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlin.reflect.KClass
-
-// TODO: add a way to keep track of moving pieces
-@Serializable
-data class Move(
-    val piece: BoardPiece, val display: Pos, val floor: Floor,
-    val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
-    val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
-    val flagsNeeded: Set<Pair<Pos, ChessFlagType>>,
-    val traits: List<MoveTrait>, val nameOrder: NameOrder
-) {
-    fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
-    inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)
-
-    fun setup(game: ChessGame) {
-        traits.forEach { it.setup(game, this) }
-    }
-
-    fun execute(game: ChessGame) {
-        var remainingTraits = traits
-        for (pass in 0u..255u) {
-            remainingTraits = remainingTraits.filterNot { mt ->
-                if (remainingTraits.any { it::class in mt.shouldComeBefore })
-                    false
-                else if (remainingTraits.any { mt::class in it.shouldComeAfter })
-                    false
-                else if (!mt.shouldComeFirst && remainingTraits.any { it.shouldComeFirst })
-                    false
-                else if (mt.shouldComeLast && remainingTraits.any { !it.shouldComeLast })
-                    false
-                else {
-                    mt.execute(game, this)
-                    true
-                }
-            }
-            if (remainingTraits.isEmpty()) return
-        }
-        throw TraitsCouldNotExecuteException(remainingTraits)
-    }
-
-    val name: MoveName get() = nameOrder.reorder(traits.flatMap { it.nameTokens })
-
-    fun undo(game: ChessGame) {
-        var remainingTraits = traits
-        for (pass in 0u..255u) {
-            remainingTraits = remainingTraits.filterNot { mt ->
-                if (remainingTraits.any { it::class in mt.shouldComeAfter })
-                    false
-                else if (remainingTraits.any { mt::class in it.shouldComeBefore })
-                    false
-                else if (!mt.shouldComeLast && remainingTraits.any { it.shouldComeLast })
-                    false
-                else if (mt.shouldComeFirst && remainingTraits.any { !it.shouldComeFirst })
-                    false
-                else {
-                    mt.undo(game, this)
-                    true
-                }
-            }
-            if (remainingTraits.isEmpty()) {
-                return
-            }
-        }
-        throw TraitsCouldNotExecuteException(remainingTraits)
-    }
-
-    fun show(board: Chessboard) {
-        board[display]?.moveMarker = floor
-    }
-
-    fun hide(board: Chessboard) {
-        board[display]?.moveMarker = null
-    }
-
-    fun showDone(board: Chessboard) {
-        board[piece.pos]?.previousMoveMarker = Floor.LAST_START
-        board[display]?.moveMarker = Floor.LAST_END
-    }
-
-    fun hideDone(board: Chessboard) {
-        board[piece.pos]?.previousMoveMarker = null
-        board[display]?.moveMarker = null
-    }
-}
 
 @Serializable(with = MoveNameTokenType.Serializer::class)
 class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmField val toPgnString: (T) -> String) :
@@ -247,32 +162,3 @@ operator fun MutableTokenList.plusAssign(token: MoveNameToken<*>) = plusAssign(A
 fun nameOf(vararg tokens: MoveNameToken<*>): MoveName = tokens.map { AnyMoveNameToken(it) }
 
 val MoveName.pgn get() = joinToString("") { it.token.pgn }
-
-@Serializable(with = UniquenessCoordinate.Serializer::class)
-data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
-    constructor(pos: Pos) : this(pos.file, pos.rank)
-
-    object Serializer : KSerializer<UniquenessCoordinate> {
-        override val descriptor: SerialDescriptor
-            get() = PrimitiveSerialDescriptor("UniquenessCoordinate", PrimitiveKind.STRING)
-
-        override fun serialize(encoder: Encoder, value: UniquenessCoordinate) {
-            encoder.encodeString(value.toString())
-        }
-
-        override fun deserialize(decoder: Decoder): UniquenessCoordinate {
-            val str = decoder.decodeString()
-            return if (str.length == 2)
-                UniquenessCoordinate(Pos.parseFromString(str))
-            else when (str.single()) {
-                in '1'..'8' -> UniquenessCoordinate(rank = str.single() - '1')
-                in 'a'..'h' -> UniquenessCoordinate(file = str.single() - 'a')
-                else -> error("Bad chessboard coordinate: $str")
-            }
-        }
-    }
-
-    val fileStr get() = file?.let { "${'a' + it}" }
-    val rankStr get() = rank?.let { (it + 1).toString() }
-    override fun toString(): String = fileStr.orEmpty() + rankStr.orEmpty()
-}
