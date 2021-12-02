@@ -2,6 +2,8 @@ package gregc.gregchess.fabric
 
 import gregc.gregchess.GregLogger
 import gregc.gregchess.Loc
+import gregc.gregchess.chess.ChessEnvironment
+import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.IntArraySerializer
 import kotlinx.serialization.descriptors.*
@@ -55,6 +57,7 @@ object UUIDAsIntArraySerializer : KSerializer<UUID> {
         NbtHelper.toUuid(NbtIntArray(decoder.decodeSerializableValue(IntArraySerializer())))
 }
 
+@Suppress("UNCHECKED_CAST")
 fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModule {
     contextual(World::class, object : KSerializer<World> {
         override val descriptor = PrimitiveSerialDescriptor("World", PrimitiveKind.STRING)
@@ -69,4 +72,5 @@ fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModul
         }
     })
     contextual(UUID::class, UUIDAsIntArraySerializer)
+    contextual(ChessEnvironment::class, FabricChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
 }

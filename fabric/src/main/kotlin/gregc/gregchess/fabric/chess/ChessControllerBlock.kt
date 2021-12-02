@@ -5,6 +5,7 @@ import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.chess.component.FabricRendererSettings
+import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import gregc.gregchess.rangeTo
 import gregc.gregchess.registry.RegistryType
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
@@ -163,6 +164,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
         if (currentGame != null) return
         currentGame = ChessGame(
+            FabricChessEnvironment,
             ChessGameManager.settings(ChessVariant.Normal, getBoardState(), FabricRendererSettings(this)),
             byColor(whitePlayer.uuid, blackPlayer.uuid)
         ).start()

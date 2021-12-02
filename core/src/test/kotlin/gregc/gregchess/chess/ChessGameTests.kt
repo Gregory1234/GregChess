@@ -17,7 +17,7 @@ class ChessGameTests {
 
     private val normalSettings = testSettings("normal")
 
-    private fun mkGame(settings: GameSettings) = ChessGame(settings, byColor(playerA, playerB))
+    private fun mkGame(settings: GameSettings) = ChessGame(TestChessEnvironment, settings, byColor(playerA, playerB))
 
     @BeforeAll
     fun setup() {

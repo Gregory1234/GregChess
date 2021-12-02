@@ -2,6 +2,8 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.GregLogger
 import gregc.gregchess.Loc
+import gregc.gregchess.bukkit.coroutines.BukkitChessEnvironment
+import gregc.gregchess.chess.ChessEnvironment
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -171,8 +173,10 @@ object UUIDAsStringSerializer : KSerializer<UUID> {
     override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
 }
 
+@Suppress("UNCHECKED_CAST")
 fun defaultModule() = SerializersModule {
     contextual(UUID::class, UUIDAsStringSerializer)
+    contextual(ChessEnvironment::class, BukkitChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
 }
 
 object PlayerSerializer : KSerializer<Player> {

@@ -8,6 +8,7 @@ import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.register
 import io.mockk.clearMocks
 import io.mockk.spyk
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.builtins.serializer
 
 fun testSettings(
@@ -41,6 +42,11 @@ object TestVariant : ChessVariant()
 
 @JvmField
 val TEST_END_REASON = DetEndReason(EndReason.Type.EMERGENCY)
+
+object TestChessEnvironment : ChessEnvironment {
+    override val coroutineDispatcher: CoroutineDispatcher
+        get() = throw UnsupportedOperationException()
+}
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)
 

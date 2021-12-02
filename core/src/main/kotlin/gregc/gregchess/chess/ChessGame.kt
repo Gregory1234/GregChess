@@ -5,7 +5,6 @@ import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.player.*
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.gregChessCoroutineDispatcherFactory
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.*
@@ -44,6 +43,7 @@ class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : Run
 
 @Serializable(with = ChessGame.Serializer::class)
 class ChessGame private constructor(
+    val environment: ChessEnvironment,
     val settings: GameSettings,
     val playerData: ByColor<Any>,
     val uuid: UUID,
@@ -51,8 +51,8 @@ class ChessGame private constructor(
     startTime: LocalDateTime?,
     results: GameResults?
 ) : ChessEventCaller {
-    constructor(settings: GameSettings, playerInfo: ByColor<Any>)
-            : this(settings, playerInfo, UUID.randomUUID(), State.INITIAL, null, null)
+    constructor(environment: ChessEnvironment, settings: GameSettings, playerInfo: ByColor<Any>)
+            : this(environment, settings, playerInfo, UUID.randomUUID(), State.INITIAL, null, null)
 
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     object Serializer : KSerializer<ChessGame> {
@@ -66,6 +66,7 @@ class ChessGame private constructor(
             element<String?>("startTime")
             element("results", GameResultsSerializer.descriptor.nullable)
             element("components", ListSerializer(ComponentDataSerializer).descriptor)
+            element("environment", buildSerialDescriptor("ChessEnvironment", SerialKind.CONTEXTUAL))
         }
 
         override fun serialize(encoder: Encoder, value: ChessGame) = encoder.encodeStructure(descriptor) {
@@ -78,6 +79,7 @@ class ChessGame private constructor(
             encodeNullableSerializableElement(descriptor, 6, String.serializer().nullable, value.startTime?.toString())
             encodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable, value.results)
             encodeSerializableElement(descriptor, 8, ListSerializer(ComponentDataSerializer), value.componentData)
+            encodeSerializableElement(descriptor, 9, encoder.serializersModule.serializer(), value.environment)
         }
 
         override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
@@ -90,6 +92,7 @@ class ChessGame private constructor(
             var startTime: LocalDateTime? = null
             var results: GameResults? = null
             var components: List<ComponentData<*>>? = null
+            var environment: ChessEnvironment? = null
             if (decodeSequentially()) { // sequential decoding protocol
                 uuid = decodeSerializableElement(descriptor, 0, decoder.serializersModule.serializer())
                 players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerDataSerializer))
@@ -100,6 +103,7 @@ class ChessGame private constructor(
                 startTime = decodeNullableSerializableElement(descriptor, 6, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
                 results = decodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable)
                 components = decodeSerializableElement(descriptor, 8, ListSerializer(ComponentDataSerializer))
+                environment = decodeSerializableElement(descriptor, 9, decoder.serializersModule.serializer())
             } else {
                 while (true) {
                     when (val index = decodeElementIndex(descriptor)) {
@@ -114,13 +118,15 @@ class ChessGame private constructor(
                         7 -> results = decodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable)
                         8 -> components =
                             decodeSerializableElement(descriptor, index, ListSerializer(ComponentDataSerializer))
+                        9 -> environment =
+                            decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
                         CompositeDecoder.DECODE_DONE -> break
                         else -> error("Unexpected index: $index")
                     }
                 }
             }
             ChessGame(
-                GameSettings(preset!!, simpleCastling!!, variant!!, components!!),
+                environment!!, GameSettings(preset!!, simpleCastling!!, variant!!, components!!),
                 players!!, uuid!!, state!!, startTime, results
             )
         }
@@ -155,7 +161,7 @@ class ChessGame private constructor(
     // TODO: consider making component and player functions suspended
     val coroutineScope by lazy {
         CoroutineScope(
-            gregChessCoroutineDispatcherFactory() +
+            environment.coroutineDispatcher +
             SupervisorJob() +
             CoroutineName("Game $uuid") +
             CoroutineExceptionHandler { _, e ->

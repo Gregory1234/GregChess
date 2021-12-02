@@ -1,6 +1,5 @@
 package gregc.gregchess
 
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.*
@@ -78,9 +77,6 @@ class MultiExceptionContext {
         }
     }
 }
-
-var gregChessCoroutineDispatcherFactory: () -> CoroutineDispatcher =
-    { throw UnsupportedOperationException("No coroutine dispatcher found") }
 
 object DurationSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Duration", PrimitiveKind.STRING)

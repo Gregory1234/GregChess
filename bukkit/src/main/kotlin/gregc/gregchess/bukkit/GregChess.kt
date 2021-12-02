@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.*
+import gregc.gregchess.ExtensionType
+import gregc.gregchess.GregChessModule
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
@@ -43,7 +44,6 @@ object GregChess : Listener {
 
         override fun onInitialize() {
             GregChessModule.logger = JavaGregLogger(GregChess.logger)
-            gregChessCoroutineDispatcherFactory = { BukkitDispatcher(this, BukkitContext.SYNC) }
             GregChessModule.extensions += BukkitGregChessModule
             GregChessModule.fullLoad()
         }
@@ -129,7 +129,7 @@ object GregChess : Listener {
                             if (settings != null) {
                                 val res = duelRequest.call(RequestData(sender, opponent, settings.name))
                                 if (res == RequestResponse.ACCEPT) {
-                                    ChessGame(settings, byColor(sender, opponent)).start()
+                                    ChessGame(BukkitChessEnvironment, settings, byColor(sender, opponent)).start()
                                 }
                             }
                         }
@@ -144,7 +144,7 @@ object GregChess : Listener {
                     coroutineScope.launch {
                         val settings = sender.openSettingsMenu()
                         if (settings != null)
-                            ChessGame(settings, byColor(sender, Stockfish())).start()
+                            ChessGame(BukkitChessEnvironment, settings, byColor(sender, Stockfish())).start()
                     }
                 }
             }
