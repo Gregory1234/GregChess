@@ -2,7 +2,6 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.Move
-import gregc.gregchess.chess.move.PawnMovement
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.rangeTo
@@ -36,7 +35,7 @@ data class ChessboardState internal constructor (
     companion object {
 
         private fun enPassantFlag(square: Pos?) =
-            listOfNotNull(square?.let { PosFlag(it, ChessFlag(PawnMovement.EN_PASSANT, 1u)) })
+            listOfNotNull(square?.let { PosFlag(it, ChessFlag(ChessFlagType.EN_PASSANT, 1u)) })
 
     }
 }
@@ -191,7 +190,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
 
         if (fen.enPassantSquare != null) {
-            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(PawnMovement.EN_PASSANT, 1u))
+            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(ChessFlagType.EN_PASSANT, 1u))
         }
 
         updateMoves()
@@ -216,7 +215,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             boardState,
             game.currentTurn,
             byColor(::castling),
-            squares.values.firstOrNull { s -> s.flags.any { it.type == PawnMovement.EN_PASSANT && it.active } }?.pos,
+            squares.values.firstOrNull { s -> s.flags.any { it.type == ChessFlagType.EN_PASSANT && it.active } }?.pos,
             halfmoveClock,
             fullmoveCounter
         )

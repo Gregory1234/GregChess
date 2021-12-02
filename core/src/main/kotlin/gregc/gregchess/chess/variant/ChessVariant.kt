@@ -86,14 +86,14 @@ open class ChessVariant : NameRegistered {
     }
 
     open fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when(piece.type) {
-        PieceType.KING -> KingMovement
-        PieceType.QUEEN -> RayMovement(rotationsOf(1, 1) + rotationsOf(1, 0))
-        PieceType.ROOK -> RayMovement(rotationsOf(1, 0))
-        PieceType.BISHOP -> RayMovement(rotationsOf(1, 1))
-        PieceType.KNIGHT -> JumpMovement(rotationsOf(2, 1))
-        PieceType.PAWN -> PromotionMovement(PawnMovement(), with(PieceType) { listOf(QUEEN, ROOK, BISHOP, KNIGHT) })
+        PieceType.KING -> kingMovement(piece, board)
+        PieceType.QUEEN -> rays(piece, board, rotationsOf(1, 1) + rotationsOf(1, 0))
+        PieceType.ROOK -> rays(piece, board, rotationsOf(1, 0))
+        PieceType.BISHOP -> rays(piece, board, rotationsOf(1, 1))
+        PieceType.KNIGHT -> jumps(piece, board, rotationsOf(2, 1))
+        PieceType.PAWN -> pawnMovement(piece).promotions(Normal.PROMOTIONS)
         else -> throw IllegalArgumentException(piece.type.toString())
-    }.generate(piece, board)
+    }
 
     open fun isInCheck(game: ChessGame, color: Color): Boolean {
         val king = game.board.kingOf(color)
@@ -123,6 +123,9 @@ open class ChessVariant : NameRegistered {
     protected fun allMoves(color: Color, board: Chessboard) = board.piecesOf(color).flatMap { it.getMoves(board) }
 
     object Normal : ChessVariant() {
+
+        @JvmField
+        val PROMOTIONS = with(PieceType) { listOf(QUEEN, ROOK, BISHOP, KNIGHT) }
 
         fun pinningMoves(by: Color, pos: Pos, board: Chessboard) =
             allMoves(by, board).filter { it.getTrait<CaptureTrait>()?.capture == pos }.filter { m ->

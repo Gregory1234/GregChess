@@ -37,25 +37,17 @@ fun rays(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
         }
     }
 
+fun kingMovement(piece: BoardPiece, board: Chessboard): List<Move> {
 
-fun interface MoveScheme {
-    fun generate(piece: BoardPiece, board: Chessboard): List<Move>
-}
-
-class JumpMovement(private val dirs: Collection<Dir>) : MoveScheme {
-    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = jumps(piece, board, dirs)
-}
-
-class RayMovement(private val dirs: Collection<Dir>) : MoveScheme {
-    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = rays(piece, board, dirs)
-}
-
-object KingMovement : MoveScheme {
-
-    private val castlesOrder =
+    val castlesOrder =
         nameOrder(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE)
 
-    private fun castles(
+    fun Collection<Int>.toPosSet(rank: Int) = map { Pos(it, rank) }.toSet()
+
+    fun neededEmptyFiles(piece: Int, pieceTarget: Int, rook: Int, rookTarget: Int) =
+        (between(piece, pieceTarget) + pieceTarget + between(rook, rookTarget) + rookTarget).distinct() - rook - piece
+
+    fun castles(
         piece: BoardPiece, rook: BoardPiece, side: BoardSide, display: Pos, pieceTarget: Pos, rookTarget: Pos
     ) = Move(
         piece, display, Floor.SPECIAL,
@@ -66,12 +58,7 @@ object KingMovement : MoveScheme {
         castlesOrder
     )
 
-    private fun Collection<Int>.toPosSet(rank: Int) = map { Pos(it, rank) }.toSet()
-
-    private fun neededEmptyFiles(piece: Int, pieceTarget: Int, rook: Int, rookTarget: Int) =
-        (between(piece, pieceTarget) + pieceTarget + between(rook, rookTarget) + rookTarget).distinct() - rook - piece
-
-    private fun normalCastles(piece: BoardPiece, rook: BoardPiece, side: BoardSide, chess960: Boolean): Move {
+    fun normalCastles(piece: BoardPiece, rook: BoardPiece, side: BoardSide, chess960: Boolean): Move {
         val target = when (side) {
             BoardSide.QUEENSIDE -> piece.pos.copy(file = 2)
             BoardSide.KINGSIDE -> piece.pos.copy(file = 6)
@@ -83,7 +70,7 @@ object KingMovement : MoveScheme {
         return castles(piece, rook, side, if (chess960) rook.pos else target, target, rookTarget)
     }
 
-    private fun simplifiedCastles(piece: BoardPiece, rook: BoardPiece, side: BoardSide): Move =
+    fun simplifiedCastles(piece: BoardPiece, rook: BoardPiece, side: BoardSide): Move =
         if (abs(piece.pos.file-rook.pos.file) == 1) {
             castles(piece, rook, side, rook.pos, rook.pos, piece.pos)
         } else {
@@ -98,7 +85,7 @@ object KingMovement : MoveScheme {
             castles(piece, rook, side, target, target, rookTarget)
         }
 
-    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
+    return buildList {
         addAll(jumps(piece, board, rotationsOf(1, 0) + rotationsOf(1, 1)))
         if (!piece.hasMoved) {
             for (rook in board.piecesOf(piece.color, PieceType.ROOK)) {
@@ -112,40 +99,23 @@ object KingMovement : MoveScheme {
             }
         }
     }
-
 }
 
-class PromotionMovement(
-    private val base: MoveScheme,
-    private val promotions: (BoardPiece) -> List<Piece>?
-) : MoveScheme {
-    constructor(base: MoveScheme, promotions: List<PieceType>) : this(base, simplePromotions(promotions))
-
-    companion object {
-        fun simplePromotions(promotions: List<PieceType>): (BoardPiece) -> List<Piece>? = { p ->
-            if (p.pos.rank in listOf(0,7)) promotions.map { white(it) } else null
-        }
-    }
-
-    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = base.generate(piece, board).map {
-        val p = promotions(piece.copy(pos = it.getTrait<TargetTrait>()?.target ?: piece.pos))
-        if (p == null) it else it.copy(floor = Floor.SPECIAL, traits = it.traits + PromotionTrait(p))
-    }
+fun List<Move>.promotions(what: (BoardPiece) -> List<Piece>?): List<Move> = map {
+    val p = what(it.piece.copy(pos = it.getTrait<TargetTrait>()?.target ?: it.piece.pos))
+    if (p == null) it else it.copy(floor = Floor.SPECIAL, traits = it.traits + PromotionTrait(p))
 }
 
+fun List<Move>.promotions(what: List<PieceType>): List<Move> = promotions { p ->
+    if (p.pos.rank in listOf(0,7)) what.map { white(it) } else null
+}
 
-class PawnMovement(
-    private val canDouble: (BoardPiece) -> Boolean = { !it.hasMoved },
-) : MoveScheme {
-    companion object {
-        @JvmField
-        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u })
-        private val pawnOrder = with (MoveNameTokenType) {
-            nameOrder(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)
-        }
+fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.hasMoved }) : List<Move> {
+    val pawnOrder = with (MoveNameTokenType) {
+        nameOrder(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)
     }
 
-    override fun generate(piece: BoardPiece, board: Chessboard): List<Move> = buildList {
+    return buildList {
         val dir = piece.color.forward
         val pos = piece.pos
         val forward = pos + dir
@@ -167,7 +137,7 @@ class PawnMovement(
                     setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2), emptySet(),
                     listOf(
                         PawnOriginTrait(), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait(),
-                        FlagTrait(listOf(PosFlag(forward, ChessFlag(EN_PASSANT))))
+                        FlagTrait(listOf(PosFlag(forward, ChessFlag(ChessFlagType.EN_PASSANT))))
                     ),
                     pawnOrder
                 )
@@ -192,7 +162,7 @@ class PawnMovement(
                     Move(
                         piece, capture, Floor.CAPTURE,
                         setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture),
-                        setOf(Pair(capture, EN_PASSANT)),
+                        setOf(Pair(capture, ChessFlagType.EN_PASSANT)),
                         listOf(
                             PawnOriginTrait(), CaptureTrait(enPassant, true), TargetTrait(capture),
                             NameTrait(nameOf(MoveNameTokenType.EN_PASSANT.mk)),

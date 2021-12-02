@@ -1,8 +1,8 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.*
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.rangeTo
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -150,6 +150,11 @@ data class FloorUpdateEvent(val pos: Pos, val floor: Floor) : ChessEvent
 @Serializable(with = ChessFlagType.Serializer::class)
 class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
     object Serializer : NameRegisteredSerializer<ChessFlagType>("ChessFlagType", RegistryType.FLAG_TYPE)
+
+    companion object {
+        @JvmField
+        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u })
+    }
 
     override val key get() = RegistryType.FLAG_TYPE[this]
 

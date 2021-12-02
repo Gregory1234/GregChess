@@ -2,8 +2,7 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.move.Move
-import gregc.gregchess.chess.move.PawnMovement
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceType
 
@@ -21,7 +20,7 @@ object HordeChess : ChessVariant() {
     }
 
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when (piece.type) {
-        PieceType.PAWN -> PawnMovement(canDouble = { pawnCanDouble(it) }).generate(piece, board)
+        PieceType.PAWN -> pawnMovement(piece){ pawnCanDouble(it) }.promotions(Normal.PROMOTIONS)
         else -> Normal.getPieceMoves(piece, board)
     }
 

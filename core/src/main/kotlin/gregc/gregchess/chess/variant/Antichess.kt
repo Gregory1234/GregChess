@@ -12,10 +12,11 @@ object Antichess : ChessVariant() {
     @JvmField
     val STALEMATE_VICTORY = GregChessModule.register("stalemate_victory", DetEndReason(EndReason.Type.NORMAL))
 
-    private val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT, PieceType.KING)
+    @JvmField
+    val PROMOTIONS = Normal.PROMOTIONS + PieceType.KING
 
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when (piece.type) {
-        PieceType.PAWN -> PromotionMovement(PawnMovement(), promotions).generate(piece, board)
+        PieceType.PAWN -> pawnMovement(piece).promotions(PROMOTIONS)
         PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.getTrait<CastlesTrait>() == null }
         else -> Normal.getPieceMoves(piece, board)
     }

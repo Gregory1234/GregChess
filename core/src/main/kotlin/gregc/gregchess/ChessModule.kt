@@ -179,7 +179,6 @@ object GregChessModule : ChessModule("gregchess") {
         PieceType
         EndReason
         MoveNameTokenType
-        PawnMovement
         registerComponents()
         registerVariants()
         registerMoveTraits()
