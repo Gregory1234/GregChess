@@ -9,6 +9,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlin.reflect.KClass
+import kotlin.reflect.full.createType
 
 @Serializable(with = MoveNameTokenType.Serializer::class)
 class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmField val toPgnString: (T) -> String) :
@@ -93,7 +94,7 @@ data class MoveNameToken<T : Any>(val type: MoveNameTokenType<T>, val value: T) 
             }
 
         override fun serialize(encoder: Encoder, value: MoveNameToken<*>) {
-            val actualSerializer = value.type.cl.serializer()
+            val actualSerializer = encoder.serializersModule.serializer(value.value::class.createType())
             encoder.encodeStructure(descriptor) {
                 encodeSerializableElement(descriptor, 0, MoveNameTokenType.Serializer, value.type)
                 encodeSerializableElement(descriptor, 1, actualSerializer as KSerializer<Any>, value.value)
@@ -103,26 +104,22 @@ data class MoveNameToken<T : Any>(val type: MoveNameTokenType<T>, val value: T) 
         override fun deserialize(decoder: Decoder): MoveNameToken<*> = decoder.decodeStructure(descriptor) {
             var type: MoveNameTokenType<*>? = null
             var ret: MoveNameToken<*>? = null
-            if (decodeSequentially()) {
-                type = decodeSerializableElement(descriptor, 0, MoveNameTokenType.Serializer)
-                type as MoveNameTokenType<Any>
-                val serializer = type.cl.serializer()
-                return MoveNameToken(type, decodeSerializableElement(descriptor, 1, serializer))
-            }
 
             if (decodeSequentially()) { // sequential decoding protocol
                 type = decodeSerializableElement(descriptor, 0, MoveNameTokenType.Serializer)
-                val serializer = type.cl.serializer()
                 type as MoveNameTokenType<Any>
-                ret = MoveNameToken(type, decodeSerializableElement(descriptor, 1, serializer))
+                val serializer = decoder.serializersModule.serializer(type.cl.createType())
+                ret = MoveNameToken(type, decodeSerializableElement(descriptor, 1, serializer)!!)
             } else {
                 while (true) {
                     when (val index = decodeElementIndex(descriptor)) {
                         0 -> type = decodeSerializableElement(descriptor, index, MoveNameTokenType.Serializer)
                         1 -> {
-                            val serializer = type!!.cl.serializer()
-                            type as MoveNameTokenType<Any>
-                            ret = MoveNameToken(type, decodeSerializableElement(descriptor, index, serializer))
+                            val serializer = decoder.serializersModule.serializer(type!!.cl.createType())
+                            ret = MoveNameToken(
+                                type as MoveNameTokenType<Any>,
+                                decodeSerializableElement(descriptor, index, serializer)!!
+                            )
                         }
                         CompositeDecoder.DECODE_DONE -> break
                         else -> error("Unexpected index: $index")
