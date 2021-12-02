@@ -25,7 +25,7 @@ data class ChessboardState internal constructor (
     val flags: List<PosFlag> = enPassantFlag(initialFEN.enPassantSquare),
     val moveHistory: List<Move> = emptyList()
 ) : ComponentData<Chessboard> {
-    private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toPieces(variant.pieceTypes))
+    private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toPieces(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960))
 
@@ -180,7 +180,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun setFromFEN(fen: FEN) {
         squares.values.forEach(Square::empty)
-        fen.forEachSquare(game.variant.pieceTypes) { p -> this += p }
+        fen.forEachSquare(game.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
 

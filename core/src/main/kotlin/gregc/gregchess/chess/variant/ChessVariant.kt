@@ -3,11 +3,10 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.move.CaptureTrait
-import gregc.gregchess.chess.move.Move
-import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.move.*
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.*
+import gregc.gregchess.rotationsOf
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -72,9 +71,10 @@ open class ChessVariant : NameRegistered {
         val blackPieces = piecesOf(Color.BLACK)
         if (whitePieces.size == 1 && blackPieces.size == 1)
             game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
-        if (whitePieces.size == 2 && whitePieces.any { it.type.minor } && blackPieces.size == 1)
+        val minorPieces = listOf(PieceType.KNIGHT, PieceType.BISHOP)
+        if (whitePieces.size == 2 && whitePieces.any { it.type in minorPieces } && blackPieces.size == 1)
             game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
-        if (blackPieces.size == 2 && blackPieces.any { it.type.minor } && whitePieces.size == 1)
+        if (blackPieces.size == 2 && blackPieces.any { it.type in minorPieces } && whitePieces.size == 1)
             game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
     }
 
@@ -85,8 +85,15 @@ open class ChessVariant : NameRegistered {
             game.stop(color.lostBy(EndReason.TIMEOUT))
     }
 
-    open fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
-        piece.type.moveScheme.generate(piece, board)
+    open fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when(piece.type) {
+        PieceType.KING -> KingMovement
+        PieceType.QUEEN -> RayMovement(rotationsOf(1, 1) + rotationsOf(1, 0))
+        PieceType.ROOK -> RayMovement(rotationsOf(1, 0))
+        PieceType.BISHOP -> RayMovement(rotationsOf(1, 1))
+        PieceType.KNIGHT -> JumpMovement(rotationsOf(2, 1))
+        PieceType.PAWN -> PromotionMovement(PawnMovement(), with(PieceType) { listOf(QUEEN, ROOK, BISHOP, KNIGHT) })
+        else -> throw IllegalArgumentException(piece.type.toString())
+    }.generate(piece, board)
 
     open fun isInCheck(game: ChessGame, color: Color): Boolean {
         val king = game.board.kingOf(color)
@@ -94,6 +101,15 @@ open class ChessVariant : NameRegistered {
     }
 
     fun isLegal(move: Move, game: ChessGame) = getLegality(move, game) == MoveLegality.LEGAL
+
+    open fun startingPieceHasMoved(fen: FEN, pos: Pos, piece: Piece): Boolean = when(piece.type) {
+        PieceType.PAWN -> when (piece.color) {
+            Color.WHITE -> pos.rank != 1
+            Color.BLACK -> pos.rank != 6
+        }
+        PieceType.ROOK -> pos.file !in fen.castlingRights[piece.color]
+        else -> false
+    }
 
     open fun genFEN(chess960: Boolean): FEN = if (!chess960) FEN() else FEN.generateChess960()
 

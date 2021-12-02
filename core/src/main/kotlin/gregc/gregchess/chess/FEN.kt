@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.chess.piece.*
+import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.component6
 import kotlinx.serialization.Serializable
 
@@ -17,14 +18,15 @@ data class FEN(
 
     class FENFormatException(val fen: String, cause: Throwable? = null) : IllegalArgumentException(fen, cause)
 
-    private fun Char.toPiece(pieceTypes: Collection<PieceType>, p: Pos): BoardPiece {
-        val type = PieceType.chooseByChar(pieceTypes, this)
+    private fun Char.toPiece(variant: ChessVariant, p: Pos): BoardPiece {
+        val type = PieceType.chooseByChar(variant.pieceTypes, this)
         val color = if (isUpperCase()) Color.WHITE else Color.BLACK
-        val hasMoved = type.hasMoved(this@FEN, p, color)
-        return BoardPiece(p, type.of(color), hasMoved)
+        val piece = type.of(color)
+        val hasMoved = variant.startingPieceHasMoved(this@FEN, p, piece)
+        return BoardPiece(p, piece, hasMoved)
     }
 
-    fun forEachSquare(pieceTypes: Collection<PieceType>, f: (BoardPiece) -> Unit) =
+    fun forEachSquare(variant: ChessVariant, f: (BoardPiece) -> Unit) =
         boardState.split("/").forEachIndexed { rowIndex, row ->
             var file = 0
             row.forEach { char ->
@@ -32,15 +34,15 @@ data class FEN(
                     in '1'..'8' -> file += char.digitToInt()
                     else -> {
                         val pos = Pos(file, 7 - rowIndex)
-                        f(char.toPiece(pieceTypes, pos))
+                        f(char.toPiece(variant, pos))
                         file++
                     }
                 }
             }
         }
 
-    fun toPieces(pieceTypes: Collection<PieceType>): Map<Pos, BoardPiece> = buildMap {
-        forEachSquare(pieceTypes) {
+    fun toPieces(variant: ChessVariant): Map<Pos, BoardPiece> = buildMap {
+        forEachSquare(variant) {
             set(it.pos, it)
         }
     }
