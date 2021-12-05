@@ -8,6 +8,8 @@ import gregc.gregchess.chess.*
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 
 class NoFreeArenasException : NoSuchElementException("No free arenas")
 
@@ -101,6 +103,8 @@ class SimpleArena(
     }
 
     private fun Player.leave() {
+        for (e in activePotionEffects)
+            removePotionEffect(e.type)
         teleport(returnWorld.spawnLocation)
         gameMode = GameMode.SURVIVAL
         allowFlight = false
@@ -124,6 +128,11 @@ class SimpleArena(
     }
 
     private fun Player.reset() {
+        health = 20.0
+        foodLevel = 20
+        for (e in activePotionEffects)
+            removePotionEffect(e.type)
+        addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 10, false, false, false))
         teleport(spawnLocation)
         inventory.clear()
         inventory.setItem(0, chess?.held?.piece?.item)

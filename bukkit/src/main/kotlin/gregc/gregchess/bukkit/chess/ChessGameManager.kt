@@ -14,6 +14,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.*
@@ -47,11 +48,10 @@ object ChessGameManager : Listener {
     fun onPlayerLeave(e: PlayerQuitEvent) = leave(e.player)
 
     @EventHandler
-    fun onPlayerDamage(e: EntityDamageEvent) {
+    fun onPlayerDeath(e: EntityDeathEvent) {
         val ent = e.entity as? Player ?: return
         val game = ent.currentGame ?: return
         game.callEvent(ResetPlayerEvent(ent))
-        e.isCancelled = true
     }
 
     @EventHandler
