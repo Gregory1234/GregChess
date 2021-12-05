@@ -12,8 +12,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.createType
 
 @Serializable(with = MoveNameTokenType.Serializer::class)
-class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmField val toPgnString: (T) -> String) :
-    NameRegistered {
+class MoveNameTokenType<T : Any>(val cl: KClass<T>) : NameRegistered {
 
     object Serializer :
         NameRegisteredSerializer<MoveNameTokenType<*>>("MoveNameTokenType", RegistryType.MOVE_NAME_TOKEN_TYPE)
@@ -23,32 +22,25 @@ class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmFiel
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 
     companion object {
-        fun <T : Any> build(cl: KClass<T>, toPgnString: (T) -> String = { it.toString() }) =
-            MoveNameTokenType(cl, toPgnString)
-
-        inline fun <reified T : Any> build(noinline toPgnString: (T) -> String = { it.toString() }) =
-            build(T::class, toPgnString)
-
-        fun build(const: String) = build<Unit> { const }
 
         @JvmField
-        val PIECE_TYPE = GregChessModule.register("piece_type", build<PieceType> { it.char.uppercase() })
+        val PIECE_TYPE = GregChessModule.register("piece_type", MoveNameTokenType(PieceType::class))
         @JvmField
-        val UNIQUENESS_COORDINATE = GregChessModule.register("uniqueness_coordinate", build<UniquenessCoordinate>())
+        val UNIQUENESS_COORDINATE = GregChessModule.register("uniqueness_coordinate", MoveNameTokenType(UniquenessCoordinate::class))
         @JvmField
-        val CAPTURE = GregChessModule.register("capture", build("x"))
+        val CAPTURE = GregChessModule.register("capture", MoveNameTokenType(Unit::class))
         @JvmField
-        val TARGET = GregChessModule.register("target", build<Pos>())
+        val TARGET = GregChessModule.register("target", MoveNameTokenType(Pos::class))
         @JvmField
-        val PROMOTION = GregChessModule.register("promotion", build<PieceType> { "=" + it.char.uppercase() })
+        val PROMOTION = GregChessModule.register("promotion", MoveNameTokenType(PieceType::class))
         @JvmField
-        val CHECK = GregChessModule.register("check", build("+"))
+        val CHECK = GregChessModule.register("check", MoveNameTokenType(Unit::class))
         @JvmField
-        val CHECKMATE = GregChessModule.register("checkmate", build("#"))
+        val CHECKMATE = GregChessModule.register("checkmate", MoveNameTokenType(Unit::class))
         @JvmField
-        val CASTLE = GregChessModule.register("castle", build<BoardSide> { it.castles })
+        val CASTLE = GregChessModule.register("castle", MoveNameTokenType(BoardSide::class))
         @JvmField
-        val EN_PASSANT = GregChessModule.register("en_passant", build(""))
+        val EN_PASSANT = GregChessModule.register("en_passant", MoveNameTokenType(Unit::class))
     }
 }
 

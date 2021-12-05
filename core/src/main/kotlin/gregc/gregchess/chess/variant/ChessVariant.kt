@@ -128,7 +128,8 @@ open class ChessVariant : NameRegistered {
             name.getOrNull(MoveNameTokenType.UNIQUENESS_COORDINATE)?.let { append(it) }
             name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append("x") }
             name.getOrNull(MoveNameTokenType.TARGET)?.let { append(it) }
-            name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append(it.char.uppercase()) }
+            name.getOrNull(MoveNameTokenType.CASTLE)?.let { append(it.castles) }
+            name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append("="+it.char.uppercase()) }
             name.getOrNull(MoveNameTokenType.CHECK)?.let { append("+") }
             name.getOrNull(MoveNameTokenType.CHECKMATE)?.let { append("#") }
         }
