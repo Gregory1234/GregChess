@@ -8,16 +8,12 @@ import kotlin.math.abs
 
 fun defaultColor(pos: Pos, board: Chessboard) = if (board[pos]?.piece == null) Floor.MOVE else Floor.CAPTURE
 
-val defaultOrder =
-    with(MoveNameTokenType) { nameOrder(PIECE_TYPE, UNIQUENESS_COORDINATE, CAPTURE, TARGET, CHECK, CHECKMATE) }
-
 fun jumps(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.map {
         Move(
             piece, it, defaultColor(it, board),
             setOf(piece.pos), setOf(it), emptySet(), setOf(it), emptySet(),
             listOf(PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
-            defaultOrder,
         )
     }
 
@@ -31,16 +27,12 @@ fun rays(piece: BoardPiece, board: Chessboard, dirs: Collection<Dir>) =
                 emptySet(),
                 listOf(
                     PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()
-                ),
-                defaultOrder
+                )
             )
         }
     }
 
 fun kingMovement(piece: BoardPiece, board: Chessboard): List<Move> {
-
-    val castlesOrder =
-        nameOrder(MoveNameTokenType.CASTLE, MoveNameTokenType.CHECK, MoveNameTokenType.CHECKMATE)
 
     fun Collection<Int>.toPosSet(rank: Int) = map { Pos(it, rank) }.toSet()
 
@@ -54,8 +46,7 @@ fun kingMovement(piece: BoardPiece, board: Chessboard): List<Move> {
         setOf(piece.pos, rook.pos), setOf(pieceTarget, rookTarget),
         neededEmptyFiles(piece.pos.file, pieceTarget.file, rook.pos.file, rookTarget.file).toPosSet(piece.pos.rank),
         betweenInc(piece.pos.file, pieceTarget.file).toList().toPosSet(piece.pos.rank), emptySet(),
-        listOf(CastlesTrait(rook, side, pieceTarget, rookTarget), DefaultHalfmoveClockTrait(), CheckTrait()),
-        castlesOrder
+        listOf(CastlesTrait(rook, side, pieceTarget, rookTarget), DefaultHalfmoveClockTrait(), CheckTrait())
     )
 
     fun normalCastles(piece: BoardPiece, rook: BoardPiece, side: BoardSide, chess960: Boolean): Move {
@@ -111,9 +102,6 @@ fun List<Move>.promotions(what: List<PieceType>): List<Move> = promotions { p ->
 }
 
 fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.hasMoved }) : List<Move> {
-    val pawnOrder = with (MoveNameTokenType) {
-        nameOrder(UNIQUENESS_COORDINATE, CAPTURE, TARGET, PROMOTION, CHECK, CHECKMATE, EN_PASSANT)
-    }
 
     return buildList {
         val dir = piece.color.forward
@@ -124,8 +112,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                 Move(
                     piece, forward, Floor.MOVE,
                     setOf(pos), setOf(forward), setOf(forward), setOf(forward), emptySet(),
-                    listOf(PawnOriginTrait(), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait()),
-                    pawnOrder
+                    listOf(PawnOriginTrait(), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait())
                 )
             )
         }
@@ -138,8 +125,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                     listOf(
                         PawnOriginTrait(), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait(),
                         FlagTrait(listOf(PosFlag(forward, ChessFlag(ChessFlagType.EN_PASSANT))))
-                    ),
-                    pawnOrder
+                    )
                 )
             )
         }
@@ -153,8 +139,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                         listOf(
                             PawnOriginTrait(), CaptureTrait(capture, true),
                             TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()
-                        ),
-                        pawnOrder
+                        )
                     )
                 )
                 val enPassant = pos + s.dir
@@ -167,8 +152,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                             PawnOriginTrait(), CaptureTrait(enPassant, true), TargetTrait(capture),
                             NameTrait(MoveName(mapOf(MoveNameTokenType.EN_PASSANT to Unit))),
                             DefaultHalfmoveClockTrait(), CheckTrait()
-                        ),
-                        pawnOrder
+                        )
                     )
                 )
             }

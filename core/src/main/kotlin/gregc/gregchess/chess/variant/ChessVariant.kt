@@ -122,6 +122,16 @@ open class ChessVariant : NameRegistered {
 
     protected fun allMoves(color: Color, board: Chessboard) = board.piecesOf(color).flatMap { it.getMoves(board) }
 
+    open fun formatMoveNamePGN(name: MoveName): String = buildString {
+        name.getOrNull(MoveNameTokenType.PIECE_TYPE)?.let { append(it.char.uppercase()) }
+        name.getOrNull(MoveNameTokenType.UNIQUENESS_COORDINATE)?.let { append(it) }
+        name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append("x") }
+        name.getOrNull(MoveNameTokenType.TARGET)?.let { append(it) }
+        name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append(it.char.uppercase()) }
+        name.getOrNull(MoveNameTokenType.CHECK)?.let { append("+") }
+        name.getOrNull(MoveNameTokenType.CHECKMATE)?.let { append("#") }
+    }
+
     object Normal : ChessVariant() {
 
         @JvmField

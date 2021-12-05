@@ -8,11 +8,10 @@ import gregc.gregchess.bukkit.chess.player.Stockfish
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.move.MoveNameTokenType
+import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.player.enginePlayerType
-import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.chess.variant.ThreeChecks
+import gregc.gregchess.chess.variant.*
 import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
@@ -23,8 +22,6 @@ class SettingsParserContext(val variant: ChessVariant, val section: Configuratio
 
 typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
-typealias MoveNameTokenInterpreter<T> = (T) -> String
-
 object BukkitRegistryTypes {
     @JvmField
     val PROPERTY_TYPE = NameRegistryType<PropertyType>("property_type")
@@ -34,8 +31,8 @@ object BukkitRegistryTypes {
             "settings_parser", RegistryType.COMPONENT_CLASS
         )
     @JvmField
-    val MOVE_NAME_TOKEN_STRING = SingleConnectedRegistryType<MoveNameTokenType<*>, MoveNameTokenInterpreter<*>>(
-        "move_name_token_string", RegistryType.MOVE_NAME_TOKEN_TYPE
+    val VARIANT_LOCAL_MOVE_NAME_FORMATTER = SingleConnectedRegistryType<ChessVariant, MoveNameFormatter>(
+        "variant_local_move_name_formatter", RegistryType.VARIANT
     )
 }
 
@@ -54,8 +51,10 @@ inline fun <reified T : Component> ChessModule.registerConstSettings(settings: C
 inline fun <reified T : SimpleComponent> ChessModule.registerSimpleSettings() =
     registerConstSettings(T::class, SimpleComponentData(T::class))
 
-fun <T : Any> ChessModule.register(token: MoveNameTokenType<T>, str: MoveNameTokenInterpreter<T> = token.toPgnString) =
-    register(BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING, token, str)
+fun ChessModule.registerLocalFormatter(
+    variant: ChessVariant,
+    formatter: MoveNameFormatter = MoveNameFormatter { defaultFormatMoveNameLocal(it) }
+) = register(BukkitRegistryTypes.VARIANT_LOCAL_MOVE_NAME_FORMATTER, variant, formatter)
 
 abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : ChessExtension(module, BUKKIT) {
     companion object {
@@ -142,16 +141,15 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
         registerSimpleSettings<BukkitGregChessAdapter>()
     }
 
-    private fun registerMoveNameTokenStrings() = with(GregChessModule) {
-        register(MoveNameTokenType.PIECE_TYPE) { it.localChar.uppercase() }
-        register(MoveNameTokenType.UNIQUENESS_COORDINATE)
-        register(MoveNameTokenType.CAPTURE) { config.getPathString("Chess.Capture") }
-        register(MoveNameTokenType.TARGET)
-        register(MoveNameTokenType.PROMOTION) { it.localChar.uppercase() }
-        register(MoveNameTokenType.CHECK)
-        register(MoveNameTokenType.CHECKMATE)
-        register(MoveNameTokenType.CASTLE)
-        register(MoveNameTokenType.EN_PASSANT) { " e.p." }
+    private fun registerLocalFormatters() = with(GregChessModule) {
+        // TODO: add default values in registries
+        registerLocalFormatter(ChessVariant.Normal)
+        registerLocalFormatter(Antichess)
+        registerLocalFormatter(AtomicChess)
+        registerLocalFormatter(CaptureAll)
+        registerLocalFormatter(HordeChess)
+        registerLocalFormatter(KingOfTheHill)
+        registerLocalFormatter(ThreeChecks)
     }
 
     private fun registerComponents() = with(GregChessModule) {
@@ -174,7 +172,7 @@ object BukkitGregChessModule : BukkitChessExtension(GregChessModule, GregChess.p
         ScoreboardManager
         registerComponents()
         registerSettings()
-        registerMoveNameTokenStrings()
+        registerLocalFormatters()
         registerPlayerTypes()
     }
 }

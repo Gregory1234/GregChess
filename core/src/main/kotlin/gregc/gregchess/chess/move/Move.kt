@@ -12,8 +12,7 @@ data class Move(
     val piece: BoardPiece, val display: Pos, val floor: Floor,
     val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
     val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
-    val flagsNeeded: Set<Pair<Pos, ChessFlagType>>,
-    val traits: List<MoveTrait>, val nameOrder: NameOrder
+    val flagsNeeded: Set<Pair<Pos, ChessFlagType>>, val traits: List<MoveTrait>
 ) {
     fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
     inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)
@@ -45,8 +44,6 @@ data class Move(
     }
 
     val name: MoveName get() = MoveName(traits.map { it.nameTokens })
-
-    val namePGN: String get() = nameOrderFormatter(nameOrder).format(name)
 
     fun undo(game: ChessGame) {
         var remainingTraits = traits

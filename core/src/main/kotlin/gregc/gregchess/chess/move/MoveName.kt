@@ -52,26 +52,6 @@ class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmFiel
     }
 }
 
-// TODO: remove this
-@Serializable(with = NameOrderElement.Serializer::class)
-data class NameOrderElement(val type: MoveNameTokenType<*>) {
-    @OptIn(ExperimentalSerializationApi::class)
-    object Serializer : KSerializer<NameOrderElement> {
-        override val descriptor: SerialDescriptor
-            get() = PrimitiveSerialDescriptor("NameOrderElement", PrimitiveKind.STRING)
-
-        override fun serialize(encoder: Encoder, value: NameOrderElement) =
-            encoder.encodeSerializableValue(MoveNameTokenType.Serializer, value.type)
-
-        override fun deserialize(decoder: Decoder): NameOrderElement =
-            NameOrderElement(decoder.decodeSerializableValue(MoveNameTokenType.Serializer))
-    }
-}
-
-typealias NameOrder = List<NameOrderElement>
-
-fun nameOrder(vararg types: MoveNameTokenType<*>) = types.map { NameOrderElement(it) }
-
 @Serializable(with = MoveName.Serializer::class)
 data class MoveName(private val tokens: Map<MoveNameTokenType<*>, Any>) {
     constructor(names: Collection<MoveName>) : this(names.flatMap { it.tokens.toList() }.toMap())
@@ -84,6 +64,8 @@ data class MoveName(private val tokens: Map<MoveNameTokenType<*>, Any>) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getOrNull(type: MoveNameTokenType<T>): T? = tokens[type] as T?
+
+    fun format(formatter: MoveNameFormatter): String = formatter.format(this)
 
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     @Suppress("UNCHECKED_CAST")
@@ -135,13 +117,4 @@ data class MoveName(private val tokens: Map<MoveNameTokenType<*>, Any>) {
 
 fun interface MoveNameFormatter {
     fun format(name: MoveName): String
-}
-
-@Suppress("UNCHECKED_CAST")
-fun nameOrderFormatter(nameOrder: NameOrder) = MoveNameFormatter { n ->
-    nameOrder.mapNotNull { t ->
-        n.getOrNull(t.type)?.let { t.type to it }
-    }.joinToString("") {
-        (it.first as MoveNameTokenType<Any>).toPgnString(it.second)
-    }
 }

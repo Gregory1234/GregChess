@@ -4,8 +4,7 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.Move
-import gregc.gregchess.chess.move.PromotionTrait
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.player.ChessPlayer
@@ -112,13 +111,13 @@ fun Player.sendPGN(pgn: PGN) {
     })
 }
 
-fun Player.sendLastMoves(num: UInt, wLast: Move?, bLast: Move?) {
+fun Player.sendLastMoves(num: UInt, wLast: Move?, bLast: Move?, formatter: MoveNameFormatter) {
     sendMessage(buildString {
         append(num - 1u)
         append(". ")
-        wLast?.let { append(it.localName) }
+        wLast?.let { append(it.name.format(formatter)) }
         append("  | ")
-        bLast?.let { append(it.localName) }
+        bLast?.let { append(it.name.format(formatter)) }
     })
 }
 
