@@ -89,7 +89,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
 
             val tree = MoveTree(
                 game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveCounter,
-                game.board.moveHistory.map { it.name.format(game.variant::formatMoveNamePGN) }, result
+                game.board.moveHistory.map { it.name.format(game.variant.pgnNameFormatter) }, result
             )
 
             return PGN(tags, tree)

@@ -5,8 +5,7 @@ import gregc.gregchess.bukkit.chess.component.arena
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
-import gregc.gregchess.chess.move.MoveName
-import gregc.gregchess.chess.move.MoveNameTokenType
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.module
@@ -35,18 +34,18 @@ val PieceType.structure
 val Piece.item get() = type.getItem(color)
 
 fun defaultFormatMoveNameLocal(name: MoveName): String = buildString {
-    name.getOrNull(MoveNameTokenType.PIECE_TYPE)?.let { append(it.char.uppercase()) }
+    name.getOrNull(MoveNameTokenType.PIECE_TYPE)?.let { append(it.localChar.uppercase()) }
     name.getOrNull(MoveNameTokenType.UNIQUENESS_COORDINATE)?.let { append(it) }
     name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append(GregChess.plugin.config.getPathString("Chess.Capture")) }
     name.getOrNull(MoveNameTokenType.TARGET)?.let { append(it) }
-    name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append(it.char.uppercase()) }
+    name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append(it.localChar.uppercase()) }
     name.getOrNull(MoveNameTokenType.CHECK)?.let { append("+") }
     name.getOrNull(MoveNameTokenType.CHECKMATE)?.let { append("#") }
     name.getOrNull(MoveNameTokenType.EN_PASSANT)?.let { append(" e.p.") }
 }
 
-fun ChessVariant.formatMoveNameLocal(name: MoveName): String =
-    BukkitRegistryTypes.VARIANT_LOCAL_MOVE_NAME_FORMATTER[module, this].format(name)
+val ChessVariant.localNameFormatter: MoveNameFormatter
+    get() = BukkitRegistryTypes.VARIANT_LOCAL_MOVE_NAME_FORMATTER[module, this]
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
@@ -58,9 +57,9 @@ fun BoardPiece.getInfo(game: ChessGame) = textComponent {
         onClickCopy(game.uuid)
     }
     val moves = getLegalMoves(game.board)
-    text("All moves: ${moves.joinToString { it.name.format(game.variant::formatMoveNameLocal) }}")
+    text("All moves: ${moves.joinToString { it.name.format(game.variant.localNameFormatter) }}")
     moves.groupBy { m -> game.variant.getLegality(m, game) }.forEach { (l, m) ->
-        text("\n${l.prettyName}: ${m.joinToString { it.name.format(game.variant::formatMoveNameLocal) }}")
+        text("\n${l.prettyName}: ${m.joinToString { it.name.format(game.variant.localNameFormatter) }}")
     }
 }
 

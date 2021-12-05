@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.GregChess
-import gregc.gregchess.bukkit.chess.formatMoveNameLocal
+import gregc.gregchess.bukkit.chess.localNameFormatter
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.chess.quick
 import gregc.gregchess.bukkit.ticks
@@ -63,7 +63,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
             if (lastMove?.piece?.color == Color.WHITE) {
                 val wLast = lastMove
                 game.players.forEachReal { p ->
-                    p.sendLastMoves(fullmoveCounter + 1u, wLast, null, game.variant::formatMoveNameLocal)
+                    p.sendLastMoves(fullmoveCounter + 1u, wLast, null, game.variant.localNameFormatter)
                 }
             }
         }
@@ -136,7 +136,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
                     val wLast = (if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2])
                     val bLast = lastMove
                     game.players.forEachReal { p ->
-                        p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant::formatMoveNameLocal)
+                        p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localNameFormatter)
                     }
                 }
             }
