@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.chess.move.Move
-import gregc.gregchess.chess.move.pgn
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.name
 import gregc.gregchess.snakeToPascal
@@ -33,7 +32,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             for ((index, moveData) in moves.withIndex()) {
                 if (index % 2 == 0)
                     append((index.toUInt() + indexShift).div(2u) + 1u, ". ")
-                append(moveData.name.pgn, " ")
+                append(moveData.namePGN, " ")
                 if (index % 2 == 1)
                     append("\n")
             }
@@ -91,7 +90,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
 
             val tree = MoveTree(
                 game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveCounter,
-                game.board.moveHistory.filter { it.name.isNotEmpty() }, result
+                game.board.moveHistory, result
             )
 
             return PGN(tags, tree)

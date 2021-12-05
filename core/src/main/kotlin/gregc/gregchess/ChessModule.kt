@@ -179,6 +179,7 @@ object GregChessModule : ChessModule("gregchess") {
         PieceType
         EndReason
         MoveNameTokenType
+        ChessFlagType
         registerComponents()
         registerVariants()
         registerMoveTraits()

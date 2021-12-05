@@ -14,7 +14,7 @@ object AtomicChess : ChessVariant() {
 
     @Serializable
     class ExplosionTrait(private val exploded: MutableList<CapturedBoardPiece> = mutableListOf()) : MoveTrait {
-        override val nameTokens: MoveName = nameOf()
+        override val nameTokens: MoveName = MoveName(emptyMap())
 
         override val shouldComeBefore get() = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
 

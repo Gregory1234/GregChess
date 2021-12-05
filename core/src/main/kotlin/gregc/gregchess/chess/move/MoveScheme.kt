@@ -165,7 +165,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                         setOf(Pair(capture, ChessFlagType.EN_PASSANT)),
                         listOf(
                             PawnOriginTrait(), CaptureTrait(enPassant, true), TargetTrait(capture),
-                            NameTrait(nameOf(MoveNameTokenType.EN_PASSANT.mk)),
+                            NameTrait(MoveName(mapOf(MoveNameTokenType.EN_PASSANT to Unit))),
                             DefaultHalfmoveClockTrait(), CheckTrait()
                         ),
                         pawnOrder

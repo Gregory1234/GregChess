@@ -44,7 +44,9 @@ data class Move(
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 
-    val name: MoveName get() = nameOrder.reorder(traits.flatMap { it.nameTokens })
+    val name: MoveName get() = MoveName(traits.map { it.nameTokens })
+
+    val namePGN: String get() = nameOrderFormatter(nameOrder).format(name)
 
     fun undo(game: ChessGame) {
         var remainingTraits = traits

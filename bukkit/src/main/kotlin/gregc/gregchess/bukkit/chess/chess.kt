@@ -5,8 +5,7 @@ import gregc.gregchess.bukkit.chess.component.arena
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
-import gregc.gregchess.chess.move.MoveName
-import gregc.gregchess.chess.move.MoveNameToken
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
@@ -33,10 +32,17 @@ val PieceType.structure
 
 val Piece.item get() = type.getItem(color)
 
+// TODO: remove repetition
 @Suppress("UNCHECKED_CAST")
-val <T : Any> MoveNameToken<T>.localName
-    get() = (type.module[BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING][type] as MoveNameTokenInterpreter<T>)(value)
-val MoveName.localName get() = joinToString("") { it.token.localName }
+fun nameOrderLocalFormatter(nameOrder: NameOrder) = MoveNameFormatter { n ->
+    nameOrder.mapNotNull { t ->
+        n.getOrNull(t.type)?.let { t.type to it }
+    }.joinToString("") {
+        (it.first.module[BukkitRegistryTypes.MOVE_NAME_TOKEN_STRING][it.first] as MoveNameTokenInterpreter<Any>)(it.second)
+    }
+}
+
+val Move.localName get() = nameOrderLocalFormatter(nameOrder).format(name)
 
 val Floor.material get() = Material.valueOf(config.getString("Chess.Floor.${name.snakeToPascal()}")!!)
 
@@ -48,9 +54,9 @@ fun BoardPiece.getInfo(game: ChessGame) = textComponent {
         onClickCopy(game.uuid)
     }
     val moves = getLegalMoves(game.board)
-    text("All moves: ${moves.joinToString { it.name.localName }}")
+    text("All moves: ${moves.joinToString { it.localName }}")
     moves.groupBy { m -> game.variant.getLegality(m, game) }.forEach { (l, m) ->
-        text("\n${l.prettyName}: ${m.joinToString { it.name.localName }}")
+        text("\n${l.prettyName}: ${m.joinToString { it.localName }}")
     }
 }
 

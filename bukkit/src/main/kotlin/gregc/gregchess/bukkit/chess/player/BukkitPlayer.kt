@@ -116,9 +116,9 @@ fun Player.sendLastMoves(num: UInt, wLast: Move?, bLast: Move?) {
     sendMessage(buildString {
         append(num - 1u)
         append(". ")
-        wLast?.let { append(it.name.localName) }
+        wLast?.let { append(it.localName) }
         append("  | ")
-        bLast?.let { append(it.name.localName) }
+        bLast?.let { append(it.localName) }
     })
 }
 

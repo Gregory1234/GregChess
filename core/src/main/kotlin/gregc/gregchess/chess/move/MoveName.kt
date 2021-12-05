@@ -22,8 +22,6 @@ class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmFiel
 
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 
-    fun of(v: T) = MoveNameToken(this, v)
-
     companion object {
         fun <T : Any> build(cl: KClass<T>, toPgnString: (T) -> String = { it.toString() }) =
             MoveNameTokenType(cl, toPgnString)
@@ -54,6 +52,7 @@ class MoveNameTokenType<T : Any> private constructor(val cl: KClass<T>, @JvmFiel
     }
 }
 
+// TODO: remove this
 @Serializable(with = NameOrderElement.Serializer::class)
 data class NameOrderElement(val type: MoveNameTokenType<*>) {
     @OptIn(ExperimentalSerializationApi::class)
@@ -71,91 +70,78 @@ data class NameOrderElement(val type: MoveNameTokenType<*>) {
 
 typealias NameOrder = List<NameOrderElement>
 
-fun NameOrder.reorder(tokens: List<AnyMoveNameToken>): MoveName {
-    val nameTokens = tokens.associateBy { it.type }
-    return mapNotNull { nameTokens[it.type] }
-}
-
 fun nameOrder(vararg types: MoveNameTokenType<*>) = types.map { NameOrderElement(it) }
 
-val MoveNameTokenType<Unit>.mk get() = of(Unit)
+@Serializable(with = MoveName.Serializer::class)
+data class MoveName(private val tokens: Map<MoveNameTokenType<*>, Any>) {
+    constructor(names: Collection<MoveName>) : this(names.flatMap { it.tokens.toList() }.toMap())
+    init {
+        for ((t,v) in tokens)
+            require(t.cl.isInstance(v))
+    }
 
-@Serializable(with = MoveNameToken.Serializer::class)
-data class MoveNameToken<T : Any>(val type: MoveNameTokenType<T>, val value: T) {
-    val pgn: String get() = type.toPgnString(value)
+    operator fun <T : Any> get(type: MoveNameTokenType<T>): T = getOrNull(type)!!
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> getOrNull(type: MoveNameTokenType<T>): T? = tokens[type] as T?
 
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     @Suppress("UNCHECKED_CAST")
-    object Serializer : KSerializer<MoveNameToken<*>> {
+    object Serializer : KSerializer<MoveName> {
         override val descriptor: SerialDescriptor
-            get() = buildClassSerialDescriptor("MoveNameToken") {
+            get() = buildSerialDescriptor("MoveNameToken", StructureKind.MAP) {
                 element("type", MoveNameTokenType.Serializer.descriptor)
                 element("value", buildSerialDescriptor("MoveNameTokenValue", SerialKind.CONTEXTUAL))
             }
 
-        override fun serialize(encoder: Encoder, value: MoveNameToken<*>) {
-            val actualSerializer = encoder.serializersModule.serializer(value.value::class.createType())
-            encoder.encodeStructure(descriptor) {
-                encodeSerializableElement(descriptor, 0, MoveNameTokenType.Serializer, value.type)
-                encodeSerializableElement(descriptor, 1, actualSerializer as KSerializer<Any>, value.value)
+        override fun serialize(encoder: Encoder, value: MoveName) = encoder.encodeStructure(descriptor) {
+            var index = 0
+            for ((t,v) in value.tokens) {
+                encodeSerializableElement(descriptor, index++, MoveNameTokenType.Serializer, t)
+                val serializer = encoder.serializersModule.serializer(t.cl.createType())
+                encodeSerializableElement(descriptor, index++, serializer as KSerializer<Any>, v)
             }
         }
 
-        override fun deserialize(decoder: Decoder): MoveNameToken<*> = decoder.decodeStructure(descriptor) {
-            var type: MoveNameTokenType<*>? = null
-            var ret: MoveNameToken<*>? = null
+        override fun deserialize(decoder: Decoder): MoveName = decoder.decodeStructure(descriptor) {
+            val ret = mutableMapOf<MoveNameTokenType<*>, Any>()
+
+            fun readElement(index: Int) {
+                val key = decodeSerializableElement(descriptor, index, MoveNameTokenType.Serializer)
+                val serializer = decoder.serializersModule.serializer(key.cl.createType())
+                val value = if (key in ret && serializer.descriptor.kind !is PrimitiveKind) {
+                    decodeSerializableElement(descriptor, index+1, serializer, ret[key])
+                } else {
+                    decodeSerializableElement(descriptor, index+1, serializer)
+                }
+                ret[key] = value!!
+            }
 
             if (decodeSequentially()) { // sequential decoding protocol
-                type = decodeSerializableElement(descriptor, 0, MoveNameTokenType.Serializer)
-                type as MoveNameTokenType<Any>
-                val serializer = decoder.serializersModule.serializer(type.cl.createType())
-                ret = MoveNameToken(type, decodeSerializableElement(descriptor, 1, serializer)!!)
+                val size = decodeCollectionSize(descriptor)
+                for (index in 0 until size * 2 step 2)
+                    readElement(index)
             } else {
                 while (true) {
-                    when (val index = decodeElementIndex(descriptor)) {
-                        0 -> type = decodeSerializableElement(descriptor, index, MoveNameTokenType.Serializer)
-                        1 -> {
-                            val serializer = decoder.serializersModule.serializer(type!!.cl.createType())
-                            ret = MoveNameToken(
-                                type as MoveNameTokenType<Any>,
-                                decodeSerializableElement(descriptor, index, serializer)!!
-                            )
-                        }
-                        CompositeDecoder.DECODE_DONE -> break
-                        else -> error("Unexpected index: $index")
-                    }
+                    val index = decodeElementIndex(descriptor)
+                    if (index == CompositeDecoder.DECODE_DONE) break
+                    readElement(index)
                 }
             }
-            ret!!
+            MoveName(ret)
         }
     }
 }
 
-@Serializable(with = AnyMoveNameToken.Serializer::class)
-data class AnyMoveNameToken(val token: MoveNameToken<*>) {
-    val type get() = token.type
-
-    @OptIn(ExperimentalSerializationApi::class)
-    object Serializer : KSerializer<AnyMoveNameToken> {
-        override val descriptor: SerialDescriptor
-            get() = SerialDescriptor("AnyMoveNameToken", MoveNameToken.Serializer.descriptor)
-
-        override fun serialize(encoder: Encoder, value: AnyMoveNameToken) =
-            encoder.encodeSerializableValue(MoveNameToken.Serializer, value.token)
-
-        override fun deserialize(decoder: Decoder): AnyMoveNameToken =
-            AnyMoveNameToken(decoder.decodeSerializableValue(MoveNameToken.Serializer))
-    }
+fun interface MoveNameFormatter {
+    fun format(name: MoveName): String
 }
 
-typealias MoveName = List<AnyMoveNameToken>
-
-typealias MutableTokenList = MutableList<AnyMoveNameToken>
-
-fun emptyTokenList(): MutableTokenList = mutableListOf()
-
-operator fun MutableTokenList.plusAssign(token: MoveNameToken<*>) = plusAssign(AnyMoveNameToken(token))
-
-fun nameOf(vararg tokens: MoveNameToken<*>): MoveName = tokens.map { AnyMoveNameToken(it) }
-
-val MoveName.pgn get() = joinToString("") { it.token.pgn }
+@Suppress("UNCHECKED_CAST")
+fun nameOrderFormatter(nameOrder: NameOrder) = MoveNameFormatter { n ->
+    nameOrder.mapNotNull { t ->
+        n.getOrNull(t.type)?.let { t.type to it }
+    }.joinToString("") {
+        (it.first as MoveNameTokenType<Any>).toPgnString(it.second)
+    }
+}
