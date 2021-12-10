@@ -11,6 +11,9 @@ import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlin.reflect.KClass
 
 interface RegistryView<K, T> {

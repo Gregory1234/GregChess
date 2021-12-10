@@ -7,7 +7,8 @@ import gregc.gregchess.chess.player.*
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
-import kotlinx.serialization.builtins.*
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import java.time.LocalDateTime
@@ -65,7 +66,7 @@ class ChessGame private constructor(
             element<State>("state")
             element<String?>("startTime")
             element("results", GameResultsSerializer.descriptor.nullable)
-            element("components", ListSerializer(ComponentDataSerializer).descriptor)
+            element("components", ComponentDataMapSerializer.descriptor)
             element("environment", buildSerialDescriptor("ChessEnvironment", SerialKind.CONTEXTUAL))
         }
 
@@ -78,7 +79,7 @@ class ChessGame private constructor(
             encodeSerializableElement(descriptor, 5, encoder.serializersModule.serializer(), value.state)
             encodeNullableSerializableElement(descriptor, 6, String.serializer().nullable, value.startTime?.toString())
             encodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable, value.results)
-            encodeSerializableElement(descriptor, 8, ListSerializer(ComponentDataSerializer), value.componentData)
+            encodeSerializableElement(descriptor, 8, ComponentDataMapSerializer, value.componentData.associateBy { it.componentClass.componentKey })
             encodeSerializableElement(descriptor, 9, encoder.serializersModule.getContextual(ChessEnvironment::class)!!, value.environment)
         }
 
@@ -102,7 +103,7 @@ class ChessGame private constructor(
                 state = decodeSerializableElement(descriptor, 5, decoder.serializersModule.serializer())
                 startTime = decodeNullableSerializableElement(descriptor, 6, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
                 results = decodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable)
-                components = decodeSerializableElement(descriptor, 8, ListSerializer(ComponentDataSerializer))
+                components = decodeSerializableElement(descriptor, 8, ComponentDataMapSerializer).values.toList()
                 environment = decodeSerializableElement(descriptor, 9, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
             } else {
                 while (true) {
@@ -117,7 +118,7 @@ class ChessGame private constructor(
                         6 -> startTime = decodeNullableSerializableElement(descriptor, 6, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
                         7 -> results = decodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable)
                         8 -> components =
-                            decodeSerializableElement(descriptor, index, ListSerializer(ComponentDataSerializer))
+                            decodeSerializableElement(descriptor, index, ComponentDataMapSerializer).values.toList()
                         9 -> environment =
                             decodeSerializableElement(descriptor, index, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
                         CompositeDecoder.DECODE_DONE -> break
