@@ -79,7 +79,7 @@ class ChessGame private constructor(
             encodeNullableSerializableElement(descriptor, 6, String.serializer().nullable, value.startTime?.toString())
             encodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable, value.results)
             encodeSerializableElement(descriptor, 8, ListSerializer(ComponentDataSerializer), value.componentData)
-            encodeSerializableElement(descriptor, 9, encoder.serializersModule.serializer(), value.environment)
+            encodeSerializableElement(descriptor, 9, encoder.serializersModule.getContextual(ChessEnvironment::class)!!, value.environment)
         }
 
         override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
@@ -103,7 +103,7 @@ class ChessGame private constructor(
                 startTime = decodeNullableSerializableElement(descriptor, 6, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
                 results = decodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable)
                 components = decodeSerializableElement(descriptor, 8, ListSerializer(ComponentDataSerializer))
-                environment = decodeSerializableElement(descriptor, 9, decoder.serializersModule.serializer())
+                environment = decodeSerializableElement(descriptor, 9, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
             } else {
                 while (true) {
                     when (val index = decodeElementIndex(descriptor)) {
@@ -119,7 +119,7 @@ class ChessGame private constructor(
                         8 -> components =
                             decodeSerializableElement(descriptor, index, ListSerializer(ComponentDataSerializer))
                         9 -> environment =
-                            decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
+                            decodeSerializableElement(descriptor, index, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
                         CompositeDecoder.DECODE_DONE -> break
                         else -> error("Unexpected index: $index")
                     }
