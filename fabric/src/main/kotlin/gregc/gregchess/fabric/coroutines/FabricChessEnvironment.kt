@@ -6,6 +6,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 object FabricChessEnvironment : ChessEnvironment {
-    override val coroutineDispatcher: CoroutineDispatcher
-        get() = throw UnsupportedOperationException()
+    override val coroutineDispatcher: CoroutineDispatcher get() = FabricDispatcher()
 }
