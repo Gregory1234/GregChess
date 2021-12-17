@@ -44,8 +44,8 @@ object TestVariant : ChessVariant()
 val TEST_END_REASON = DetEndReason(EndReason.Type.EMERGENCY)
 
 object TestChessEnvironment : ChessEnvironment {
-    override val coroutineDispatcher: CoroutineDispatcher
-        get() = throw UnsupportedOperationException()
+    override val pgnSite: String get() = "GregChess test"
+    override val coroutineDispatcher: CoroutineDispatcher get() = throw UnsupportedOperationException()
 }
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)

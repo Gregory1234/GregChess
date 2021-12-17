@@ -9,6 +9,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
+// TODO: remove this
 interface ComponentData<out T : Component> {
     val componentClass: KClass<out T>
     fun getComponent(game: ChessGame): T

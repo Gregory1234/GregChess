@@ -9,6 +9,7 @@ import kotlinx.serialization.encoding.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.superclasses
 
+// TODO: consider adding back a separate player interface
 @Serializable(with = ChessPlayerType.Serializer::class)
 class ChessPlayerType<T : Any>(
     val playerSerializer: KSerializer<T>,

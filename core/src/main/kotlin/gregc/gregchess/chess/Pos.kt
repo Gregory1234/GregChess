@@ -141,12 +141,15 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
     override fun toString(): String = fileStr.orEmpty() + rankStr.orEmpty()
 }
 
+// TODO: remove this
 enum class Floor {
     LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END
 }
 
+// TODO: remove this
 data class FloorUpdateEvent(val pos: Pos, val floor: Floor) : ChessEvent
 
+// TODO: rename this to ChessFlag
 @Serializable(with = ChessFlagType.Serializer::class)
 class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
     object Serializer : NameRegisteredSerializer<ChessFlagType>("ChessFlagType", RegistryType.FLAG_TYPE)
@@ -161,14 +164,17 @@ class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered 
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 }
 
+// TODO: change lists into maps
 @Serializable
 data class ChessFlag(val type: ChessFlagType, var age: UInt = 0u) {
     val active get() = type.isActive(age)
 }
 
+// TODO: remove this
 @Serializable
 data class PosFlag(val pos: Pos, val flag: ChessFlag)
 
+// TODO: make this private
 class Square(val pos: Pos, val game: ChessGame) {
     var piece: BoardPiece? = null
     val flags = mutableListOf<ChessFlag>()

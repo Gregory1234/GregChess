@@ -51,7 +51,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
         fun generate(game: ChessGame): PGN {
             val tags = mutableListOf<TagPair>()
             tags += TagPair("Event", "Casual game")
-            tags += TagPair("Site", "GregChess plugin")
+            tags += TagPair("Site", game.environment.pgnSite)
             val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(game.startTime)
             tags += TagPair("Date", date)
             tags += TagPair("Round", "1")

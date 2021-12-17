@@ -76,6 +76,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         this[piece.pos]?.piece = piece
     }
 
+    // TODO: remove this
     operator fun get(pos: Pos) = squares[pos]
 
     private val moves: MutableList<Move> = initialState.moveHistory.toMutableList()

@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
 
 enum class Color(val char: Char, private val direction: Int) {
@@ -69,3 +70,8 @@ data class ByColor<out T> internal constructor(val white: T, val black: T) {
 fun <T> byColor(white: T, black: T) = ByColor(white, black)
 fun <T> byColor(both: T) = ByColor(both, both)
 inline fun <T> byColor(block: (Color) -> T) = byColor(block(Color.WHITE), block(Color.BLACK))
+
+interface ChessEnvironment {
+    val pgnSite: String
+    val coroutineDispatcher: CoroutineDispatcher
+}

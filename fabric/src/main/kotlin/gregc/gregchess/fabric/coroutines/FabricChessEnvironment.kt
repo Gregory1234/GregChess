@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 object FabricChessEnvironment : ChessEnvironment {
+    override val pgnSite: String get() = "GregChess Fabric mod"
     override val coroutineDispatcher: CoroutineDispatcher get() = FabricDispatcher()
 }

@@ -10,6 +10,7 @@ import gregc.gregchess.rotationsOf
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
+// TODO: refactor all of the code in this package
 @Serializable(with = ChessVariant.Serializer::class)
 open class ChessVariant : NameRegistered {
 
