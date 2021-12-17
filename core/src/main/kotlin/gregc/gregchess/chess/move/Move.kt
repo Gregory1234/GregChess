@@ -1,7 +1,6 @@
 package gregc.gregchess.chess.move
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.piece.BoardPiece
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
@@ -9,7 +8,7 @@ import kotlin.reflect.KClass
 // TODO: add a way to keep track of moving pieces
 @Serializable
 data class Move(
-    val piece: BoardPiece, val display: Pos, val floor: Floor,
+    val piece: BoardPiece, val display: Pos,
     val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
     val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
     val flagsNeeded: Set<Pair<Pos, ChessFlagType>>, val traits: List<MoveTrait>
@@ -67,24 +66,6 @@ data class Move(
             }
         }
         throw TraitsCouldNotExecuteException(remainingTraits)
-    }
-
-    fun show(board: Chessboard) {
-        board[display]?.moveMarker = floor
-    }
-
-    fun hide(board: Chessboard) {
-        board[display]?.moveMarker = null
-    }
-
-    fun showDone(board: Chessboard) {
-        board[piece.pos]?.previousMoveMarker = Floor.LAST_START
-        board[display]?.moveMarker = Floor.LAST_END
-    }
-
-    fun hideDone(board: Chessboard) {
-        board[piece.pos]?.previousMoveMarker = null
-        board[display]?.moveMarker = null
     }
 }
 

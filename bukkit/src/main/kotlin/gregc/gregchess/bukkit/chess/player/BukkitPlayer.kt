@@ -143,17 +143,13 @@ class BukkitPlayer(player: Player, color: Color, game: ChessGame) : ChessPlayer<
         private set(v) {
             field?.let {
                 it.checkExists(game.board)
-                game.board[it.pos]?.moveMarker = null
-                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.hide(game.board) }
                 game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
             }
+            field = v
             v?.let {
                 it.checkExists(game.board)
-                game.board[it.pos]?.moveMarker = Floor.NOTHING
-                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.show(game.board) }
                 game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
             }
-            field = v
         }
 
     companion object {

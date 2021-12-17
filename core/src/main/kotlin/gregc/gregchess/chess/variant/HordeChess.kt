@@ -8,12 +8,6 @@ import gregc.gregchess.chess.piece.PieceType
 
 object HordeChess : ChessVariant() {
 
-    override fun chessboardSetup(board: Chessboard) {
-        for (it in board.piecesOf(Color.WHITE, PieceType.PAWN)) {
-            it.copyInPlace(board, hasMoved = false)
-        }
-    }
-
     private fun pawnCanDouble(piece: BoardPiece): Boolean = when (piece.color) {
         Color.WHITE -> piece.pos.rank <= 1
         Color.BLACK -> piece.pos.rank >= 6

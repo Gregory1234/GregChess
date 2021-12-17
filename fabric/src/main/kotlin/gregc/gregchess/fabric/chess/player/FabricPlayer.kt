@@ -5,6 +5,7 @@ import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.fabric.chess.ChessboardFloorBlockEntity
+import gregc.gregchess.fabric.chess.component.renderer
 import gregc.gregchess.registry.name
 import kotlinx.coroutines.launch
 import net.minecraft.block.BlockState
@@ -24,15 +25,15 @@ class FabricPlayer(uuid: UUID, color: Color, game: ChessGame) : ChessPlayer<UUID
         private set(v) {
             field?.let {
                 it.checkExists(game.board)
-                game.board[it.pos]?.moveMarker = null
-                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.hide(game.board) }
-            }
-            v?.let {
-                it.checkExists(game.board)
-                game.board[it.pos]?.moveMarker = Floor.NOTHING
-                game.board[it.pos]?.bakedLegalMoves?.forEach { m -> m.show(game.board) }
+                game.renderer.heldPiece = null
+                game.renderer.redrawFloor()
             }
             field = v
+            v?.let {
+                it.checkExists(game.board)
+                game.renderer.heldPiece = field
+                game.renderer.redrawFloor()
+            }
         }
 
     override fun init() {

@@ -28,8 +28,6 @@ open class ChessVariant : NameRegistered {
         LEGAL("Legal moves")
     }
 
-    open fun chessboardSetup(board: Chessboard) {}
-
     open fun getLegality(move: Move, game: ChessGame): MoveLegality = with(move) {
         if (!Normal.isValid(move, game))
             return MoveLegality.INVALID
@@ -88,10 +86,10 @@ open class ChessVariant : NameRegistered {
 
     open fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when(piece.type) {
         PieceType.KING -> kingMovement(piece, board)
-        PieceType.QUEEN -> rays(piece, board, rotationsOf(1, 1) + rotationsOf(1, 0))
-        PieceType.ROOK -> rays(piece, board, rotationsOf(1, 0))
-        PieceType.BISHOP -> rays(piece, board, rotationsOf(1, 1))
-        PieceType.KNIGHT -> jumps(piece, board, rotationsOf(2, 1))
+        PieceType.QUEEN -> rays(piece, rotationsOf(1, 1) + rotationsOf(1, 0))
+        PieceType.ROOK -> rays(piece, rotationsOf(1, 0))
+        PieceType.BISHOP -> rays(piece, rotationsOf(1, 1))
+        PieceType.KNIGHT -> jumps(piece, rotationsOf(2, 1))
         PieceType.PAWN -> pawnMovement(piece).promotions(Normal.PROMOTIONS)
         else -> throw IllegalArgumentException(piece.type.toString())
     }
@@ -135,6 +133,8 @@ open class ChessVariant : NameRegistered {
             name.getOrNull(MoveNameTokenType.CHECKMATE)?.let { append("#") }
         }
     }
+
+    open val specialSquares: Set<Pos> get() = emptySet()
 
     object Normal : ChessVariant() {
 

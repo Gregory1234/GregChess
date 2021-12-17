@@ -141,14 +141,6 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
     override fun toString(): String = fileStr.orEmpty() + rankStr.orEmpty()
 }
 
-// TODO: remove this
-enum class Floor {
-    LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END
-}
-
-// TODO: remove this
-data class FloorUpdateEvent(val pos: Pos, val floor: Floor) : ChessEvent
-
 // TODO: rename this to ChessFlag
 @Serializable(with = ChessFlagType.Serializer::class)
 class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
@@ -184,43 +176,14 @@ class Square(val pos: Pos, val game: ChessGame) {
     var bakedMoves: List<Move>? = null
     var bakedLegalMoves: List<Move>? = null
 
-    private val baseFloor = if ((pos.file + pos.rank) % 2 == 0) Floor.DARK else Floor.LIGHT
-    var variantMarker: Floor? = null
-        set(v) {
-            val old = floor
-            field = v
-            if (old != floor) update()
-        }
-    var previousMoveMarker: Floor? = null
-        set(v) {
-            val old = floor
-            field = v
-            if (old != floor) update()
-        }
-    var moveMarker: Floor? = null
-        set(v) {
-            val old = floor
-            field = v
-            if (old != floor) update()
-        }
-    private val floor
-        get() = moveMarker ?: previousMoveMarker ?: variantMarker ?: baseFloor
-
     val board
         get() = game.board
 
-    fun update() {
-        game.callEvent(FloorUpdateEvent(pos, floor))
-    }
-
-    override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, floor=$floor, flags=$flags)"
+    override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, flags=$flags)"
 
     fun empty() {
         piece?.clear(board)
         bakedMoves = null
-        variantMarker = null
-        previousMoveMarker = null
-        moveMarker = null
         flags.clear()
     }
 

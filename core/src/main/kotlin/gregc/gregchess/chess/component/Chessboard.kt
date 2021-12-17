@@ -140,13 +140,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.SYNC || e == GameBaseEvent.START) {
             updateMoves()
-            game.variant.chessboardSetup(this)
             pieces.forEach { it.sendCreated(this) }
-            squares.values.forEach(Square::update)
-        }
-
-        if (e == GameBaseEvent.SYNC) {
-            lastMove?.showDone(this)
         }
     }
 
@@ -198,10 +192,8 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
         boardHashes.clear()
         addBoardHash(fen)
-        game.variant.chessboardSetup(this)
         pieces.forEach { it.sendCreated(this) }
         callEvent(SetFenEvent(fen))
-        squares.values.forEach(Square::update)
     }
 
     fun getFEN(): FEN {
@@ -240,14 +232,12 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     fun undoLastMove() {
         lastMove?.let {
-            it.hideDone(this)
             val hash = getFEN().hashed()
             boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
             it.undo(game)
             if (game.currentTurn == Color.WHITE)
                 fullmoveCounter--
             moves.removeLast()
-            lastMove?.showDone(this)
             game.previousTurn()
         }
     }

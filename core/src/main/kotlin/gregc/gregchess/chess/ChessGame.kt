@@ -313,9 +313,7 @@ class ChessGame private constructor(
     fun finishMove(move: Move) {
         requireState(State.RUNNING)
         move.execute(this)
-        board.lastMove?.hideDone(board)
         board.lastMove = move
-        board.lastMove?.showDone(board)
         nextTurn()
     }
 

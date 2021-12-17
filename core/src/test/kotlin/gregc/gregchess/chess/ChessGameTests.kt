@@ -80,7 +80,6 @@ class ChessGameTests {
             val c = g.getComponent<TestComponent>()!!
             excludeRecords {
                 c.handleEvent(match { it is PieceEvent })
-                c.handleEvent(match { it is FloorUpdateEvent })
             }
             verifySequence {
                 c.validate()

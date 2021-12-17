@@ -4,6 +4,7 @@ import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceEvent
 import gregc.gregchess.fabric.blockpos
@@ -37,10 +38,44 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
 
     private val tileBlocks: Map<Pos, List<ChessboardFloorBlockEntity>> by lazy { data.floor.groupBy { it.boardPos!! } }
 
-    @ChessEventHandler
-    fun onFloorUpdate(e: FloorUpdateEvent) {
-        tileBlocks[e.pos]?.forEach {
-            it.updateFloor(e.floor)
+    // TODO: make this private
+    var heldPiece: BoardPiece? = null
+
+    private val Move.floorMaterial: Floor
+        get() {
+            if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
+                return Floor.SPECIAL
+            getTrait<TargetTrait>()?.let {
+                if (game.board[it.target]?.piece != null)
+                    return Floor.CAPTURE
+            }
+            return Floor.MOVE
+        }
+
+    private val Pos.floorMaterial: Floor
+        get() {
+            if (this == heldPiece?.pos)
+                return Floor.NOTHING
+            val moves = heldPiece?.getLegalMoves(game.board).orEmpty()
+            if (this in moves.map { it.display })
+                return moves.first { it.display == this }.floorMaterial
+            if (this == game.board.lastMove?.piece?.pos)
+                return Floor.LAST_START
+            if (this == game.board.lastMove?.display)
+                return Floor.LAST_END
+            if (this in game.variant.specialSquares)
+                return Floor.OTHER
+            return if ((file + rank) % 2 == 0) Floor.DARK else Floor.LIGHT
+        }
+
+    // TODO: make this private
+    fun redrawFloor() {
+        for (file in 0..7) {
+            for (rank in 0..7) {
+                tileBlocks[Pos(file, rank)]?.forEach {
+                    it.updateFloor(Pos(file, rank).floorMaterial)
+                }
+            }
         }
     }
 
@@ -53,6 +88,13 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
                 }
             }
             (data.world.getBlockEntity(data.controllerLoc.blockpos) as? ChessControllerBlockEntity)?.currentGame = null
+        }
+    }
+
+    @ChessEventHandler
+    fun onTurnStart(e: TurnEvent) {
+        if (e == TurnEvent.START || e == TurnEvent.UNDO) {
+            redrawFloor()
         }
     }
 

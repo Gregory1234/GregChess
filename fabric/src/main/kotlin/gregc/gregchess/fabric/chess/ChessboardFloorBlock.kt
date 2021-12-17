@@ -1,6 +1,5 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.chess.Floor
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.chess.player.FabricPlayer
@@ -53,9 +52,9 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
         }
     }
 
-    fun updateFloor(floor: Floor? = boardPos?.let { if ((it.rank + it.file) % 2 == 0) Floor.DARK else Floor.LIGHT }) {
+    fun updateFloor(floor: Floor = boardPos?.let { if ((it.rank + it.file) % 2 == 0) Floor.DARK else Floor.LIGHT } ?: Floor.INACTIVE) {
         if (world?.getBlockState(pos)?.block is ChessboardFloorBlock)
-            world?.setBlockState(pos, world!!.getBlockState(pos).with(ChessboardFloorBlock.FLOOR, floor?.chess ?: ChessboardFloor.INACTIVE))
+            world?.setBlockState(pos, world!!.getBlockState(pos).with(ChessboardFloorBlock.FLOOR, floor))
     }
 
     override fun markRemoved() {
@@ -115,10 +114,8 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 }
 
-enum class ChessboardFloor(val floor: Floor?) : StringIdentifiable {
-    INACTIVE(null), LIGHT(Floor.LIGHT), DARK(Floor.DARK), MOVE(Floor.MOVE), CAPTURE(Floor.CAPTURE),
-    SPECIAL(Floor.SPECIAL), NOTHING(Floor.NOTHING), OTHER(Floor.OTHER),
-    LAST_START(Floor.LAST_START), LAST_END(Floor.LAST_END);
+enum class Floor : StringIdentifiable {
+    INACTIVE, LIGHT, DARK, MOVE, CAPTURE, SPECIAL, NOTHING, OTHER, LAST_START, LAST_END;
 
     override fun asString(): String = name.lowercase()
 }
@@ -126,7 +123,7 @@ enum class ChessboardFloor(val floor: Floor?) : StringIdentifiable {
 class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
     companion object {
         @JvmField
-        val FLOOR: EnumProperty<ChessboardFloor> = EnumProperty.of("floor", ChessboardFloor::class.java)
+        val FLOOR: EnumProperty<Floor> = EnumProperty.of("floor", Floor::class.java)
     }
 
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
@@ -135,7 +132,7 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
         ChessboardFloorBlockEntity(pos, state)
 
     init {
-        defaultState = stateManager.defaultState.with(FLOOR, ChessboardFloor.INACTIVE)
+        defaultState = stateManager.defaultState.with(FLOOR, Floor.INACTIVE)
     }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
