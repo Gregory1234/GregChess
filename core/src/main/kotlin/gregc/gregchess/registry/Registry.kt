@@ -1,7 +1,7 @@
 package gregc.gregchess.registry
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.ChessFlagType
+import gregc.gregchess.chess.ChessFlag
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
@@ -11,9 +11,6 @@ import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlin.reflect.KClass
 
 interface RegistryView<K, T> {
@@ -75,7 +72,7 @@ abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) : Enu
         @JvmField
         val VARIANT = NameRegistryType<ChessVariant>("variant")
         @JvmField
-        val FLAG_TYPE = NameRegistryType<ChessFlagType>("flag_type")
+        val FLAG = NameRegistryType<ChessFlag>("flag")
         @JvmField
         val MOVE_NAME_TOKEN_TYPE = NameRegistryType<MoveNameTokenType<*>>("move_name_token_type")
         @JvmField

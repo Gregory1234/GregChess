@@ -21,7 +21,7 @@ data class ChessboardState internal constructor (
     val fullmoveCounter: UInt = initialFEN.fullmoveCounter,
     val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
     val capturedPieces: List<CapturedPiece> = emptyList(),
-    val flags: List<PosFlag> = enPassantFlag(initialFEN.enPassantSquare),
+    val flags: Map<Pos, Map<ChessFlag, UInt>> = enPassantFlag(initialFEN.enPassantSquare),
     val moveHistory: List<Move> = emptyList()
 ) : ComponentData<Chessboard> {
     private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toPieces(variant))
@@ -35,7 +35,7 @@ data class ChessboardState internal constructor (
     companion object {
 
         private fun enPassantFlag(square: Pos?) =
-            listOfNotNull(square?.let { PosFlag(it, ChessFlag(ChessFlagType.EN_PASSANT, 1u)) })
+            square?.let { mapOf(it to mapOf(ChessFlag.EN_PASSANT to 1u)) }.orEmpty()
 
     }
 }
@@ -47,7 +47,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         Square(p, game).also { s ->
             val piece = initialState.pieces[p]
             s.piece = piece
-            s.flags.addAll(initialState.flags.mapNotNull { (p, f) -> if (p == s.pos) f else null })
+            s.flags += initialState.flags[p].orEmpty()
         }
     }
 
@@ -70,7 +70,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
     private val piecesByPos get() = squares.mapNotNull { it.value.piece }.associateBy { it.pos }
 
-    private val posFlags get() = squares.values.flatMap { it.posFlags }
+    private val posFlags get() = squares.values.filter { it.flags.isNotEmpty() }.associate { it.pos to it.flags }
 
     operator fun plusAssign(piece: BoardPiece) {
         this[piece.pos]?.piece = piece
@@ -121,15 +121,15 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             }
             for (s in squares.values)
                 for (f in s.flags)
-                    f.age++
+                    f.flagAge++
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
                 for (f in s.flags) {
-                    f.age--
+                    f.flagAge--
                 }
-                s.flags.removeIf { it.age == 0u }
+                s.flags.entries.removeIf { it.flagAge == 0u }
             }
         }
         if (e.ending)
@@ -185,7 +185,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
 
         if (fen.enPassantSquare != null) {
-            this[fen.enPassantSquare]?.flags?.plusAssign(ChessFlag(ChessFlagType.EN_PASSANT, 1u))
+            this[fen.enPassantSquare]?.flags?.set(ChessFlag.EN_PASSANT, 1u)
         }
 
         updateMoves()
@@ -208,7 +208,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             boardState,
             game.currentTurn,
             byColor(::castling),
-            squares.values.firstOrNull { s -> s.flags.any { it.type == ChessFlagType.EN_PASSANT && it.active } }?.pos,
+            squares.values.firstOrNull { s -> s.flags.any { it.key == ChessFlag.EN_PASSANT && it.flagActive } }?.pos,
             halfmoveClock,
             fullmoveCounter
         )

@@ -45,8 +45,8 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
         get() {
             if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
                 return Floor.SPECIAL
-            getTrait<TargetTrait>()?.let {
-                if (game.board[it.target]?.piece != null)
+            getTrait<CaptureTrait>()?.let {
+                if (game.board[it.capture]?.piece != null)
                     return Floor.CAPTURE
             }
             return Floor.MOVE

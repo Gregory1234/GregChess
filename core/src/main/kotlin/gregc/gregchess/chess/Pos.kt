@@ -141,37 +141,35 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
     override fun toString(): String = fileStr.orEmpty() + rankStr.orEmpty()
 }
 
-// TODO: rename this to ChessFlag
-@Serializable(with = ChessFlagType.Serializer::class)
-class ChessFlagType(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessFlagType>("ChessFlagType", RegistryType.FLAG_TYPE)
+@Serializable(with = ChessFlag.Serializer::class)
+class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
+    object Serializer : NameRegisteredSerializer<ChessFlag>("ChessFlag", RegistryType.FLAG)
 
     companion object {
         @JvmField
-        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlagType { it == 1u })
+        val EN_PASSANT = GregChessModule.register("en_passant", ChessFlag { it == 1u })
     }
 
-    override val key get() = RegistryType.FLAG_TYPE[this]
+    override val key get() = RegistryType.FLAG[this]
 
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 }
 
-// TODO: change lists into maps
-@Serializable
-data class ChessFlag(val type: ChessFlagType, var age: UInt = 0u) {
-    val active get() = type.isActive(age)
-}
-
-// TODO: remove this
-@Serializable
-data class PosFlag(val pos: Pos, val flag: ChessFlag)
+typealias ChessFlagReference = Map.Entry<ChessFlag, UInt>
+val ChessFlagReference.flagType get() = key
+@get:JvmName("getFlagAgeSimple")
+val ChessFlagReference.flagAge get() = value
+val ChessFlagReference.flagActive get() = flagType.isActive(flagAge)
+var MutableMap.MutableEntry<ChessFlag, UInt>.flagAge
+    get() = value
+    set(v) {
+        setValue(v)
+    }
 
 // TODO: make this private
 class Square(val pos: Pos, val game: ChessGame) {
     var piece: BoardPiece? = null
-    val flags = mutableListOf<ChessFlag>()
-
-    val posFlags get() = flags.map { PosFlag(pos, it) }
+    val flags = mutableMapOf<ChessFlag, UInt>()
 
     var bakedMoves: List<Move>? = null
     var bakedLegalMoves: List<Move>? = null

@@ -100,7 +100,7 @@ fun <T : GameScore> ChessModule.register(id: String, endReason: EndReason<T>) =
 
 fun ChessModule.register(id: String, variant: ChessVariant) = register(RegistryType.VARIANT, id, variant)
 
-fun ChessModule.register(id: String, flagType: ChessFlagType) = register(RegistryType.FLAG_TYPE, id, flagType)
+fun ChessModule.register(id: String, flagType: ChessFlag) = register(RegistryType.FLAG, id, flagType)
 
 fun <T : Any> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
     register(RegistryType.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
@@ -179,7 +179,7 @@ object GregChessModule : ChessModule("gregchess") {
         PieceType
         EndReason
         MoveNameTokenType
-        ChessFlagType
+        ChessFlag
         registerComponents()
         registerVariants()
         registerMoveTraits()

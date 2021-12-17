@@ -178,8 +178,8 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         get() {
             if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
                 return getFloor("Special")
-            getTrait<TargetTrait>()?.let {
-                if (game.board[it.target]?.piece != null)
+            getTrait<CaptureTrait>()?.let {
+                if (game.board[it.capture]?.piece != null)
                     return getFloor("Capture")
             }
             return getFloor("Move")
