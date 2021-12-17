@@ -165,7 +165,7 @@ class BukkitPlayer(player: Player, color: Color, game: ChessGame) : ChessPlayer<
 
     fun pickUp(pos: Pos) {
         if (!game.running) return
-        val piece = game.board[pos]?.piece ?: return
+        val piece = game.board[pos] ?: return
         if (piece.color != color) return
         held = piece
         player.inventory.setItem(0, piece.piece.item)

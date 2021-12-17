@@ -49,7 +49,7 @@ class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChe
     }
 
     val exists
-        get() = floorBlock?.boardPos?.let { boardPos -> currentGame?.board?.get(boardPos) }?.piece?.piece == piece
+        get() = floorBlock?.boardPos?.let { boardPos -> currentGame?.board?.get(boardPos) }?.piece == piece
 
 }
 

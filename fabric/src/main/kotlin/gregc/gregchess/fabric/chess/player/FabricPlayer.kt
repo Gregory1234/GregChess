@@ -42,7 +42,7 @@ class FabricPlayer(uuid: UUID, color: Color, game: ChessGame) : ChessPlayer<UUID
 
     fun pickUp(pos: Pos) {
         if (!game.running) return
-        val piece = game.board[pos]?.piece ?: return
+        val piece = game.board[pos] ?: return
         if (piece.color != color) return
         held = piece
     }

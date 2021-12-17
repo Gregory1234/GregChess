@@ -67,7 +67,7 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     val char: Char get() = piece.char
 
     fun checkExists(board: Chessboard) {
-        if (board[pos]?.piece != this)
+        if (board[pos] != this)
             throw PieceDoesNotExistException(this)
     }
 
@@ -79,12 +79,12 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
     fun clear(board: Chessboard) {
         checkExists(board)
         board.callEvent(PieceEvent.Cleared(this))
-        board[pos]?.piece = null
+        board.clearPiece(pos)
     }
 
     fun move(target: Pos, board: Chessboard): BoardPiece {
         checkExists(board)
-        board[target]?.piece?.let {
+        board[target]?.let {
             throw PieceAlreadyOccupiesSquareException(it)
         }
         val new = copyInPlace(board, pos = target, hasMoved = true)
@@ -112,7 +112,7 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         board: Chessboard, pos: Pos = this.pos, piece: Piece = this.piece, hasMoved: Boolean = this.hasMoved
     ): BoardPiece {
         checkExists(board)
-        board[this.pos]?.piece = null
+        board.clearPiece(this.pos)
         val new = BoardPiece(pos, piece, hasMoved)
         board += new
         return new
@@ -126,10 +126,10 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
             val pieces = moves.keys
             for (piece in pieces) {
                 piece.checkExists(board)
-                board[piece.pos]?.piece = null
+                board.clearPiece(piece.pos)
             }
             for ((piece, target) in moves)
-                if (board[target]?.piece != null && target !in pieces.map { it.pos })
+                if (board[target] != null && target !in pieces.map { it.pos })
                     throw PieceAlreadyOccupiesSquareException(piece)
             val new = moves.mapValues { (piece, target) ->
                 piece.copy(pos = target, hasMoved = true).also { board += it }
@@ -160,7 +160,7 @@ data class CapturedBoardPiece(val boardPiece: BoardPiece, val captured: Captured
     override fun toString(): String = "CapturedBoardPiece(piece=$piece, pos=$pos, capturedBy=${capturedBy})"
 
     fun resurrect(board: Chessboard): BoardPiece {
-        board[pos]?.piece?.let {
+        board[pos]?.let {
             throw PieceAlreadyOccupiesSquareException(it)
         }
         board -= captured

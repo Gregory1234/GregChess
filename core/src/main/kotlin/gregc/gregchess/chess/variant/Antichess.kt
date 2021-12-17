@@ -24,11 +24,11 @@ object Antichess : ChessVariant() {
     override fun getLegality(move: Move, game: ChessGame): MoveLegality {
         if (!Normal.isValid(move, game))
             return MoveLegality.INVALID
-        if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it]?.piece } != null)
+        if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it] } != null)
             return MoveLegality.LEGAL
         return if (game.board.piecesOf(move.piece.color).none { m ->
                 m.getMoves(game.board).filter { Normal.isValid(it, game) }
-                    .any { mv -> mv.getTrait<CaptureTrait>()?.capture?.let { game.board[it]?.piece } != null }
+                    .any { mv -> mv.getTrait<CaptureTrait>()?.capture?.let { game.board[it] } != null }
             }) MoveLegality.LEGAL else MoveLegality.SPECIAL
     }
 

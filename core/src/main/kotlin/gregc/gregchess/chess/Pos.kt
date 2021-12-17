@@ -1,8 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.move.Move
-import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -165,25 +163,3 @@ var MutableMap.MutableEntry<ChessFlag, UInt>.flagAge
     set(v) {
         setValue(v)
     }
-
-// TODO: make this private
-class Square(val pos: Pos, val game: ChessGame) {
-    var piece: BoardPiece? = null
-    val flags = mutableMapOf<ChessFlag, UInt>()
-
-    var bakedMoves: List<Move>? = null
-    var bakedLegalMoves: List<Move>? = null
-
-    val board
-        get() = game.board
-
-    override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, flags=$flags)"
-
-    fun empty() {
-        piece?.clear(board)
-        bakedMoves = null
-        flags.clear()
-    }
-
-    fun neighbours() = pos.neighbours().mapNotNull { this.board[it] }
-}

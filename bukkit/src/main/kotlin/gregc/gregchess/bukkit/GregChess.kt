@@ -179,14 +179,14 @@ object GregChess : Listener {
                 execute<Player> {
                     val g = pl().game
                     val pos = g.renderer.getPos(sender.location.toLoc())
-                    g.board[pos]?.piece?.capture(pl().color, g.board)
+                    g.board[pos]?.capture(pl().color, g.board)
                     g.board.updateMoves()
                     sender.sendMessage(BOARD_OP_DONE)
                 }
                 argument(PosArgument("pos")) { pos ->
                     execute<Player> {
                         val g = pl().game
-                        g.board[pos()]?.piece?.capture(pl().color, g.board)
+                        g.board[pos()]?.capture(pl().color, g.board)
                         g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
@@ -197,20 +197,20 @@ object GregChess : Listener {
                 argument(RegistryArgument("piece", PieceRegistryView)) { piece ->
                     execute<Player> {
                         val g = pl().game
-                        val square = g.board[g.renderer.getPos(sender.location.toLoc())]!!
-                        square.piece?.capture(pl().color, square.board)
-                        g.board += BoardPiece(square.pos, piece(), false)
-                        square.piece?.sendCreated(g.board)
+                        val p = g.board[g.renderer.getPos(sender.location.toLoc())]!!
+                        p.capture(pl().color, g.board)
+                        g.board += BoardPiece(p.pos, piece(), false)
+                        p.sendCreated(g.board)
                         g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
                     argument(PosArgument("pos")) { pos ->
                         execute<Player> {
                             val g = pl().game
-                            val square = g.board[pos()]!!
-                            square.piece?.capture(pl().color, square.board)
-                            g.board += BoardPiece(square.pos, piece(), false)
-                            square.piece?.sendCreated(g.board)
+                            val p = g.board[pos()]!!
+                            p.capture(pl().color, g.board)
+                            g.board += BoardPiece(p.pos, piece(), false)
+                            p.sendCreated(g.board)
                             g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }
@@ -223,8 +223,8 @@ object GregChess : Listener {
                     argument(PosArgument("to")) { to ->
                         execute<Player> {
                             val g = pl().game
-                            g.board[to()]?.piece?.capture(pl().color, g.board)
-                            g.board[from()]?.piece?.move(to(), g.board)
+                            g.board[to()]?.capture(pl().color, g.board)
+                            g.board[from()]?.move(to(), g.board)
                             g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }
@@ -397,14 +397,14 @@ object GregChess : Listener {
                     val pl = requireGame()
                     execute<Player> {
                         sender.spigot().sendMessage(
-                            pl().game.board[pl().game.renderer.getPos(sender.location.toLoc())]?.piece
+                            pl().game.board[pl().game.renderer.getPos(sender.location.toLoc())]
                                 .cNotNull(PIECE_NOT_FOUND).getInfo(pl().game)
                         )
                     }
                     argument(PosArgument("pos")) { pos ->
                         execute<Player> {
                             sender.spigot().sendMessage(
-                                pl().game.board[pos()]?.piece.cNotNull(PIECE_NOT_FOUND).getInfo(pl().game))
+                                pl().game.board[pos()].cNotNull(PIECE_NOT_FOUND).getInfo(pl().game))
                         }
                     }
                 }

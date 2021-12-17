@@ -13,6 +13,26 @@ import kotlin.reflect.KClass
 
 class SetFenEvent(val FEN: FEN) : ChessEvent
 
+private class Square(val pos: Pos, val game: ChessGame) {
+    var piece: BoardPiece? = null
+    val flags = mutableMapOf<ChessFlag, UInt>()
+
+    var bakedMoves: List<Move>? = null
+    var bakedLegalMoves: List<Move>? = null
+
+    val board
+        get() = game.board
+
+    override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, flags=$flags)"
+
+    fun empty() {
+        piece?.clear(board)
+        bakedMoves = null
+        bakedLegalMoves = null
+        flags.clear()
+    }
+}
+
 @Serializable
 data class ChessboardState internal constructor (
     val initialFEN: FEN,
@@ -73,11 +93,20 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     private val posFlags get() = squares.values.filter { it.flags.isNotEmpty() }.associate { it.pos to it.flags }
 
     operator fun plusAssign(piece: BoardPiece) {
-        this[piece.pos]?.piece = piece
+        squares[piece.pos]?.piece = piece
     }
 
-    // TODO: remove this
-    operator fun get(pos: Pos) = squares[pos]
+    operator fun get(pos: Pos) = squares[pos]?.piece
+
+    fun clearPiece(pos: Pos) {
+        squares[pos]?.piece = null
+    }
+
+    fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u) {
+        squares[pos]?.flags?.set(flag, age)
+    }
+
+    fun getFlags(pos: Pos): Map<ChessFlag, UInt> = squares[pos]?.flags.orEmpty()
 
     private val moves: MutableList<Move> = initialState.moveHistory.toMutableList()
 
@@ -185,7 +214,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
 
         if (fen.enPassantSquare != null) {
-            this[fen.enPassantSquare]?.flags?.set(ChessFlag.EN_PASSANT, 1u)
+            squares[fen.enPassantSquare]?.flags?.set(ChessFlag.EN_PASSANT, 1u)
         }
 
         updateMoves()

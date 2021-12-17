@@ -137,7 +137,8 @@ class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
 
     override fun execute(game: ChessGame, move: Move) {
         for ((p, f) in flags)
-            game.board[p]!!.flags += f
+            for ((t, a) in f)
+                game.board.addFlag(p, t, a)
     }
 }
 
@@ -178,7 +179,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTr
         get() = MoveName(if (captured != null) mapOf(MoveNameTokenType.CAPTURE to Unit) else emptyMap())
 
     override fun execute(game: ChessGame, move: Move) {
-        game.board[capture]?.piece?.let {
+        game.board[capture]?.let {
             captured = it.capture(move.piece.color, game.board)
         }
     }
@@ -199,7 +200,7 @@ class PawnOriginTrait : MoveTrait {
 
     override fun setup(game: ChessGame, move: Move) {
         move.getTrait<CaptureTrait>()?.let {
-            if (game.board[it.capture]?.piece != null) {
+            if (game.board[it.capture] != null) {
                 uniquenessCoordinate = UniquenessCoordinate(file = move.piece.pos.file)
             }
         }

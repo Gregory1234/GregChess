@@ -27,10 +27,10 @@ object AtomicChess : ChessVariant() {
             val targetTrait = move.getTrait<TargetTrait>() ?: throw TraitPreconditionException(this, "No target trait")
             if (captureTrait.captured == null) return
             val pos = targetTrait.target
-            game.board[pos]?.piece?.explode(move.piece.color, game.board)
-            game.board[pos]?.neighbours()?.forEach {
-                if (it.piece?.type != PieceType.PAWN)
-                    it.piece?.explode(move.piece.color, game.board)
+            game.board[pos]?.explode(move.piece.color, game.board)
+            pos.neighbours().mapNotNull { game.board[pos] }.forEach {
+                if (it.type != PieceType.PAWN)
+                    it.explode(move.piece.color, game.board)
             }
             game.callEvent(ExplosionEvent(pos))
         }
@@ -68,7 +68,7 @@ object AtomicChess : ChessVariant() {
 
         if (!Normal.isValid(this, game))
             return MoveLegality.INVALID
-        val captured = getTrait<CaptureTrait>()?.let { game.board[it.capture]?.piece }
+        val captured = getTrait<CaptureTrait>()?.let { game.board[it.capture] }
         if (piece.type == PieceType.KING) {
             if (captured != null)
                 return MoveLegality.SPECIAL
@@ -92,7 +92,7 @@ object AtomicChess : ChessVariant() {
         val pins = pinningMoves(!piece.color, myKing.pos, game.board)
         if (pins.any { pin ->
                 capture != pin.piece.pos &&
-                        pin.neededEmpty.filter { game.board[it]?.piece != null }
+                        pin.neededEmpty.filter { game.board[it] != null }
                             .all { it in stopBlocking } && startBlocking.none { it in pin.neededEmpty }
             })
             return MoveLegality.PINNED
