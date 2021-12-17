@@ -108,9 +108,12 @@ abstract class ClassMapSerializer<T, K, V>(val name: String, private val keySeri
     final override fun deserialize(decoder: Decoder): T = decoder.decodeStructure(descriptor) {
         val ret = mutableMapOf<K, V>()
 
-        fun readElement(index: Int) {
+        fun readElement(index: Int, checkIndex: Boolean) {
             val key = decodeSerializableElement(descriptor, index, keySerializer)
             val serializer = key.valueSerializer(decoder.serializersModule)
+            if (checkIndex) {
+                check(decodeElementIndex(descriptor) == index + 1)
+            }
             val value = if (key in ret && serializer.descriptor.kind !is PrimitiveKind) {
                 decodeSerializableElement(descriptor, index+1, serializer, ret[key])
             } else {
@@ -122,12 +125,12 @@ abstract class ClassMapSerializer<T, K, V>(val name: String, private val keySeri
         if (decodeSequentially()) { // sequential decoding protocol
             val size = decodeCollectionSize(descriptor)
             for (index in 0 until size * 2 step 2)
-                readElement(index)
+                readElement(index, false)
         } else {
             while (true) {
                 val index = decodeElementIndex(descriptor)
                 if (index == CompositeDecoder.DECODE_DONE) break
-                readElement(index)
+                readElement(index, true)
             }
         }
         fromMap(ret)
