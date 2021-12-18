@@ -3,12 +3,12 @@ package gregc.gregchess.chess.move
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.ClassRegisteredSerializer
-import gregc.gregchess.registry.RegistryType
+import gregc.gregchess.registry.Registry
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>) :
-    Exception(traits.toList().map { RegistryType.MOVE_TRAIT_CLASS[it::class] }.toString())
+    Exception(traits.toList().map { Registry.MOVE_TRAIT_CLASS[it::class] }.toString())
 
 class TraitPreconditionException(trait: MoveTrait, message: String, cause: Throwable? = null) :
     IllegalStateException("${trait::class.traitKey}: $message", cause)
@@ -34,7 +34,7 @@ inline fun MoveTrait.tryPiece(f: () -> Unit) =
         pieceOccupiesSquare(e)
     }
 
-object MoveTraitSerializer : ClassRegisteredSerializer<MoveTrait>("MoveTrait", RegistryType.MOVE_TRAIT_CLASS)
+object MoveTraitSerializer : ClassRegisteredSerializer<MoveTrait>("MoveTrait", Registry.MOVE_TRAIT_CLASS)
 
 fun MoveTrait.pieceNotExist(e: PieceDoesNotExistException): Nothing =
     throw TraitPreconditionException(this, "Piece ${e.piece.piece} doesn't exist at ${e.piece.pos}!", e)
@@ -43,7 +43,7 @@ fun MoveTrait.pieceOccupiesSquare(e: PieceAlreadyOccupiesSquareException): Nothi
 fun MoveTrait.traitNotExecuted(): Nothing =
     throw TraitPreconditionException(this, "Trait hasn't executed")
 
-val KClass<out MoveTrait>.traitKey get() = RegistryType.MOVE_TRAIT_CLASS[this]
+val KClass<out MoveTrait>.traitKey get() = Registry.MOVE_TRAIT_CLASS[this]
 val KClass<out MoveTrait>.traitModule get() = traitKey.module
 val KClass<out MoveTrait>.traitName get() = traitKey.key
 

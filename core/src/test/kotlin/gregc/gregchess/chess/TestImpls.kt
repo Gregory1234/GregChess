@@ -60,4 +60,5 @@ inline fun <T> measureTime(block: () -> T): T {
 
 fun setupRegistry() = with(GregChess) {
     register("test", ChessPlayerType(String.serializer()) { c, g -> TestPlayer(this, c, g) })
+    fullLoad()
 }

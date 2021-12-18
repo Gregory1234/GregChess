@@ -39,7 +39,7 @@ object GregChessMod : ModInitializer {
 
     @JvmField
     val PIECE_ENTITY_TYPE: BlockEntityType<*> = BlockEntityType.Builder.create(
-        ::PieceBlockEntity, *FabricRegistryTypes.PIECE_BLOCK.values.toTypedArray()
+        ::PieceBlockEntity, *FabricRegistry.PIECE_BLOCK.values.toTypedArray()
     ).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
 
     @JvmField

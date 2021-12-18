@@ -4,7 +4,7 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
-import gregc.gregchess.registry.EnumeratedRegistryView
+import gregc.gregchess.registry.FiniteRegistryView
 import gregc.gregchess.registry.toKey
 import org.bukkit.entity.Player
 import kotlin.time.Duration
@@ -44,7 +44,7 @@ class PosArgument(name: String) : CommandArgumentType<Pos>(name) {
     }
 }
 
-class RegistryArgument<T>(name: String, val registryView: EnumeratedRegistryView<String, T>) : CommandArgumentType<T>(name) {
+class RegistryArgument<T>(name: String, val registryView: FiniteRegistryView<String, T>) : CommandArgumentType<T>(name) {
     override fun tryParse(strings: List<String>): Pair<T, List<String>>? = try {
         if (strings.isEmpty()) null else registryView[strings.first().toKey()] to strings.drop(1)
     } catch (e: IllegalArgumentException) {

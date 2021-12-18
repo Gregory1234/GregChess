@@ -13,9 +13,9 @@ import kotlin.reflect.full.createType
 class MoveNameTokenType<T : Any>(val cl: KClass<T>) : NameRegistered {
 
     object Serializer :
-        NameRegisteredSerializer<MoveNameTokenType<*>>("MoveNameTokenType", RegistryType.MOVE_NAME_TOKEN_TYPE)
+        NameRegisteredSerializer<MoveNameTokenType<*>>("MoveNameTokenType", Registry.MOVE_NAME_TOKEN_TYPE)
 
-    override val key get() = RegistryType.MOVE_NAME_TOKEN_TYPE[this]
+    override val key get() = Registry.MOVE_NAME_TOKEN_TYPE[this]
 
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 

@@ -8,7 +8,7 @@ import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.Registry
-import gregc.gregchess.registry.RegistryType
+import gregc.gregchess.registry.RegistryBlock
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
@@ -45,16 +45,13 @@ abstract class ChessModule(val namespace: String) {
     }
 
     val extensions = mutableSetOf<ChessExtension>()
-    private val registries = mutableMapOf<RegistryType<*, *, *>, Registry<*, *, *>>()
     var logger: GregLogger = SystemGregLogger()
     var locked: Boolean = false
         private set
 
-    @Suppress("UNCHECKED_CAST")
-    operator fun <K, T, R : Registry<K, T, R>> get(t: RegistryType<K, T, R>): R =
-        registries.getOrPut(t) { t.createRegistry(this) } as R
+    operator fun <K, T, B : RegistryBlock<K, T>> get(t: Registry<K, T, B>): B = t[this]
 
-    fun <K, T, V : T, R : Registry<K, T, R>> register(t: RegistryType<K, T, R>, key: K, v: V): V {
+    fun <K, T, V : T, B : RegistryBlock<K, T>> register(t: Registry<K, T, B>, key: K, v: V): V {
         t[this, key] = v
         return v
     }
@@ -82,7 +79,7 @@ abstract class ChessModule(val namespace: String) {
             }
         }
         locked = true
-        registries.values.forEach { it.validate() }
+        Registry.REGISTRIES.forEach { it[this].validate() }
         logger.info("Validated chess module $this")
         extensions.forEach {
             it.validate()
@@ -94,17 +91,17 @@ abstract class ChessModule(val namespace: String) {
     final override fun toString() = "$namespace@${hashCode().toString(16)}"
 }
 
-fun ChessModule.register(id: String, pieceType: PieceType) = register(RegistryType.PIECE_TYPE, id, pieceType)
+fun ChessModule.register(id: String, pieceType: PieceType) = register(Registry.PIECE_TYPE, id, pieceType)
 
 fun <T : GameScore> ChessModule.register(id: String, endReason: EndReason<T>) =
-    register(RegistryType.END_REASON, id, endReason)
+    register(Registry.END_REASON, id, endReason)
 
-fun ChessModule.register(id: String, variant: ChessVariant) = register(RegistryType.VARIANT, id, variant)
+fun ChessModule.register(id: String, variant: ChessVariant) = register(Registry.VARIANT, id, variant)
 
-fun ChessModule.register(id: String, flagType: ChessFlag) = register(RegistryType.FLAG, id, flagType)
+fun ChessModule.register(id: String, flagType: ChessFlag) = register(Registry.FLAG, id, flagType)
 
 fun <T : Any> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
-    register(RegistryType.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
+    register(Registry.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
 
 @OptIn(InternalSerializationApi::class)
 fun <T : Component, D : ComponentData<T>> ChessModule.registerComponent(
@@ -112,9 +109,9 @@ fun <T : Component, D : ComponentData<T>> ChessModule.registerComponent(
 ) {
     tcl.companionObjectInstance
     dcl.companionObjectInstance
-    register(RegistryType.COMPONENT_CLASS, id, tcl)
-    register(RegistryType.COMPONENT_DATA_CLASS, tcl, dcl)
-    register(RegistryType.COMPONENT_SERIALIZER, tcl, dcl.serializer())
+    register(Registry.COMPONENT_CLASS, id, tcl)
+    register(Registry.COMPONENT_DATA_CLASS, tcl, dcl)
+    register(Registry.COMPONENT_SERIALIZER, tcl, dcl.serializer())
 }
 
 inline fun <reified T : Component, reified D : ComponentData<T>> ChessModule.registerComponent(id: String) =
@@ -123,9 +120,9 @@ inline fun <reified T : Component, reified D : ComponentData<T>> ChessModule.reg
 @OptIn(InternalSerializationApi::class)
 fun <T : SimpleComponent> ChessModule.registerSimpleComponent(id: String, tcl: KClass<T>) {
     tcl.companionObjectInstance
-    register(RegistryType.COMPONENT_CLASS, id, tcl)
-    register(RegistryType.COMPONENT_DATA_CLASS, tcl, SimpleComponentData::class)
-    register(RegistryType.COMPONENT_SERIALIZER, tcl, SimpleComponentDataSerializer(tcl))
+    register(Registry.COMPONENT_CLASS, id, tcl)
+    register(Registry.COMPONENT_DATA_CLASS, tcl, SimpleComponentData::class)
+    register(Registry.COMPONENT_SERIALIZER, tcl, SimpleComponentDataSerializer(tcl))
 }
 
 @OptIn(InternalSerializationApi::class)
@@ -133,11 +130,11 @@ inline fun <reified T : SimpleComponent> ChessModule.registerSimpleComponent(id:
     registerSimpleComponent(id, T::class)
 
 inline fun <reified T : MoveTrait> ChessModule.registerMoveTrait(id: String) =
-    register(RegistryType.MOVE_TRAIT_CLASS, id, T::class)
+    register(Registry.MOVE_TRAIT_CLASS, id, T::class)
 
 fun <T : Any> ChessModule.register(id: String, type: ChessPlayerType<T>, cl: KClass<T>) {
-    register(RegistryType.PLAYER_TYPE, id, type)
-    register(RegistryType.PLAYER_TYPE_CLASS, type, cl)
+    register(Registry.PLAYER_TYPE, id, type)
+    register(Registry.PLAYER_TYPE_CLASS, type, cl)
 }
 
 inline fun <reified T : Any> ChessModule.register(id: String, type: ChessPlayerType<T>) =

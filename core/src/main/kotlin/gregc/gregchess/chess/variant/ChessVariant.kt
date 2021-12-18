@@ -13,9 +13,9 @@ import kotlin.reflect.KClass
 @Serializable(with = ChessVariant.Serializer::class)
 open class ChessVariant : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<ChessVariant>("ChessVariant", RegistryType.VARIANT)
+    object Serializer : NameRegisteredSerializer<ChessVariant>("ChessVariant", Registry.VARIANT)
 
-    final override val key get() = RegistryType.VARIANT[this]
+    final override val key get() = Registry.VARIANT[this]
 
     final override fun toString(): String = "$key@${hashCode().toString(16)}"
 

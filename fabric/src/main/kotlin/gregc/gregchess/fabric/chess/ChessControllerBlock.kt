@@ -7,7 +7,7 @@ import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.chess.component.FabricRendererSettings
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import gregc.gregchess.rangeTo
-import gregc.gregchess.registry.RegistryType
+import gregc.gregchess.registry.Registry
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.client.CottonInventoryScreen
@@ -329,7 +329,7 @@ class ChessControllerGuiDescription(
         val blackIcon = WItem(Items.BLACK_DYE.defaultStack)
         root.add(blackIcon, 0, 10)
 
-        for ((i, piece) in RegistryType.PIECE_TYPE.values.withIndex()) {
+        for ((i, piece) in Registry.PIECE_TYPE.values.withIndex()) {
             val icon = WItem(white(piece).item.defaultStack)
             root.add(icon, i+1, 8)
             val itemSlotWhite = WItemSlot.of(blockInventory, slotOf(white(piece)))

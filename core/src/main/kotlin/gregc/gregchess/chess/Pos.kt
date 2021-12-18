@@ -141,14 +141,14 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
 
 @Serializable(with = ChessFlag.Serializer::class)
 class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessFlag>("ChessFlag", RegistryType.FLAG)
+    object Serializer : NameRegisteredSerializer<ChessFlag>("ChessFlag", Registry.FLAG)
 
     companion object {
         @JvmField
         val EN_PASSANT = GregChess.register("en_passant", ChessFlag { it == 1u })
     }
 
-    override val key get() = RegistryType.FLAG[this]
+    override val key get() = Registry.FLAG[this]
 
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 }

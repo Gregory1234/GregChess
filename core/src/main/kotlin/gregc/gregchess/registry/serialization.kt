@@ -7,21 +7,6 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
 
-interface NameRegistered {
-    val key: RegistryKey<String>
-}
-
-val NameRegistered.name get() = key.key
-val NameRegistered.module get() = key.module
-
-object StringKeySerializer : KSerializer<RegistryKey<String>> {
-    override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("StringRegistryKey", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: RegistryKey<String>) = encoder.encodeString(value.toString())
-
-    override fun deserialize(decoder: Decoder): RegistryKey<String> = decoder.decodeString().toKey()
-}
-
 // TODO: make names package qualified
 open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryView: RegistryView<String, T>) :
     KSerializer<T> {
@@ -42,7 +27,7 @@ open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val re
 @Suppress("UNCHECKED_CAST")
 open class ClassRegisteredSerializer<T : Any>(
     val name: String,
-    val registryType: DoubleRegistryView<String, KClass<out T>>
+    val registryType: BiRegistryView<String, KClass<out T>>
 ) : KSerializer<T> {
     final override val descriptor: SerialDescriptor
         get() = buildClassSerialDescriptor(name) {

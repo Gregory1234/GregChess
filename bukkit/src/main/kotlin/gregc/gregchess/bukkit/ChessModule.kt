@@ -16,28 +16,27 @@ class SettingsParserContext(val variant: ChessVariant, val section: Configuratio
 
 typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
-object BukkitRegistryTypes {
+object BukkitRegistry {
     @JvmField
-    val PROPERTY_TYPE = NameRegistryType<PropertyType>("property_type")
+    val PROPERTY_TYPE = NameRegistry<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER =
-        SingleConnectedRegistryType<KClass<out Component>, SettingsParser<out ComponentData<*>>>(
-            "settings_parser", RegistryType.COMPONENT_CLASS
-        )
+    val SETTINGS_PARSER = ConnectedRegistry<KClass<out Component>, SettingsParser<out ComponentData<*>>>(
+        "settings_parser", Registry.COMPONENT_CLASS
+    )
     @JvmField
-    val VARIANT_LOCAL_MOVE_NAME_FORMATTER = SingleConnectedRegistryType<ChessVariant, MoveNameFormatter>(
-        "variant_local_move_name_formatter", RegistryType.VARIANT
+    val VARIANT_LOCAL_MOVE_NAME_FORMATTER = ConnectedRegistry<ChessVariant, MoveNameFormatter>(
+        "variant_local_move_name_formatter", Registry.VARIANT
     )
 }
 
 fun ChessModule.register(id: String, propertyType: PropertyType) =
-    register(BukkitRegistryTypes.PROPERTY_TYPE, id, propertyType)
+    register(BukkitRegistry.PROPERTY_TYPE, id, propertyType)
 
 inline fun <reified T : Component> ChessModule.registerSettings(noinline settings: SettingsParser<ComponentData<T>>) =
-    register(BukkitRegistryTypes.SETTINGS_PARSER, T::class, settings)
+    register(BukkitRegistry.SETTINGS_PARSER, T::class, settings)
 
 fun <T : Component> ChessModule.registerConstSettings(cl: KClass<T>, settings: ComponentData<T>) =
-    register(BukkitRegistryTypes.SETTINGS_PARSER, cl) { settings }
+    register(BukkitRegistry.SETTINGS_PARSER, cl) { settings }
 
 inline fun <reified T : Component> ChessModule.registerConstSettings(settings: ComponentData<T>) =
     registerConstSettings(T::class, settings)
@@ -48,7 +47,7 @@ inline fun <reified T : SimpleComponent> ChessModule.registerSimpleSettings() =
 fun ChessModule.registerLocalFormatter(
     variant: ChessVariant,
     formatter: MoveNameFormatter = MoveNameFormatter { defaultFormatMoveNameLocal(it) }
-) = register(BukkitRegistryTypes.VARIANT_LOCAL_MOVE_NAME_FORMATTER, variant, formatter)
+) = register(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER, variant, formatter)
 
 abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : ChessExtension(module, BUKKIT) {
     companion object {
@@ -63,11 +62,11 @@ abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : C
     open val quickEndReasons: Set<EndReason<*>> = emptySet()
 
     override fun validate() {
-        val components = module[RegistryType.COMPONENT_CLASS].values
+        val components = module[Registry.COMPONENT_CLASS].values
         hookedComponents.forEach {
             requireValid(it in components) { "External component hooked: ${it.componentKey}" }
         }
-        val endReasons = module[RegistryType.END_REASON].values
+        val endReasons = module[Registry.END_REASON].values
         quickEndReasons.forEach {
             requireValid(it in endReasons) { "External end reason made quick: ${it.key}" }
         }

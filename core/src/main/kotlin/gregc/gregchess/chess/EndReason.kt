@@ -45,13 +45,13 @@ typealias DrawEndReason = EndReason<GameScore.Draw>
 @Serializable(with = EndReason.Serializer::class)
 class EndReason<R : GameScore>(val type: Type) : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", RegistryType.END_REASON)
+    object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", Registry.END_REASON)
 
     enum class Type(val pgn: String) {
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
     }
 
-    override val key get() = RegistryType.END_REASON[this]
+    override val key get() = Registry.END_REASON[this]
 
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 

@@ -10,9 +10,9 @@ class PieceType(
     val char: Char
 ) : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<PieceType>("PieceType", RegistryType.PIECE_TYPE)
+    object Serializer : NameRegisteredSerializer<PieceType>("PieceType", Registry.PIECE_TYPE)
 
-    override val key get() = RegistryType.PIECE_TYPE[this]
+    override val key get() = Registry.PIECE_TYPE[this]
 
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 

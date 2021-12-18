@@ -1,14 +1,14 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.piece.Piece
-import gregc.gregchess.fabric.FabricRegistryTypes
+import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.registry.*
 import net.minecraft.util.Identifier
 
 val NameRegistered.id get() = Identifier(module.namespace, name)
 
-val Piece.block get() = FabricRegistryTypes.PIECE_BLOCK[type.module, this]
-val Piece.item get() = FabricRegistryTypes.PIECE_ITEM[type.module, this]
+val Piece.block get() = FabricRegistry.PIECE_BLOCK[type.module, this]
+val Piece.item get() = FabricRegistry.PIECE_ITEM[type.module, this]
 
 fun interface ChessInitializer {
     fun onInitializeChess()

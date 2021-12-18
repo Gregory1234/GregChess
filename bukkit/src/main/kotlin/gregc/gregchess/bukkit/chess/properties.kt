@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.bukkit.BukkitRegistryTypes
+import gregc.gregchess.bukkit.BukkitRegistry
 import gregc.gregchess.chess.ChessEvent
 import gregc.gregchess.chess.Color
 import gregc.gregchess.registry.NameRegistered
@@ -26,7 +26,7 @@ class PropertyException(property: PropertyType, color: Color? = null, override v
     : RuntimeException("${color ?: ""} $property", cause)
 
 class PropertyType : NameRegistered {
-    override val key get() = BukkitRegistryTypes.PROPERTY_TYPE[this]
+    override val key get() = BukkitRegistry.PROPERTY_TYPE[this]
 
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 }

@@ -1,6 +1,6 @@
 package gregc.gregchess.registry
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.ChessFlag
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.component.Component
@@ -10,260 +10,188 @@ import gregc.gregchess.chess.move.MoveTrait
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.isValidId
 import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 
-interface RegistryView<K, T> {
-    operator fun get(key: RegistryKey<K>): T = getOrNull(key)!!
-    fun getOrNull(key: RegistryKey<K>): T?
-    operator fun get(namespace: String, key: K): T = get(RegistryKey(namespace, key))
-    fun getOrNull(namespace: String, key: K): T? = ChessModule.getOrNull(namespace)?.let { getOrNull(it, key) }
-    operator fun get(module: ChessModule, key: K): T = get(RegistryKey(module, key))
-    fun getOrNull(module: ChessModule, key: K): T? = getOrNull(RegistryKey(module, key))
+class RegistryValidationException(val module: ChessModule, val type: Registry<*, *, *>, val text: String)
+    : IllegalStateException("$module:${type.name}: $text")
+class RegistryKeyValidationException(
+    val module: ChessModule, val type: Registry<*, *, *>, val key: Any?, val value: Any?, val text: String
+) : IllegalArgumentException("$module:${type.name}: $text: $key - $value")
+
+private inline fun <K, T, B : RegistryBlock<K, T>> B.requireValid(type: Registry<K, T, B>, condition: Boolean, message: () -> String) {
+    if (!condition)
+        throw RegistryValidationException(module, type, message())
 }
 
-interface EnumeratedRegistryView<K, T> : RegistryView<K, T> {
-    val keys: Set<RegistryKey<K>>
-    val values: Collection<T>
-    fun valuesOf(module: ChessModule): Collection<T>
+private inline fun <K, T, B : RegistryBlock<K, T>> B.requireValidKey(
+    type: Registry<K, T, B>, key: K, value: T, condition: Boolean, message: () -> String
+) {
+    if (!condition)
+        throw RegistryKeyValidationException(module, type, key, value, message())
 }
 
-data class RegistryKey<K>(val module: ChessModule, val key: K) {
-    constructor(namespace: String, key: K) : this(ChessModule[namespace], key)
-
-    override fun toString() = "${module.namespace}:$key"
+abstract class RegistryBlock<K, T>(val module: ChessModule) : FiniteRegistryBlockView<K, T> {
+    abstract fun set(key: K, value: T)
+    abstract fun validate()
 }
 
-fun String.toKey(): RegistryKey<String> {
-    val sections = split(":")
-    return when (sections.size) {
-        1 -> RegistryKey(GregChess, this)
-        2 -> RegistryKey(sections[0], sections[1])
-        else -> throw IllegalArgumentException("Bad registry key: $this")
+abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : FiniteRegistryView<K, T> {
+    init {
+        @Suppress("LeakingThis")
+        REGISTRIES += this
     }
-}
 
-abstract class RegistryType<K, T, R : Registry<K, T, R>>(val name: String) : EnumeratedRegistryView<K, T> {
-    abstract fun createRegistry(module: ChessModule): R
-    final override operator fun get(key: RegistryKey<K>): T = key.module[this][key.key]
-    final override fun getOrNull(key: RegistryKey<K>): T? = key.module[this].getOrNull(key.key)
-    final override operator fun get(namespace: String, key: K): T = get(ChessModule[namespace], key)
-    final override fun getOrNull(namespace: String, key: K): T? =
-        ChessModule.getOrNull(namespace)?.let { getOrNull(it, key) }
+    abstract operator fun get(module: ChessModule): B
 
-    final override operator fun get(module: ChessModule, key: K): T = module[this][key]
-    final override fun getOrNull(module: ChessModule, key: K): T? = module[this].getOrNull(key)
+    final override fun get(module: ChessModule, key: K): T = get(module)[key]
+    final override fun getOrNull(module: ChessModule, key: K): T? = get(module).getOrNull(key)
+    final override fun get(key: RegistryKey<K>): T = get(key.module, key.key)
+    final override fun getOrNull(key: RegistryKey<K>): T? = getOrNull(key.module, key.key)
+    final override fun keysOf(module: ChessModule): Set<K> = get(module).keys
+    override fun valuesOf(module: ChessModule): Collection<T> = get(module).values
 
-    operator fun set(key: RegistryKey<K>, value: T) = key.module[this].set(key.key, value)
-    operator fun set(module: ChessModule, key: K, value: T) = module[this].set(key, value)
-
-    override val keys: Set<RegistryKey<K>>
-        get() = ChessModule.modules.flatMap { m -> m[this].keys.map { k -> RegistryKey(m, k) } }.toSet()
-    override val values: Collection<T>
-        get() = ChessModule.modules.flatMap { m -> m[this].values }
-
-    override fun valuesOf(module: ChessModule): Collection<T> = module[this].values
+    operator fun set(key: RegistryKey<K>, value: T) = set(key.module, key.key, value)
+    operator fun set(module: ChessModule, key: K, value: T) = get(module).set(key, value)
 
     companion object {
         @JvmField
-        val PIECE_TYPE = NameRegistryType<PieceType>("piece_type")
+        val REGISTRIES = mutableListOf<Registry<*,*,*>>()
         @JvmField
-        val END_REASON = NameRegistryType<EndReason<*>>("end_reason")
+        val PIECE_TYPE = NameRegistry<PieceType>("piece_type")
         @JvmField
-        val VARIANT = NameRegistryType<ChessVariant>("variant")
+        val END_REASON = NameRegistry<EndReason<*>>("end_reason")
         @JvmField
-        val FLAG = NameRegistryType<ChessFlag>("flag")
+        val VARIANT = NameRegistry<ChessVariant>("variant")
         @JvmField
-        val MOVE_NAME_TOKEN_TYPE = NameRegistryType<MoveNameTokenType<*>>("move_name_token_type")
+        val FLAG = NameRegistry<ChessFlag>("flag")
         @JvmField
-        val COMPONENT_CLASS = NameRegistryType<KClass<out Component>>("component_class")
+        val MOVE_NAME_TOKEN_TYPE = NameRegistry<MoveNameTokenType<*>>("move_name_token_type")
         @JvmField
-        val COMPONENT_DATA_CLASS = SingleConnectedRegistryType<KClass<out Component>, KClass<out ComponentData<*>>>(
+        val COMPONENT_CLASS = NameRegistry<KClass<out Component>>("component_class")
+        val COMPONENT_DATA_CLASS = ConnectedRegistry<KClass<out Component>, KClass<out ComponentData<*>>>(
             "component_data_class", COMPONENT_CLASS
         )
         @JvmField
-        val COMPONENT_SERIALIZER = SingleConnectedRegistryType<KClass<out Component>, KSerializer<out ComponentData<*>>>(
+        val COMPONENT_SERIALIZER = ConnectedRegistry<KClass<out Component>, KSerializer<out ComponentData<*>>>(
             "component_serializer", COMPONENT_CLASS
         )
         @JvmField
-        val MOVE_TRAIT_CLASS = NameRegistryType<KClass<out MoveTrait>>("move_trait_class")
+        val MOVE_TRAIT_CLASS = NameRegistry<KClass<out MoveTrait>>("move_trait_class")
         @JvmField
-        val PLAYER_TYPE = NameRegistryType<ChessPlayerType<*>>("player_type")
+        val PLAYER_TYPE = NameRegistry<ChessPlayerType<*>>("player_type")
         @JvmField
-        val PLAYER_TYPE_CLASS =
-            ConnectedRegistryType<ChessPlayerType<*>, KClass<*>>("player_type_class", PLAYER_TYPE)
+        val PLAYER_TYPE_CLASS = ConnectedBiRegistry<ChessPlayerType<*>, KClass<*>>("player_type_class", PLAYER_TYPE)
     }
 }
 
-class RegistryValidationException(val module: ChessModule, val type: RegistryType<*, *, *>, val text: String)
-    : IllegalStateException("$module:${type.name}: $text")
-class RegistryKeyValidationException(
-    val module: ChessModule, val type: RegistryType<*, *, *>, val key: Any?, val value: Any?, val text: String
-) : IllegalArgumentException("$module:${type.name}: $text: $key - $value")
+abstract class BiRegistryBlock<K, T>(module: ChessModule) : RegistryBlock<K, T>(module), FiniteBiRegistryBlockView<K, T>
 
-abstract class Registry<K, T, R : Registry<K, T, R>>(val module: ChessModule) {
-    abstract operator fun set(key: K, value: T)
+abstract class BiRegistry<K, T, B : BiRegistryBlock<K, T>>(name: String) : Registry<K, T, B>(name), FiniteBiRegistryView<K, T> {
+    final override fun valuesOf(module: ChessModule): Set<T> = get(module).values
+}
 
-    abstract fun getValueOrNull(key: K): T?
-    fun getOrNull(key: K): T? = getValueOrNull(key)
-    fun getValue(key: K): T = getValueOrNull(key)!!
-    operator fun get(key: K): T = getOrNull(key)!!
+class NameRegistry<T>(name: String) : BiRegistry<String, T, NameRegistry<T>.Block>(name) {
+    private val valueEntries = mutableMapOf<T, RegistryKey<String>>()
+    private val blocks = mutableMapOf<ChessModule, Block>()
 
-    protected inline fun requireValid(type: RegistryType<K, T, R>, condition: Boolean, message: () -> String) {
-        if (!condition)
-            throw RegistryValidationException(module, type, message())
+    inner class Block(module: ChessModule) : BiRegistryBlock<String, T>(module) {
+        private val members = mutableMapOf<String, T>()
+        private val names = mutableMapOf<T, String>()
+
+        override val keys: Set<String> get() = members.keys
+        override val values: Set<T> get() = names.keys
+
+        override fun set(key: String, value: T) {
+            requireValidKey(this@NameRegistry, key, value, !module.locked) { "Module is locked" }
+            requireValidKey(this@NameRegistry, key, value, key.isValidId()) { "Key is invalid" }
+            requireValidKey(this@NameRegistry, key, value, key !in members) { "Key is already registered" }
+            requireValidKey(this@NameRegistry, key, value, value !in valueEntries) { "Value is already registered" }
+            members[key] = value
+            names[value] = key
+            valueEntries[value] = RegistryKey(module, key)
+        }
+
+        override fun getValueOrNull(key: String): T? = members[key]
+
+        override fun getKeyOrNull(value: T): String? = names[value]
+
+        override fun validate() {}
     }
 
-    protected inline fun requireValidKey(
-        type: RegistryType<K, T, R>, key: K, value: T, condition: Boolean, message: () -> String
-    ) {
-        if (!condition)
-            throw RegistryKeyValidationException(module, type, key, value, message())
-    }
-
-    open fun validate() {}
-
-    abstract val keys: Set<K>
-    abstract val values: Collection<T>
-}
-
-interface DoubleRegistryView<K, T> : RegistryView<K, T> {
-    operator fun get(value: T): RegistryKey<K> = getOrNull(value)!!
-    fun getOrNull(value: T): RegistryKey<K>?
-    fun getKey(value: T): K = getKeyOrNull(value)!!
-    fun getKeyOrNull(value: T): K? = getOrNull(value)?.key
-    fun getModule(value: T): ChessModule = getModuleOrNull(value)!!
-    fun getModuleOrNull(value: T): ChessModule? = getOrNull(value)?.module
-}
-
-interface DoubleEnumeratedRegistryView<K, T> : DoubleRegistryView<K, T>, EnumeratedRegistryView<K, T> {
-    override val values: Set<T>
-    override fun valuesOf(module: ChessModule): Set<T>
-}
-
-abstract class DoubleRegistryType<K, T, R : DoubleRegistry<K, T, R>>(name: String) : RegistryType<K, T, R>(name),
-    DoubleEnumeratedRegistryView<K, T> {
-    abstract override val values: Set<T>
-    abstract override fun valuesOf(module: ChessModule): Set<T>
-}
-
-abstract class DoubleRegistry<K, T, R : DoubleRegistry<K, T, R>>(module: ChessModule) : Registry<K, T, R>(module) {
-    abstract fun getKeyOrNull(value: T): K?
-    @JvmName("getKeyOrNullKt")
-    @JvmSynthetic
-    fun getOrNull(value: T): K? = getKeyOrNull(value)
-    fun getKey(value: T): K = getKeyOrNull(value)!!
-    @JvmName("getKeyKt")
-    @JvmSynthetic
-    operator fun get(value: T): K = getOrNull(value)!!
-    abstract override val values: Set<T>
-}
-
-class NameRegistryType<T>(name: String) : DoubleRegistryType<String, T, NameRegistry<T>>(name) {
-    internal val valueEntries = mutableMapOf<T, RegistryKey<String>>()
-
-    override fun createRegistry(module: ChessModule) = NameRegistry(module, this)
-
-    override fun getOrNull(value: T): RegistryKey<String>? = valueEntries[value]
+    override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
 
     override val keys: Set<RegistryKey<String>> get() = valueEntries.values.toSet()
-    override val values: Set<T> = valueEntries.keys
-    override fun valuesOf(module: ChessModule): Set<T> = module[this].values
+    override val values: Set<T> get() = valueEntries.keys
+
+    override fun getOrNull(value: T): RegistryKey<String>? = valueEntries[value]
 }
 
-class NameRegistry<T>(module: ChessModule, val type: NameRegistryType<T>) :
-    DoubleRegistry<String, T, NameRegistry<T>>(module) {
-    private val members = mutableMapOf<String, T>()
-    private val names = mutableMapOf<T, String>()
+class ConnectedRegistry<K, T>(name: String, val base: FiniteRegistryView<*, K>) : Registry<K, T, ConnectedRegistry<K, T>.Block>(name) {
+    private val blocks = mutableMapOf<ChessModule, Block>()
 
-    override fun set(key: String, value: T) {
-        requireValidKey(type, key, value, !module.locked) { "Module is locked" }
-        requireValidKey(type, key, value, key.isValidId()) { "Key is invalid" }
-        requireValidKey(type, key, value, key !in members) { "Key is already registered" }
-        requireValidKey(type, key, value, value !in type.valueEntries) { "Value is already registered" }
-        members[key] = value
-        names[value] = key
-        type.valueEntries[value] = RegistryKey(module, key)
+    inner class Block(module: ChessModule) : RegistryBlock<K, T>(module) {
+        private val members = mutableMapOf<K, T>()
+
+        override val keys: Set<K> = members.keys
+        override val values: Collection<T> = members.values
+
+        override fun set(key: K, value: T) {
+            requireValidKey(this@ConnectedRegistry, key, value, !module.locked) { "Module is locked" }
+            requireValidKey(this@ConnectedRegistry, key, value, key in base.valuesOf(module)) { "Key is invalid" }
+            requireValidKey(this@ConnectedRegistry, key, value, key !in members) { "Key is already registered" }
+            members[key] = value
+        }
+
+        override fun validate() = requireValid(this@ConnectedRegistry, base.valuesOf(module).all { it in members }) { "Registry incomplete" }
+
+        override fun getValueOrNull(key: K): T? = members[key]
+
     }
 
-    override fun getValueOrNull(key: String): T? = members[key]
-    override fun getKeyOrNull(value: T): String? = names[value]
+    override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
 
-    override val keys: Set<String> get() = members.keys
-    override val values: Set<T> get() = names.keys
+    override val keys: Set<RegistryKey<K>>
+        get() = blocks.flatMap { b -> b.value.keys.map { RegistryKey(b.key, it) } }.toSet()
+    override val values: Collection<T>
+        get() = blocks.flatMap { b -> b.value.values }
+
 }
 
-class ConnectedRegistryType<K, T>(name: String, val base: DoubleEnumeratedRegistryView<*, K>) :
-    DoubleRegistryType<K, T, ConnectedRegistry<K, T>>(name) {
-    internal val valueEntries = mutableMapOf<T, RegistryKey<K>>()
+class ConnectedBiRegistry<K, T>(name: String, val base: FiniteRegistryView<*, K>) : BiRegistry<K, T, ConnectedBiRegistry<K, T>.Block>(name) {
+    private val valueEntries = mutableMapOf<T, RegistryKey<K>>()
+    private val blocks = mutableMapOf<ChessModule, Block>()
 
-    override fun createRegistry(module: ChessModule) = ConnectedRegistry(module, this)
+    inner class Block(module: ChessModule) : BiRegistryBlock<K, T>(module) {
+        private val members = mutableMapOf<K, T>()
+        private val reversed = mutableMapOf<T, K>()
+
+        override val keys: Set<K> = members.keys
+        override val values: Set<T> = reversed.keys
+
+        override fun set(key: K, value: T) {
+            requireValidKey(this@ConnectedBiRegistry, key, value, !module.locked) { "Module is locked" }
+            requireValidKey(this@ConnectedBiRegistry, key, value, key in base.valuesOf(module)) { "Key is invalid" }
+            requireValidKey(this@ConnectedBiRegistry, key, value, key !in members) { "Key is already registered" }
+            requireValidKey(this@ConnectedBiRegistry, key, value, value !in valueEntries) { "Value is already registered" }
+            members[key] = value
+            reversed[value] = key
+            valueEntries[value] = RegistryKey(module, key)
+        }
+
+        override fun validate() = requireValid(this@ConnectedBiRegistry, base.valuesOf(module).all { it in members }) { "Registry incomplete" }
+
+        override fun getValueOrNull(key: K): T? = members[key]
+        override fun getKeyOrNull(value: T): K? = reversed[value]
+
+    }
+
+    override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
+
+    override val keys: Set<RegistryKey<K>> get() = valueEntries.values.toSet()
+    override val values: Set<T> get() = valueEntries.keys
 
     override fun getOrNull(value: T): RegistryKey<K>? = valueEntries[value]
 
-    override val keys: Set<RegistryKey<K>> get() = valueEntries.values.toSet()
-    override val values: Set<T> = valueEntries.keys
-    override fun valuesOf(module: ChessModule): Set<T> = module[this].values
-}
-
-class ConnectedRegistry<K, T>(module: ChessModule, val type: ConnectedRegistryType<K, T>) :
-    DoubleRegistry<K, T, ConnectedRegistry<K, T>>(module) {
-    private val members = mutableMapOf<K, T>()
-    private val reversed = mutableMapOf<T, K>()
-
-    override fun set(key: K, value: T) {
-        requireValidKey(type, key, value, !module.locked) { "Module is locked" }
-        requireValidKey(type, key, value, key in type.base.valuesOf(module)) { "Key is invalid" }
-        requireValidKey(type, key, value, key !in members) { "Key is already registered" }
-        requireValidKey(type, key, value, value !in type.valueEntries) { "Value is already registered" }
-        members[key] = value
-        reversed[value] = key
-        type.valueEntries[value] = RegistryKey(module, key)
-    }
-
-    override fun getValueOrNull(key: K): T? = members[key]
-    override fun getKeyOrNull(value: T): K? = reversed[value]
-
-    override fun validate() =
-        requireValid(type, type.base.valuesOf(module).all { it in members }) { "Registry incomplete" }
-
-    override val keys: Set<K> get() = members.keys
-    override val values: Set<T> get() = reversed.keys
-}
-
-class SingleConnectedRegistryType<K, T>(name: String, val base: DoubleEnumeratedRegistryView<*, K>) :
-    RegistryType<K, T, SingleConnectedRegistry<K, T>>(name) {
-
-    override fun createRegistry(module: ChessModule) = SingleConnectedRegistry(module, this)
-}
-
-class SingleConnectedRegistry<K, T>(module: ChessModule, val type: SingleConnectedRegistryType<K, T>) :
-    Registry<K, T, SingleConnectedRegistry<K, T>>(module) {
-    private val members = mutableMapOf<K, T>()
-
-    override fun set(key: K, value: T) {
-        requireValidKey(type, key, value, !module.locked) { "Module is locked" }
-        requireValidKey(type, key, value, key in type.base.valuesOf(module)) { "Key is invalid" }
-        requireValidKey(type, key, value, key !in members) { "Key is already registered" }
-        members[key] = value
-    }
-
-    override fun getValueOrNull(key: K): T? = members[key]
-
-    override fun validate() =
-        requireValid(type, type.base.valuesOf(module).all { it in members }) { "Registry incomplete" }
-
-    override val keys: Set<K> get() = members.keys
-    override val values: Collection<T> get() = members.values
-}
-
-class ChainRegistryView<K, I, T>(val base: RegistryView<K, I>, val extension: RegistryView<I, T>) : RegistryView<K, T> {
-    override fun getOrNull(key: RegistryKey<K>): T? = base.getOrNull(key)?.let { extension.getOrNull(key.module, it) }
-}
-
-class DoubleChainRegistryView<K, I, T>(val base: DoubleRegistryView<K, I>, val extension: DoubleRegistryView<I, T>) :
-    DoubleRegistryView<K, T> {
-    override fun getOrNull(key: RegistryKey<K>): T? = base.getOrNull(key)?.let { extension.getOrNull(key.module, it) }
-    override fun getModuleOrNull(value: T): ChessModule? = extension.getModuleOrNull(value)
-    override fun getOrNull(value: T): RegistryKey<K>? = extension.getKeyOrNull(value)?.let { base.getOrNull(it) }
 }

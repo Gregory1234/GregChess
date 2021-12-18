@@ -16,9 +16,9 @@ class ChessPlayerType<T : Any>(
     val createPlayer: T.(Color, ChessGame) -> ChessPlayer<T>
 ): NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", RegistryType.PLAYER_TYPE)
+    object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", Registry.PLAYER_TYPE)
 
-    override val key: RegistryKey<String> get() = RegistryType.PLAYER_TYPE[this]
+    override val key: RegistryKey<String> get() = Registry.PLAYER_TYPE[this]
 }
 
 fun playerType(p: Any) : ChessPlayerType<*> {
@@ -26,7 +26,7 @@ fun playerType(p: Any) : ChessPlayerType<*> {
     val q = mutableListOf<KClass<*>>()
     var cl: KClass<*> = p::class
     while (true) {
-        val ret = RegistryType.PLAYER_TYPE_CLASS.getOrNull(cl)
+        val ret = Registry.PLAYER_TYPE_CLASS.getOrNull(cl)
         if (ret != null)
             return ret.key
         else {
@@ -61,12 +61,12 @@ object ChessPlayerDataSerializer : KSerializer<Any> {
         var ret: Any? = null
 
         if (decodeSequentially()) { // sequential decoding protocol
-            type = RegistryType.PLAYER_TYPE[decodeStringElement(descriptor, 0).toKey()]
+            type = Registry.PLAYER_TYPE[decodeStringElement(descriptor, 0).toKey()]
             ret = decodeSerializableElement(descriptor, 1, type.playerSerializer)
         } else {
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
-                    0 -> type = RegistryType.PLAYER_TYPE[decodeStringElement(descriptor, 0).toKey()]
+                    0 -> type = Registry.PLAYER_TYPE[decodeStringElement(descriptor, 0).toKey()]
                     1 -> ret = decodeSerializableElement(descriptor, 1, type!!.playerSerializer)
                     CompositeDecoder.DECODE_DONE -> break
                     else -> error("Unexpected index: $index")

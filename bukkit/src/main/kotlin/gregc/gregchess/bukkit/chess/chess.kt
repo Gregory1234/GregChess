@@ -46,7 +46,7 @@ fun defaultFormatMoveNameLocal(name: MoveName): String = buildString {
 }
 
 val ChessVariant.localNameFormatter: MoveNameFormatter
-    get() = BukkitRegistryTypes.VARIANT_LOCAL_MOVE_NAME_FORMATTER[module, this]
+    get() = BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER[module, this]
 
 fun BoardPiece.getInfo(game: ChessGame) = textComponent {
     text("Type: $color $type\n")

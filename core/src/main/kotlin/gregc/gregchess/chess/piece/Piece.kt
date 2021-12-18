@@ -8,29 +8,30 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 
-object PieceRegistryView : DoubleEnumeratedRegistryView<String, Piece> {
-    override fun getOrNull(key: RegistryKey<String>): Piece? {
-        val (module, name) = key
-        return when (name.take(6)) {
-            "white_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Color.WHITE)
-            "black_" -> RegistryType.PIECE_TYPE.getOrNull(module, name.drop(6))?.of(Color.BLACK)
-            else -> null
-        }
-    }
+object PieceRegistryView : FiniteBiRegistryView<String, Piece> {
 
     override fun getOrNull(value: Piece): RegistryKey<String>? =
-        RegistryType.PIECE_TYPE.getOrNull(value.type)?.let { (module, name) ->
+        Registry.PIECE_TYPE.getOrNull(value.type)?.let { (module, name) ->
             RegistryKey(module, "${value.color.toString().lowercase()}_$name")
         }
 
     override val values: Set<Piece>
-        get() = RegistryType.PIECE_TYPE.values.flatMap { listOf(white(it), black(it)) }.toSet()
+        get() = Registry.PIECE_TYPE.values.flatMap { listOf(white(it), black(it)) }.toSet()
 
     override fun valuesOf(module: ChessModule): Set<Piece> =
-        RegistryType.PIECE_TYPE.valuesOf(module).flatMap { listOf(white(it), black(it)) }.toSet()
+        Registry.PIECE_TYPE.valuesOf(module).flatMap { listOf(white(it), black(it)) }.toSet()
 
     override val keys: Set<RegistryKey<String>>
         get() = values.map { get(it) }.toSet()
+
+    override fun getOrNull(module: ChessModule, key: String): Piece? = when (key.take(6)) {
+        "white_" -> Registry.PIECE_TYPE.getOrNull(module, key.drop(6))?.of(Color.WHITE)
+        "black_" -> Registry.PIECE_TYPE.getOrNull(module, key.drop(6))?.of(Color.BLACK)
+        else -> null
+    }
+
+    override fun keysOf(module: ChessModule): Set<String> =
+        Registry.PIECE_TYPE.keysOf(module).flatMap { listOf("white_$it", "black_$it") }.toSet()
 }
 
 @Serializable(with = Piece.Serializer::class)
