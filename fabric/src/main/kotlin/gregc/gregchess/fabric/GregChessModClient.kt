@@ -6,12 +6,12 @@ import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry
 
 
-object GregChessClient : ClientModInitializer {
+object GregChessModClient : ClientModInitializer {
     override fun onInitializeClient() {
-        ScreenRegistry.register(GregChess.CHESS_CONTROLLER_SCREEN_HANDLER_TYPE) { gui, inventory, title ->
+        ScreenRegistry.register(GregChessMod.CHESS_CONTROLLER_SCREEN_HANDLER_TYPE) { gui, inventory, title ->
             ChessControllerBlockScreen(gui, inventory.player, title)
         }
-        ScreenRegistry.register(GregChess.PROMOTION_MENU_HANDLER_TYPE) { gui, inventory, title ->
+        ScreenRegistry.register(GregChessMod.PROMOTION_MENU_HANDLER_TYPE) { gui, inventory, title ->
             PromotionMenu(gui, inventory.player, title)
         }
     }

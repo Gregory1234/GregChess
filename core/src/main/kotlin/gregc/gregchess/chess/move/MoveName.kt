@@ -22,23 +22,23 @@ class MoveNameTokenType<T : Any>(val cl: KClass<T>) : NameRegistered {
     companion object {
 
         @JvmField
-        val PIECE_TYPE = GregChessModule.register("piece_type", MoveNameTokenType(PieceType::class))
+        val PIECE_TYPE = GregChess.register("piece_type", MoveNameTokenType(PieceType::class))
         @JvmField
-        val UNIQUENESS_COORDINATE = GregChessModule.register("uniqueness_coordinate", MoveNameTokenType(UniquenessCoordinate::class))
+        val UNIQUENESS_COORDINATE = GregChess.register("uniqueness_coordinate", MoveNameTokenType(UniquenessCoordinate::class))
         @JvmField
-        val CAPTURE = GregChessModule.register("capture", MoveNameTokenType(Unit::class))
+        val CAPTURE = GregChess.register("capture", MoveNameTokenType(Unit::class))
         @JvmField
-        val TARGET = GregChessModule.register("target", MoveNameTokenType(Pos::class))
+        val TARGET = GregChess.register("target", MoveNameTokenType(Pos::class))
         @JvmField
-        val PROMOTION = GregChessModule.register("promotion", MoveNameTokenType(PieceType::class))
+        val PROMOTION = GregChess.register("promotion", MoveNameTokenType(PieceType::class))
         @JvmField
-        val CHECK = GregChessModule.register("check", MoveNameTokenType(Unit::class))
+        val CHECK = GregChess.register("check", MoveNameTokenType(Unit::class))
         @JvmField
-        val CHECKMATE = GregChessModule.register("checkmate", MoveNameTokenType(Unit::class))
+        val CHECKMATE = GregChess.register("checkmate", MoveNameTokenType(Unit::class))
         @JvmField
-        val CASTLE = GregChessModule.register("castle", MoveNameTokenType(BoardSide::class))
+        val CASTLE = GregChess.register("castle", MoveNameTokenType(BoardSide::class))
         @JvmField
-        val EN_PASSANT = GregChessModule.register("en_passant", MoveNameTokenType(Unit::class))
+        val EN_PASSANT = GregChess.register("en_passant", MoveNameTokenType(Unit::class))
     }
 }
 

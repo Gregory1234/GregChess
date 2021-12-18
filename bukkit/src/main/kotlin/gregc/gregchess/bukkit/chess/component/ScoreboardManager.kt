@@ -23,10 +23,10 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
         private val playerPrefix get() = config.getPathString("Scoreboard.PlayerPrefix")
 
         @JvmField
-        val PRESET = GregChessModule.register("preset", PropertyType())
+        val PRESET = GregChess.register("preset", PropertyType())
 
         @JvmField
-        val PLAYER = GregChessModule.register("player", PropertyType())
+        val PLAYER = GregChess.register("player", PropertyType())
     }
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard

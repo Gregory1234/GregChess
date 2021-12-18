@@ -25,7 +25,7 @@ import net.minecraft.world.World
 
 // TODO: make NamedScreenHandlerFactory a separate thing
 class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
-    BlockEntity(GregChess.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory {
+    BlockEntity(GregChessMod.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory {
     var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)
     var boardPos: Pos? by BlockEntityDirtyDelegate(null)
     override fun writeNbt(nbt: NbtCompound): NbtCompound {

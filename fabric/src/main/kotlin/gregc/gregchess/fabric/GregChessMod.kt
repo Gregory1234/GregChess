@@ -22,7 +22,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
 
-object GregChess : ModInitializer {
+object GregChessMod : ModInitializer {
 
     val logger: Logger = LogManager.getFormatterLogger(MOD_NAME)
 

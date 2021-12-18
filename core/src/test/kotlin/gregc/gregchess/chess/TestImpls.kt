@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.GregChess
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.chess.player.ChessPlayerType
@@ -58,6 +58,6 @@ inline fun <T> measureTime(block: () -> T): T {
     return ret
 }
 
-fun setupRegistry() = with(GregChessModule) {
+fun setupRegistry() = with(GregChess) {
     register("test", ChessPlayerType(String.serializer()) { c, g -> TestPlayer(this, c, g) })
 }

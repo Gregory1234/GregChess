@@ -2,7 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.piece.PieceRegistryView
-import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.ident
 import gregc.gregchess.registry.toKey
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
@@ -22,7 +22,7 @@ import net.minecraft.text.Text
 class PromotionMenuGuiDescription(
     syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext = ScreenHandlerContext.EMPTY
 ) : SyncedGuiDescription(
-    GregChess.PROMOTION_MENU_HANDLER_TYPE, syncId, playerInventory,
+    GregChessMod.PROMOTION_MENU_HANDLER_TYPE, syncId, playerInventory,
     null, getBlockPropertyDelegate(context, 0)
 ) {
 

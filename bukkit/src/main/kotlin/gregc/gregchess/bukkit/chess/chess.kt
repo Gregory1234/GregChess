@@ -36,7 +36,7 @@ val Piece.item get() = type.getItem(color)
 fun defaultFormatMoveNameLocal(name: MoveName): String = buildString {
     name.getOrNull(MoveNameTokenType.PIECE_TYPE)?.let { append(it.localChar.uppercase()) }
     name.getOrNull(MoveNameTokenType.UNIQUENESS_COORDINATE)?.let { append(it) }
-    name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append(GregChess.plugin.config.getPathString("Chess.Capture")) }
+    name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append(config.getPathString("Chess.Capture")) }
     name.getOrNull(MoveNameTokenType.TARGET)?.let { append(it) }
     name.getOrNull(MoveNameTokenType.CASTLE)?.let { append(it.castles) }
     name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append(it.localChar.uppercase()) }

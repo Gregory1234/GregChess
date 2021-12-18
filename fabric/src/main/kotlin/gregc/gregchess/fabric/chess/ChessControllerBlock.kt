@@ -44,8 +44,7 @@ import kotlin.math.min
 
 
 class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
-    BlockEntity(GregChess.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder,
-    ChessControllerInventory {
+    BlockEntity(GregChessMod.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder, ChessControllerInventory {
     var currentGameUUID: UUID? by BlockEntityDirtyDelegate(null)
     var currentGame: ChessGame? = null
         set(v) {
@@ -151,7 +150,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             block.updateFloor()
         }
         chessboardStart = null
-        currentGame?.stop(drawBy(FabricGregChessModule.CHESSBOARD_BROKEN))
+        currentGame?.stop(drawBy(GregChessFabric.CHESSBOARD_BROKEN))
         currentGame = null
     }
 
@@ -281,7 +280,7 @@ fun interface ChessControllerInventory : SidedInventory {
 class ChessControllerGuiDescription(
     syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext = ScreenHandlerContext.EMPTY
 ) : SyncedGuiDescription(
-    GregChess.CHESS_CONTROLLER_SCREEN_HANDLER_TYPE, syncId, playerInventory,
+    GregChessMod.CHESS_CONTROLLER_SCREEN_HANDLER_TYPE, syncId, playerInventory,
     getBlockInventory(context, INVENTORY_SIZE), getBlockPropertyDelegate(context, 1)
 ) {
 
@@ -366,7 +365,7 @@ class ChessControllerGuiDescription(
             context.run { world, pos ->
                 val entity = world.getBlockEntity(pos)
                 if (entity is ChessControllerBlockEntity && entity.chessboardStart != null) {
-                    entity.currentGame?.stop(drawBy(FabricGregChessModule.ABORTED))
+                    entity.currentGame?.stop(drawBy(GregChessFabric.ABORTED))
                 }
             }
         }

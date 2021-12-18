@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.coroutines
 
-import gregc.gregchess.bukkit.GregChess
+import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.chess.ChessEnvironment
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
@@ -8,5 +8,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 object BukkitChessEnvironment : ChessEnvironment {
     override val pgnSite: String get() = "GregChess Bukkit plugin"
-    override val coroutineDispatcher: CoroutineDispatcher = BukkitDispatcher(GregChess.plugin, BukkitContext.SYNC)
+    override val coroutineDispatcher: CoroutineDispatcher = BukkitDispatcher(GregChessPlugin.plugin, BukkitContext.SYNC)
 }

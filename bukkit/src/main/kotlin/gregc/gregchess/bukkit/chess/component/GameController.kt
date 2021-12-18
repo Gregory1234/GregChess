@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.bukkit.GregChess
+import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.chess.localNameFormatter
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.chess.quick
@@ -52,7 +52,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
                 else
                     cancel()
             }
-        }.runTaskTimer(GregChess.plugin, 0, 2)
+        }.runTaskTimer(GregChessPlugin.plugin, 0, 2)
     }
 
     @OptIn(ExperimentalTime::class)

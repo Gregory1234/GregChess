@@ -13,19 +13,19 @@
     "main": [
       {
         "adapter": "kotlin",
-        "value": "gregc.gregchess.fabric.GregChess"
+        "value": "gregc.gregchess.fabric.GregChessMod"
       }
     ],
     "client": [
       {
         "adapter": "kotlin",
-        "value": "gregc.gregchess.fabric.GregChessClient"
+        "value": "gregc.gregchess.fabric.GregChessModClient"
       }
     ],
     "chess": [
       {
         "adapter": "kotlin",
-        "value": "gregc.gregchess.fabric.GregChessChess"
+        "value": "gregc.gregchess.fabric.GregChessModChess"
       }
     ]
   },

@@ -2,7 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.piece.Piece
-import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.chess.player.FabricPlayer
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
@@ -24,7 +24,7 @@ import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.*
 
-class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChess.PIECE_ENTITY_TYPE, pos, state) {
+class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChessMod.PIECE_ENTITY_TYPE, pos, state) {
     private var moved: Boolean = false
 
     val piece: Piece

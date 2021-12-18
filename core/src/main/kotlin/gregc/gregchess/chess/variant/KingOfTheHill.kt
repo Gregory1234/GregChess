@@ -6,7 +6,7 @@ import gregc.gregchess.chess.*
 object KingOfTheHill : ChessVariant() {
 
     @JvmField
-    val KING_OF_THE_HILL = GregChessModule.register("king_of_the_hill", DetEndReason(EndReason.Type.NORMAL))
+    val KING_OF_THE_HILL = GregChess.register("king_of_the_hill", DetEndReason(EndReason.Type.NORMAL))
 
     override val specialSquares get() = (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) }.toSet()
 

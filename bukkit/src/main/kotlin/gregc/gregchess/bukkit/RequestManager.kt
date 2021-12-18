@@ -76,7 +76,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         )
         val duration = section.getString("Duration")?.toDuration()
         if (duration != null)
-            GregChess.coroutineScope.launch {
+            GregChessPlugin.coroutineScope.launch {
                 delay(duration)
                 if (request.uuid in requests)
                     expire(request)

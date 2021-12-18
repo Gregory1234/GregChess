@@ -5,7 +5,7 @@ import gregc.gregchess.chess.component.ChessboardState
 import gregc.gregchess.chess.component.SimpleComponentData
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.chess.component.*
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
@@ -27,13 +27,13 @@ object ChessGameManager {
     private fun gameFile(uuid: UUID) = server.getSavePath(gregchessPath).resolve("$uuid.dat").toFile()
 
     operator fun get(uuid: UUID): ChessGame? = loadedGames.getOrPut(uuid) {
-        GregChess.logger.info("loading game $uuid")
+        GregChessMod.logger.info("loading game $uuid")
         val f = gameFile(uuid)
         if (f.exists()) {
             val nbt = Nbt(defaultModule(server))
             try {
                 nbt.decodeFromNbtElement<ChessGame>(NbtIo.readCompressed(f)).also {
-                    GregChess.logger.info("loaded game $it")
+                    GregChessMod.logger.info("loaded game $it")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -43,12 +43,12 @@ object ChessGameManager {
     }
 
     operator fun plusAssign(game: ChessGame) {
-        GregChess.logger.info("added game $game")
+        GregChessMod.logger.info("added game $game")
         loadedGames[game.uuid] = game
     }
 
     operator fun minusAssign(game: ChessGame) {
-        GregChess.logger.info("removed game $game")
+        GregChessMod.logger.info("removed game $game")
         loadedGames.remove(game.uuid, game)
         val file = gameFile(game.uuid)
         if (file.exists()) {
@@ -75,7 +75,7 @@ object ChessGameManager {
                 val f = gameFile(u)
                 f.parentFile.mkdirs()
                 NbtIo.writeCompressed(nbt.encodeToNbtElement(g) as NbtCompound, f)
-                GregChess.logger.info("saved game $g")
+                GregChessMod.logger.info("saved game $g")
             }
         } catch (e: Exception) {
             e.printStackTrace()

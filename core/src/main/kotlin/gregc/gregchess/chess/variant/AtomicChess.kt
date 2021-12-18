@@ -1,6 +1,6 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.GregChess
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.move.*
@@ -43,7 +43,7 @@ object AtomicChess : ChessVariant() {
     }
 
     @JvmField
-    val ATOMIC = GregChessModule.register("atomic", DetEndReason(EndReason.Type.NORMAL))
+    val ATOMIC = GregChess.register("atomic", DetEndReason(EndReason.Type.NORMAL))
 
     private fun nextToKing(color: Color, pos: Pos, board: Chessboard): Boolean =
         pos in board.kingOf(color)?.pos?.neighbours().orEmpty()

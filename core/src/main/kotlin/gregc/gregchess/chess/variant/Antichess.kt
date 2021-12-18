@@ -1,6 +1,6 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.GregChess
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.move.*
@@ -10,7 +10,7 @@ import gregc.gregchess.register
 
 object Antichess : ChessVariant() {
     @JvmField
-    val STALEMATE_VICTORY = GregChessModule.register("stalemate_victory", DetEndReason(EndReason.Type.NORMAL))
+    val STALEMATE_VICTORY = GregChess.register("stalemate_victory", DetEndReason(EndReason.Type.NORMAL))
 
     @JvmField
     val PROMOTIONS = Normal.PROMOTIONS + PieceType.KING

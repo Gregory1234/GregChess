@@ -1,6 +1,6 @@
 name: GregChess
 version: @version@
-main: gregc.gregchess.bukkit.GregChess$Plugin
+main: gregc.gregchess.bukkit.GregChessPlugin$Plugin
 api-version: @minecraft-version@
 author: GregC
 description: Chess Plugin

@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.loc
@@ -13,7 +13,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
@@ -22,7 +21,7 @@ import java.util.*
 
 object ChessGameManager : Listener {
     @JvmField
-    val PLUGIN_RESTART = GregChessModule.register("plugin_restart", DrawEndReason(EndReason.Type.EMERGENCY))
+    val PLUGIN_RESTART = GregChess.register("plugin_restart", DrawEndReason(EndReason.Type.EMERGENCY))
 
     private val games = mutableListOf<ChessGame>()
 

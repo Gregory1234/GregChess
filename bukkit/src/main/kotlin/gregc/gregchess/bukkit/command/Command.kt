@@ -117,8 +117,8 @@ class CommandBuilder {
         val ctx = mutableListOf<Any?>()
         executeOn(strings, toExec, toValidate, ctx)
         val ectx = ExecutionContext(sender, ctx, CoroutineScope(
-        BukkitDispatcher(GregChess.plugin, BukkitContext.SYNC) +
-                SupervisorJob(GregChess.coroutineScope.coroutineContext.job) +
+        BukkitDispatcher(GregChessPlugin.plugin, BukkitContext.SYNC) +
+                SupervisorJob(GregChessPlugin.coroutineScope.coroutineContext.job) +
                 CoroutineExceptionHandler { _, e ->
                     if (e is CommandException)
                         sender.sendMessage(e.error.get())
@@ -141,7 +141,7 @@ class CommandBuilder {
         context: MutableList<Any?>
     ) {
         outLoop@ for ((arg, com) in onArgument) {
-            val ctx = ExecutionContext(sender, context, GregChess.coroutineScope)
+            val ctx = ExecutionContext(sender, context, GregChessPlugin.coroutineScope)
             for (v in validator) {
                 if (ctx.v() != null)
                     continue@outLoop

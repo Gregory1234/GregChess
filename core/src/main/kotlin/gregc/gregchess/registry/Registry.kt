@@ -37,7 +37,7 @@ data class RegistryKey<K>(val module: ChessModule, val key: K) {
 fun String.toKey(): RegistryKey<String> {
     val sections = split(":")
     return when (sections.size) {
-        1 -> RegistryKey(GregChessModule, this)
+        1 -> RegistryKey(GregChess, this)
         2 -> RegistryKey(sections[0], sections[1])
         else -> throw IllegalArgumentException("Bad registry key: $this")
     }

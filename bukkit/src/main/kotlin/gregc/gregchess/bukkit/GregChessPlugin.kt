@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.ExtensionType
-import gregc.gregchess.GregChessModule
+import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
@@ -23,7 +23,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 
-object GregChess : Listener {
+object GregChessPlugin : Listener {
     class Plugin : JavaPlugin(), BukkitChessPlugin {
         companion object {
             lateinit var INSTANCE: Plugin
@@ -35,17 +35,17 @@ object GregChess : Listener {
         }
 
         override fun onEnable() {
-            GregChess.onEnable()
+            GregChessPlugin.onEnable()
         }
 
         override fun onDisable() {
-            GregChess.onDisable()
+            GregChessPlugin.onDisable()
         }
 
         override fun onInitialize() {
-            GregChessModule.logger = JavaGregLogger(GregChess.logger)
-            GregChessModule.extensions += BukkitGregChessModule
-            GregChessModule.fullLoad()
+            GregChess.logger = JavaGregLogger(GregChessPlugin.logger)
+            GregChess.extensions += GregChessBukkit
+            GregChess.fullLoad()
         }
     }
 

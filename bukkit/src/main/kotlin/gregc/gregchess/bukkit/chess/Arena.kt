@@ -17,7 +17,7 @@ abstract class Arena(val name: String) : ChessListener {
 
     companion object {
         @JvmField
-        val ARENA_REMOVED = GregChessModule.register("arena_removed", DrawEndReason(EndReason.Type.EMERGENCY))
+        val ARENA_REMOVED = GregChess.register("arena_removed", DrawEndReason(EndReason.Type.EMERGENCY))
 
         private val arenas = mutableListOf<Arena>()
 
@@ -26,14 +26,14 @@ abstract class Arena(val name: String) : ChessListener {
         } ?: def
 
         private fun ConfigurationSection.parseArena(name: String): Arena? {
-            GregChess.logger.info("Loading arena $name")
+            GregChessPlugin.logger.info("Loading arena $name")
             val start = getLoc("Start", Loc(0, 101, 0))
 
             val world = Bukkit.getWorld(getString("World") ?: return null) ?: return null
 
             val tileSize = getInt("TileSize", 3)
 
-            GregChess.logger.info("Loaded arena $name")
+            GregChessPlugin.logger.info("Loaded arena $name")
 
             return SimpleArena(name, world, tileSize, start)
         }
@@ -46,7 +46,7 @@ abstract class Arena(val name: String) : ChessListener {
                     if (section != null)
                         section.parseArena(name)
                     else {
-                        GregChess.logger.warning("Arena $name has a wrong format")
+                        GregChessPlugin.logger.warning("Arena $name has a wrong format")
                         null
                     }
                 }.orEmpty()
@@ -63,7 +63,7 @@ abstract class Arena(val name: String) : ChessListener {
 
         @JvmStatic
         protected val returnWorld: World
-            get() = BukkitGregChessModule.config.getString("ReturnWorld")
+            get() = config.getString("ReturnWorld")
                 ?.let { requireNotNull(Bukkit.getWorld(it)) { "Return world not found: $it" } }
                 ?: Bukkit.getWorlds().first()
     }

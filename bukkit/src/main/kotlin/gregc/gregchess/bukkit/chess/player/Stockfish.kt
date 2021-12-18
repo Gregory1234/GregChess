@@ -63,13 +63,13 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
     }
 
     init {
-        GregChess.coroutineScope.launch {
+        GregChessPlugin.coroutineScope.launch {
             readLine()
         }
     }
 
     override suspend fun getMove(fen: FEN): String =
-        withContext(BukkitDispatcher(GregChess.plugin, BukkitContext.ASYNC)) {
+        withContext(BukkitDispatcher(GregChessPlugin.plugin, BukkitContext.ASYNC)) {
             sendCommand("position fen $fen")
             sendCommand("go movetime " + moveTime.inWholeMilliseconds)
             var ret: String? = null
