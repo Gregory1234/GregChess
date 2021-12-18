@@ -18,24 +18,25 @@ object HordeChess : ChessVariant() {
         else -> Normal.getPieceMoves(piece, board)
     }
 
-    override fun getLegality(move: Move, game: ChessGame): MoveLegality = when {
-        move.piece.color == Color.BLACK -> Normal.getLegality(move, game)
-        Normal.isValid(move, game) -> MoveLegality.LEGAL
-        else -> MoveLegality.INVALID
+    override fun getLegality(move: Move, game: ChessGame): MoveLegality = when(move.piece.color) {
+        Color.BLACK -> Normal.getLegality(move, game)
+        Color.WHITE -> if (Normal.isValid(move, game)) MoveLegality.LEGAL else MoveLegality.INVALID
     }
 
     override fun isInCheck(king: BoardPiece, board: Chessboard) =
         king.color == Color.BLACK && Normal.isInCheck(king, board)
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(Color.BLACK).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
+        if (piecesOf(Color.WHITE).isEmpty())
+            game.stop(blackWonBy(EndReason.ALL_PIECES_LOST))
+
+        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
             if (isInCheck(game, Color.BLACK))
                 game.stop(whiteWonBy(EndReason.CHECKMATE))
             else
                 game.stop(drawBy(EndReason.STALEMATE))
         }
-        if (piecesOf(Color.WHITE).isEmpty())
-            game.stop(blackWonBy(EndReason.ALL_PIECES_LOST))
+
         checkForRepetition()
         checkForFiftyMoveRule()
     }

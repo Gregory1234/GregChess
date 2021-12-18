@@ -15,7 +15,7 @@ class SetFenEvent(val FEN: FEN) : ChessEvent
 
 private class Square(val pos: Pos, val game: ChessGame) {
     var piece: BoardPiece? = null
-    val flags = mutableMapOf<ChessFlag, UInt>()
+    val flags = mutableMapOf<ChessFlag, MutableList<UInt>>()
 
     var bakedMoves: List<Move>? = null
     var bakedLegalMoves: List<Move>? = null
@@ -41,7 +41,7 @@ data class ChessboardState internal constructor (
     val fullmoveCounter: UInt = initialFEN.fullmoveCounter,
     val boardHashes: Map<Int, Int> = mapOf(initialFEN.hashed() to 1),
     val capturedPieces: List<CapturedPiece> = emptyList(),
-    val flags: Map<Pos, Map<ChessFlag, UInt>> = enPassantFlag(initialFEN.enPassantSquare),
+    val flags: Map<Pos, Map<ChessFlag, List<UInt>>> = enPassantFlag(initialFEN.enPassantSquare),
     val moveHistory: List<Move> = emptyList()
 ) : ComponentData<Chessboard> {
     private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toPieces(variant))
@@ -55,7 +55,7 @@ data class ChessboardState internal constructor (
     companion object {
 
         private fun enPassantFlag(square: Pos?) =
-            square?.let { mapOf(it to mapOf(ChessFlag.EN_PASSANT to 1u)) }.orEmpty()
+            square?.let { mapOf(it to mapOf(ChessFlag.EN_PASSANT to listOf(1u))) }.orEmpty()
 
     }
 }
@@ -67,7 +67,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         Square(p, game).also { s ->
             val piece = initialState.pieces[p]
             s.piece = piece
-            s.flags += initialState.flags[p].orEmpty()
+            s.flags += initialState.flags[p].orEmpty().mapValues { it.value.toMutableList() }
         }
     }
 
@@ -103,10 +103,16 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     }
 
     fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u) {
-        squares[pos]?.flags?.set(flag, age)
+        squares[pos]?.flags?.let {
+            it[flag] = it[flag] ?: mutableListOf()
+            it[flag]!! += age
+        }
     }
 
-    fun getFlags(pos: Pos): Map<ChessFlag, UInt> = squares[pos]?.flags.orEmpty()
+    fun getFlags(pos: Pos): Map<ChessFlag, UInt> =
+        squares[pos]?.flags?.filterValues { it.isNotEmpty() }?.mapValues { it.value.last() }.orEmpty()
+
+    fun hasActiveFlag(pos: Pos, flag: ChessFlag): Boolean = getFlags(pos)[flag]?.let(flag.isActive) ?: false
 
     private val moves: MutableList<Move> = initialState.moveHistory.toMutableList()
 
@@ -150,15 +156,16 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             }
             for (s in squares.values)
                 for (f in s.flags)
-                    f.flagAge++
+                    f.value.replaceAll { it + 1u }
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
                 for (f in s.flags) {
-                    f.flagAge--
+                    f.value.replaceAll { it + 1u }
+                    f.value.removeIf { it == 0u }
                 }
-                s.flags.entries.removeIf { it.flagAge == 0u }
+                s.flags.entries.removeIf { it.flagAges.isEmpty() }
             }
         }
         if (e.ending)
@@ -214,7 +221,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
 
         if (fen.enPassantSquare != null) {
-            squares[fen.enPassantSquare]?.flags?.set(ChessFlag.EN_PASSANT, 1u)
+            addFlag(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1u)
         }
 
         updateMoves()

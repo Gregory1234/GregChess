@@ -14,12 +14,12 @@ object CaptureAll : ChessVariant() {
     override fun timeout(game: ChessGame, color: Color) = game.stop(color.lostBy(EndReason.TIMEOUT))
 
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } }) {
-            game.stop(drawBy(EndReason.STALEMATE))
-        }
-        checkForRepetition()
-        checkForFiftyMoveRule()
         if (piecesOf(!game.currentTurn).isEmpty())
             game.stop(game.currentTurn.wonBy(EndReason.ALL_PIECES_LOST))
+        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } })
+            game.stop(drawBy(EndReason.STALEMATE))
+
+        checkForRepetition()
+        checkForFiftyMoveRule()
     }
 }

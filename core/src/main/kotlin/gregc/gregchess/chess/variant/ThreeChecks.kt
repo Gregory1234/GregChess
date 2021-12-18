@@ -12,8 +12,7 @@ import kotlin.reflect.KClass
 object ThreeChecks : ChessVariant() {
 
     @Serializable
-    data class CheckCounterData(val limit: UInt, val checks: ByColor<UInt> = byColor(0u)) :
-        ComponentData<CheckCounter> {
+    data class CheckCounterData(val limit: UInt, val checks: ByColor<UInt> = byColor(0u)) : ComponentData<CheckCounter> {
         override val componentClass: KClass<out CheckCounter> get() = CheckCounter::class
 
         override fun getComponent(game: ChessGame) = CheckCounter(game, this)
@@ -78,6 +77,7 @@ object ThreeChecks : ChessVariant() {
 
     override fun checkForGameEnd(game: ChessGame) {
         game.requireComponent<CheckCounter>().checkForGameEnd()
+
         Normal.checkForGameEnd(game)
     }
 

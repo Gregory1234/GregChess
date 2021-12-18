@@ -24,12 +24,16 @@ object Antichess : ChessVariant() {
     override fun getLegality(move: Move, game: ChessGame): MoveLegality {
         if (!Normal.isValid(move, game))
             return MoveLegality.INVALID
+
         if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it] } != null)
             return MoveLegality.LEGAL
-        return if (game.board.piecesOf(move.piece.color).none { m ->
-                m.getMoves(game.board).filter { Normal.isValid(it, game) }
-                    .any { mv -> mv.getTrait<CaptureTrait>()?.capture?.let { game.board[it] } != null }
-            }) MoveLegality.LEGAL else MoveLegality.SPECIAL
+
+        return if (game.board.piecesOf(move.piece.color).flatMap { it.getMoves(game.board) }
+                .filter { Normal.isValid(it, game) }
+                .all { m -> m.getTrait<CaptureTrait>()?.capture?.let { game.board[it] } == null })
+            MoveLegality.LEGAL
+        else
+            MoveLegality.SPECIAL
     }
 
     override fun isInCheck(king: BoardPiece, board: Chessboard) = false
@@ -39,8 +43,10 @@ object Antichess : ChessVariant() {
     override fun checkForGameEnd(game: ChessGame) = with(game.board) {
         if (piecesOf(!game.currentTurn).isEmpty())
             game.stop(game.currentTurn.lostBy(EndReason.ALL_PIECES_LOST))
+
         if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } })
             game.stop(game.currentTurn.lostBy(STALEMATE_VICTORY))
+
         checkForRepetition()
         checkForFiftyMoveRule()
     }

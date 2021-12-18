@@ -68,12 +68,14 @@ object AtomicChess : ChessVariant() {
 
         if (!Normal.isValid(this, game))
             return MoveLegality.INVALID
+
         val captured = getTrait<CaptureTrait>()?.let { game.board[it.capture] }
+
         if (piece.type == PieceType.KING) {
             if (captured != null)
                 return MoveLegality.SPECIAL
 
-            if (passedThrough.all { checkingMoves(!piece.color, it, game.board).isEmpty() })
+            return if (passedThrough.all { checkingMoves(!piece.color, it, game.board).isEmpty() })
                 MoveLegality.LEGAL
             else
                 MoveLegality.IN_CHECK
@@ -89,13 +91,11 @@ object AtomicChess : ChessVariant() {
         val capture = getTrait<CaptureTrait>()?.capture
         if (checks.any { ch -> capture != ch.piece.pos && startBlocking.none { it in ch.neededEmpty } })
             return MoveLegality.IN_CHECK
+
         val pins = pinningMoves(!piece.color, myKing.pos, game.board)
-        if (pins.any { pin ->
-                capture != pin.piece.pos &&
-                        pin.neededEmpty.filter { game.board[it] != null }
-                            .all { it in stopBlocking } && startBlocking.none { it in pin.neededEmpty }
-            })
+        if (pins.any { pin -> isPinnedBy(pin, game.board) })
             return MoveLegality.PINNED
+
         return MoveLegality.LEGAL
     }
 

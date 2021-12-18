@@ -153,13 +153,8 @@ class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
     override fun toString(): String = "$key@${hashCode().toString(16)}"
 }
 
-typealias ChessFlagReference = Map.Entry<ChessFlag, UInt>
+typealias ChessFlagReference = Map.Entry<ChessFlag, List<UInt>>
 val ChessFlagReference.flagType get() = key
-@get:JvmName("getFlagAgeSimple")
-val ChessFlagReference.flagAge get() = value
-val ChessFlagReference.flagActive get() = flagType.isActive(flagAge)
-var MutableMap.MutableEntry<ChessFlag, UInt>.flagAge
-    get() = value
-    set(v) {
-        setValue(v)
-    }
+val ChessFlagReference.flagAges get() = value
+val ChessFlagReference.flagAge get() = value.lastOrNull()
+val ChessFlagReference.flagActive get() = flagAge?.let(flagType.isActive) ?: false

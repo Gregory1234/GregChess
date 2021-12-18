@@ -2,7 +2,6 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.PieceType
 
 object KingOfTheHill : ChessVariant() {
 
@@ -12,10 +11,10 @@ object KingOfTheHill : ChessVariant() {
     override val specialSquares get() = (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) }.toSet()
 
     override fun checkForGameEnd(game: ChessGame) {
-        for (p in game.board.pieces) {
-            if (p.type == PieceType.KING && p.pos.file in (3..4) && p.pos.rank in (3..4))
-                game.stop(p.color.wonBy(KING_OF_THE_HILL))
-        }
+        val king = game.tryOrStopNull(game.board.kingOf(game.currentTurn))
+        if (king.pos.file in (3..4) && king.pos.rank in (3..4))
+            game.stop(game.currentTurn.wonBy(KING_OF_THE_HILL))
+
         Normal.checkForGameEnd(game)
     }
 }
