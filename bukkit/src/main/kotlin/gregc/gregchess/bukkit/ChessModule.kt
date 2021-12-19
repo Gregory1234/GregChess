@@ -11,6 +11,7 @@ import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 class SettingsParserContext(val variant: ChessVariant, val section: ConfigurationSection)
 
@@ -41,13 +42,20 @@ fun <T : Component> ChessModule.registerConstSettings(cl: KClass<T>, settings: C
 inline fun <reified T : Component> ChessModule.registerConstSettings(settings: ComponentData<T>) =
     registerConstSettings(T::class, settings)
 
-inline fun <reified T : SimpleComponent> ChessModule.registerSimpleSettings() =
-    registerConstSettings(T::class, SimpleComponentData(T::class))
+@Suppress("UNCHECKED_CAST")
+fun ChessModule.completeSimpleSettings() =
+    get(BukkitRegistry.SETTINGS_PARSER)
+        .completeWith { cl ->
+            require (cl.isSubclassOf(SimpleComponent::class));
+            { SimpleComponentData(cl as KClass<out SimpleComponent>) }
+        }
 
-fun ChessModule.registerLocalFormatter(
-    variant: ChessVariant,
-    formatter: MoveNameFormatter = MoveNameFormatter { defaultFormatMoveNameLocal(it) }
-) = register(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER, variant, formatter)
+fun ChessModule.registerLocalFormatter(variant: ChessVariant, formatter: MoveNameFormatter) =
+    register(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER, variant, formatter)
+
+fun ChessModule.completeLocalFormatters() =
+    get(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER)
+        .completeWith { MoveNameFormatter { defaultFormatMoveNameLocal(it) } }
 
 abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : ChessExtension(module, BUKKIT) {
     companion object {

@@ -10,7 +10,7 @@ import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.player.enginePlayerType
-import gregc.gregchess.chess.variant.*
+import gregc.gregchess.chess.variant.ThreeChecks
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 
@@ -60,24 +60,8 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
                 }
             }
         }
-        registerSimpleSettings<GameController>()
-        registerSimpleSettings<SpectatorManager>()
-        registerSimpleSettings<ScoreboardManager>()
         registerSettings { BukkitRendererSettings() }
-        registerSimpleSettings<BukkitEventRelay>()
         registerSettings { ThreeChecks.CheckCounterData(section.getInt("CheckLimit", 3).toUInt()) }
-        registerSimpleSettings<BukkitGregChessAdapter>()
-    }
-
-    private fun registerLocalFormatters() = with(GregChess) {
-        // TODO: add default values in registries
-        registerLocalFormatter(ChessVariant.Normal)
-        registerLocalFormatter(Antichess)
-        registerLocalFormatter(AtomicChess)
-        registerLocalFormatter(CaptureAll)
-        registerLocalFormatter(HordeChess)
-        registerLocalFormatter(KingOfTheHill)
-        registerLocalFormatter(ThreeChecks)
     }
 
     private fun registerComponents() = with(GregChess) {
@@ -100,7 +84,8 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
         ScoreboardManager
         registerComponents()
         registerSettings()
-        registerLocalFormatters()
+        GregChess.completeSimpleSettings()
+        GregChess.completeLocalFormatters()
         registerPlayerTypes()
     }
 }
