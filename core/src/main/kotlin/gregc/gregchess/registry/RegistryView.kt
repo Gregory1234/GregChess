@@ -51,11 +51,6 @@ interface FiniteBiRegistryBlockView<K, T> : BiRegistryBlockView<K, T>, FiniteReg
     override val values: Set<T>
 }
 
-@JvmSynthetic
-fun <K, T> BiRegistryBlockView<K, T>.getOrNull(value: T): K? = getKeyOrNull(value)
-@JvmSynthetic
-fun <K, T> BiRegistryBlockView<K, T>.get(value: T): K = getOrNull(value)!!
-
 class ChainRegistryView<K, M, T>(val base: RegistryView<K, M>, val extension: RegistryView<M, T>) : RegistryView<K, T> {
     override fun getOrNull(module: ChessModule, key: K): T? =
         base.getOrNull(module, key)?.let { extension.getOrNull(module, it) }

@@ -71,7 +71,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     private val world get() = arena.world
 
     private fun Piece.render(loc: Loc) {
-        for ((i, m) in type.structure[color].withIndex())
+        for ((i, m) in structure.withIndex())
             fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
     }
 

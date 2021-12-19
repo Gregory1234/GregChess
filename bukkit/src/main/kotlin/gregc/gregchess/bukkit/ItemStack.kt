@@ -14,7 +14,8 @@ inline fun <reified T : ItemMeta> ItemStack.meta(builder: T.() -> Unit) {
     itemMeta = curMeta?.apply(builder)
 }
 
-fun <T : ItemMeta> ItemStack.getOrCreateItemMeta(cl: KClass<T>): T? =
+@PublishedApi
+internal fun <T : ItemMeta> ItemStack.getOrCreateItemMeta(cl: KClass<T>): T? =
     cl.safeCast(itemMeta) ?: cl.safeCast(Bukkit.getItemFactory().getItemMeta(type))
 
 @JvmName("simpleMeta")

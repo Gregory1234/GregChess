@@ -151,7 +151,7 @@ class ConnectedRegistry<K, T>(name: String, val base: FiniteRegistryView<*, K>) 
 
         override fun getValueOrNull(key: K): T? = members[key]
 
-        fun completeWith(default: (K) -> T) {
+        inline fun completeWith(default: (K) -> T) {
             for (v in base.valuesOf(module)) {
                 if (v !in keys) {
                     set(v, default(v))

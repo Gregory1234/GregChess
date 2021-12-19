@@ -21,7 +21,7 @@ class ChessPlayerType<T : Any>(
     override val key: RegistryKey<String> get() = Registry.PLAYER_TYPE[this]
 }
 
-fun playerType(p: Any) : ChessPlayerType<*> {
+internal fun playerType(p: Any) : ChessPlayerType<*> {
     val visited = mutableListOf<KClass<*>>()
     val q = mutableListOf<KClass<*>>()
     var cl: KClass<*> = p::class

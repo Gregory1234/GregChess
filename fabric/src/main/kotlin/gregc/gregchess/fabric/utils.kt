@@ -58,7 +58,7 @@ object UUIDAsIntArraySerializer : KSerializer<UUID> {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModule {
+internal fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModule {
     contextual(World::class, object : KSerializer<World> {
         override val descriptor = PrimitiveSerialDescriptor("World", PrimitiveKind.STRING)
 

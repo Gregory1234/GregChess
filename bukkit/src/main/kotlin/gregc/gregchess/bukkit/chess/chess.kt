@@ -5,7 +5,8 @@ import gregc.gregchess.bukkit.chess.component.arena
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
-import gregc.gregchess.chess.move.*
+import gregc.gregchess.chess.move.MoveNameFormatter
+import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.module
@@ -13,37 +14,40 @@ import gregc.gregchess.registry.name
 import gregc.gregchess.snakeToPascal
 import org.bukkit.Material
 import org.bukkit.Sound
+import org.bukkit.inventory.ItemStack
 
 val Color.configName get() = name.snakeToPascal()
-
-fun PieceType.getItem(color: Color) = itemStack(itemMaterial[color]) {
-    meta {
-        name = config.getPathString("Chess.Color.${color.configName}.Piece", localName)
-    }
-}
 
 val PieceType.configName get() = name.snakeToPascal()
 val PieceType.section get() = module.bukkit.config.getConfigurationSection("Chess.Piece.$configName")!!
 val PieceType.localChar get() = section.getString("Char")!!.single()
 val PieceType.localName get() = section.getPathString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
-val PieceType.itemMaterial get() = byColor { Material.valueOf(section.getString("Item.${it.configName}")!!) }
-val PieceType.structure
-    get() = byColor { section.getStringList("Structure.${it.configName}").map { m -> Material.valueOf(m) } }
 
-val Piece.item get() = type.getItem(color)
+val Piece.structure
+    get() = type.section.getStringList("Structure.${color.configName}").map { m -> Material.valueOf(m) }
 
-fun defaultFormatMoveNameLocal(name: MoveName): String = buildString {
-    name.getOrNull(MoveNameTokenType.PIECE_TYPE)?.let { append(it.localChar.uppercase()) }
-    name.getOrNull(MoveNameTokenType.UNIQUENESS_COORDINATE)?.let { append(it) }
-    name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append(config.getPathString("Chess.Capture")) }
-    name.getOrNull(MoveNameTokenType.TARGET)?.let { append(it) }
-    name.getOrNull(MoveNameTokenType.CASTLE)?.let { append(it.castles) }
-    name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append(it.localChar.uppercase()) }
-    name.getOrNull(MoveNameTokenType.CHECK)?.let { append("+") }
-    name.getOrNull(MoveNameTokenType.CHECKMATE)?.let { append("#") }
-    name.getOrNull(MoveNameTokenType.EN_PASSANT)?.let { append(" e.p.") }
-}
+val Piece.item: ItemStack
+    get() = itemStack(Material.valueOf(type.section.getString("Item.${color.configName}")!!)) {
+        meta {
+            name = config.getPathString("Chess.Color.${color.configName}.Piece", this@item.type.localName)
+        }
+    }
+
+val defaultLocalMoveNameFormatter: MoveNameFormatter
+    get() = MoveNameFormatter { name ->
+        buildString {
+            name.getOrNull(MoveNameTokenType.PIECE_TYPE)?.let { append(it.localChar.uppercase()) }
+            name.getOrNull(MoveNameTokenType.UNIQUENESS_COORDINATE)?.let { append(it) }
+            name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append(config.getPathString("Chess.Capture")) }
+            name.getOrNull(MoveNameTokenType.TARGET)?.let { append(it) }
+            name.getOrNull(MoveNameTokenType.CASTLE)?.let { append(it.castles) }
+            name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append(it.localChar.uppercase()) }
+            name.getOrNull(MoveNameTokenType.CHECK)?.let { append("+") }
+            name.getOrNull(MoveNameTokenType.CHECKMATE)?.let { append("#") }
+            name.getOrNull(MoveNameTokenType.EN_PASSANT)?.let { append(" e.p.") }
+        }
+    }
 
 val ChessVariant.localNameFormatter: MoveNameFormatter
     get() = BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER[module, this]

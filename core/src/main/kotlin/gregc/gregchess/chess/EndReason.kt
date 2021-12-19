@@ -90,14 +90,11 @@ fun Color.wonBy(reason: DetEndReason, vararg args: String): GameResults =
 
 fun Color.lostBy(reason: DetEndReason, vararg args: String): GameResults = (!this).wonBy(reason, *args)
 
-
 fun whiteWonBy(reason: DetEndReason, vararg args: String): GameResults = Color.WHITE.wonBy(reason, *args)
 fun blackWonBy(reason: DetEndReason, vararg args: String): GameResults = Color.BLACK.wonBy(reason, *args)
 
 fun drawBy(reason: DrawEndReason, vararg args: String): GameResults =
     GameResultsWith(reason, GameScore.Draw, args.toList())
-
-fun DrawEndReason.of(vararg args: String): GameResults = GameResultsWith(this, GameScore.Draw, args.toList())
 
 @Serializable(with = GameResultsSerializer::class)
 data class GameResultsWith<out R : GameScore> internal constructor(

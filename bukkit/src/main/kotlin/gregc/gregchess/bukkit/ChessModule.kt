@@ -2,7 +2,7 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.PropertyType
-import gregc.gregchess.bukkit.chess.defaultFormatMoveNameLocal
+import gregc.gregchess.bukkit.chess.defaultLocalMoveNameFormatter
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.MoveNameFormatter
@@ -55,7 +55,7 @@ fun ChessModule.registerLocalFormatter(variant: ChessVariant, formatter: MoveNam
 
 fun ChessModule.completeLocalFormatters() =
     get(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER)
-        .completeWith { MoveNameFormatter { defaultFormatMoveNameLocal(it) } }
+        .completeWith { defaultLocalMoveNameFormatter }
 
 abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : ChessExtension(module, BUKKIT) {
     companion object {

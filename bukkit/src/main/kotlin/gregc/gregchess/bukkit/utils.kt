@@ -174,7 +174,7 @@ object UUIDAsStringSerializer : KSerializer<UUID> {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun defaultModule() = SerializersModule {
+internal fun defaultModule() = SerializersModule {
     contextual(UUID::class, UUIDAsStringSerializer)
     contextual(ChessEnvironment::class, BukkitChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
 }
