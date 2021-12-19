@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.GregChess
+import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.forEachReal
@@ -38,6 +39,9 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
     private val playerPropertyTeams = mutableMapOf<PropertyType, ByColor<Team>>()
 
     private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get())
+
+    private fun randomString(size: Int) =
+        String(CharArray(size) { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() })
 
     private fun newTeam(): Team {
         var s: String

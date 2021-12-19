@@ -2,7 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.component6
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -109,6 +108,8 @@ data class FEN(
             }
             return false
         }
+
+        private operator fun <E> List<E>.component6(): E = this[5]
 
         fun parseFromString(fen: String): FEN = try {
             val parts = fen.split(" ")

@@ -1,10 +1,16 @@
 package gregc.gregchess.chess.move
 
-import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.piece.*
+import gregc.gregchess.rotationsOf
 import kotlin.math.abs
+
+private fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)
+
+private fun betweenInc(i: Int, j: Int): IntRange = if (i > j) (j..i) else (i..j)
+
+private operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 
 fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.map {

@@ -10,13 +10,14 @@ import gregc.gregchess.chess.move.MoveTrait
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.isValidId
 import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 
-class RegistryValidationException(val module: ChessModule, val type: Registry<*, *, *>, val text: String)
-    : IllegalStateException("$module:${type.name}: $text")
-class RegistryKeyValidationException(
+private class RegistryValidationException(
+    val module: ChessModule, val type: Registry<*, *, *>, val text: String
+): IllegalStateException("$module:${type.name}: $text")
+
+private class RegistryKeyValidationException(
     val module: ChessModule, val type: Registry<*, *, *>, val key: Any?, val value: Any?, val text: String
 ) : IllegalArgumentException("$module:${type.name}: $text: $key - $value")
 
@@ -91,6 +92,8 @@ abstract class BiRegistryBlock<K, T>(module: ChessModule) : RegistryBlock<K, T>(
 abstract class BiRegistry<K, T, B : BiRegistryBlock<K, T>>(name: String) : Registry<K, T, B>(name), FiniteBiRegistryView<K, T> {
     final override fun valuesOf(module: ChessModule): Set<T> = get(module).values
 }
+
+private fun String.isValidId(): Boolean = all { it == '_' || it in ('a'..'z') }
 
 class NameRegistry<T>(name: String) : BiRegistry<String, T, NameRegistry<T>.Block>(name) {
     private val valueEntries = mutableMapOf<T, RegistryKey<String>>()
