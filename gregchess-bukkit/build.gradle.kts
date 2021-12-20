@@ -19,7 +19,7 @@ dependencies {
     val kotlinxCoroutinesVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
     implementation(kotlin("reflect"))
-    shaded(project(":core"))
+    shaded(project(":gregchess-core"))
 }
 
 // TODO: make this simpler

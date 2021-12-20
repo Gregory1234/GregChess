@@ -30,8 +30,8 @@ dependencies {
     val fabricLibGuiVersion: String by project
     modImplementation("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
     include("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
-    implementation(project(":core"))
-    include(project(":core"))
+    implementation(project(":gregchess-core"))
+    include(project(":gregchess-core"))
 }
 
 fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("tokens" to mapOf(*args))

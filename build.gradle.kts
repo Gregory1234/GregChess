@@ -6,22 +6,22 @@ plugins {
 }
 
 allprojects {
-    group = "gregc"
+    group = "gregc.gregchess"
     version = "1.1"
 }
 
 tasks {
-    project(":core").getTasksByName("test", true).forEach {
+    project(":gregchess-core").getTasksByName("test", true).forEach {
         it.outputs.upToDateWhen { false }
     }
 
     create<DefaultTask>("createSpigotJar") {
         group = "gregchess"
-        dependsOn(":core:test")
-        dependsOn(":bukkit:jar")
+        dependsOn(":gregchess-core:test")
+        dependsOn(":gregchess-bukkit:jar")
         doLast {
             copy {
-                from(project(":bukkit").getTasksByName("jar", true))
+                from(project(":gregchess-bukkit").getTasksByName("jar", true))
                 into(rootDir)
                 rename {
                     "${rootProject.name}-$version-bukkit.jar"
@@ -31,11 +31,11 @@ tasks {
     }
     create<DefaultTask>("createFabricJar") {
         group = "gregchess"
-        dependsOn(":core:test")
-        dependsOn(":fabric:remapJar")
+        dependsOn(":gregchess-core:test")
+        dependsOn(":gregchess-fabric:remapJar")
         doLast {
             copy {
-                from(project(":fabric").getTasksByName("remapJar", true))
+                from(project(":gregchess-fabric").getTasksByName("remapJar", true))
                 into(rootDir)
                 rename {
                     "${rootProject.name}-$version-fabric.jar"
