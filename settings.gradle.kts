@@ -20,4 +20,4 @@ dependencyResolutionManagement {
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") { name = "Spigot" }
     }
 }
-include("gregchess-core", "gregchess-bukkit", "gregchess-fabric")
+include("gregchess-core", "gregchess-bukkit", "gregchess-fabric", "bukkit-utils")

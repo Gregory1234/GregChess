@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkit
+package gregc.gregchess.bukkitutils
 
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.TextComponent

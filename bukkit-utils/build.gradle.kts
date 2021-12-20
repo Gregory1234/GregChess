@@ -1,4 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
 import java.net.URL
 
 plugins {
@@ -6,10 +5,6 @@ plugins {
     kotlin("plugin.serialization")
     id("org.jetbrains.dokka")
 }
-
-val shaded: Configuration by configurations.creating
-
-configurations["implementation"].extendsFrom(shaded)
 
 dependencies {
     val spigotVersion: String by project
@@ -19,8 +14,6 @@ dependencies {
     val kotlinxCoroutinesVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
     implementation(kotlin("reflect"))
-    shaded(project(":gregchess-core"))
-    shaded(project(":bukkit-utils"))
 }
 
 // TODO: make this simpler
@@ -33,27 +26,7 @@ val trueSpigotVersion by lazy {
     spigotVersion.replace("SNAPSHOT", snapshot.first {it.name() == "timestamp"}.text() + "-" + snapshot.first {it.name() == "buildNumber"}.text())
 }
 
-fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("tokens" to mapOf(*args))
-
 tasks {
-
-    processResources {
-        val kotlinVersion: String by project
-        val kotlinxSerializationVersion: String by project
-        val kotlinxCoroutinesVersion: String by project
-        val spigotMinecraftVersion: String by project
-        from(sourceSets["main"].resources.srcDirs) {
-            include("**/*.yml")
-            replace(
-                "version" to version,
-                "kotlin-version" to kotlinVersion,
-                "serialization-version" to kotlinxSerializationVersion,
-                "coroutines-version" to kotlinxCoroutinesVersion,
-                "minecraft-version" to spigotMinecraftVersion
-            )
-        }
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    }
 
     compileKotlin {
         kotlinOptions {
@@ -66,15 +39,9 @@ tasks {
                 "-progressive")
         }
     }
-    jar {
-        from ({ shaded.resolvedConfiguration.firstLevelModuleDependencies.flatMap { dep -> dep.moduleArtifacts.map { zipTree(it.file) }}})
-        exclude { it.file.extension == "kotlin_metadata" }
-        duplicatesStrategy = DuplicatesStrategy.WARN
-    }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
             configureEach {
-                // TODO: remove repetition
                 sourceLink {
                     val relPath = rootProject.projectDir.toPath().relativize(projectDir.toPath())
                     localDirectory.set(projectDir.resolve("src"))

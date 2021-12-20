@@ -4,8 +4,9 @@ package gregc.gregchess.bukkit.chess.player
 
 import gregc.gregchess.DurationSerializer
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.coroutines.BukkitContext
-import gregc.gregchess.bukkit.coroutines.BukkitDispatcher
+import gregc.gregchess.bukkitutils.coroutines.BukkitContext
+import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
+import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.player.ChessEngine
 import gregc.gregchess.chess.player.NoEngineMoveException

@@ -6,7 +6,10 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.command.*
-import gregc.gregchess.bukkit.coroutines.*
+import gregc.gregchess.bukkituils.command.*
+import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.bukkitutils.coroutines.BukkitContext
+import gregc.gregchess.bukkitutils.coroutines.BukkitScope
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceRegistryView
@@ -92,7 +95,7 @@ object GregChessPlugin : Listener {
 
         val json = Json { serializersModule = defaultModule() }
 
-        plugin.addCommand("chess") {
+        CommandEnvironment(plugin, coroutineScope, WRONG_ARGUMENTS_NUMBER, WRONG_ARGUMENT).addCommand("chess") {
             subcommand("duel") {
                 requirePlayer()
                 requireNoGame()
@@ -114,7 +117,7 @@ object GregChessPlugin : Listener {
                         }
                     }
                 }
-                argument(PlayerArgument("opponent")) { opponentArg ->
+                argument(playerArgument("opponent")) { opponentArg ->
                     validate(OPPONENT_IN_GAME) { !opponentArg().isInGame }
 
                     execute<Player> {
@@ -156,7 +159,7 @@ object GregChessPlugin : Listener {
             }
             subcommand("leave") {
                 requirePlayer()
-                validate(YOU_NOT_IN_GAME) { sender !is Player || sender.isInGame || sender.isSpectating }
+                validate(YOU_NOT_IN_GAME) { sender !is Player || (sender as Player).isInGame || (sender as Player).isSpectating }
                 execute<Player> {
                     ChessGameManager.leave(sender)
                 }
@@ -309,7 +312,7 @@ object GregChessPlugin : Listener {
             subcommand("spectate") {
                 requirePlayer()
                 requireNoGame()
-                argument(PlayerArgument("spectated")) { spectated ->
+                argument(playerArgument("spectated")) { spectated ->
                     validate(PLAYER_NOT_IN_GAME) { spectated().isInGame }
                     execute<Player> {
                         sender.spectatedGame = spectated().currentGame!!

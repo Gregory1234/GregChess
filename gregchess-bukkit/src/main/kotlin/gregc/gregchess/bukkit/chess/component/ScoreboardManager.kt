@@ -2,9 +2,11 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.GregChess
 import gregc.gregchess.MultiExceptionContext
-import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.forEachReal
+import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.register
+import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
 import org.bukkit.Bukkit

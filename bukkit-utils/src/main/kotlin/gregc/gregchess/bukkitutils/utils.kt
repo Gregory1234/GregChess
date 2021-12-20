@@ -1,0 +1,26 @@
+package gregc.gregchess.bukkitutils
+
+import org.bukkit.ChatColor
+import org.bukkit.command.CommandSender
+import org.bukkit.configuration.ConfigurationSection
+
+class Message(val config: ConfigurationSection, val path: String) {
+    fun get() = config.getPathString(path)
+}
+
+fun ConfigurationSection.getPathString(path: String, vararg args: String) =
+    getString(path)?.format(*args)?.chatColor() ?: ((currentPath ?: "") + "-" + path)
+
+fun String.chatColor(): String = ChatColor.translateAlternateColorCodes('&', this)
+
+class CommandException(val error: Message, cause: Throwable? = null) : Exception(cause) {
+
+    override val message: String get() = "Uncaught command error: ${error.get()}"
+}
+
+inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
+    f()
+} catch (e: CommandException) {
+    p.sendMessage(e.error.get())
+    err(e)
+}

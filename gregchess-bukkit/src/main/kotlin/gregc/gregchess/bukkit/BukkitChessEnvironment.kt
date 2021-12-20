@@ -1,6 +1,7 @@
-package gregc.gregchess.bukkit.coroutines
+package gregc.gregchess.bukkit
 
-import gregc.gregchess.bukkit.GregChessPlugin
+import gregc.gregchess.bukkitutils.coroutines.BukkitContext
+import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import gregc.gregchess.chess.ChessEnvironment
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable

@@ -2,7 +2,8 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.GregLogger
 import gregc.gregchess.Loc
-import gregc.gregchess.bukkit.coroutines.BukkitChessEnvironment
+import gregc.gregchess.bukkitutils.CommandException
+import gregc.gregchess.bukkitutils.Message
 import gregc.gregchess.chess.ChessEnvironment
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -12,7 +13,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import org.bukkit.*
 import org.bukkit.block.Block
-import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
@@ -25,13 +25,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-
-inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) = try {
-    f()
-} catch (e: CommandException) {
-    p.sendMessage(e.error.get())
-    err(e)
-}
 
 fun Loc.toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
 fun Location.toLoc() = Loc(x.toInt(), y.toInt(), z.toInt())
@@ -62,19 +55,12 @@ val PLAYER_NOT_IN_GAME = err("NotInGame.Player")
 @JvmField
 val OPPONENT_NOT_HUMAN = err("NotHuman.Opponent")
 
-class Message(val config: ConfigurationSection, val path: String) {
-    fun get() = config.getPathString(path)
-}
 
 fun message(n: String) = Message(config, "Message.$n")
 fun title(n: String) = Message(config, "Title.$n")
 fun err(n: String) = Message(config, "Message.Error.$n")
 
 
-class CommandException(val error: Message, cause: Throwable? = null) : Exception(cause) {
-
-    override val message: String get() = "Uncaught command error: ${error.get()}"
-}
 
 @OptIn(ExperimentalContracts::class)
 fun cRequire(e: Boolean, msg: Message) {
@@ -95,8 +81,6 @@ inline fun <T> cWrongArgument(block: () -> T): T = try {
 } catch (e: IllegalArgumentException) {
     throw CommandException(WRONG_ARGUMENT, e)
 }
-
-fun String.chatColor(): String = ChatColor.translateAlternateColorCodes('&', this)
 
 internal fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChessPlugin.plugin)
 
@@ -153,9 +137,6 @@ fun Duration.format(formatString: String): String = toComponents { hours, minute
 }
 
 internal val config: ConfigurationSection get() = GregChessPlugin.plugin.config
-
-fun ConfigurationSection.getPathString(path: String, vararg args: String) =
-    getString(path)?.format(*args)?.chatColor() ?: ((currentPath ?: "") + "-" + path)
 
 class JavaGregLogger(private val logger: Logger) : GregLogger {
     override fun info(msg: String) = logger.info(msg)

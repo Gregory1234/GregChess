@@ -3,6 +3,7 @@ package gregc.gregchess.bukkit.chess
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.arena
 import gregc.gregchess.bukkit.chess.component.spectators
+import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
 import gregc.gregchess.chess.move.MoveNameFormatter

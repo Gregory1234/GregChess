@@ -4,6 +4,7 @@ import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.AddPropertiesEvent
 import gregc.gregchess.bukkit.chess.PropertyType
+import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.chess.ChessEventHandler
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.component.SimpleComponent

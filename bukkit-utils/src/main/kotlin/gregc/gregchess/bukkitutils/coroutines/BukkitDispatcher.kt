@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkit.coroutines
+package gregc.gregchess.bukkitutils.coroutines
 
 import kotlinx.coroutines.*
 import org.bukkit.Bukkit

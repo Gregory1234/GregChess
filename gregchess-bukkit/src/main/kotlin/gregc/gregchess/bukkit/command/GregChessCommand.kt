@@ -2,6 +2,7 @@ package gregc.gregchess.bukkit.command
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.player.*
+import gregc.gregchess.bukkituils.command.*
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.registry.FiniteRegistryView
@@ -9,6 +10,9 @@ import gregc.gregchess.registry.toKey
 import org.bukkit.entity.Player
 import kotlin.time.Duration
 
+fun playerArgument(name: String): PlayerArgument = PlayerArgument(name, PLAYER_NOT_FOUND)
+
+fun CommandBuilder.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
 
 fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) {
     literal(name) {
@@ -28,12 +32,12 @@ fun CommandBuilder.requireHumanOpponent(): ExecutionContext<Player>.() -> Bukkit
 
 fun CommandBuilder.requireGame(): ExecutionContext<Player>.() -> BukkitPlayer {
     requirePlayer()
-    validate(YOU_NOT_IN_GAME) { sender is Player && sender.currentGame != null }
+    validate(YOU_NOT_IN_GAME) { sender is Player && (sender as Player).currentGame != null }
     return { sender.chess!! }
 }
 
 fun CommandBuilder.requireNoGame() {
-    validate(YOU_IN_GAME) { sender !is Player || sender.currentGame == null }
+    validate(YOU_IN_GAME) { sender !is Player || (sender as Player).currentGame == null }
 }
 
 class PosArgument(name: String) : CommandArgumentType<Pos>(name) {

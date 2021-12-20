@@ -1,8 +1,10 @@
 package gregc.gregchess.bukkit.chess.player
 
-import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.spectators
+import gregc.gregchess.bukkit.message
+import gregc.gregchess.bukkit.title
+import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece

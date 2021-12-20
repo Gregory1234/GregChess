@@ -1,8 +1,8 @@
-package gregc.gregchess.bukkit.command
+package gregc.gregchess.bukkituils.command
 
-import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.coroutines.BukkitContext
-import gregc.gregchess.bukkit.coroutines.BukkitDispatcher
+import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.bukkitutils.coroutines.BukkitContext
+import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import kotlinx.coroutines.*
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -14,6 +14,13 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.CLASS)
 @DslMarker
 annotation class CommandDsl
+
+class CommandEnvironment(
+    val plugin: JavaPlugin,
+    val coroutineScope: CoroutineScope,
+    val wrongArgumentsNumberMessage: Message,
+    val wrongArgumentMessage: Message
+)
 
 @CommandDsl
 class CommandBuilder {
@@ -85,6 +92,7 @@ class CommandBuilder {
     }
 
     private fun executeOn(
+        env: CommandEnvironment,
         strings: List<String>,
         toExec: MutableList<ExecutionContext<*>.() -> Unit>,
         toValidate: MutableList<ExecutionContext<*>.() -> Message?>,
@@ -97,7 +105,7 @@ class CommandBuilder {
             if (parse != null) {
                 context += parse.first
                 toValidate.addAll(validator)
-                return com.executeOn(parse.second, toExec, toValidate, context)
+                return com.executeOn(env, parse.second, toExec, toValidate, context)
             } else {
                 msg = msg ?: arg.failMessage
             }
@@ -107,18 +115,18 @@ class CommandBuilder {
             return
         }
         throw CommandException(
-            if (strings.isEmpty() || onArgument.isEmpty()) WRONG_ARGUMENTS_NUMBER else msg ?: WRONG_ARGUMENT
+            if (strings.isEmpty() || onArgument.isEmpty()) env.wrongArgumentsNumberMessage else msg ?: env.wrongArgumentMessage
         )
     }
 
-    fun executeOn(sender: CommandSender, strings: List<String>) {
+    fun executeOn(env: CommandEnvironment, sender: CommandSender, strings: List<String>) {
         val toExec = mutableListOf<ExecutionContext<*>.() -> Unit>()
         val toValidate = mutableListOf<ExecutionContext<*>.() -> Message?>()
         val ctx = mutableListOf<Any?>()
-        executeOn(strings, toExec, toValidate, ctx)
+        executeOn(env, strings, toExec, toValidate, ctx)
         val ectx = ExecutionContext(sender, ctx, CoroutineScope(
-        BukkitDispatcher(GregChessPlugin.plugin, BukkitContext.SYNC) +
-                SupervisorJob(GregChessPlugin.coroutineScope.coroutineContext.job) +
+        BukkitDispatcher(env.plugin, BukkitContext.SYNC) +
+                SupervisorJob(env.coroutineScope.coroutineContext.job) +
                 CoroutineExceptionHandler { _, e ->
                     if (e is CommandException)
                         sender.sendMessage(e.error.get())
@@ -135,13 +143,14 @@ class CommandBuilder {
     }
 
     private fun autocompleteOn(
+        env: CommandEnvironment,
         sender: CommandSender,
         strings: List<String>,
         ac: MutableSet<String>,
         context: MutableList<Any?>
     ) {
         outLoop@ for ((arg, com) in onArgument) {
-            val ctx = ExecutionContext(sender, context, GregChessPlugin.coroutineScope)
+            val ctx = ExecutionContext(sender, context, env.coroutineScope)
             for (v in validator) {
                 if (ctx.v() != null)
                     continue@outLoop
@@ -168,16 +177,16 @@ class CommandBuilder {
                 val parse = arg.tryParse(strings)
                 if (parse != null) {
                     context += parse.first
-                    com.autocompleteOn(sender, parse.second, ac, context)
+                    com.autocompleteOn(env, sender, parse.second, ac, context)
                     context.removeLast()
                 }
             }
         }
     }
 
-    fun autocompleteOn(sender: CommandSender, strings: List<String>): Set<String> {
+    fun autocompleteOn(env: CommandEnvironment, sender: CommandSender, strings: List<String>): Set<String> {
         val ret = mutableSetOf<String>()
-        autocompleteOn(sender, strings, ret, mutableListOf())
+        autocompleteOn(env, sender, strings, ret, mutableListOf())
         return ret
     }
 }
@@ -233,7 +242,7 @@ class EnumArgument<T>(val values: Collection<T>, name: String) : CommandArgument
 
 inline fun <reified E : Enum<E>> enumArgument(name: String) = EnumArgument(E::class.java.enumConstants.toList(), name)
 
-class PlayerArgument(name: String) : CommandArgumentType<Player>(name, PLAYER_NOT_FOUND) {
+class PlayerArgument(name: String, msg: Message) : CommandArgumentType<Player>(name, msg) {
     override fun tryParse(strings: List<String>): Pair<Player, List<String>>? = strings.firstOrNull()?.let { n ->
         Bukkit.getPlayer(n)?.let {
             Pair(it, strings.drop(1))
@@ -244,20 +253,20 @@ class PlayerArgument(name: String) : CommandArgumentType<Player>(name, PLAYER_NO
         if (strings.isEmpty()) Bukkit.getOnlinePlayers().map { it.name }.toSet() else null
 }
 
-fun CommandBuilder.requirePermission(permission: String) {
-    validate(NO_PERMISSION) { sender.hasPermission(permission) }
+fun CommandBuilder.requirePermission(permission: String, msg: Message) {
+    validate(msg) { sender.hasPermission(permission) }
 }
 
-fun JavaPlugin.addCommand(name: String, command: CommandBuilder.() -> Unit) {
+fun CommandEnvironment.addCommand(name: String, command: CommandBuilder.() -> Unit) {
     val com = CommandBuilder().apply { command() }
-    getCommand(name)?.setExecutor { sender, _, _, args ->
+    plugin.getCommand(name)?.setExecutor { sender, _, _, args ->
         cTry(sender) {
-            com.executeOn(sender, args.toList())
+            com.executeOn(this, sender, args.toList())
         }
         true
     }
-    getCommand(name)?.setTabCompleter { sender, _, _, args ->
+    plugin.getCommand(name)?.setTabCompleter { sender, _, _, args ->
         val last by lazy { args.last().lowercase() }
-        com.autocompleteOn(sender, args.dropLast(1)).filter { args.isEmpty() || last in it.lowercase() }
+        com.autocompleteOn(this, sender, args.dropLast(1)).filter { args.isEmpty() || last in it.lowercase() }
     }
 }

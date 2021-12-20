@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkit
+package gregc.gregchess.bukkitutils
 
 import org.bukkit.Bukkit
 import org.bukkit.Material

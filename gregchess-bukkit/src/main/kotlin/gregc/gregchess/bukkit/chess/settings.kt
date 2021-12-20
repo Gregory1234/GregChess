@@ -2,6 +2,7 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.component.componentModule
 import gregc.gregchess.chess.variant.ChessVariant
