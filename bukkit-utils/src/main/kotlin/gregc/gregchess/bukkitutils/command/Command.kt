@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkituils.command
+package gregc.gregchess.bukkitutils.command
 
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext

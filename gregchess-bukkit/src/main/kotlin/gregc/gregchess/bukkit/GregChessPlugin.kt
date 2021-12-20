@@ -6,7 +6,7 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.command.*
-import gregc.gregchess.bukkituils.command.*
+import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
