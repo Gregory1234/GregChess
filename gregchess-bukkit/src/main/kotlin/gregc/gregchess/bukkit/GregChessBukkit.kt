@@ -5,11 +5,11 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitPlayer
 import gregc.gregchess.bukkit.chess.player.Stockfish
-import gregc.gregchess.chess.EndReason
-import gregc.gregchess.chess.FEN
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.player.enginePlayerType
+import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.chess.variant.ThreeChecks
 import kotlin.reflect.KClass
 import kotlin.time.Duration
@@ -86,6 +86,8 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
         registerSettings()
         GregChess.completeSimpleSettings()
         GregChess.completeLocalFormatters()
+        GregChess.registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
+        GregChess.completeFloorRenderers()
         registerPlayerTypes()
     }
 }

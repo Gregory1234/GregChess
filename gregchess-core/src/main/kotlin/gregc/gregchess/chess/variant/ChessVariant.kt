@@ -110,8 +110,6 @@ open class ChessVariant : NameRegistered {
         else -> false
     }
 
-    open val specialSquares: Set<Pos> get() = emptySet()
-
     open fun genFEN(chess960: Boolean): FEN = if (!chess960) FEN() else FEN.generateChess960()
 
     open val pieceTypes: Collection<PieceType>

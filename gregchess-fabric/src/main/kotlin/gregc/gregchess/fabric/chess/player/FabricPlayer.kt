@@ -23,17 +23,10 @@ class FabricPlayer(uuid: UUID, color: Color, game: ChessGame) : ChessPlayer<UUID
 
     var held: BoardPiece? = null
         private set(v) {
-            field?.let {
-                it.checkExists(game.board)
-                game.renderer.heldPiece = null
-                game.renderer.redrawFloor()
-            }
+            field?.checkExists(game.board)
+            v?.checkExists(game.board)
             field = v
-            v?.let {
-                it.checkExists(game.board)
-                game.renderer.heldPiece = field
-                game.renderer.redrawFloor()
-            }
+            game.renderer.redrawFloor()
         }
 
     override fun init() {

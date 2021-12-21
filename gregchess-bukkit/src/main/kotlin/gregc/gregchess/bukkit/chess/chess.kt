@@ -1,13 +1,12 @@
 package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.chess.component.arena
-import gregc.gregchess.bukkit.chess.component.spectators
+import gregc.gregchess.bukkit.chess.component.*
+import gregc.gregchess.bukkit.chess.player.BukkitPlayer
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
-import gregc.gregchess.chess.move.MoveNameFormatter
-import gregc.gregchess.chess.move.MoveNameTokenType
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.module
@@ -34,6 +33,33 @@ val Piece.item: ItemStack
             name = config.getPathString("Chess.Color.${color.configName}.Piece", this@item.type.localName)
         }
     }
+
+private fun getFloor(name: String): Material = Material.valueOf(config.getString("Chess.Floor.$name")!!)
+
+fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
+    val heldPiece = (currentPlayer as? BukkitPlayer)?.held
+    fun Move.getFloorMaterial(): Material {
+        if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
+            return getFloor("Special")
+        getTrait<CaptureTrait>()?.let {
+            if (board[it.capture]?.piece != null)
+                return getFloor("Capture")
+        }
+        return getFloor("Move")
+    }
+    when(p) {
+        heldPiece?.pos -> getFloor("Nothing")
+        in heldPiece?.getLegalMoves(board).orEmpty().map { it.display } ->
+            heldPiece?.getLegalMoves(board).orEmpty().first { it.display == p }.getFloorMaterial()
+        board.lastMove?.piece?.pos -> getFloor("LastStart")
+        board.lastMove?.display -> getFloor("LastEnd")
+        in specialSquares -> getFloor("Other")
+        else -> if ((p.file + p.rank) % 2 == 0) getFloor("Dark") else getFloor("Light")
+    }
+}
+
+val ChessVariant.floorRenderer: ChessFloorRenderer
+    get() = BukkitRegistry.VARIANT_FLOOR_RENDERER[module, this]
 
 val defaultLocalMoveNameFormatter: MoveNameFormatter
     get() = MoveNameFormatter { name ->

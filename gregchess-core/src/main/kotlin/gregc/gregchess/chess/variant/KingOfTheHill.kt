@@ -1,14 +1,13 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.*
+import gregc.gregchess.GregChess
 import gregc.gregchess.chess.*
+import gregc.gregchess.register
 
 object KingOfTheHill : ChessVariant() {
 
     @JvmField
     val KING_OF_THE_HILL = GregChess.register("king_of_the_hill", DetEndReason(EndReason.Type.NORMAL))
-
-    override val specialSquares get() = (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) }.toSet()
 
     override fun checkForGameEnd(game: ChessGame) {
         val king = game.tryOrStopNull(game.board.kingOf(game.currentTurn))

@@ -9,7 +9,7 @@ plugins {
 }
 
 loom.runConfigs.forEach {
-    it.runDir = "fabric/" + it.runDir
+    it.runDir = "gregchess-fabric/" + it.runDir
 }
 
 repositories {

@@ -4,7 +4,6 @@ import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
-import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceEvent
 import gregc.gregchess.fabric.blockpos
@@ -34,46 +33,22 @@ data class FabricRendererSettings(
     override fun getComponent(game: ChessGame) = FabricRenderer(game, this)
 }
 
+fun interface ChessFloorRenderer {
+    fun ChessGame.getFloorMaterial(p: Pos): Floor
+}
+
 class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings) : Component(game) {
 
     private val tileBlocks: Map<Pos, List<ChessboardFloorBlockEntity>> by lazy { data.floor.groupBy { it.boardPos!! } }
-
-    // TODO: make this private
-    var heldPiece: BoardPiece? = null
-
-    private val Move.floorMaterial: Floor
-        get() {
-            if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
-                return Floor.SPECIAL
-            getTrait<CaptureTrait>()?.let {
-                if (game.board[it.capture]?.piece != null)
-                    return Floor.CAPTURE
-            }
-            return Floor.MOVE
-        }
-
-    private val Pos.floorMaterial: Floor
-        get() {
-            if (this == heldPiece?.pos)
-                return Floor.NOTHING
-            val moves = heldPiece?.getLegalMoves(game.board).orEmpty()
-            if (this in moves.map { it.display })
-                return moves.first { it.display == this }.floorMaterial
-            if (this == game.board.lastMove?.piece?.pos)
-                return Floor.LAST_START
-            if (this == game.board.lastMove?.display)
-                return Floor.LAST_END
-            if (this in game.variant.specialSquares)
-                return Floor.OTHER
-            return if ((file + rank) % 2 == 0) Floor.DARK else Floor.LIGHT
-        }
 
     // TODO: make this private
     fun redrawFloor() {
         for (file in 0..7) {
             for (rank in 0..7) {
                 tileBlocks[Pos(file, rank)]?.forEach {
-                    it.updateFloor(Pos(file, rank).floorMaterial)
+                    with(game.variant.floorRenderer) {
+                        it.updateFloor(game.getFloorMaterial(Pos(file, rank)))
+                    }
                 }
             }
         }

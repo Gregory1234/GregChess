@@ -1,9 +1,10 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.chess.PropertyType
-import gregc.gregchess.bukkit.chess.defaultLocalMoveNameFormatter
+import gregc.gregchess.bukkit.chess.*
+import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
 import gregc.gregchess.chess.EndReason
+import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.variant.ChessVariant
@@ -27,6 +28,10 @@ object BukkitRegistry {
     @JvmField
     val VARIANT_LOCAL_MOVE_NAME_FORMATTER = ConnectedRegistry<ChessVariant, MoveNameFormatter>(
         "variant_local_move_name_formatter", Registry.VARIANT
+    )
+    @JvmField
+    val VARIANT_FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>(
+        "variant_floor_renderer", Registry.VARIANT
     )
 }
 
@@ -54,8 +59,16 @@ fun ChessModule.registerLocalFormatter(variant: ChessVariant, formatter: MoveNam
     register(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER, variant, formatter)
 
 fun ChessModule.completeLocalFormatters() =
-    get(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER)
-        .completeWith { defaultLocalMoveNameFormatter }
+    get(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER).completeWith { defaultLocalMoveNameFormatter }
+
+fun ChessModule.registerFloorRenderer(variant: ChessVariant, floorRenderer: ChessFloorRenderer) =
+    register(BukkitRegistry.VARIANT_FLOOR_RENDERER, variant, floorRenderer)
+
+fun ChessModule.registerSimpleFloorRenderer(variant: ChessVariant, specialSquares: Collection<Pos>) =
+    registerFloorRenderer(variant, simpleFloorRenderer(specialSquares))
+
+fun ChessModule.completeFloorRenderers() =
+    get(BukkitRegistry.VARIANT_FLOOR_RENDERER).completeWith { simpleFloorRenderer() }
 
 abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : ChessExtension(module, BUKKIT) {
     companion object {

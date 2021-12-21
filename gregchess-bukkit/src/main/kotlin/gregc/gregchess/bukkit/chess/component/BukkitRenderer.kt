@@ -3,12 +3,10 @@ package gregc.gregchess.bukkit.chess.component
 import gregc.gregchess.Loc
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.PiecePlayerActionEvent
-import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.toLocation
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
-import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.AtomicChess
 import kotlinx.serialization.Serializable
@@ -26,6 +24,10 @@ data class BukkitRendererSettings(
     override val componentClass: KClass<out BukkitRenderer> get() = BukkitRenderer::class
 
     override fun getComponent(game: ChessGame) = BukkitRenderer(game, this)
+}
+
+fun interface ChessFloorRenderer {
+    fun ChessGame.getFloorMaterial(p: Pos): Material
 }
 
 class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings) : Component(game) {
@@ -170,42 +172,12 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         }
     }
 
-    private fun getFloor(name: String): Material = Material.valueOf(config.getString("Chess.Floor.$name")!!)
-
-    private var heldPiece: BoardPiece? = null
-
-    private val Move.floorMaterial: Material
-        get() {
-            if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
-                return getFloor("Special")
-            getTrait<CaptureTrait>()?.let {
-                if (game.board[it.capture]?.piece != null)
-                    return getFloor("Capture")
-            }
-            return getFloor("Move")
-        }
-
-    // TODO: consider connecting it with ChessVariant
-    private val Pos.floorMaterial: Material
-        get() {
-            if (this == heldPiece?.pos)
-                return getFloor("Nothing")
-            val moves = heldPiece?.getLegalMoves(game.board).orEmpty()
-            if (this in moves.map { it.display })
-                return moves.first { it.display == this }.floorMaterial
-            if (this == game.board.lastMove?.piece?.pos)
-                return getFloor("LastStart")
-            if (this == game.board.lastMove?.display)
-                return getFloor("LastEnd")
-            if (this in game.variant.specialSquares)
-                return getFloor("Other")
-            return if ((file + rank) % 2 == 0) getFloor("Dark") else getFloor("Light")
-        }
-
     private fun redrawFloor() {
         for (file in 0..7) {
             for (rank in 0..7) {
-                Pos(file, rank).fillFloor(Pos(file, rank).floorMaterial)
+                with (game.variant.floorRenderer) {
+                    Pos(file, rank).fillFloor(game.getFloorMaterial(Pos(file, rank)))
+                }
             }
         }
     }
@@ -215,13 +187,11 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         PiecePlayerActionEvent.Type.PICK_UP -> {
             e.piece.clearRender()
             e.piece.playSound("PickUp")
-            heldPiece = e.piece
             redrawFloor()
         }
         PiecePlayerActionEvent.Type.PLACE_DOWN -> {
             e.piece.render()
             e.piece.playSound("Move")
-            heldPiece = null
             redrawFloor()
         }
     }

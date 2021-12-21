@@ -143,11 +143,12 @@ class BukkitPlayer(player: Player, color: Color, game: ChessGame) : ChessPlayer<
 
     var held: BoardPiece? = null
         private set(v) {
-            field?.let {
+            val oldHeld = field
+            field = v
+            oldHeld?.let {
                 it.checkExists(game.board)
                 game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
             }
-            field = v
             v?.let {
                 it.checkExists(game.board)
                 game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
