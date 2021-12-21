@@ -148,13 +148,13 @@ open class ChessVariant : NameRegistered {
 
         fun pinningMoves(by: Color, pos: Pos, board: Chessboard) =
             allMoves(by, board).filter { it.getTrait<CaptureTrait>()?.capture == pos }.filter { m ->
-                m.flagsNeeded.none { (p, f) -> !board.hasActiveFlag(p, f) } &&
+                m.getTrait<RequireFlagTrait>()?.flags.orEmpty().none { (p, fs) -> !fs.all { f -> board.hasActiveFlag(p, f) } } &&
                         m.neededEmpty.any { board[it]?.piece != null }
             }
 
         fun checkingMoves(by: Color, pos: Pos, board: Chessboard) =
             allMoves(by, board).filter { it.getTrait<CaptureTrait>()?.capture == pos }.filter { m ->
-                m.flagsNeeded.none { (p, f) -> !board.hasActiveFlag(p, f) } &&
+                m.getTrait<RequireFlagTrait>()?.flags.orEmpty().none { (p, fs) -> !fs.all { f -> board.hasActiveFlag(p, f) } } &&
                         m.neededEmpty.mapNotNull { board[it]?.piece }
                             .all { it.color == !m.piece.color && it.type == PieceType.KING }
             }
@@ -162,7 +162,7 @@ open class ChessVariant : NameRegistered {
         fun isValid(move: Move, game: ChessGame): Boolean = with(move) {
             val board = game.board
 
-            if (flagsNeeded.any { (p, f) -> !board.hasActiveFlag(p, f) })
+            if (getTrait<RequireFlagTrait>()?.flags.orEmpty().any { (p, fs) -> !fs.all { f -> board.hasActiveFlag(p, f) } })
                 return false
 
             if (neededEmpty.any { board[it] != null })

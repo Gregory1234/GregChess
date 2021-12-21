@@ -132,6 +132,11 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
 class NameTrait(override val nameTokens: MoveName) : MoveTrait
 
 @Serializable
+class RequireFlagTrait(val flags: Map<Pos, Set<ChessFlag>>) : MoveTrait {
+    override val nameTokens = MoveName(emptyMap())
+}
+
+@Serializable
 class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
     override val nameTokens = MoveName(emptyMap())
 

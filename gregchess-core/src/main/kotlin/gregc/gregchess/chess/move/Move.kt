@@ -11,7 +11,7 @@ data class Move(
     val piece: BoardPiece, val display: Pos,
     val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
     val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
-    val flagsNeeded: Set<Pair<Pos, ChessFlag>>, val traits: List<MoveTrait>
+    val traits: List<MoveTrait>
 ) {
     fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
     inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)
