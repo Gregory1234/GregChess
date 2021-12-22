@@ -168,6 +168,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTr
 
     override fun execute(game: ChessGame, move: Move) {
         game.board[capture]?.let {
+            move.pieceTracker.giveName("capture", it)
             move.pieceTracker.traceMove(game.board, move.toCapture.capture(move.piece.color))
             captureSuccess = true
         }

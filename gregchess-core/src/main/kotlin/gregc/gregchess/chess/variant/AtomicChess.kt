@@ -12,34 +12,37 @@ object AtomicChess : ChessVariant() {
 
     class ExplosionEvent(val pos: Pos) : ChessEvent
 
-    // TODO: handle exploded pieces in pieceTracker
     @Serializable
-    class ExplosionTrait(private val exploded: MutableList<Pair<BoardPiece, CapturedPiece>> = mutableListOf()) : MoveTrait {
+    class ExplosionTrait : MoveTrait {
         override val nameTokens: MoveName = MoveName(emptyMap())
+
+        var explodedNumber = 0
+            private set
 
         override val shouldComeBefore get() = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
 
-        private fun BoardPiece.explode(by: Color, board: Chessboard) {
-            val m = capture(by)
-            multiMove(board, m)
-            exploded += m
+        private fun BoardPiece.explode(by: Color, tracker: PieceTracker): Pair<BoardPiece, CapturedPiece> {
+            tracker.giveName("exploded${explodedNumber++}", this)
+            return capture(by)
         }
 
         override fun execute(game: ChessGame, move: Move) {
             val captureTrait = move.getTrait<CaptureTrait>() ?: throw TraitPreconditionException(this, "No capture trait")
             if (!captureTrait.captureSuccess) return
-            move.piece.explode(move.piece.color, game.board)
-            move.piece.pos.neighbours().mapNotNull { game.board[it] }.forEach {
+            val explosions = mutableListOf<Pair<BoardPiece, CapturedPiece>>()
+            val piece = move.piece
+            explosions += move.piece.explode(piece.color, move.pieceTracker)
+            piece.pos.neighbours().mapNotNull { game.board[it] }.forEach {
                 if (it.type != PieceType.PAWN)
-                    it.explode(move.piece.color, game.board)
+                    explosions += it.explode(piece.color, move.pieceTracker)
             }
-            game.callEvent(ExplosionEvent(move.piece.pos))
+            move.pieceTracker.traceMove(game.board, *explosions.toTypedArray())
+            game.callEvent(ExplosionEvent(piece.pos))
         }
 
         override fun undo(game: ChessGame, move: Move) = tryPiece {
-            for ((o,t) in exploded) {
-                multiMove(game.board, t to o)
-            }
+            move.pieceTracker.traceMoveBack(game.board,
+                *((0 until explodedNumber).map { move.pieceTracker["exploded$it"] } + move.pieceTracker["main"]).toTypedArray())
         }
     }
 

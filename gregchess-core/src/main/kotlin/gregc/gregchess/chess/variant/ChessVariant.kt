@@ -93,11 +93,11 @@ open class ChessVariant : NameRegistered {
 
     open fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when(piece.type) {
         PieceType.KING -> kingMovement(piece, board)
-        PieceType.QUEEN -> rays(piece, board, rotationsOf(1, 1) + rotationsOf(1, 0))
-        PieceType.ROOK -> rays(piece, board, rotationsOf(1, 0))
-        PieceType.BISHOP -> rays(piece, board, rotationsOf(1, 1))
-        PieceType.KNIGHT -> jumps(piece, board, rotationsOf(2, 1))
-        PieceType.PAWN -> pawnMovement(piece, board).promotions(Normal.PROMOTIONS)
+        PieceType.QUEEN -> rays(piece, rotationsOf(1, 1) + rotationsOf(1, 0))
+        PieceType.ROOK -> rays(piece, rotationsOf(1, 0))
+        PieceType.BISHOP -> rays(piece, rotationsOf(1, 1))
+        PieceType.KNIGHT -> jumps(piece, rotationsOf(2, 1))
+        PieceType.PAWN -> pawnMovement(piece).promotions(Normal.PROMOTIONS)
         else -> throw IllegalArgumentException(piece.type.toString())
     }
 

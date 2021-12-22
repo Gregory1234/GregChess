@@ -14,7 +14,7 @@ object HordeChess : ChessVariant() {
     }
 
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when (piece.type) {
-        PieceType.PAWN -> pawnMovement(piece, board){ pawnCanDouble(it) }.promotions(Normal.PROMOTIONS)
+        PieceType.PAWN -> pawnMovement(piece){ pawnCanDouble(it) }.promotions(Normal.PROMOTIONS)
         else -> Normal.getPieceMoves(piece, board)
     }
 
