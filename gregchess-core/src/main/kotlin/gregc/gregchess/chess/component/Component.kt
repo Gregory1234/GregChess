@@ -38,7 +38,7 @@ abstract class Component(protected val game: ChessGame) : ChessListener, ChessEv
 object ComponentDataMapSerializer :
     KeyRegisteredMapSerializer<ComponentData<*>>("ComponentDataMap", ChainRegistryView(Registry.COMPONENT_CLASS, Registry.COMPONENT_SERIALIZER))
 
-val KClass<out Component>.componentDataClass get() = Registry.COMPONENT_DATA_CLASS[componentModule, this]
+val KClass<out Component>.componentDataClass get() = Registry.COMPONENT_DATA_CLASS[this]
 val KClass<out Component>.componentKey get() = Registry.COMPONENT_CLASS[this]
 val KClass<out Component>.componentModule get() = componentKey.module
 val KClass<out Component>.componentName get() = componentKey.key

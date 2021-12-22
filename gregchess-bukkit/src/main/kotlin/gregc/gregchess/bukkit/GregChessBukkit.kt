@@ -5,13 +5,13 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitPlayer
 import gregc.gregchess.bukkit.chess.player.Stockfish
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.FEN
+import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.player.enginePlayerType
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.chess.variant.ThreeChecks
-import kotlin.reflect.KClass
 import kotlin.time.Duration
 
 object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin) {
@@ -24,16 +24,6 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
             val increment = if (t.usesIncrement) section.getString("Increment")!!.toDuration() else Duration.ZERO
             ChessClockData(TimeControl(t, initial, increment))
         }
-
-    override val hookedComponents: Set<KClass<out Component>>
-        get() = setOf(
-            Chessboard::class, ChessClock::class, GameController::class,
-            SpectatorManager::class, ScoreboardManager::class, BukkitRenderer::class,
-            BukkitEventRelay::class, BukkitGregChessAdapter::class
-        )
-
-    override val quickEndReasons: Set<EndReason<*>>
-        get() = setOf(Arena.ARENA_REMOVED, ChessGameManager.PLUGIN_RESTART)
 
     private fun registerSettings() = with(GregChess) {
         registerSettings {
@@ -71,11 +61,21 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
         registerSimpleComponent<GameController>("game_controller")
         registerSimpleComponent<ScoreboardManager>("scoreboard_manager")
         registerSimpleComponent<SpectatorManager>("spectator_manager")
+        for (c in listOf(Chessboard::class, ChessClock::class, GameController::class,
+            SpectatorManager::class, ScoreboardManager::class, BukkitRenderer::class,
+            BukkitEventRelay::class, BukkitGregChessAdapter::class)) {
+            registerHookedComponent(c)
+        }
     }
 
     private fun registerPlayerTypes() = with(GregChess) {
         register("bukkit", ChessPlayerType(PlayerSerializer) { c, g -> BukkitPlayer(this, c, g) })
         register("stockfish", enginePlayerType<Stockfish>())
+    }
+
+    private fun registerQuickEndReasons() = with(GregChess) {
+        registerQuickEndReason(Arena.ARENA_REMOVED)
+        registerQuickEndReason(ChessGameManager.PLUGIN_RESTART)
     }
 
     override fun load() {
@@ -84,6 +84,7 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
         ScoreboardManager
         registerComponents()
         registerSettings()
+        registerQuickEndReasons()
         GregChess.completeSimpleSettings()
         GregChess.completeLocalFormatters()
         GregChess.registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })

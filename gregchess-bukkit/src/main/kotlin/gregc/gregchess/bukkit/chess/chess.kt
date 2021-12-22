@@ -59,7 +59,7 @@ fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFl
 }
 
 val ChessVariant.floorRenderer: ChessFloorRenderer
-    get() = BukkitRegistry.VARIANT_FLOOR_RENDERER[module, this]
+    get() = BukkitRegistry.VARIANT_FLOOR_RENDERER[this]
 
 val defaultLocalMoveNameFormatter: MoveNameFormatter
     get() = MoveNameFormatter { name ->
@@ -77,7 +77,7 @@ val defaultLocalMoveNameFormatter: MoveNameFormatter
     }
 
 val ChessVariant.localNameFormatter: MoveNameFormatter
-    get() = BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER[module, this]
+    get() = BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER[this]
 
 fun BoardPiece.getInfo(game: ChessGame) = textComponent {
     text("Type: $color $type\n")
@@ -106,7 +106,7 @@ fun ChessGame.getInfo() = textComponent {
 }
 
 val EndReason<*>.quick
-    get() = this in module.bukkit.quickEndReasons
+    get() = this in module[BukkitRegistry.QUICK_END_REASONS]
 
 val GameResults.name
     get() = endReason.module.bukkit.config

@@ -33,6 +33,10 @@ object BukkitRegistry {
     val VARIANT_FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>(
         "variant_floor_renderer", Registry.VARIANT
     )
+    @JvmField
+    val QUICK_END_REASONS = ConnectedSetRegistry("quick_end_reasons", Registry.END_REASON)
+    @JvmField
+    val HOOKED_COMPONENTS = ConnectedSetRegistry("hooked_components", Registry.COMPONENT_CLASS)
 }
 
 fun ChessModule.register(id: String, propertyType: PropertyType) =
@@ -70,6 +74,14 @@ fun ChessModule.registerSimpleFloorRenderer(variant: ChessVariant, specialSquare
 fun ChessModule.completeFloorRenderers() =
     get(BukkitRegistry.VARIANT_FLOOR_RENDERER).completeWith { simpleFloorRenderer() }
 
+fun ChessModule.registerHookedComponent(cl: KClass<out Component>) =
+    get(BukkitRegistry.HOOKED_COMPONENTS).add(cl)
+
+inline fun <reified T : Component> ChessModule.registerHookedComponent() = registerHookedComponent(T::class)
+
+fun ChessModule.registerQuickEndReason(endReason: EndReason<*>) =
+    get(BukkitRegistry.QUICK_END_REASONS).add(endReason)
+
 abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : ChessExtension(module, BUKKIT) {
     companion object {
         @JvmField
@@ -77,21 +89,6 @@ abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : C
     }
 
     open val config: ConfigurationSection get() = plugin.config
-
-    open val hookedComponents: Set<KClass<out Component>> = emptySet()
-
-    open val quickEndReasons: Set<EndReason<*>> = emptySet()
-
-    override fun validate() {
-        val components = module[Registry.COMPONENT_CLASS].values
-        hookedComponents.forEach {
-            requireValid(it in components) { "External component hooked: ${it.componentKey}" }
-        }
-        val endReasons = module[Registry.END_REASON].values
-        quickEndReasons.forEach {
-            requireValid(it in endReasons) { "External end reason made quick: ${it.key}" }
-        }
-    }
 }
 
 val ChessModule.bukkit get() = extensions.filterIsInstance<BukkitChessExtension>().first()

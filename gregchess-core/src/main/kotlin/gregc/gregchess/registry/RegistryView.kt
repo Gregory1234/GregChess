@@ -16,16 +16,24 @@ interface FiniteRegistryView<K, T> : RegistryView<K, T> {
     fun valuesOf(module: ChessModule): Collection<T>
 }
 
+interface SplitRegistryView<K, T> : RegistryView<K, T> {
+    fun getOrNull(key: K): T? = getKeyModule(key)?.let { m -> getOrNull(m, key) }
+    operator fun get(key: K): T = getOrNull(key)!!
+    fun getKeyModule(key: K): ChessModule?
+    fun completeKey(key: K): RegistryKey<K>? = getKeyModule(key)?.let { m -> RegistryKey(m, key) }
+}
+
+interface FiniteSplitRegistryView<K, T> : FiniteRegistryView<K, T>, SplitRegistryView<K, T> {
+    override val keys: Set<RegistryKey<K>> get() = simpleKeys.mapNotNull(::completeKey).toSet()
+    val simpleKeys: Set<K>
+}
+
 interface BiRegistryView<K, T> : RegistryView<K, T> {
     operator fun get(value: T): RegistryKey<K> = getOrNull(value)!!
     fun getOrNull(value: T): RegistryKey<K>?
-    fun getKey(value: T): K = getKeyOrNull(value)!!
-    fun getKeyOrNull(value: T): K? = getOrNull(value)?.key
-    fun getModule(value: T): ChessModule = getModuleOrNull(value)!!
-    fun getModuleOrNull(value: T): ChessModule? = getOrNull(value)?.module
 }
 
-interface FiniteBiRegistryView<K, T> : BiRegistryView<K, T>, FiniteRegistryView<K, T> {
+interface FiniteBiRegistryView<K, T> : FiniteRegistryView<K, T>, BiRegistryView<K, T> {
     override val values: Set<T>
     override fun valuesOf(module: ChessModule): Set<T>
 }

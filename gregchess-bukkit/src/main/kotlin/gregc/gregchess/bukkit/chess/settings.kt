@@ -1,10 +1,8 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.GameSettings
-import gregc.gregchess.chess.component.componentModule
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.toKey
@@ -22,10 +20,10 @@ object SettingsManager {
             val variant = section.getString("Variant")?.toKey()
                 ?.let { Registry.VARIANT.getOrNull(it) } ?: ChessVariant.Normal
             val requestedComponents = variant.requiredComponents + variant.optionalComponents +
-                    ChessModule.modules.flatMap { it.bukkit.hookedComponents }
+                    BukkitRegistry.HOOKED_COMPONENTS.elements
             val context = SettingsParserContext(variant, section)
             val components = requestedComponents.mapNotNull { req ->
-                val f = BukkitRegistry.SETTINGS_PARSER[req.componentModule, req]
+                val f = BukkitRegistry.SETTINGS_PARSER[req]
                 context.f()
             }
             GameSettings(name, simpleCastling, variant, components)

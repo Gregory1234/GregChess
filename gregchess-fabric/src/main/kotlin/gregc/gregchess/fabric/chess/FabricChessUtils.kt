@@ -7,8 +7,8 @@ import net.minecraft.util.Identifier
 
 val NameRegistered.id get() = Identifier(module.namespace, name)
 
-val Piece.block get() = FabricRegistry.PIECE_BLOCK[type.module, this]
-val Piece.item get() = FabricRegistry.PIECE_ITEM[type.module, this]
+val Piece.block get() = FabricRegistry.PIECE_BLOCK[this]
+val Piece.item get() = FabricRegistry.PIECE_ITEM[this]
 
 fun interface ChessInitializer {
     fun onInitializeChess()

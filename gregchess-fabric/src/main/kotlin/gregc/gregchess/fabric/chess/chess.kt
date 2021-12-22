@@ -6,7 +6,6 @@ import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
 import gregc.gregchess.fabric.chess.player.FabricPlayer
-import gregc.gregchess.registry.module
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
     val heldPiece = (currentPlayer as? FabricPlayer)?.held
@@ -31,4 +30,4 @@ fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFl
 }
 
 val ChessVariant.floorRenderer: ChessFloorRenderer
-    get() = FabricRegistry.VARIANT_FLOOR_RENDERER[module, this]
+    get() = FabricRegistry.VARIANT_FLOOR_RENDERER[this]

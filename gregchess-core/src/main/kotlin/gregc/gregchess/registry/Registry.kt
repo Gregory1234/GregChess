@@ -131,7 +131,7 @@ class NameRegistry<T>(name: String) : BiRegistry<String, T, NameRegistry<T>.Bloc
     override fun getOrNull(value: T): RegistryKey<String>? = valueEntries[value]
 }
 
-class ConnectedRegistry<K, T>(name: String, val base: FiniteRegistryView<*, K>) : Registry<K, T, ConnectedRegistry<K, T>.Block>(name) {
+class ConnectedRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, K>) : Registry<K, T, ConnectedRegistry<K, T>.Block>(name), FiniteSplitRegistryView<K, T> {
     private val blocks = mutableMapOf<ChessModule, Block>()
 
     inner class Block(module: ChessModule) : RegistryBlock<K, T>(module) {
@@ -163,6 +163,10 @@ class ConnectedRegistry<K, T>(name: String, val base: FiniteRegistryView<*, K>) 
 
     override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
 
+    override fun getKeyModule(key: K): ChessModule = base[key].module
+
+    override val simpleKeys: Set<K>
+        get() = blocks.flatMap { b -> b.value.keys }.toSet()
     override val keys: Set<RegistryKey<K>>
         get() = blocks.flatMap { b -> b.value.keys.map { RegistryKey(b.key, it) } }.toSet()
     override val values: Collection<T>
@@ -170,7 +174,7 @@ class ConnectedRegistry<K, T>(name: String, val base: FiniteRegistryView<*, K>) 
 
 }
 
-class ConnectedBiRegistry<K, T>(name: String, val base: FiniteRegistryView<*, K>) : BiRegistry<K, T, ConnectedBiRegistry<K, T>.Block>(name) {
+class ConnectedBiRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, K>) : BiRegistry<K, T, ConnectedBiRegistry<K, T>.Block>(name), FiniteSplitRegistryView<K, T> {
     private val valueEntries = mutableMapOf<T, RegistryKey<K>>()
     private val blocks = mutableMapOf<ChessModule, Block>()
 
@@ -200,9 +204,59 @@ class ConnectedBiRegistry<K, T>(name: String, val base: FiniteRegistryView<*, K>
 
     override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
 
+    override fun getKeyModule(key: K): ChessModule = base[key].module
+
+    override val simpleKeys: Set<K> get() = valueEntries.values.map { it.key }.toSet()
     override val keys: Set<RegistryKey<K>> get() = valueEntries.values.toSet()
     override val values: Set<T> get() = valueEntries.keys
 
     override fun getOrNull(value: T): RegistryKey<K>? = valueEntries[value]
 
+}
+
+class ConnectedSetRegistry<E>(name: String, val base: FiniteBiRegistryView<*, E>) : Registry<E, Unit, ConnectedSetRegistry<E>.Block>(name), FiniteSplitRegistryView<E, Unit> {
+    private val blocks = mutableMapOf<ChessModule, Block>()
+
+    inner class Block(module: ChessModule) : RegistryBlock<E, Unit>(module) {
+        private val members = mutableSetOf<E>()
+        override val keys: Set<E> get() = members
+        override val values: Collection<Unit> = members.map { }
+
+        override fun set(key: E, value: Unit) {
+            requireValidKey(this@ConnectedSetRegistry, key, value, !module.locked) { "Module is locked" }
+            requireValidKey(this@ConnectedSetRegistry, key, value, key in base.valuesOf(module)) { "Key is invalid" }
+            requireValidKey(this@ConnectedSetRegistry, key, value, key !in members) { "Key is already registered" }
+            members += key
+        }
+        fun add(key: E) = set(key, Unit)
+        fun remove(key: E) {
+            requireValidKey(this@ConnectedSetRegistry, key, Unit, !module.locked) { "Module is locked" }
+            requireValidKey(this@ConnectedSetRegistry, key, Unit, key in members) { "Key is not registered" }
+            members -= key
+        }
+        operator fun plusAssign(key: E) = add(key)
+        operator fun minusAssign(key: E) = remove(key)
+
+        override fun validate() {}
+        operator fun contains(key: E): Boolean = key in members
+        override fun getValueOrNull(key: E): Unit? = if (key in members) Unit else null
+    }
+
+    override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
+
+    override fun getKeyModule(key: E): ChessModule = base[key].module
+
+    val elements: Set<E> get() = simpleKeys
+    override val simpleKeys: Set<E>
+        get() = blocks.flatMap { b -> b.value.keys }.toSet()
+    override val keys: Set<RegistryKey<E>>
+        get() = blocks.flatMap { b -> b.value.keys.map { RegistryKey(b.key, it) } }.toSet()
+
+    override val values: Collection<Unit> get() = simpleKeys.map { }
+
+    operator fun contains(key: E): Boolean = key in get(getKeyModule(key))
+    fun add(key: E) = get(getKeyModule(key)).add(key)
+    fun remove(key: E) = get(getKeyModule(key)).remove(key)
+    operator fun plusAssign(key: E) = add(key)
+    operator fun minusAssign(key: E) = remove(key)
 }
