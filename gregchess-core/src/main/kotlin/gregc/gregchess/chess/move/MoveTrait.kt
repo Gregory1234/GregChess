@@ -37,9 +37,9 @@ inline fun MoveTrait.tryPiece(f: () -> Unit) =
 object MoveTraitSerializer : ClassRegisteredSerializer<MoveTrait>("MoveTrait", Registry.MOVE_TRAIT_CLASS)
 
 fun MoveTrait.pieceNotExist(e: PieceDoesNotExistException): Nothing =
-    throw TraitPreconditionException(this, "Piece ${e.piece.piece} doesn't exist at ${e.piece.pos}!", e)
+    throw TraitPreconditionException(this, "Piece ${e.piece} doesn't exist!", e)
 fun MoveTrait.pieceOccupiesSquare(e: PieceAlreadyOccupiesSquareException): Nothing =
-    throw TraitPreconditionException(this, "Piece ${e.piece.piece} occupies square ${e.piece.pos}!", e)
+    throw TraitPreconditionException(this, "Piece ${e.piece} occupies square already!", e)
 fun MoveTrait.traitNotExecuted(): Nothing =
     throw TraitPreconditionException(this, "Trait hasn't executed")
 
@@ -57,7 +57,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
     override fun execute(game: ChessGame, move: Move) {
         halfmoveClock = game.board.halfmoveClock
-        if (move.piece.type == PieceType.PAWN || move.getTrait<CaptureTrait>()?.captured != null) {
+        if (move.piece.type == PieceType.PAWN || move.getTrait<CaptureTrait>()?.captureSuccess != true) {
             game.board.halfmoveClock = 0u
         } else {
             game.board.halfmoveClock++
@@ -70,33 +70,18 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 }
 
 @Serializable
-class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, val rookTarget: Pos) : MoveTrait {
+class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : MoveTrait {
 
     override val nameTokens = MoveName(mapOf(MoveNameTokenType.CASTLE to side))
 
-    var resulting: BoardPiece? = null
-        private set
-    var rookResulting: BoardPiece? = null
-        private set
+    private val Move.rook get() = pieceTracker["rook"] as BoardPiece
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
-        BoardPiece.autoMove(mapOf(move.piece to target, rook to rookTarget), game.board).map { (o, t) ->
-            when (o) {
-                rook -> rookResulting = t
-                move.piece -> resulting = t
-            }
-        }
+        move.pieceTracker.traceMove(game.board, move.piece.move(target), move.rook.move(rookTarget))
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        BoardPiece.autoMove(
-            mapOf(
-                (resulting ?: traitNotExecuted()) to move.piece.pos,
-                (rookResulting ?: traitNotExecuted()) to rook.pos
-            ), game.board
-        ).map { (_, t) ->
-            t.copyInPlace(game.board, hasMoved = false)
-        }
+        move.pieceTracker.traceMoveBack(game.board, move.piece, move.rook)
     }
 }
 
@@ -104,9 +89,6 @@ class CastlesTrait(val rook: BoardPiece, val side: BoardSide, val target: Pos, v
 class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
 
     var promotion: Piece? = null
-
-    var promoted: BoardPiece? = null
-        private set
 
     override val nameTokens
         get() = MoveName(promotion?.type?.let { mapOf(MoveNameTokenType.PROMOTION to it) } ?: emptyMap())
@@ -117,14 +99,12 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
         val promotion = promotion ?: throw TraitPreconditionException(this, "Promotion not chosen", NullPointerException())
         if (promotion !in promotions) throw TraitPreconditionException(this, "Promotion not valid: $promotion")
         tryPiece {
-            promoted = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).promote(promotion, game.board)
+            move.pieceTracker.traceMove(game.board, move.piece.promote(promotion))
         }
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        val promoted = promoted ?: traitNotExecuted()
-        promoted.promote(move.piece.piece, game.board)
-            .copyInPlace(game.board, hasMoved = (move.getTrait<TargetTrait>()?.resulting ?: move.piece).hasMoved)
+        move.pieceTracker.traceMoveBack(game.board, move.piece)
     }
 }
 
@@ -177,20 +157,25 @@ class CheckTrait : MoveTrait {
 @Serializable
 class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTrait {
 
-    var captured: CapturedBoardPiece? = null
+    private val Move.toCapture: BoardPiece get() = pieceTracker["capture"] as BoardPiece
+    private val Move.captured: CapturedPiece get() = pieceTracker["capture"] as CapturedPiece
+
+    var captureSuccess: Boolean = false
         private set
 
     override val nameTokens
-        get() = MoveName(if (captured != null) mapOf(MoveNameTokenType.CAPTURE to Unit) else emptyMap())
+        get() = MoveName(if (captureSuccess) mapOf(MoveNameTokenType.CAPTURE to Unit) else emptyMap())
 
     override fun execute(game: ChessGame, move: Move) {
         game.board[capture]?.let {
-            captured = it.capture(move.piece.color, game.board)
+            move.pieceTracker.traceMove(game.board, move.toCapture.capture(move.piece.color))
+            captureSuccess = true
         }
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        captured?.resurrect(game.board)
+        if (captureSuccess)
+            move.pieceTracker.traceMoveBack(game.board, move.captured)
     }
 }
 
@@ -249,15 +234,11 @@ class TargetTrait(val target: Pos) : MoveTrait {
 
     override val shouldComeBefore = listOf(CaptureTrait::class)
 
-    var resulting: BoardPiece? = null
-        private set
-
     override fun execute(game: ChessGame, move: Move) = tryPiece {
-        resulting = move.piece.move(target, game.board)
+        move.pieceTracker.traceMove(game.board, move.piece.move(target))
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        (resulting ?: traitNotExecuted()).move(move.piece.pos, game.board)
-            .copyInPlace(game.board, hasMoved = move.piece.hasMoved)
+        move.pieceTracker.traceMoveBack(game.board, move.piece)
     }
 }

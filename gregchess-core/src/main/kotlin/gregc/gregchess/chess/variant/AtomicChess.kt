@@ -12,32 +12,33 @@ object AtomicChess : ChessVariant() {
 
     class ExplosionEvent(val pos: Pos) : ChessEvent
 
+    // TODO: handle exploded pieces in pieceTracker
     @Serializable
-    class ExplosionTrait(private val exploded: MutableList<CapturedBoardPiece> = mutableListOf()) : MoveTrait {
+    class ExplosionTrait(private val exploded: MutableList<Pair<BoardPiece, CapturedPiece>> = mutableListOf()) : MoveTrait {
         override val nameTokens: MoveName = MoveName(emptyMap())
 
         override val shouldComeBefore get() = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
 
         private fun BoardPiece.explode(by: Color, board: Chessboard) {
-            exploded += capture(by, board)
+            val m = capture(by)
+            multiMove(board, m)
+            exploded += m
         }
 
         override fun execute(game: ChessGame, move: Move) {
             val captureTrait = move.getTrait<CaptureTrait>() ?: throw TraitPreconditionException(this, "No capture trait")
-            val targetTrait = move.getTrait<TargetTrait>() ?: throw TraitPreconditionException(this, "No target trait")
-            if (captureTrait.captured == null) return
-            val pos = targetTrait.target
-            game.board[pos]?.explode(move.piece.color, game.board)
-            pos.neighbours().mapNotNull { game.board[pos] }.forEach {
+            if (!captureTrait.captureSuccess) return
+            move.piece.explode(move.piece.color, game.board)
+            move.piece.pos.neighbours().mapNotNull { game.board[it] }.forEach {
                 if (it.type != PieceType.PAWN)
                     it.explode(move.piece.color, game.board)
             }
-            game.callEvent(ExplosionEvent(pos))
+            game.callEvent(ExplosionEvent(move.piece.pos))
         }
 
         override fun undo(game: ChessGame, move: Move) = tryPiece {
-            for (p in exploded) {
-                p.resurrect(game.board)
+            for ((o,t) in exploded) {
+                multiMove(game.board, t to o)
             }
         }
     }

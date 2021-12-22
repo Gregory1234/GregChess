@@ -4,9 +4,7 @@ import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.registry.*
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.Serializable
 
 object PieceRegistryView : FiniteBiRegistryView<String, Piece> {
 
@@ -54,22 +52,76 @@ fun PieceType.of(color: Color) = Piece(this, color)
 fun white(type: PieceType) = type.of(Color.WHITE)
 fun black(type: PieceType) = type.of(Color.BLACK)
 
-@Serializable
-data class CapturedPiece(val piece: Piece, val capturedBy: Color) {
+@Serializable(with = PlacedPieceSerializer::class)
+interface PlacedPiece {
+    val piece: Piece
     val color: Color get() = piece.color
     val type: PieceType get() = piece.type
     val char: Char get() = piece.char
+
+    fun checkExists(board: Chessboard)
+    fun checkCanExist(board: Chessboard)
+
+    fun create(board: Chessboard)
+    fun destroy(board: Chessboard)
+}
+
+fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
+    for ((o,_) in moves)
+        o.checkExists(board)
+    for ((o,_) in moves)
+        o.destroy(board)
+    for ((_,t) in moves)
+        t.checkCanExist(board)
+    for ((_,t) in moves)
+        t.create(board)
+}
+
+object PlacedPieceSerializer : ClassRegisteredSerializer<PlacedPiece>("PlacedPiece", Registry.PLACED_PIECE_CLASS)
+
+@Serializable
+data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : PlacedPiece {
+    override fun checkExists(board: Chessboard) {
+        if (board.data.capturedPieces.none { it == this })
+            throw PieceDoesNotExistException(this)
+    }
+
+    override fun checkCanExist(board: Chessboard) {}
+
+    override fun create(board: Chessboard) {
+        board += this
+        board.callEvent(PieceEvent.Captured(this))
+    }
+
+    override fun destroy(board: Chessboard) {
+        checkExists(board)
+        board -= this
+        board.callEvent(PieceEvent.Captured(this))
+    }
 }
 
 @Serializable
-data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
-    val color: Color get() = piece.color
-    val type: PieceType get() = piece.type
-    val char: Char get() = piece.char
+data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boolean) : PlacedPiece {
 
-    fun checkExists(board: Chessboard) {
+    override fun checkExists(board: Chessboard) {
         if (board[pos] != this)
             throw PieceDoesNotExistException(this)
+    }
+
+    override fun checkCanExist(board: Chessboard) {
+        if (board[pos] != null)
+            throw PieceAlreadyOccupiesSquareException(board[pos]!!)
+    }
+
+    override fun create(board: Chessboard) {
+        board += this
+        board.callEvent(PieceEvent.Created(this))
+    }
+
+    override fun destroy(board: Chessboard) {
+        checkExists(board)
+        board.clearPiece(pos)
+        board.callEvent(PieceEvent.Cleared(this))
     }
 
     fun sendCreated(board: Chessboard) {
@@ -83,147 +135,21 @@ data class BoardPiece(val pos: Pos, val piece: Piece, val hasMoved: Boolean) {
         board.clearPiece(pos)
     }
 
-    fun move(target: Pos, board: Chessboard): BoardPiece {
-        checkExists(board)
-        board[target]?.let {
-            throw PieceAlreadyOccupiesSquareException(it)
-        }
-        val new = copyInPlace(board, pos = target, hasMoved = true)
-        board.callEvent(PieceEvent.Moved(new, pos))
-        return new
-    }
-
-    fun capture(by: Color, board: Chessboard): CapturedBoardPiece {
-        checkExists(board)
-        clear(board)
-        val captured = CapturedBoardPiece(this, by)
-        board += captured.captured
-        board.callEvent(PieceEvent.Captured(captured))
-        return captured
-    }
-
-    fun promote(promotion: Piece, board: Chessboard): BoardPiece {
-        checkExists(board)
-        val new = copyInPlace(board, piece = promotion, hasMoved = false)
-        board.callEvent(PieceEvent.Promoted(this, new))
-        return new
-    }
-
-    fun copyInPlace(
-        board: Chessboard, pos: Pos = this.pos, piece: Piece = this.piece, hasMoved: Boolean = this.hasMoved
-    ): BoardPiece {
-        checkExists(board)
-        board.clearPiece(this.pos)
-        val new = BoardPiece(pos, piece, hasMoved)
-        board += new
-        return new
-    }
-
     fun getMoves(board: Chessboard) = board.getMoves(pos)
     fun getLegalMoves(board: Chessboard) = board.getLegalMoves(pos)
 
-    companion object {
-        fun autoMove(moves: Map<BoardPiece, Pos>, board: Chessboard): Map<BoardPiece, BoardPiece> {
-            val pieces = moves.keys
-            for (piece in pieces) {
-                piece.checkExists(board)
-                board.clearPiece(piece.pos)
-            }
-            for ((piece, target) in moves)
-                if (board[target] != null && target !in pieces.map { it.pos })
-                    throw PieceAlreadyOccupiesSquareException(piece)
-            val new = moves.mapValues { (piece, target) ->
-                piece.copy(pos = target, hasMoved = true).also { board += it }
-            }
-            board.callEvent(PieceEvent.MultiMoved(new))
-            return new
-        }
-    }
-}
-
-@Serializable(with = CapturedBoardPiece.Serializer::class)
-data class CapturedBoardPiece(val boardPiece: BoardPiece, val captured: CapturedPiece) {
-    constructor(boardPiece: BoardPiece, capturedBy: Color)
-            : this(boardPiece, CapturedPiece(boardPiece.piece, capturedBy))
-
-    init {
-        require(boardPiece.piece == captured.piece) { "Bad piece types" }
-    }
-
-    val piece: Piece get() = boardPiece.piece
-    val pos: Pos get() = boardPiece.pos
-    val capturedBy: Color get() = captured.capturedBy
-    val hasMoved: Boolean get() = boardPiece.hasMoved
-    val color: Color get() = piece.color
-    val type: PieceType get() = piece.type
-    val char: Char get() = piece.char
-
-    override fun toString(): String = "CapturedBoardPiece(piece=$piece, pos=$pos, capturedBy=${capturedBy})"
-
-    fun resurrect(board: Chessboard): BoardPiece {
-        board[pos]?.let {
-            throw PieceAlreadyOccupiesSquareException(it)
-        }
-        board -= captured
-        board += boardPiece
-        board.callEvent(PieceEvent.Resurrected(this))
-        return boardPiece
-    }
-
-    object Serializer : KSerializer<CapturedBoardPiece> {
-        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("CapturedBoardPiece") {
-            element<Piece>("piece")
-            element<Pos>("pos")
-            element<Boolean>("hasMoved")
-            element<Color>("capturedBy")
-        }
-
-        override fun serialize(encoder: Encoder, value: CapturedBoardPiece) = encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, Piece.serializer(), value.piece)
-            encodeSerializableElement(descriptor, 1, Pos.serializer(), value.pos)
-            encodeBooleanElement(descriptor, 2, value.boardPiece.hasMoved)
-            encodeSerializableElement(descriptor, 3, encoder.serializersModule.serializer(), value.capturedBy)
-        }
-
-        @OptIn(ExperimentalSerializationApi::class)
-        override fun deserialize(decoder: Decoder): CapturedBoardPiece = decoder.decodeStructure(descriptor) {
-            var piece: Piece? = null
-            var pos: Pos? = null
-            var hasMoved: Boolean? = null
-            var capturedBy: Color? = null
-            if (decodeSequentially()) { // sequential decoding protocol
-                piece = decodeSerializableElement(descriptor, 0, Piece.serializer())
-                pos = decodeSerializableElement(descriptor, 1, Pos.serializer())
-                hasMoved = decodeBooleanElement(descriptor, 2)
-                capturedBy = decodeSerializableElement(descriptor, 3, decoder.serializersModule.serializer())
-            } else {
-                while (true) {
-                    when (val index = decodeElementIndex(descriptor)) {
-                        0 -> piece = decodeSerializableElement(descriptor, index, Piece.serializer())
-                        1 -> pos = decodeSerializableElement(descriptor, index, Pos.serializer())
-                        2 -> hasMoved = decodeBooleanElement(descriptor, index)
-                        3 -> capturedBy =
-                            decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
-                        CompositeDecoder.DECODE_DONE -> break
-                        else -> error("Unexpected index: $index")
-                    }
-                }
-            }
-            CapturedBoardPiece(BoardPiece(pos!!, piece!!, hasMoved!!), CapturedPiece(piece, capturedBy!!))
-        }
-    }
+    fun move(target: Pos) = this to this.copy(pos = target, hasMoved = true)
+    fun capture(by: Color) = this to CapturedPiece(piece, by)
+    fun promote(promotion: Piece) = this to this.copy(piece = promotion)
 }
 
 sealed class PieceEvent : ChessEvent {
     class Created(val piece: BoardPiece) : PieceEvent()
     class Cleared(val piece: BoardPiece) : PieceEvent()
 
-    class Moved(val piece: BoardPiece, val from: Pos) : PieceEvent()
-    class Captured(val piece: CapturedBoardPiece) : PieceEvent()
-    class Promoted(val piece: BoardPiece, val promotion: BoardPiece) : PieceEvent()
-    class Resurrected(val piece: CapturedBoardPiece) : PieceEvent()
-    class MultiMoved(val moves: Map<BoardPiece, BoardPiece>) : PieceEvent()
+    class Captured(val piece: CapturedPiece) : PieceEvent()
+    class Resurrected(val piece: CapturedPiece) : PieceEvent()
 }
 
-class PieceDoesNotExistException(val piece: BoardPiece) : Exception(piece.toString())
-class PieceAlreadyOccupiesSquareException(val piece: BoardPiece) : Exception(piece.toString())
+class PieceDoesNotExistException(val piece: PlacedPiece) : Exception(piece.toString())
+class PieceAlreadyOccupiesSquareException(val piece: PlacedPiece) : Exception(piece.toString())

@@ -6,13 +6,12 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.command.*
-import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.PieceRegistryView
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.player.EnginePlayer
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
@@ -182,14 +181,14 @@ object GregChessPlugin : Listener {
                 execute<Player> {
                     val g = pl().game
                     val pos = g.renderer.getPos(sender.location.toLoc())
-                    g.board[pos]?.capture(pl().color, g.board)
+                    g.board[pos]?.let { multiMove(g.board, it.capture(pl().color)) }
                     g.board.updateMoves()
                     sender.sendMessage(BOARD_OP_DONE)
                 }
                 argument(PosArgument("pos")) { pos ->
                     execute<Player> {
                         val g = pl().game
-                        g.board[pos()]?.capture(pl().color, g.board)
+                        g.board[pos()]?.let { multiMove(g.board, it.capture(pl().color)) }
                         g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
@@ -201,9 +200,8 @@ object GregChessPlugin : Listener {
                     execute<Player> {
                         val g = pl().game
                         val p = g.board[g.renderer.getPos(sender.location.toLoc())]!!
-                        p.capture(pl().color, g.board)
-                        g.board += BoardPiece(p.pos, piece(), false)
-                        p.sendCreated(g.board)
+                        multiMove(g.board, p.capture(pl().color))
+                        BoardPiece(p.pos, piece(), false).create(g.board)
                         g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
@@ -211,9 +209,8 @@ object GregChessPlugin : Listener {
                         execute<Player> {
                             val g = pl().game
                             val p = g.board[pos()]!!
-                            p.capture(pl().color, g.board)
-                            g.board += BoardPiece(p.pos, piece(), false)
-                            p.sendCreated(g.board)
+                            multiMove(g.board, p.capture(pl().color))
+                            BoardPiece(p.pos, piece(), false).create(g.board)
                             g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }
@@ -226,8 +223,9 @@ object GregChessPlugin : Listener {
                     argument(PosArgument("to")) { to ->
                         execute<Player> {
                             val g = pl().game
-                            g.board[to()]?.capture(pl().color, g.board)
-                            g.board[from()]?.move(to(), g.board)
+                            // TODO: allow for null placedPieces
+                            g.board[to()]?.let { multiMove(g.board, it.capture(pl().color)) }
+                            g.board[from()]?.let { multiMove(g.board, it.move(to())) }
                             g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }

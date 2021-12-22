@@ -16,7 +16,7 @@ object Antichess : ChessVariant() {
     val PROMOTIONS = Normal.PROMOTIONS + PieceType.KING
 
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> = when (piece.type) {
-        PieceType.PAWN -> pawnMovement(piece).promotions(PROMOTIONS)
+        PieceType.PAWN -> pawnMovement(piece, board).promotions(PROMOTIONS)
         PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.getTrait<CastlesTrait>() == null }
         else -> Normal.getPieceMoves(piece, board)
     }

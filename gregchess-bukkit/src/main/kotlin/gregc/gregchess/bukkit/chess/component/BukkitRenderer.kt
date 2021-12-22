@@ -199,36 +199,11 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) {
         when (e) {
+            // TODO: add back sounds
             is PieceEvent.Created -> e.piece.render()
             is PieceEvent.Cleared -> e.piece.clearRender()
-            is PieceEvent.Moved -> {
-                clearPiece(e.from.loc)
-                e.piece.render()
-                e.piece.playSound("Move")
-            }
-            is PieceEvent.Captured -> {
-                e.piece.boardPiece.clearRender()
-                addCapturedPiece(e.piece.captured)
-                e.piece.boardPiece.playSound("Capture")
-            }
-            is PieceEvent.Promoted -> {
-                e.piece.clearRender()
-                e.promotion.render()
-            }
-            is PieceEvent.Resurrected -> {
-                e.piece.boardPiece.render()
-                removeCapturedPiece(e.piece.captured)
-                e.piece.boardPiece.playSound("Move")
-            }
-            is PieceEvent.MultiMoved -> {
-                for ((o, _) in e.moves) {
-                    o.clearRender()
-                }
-                for ((_, t) in e.moves) {
-                    t.render()
-                    t.playSound("Move")
-                }
-            }
+            is PieceEvent.Captured -> addCapturedPiece(e.piece)
+            is PieceEvent.Resurrected -> removeCapturedPiece(e.piece)
         }
     }
 }

@@ -4,7 +4,7 @@ import gregc.gregchess.chess.ChessFlag
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
-import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.*
 
 object GregChess : ChessModule("gregchess") {
@@ -40,6 +40,11 @@ object GregChess : ChessModule("gregchess") {
         registerMoveTrait<ThreeChecks.CheckCounterTrait>("check_counter")
     }
 
+    private fun registerPlacedPieceClasses() {
+        registerPlacedPieceClass<BoardPiece>("board")
+        registerPlacedPieceClass<CapturedPiece>("captured")
+    }
+
     override fun load() {
         PieceType
         EndReason
@@ -48,5 +53,6 @@ object GregChess : ChessModule("gregchess") {
         registerComponents()
         registerVariants()
         registerMoveTraits()
+        registerPlacedPieceClasses()
     }
 }

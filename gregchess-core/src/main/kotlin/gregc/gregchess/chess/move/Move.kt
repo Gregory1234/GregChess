@@ -1,18 +1,21 @@
 package gregc.gregchess.chess.move
 
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.piece.BoardPiece
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
-// TODO: add a way to keep track of moving pieces
 @Serializable
 data class Move(
-    val piece: BoardPiece, val display: Pos,
+    val pieceTracker: PieceTracker, val display: Pos,
     val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
     val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
     val traits: List<MoveTrait>
 ) {
+    val origin: Pos get() = (pieceTracker.getOriginal("main") as BoardPiece).pos
+    val piece: BoardPiece get() = pieceTracker["main"] as BoardPiece
+
     fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
     inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)
 

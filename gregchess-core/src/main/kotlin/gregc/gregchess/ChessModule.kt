@@ -5,6 +5,7 @@ import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTrait
 import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.Registry
@@ -140,3 +141,6 @@ fun <T : Any> ChessModule.register(id: String, type: ChessPlayerType<T>, cl: KCl
 inline fun <reified T : Any> ChessModule.register(id: String, type: ChessPlayerType<T>) =
     register(id, type, T::class)
 
+
+inline fun <reified T : PlacedPiece> ChessModule.registerPlacedPieceClass(id: String) =
+    register(Registry.PLACED_PIECE_CLASS, id, T::class)

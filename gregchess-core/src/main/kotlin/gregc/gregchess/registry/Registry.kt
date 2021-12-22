@@ -8,6 +8,7 @@ import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTrait
 import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.serialization.KSerializer
@@ -84,6 +85,8 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
         val PLAYER_TYPE = NameRegistry<ChessPlayerType<*>>("player_type")
         @JvmField
         val PLAYER_TYPE_CLASS = ConnectedBiRegistry<ChessPlayerType<*>, KClass<*>>("player_type_class", PLAYER_TYPE)
+        @JvmField
+        val PLACED_PIECE_CLASS = NameRegistry<KClass<out PlacedPiece>>("placed_piece")
     }
 }
 

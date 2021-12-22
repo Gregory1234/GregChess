@@ -86,45 +86,22 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
     @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) {
         when (e) {
-            is PieceEvent.Created -> {}
-            is PieceEvent.Cleared -> {}
-            is PieceEvent.Moved -> {
-                val pieceBlock = tileBlocks[e.from]?.firstNotNullOfOrNull { it.directPiece }
-                pieceBlock?.safeBreak()
-                val newBlockPos = tileBlocks[e.piece.pos]?.randomOrNull()?.pos
-                if (newBlockPos != null)
-                    e.piece.place(newBlockPos)
+            is PieceEvent.Created -> {
+                val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
+                if (pieceBlock == null) {
+                    val newBlockPos = tileBlocks[e.piece.pos]?.randomOrNull()?.pos
+                    if (newBlockPos != null) {
+                        check(data.controller.removePiece(e.piece.piece)) { "Not enough pieces in the controller" }
+                        e.piece.place(newBlockPos)
+                    }
+                }
             }
-            is PieceEvent.Captured -> {
+            is PieceEvent.Cleared -> {
                 val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
                 pieceBlock?.safeBreak(!data.controller.addPiece(e.piece.piece))
             }
-            is PieceEvent.Promoted -> {
-                val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
-                val blockPos = pieceBlock?.floorBlock?.pos
-                pieceBlock?.safeBreak(!data.controller.addPiece(e.piece.piece))
-                check(data.controller.removePiece(e.promotion.piece)) { "Not enough pieces in the controller" }
-                if (blockPos != null)
-                    e.promotion.place(blockPos)
-            }
-            is PieceEvent.Resurrected -> {
-                // TODO: handle this better
-                check(data.controller.removePiece(e.piece.piece)) { "Not enough pieces in the controller" }
-                val newBlockPos = tileBlocks[e.piece.pos]?.randomOrNull()?.pos
-                if (newBlockPos != null)
-                    e.piece.boardPiece.place(newBlockPos)
-            }
-            is PieceEvent.MultiMoved -> {
-                for ((o, _) in e.moves) {
-                    val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
-                    pieceBlock?.safeBreak()
-                }
-                for ((_, t) in e.moves) {
-                    val newBlockPos = tileBlocks[t.pos]?.randomOrNull()?.pos
-                    if (newBlockPos != null)
-                        t.place(newBlockPos)
-                }
-            }
+            is PieceEvent.Captured -> {}
+            is PieceEvent.Resurrected -> {}
         }
     }
 
