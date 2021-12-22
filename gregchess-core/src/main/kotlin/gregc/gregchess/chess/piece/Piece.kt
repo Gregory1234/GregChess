@@ -76,6 +76,7 @@ fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?
         t?.checkCanExist(board)
     for ((_,t) in realMoves)
         t?.create(board)
+    board.callEvent(PieceEvent.Moved(realMoves.toMap()))
 }
 
 object PlacedPieceSerializer : ClassRegisteredSerializer<PlacedPiece>("PlacedPiece", Registry.PLACED_PIECE_CLASS)
@@ -91,13 +92,11 @@ data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : Pla
 
     override fun create(board: Chessboard) {
         board += this
-        board.callEvent(PieceEvent.Captured(this))
     }
 
     override fun destroy(board: Chessboard) {
         checkExists(board)
         board -= this
-        board.callEvent(PieceEvent.Captured(this))
     }
 }
 
@@ -116,13 +115,11 @@ data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boo
 
     override fun create(board: Chessboard) {
         board += this
-        board.callEvent(PieceEvent.Created(this))
     }
 
     override fun destroy(board: Chessboard) {
         checkExists(board)
         board.clearPiece(pos)
-        board.callEvent(PieceEvent.Cleared(this))
     }
 
     fun sendCreated(board: Chessboard) {
@@ -148,8 +145,7 @@ sealed class PieceEvent : ChessEvent {
     class Created(val piece: BoardPiece) : PieceEvent()
     class Cleared(val piece: BoardPiece) : PieceEvent()
 
-    class Captured(val piece: CapturedPiece) : PieceEvent()
-    class Resurrected(val piece: CapturedPiece) : PieceEvent()
+    class Moved(val moves: Map<PlacedPiece?, PlacedPiece?>) : PieceEvent()
 }
 
 class PieceDoesNotExistException(val piece: PlacedPiece) : Exception(piece.toString())

@@ -86,22 +86,30 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
     @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) {
         when (e) {
-            is PieceEvent.Created -> {
-                val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
-                if (pieceBlock == null) {
-                    val newBlockPos = tileBlocks[e.piece.pos]?.randomOrNull()?.pos
-                    if (newBlockPos != null) {
-                        check(data.controller.removePiece(e.piece.piece)) { "Not enough pieces in the controller" }
-                        e.piece.place(newBlockPos)
+            is PieceEvent.Created -> {}
+            is PieceEvent.Cleared -> {}
+            is PieceEvent.Moved -> {
+                for ((o, _) in e.moves)
+                    when (o) {
+                        is BoardPiece -> {
+                            val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
+                            if (pieceBlock == null) {
+                                val newBlockPos = tileBlocks[o.pos]?.randomOrNull()?.pos
+                                if (newBlockPos != null) {
+                                    check(data.controller.removePiece(o.piece)) { "Not enough pieces in the controller" }
+                                    o.place(newBlockPos)
+                                }
+                            }
+                        }
                     }
-                }
+                for ((_, t) in e.moves)
+                    when (t) {
+                        is BoardPiece -> {
+                            val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                            pieceBlock?.safeBreak(!data.controller.addPiece(t.piece))
+                        }
+                    }
             }
-            is PieceEvent.Cleared -> {
-                val pieceBlock = tileBlocks[e.piece.pos]?.firstNotNullOfOrNull { it.directPiece }
-                pieceBlock?.safeBreak(!data.controller.addPiece(e.piece.piece))
-            }
-            is PieceEvent.Captured -> {}
-            is PieceEvent.Resurrected -> {}
         }
     }
 
