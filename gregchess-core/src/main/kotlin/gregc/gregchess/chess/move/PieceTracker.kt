@@ -16,14 +16,13 @@ class PieceTracker private constructor(private val pieces: Map<String, MutableLi
     fun getOrNull(name: String) = pieces[name]?.lastOrNull()
     operator fun get(name: String) = getOrNull(name)!!
 
-    fun move(origin: PlacedPiece, target: PlacedPiece) {
-        require(pieces.none { it.value.last() == target && it.value.last() != origin })
-        pieces.entries.single { it.value.last() == origin }.value += target
+    private fun addMoves(vararg moves: Pair<PlacedPiece, PlacedPiece>) {
+        moves.map { m -> pieces.entries.single { it.value.last() == m.first }.value to m.second }
+            .forEach { m -> m.first += m.second }
     }
 
-    fun move(name: String, target: PlacedPiece) {
-        require(pieces.none { it.value.last() == target && it.key != name })
-        pieces[name]!! += target
+    private fun addMovesBack(vararg moves: Pair<PlacedPiece, PlacedPiece>) {
+        moves.map { m -> pieces.entries.single { it.value.last() == m.first }.value }.forEach { it.removeLast() }
     }
 
     fun getOriginal(name: String): PlacedPiece = pieces[name]!!.first()
@@ -32,12 +31,14 @@ class PieceTracker private constructor(private val pieces: Map<String, MutableLi
         it[it.size-2]
     }
 
-    fun traceMoveBack(board: Chessboard, vararg pieces: PlacedPiece) =
-        traceMove(board, *pieces.map { Pair(it, traceBack(it)) }.toTypedArray())
+    fun traceMoveBack(board: Chessboard, vararg pieces: PlacedPiece) {
+        val revMoves = pieces.map { Pair(it, traceBack(it)) }.toTypedArray()
+        addMovesBack(*revMoves)
+        multiMove(board, *revMoves)
+    }
 
     fun traceMove(board: Chessboard, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
-        for ((o,t) in moves)
-            move(o,t)
+        addMoves(*moves)
         multiMove(board, *moves)
     }
 
