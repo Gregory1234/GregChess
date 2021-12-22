@@ -28,7 +28,7 @@ object Antichess : ChessVariant() {
         if (move.getTrait<CaptureTrait>()?.capture?.let { game.board[it] } != null)
             return MoveLegality.LEGAL
 
-        return if (game.board.piecesOf(move.piece.color).flatMap { it.getMoves(game.board) }
+        return if (game.board.piecesOf(move.main.color).flatMap { it.getMoves(game.board) }
                 .filter { Normal.isValid(it, game) }
                 .all { m -> m.getTrait<CaptureTrait>()?.capture?.let { game.board[it] } == null })
             MoveLegality.LEGAL

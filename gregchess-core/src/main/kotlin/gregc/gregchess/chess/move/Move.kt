@@ -2,7 +2,8 @@ package gregc.gregchess.chess.move
 
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Pos
-import gregc.gregchess.chess.piece.BoardPiece
+import gregc.gregchess.chess.piece.PlacedPiece
+import gregc.gregchess.chess.piece.boardPiece
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -13,8 +14,8 @@ data class Move(
     val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
     val traits: List<MoveTrait>
 ) {
-    val origin: Pos get() = (pieceTracker.getOriginal("main") as BoardPiece).pos
-    val piece: BoardPiece get() = pieceTracker["main"] as BoardPiece
+    val origin: Pos get() = pieceTracker.getOriginal("main").boardPiece().pos
+    val main: PlacedPiece get() = pieceTracker["main"]
 
     fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
     inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)

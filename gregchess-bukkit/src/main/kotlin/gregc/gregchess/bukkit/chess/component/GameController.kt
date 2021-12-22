@@ -60,7 +60,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         val results = game.results!!
         callEvent(GameStopStageEvent.STOP)
         with(game.board) {
-            if (lastMove?.piece?.color == Color.WHITE) {
+            if (lastMove?.main?.color == Color.WHITE) {
                 val wLast = lastMove
                 game.players.forEachReal { p ->
                     p.sendLastMoves(fullmoveCounter + 1u, wLast, null, game.variant.localNameFormatter)

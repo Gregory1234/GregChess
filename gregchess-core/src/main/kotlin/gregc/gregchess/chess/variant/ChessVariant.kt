@@ -31,20 +31,20 @@ open class ChessVariant : NameRegistered {
         if (!Normal.isValid(move, game))
             return MoveLegality.INVALID
 
-        if (piece.type == PieceType.KING) {
-            return if (passedThrough.all { Normal.checkingMoves(!piece.color, it, game.board).isEmpty() })
+        if (main.type == PieceType.KING) {
+            return if (passedThrough.all { Normal.checkingMoves(!main.color, it, game.board).isEmpty() })
                 MoveLegality.LEGAL
             else
                 MoveLegality.IN_CHECK
         }
 
-        val myKing = game.tryOrStopNull(game.board.kingOf(piece.color))
-        val checks = Normal.checkingMoves(!piece.color, myKing.pos, game.board)
+        val myKing = game.tryOrStopNull(game.board.kingOf(main.color))
+        val checks = Normal.checkingMoves(!main.color, myKing.pos, game.board)
         val capture = getTrait<CaptureTrait>()?.capture
-        if (checks.any { ch -> capture != ch.piece.pos && startBlocking.none { it in ch.neededEmpty } })
+        if (checks.any { ch -> capture != ch.origin && startBlocking.none { it in ch.neededEmpty } })
             return MoveLegality.IN_CHECK
 
-        val pins = Normal.pinningMoves(!piece.color, myKing.pos, game.board)
+        val pins = Normal.pinningMoves(!main.color, myKing.pos, game.board)
         if (pins.any { pin -> isPinnedBy(pin, game.board) })
             return MoveLegality.PINNED
 
@@ -135,7 +135,7 @@ open class ChessVariant : NameRegistered {
     protected fun allMoves(color: Color, board: Chessboard) = board.piecesOf(color).flatMap { it.getMoves(board) }
 
     protected fun Move.isPinnedBy(pin: Move, board: Chessboard) =
-        getTrait<CaptureTrait>()?.capture != pin.piece.pos &&
+        getTrait<CaptureTrait>()?.capture != pin.origin &&
                 pin.neededEmpty.filter { board[it] != null }.all { it in stopBlocking } &&
                 startBlocking.none { it in pin.neededEmpty }
 
@@ -154,7 +154,7 @@ open class ChessVariant : NameRegistered {
             allMoves(by, board).filter { it.getTrait<CaptureTrait>()?.capture == pos }.filter { m ->
                 m.getTrait<RequireFlagTrait>()?.flags.orEmpty().none { (p, fs) -> !fs.all { f -> board.hasActiveFlag(p, f) } } &&
                         m.neededEmpty.mapNotNull { board[it]?.piece }
-                            .all { it.color == !m.piece.color && it.type == PieceType.KING }
+                            .all { it.color == !m.main.color && it.type == PieceType.KING }
             }
 
         fun isValid(move: Move, game: ChessGame): Boolean = with(move) {
@@ -169,7 +169,7 @@ open class ChessVariant : NameRegistered {
             getTrait<CaptureTrait>()?.let {
                 if (it.hasToCapture && board[it.capture] == null)
                     return false
-                if (board[it.capture]?.color == piece.color)
+                if (board[it.capture]?.color == main.color)
                     return false
             }
 

@@ -57,7 +57,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
     override fun execute(game: ChessGame, move: Move) {
         halfmoveClock = game.board.halfmoveClock
-        if (move.piece.type == PieceType.PAWN || move.getTrait<CaptureTrait>()?.captureSuccess != true) {
+        if (move.main.type == PieceType.PAWN || move.getTrait<CaptureTrait>()?.captureSuccess != true) {
             game.board.halfmoveClock = 0u
         } else {
             game.board.halfmoveClock++
@@ -77,11 +77,11 @@ class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : 
     private val Move.rook get() = pieceTracker["rook"] as BoardPiece
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMove(game.board, move.piece.move(target), move.rook.move(rookTarget))
+        move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target), move.rook.move(rookTarget))
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game.board, move.piece, move.rook)
+        move.pieceTracker.traceMoveBack(game.board, move.main, move.rook)
     }
 }
 
@@ -99,12 +99,12 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
         val promotion = promotion ?: throw TraitPreconditionException(this, "Promotion not chosen", NullPointerException())
         if (promotion !in promotions) throw TraitPreconditionException(this, "Promotion not valid: $promotion")
         tryPiece {
-            move.pieceTracker.traceMove(game.board, move.piece.promote(promotion))
+            move.pieceTracker.traceMove(game.board, move.main.boardPiece().promote(promotion))
         }
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game.board, move.piece)
+        move.pieceTracker.traceMoveBack(game.board, move.main)
     }
 }
 
@@ -150,7 +150,7 @@ class CheckTrait : MoveTrait {
     override val nameTokens get() = MoveName(checkToken?.let { mapOf(it to Unit) } ?: emptyMap())
 
     override fun execute(game: ChessGame, move: Move) {
-        checkToken = checkForChecks(move.piece.color, game)
+        checkToken = checkForChecks(move.main.color, game)
     }
 }
 
@@ -169,7 +169,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTr
     override fun execute(game: ChessGame, move: Move) {
         game.board[capture]?.let {
             move.pieceTracker.giveName("capture", it)
-            move.pieceTracker.traceMove(game.board, move.toCapture.capture(move.piece.color))
+            move.pieceTracker.traceMove(game.board, move.toCapture.capture(move.main.color))
             captureSuccess = true
         }
     }
@@ -192,7 +192,7 @@ class PawnOriginTrait : MoveTrait {
     override fun setup(game: ChessGame, move: Move) {
         move.getTrait<CaptureTrait>()?.let {
             if (game.board[it.capture] != null) {
-                uniquenessCoordinate = UniquenessCoordinate(file = move.piece.pos.file)
+                uniquenessCoordinate = UniquenessCoordinate(file = move.origin.file)
             }
         }
     }
@@ -222,9 +222,9 @@ class PieceOriginTrait : MoveTrait {
         } ?: emptyMap())
 
     override fun setup(game: ChessGame, move: Move) {
-        pieceType = move.piece.type
+        pieceType = move.main.type
         move.getTrait<TargetTrait>()?.let {
-            uniquenessCoordinate = getUniquenessCoordinate(move.piece, it.target, game)
+            uniquenessCoordinate = getUniquenessCoordinate(move.main.boardPiece(), it.target, game)
         }
     }
 }
@@ -236,10 +236,10 @@ class TargetTrait(val target: Pos) : MoveTrait {
     override val shouldComeBefore = listOf(CaptureTrait::class)
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMove(game.board, move.piece.move(target))
+        move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target))
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game.board, move.piece)
+        move.pieceTracker.traceMoveBack(game.board, move.main)
     }
 }

@@ -38,7 +38,7 @@ class EnginePlayer<T : ChessEngine>(val engine: T, color: Color, game: ChessGame
                 val target = Pos.parseFromString(str.drop(2).take(2))
                 val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
                 val move = game.board.getMoves(origin).first { it.display == target }
-                move.getTrait<PromotionTrait>()?.promotion = promotion?.of(move.piece.color)
+                move.getTrait<PromotionTrait>()?.promotion = promotion?.of(move.main.color)
                 game.finishMove(move)
             } catch (e: Exception) {
                 game.stop(drawBy(EndReason.ERROR))

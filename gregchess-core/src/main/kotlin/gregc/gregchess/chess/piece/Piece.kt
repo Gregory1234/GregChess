@@ -66,6 +66,9 @@ interface PlacedPiece {
     fun destroy(board: Chessboard)
 }
 
+fun PlacedPiece?.boardPiece() = this as BoardPiece
+fun PlacedPiece?.capturedPiece() = this as CapturedPiece
+
 fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) {
     val realMoves = moves.filterNotNull()
     for ((o,_) in realMoves)

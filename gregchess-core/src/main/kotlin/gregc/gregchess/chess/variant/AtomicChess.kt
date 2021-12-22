@@ -30,8 +30,8 @@ object AtomicChess : ChessVariant() {
             val captureTrait = move.getTrait<CaptureTrait>() ?: throw TraitPreconditionException(this, "No capture trait")
             if (!captureTrait.captureSuccess) return
             val explosions = mutableListOf<Pair<BoardPiece, CapturedPiece>>()
-            val piece = move.piece
-            explosions += move.piece.explode(piece.color, move.pieceTracker)
+            val piece = move.main.boardPiece()
+            explosions += move.main.boardPiece().explode(piece.color, move.pieceTracker)
             piece.pos.neighbours().mapNotNull { game.board[it] }.forEach {
                 if (it.type != PieceType.PAWN)
                     explosions += it.explode(piece.color, move.pieceTracker)
@@ -75,28 +75,28 @@ object AtomicChess : ChessVariant() {
 
         val captured = getTrait<CaptureTrait>()?.let { game.board[it.capture] }
 
-        if (piece.type == PieceType.KING) {
+        if (main.type == PieceType.KING) {
             if (captured != null)
                 return MoveLegality.SPECIAL
 
-            return if (passedThrough.all { checkingMoves(!piece.color, it, game.board).isEmpty() })
+            return if (passedThrough.all { checkingMoves(!main.color, it, game.board).isEmpty() })
                 MoveLegality.LEGAL
             else
                 MoveLegality.IN_CHECK
         }
 
-        val myKing = game.board.kingOf(piece.color) ?: return MoveLegality.IN_CHECK
+        val myKing = game.board.kingOf(main.color) ?: return MoveLegality.IN_CHECK
 
         if (captured != null)
             if (myKing.pos in captured.pos.neighbours())
                 return MoveLegality.SPECIAL
 
-        val checks = checkingMoves(!piece.color, myKing.pos, game.board)
+        val checks = checkingMoves(!main.color, myKing.pos, game.board)
         val capture = getTrait<CaptureTrait>()?.capture
-        if (checks.any { ch -> capture != ch.piece.pos && startBlocking.none { it in ch.neededEmpty } })
+        if (checks.any { ch -> capture != ch.origin && startBlocking.none { it in ch.neededEmpty } })
             return MoveLegality.IN_CHECK
 
-        val pins = pinningMoves(!piece.color, myKing.pos, game.board)
+        val pins = pinningMoves(!main.color, myKing.pos, game.board)
         if (pins.any { pin -> isPinnedBy(pin, game.board) })
             return MoveLegality.PINNED
 

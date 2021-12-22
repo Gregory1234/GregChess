@@ -18,7 +18,7 @@ object HordeChess : ChessVariant() {
         else -> Normal.getPieceMoves(piece, board)
     }
 
-    override fun getLegality(move: Move, game: ChessGame): MoveLegality = when(move.piece.color) {
+    override fun getLegality(move: Move, game: ChessGame): MoveLegality = when(move.main.color) {
         Color.BLACK -> Normal.getLegality(move, game)
         Color.WHITE -> if (Normal.isValid(move, game)) MoveLegality.LEGAL else MoveLegality.INVALID
     }

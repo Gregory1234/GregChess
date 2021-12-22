@@ -54,15 +54,15 @@ object ThreeChecks : ChessVariant() {
 
         override fun execute(game: ChessGame, move: Move) {
             game.board.updateMoves()
-            if (game.variant.isInCheck(game, !move.piece.color)) {
-                game.requireComponent<CheckCounter>().registerCheck(!move.piece.color)
+            if (game.variant.isInCheck(game, !move.main.color)) {
+                game.requireComponent<CheckCounter>().registerCheck(!move.main.color)
                 checkRegistered = true
             }
         }
 
         override fun undo(game: ChessGame, move: Move) {
             if (checkRegistered) {
-                game.requireComponent<CheckCounter>().removeCheck(!move.piece.color)
+                game.requireComponent<CheckCounter>().removeCheck(!move.main.color)
             }
         }
     }
