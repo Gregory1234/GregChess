@@ -66,15 +66,16 @@ interface PlacedPiece {
     fun destroy(board: Chessboard)
 }
 
-fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
-    for ((o,_) in moves)
-        o.checkExists(board)
-    for ((o,_) in moves)
-        o.destroy(board)
-    for ((_,t) in moves)
-        t.checkCanExist(board)
-    for ((_,t) in moves)
-        t.create(board)
+fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) {
+    val realMoves = moves.filterNotNull()
+    for ((o,_) in realMoves)
+        o?.checkExists(board)
+    for ((o,_) in realMoves)
+        o?.destroy(board)
+    for ((_,t) in realMoves)
+        t?.checkCanExist(board)
+    for ((_,t) in realMoves)
+        t?.create(board)
 }
 
 object PlacedPieceSerializer : ClassRegisteredSerializer<PlacedPiece>("PlacedPiece", Registry.PLACED_PIECE_CLASS)
