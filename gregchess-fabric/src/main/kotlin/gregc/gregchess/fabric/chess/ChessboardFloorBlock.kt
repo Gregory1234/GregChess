@@ -28,7 +28,7 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChessMod.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory {
     var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)
     var boardPos: Pos? by BlockEntityDirtyDelegate(null)
-    override fun writeNbt(nbt: NbtCompound): NbtCompound {
+    override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         chessControllerBlockPos?.let {
             nbt.putLong("Controller", it.asLong())
@@ -36,7 +36,6 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
         boardPos?.let {
             nbt.putLong("Pos", ((it.file.toLong() shl 32) or (it.rank.toLong() and 0xFFFFFFFFL)))
         }
-        return nbt
     }
 
     override fun readNbt(nbt: NbtCompound) {

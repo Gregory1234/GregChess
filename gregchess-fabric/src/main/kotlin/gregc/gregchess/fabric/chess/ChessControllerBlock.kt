@@ -53,7 +53,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         }
     var chessboardStart: BlockPos? by BlockEntityDirtyDelegate(null)
 
-    override fun writeNbt(nbt: NbtCompound): NbtCompound {
+    override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
 
         chessboardStart?.let {
@@ -63,8 +63,6 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             nbt.putUuid("GameUUID", it.uuid)
         }
         Inventories.writeNbt(nbt, items)
-
-        return nbt
     }
 
     override fun readNbt(nbt: NbtCompound) {
