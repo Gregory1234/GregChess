@@ -2,15 +2,12 @@ import java.net.URL
 
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization")
     id("org.jetbrains.dokka")
 }
 
 dependencies {
     val spigotVersion: String by project
     api("org.spigotmc:spigot-api:$spigotVersion")
-    val kotlinxSerializationVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
     val kotlinxCoroutinesVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
     implementation(kotlin("reflect"))
@@ -53,6 +50,7 @@ tasks {
                     url.set(URL("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/$spigotVersion/spigot-api-$trueSpigotVersion-javadoc.jar/!"))
                     packageListUrl.set(URL("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/$spigotVersion/spigot-api-$trueSpigotVersion-javadoc.jar/!/element-list"))
                 }
+                externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
         }
     }

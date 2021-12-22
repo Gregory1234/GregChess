@@ -92,6 +92,8 @@ tasks {
                     url.set(URL("https://maven.fabricmc.net/docs/yarn-$yarnMappings/"))
                     packageListUrl.set(URL("https://maven.fabricmc.net/docs/yarn-$yarnMappings/element-list"))
                 }
+                externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
+                externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
         }
     }

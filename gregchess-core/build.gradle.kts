@@ -57,6 +57,8 @@ tasks {
                     remoteUrl.set(URL("https://github.com/Gregory1234/GregChess/tree/master/$relPath/src"))
                     remoteLineSuffix.set("#L")
                 }
+                externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
+                externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
         }
     }
