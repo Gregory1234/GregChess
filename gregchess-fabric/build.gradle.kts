@@ -1,6 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-import java.net.URL
-
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
@@ -34,8 +31,6 @@ dependencies {
     include(project(":gregchess-core"))
 }
 
-fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("tokens" to mapOf(*args))
-
 tasks {
     compileJava {
         val jvmVersion: String by project
@@ -46,11 +41,7 @@ tasks {
         kotlinOptions {
             val jvmVersion: String by project
             jvmTarget = jvmVersion
-            freeCompilerArgs = listOf(
-                "-Xopt-in=kotlin.RequiresOptIn",
-                "-Xjvm-default=all",
-                "-Xlambdas=indy",
-                "-progressive")
+            freeCompilerArgs = defaultKotlinArgs
         }
     }
     processResources {
@@ -77,21 +68,10 @@ tasks {
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
             configureEach {
-                sourceLink {
-                    val relPath = rootProject.projectDir.toPath().relativize(projectDir.toPath())
-                    localDirectory.set(projectDir.resolve("src"))
-                    remoteUrl.set(URL("https://github.com/Gregory1234/GregChess/tree/master/$relPath/src"))
-                    remoteLineSuffix.set("#L")
-                }
-                externalDocumentationLink {
-                    url.set(URL("https://cottonmc.github.io/docs/libgui/"))
-                    packageListUrl.set(URL("https://cottonmc.github.io/docs/libgui/element-list"))
-                }
-                externalDocumentationLink {
-                    val yarnMappings: String by project
-                    url.set(URL("https://maven.fabricmc.net/docs/yarn-$yarnMappings/"))
-                    packageListUrl.set(URL("https://maven.fabricmc.net/docs/yarn-$yarnMappings/element-list"))
-                }
+                gregchessSourceLink(project)
+                externalDocumentationLinkElementList("https://cottonmc.github.io/docs/libgui/")
+                val yarnMappings: String by project
+                externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/yarn-$yarnMappings/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }

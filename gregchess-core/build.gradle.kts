@@ -1,5 +1,3 @@
-import java.net.URL
-
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
@@ -32,11 +30,7 @@ tasks {
         kotlinOptions {
             val jvmVersion: String by project
             jvmTarget = jvmVersion
-            freeCompilerArgs = listOf(
-                "-Xopt-in=kotlin.RequiresOptIn",
-                "-Xjvm-default=all",
-                "-Xlambdas=indy",
-                "-progressive")
+            freeCompilerArgs = defaultKotlinArgs
         }
     }
     compileTestKotlin {
@@ -51,12 +45,7 @@ tasks {
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
             configureEach {
-                sourceLink {
-                    val relPath = rootProject.projectDir.toPath().relativize(projectDir.toPath())
-                    localDirectory.set(projectDir.resolve("src"))
-                    remoteUrl.set(URL("https://github.com/Gregory1234/GregChess/tree/master/$relPath/src"))
-                    remoteLineSuffix.set("#L")
-                }
+                gregchessSourceLink(project)
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
