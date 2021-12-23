@@ -19,14 +19,14 @@ interface ChessEngine {
 
 @OptIn(InternalSerializationApi::class)
 fun <T : ChessEngine> enginePlayerType(cl: KClass<T>) =
-    ChessPlayerType(cl.serializer()) { c, g -> EnginePlayer(this, c, g) }
+    ChessPlayerType(cl.serializer()) { c, g -> EngineChessSide(this, c, g) }
 
 inline fun <reified T : ChessEngine> enginePlayerType() = enginePlayerType(T::class)
 
-class EnginePlayer<T : ChessEngine>(val engine: T, color: Color, game: ChessGame)
-    : ChessPlayer<T>(engine, color, engine.name, game) {
+class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, game: ChessGame)
+    : ChessSide<T>(engine, color, engine.name, game) {
 
-    override fun toString() = "EnginePlayer(engine=$engine, color=$color)"
+    override fun toString() = "EngineChessSide(engine=$engine, color=$color)"
 
     override fun stop() = engine.stop()
 

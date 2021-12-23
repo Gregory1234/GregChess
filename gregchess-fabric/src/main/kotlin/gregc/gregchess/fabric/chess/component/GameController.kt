@@ -2,7 +2,7 @@ package gregc.gregchess.fabric.chess.component
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
-import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessGameManager
 import gregc.gregchess.fabric.chess.player.forEachUnique
 import kotlinx.coroutines.cancel
@@ -14,13 +14,13 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         when (e) {
             GameBaseEvent.START -> {
                 ChessGameManager += game
-                players.forEachUnique { it.init() }
+                sides.forEachUnique { it.init() }
             }
             GameBaseEvent.STOP -> {
-                players.forEachUnique {
+                sides.forEachUnique {
                     //it.player.showGameResults(it.color, results!!)
                 }
-                players.forEach(ChessPlayer<*>::stop)
+                sides.forEach(ChessSide<*>::stop)
                 ChessGameManager -= game
                 game.coroutineScope.cancel()
             }

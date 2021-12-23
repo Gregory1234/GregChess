@@ -3,7 +3,7 @@ package gregc.gregchess.fabric.chess.player
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.chess.component.renderer
 import gregc.gregchess.registry.name
@@ -19,7 +19,7 @@ fun ServerPlayerEntity.showGameResults(color: Color, results: GameResults) {
 }
 
 // TODO: use a better representation of a "player"
-class FabricPlayer(uuid: UUID, color: Color, game: ChessGame) : ChessPlayer<UUID>(uuid, color, "fabric player", game) {
+class FabricChessSide(uuid: UUID, color: Color, game: ChessGame) : ChessSide<UUID>(uuid, color, "fabric player", game) {
 
     var held: BoardPiece? = null
         private set(v) {
@@ -63,12 +63,12 @@ class FabricPlayer(uuid: UUID, color: Color, game: ChessGame) : ChessPlayer<UUID
     }
 }
 
-inline fun ByColor<ChessPlayer<*>>.forEachReal(block: (UUID) -> Unit) {
-    toList().filterIsInstance<FabricPlayer>().map { it.player }.distinct().forEach(block)
+inline fun ByColor<ChessSide<*>>.forEachReal(block: (UUID) -> Unit) {
+    toList().filterIsInstance<FabricChessSide>().map { it.player }.distinct().forEach(block)
 }
 
-inline fun ByColor<ChessPlayer<*>>.forEachUnique(block: (FabricPlayer) -> Unit) {
-    val players = toList().filterIsInstance<FabricPlayer>()
+inline fun ByColor<ChessSide<*>>.forEachUnique(block: (FabricChessSide) -> Unit) {
+    val players = toList().filterIsInstance<FabricChessSide>()
     if (players.size == 2 && players.all { it.player == players[0].player })
         players.filter { it.hasTurn }.forEach(block)
     else

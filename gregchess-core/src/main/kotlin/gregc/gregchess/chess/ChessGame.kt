@@ -59,7 +59,7 @@ class ChessGame private constructor(
     object Serializer : KSerializer<ChessGame> {
         override val descriptor = buildClassSerialDescriptor("ChessGame") {
             element("uuid", buildSerialDescriptor("ChessGameUUID", SerialKind.CONTEXTUAL))
-            element("players", ByColor.serializer(ChessPlayerDataSerializer).descriptor)
+            element("players", ByColor.serializer(ChessPlayerSerializer).descriptor)
             element<String>("preset")
             element<ChessVariant>("variant")
             element<Boolean>("simpleCastling")
@@ -72,7 +72,7 @@ class ChessGame private constructor(
 
         override fun serialize(encoder: Encoder, value: ChessGame) = encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, encoder.serializersModule.serializer(), value.uuid)
-            encodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerDataSerializer), value.playerData)
+            encodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerSerializer), value.playerData)
             encodeStringElement(descriptor, 2, value.settings.name)
             encodeSerializableElement(descriptor, 3, ChessVariant.serializer(), value.variant)
             encodeBooleanElement(descriptor, 4, value.settings.simpleCastling)
@@ -96,7 +96,7 @@ class ChessGame private constructor(
             var environment: ChessEnvironment? = null
             if (decodeSequentially()) { // sequential decoding protocol
                 uuid = decodeSerializableElement(descriptor, 0, decoder.serializersModule.serializer())
-                players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerDataSerializer))
+                players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerSerializer))
                 preset = decodeStringElement(descriptor, 2)
                 variant = decodeSerializableElement(descriptor, 3, ChessVariant.serializer())
                 simpleCastling = decodeBooleanElement(descriptor, 4)
@@ -110,7 +110,7 @@ class ChessGame private constructor(
                     when (val index = decodeElementIndex(descriptor)) {
                         0 -> uuid = decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
                         1 -> players =
-                            decodeSerializableElement(descriptor, index, ByColor.serializer(ChessPlayerDataSerializer))
+                            decodeSerializableElement(descriptor, index, ByColor.serializer(ChessPlayerSerializer))
                         2 -> preset = decodeStringElement(descriptor, index)
                         3 -> variant = decodeSerializableElement(descriptor, index, ChessVariant.serializer())
                         4 -> simpleCastling = decodeBooleanElement(descriptor, index)
@@ -181,11 +181,11 @@ class ChessGame private constructor(
     inline fun <reified T : Component> requireComponent(): T = requireComponent(T::class)
 
     @Suppress("UNCHECKED_CAST")
-    val players: ByColor<ChessPlayer<*>> = byColor {
+    val sides: ByColor<ChessSide<*>> = byColor {
         val d = playerData[it]
         val type = playerType(d) as ChessPlayerType<Any>
         with(type) {
-            d.createPlayer(it, this@ChessGame)
+            d.initSide(it, this@ChessGame)
         }
     }
 
@@ -202,9 +202,9 @@ class ChessGame private constructor(
 
     var currentTurn: Color = board.initialFEN.currentTurn
 
-    val currentPlayer: ChessPlayer<*> get() = players[currentTurn]
+    val currentSide: ChessSide<*> get() = sides[currentTurn]
 
-    val currentOpponent: ChessPlayer<*> get() = players[!currentTurn]
+    val currentOpponent: ChessSide<*> get() = sides[!currentTurn]
 
     var startTime: LocalDateTime? = startTime
         private set(v) {
@@ -268,13 +268,13 @@ class ChessGame private constructor(
     private fun startTurn() {
         requireState(State.RUNNING)
         callEvent(TurnEvent.START)
-        currentPlayer.startTurn()
+        currentSide.startTurn()
     }
 
     private fun startPreviousTurn() {
         requireState(State.RUNNING)
         callEvent(TurnEvent.START)
-        currentPlayer.startTurn()
+        currentSide.startTurn()
     }
 
     var results: GameResults? = results
@@ -308,7 +308,7 @@ class ChessGame private constructor(
         panic(e)
     }
 
-    operator fun get(color: Color): ChessPlayer<*> = players[color]
+    operator fun get(color: Color): ChessSide<*> = sides[color]
 
     fun finishMove(move: Move) {
         requireState(State.RUNNING)

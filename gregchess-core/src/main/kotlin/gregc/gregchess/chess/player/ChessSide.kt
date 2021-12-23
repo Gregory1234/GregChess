@@ -13,7 +13,7 @@ import kotlin.reflect.full.superclasses
 @Serializable(with = ChessPlayerType.Serializer::class)
 class ChessPlayerType<T : Any>(
     val playerSerializer: KSerializer<T>,
-    val createPlayer: T.(Color, ChessGame) -> ChessPlayer<T>
+    val initSide: T.(Color, ChessGame) -> ChessSide<T>
 ): NameRegistered {
 
     object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", Registry.PLAYER_TYPE)
@@ -40,8 +40,8 @@ internal fun playerType(p: Any) : ChessPlayerType<*> {
 
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 @Suppress("UNCHECKED_CAST")
-object ChessPlayerDataSerializer : KSerializer<Any> {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ChessPlayerData") {
+object ChessPlayerSerializer : KSerializer<Any> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ChessPlayer") {
         element<String>("type")
         element("value", buildSerialDescriptor("ChessPlayerValue", SerialKind.CONTEXTUAL))
     }
@@ -77,7 +77,7 @@ object ChessPlayerDataSerializer : KSerializer<Any> {
     }
 }
 
-abstract class ChessPlayer<T : Any>(val player: T, val color: Color, val name: String, val game: ChessGame) {
+abstract class ChessSide<T : Any>(val player: T, val color: Color, val name: String, val game: ChessGame) {
 
     @Suppress("UNCHECKED_CAST")
     val type: ChessPlayerType<T> get() = playerType(player) as ChessPlayerType<T>

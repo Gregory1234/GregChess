@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.bukkit.chess.player.BukkitPlayer
+import gregc.gregchess.bukkit.chess.player.BukkitChessSide
 import gregc.gregchess.bukkit.chess.player.Stockfish
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
@@ -69,7 +69,7 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
     }
 
     private fun registerPlayerTypes() = with(GregChess) {
-        register("bukkit", ChessPlayerType(PlayerSerializer) { c, g -> BukkitPlayer(this, c, g) })
+        register("bukkit", ChessPlayerType(PlayerSerializer) { c, g -> BukkitChessSide(this, c, g) })
         register("stockfish", enginePlayerType<Stockfish>())
     }
 

@@ -90,7 +90,7 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
     }
 
     private fun start() {
-        game.players.forEachReal(::giveScoreboard)
+        game.sides.forEachReal(::giveScoreboard)
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l

@@ -2,7 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.fabric.*
-import gregc.gregchess.fabric.chess.player.FabricPlayer
+import gregc.gregchess.fabric.chess.player.FabricChessSide
 import io.github.cottonmc.cotton.gui.networking.NetworkSide
 import io.github.cottonmc.cotton.gui.networking.ScreenNetworking
 import net.minecraft.block.*
@@ -151,7 +151,7 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
         val floorEntity = (world?.getBlockEntity(pos) as? ChessboardFloorBlockEntity) ?: return ActionResult.PASS
         val game = floorEntity.chessControllerBlock?.currentGame ?: return ActionResult.PASS
 
-        val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
+        val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.held != null) {
             cp.makeMove(floorEntity.boardPos!!, floorEntity, player as ServerPlayerEntity, state)

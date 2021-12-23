@@ -2,8 +2,8 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.GregChess
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.chess.player.ChessPlayerType
+import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.register
 import io.mockk.clearMocks
@@ -22,7 +22,7 @@ fun testSettings(
     return GameSettings(name, false, variant, components)
 }
 
-class TestPlayer(name: String, color: Color, game: ChessGame) : ChessPlayer<String>(name, color, name, game)
+class TestChessSide(name: String, color: Color, game: ChessGame) : ChessSide<String>(name, color, name, game)
 
 object TestComponentData : ComponentData<TestComponent> {
     override val componentClass = TestComponent::class
@@ -59,6 +59,8 @@ inline fun <T> measureTime(block: () -> T): T {
 }
 
 fun setupRegistry() = with(GregChess) {
-    register("test", ChessPlayerType(String.serializer()) { c, g -> TestPlayer(this, c, g) })
-    fullLoad()
+    if (!GregChess.locked) {
+        register("test", ChessPlayerType(String.serializer()) { c, g -> TestChessSide(this, c, g) })
+        fullLoad()
+    }
 }

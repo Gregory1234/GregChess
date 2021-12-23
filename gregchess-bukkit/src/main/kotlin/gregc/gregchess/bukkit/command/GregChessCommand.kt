@@ -25,12 +25,12 @@ fun CommandBuilder.requirePlayer() {
     validate(NOT_PLAYER) { sender is Player }
 }
 
-fun CommandBuilder.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitPlayer {
-    validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitPlayer }
-    return { sender.chess!!.opponent as BukkitPlayer }
+fun CommandBuilder.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSide {
+    validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitChessSide }
+    return { sender.chess!!.opponent as BukkitChessSide }
 }
 
-fun CommandBuilder.requireGame(): ExecutionContext<Player>.() -> BukkitPlayer {
+fun CommandBuilder.requireGame(): ExecutionContext<Player>.() -> BukkitChessSide {
     requirePlayer()
     validate(YOU_NOT_IN_GAME) { sender is Player && (sender as Player).currentGame != null }
     return { sender.chess!! }

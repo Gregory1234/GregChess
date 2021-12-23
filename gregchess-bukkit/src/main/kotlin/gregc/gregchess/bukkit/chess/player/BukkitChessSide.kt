@@ -9,7 +9,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
-import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessSide
 import kotlinx.coroutines.launch
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -40,10 +40,10 @@ private class ExtraPlayerInfo(val player: Player) {
 }
 
 private val Player.extra get() = ExtraPlayerInfo.of(this)
-val Player.chess: BukkitPlayer?
+val Player.chess: BukkitChessSide?
     get() {
-        val players = currentGame?.players?.toList().orEmpty()
-            .filterIsInstance<BukkitPlayer>().filter { it.player == this }
+        val players = currentGame?.sides?.toList().orEmpty()
+            .filterIsInstance<BukkitChessSide>().filter { it.player == this }
         return if (players.size == 2)
             players.firstOrNull { it.hasTurn }
         else
@@ -136,7 +136,7 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent
     }
 }
 
-class BukkitPlayer(player: Player, color: Color, game: ChessGame) : ChessPlayer<Player>(player, color, player.name, game) {
+class BukkitChessSide(player: Player, color: Color, game: ChessGame) : ChessSide<Player>(player, color, player.name, game) {
 
     private val silent get() = this.player == opponent.player
 
@@ -164,7 +164,7 @@ class BukkitPlayer(player: Player, color: Color, game: ChessGame) : ChessPlayer<
         private val YOUR_TURN = title("YourTurn")
     }
 
-    override fun toString() = "BukkitPlayer(name=$name)"
+    override fun toString() = "BukkitChessSide(name=$name)"
 
     fun pickUp(pos: Pos) {
         if (!game.running) return
@@ -226,12 +226,12 @@ class BukkitPlayer(player: Player, color: Color, game: ChessGame) : ChessPlayer<
     }
 }
 
-inline fun ByColor<ChessPlayer<*>>.forEachReal(block: (Player) -> Unit) {
-    toList().filterIsInstance<BukkitPlayer>().map { it.player }.distinct().forEach(block)
+inline fun ByColor<ChessSide<*>>.forEachReal(block: (Player) -> Unit) {
+    toList().filterIsInstance<BukkitChessSide>().map { it.player }.distinct().forEach(block)
 }
 
-inline fun ByColor<ChessPlayer<*>>.forEachUnique(block: (BukkitPlayer) -> Unit) {
-    val players = toList().filterIsInstance<BukkitPlayer>()
+inline fun ByColor<ChessSide<*>>.forEachUnique(block: (BukkitChessSide) -> Unit) {
+    val players = toList().filterIsInstance<BukkitChessSide>()
     if (players.size == 2 && players.all { it.player == players[0].player })
         players.filter { it.hasTurn }.forEach(block)
     else

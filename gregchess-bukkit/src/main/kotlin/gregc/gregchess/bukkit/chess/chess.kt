@@ -2,7 +2,7 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.bukkit.chess.player.BukkitPlayer
+import gregc.gregchess.bukkit.chess.player.BukkitChessSide
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
@@ -37,7 +37,7 @@ val Piece.item: ItemStack
 private fun getFloor(name: String): Material = Material.valueOf(config.getString("Chess.Floor.$name")!!)
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
-    val heldPiece = (currentPlayer as? BukkitPlayer)?.held
+    val heldPiece = (currentSide as? BukkitChessSide)?.held
     fun Move.getFloorMaterial(): Material {
         if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
             return getFloor("Special")
@@ -97,7 +97,7 @@ fun ChessGame.getInfo() = textComponent {
     text("UUID: $uuid\n") {
         onClickCopy(uuid)
     }
-    text("Players: ${players.toList().joinToString { "${it.name} as ${it.color.configName}" }}\n")
+    text("Players: ${sides.toList().joinToString { "${it.name} as ${it.color.configName}" }}\n")
     text("Spectators: ${spectators.spectators.joinToString { it.name }}\n")
     text("Arena: ${arena.name}\n")
     text("Preset: ${settings.name}\n")

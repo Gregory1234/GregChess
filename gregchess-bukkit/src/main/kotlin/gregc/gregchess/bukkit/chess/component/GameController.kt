@@ -7,7 +7,7 @@ import gregc.gregchess.bukkit.chess.quick
 import gregc.gregchess.bukkit.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
-import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessSide
 import kotlinx.coroutines.*
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
@@ -33,13 +33,13 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
     internal var quick: ByColor<Boolean> = byColor(false)
 
     private fun onStart() {
-        game.players.forEachReal {
+        game.sides.forEachReal {
             callEvent(PlayerEvent(it, PlayerDirection.JOIN))
             it.games += game
             it.currentGame = game
         }
         callEvent(GameStartStageEvent.INIT)
-        game.players.forEachUnique { it.init() }
+        game.sides.forEachUnique { it.init() }
         callEvent(GameStartStageEvent.START)
     }
 
@@ -62,13 +62,13 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         with(game.board) {
             if (lastMove?.main?.color == Color.WHITE) {
                 val wLast = lastMove
-                game.players.forEachReal { p ->
+                game.sides.forEachReal { p ->
                     p.sendLastMoves(fullmoveCounter + 1u, wLast, null, game.variant.localNameFormatter)
                 }
             }
         }
         val pgn = PGN.generate(game)
-        game.players.forEachUnique {
+        game.sides.forEachUnique {
             game.coroutineScope.launch {
                 it.player.showGameResults(it.color, results)
                 if (!results.endReason.quick)
@@ -81,7 +81,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         }
         if (results.endReason.quick) {
             callEvent(GameStopStageEvent.CLEAR)
-            game.players.forEach(ChessPlayer<*>::stop)
+            game.sides.forEach(ChessSide<*>::stop)
             callEvent(GameStopStageEvent.VERY_END)
             game.coroutineScope.cancel()
             return
@@ -91,7 +91,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
             delay(1.ticks)
             callEvent(GameStopStageEvent.CLEAR)
             delay(1.ticks)
-            game.players.forEach(ChessPlayer<*>::stop)
+            game.sides.forEach(ChessSide<*>::stop)
             callEvent(GameStopStageEvent.VERY_END)
         }.invokeOnCompletion {
             game.coroutineScope.cancel()
@@ -101,10 +101,10 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
     }
 
     private fun onPanic() {
-        game.players.forEach(ChessPlayer<*>::stop)
+        game.sides.forEach(ChessSide<*>::stop)
         val results = game.results!!
         val pgn = PGN.generate(game)
-        game.players.forEachUnique {
+        game.sides.forEachUnique {
             it.player.showGameResults(it.color, results)
             it.player.sendPGN(pgn)
             it.player.games -= game
@@ -135,7 +135,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
                 with(game.board) {
                     val wLast = (if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2])
                     val bLast = lastMove
-                    game.players.forEachReal { p ->
+                    game.sides.forEachReal { p ->
                         p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localNameFormatter)
                     }
                 }

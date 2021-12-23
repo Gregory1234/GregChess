@@ -97,8 +97,8 @@ class SimpleArena(
     fun onStop(e: GameStopStageEvent) {
         if (e == GameStopStageEvent.VERY_END) game = null
         else if (e == GameStopStageEvent.PANIC)
-            for (p in game?.players?.toList().orEmpty())
-                if (p is BukkitPlayer)
+            for (p in game?.sides?.toList().orEmpty())
+                if (p is BukkitChessSide)
                     p.player.leave()
     }
 

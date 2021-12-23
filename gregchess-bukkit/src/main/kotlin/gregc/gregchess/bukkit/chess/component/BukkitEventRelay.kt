@@ -2,7 +2,7 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
-import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessSide
 import org.bukkit.Bukkit
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
@@ -24,7 +24,7 @@ class BukkitEventRelay(game: ChessGame) : SimpleComponent(game) {
     @ChessEventHandler
     fun onTurnEnd(e: TurnEvent) {
         if (e == TurnEvent.END)
-            Bukkit.getPluginManager().callEvent(TurnEndEvent(game, game.currentPlayer))
+            Bukkit.getPluginManager().callEvent(TurnEndEvent(game, game.currentSide))
     }
 
     override fun handleEvent(e: ChessEvent) {
@@ -46,7 +46,7 @@ class GameStartEvent(val game: ChessGame) : Event() {
     }
 }
 
-class TurnEndEvent(val game: ChessGame, val player: ChessPlayer<*>) : Event() {
+class TurnEndEvent(val game: ChessGame, val player: ChessSide<*>) : Event() {
     override fun getHandlers() = handlerList
 
     companion object {

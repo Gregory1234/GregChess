@@ -12,7 +12,7 @@ import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
-import gregc.gregchess.chess.player.EnginePlayer
+import gregc.gregchess.chess.player.EngineChessSide
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
@@ -275,15 +275,15 @@ object GregChessPlugin : Listener {
             subcommand("uci") {
                 val pl = requireGame()
                 validate(ENGINE_NOT_FOUND) {
-                    (sender as? Player)?.currentGame?.players?.toList()
-                        ?.filterIsInstance<EnginePlayer<*>>()?.firstOrNull() != null
+                    (sender as? Player)?.currentGame?.sides?.toList()
+                        ?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
                 }
                 literal("set") {
                     argument(StringArgument("option")) { option ->
                         argument(GreedyStringArgument("value")) { value ->
                             execute<Player> {
                                 coroutineScope.launch {
-                                    pl().game.players.toList().filterIsInstance<EnginePlayer<*>>()
+                                    pl().game.sides.toList().filterIsInstance<EngineChessSide<*>>()
                                         .first().engine.setOption(option(), value())
                                     sender.sendMessage(ENGINE_COMMAND_SENT)
                                 }
@@ -295,7 +295,7 @@ object GregChessPlugin : Listener {
                     argument(GreedyStringArgument("command")) { command ->
                         execute<Player> {
                             coroutineScope.launch {
-                                pl().game.players.toList().filterIsInstance<EnginePlayer<*>>()
+                                pl().game.sides.toList().filterIsInstance<EngineChessSide<*>>()
                                     .first().engine.sendCommand(command())
                                 sender.sendMessage(ENGINE_COMMAND_SENT)
                             }
@@ -328,12 +328,12 @@ object GregChessPlugin : Listener {
             subcommand("undo") {
                 val pl = requireGame()
                 validate(NOTHING_TO_TAKEBACK) { (sender as? Player)?.currentGame?.board?.lastMove != null }
-                validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitPlayer }
+                validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitChessSide }
                 execute<Player> {
-                    val opponent = pl().opponent as BukkitPlayer
+                    val opponent = pl().opponent as BukkitChessSide
                     coroutineScope.launch {
                         drawRequest.invalidSender(sender) {
-                            (pl().game.currentOpponent as? BukkitPlayer)?.player != sender
+                            (pl().game.currentOpponent as? BukkitChessSide)?.player != sender
                         }
                         val res = takebackRequest.call(RequestData(sender, opponent.player, ""), true)
                         if (res == RequestResponse.ACCEPT) {
@@ -422,7 +422,7 @@ object GregChessPlugin : Listener {
 
     @EventHandler
     fun onTurnEnd(e: TurnEndEvent) {
-        if (e.player is BukkitPlayer) {
+        if (e.player is BukkitChessSide) {
             drawRequest.quietRemove(e.player.player)
             takebackRequest.quietRemove(e.player.player)
         }
@@ -430,7 +430,7 @@ object GregChessPlugin : Listener {
 
     @EventHandler
     fun onGameEnd(e: GameEndEvent) {
-        e.game.players.forEachReal {
+        e.game.sides.forEachReal {
             drawRequest.quietRemove(it)
             takebackRequest.quietRemove(it)
         }

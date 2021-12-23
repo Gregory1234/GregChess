@@ -3,7 +3,7 @@ package gregc.gregchess.fabric.chess
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.fabric.GregChessMod
-import gregc.gregchess.fabric.chess.player.FabricPlayer
+import gregc.gregchess.fabric.chess.player.FabricChessSide
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf
@@ -81,7 +81,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
         if (!pieceEntity.exists) return ActionResult.PASS
         val game = pieceEntity.currentGame ?: return ActionResult.PASS
 
-        val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
+        val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.player == player.uuid && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
@@ -168,7 +168,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         if (!pieceEntity.exists) return ActionResult.PASS
         val game = pieceEntity.currentGame ?: return ActionResult.PASS
 
-        val cp = game.currentPlayer as? FabricPlayer ?: return ActionResult.PASS
+        val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.player == player.uuid && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)

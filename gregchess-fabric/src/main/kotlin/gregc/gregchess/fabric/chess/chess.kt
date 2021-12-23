@@ -5,10 +5,10 @@ import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
-import gregc.gregchess.fabric.chess.player.FabricPlayer
+import gregc.gregchess.fabric.chess.player.FabricChessSide
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
-    val heldPiece = (currentPlayer as? FabricPlayer)?.held
+    val heldPiece = (currentSide as? FabricChessSide)?.held
     fun Move.getFloor(): Floor {
         if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
             return Floor.SPECIAL
