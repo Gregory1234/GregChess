@@ -33,6 +33,8 @@ data class FabricRendererSettings(
     override fun getComponent(game: ChessGame) = FabricRenderer(game, this)
 }
 
+val ChessGame.server get() = renderer.data.world.server
+
 fun interface ChessFloorRenderer {
     fun ChessGame.getFloorMaterial(p: Pos): Floor
 }
@@ -85,6 +87,7 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
 
     @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) {
+        println(e)
         when (e) {
             is PieceEvent.Created -> {}
             is PieceEvent.Cleared -> {}
@@ -93,20 +96,20 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
                     when (o) {
                         is BoardPiece -> {
                             val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
-                            if (pieceBlock == null) {
-                                val newBlockPos = tileBlocks[o.pos]?.randomOrNull()?.pos
-                                if (newBlockPos != null) {
-                                    check(data.controller.removePiece(o.piece)) { "Not enough pieces in the controller" }
-                                    o.place(newBlockPos)
-                                }
-                            }
+                            pieceBlock?.safeBreak(!data.controller.addPiece(o.piece))
                         }
                     }
                 for ((_, t) in e.moves)
                     when (t) {
                         is BoardPiece -> {
                             val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
-                            pieceBlock?.safeBreak(!data.controller.addPiece(t.piece))
+                            if (pieceBlock == null) {
+                                val newBlockPos = tileBlocks[t.pos]?.randomOrNull()?.pos
+                                if (newBlockPos != null) {
+                                    check(data.controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
+                                    t.place(newBlockPos)
+                                }
+                            }
                         }
                     }
             }

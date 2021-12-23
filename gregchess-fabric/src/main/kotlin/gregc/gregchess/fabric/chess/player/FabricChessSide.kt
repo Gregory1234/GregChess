@@ -6,9 +6,12 @@ import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.chess.component.renderer
+import gregc.gregchess.fabric.chess.component.server
 import kotlinx.coroutines.launch
 import net.minecraft.block.BlockState
+import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.text.LiteralText
 import kotlin.coroutines.suspendCoroutine
 
 class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : ChessSide<FabricPlayer>(player, color, game) {
@@ -22,7 +25,14 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         }
 
     override fun init() {
-        //player.sendMessage(LiteralText(color.name),false)
+        player.getServerPlayer(game.server)?.sendMessage(LiteralText(color.name),false)
+    }
+
+    override fun startTurn() {
+        val inCheck = game.variant.isInCheck(game, color)
+        if (inCheck) {
+            player.getServerPlayer(game.server)?.sendMessage(LiteralText("in check"),false)
+        }
     }
 
     fun pickUp(pos: Pos) {
@@ -57,6 +67,10 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
 
 inline fun ByColor<ChessSide<*>>.forEachReal(block: (FabricPlayer) -> Unit) {
     toList().filterIsInstance<FabricChessSide>().map { it.player }.distinct().forEach(block)
+}
+
+inline fun ByColor<ChessSide<*>>.forEachRealFabric(server: MinecraftServer?, block: (ServerPlayerEntity) -> Unit) = forEachReal {
+    it.getServerPlayer(server)?.let(block)
 }
 
 inline fun ByColor<ChessSide<*>>.forEachUnique(block: (FabricChessSide) -> Unit) {

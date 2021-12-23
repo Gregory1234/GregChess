@@ -49,9 +49,9 @@ val KClass<out MoveTrait>.traitName get() = traitKey.key
 
 @Serializable
 class DefaultHalfmoveClockTrait : MoveTrait {
-    override val nameTokens = MoveName(emptyMap())
+    override val nameTokens get() = MoveName(emptyMap())
 
-    override val shouldComeBefore = listOf(CaptureTrait::class)
+    override val shouldComeBefore get() = listOf(CaptureTrait::class)
 
     private var halfmoveClock: UInt = 0u
 
@@ -72,7 +72,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 @Serializable
 class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : MoveTrait {
 
-    override val nameTokens = MoveName(mapOf(MoveNameTokenType.CASTLE to side))
+    override val nameTokens get() = MoveName(mapOf(MoveNameTokenType.CASTLE to side))
 
     private val Move.rook get() = pieceTracker["rook"] as BoardPiece
 
@@ -93,7 +93,7 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
     override val nameTokens
         get() = MoveName(promotion?.type?.let { mapOf(MoveNameTokenType.PROMOTION to it) } ?: emptyMap())
 
-    override val shouldComeBefore = listOf(TargetTrait::class)
+    override val shouldComeBefore get() = listOf(TargetTrait::class)
 
     override fun execute(game: ChessGame, move: Move) {
         val promotion = promotion ?: throw TraitPreconditionException(this, "Promotion not chosen", NullPointerException())
@@ -113,12 +113,12 @@ class NameTrait(override val nameTokens: MoveName) : MoveTrait
 
 @Serializable
 class RequireFlagTrait(val flags: Map<Pos, Set<ChessFlag>>) : MoveTrait {
-    override val nameTokens = MoveName(emptyMap())
+    override val nameTokens get() = MoveName(emptyMap())
 }
 
 @Serializable
 class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
-    override val nameTokens = MoveName(emptyMap())
+    override val nameTokens get() = MoveName(emptyMap())
 
     override fun execute(game: ChessGame, move: Move) {
         for ((p, f) in flags)
@@ -198,13 +198,13 @@ class PawnOriginTrait : MoveTrait {
     }
 }
 
-private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessGame): UniquenessCoordinate {
+private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessGame): UniquenessCoordinate? {
     val pieces = game.board.pieces.filter { it.color == piece.color && it.type == piece.type }
     val consideredPieces = pieces.filter { p ->
         p.getMoves(game.board).any { it.getTrait<TargetTrait>()?.target == target && game.variant.isLegal(it, game) }
     }
     return when {
-        consideredPieces.size == 1 -> UniquenessCoordinate()
+        consideredPieces.size == 1 -> null
         consideredPieces.count { it.pos.file == piece.pos.file } == 1 -> UniquenessCoordinate(file = piece.pos.file)
         consideredPieces.count { it.pos.rank == piece.pos.rank } == 1 -> UniquenessCoordinate(rank = piece.pos.rank)
         else -> UniquenessCoordinate(piece.pos)
@@ -231,9 +231,9 @@ class PieceOriginTrait : MoveTrait {
 
 @Serializable
 class TargetTrait(val target: Pos) : MoveTrait {
-    override val nameTokens = MoveName(mapOf(MoveNameTokenType.TARGET to target))
+    override val nameTokens get() = MoveName(mapOf(MoveNameTokenType.TARGET to target))
 
-    override val shouldComeBefore = listOf(CaptureTrait::class)
+    override val shouldComeBefore get() = listOf(CaptureTrait::class)
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
         move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target))

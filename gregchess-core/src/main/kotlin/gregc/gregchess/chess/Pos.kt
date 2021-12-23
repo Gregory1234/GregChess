@@ -126,6 +126,8 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
             val str = decoder.decodeString()
             return if (str.length == 2)
                 UniquenessCoordinate(Pos.parseFromString(str))
+            else if (str.isEmpty())
+                UniquenessCoordinate()
             else when (str.single()) {
                 in '1'..'8' -> UniquenessCoordinate(rank = str.single() - '1')
                 in 'a'..'h' -> UniquenessCoordinate(file = str.single() - 'a')
