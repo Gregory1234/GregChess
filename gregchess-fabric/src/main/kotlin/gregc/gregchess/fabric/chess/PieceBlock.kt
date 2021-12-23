@@ -4,6 +4,7 @@ import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.chess.player.FabricChessSide
+import gregc.gregchess.fabric.chess.player.gregchess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf
@@ -83,7 +84,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
 
         val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
-        if (cp.player == player.uuid && cp.held == null && cp.color == piece.color) {
+        if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
@@ -170,7 +171,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
 
         val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
-        if (cp.player == player.uuid && cp.held == null && cp.color == piece.color) {
+        if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {

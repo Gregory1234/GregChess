@@ -33,7 +33,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
     internal var quick: ByColor<Boolean> = byColor(false)
 
     private fun onStart() {
-        game.sides.forEachReal {
+        game.sides.forEachRealBukkit {
             callEvent(PlayerEvent(it, PlayerDirection.JOIN))
             it.games += game
             it.currentGame = game
@@ -62,21 +62,23 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         with(game.board) {
             if (lastMove?.main?.color == Color.WHITE) {
                 val wLast = lastMove
-                game.sides.forEachReal { p ->
+                game.sides.forEachRealBukkit { p ->
                     p.sendLastMoves(fullmoveCounter + 1u, wLast, null, game.variant.localNameFormatter)
                 }
             }
         }
         val pgn = PGN.generate(game)
         game.sides.forEachUnique {
-            game.coroutineScope.launch {
-                it.player.showGameResults(it.color, results)
-                if (!results.endReason.quick)
-                    delay((if (quick[it.color]) 0 else 3).seconds)
-                callEvent(PlayerEvent(it.player, PlayerDirection.LEAVE))
-                it.player.sendPGN(pgn)
-                it.player.games -= game
-                it.player.currentGame = null
+            it.bukkit?.let { player ->
+                game.coroutineScope.launch {
+                    player.showGameResults(it.color, results)
+                    if (!results.endReason.quick)
+                        delay((if (quick[it.color]) 0 else 3).seconds)
+                    callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
+                    player.sendPGN(pgn)
+                    player.games -= game
+                    player.currentGame = null
+                }
             }
         }
         if (results.endReason.quick) {
@@ -105,10 +107,12 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         val results = game.results!!
         val pgn = PGN.generate(game)
         game.sides.forEachUnique {
-            it.player.showGameResults(it.color, results)
-            it.player.sendPGN(pgn)
-            it.player.games -= game
-            it.player.currentGame = null
+            it.bukkit?.let { player ->
+                player.showGameResults(it.color, results)
+                player.sendPGN(pgn)
+                player.games -= game
+                player.currentGame = null
+            }
         }
         callEvent(GameStopStageEvent.PANIC)
         game.coroutineScope.cancel()
@@ -135,7 +139,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
                 with(game.board) {
                     val wLast = (if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2])
                     val bLast = lastMove
-                    game.sides.forEachReal { p ->
+                    game.sides.forEachRealBukkit { p ->
                         p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localNameFormatter)
                     }
                 }

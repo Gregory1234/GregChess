@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit.chess.component
 import gregc.gregchess.GregChess
 import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.player.forEachReal
+import gregc.gregchess.bukkit.chess.player.forEachRealBukkit
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.register
 import gregc.gregchess.bukkitutils.*
@@ -90,7 +90,7 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
     }
 
     private fun start() {
-        game.sides.forEachReal(::giveScoreboard)
+        game.sides.forEachRealBukkit(::giveScoreboard)
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l

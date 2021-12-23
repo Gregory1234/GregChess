@@ -99,7 +99,7 @@ class SimpleArena(
         else if (e == GameStopStageEvent.PANIC)
             for (p in game?.sides?.toList().orEmpty())
                 if (p is BukkitChessSide)
-                    p.player.leave()
+                    p.player.bukkit?.leave()
     }
 
     private fun Player.leave() {

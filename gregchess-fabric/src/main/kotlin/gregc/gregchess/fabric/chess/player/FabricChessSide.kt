@@ -6,20 +6,12 @@ import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.chess.component.renderer
-import gregc.gregchess.registry.name
 import kotlinx.coroutines.launch
 import net.minecraft.block.BlockState
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.LiteralText
-import java.util.*
 import kotlin.coroutines.suspendCoroutine
 
-fun ServerPlayerEntity.showGameResults(color: Color, results: GameResults) {
-    sendMessage(LiteralText(results.endReason.name), false)
-}
-
-// TODO: use a better representation of a "player"
-class FabricChessSide(uuid: UUID, color: Color, game: ChessGame) : ChessSide<UUID>(uuid, color, "fabric player", game) {
+class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : ChessSide<FabricPlayer>(player, color, game) {
 
     var held: BoardPiece? = null
         private set(v) {
@@ -63,7 +55,7 @@ class FabricChessSide(uuid: UUID, color: Color, game: ChessGame) : ChessSide<UUI
     }
 }
 
-inline fun ByColor<ChessSide<*>>.forEachReal(block: (UUID) -> Unit) {
+inline fun ByColor<ChessSide<*>>.forEachReal(block: (FabricPlayer) -> Unit) {
     toList().filterIsInstance<FabricChessSide>().map { it.player }.distinct().forEach(block)
 }
 

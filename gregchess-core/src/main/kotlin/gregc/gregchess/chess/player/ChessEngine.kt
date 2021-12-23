@@ -5,26 +5,16 @@ import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.of
 import kotlinx.coroutines.launch
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.serializer
-import kotlin.reflect.KClass
 
-interface ChessEngine {
-    val name: String
+interface ChessEngine : ChessPlayer {
     fun stop()
     suspend fun setOption(name: String, value: String)
     suspend fun sendCommand(command: String)
     suspend fun getMove(fen: FEN): String
+    override fun initSide(color: Color, game: ChessGame): EngineChessSide<*> = EngineChessSide(this, color, game)
 }
 
-@OptIn(InternalSerializationApi::class)
-fun <T : ChessEngine> enginePlayerType(cl: KClass<T>) =
-    ChessPlayerType(cl.serializer()) { c, g -> EngineChessSide(this, c, g) }
-
-inline fun <reified T : ChessEngine> enginePlayerType() = enginePlayerType(T::class)
-
-class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, game: ChessGame)
-    : ChessSide<T>(engine, color, engine.name, game) {
+class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, game: ChessGame) : ChessSide<T>(engine, color, game) {
 
     override fun toString() = "EngineChessSide(engine=$engine, color=$color)"
 

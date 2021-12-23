@@ -131,7 +131,7 @@ object GregChessPlugin : Listener {
                             if (settings != null) {
                                 val res = duelRequest.call(RequestData(sender, opponent, settings.name))
                                 if (res == RequestResponse.ACCEPT) {
-                                    ChessGame(BukkitChessEnvironment, settings, byColor(sender, opponent)).start()
+                                    ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, opponent.gregchess)).start()
                                 }
                             }
                         }
@@ -146,7 +146,7 @@ object GregChessPlugin : Listener {
                     coroutineScope.launch {
                         val settings = sender.openSettingsMenu()
                         if (settings != null)
-                            ChessGame(BukkitChessEnvironment, settings, byColor(sender, Stockfish())).start()
+                            ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, Stockfish())).start()
                     }
                 }
             }
@@ -169,7 +169,7 @@ object GregChessPlugin : Listener {
                 execute<Player> {
                     coroutineScope.launch {
                         drawRequest.invalidSender(sender) { !pl().hasTurn }
-                        val res = drawRequest.call(RequestData(sender, op().player, ""), true)
+                        val res = drawRequest.call(RequestData(sender, op().player.bukkit!!, ""), true)
                         if (res == RequestResponse.ACCEPT) {
                             pl().game.stop(drawBy(EndReason.DRAW_AGREEMENT))
                         }
@@ -333,9 +333,9 @@ object GregChessPlugin : Listener {
                     val opponent = pl().opponent as BukkitChessSide
                     coroutineScope.launch {
                         drawRequest.invalidSender(sender) {
-                            (pl().game.currentOpponent as? BukkitChessSide)?.player != sender
+                            (pl().game.currentOpponent as? BukkitChessSide)?.player != sender.gregchess
                         }
-                        val res = takebackRequest.call(RequestData(sender, opponent.player, ""), true)
+                        val res = takebackRequest.call(RequestData(sender, opponent.player.bukkit!!, ""), true)
                         if (res == RequestResponse.ACCEPT) {
                             pl().game.board.undoLastMove()
                         }
@@ -423,16 +423,16 @@ object GregChessPlugin : Listener {
     @EventHandler
     fun onTurnEnd(e: TurnEndEvent) {
         if (e.player is BukkitChessSide) {
-            drawRequest.quietRemove(e.player.player)
-            takebackRequest.quietRemove(e.player.player)
+            drawRequest.quietRemove(e.player.player.bukkit!!)
+            takebackRequest.quietRemove(e.player.player.bukkit!!)
         }
     }
 
     @EventHandler
     fun onGameEnd(e: GameEndEvent) {
         e.game.sides.forEachReal {
-            drawRequest.quietRemove(it)
-            takebackRequest.quietRemove(it)
+            drawRequest.quietRemove(it.bukkit!!)
+            takebackRequest.quietRemove(it.bukkit!!)
         }
     }
 

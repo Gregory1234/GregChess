@@ -2,85 +2,24 @@ package gregc.gregchess.chess.player
 
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Color
-import gregc.gregchess.registry.*
+import gregc.gregchess.registry.ClassRegisteredSerializer
+import gregc.gregchess.registry.Registry
 import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
-import kotlin.reflect.KClass
-import kotlin.reflect.full.superclasses
 
-// TODO: consider adding back a separate player interface
-@Serializable(with = ChessPlayerType.Serializer::class)
-class ChessPlayerType<T : Any>(
-    val playerSerializer: KSerializer<T>,
-    val initSide: T.(Color, ChessGame) -> ChessSide<T>
-): NameRegistered {
-
-    object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", Registry.PLAYER_TYPE)
-
-    override val key: RegistryKey<String> get() = Registry.PLAYER_TYPE[this]
-}
-
-internal fun playerType(p: Any) : ChessPlayerType<*> {
-    val visited = mutableListOf<KClass<*>>()
-    val q = mutableListOf<KClass<*>>()
-    var cl: KClass<*> = p::class
-    while (true) {
-        val ret = Registry.PLAYER_TYPE_CLASS.getOrNull(cl)
-        if (ret != null)
-            return ret.key
-        else {
-            visited += cl
-            q.addAll(cl.superclasses)
-            q.removeAll(visited)
-            cl = q.removeFirst()
-        }
-    }
+@Serializable(with = ChessPlayerSerializer::class)
+interface ChessPlayer {
+    val name: String
+    fun initSide(color: Color, game: ChessGame): ChessSide<*>
 }
 
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 @Suppress("UNCHECKED_CAST")
-object ChessPlayerSerializer : KSerializer<Any> {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ChessPlayer") {
-        element<String>("type")
-        element("value", buildSerialDescriptor("ChessPlayerValue", SerialKind.CONTEXTUAL))
-    }
+object ChessPlayerSerializer : ClassRegisteredSerializer<ChessPlayer>("ChessPlayer", Registry.PLAYER_CLASS)
 
-    override fun serialize(encoder: Encoder, value: Any) {
-        val type = playerType(value)
-        val actualSerializer = type.playerSerializer
-        val id = type.key.toString()
-        encoder.encodeStructure(descriptor) {
-            encodeStringElement(descriptor, 0, id)
-            encodeSerializableElement(descriptor, 1, actualSerializer as KSerializer<Any>, value)
-        }
-    }
+abstract class ChessSide<T : ChessPlayer>(val player: T, val color: Color, val game: ChessGame) {
 
-    override fun deserialize(decoder: Decoder): Any = decoder.decodeStructure(descriptor) {
-        var type: ChessPlayerType<*>? = null
-        var ret: Any? = null
-
-        if (decodeSequentially()) { // sequential decoding protocol
-            type = Registry.PLAYER_TYPE[decodeStringElement(descriptor, 0).toKey()]
-            ret = decodeSerializableElement(descriptor, 1, type.playerSerializer)
-        } else {
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> type = Registry.PLAYER_TYPE[decodeStringElement(descriptor, 0).toKey()]
-                    1 -> ret = decodeSerializableElement(descriptor, 1, type!!.playerSerializer)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-        }
-        ret!!
-    }
-}
-
-abstract class ChessSide<T : Any>(val player: T, val color: Color, val name: String, val game: ChessGame) {
-
-    @Suppress("UNCHECKED_CAST")
-    val type: ChessPlayerType<T> get() = playerType(player) as ChessPlayerType<T>
+    val name: String
+        get() = player.name
 
     val opponent
         get() = game[!color]

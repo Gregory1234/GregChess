@@ -3,13 +3,11 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.bukkit.chess.player.BukkitChessSide
+import gregc.gregchess.bukkit.chess.player.BukkitPlayer
 import gregc.gregchess.bukkit.chess.player.Stockfish
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.player.ChessPlayerType
-import gregc.gregchess.chess.player.enginePlayerType
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.chess.variant.ThreeChecks
 import kotlin.time.Duration
@@ -69,8 +67,8 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
     }
 
     private fun registerPlayerTypes() = with(GregChess) {
-        register("bukkit", ChessPlayerType(PlayerSerializer) { c, g -> BukkitChessSide(this, c, g) })
-        register("stockfish", enginePlayerType<Stockfish>())
+        register<BukkitPlayer>("bukkit")
+        register<Stockfish>("stockfish")
     }
 
     private fun registerQuickEndReasons() = with(GregChess) {

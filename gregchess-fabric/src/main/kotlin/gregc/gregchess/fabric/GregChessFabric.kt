@@ -3,10 +3,9 @@ package gregc.gregchess.fabric
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.fabric.chess.component.*
-import gregc.gregchess.fabric.chess.player.FabricChessSide
+import gregc.gregchess.fabric.chess.player.FabricPlayer
 import net.minecraft.util.Rarity
 
 object GregChessFabric : FabricChessExtension(GregChess) {
@@ -32,7 +31,7 @@ object GregChessFabric : FabricChessExtension(GregChess) {
     override fun load() {
         registerItems()
         registerComponents()
-        GregChess.register("fabric", ChessPlayerType(UUIDAsIntArraySerializer) { c, g -> FabricChessSide(this, c, g) })
+        GregChess.register<FabricPlayer>("fabric")
         GregChess.registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
         GregChess.completeFloorRenderers()
     }

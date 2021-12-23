@@ -46,13 +46,13 @@ class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : Run
 class ChessGame private constructor(
     val environment: ChessEnvironment,
     val settings: GameSettings,
-    val playerData: ByColor<Any>,
+    val playerData: ByColor<ChessPlayer>,
     val uuid: UUID,
     initialState: State,
     startTime: LocalDateTime?,
     results: GameResults?
 ) : ChessEventCaller {
-    constructor(environment: ChessEnvironment, settings: GameSettings, playerInfo: ByColor<Any>)
+    constructor(environment: ChessEnvironment, settings: GameSettings, playerInfo: ByColor<ChessPlayer>)
             : this(environment, settings, playerInfo, UUID.randomUUID(), State.INITIAL, null, null)
 
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
@@ -85,7 +85,7 @@ class ChessGame private constructor(
 
         override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
             var uuid: UUID? = null
-            var players: ByColor<Any>? = null
+            var players: ByColor<ChessPlayer>? = null
             var preset: String? = null
             var variant: ChessVariant? = null
             var simpleCastling: Boolean? = null
@@ -181,13 +181,7 @@ class ChessGame private constructor(
     inline fun <reified T : Component> requireComponent(): T = requireComponent(T::class)
 
     @Suppress("UNCHECKED_CAST")
-    val sides: ByColor<ChessSide<*>> = byColor {
-        val d = playerData[it]
-        val type = playerType(d) as ChessPlayerType<Any>
-        with(type) {
-            d.initSide(it, this@ChessGame)
-        }
-    }
+    val sides: ByColor<ChessSide<*>> = byColor { playerData[it].initSide(it, this@ChessGame) }
 
     private fun requireState(s: State) = check(state == s)
 

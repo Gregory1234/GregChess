@@ -12,8 +12,8 @@ class ChessGameTests {
     // TODO: move mocks to initialization to make tests faster
     // TODO: mock Chessboard
 
-    private val playerA = "A"
-    private val playerB = "B"
+    private val playerA = TestPlayer("A")
+    private val playerB = TestPlayer("B")
 
     private val normalSettings = testSettings("normal")
 
