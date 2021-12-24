@@ -19,3 +19,9 @@ dependencies {
     val dokkaVersion: String by props
     implementation("org.jetbrains.dokka:dokka-gradle-plugin:$dokkaVersion")
 }
+
+tasks {
+    compileJava {
+        targetCompatibility = "1.8"
+    }
+}

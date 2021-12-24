@@ -1,7 +1,6 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.GregLogger
-import gregc.gregchess.Loc
 import gregc.gregchess.chess.ChessEnvironment
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import kotlinx.serialization.KSerializer
@@ -42,8 +41,15 @@ class Log4jGregLogger(val logger: Logger) : GregLogger {
     override fun err(msg: String) = logger.error(msg)
 }
 
-val BlockPos.loc get() = Loc(x, y, z)
-val Loc.blockpos get() = BlockPos(x, y, z)
+object BlockPosAsLongSerializer : KSerializer<BlockPos> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("BlockPos", PrimitiveKind.LONG)
+
+    override fun serialize(encoder: Encoder, value: BlockPos) = encoder.encodeLong(value.asLong())
+
+    override fun deserialize(decoder: Decoder): BlockPos = BlockPos.fromLong(decoder.decodeLong())
+
+}
 
 object UUIDAsIntArraySerializer : KSerializer<UUID> {
     override val descriptor: SerialDescriptor
@@ -72,5 +78,6 @@ internal fun defaultModule(server: MinecraftServer): SerializersModule = Seriali
         }
     })
     contextual(UUID::class, UUIDAsIntArraySerializer)
+    contextual(BlockPos::class, BlockPosAsLongSerializer)
     contextual(ChessEnvironment::class, FabricChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
 }

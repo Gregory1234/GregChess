@@ -7,7 +7,6 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
 
-// TODO: make names package qualified
 open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryView: RegistryView<String, T>) :
     KSerializer<T> {
 

@@ -5,14 +5,12 @@ import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.piece.multiMove
 import kotlinx.serialization.Serializable
 
-// TODO: make the serialized version nicer
-// TODO: replace string names with a "move role" class
-// TODO: don't require having all relevant pieces named from the start
 @Serializable
 class PieceTracker private constructor(
     private val pieces: MutableMap<String, MutableList<PlacedPiece>>,
     private val synonyms: MutableMap<String, String> = mutableMapOf()
 ) {
+
     constructor(vararg pieces: Pair<String, PlacedPiece>)
             : this(mapOf(*pieces).mapValues { mutableListOf(it.value) }.toMutableMap())
 

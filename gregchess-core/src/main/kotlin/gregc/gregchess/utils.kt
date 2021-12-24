@@ -33,12 +33,6 @@ internal class SystemGregLogger : GregLogger {
     override fun err(msg: String) = System.err.println(msg)
 }
 
-// TODO: remove this
-@Serializable
-data class Loc(val x: Int, val y: Int, val z: Int) {
-    operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
-}
-
 class MultiExceptionContext {
     private val exceptions = mutableListOf<Exception>()
 

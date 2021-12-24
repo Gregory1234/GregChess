@@ -1,11 +1,11 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.GregLogger
-import gregc.gregchess.Loc
 import gregc.gregchess.bukkitutils.CommandException
 import gregc.gregchess.bukkitutils.Message
 import gregc.gregchess.chess.ChessEnvironment
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -14,7 +14,6 @@ import kotlinx.serialization.modules.SerializersModule
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.configuration.ConfigurationSection
-import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import java.util.*
 import java.util.logging.Logger
@@ -25,6 +24,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+
+@Serializable
+data class Loc(val x: Int, val y: Int, val z: Int) {
+    operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
+}
 
 fun Loc.toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
 fun Location.toLoc() = Loc(x.toInt(), y.toInt(), z.toInt())
@@ -158,15 +162,4 @@ object UUIDAsStringSerializer : KSerializer<UUID> {
 internal fun defaultModule() = SerializersModule {
     contextual(UUID::class, UUIDAsStringSerializer)
     contextual(ChessEnvironment::class, BukkitChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
-}
-
-object PlayerSerializer : KSerializer<Player> {
-    override val descriptor = PrimitiveSerialDescriptor("PlayerAsString", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: Player) {
-        encoder.encodeString(value.uniqueId.toString())
-    }
-
-    // TODO: what if the player is offline?
-    override fun deserialize(decoder: Decoder): Player = Bukkit.getPlayer(UUID.fromString(decoder.decodeString()))!!
 }

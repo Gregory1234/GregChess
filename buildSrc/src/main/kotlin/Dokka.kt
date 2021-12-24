@@ -12,5 +12,4 @@ fun GradleDokkaSourceSetBuilder.gregchessSourceLink(project: Project) = sourceLi
 fun GradleDokkaSourceSetBuilder.externalDocumentationLinkElementList(url: String) = externalDocumentationLink {
     this.url.set(URL(url))
     this.packageListUrl.set(URL(url + "element-list"))
-    println("hello")
 }

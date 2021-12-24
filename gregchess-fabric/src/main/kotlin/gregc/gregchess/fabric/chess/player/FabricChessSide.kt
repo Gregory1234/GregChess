@@ -39,6 +39,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         if (!game.running) return
         val piece = game.board[pos] ?: return
         if (piece.color != color) return
+        println(piece.getLegalMoves(game.board).groupBy { m -> game.variant.getLegality(m, game) })
         held = piece
     }
 

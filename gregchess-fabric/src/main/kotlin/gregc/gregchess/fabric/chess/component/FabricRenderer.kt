@@ -1,14 +1,11 @@
 package gregc.gregchess.fabric.chess.component
 
-import gregc.gregchess.Loc
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceEvent
-import gregc.gregchess.fabric.blockpos
 import gregc.gregchess.fabric.chess.*
-import gregc.gregchess.fabric.loc
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.minecraft.block.enums.DoubleBlockHalf
@@ -18,13 +15,13 @@ import kotlin.reflect.KClass
 
 @Serializable
 data class FabricRendererSettings(
-    val controllerLoc: Loc,
+    val controllerPos: @Contextual BlockPos,
     val world: @Contextual World
 ) : ComponentData<FabricRenderer> {
-    constructor(controller: ChessControllerBlockEntity) : this(controller.pos.loc, controller.world!!)
+    constructor(controller: ChessControllerBlockEntity) : this(controller.pos, controller.world!!)
 
     val controller: ChessControllerBlockEntity
-        get() = world.getBlockEntity(controllerLoc.blockpos) as ChessControllerBlockEntity
+        get() = world.getBlockEntity(controllerPos) as ChessControllerBlockEntity
 
     val floor: List<ChessboardFloorBlockEntity> get() = controller.floorBlockEntities
 
@@ -64,7 +61,7 @@ class FabricRenderer(game: ChessGame, override val data: FabricRendererSettings)
                     it.updateFloor()
                 }
             }
-            (data.world.getBlockEntity(data.controllerLoc.blockpos) as? ChessControllerBlockEntity)?.currentGame = null
+            (data.world.getBlockEntity(data.controllerPos) as? ChessControllerBlockEntity)?.currentGame = null
         }
     }
 
