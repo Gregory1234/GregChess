@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import net.minecraft.block.BlockState
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.LiteralText
+import net.minecraft.text.TranslatableText
 import kotlin.coroutines.suspendCoroutine
 
 class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : ChessSide<FabricPlayer>(player, color, game) {
@@ -25,13 +25,13 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         }
 
     override fun init() {
-        player.getServerPlayer(game.server)?.sendMessage(LiteralText(color.name),false)
+        player.getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }
 
     override fun startTurn() {
         val inCheck = game.variant.isInCheck(game, color)
         if (inCheck) {
-            player.getServerPlayer(game.server)?.sendMessage(LiteralText("in check"),false)
+            player.getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.in_check"),false)
         }
     }
 

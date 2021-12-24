@@ -1,11 +1,16 @@
 package gregc.gregchess.fabric.chess
 
+import gregc.gregchess.chess.GameResults
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
 import gregc.gregchess.fabric.chess.player.FabricChessSide
+import gregc.gregchess.registry.module
+import gregc.gregchess.registry.name
+import net.minecraft.text.Text
+import net.minecraft.text.TranslatableText
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
     val heldPiece = (currentSide as? FabricChessSide)?.held
@@ -31,3 +36,5 @@ fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFl
 
 val ChessVariant.floorRenderer: ChessFloorRenderer
     get() = FabricRegistry.VARIANT_FLOOR_RENDERER[this]
+
+val GameResults.text: Text get() = TranslatableText("end_reason.${endReason.module.namespace}.${endReason.name}", *args.toTypedArray())
