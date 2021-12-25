@@ -2,14 +2,15 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     id("org.jetbrains.dokka")
+    `maven-publish`
 }
 
 dependencies {
     implementation(kotlin("reflect"))
     val kotlinxSerializationVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
     val kotlinxCoroutinesVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
     testImplementation(kotlin("test"))
     val junitVersion: String by project
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
@@ -49,6 +50,23 @@ tasks {
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
+        }
+    }
+    create<Jar>("sourcesJar") {
+        group = "build"
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("core") {
+            groupId = project.group as String
+            artifactId = project.name
+            version = project.version as String
+            from(components["kotlin"])
+            artifact(tasks.getByPath(":gregchess-core:sourcesJar"))
         }
     }
 }

@@ -1,8 +1,5 @@
-@file:UseSerializers(DurationSerializer::class)
-
 package gregc.gregchess.bukkit.chess.player
 
-import gregc.gregchess.DurationSerializer
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
@@ -11,7 +8,8 @@ import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.player.ChessEngine
 import gregc.gregchess.chess.player.NoEngineMoveException
 import kotlinx.coroutines.*
-import kotlinx.serialization.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 

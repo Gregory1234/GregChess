@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization")
     id("fabric-loom")
     id("org.jetbrains.dokka")
+    `maven-publish`
 }
 
 loom.runConfigs.forEach {
@@ -27,9 +28,9 @@ dependencies {
     val fabricKotlinVersion: String by project
     modImplementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
     val fabricLibGuiVersion: String by project
-    modImplementation("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
+    modApi("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
     include("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
-    implementation(project(":gregchess-core"))
+    api(project(":gregchess-core"))
     include(project(":gregchess-core"))
 }
 
@@ -71,7 +72,7 @@ tasks {
         dependsOn(":gregchess-fabric:jar")
         group = "fabric"
         input.set((getByPath(":gregchess-fabric:remapJar") as RemapJarTask).input)
-        archiveFileName.set("${project.name}-${project.version}-remapped.jar")
+        archiveClassifier.set("remapped")
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
@@ -83,6 +84,23 @@ tasks {
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
+        }
+    }
+    create<Jar>("sourcesJar") {
+        group = "build"
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("fabric") {
+            groupId = project.group as String
+            artifactId = project.name
+            version = project.version as String
+            from(components["kotlin"])
+            artifact(tasks.getByPath(":gregchess-fabric:sourcesJar"))
         }
     }
 }

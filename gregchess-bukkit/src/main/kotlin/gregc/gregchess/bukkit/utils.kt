@@ -36,6 +36,8 @@ fun Location.toLoc() = Loc(x.toInt(), y.toInt(), z.toInt())
 val Block.loc: Loc
     get() = Loc(x, y, z)
 
+// TODO: make most of this file internal
+
 @JvmField
 val WRONG_ARGUMENTS_NUMBER = err("WrongArgumentsNumber")
 @JvmField
@@ -60,9 +62,9 @@ val PLAYER_NOT_IN_GAME = err("NotInGame.Player")
 val OPPONENT_NOT_HUMAN = err("NotHuman.Opponent")
 
 
-fun message(n: String) = Message(config, "Message.$n")
-fun title(n: String) = Message(config, "Title.$n")
-fun err(n: String) = Message(config, "Message.Error.$n")
+internal fun message(n: String) = Message(config, "Message.$n")
+internal fun title(n: String) = Message(config, "Title.$n")
+internal fun err(n: String) = Message(config, "Message.Error.$n")
 
 
 

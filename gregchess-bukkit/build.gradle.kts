@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     id("org.jetbrains.dokka")
+    `maven-publish`
 }
 
 val shaded: Configuration by configurations.creating
@@ -13,9 +14,8 @@ dependencies {
     api("org.spigotmc:spigot-api:$spigotVersion")
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
-    val kotlinxCoroutinesVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
     implementation(kotlin("reflect"))
+    api(project(":gregchess-core"))
     shaded(project(":gregchess-core"))
     shaded(project(":bukkit-utils"))
 }
@@ -58,7 +58,7 @@ tasks {
         dependsOn(":gregchess-bukkit:jar")
         from({ getByPath(":gregchess-bukkit:jar").outputs.files.map { zipTree(it) } })
         from({ shaded.resolvedConfiguration.firstLevelModuleDependencies.flatMap { dep -> dep.moduleArtifacts.map { zipTree(it.file) }}})
-        archiveFileName.set("${project.name}-${project.version}-shaded.jar")
+        archiveClassifier.set("shaded")
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
@@ -70,6 +70,23 @@ tasks {
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-json/kotlinx-serialization-json/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
+        }
+    }
+    create<Jar>("sourcesJar") {
+        group = "build"
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("bukkit") {
+            groupId = project.group as String
+            artifactId = project.name
+            version = project.version as String
+            from(components["kotlin"])
+            artifact(tasks.getByPath(":gregchess-bukkit:sourcesJar"))
         }
     }
 }
