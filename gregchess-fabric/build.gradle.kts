@@ -1,3 +1,5 @@
+import net.fabricmc.loom.task.RemapJarTask
+
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
@@ -64,6 +66,12 @@ tasks {
     jar {
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
+    }
+    create<RemapJarTask>("unshadedRemapJar") {
+        dependsOn(":gregchess-fabric:jar")
+        group = "fabric"
+        input.set((getByPath(":gregchess-fabric:remapJar") as RemapJarTask).input)
+        archiveFileName.set("${project.name}-${project.version}-remapped.jar")
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {

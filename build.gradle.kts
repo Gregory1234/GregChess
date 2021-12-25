@@ -18,10 +18,10 @@ tasks {
     create<Copy>("createSpigotJar") {
         group = "gregchess"
         dependsOn(":gregchess-core:test")
-        dependsOn(":gregchess-bukkit:jar")
+        dependsOn(":gregchess-bukkit:shadedJar")
         getByPath(":gregchess-bukkit:compileKotlin").mustRunAfter(":gregchess-core:test")
         getByPath(":bukkit-utils:compileKotlin").mustRunAfter(":gregchess-core:test")
-        from(getByPath(":gregchess-bukkit:jar"))
+        from(getByPath(":gregchess-bukkit:shadedJar"))
         into(rootDir)
         rename { "${rootProject.name}-$version-bukkit.jar" }
     }

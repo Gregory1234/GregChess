@@ -50,9 +50,15 @@ tasks {
         }
     }
     jar {
-        from ({ shaded.resolvedConfiguration.firstLevelModuleDependencies.flatMap { dep -> dep.moduleArtifacts.map { zipTree(it.file) }}})
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
+    }
+    create<Jar>("shadedJar") {
+        group = "build"
+        dependsOn(":gregchess-bukkit:jar")
+        from({ getByPath(":gregchess-bukkit:jar").outputs.files.map { zipTree(it) } })
+        from({ shaded.resolvedConfiguration.firstLevelModuleDependencies.flatMap { dep -> dep.moduleArtifacts.map { zipTree(it.file) }}})
+        archiveFileName.set("${project.name}-${project.version}-shaded.jar")
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
