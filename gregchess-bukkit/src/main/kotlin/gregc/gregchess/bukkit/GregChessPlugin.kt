@@ -14,7 +14,8 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.player.EngineChessSide
 import kotlinx.coroutines.*
-import kotlinx.serialization.*
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
@@ -80,7 +81,6 @@ object GregChessPlugin : Listener {
 
     private val duelRequest = RequestManager.register("Duel", "/chess duel accept", "/chess duel cancel")
 
-    @OptIn(ExperimentalSerializationApi::class)
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()

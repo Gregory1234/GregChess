@@ -118,7 +118,6 @@ fun <T : Component, D : ComponentData<T>> ChessModule.registerComponent(
 inline fun <reified T : Component, reified D : ComponentData<T>> ChessModule.registerComponent(id: String) =
     registerComponent(id, T::class, D::class)
 
-@OptIn(InternalSerializationApi::class)
 fun <T : SimpleComponent> ChessModule.registerSimpleComponent(id: String, tcl: KClass<T>) {
     tcl.companionObjectInstance
     register(Registry.COMPONENT_CLASS, id, tcl)
@@ -126,7 +125,6 @@ fun <T : SimpleComponent> ChessModule.registerSimpleComponent(id: String, tcl: K
     register(Registry.COMPONENT_SERIALIZER, tcl, SimpleComponentDataSerializer(tcl))
 }
 
-@OptIn(InternalSerializationApi::class)
 inline fun <reified T : SimpleComponent> ChessModule.registerSimpleComponent(id: String) =
     registerSimpleComponent(id, T::class)
 

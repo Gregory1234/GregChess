@@ -10,37 +10,37 @@ import gregc.gregchess.registry.toKey
 import org.bukkit.entity.Player
 import kotlin.time.Duration
 
-fun playerArgument(name: String): PlayerArgument = PlayerArgument(name, PLAYER_NOT_FOUND)
+internal fun playerArgument(name: String): PlayerArgument = PlayerArgument(name, PLAYER_NOT_FOUND)
 
-fun CommandBuilder.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
+internal fun CommandBuilder.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
 
-fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) {
+internal fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) {
     literal(name) {
         requirePermission("gregchess.chess.$name")
         builder()
     }
 }
 
-fun CommandBuilder.requirePlayer() {
+internal fun CommandBuilder.requirePlayer() {
     validate(NOT_PLAYER) { sender is Player }
 }
 
-fun CommandBuilder.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSide {
+internal fun CommandBuilder.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSide {
     validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitChessSide }
     return { sender.chess!!.opponent as BukkitChessSide }
 }
 
-fun CommandBuilder.requireGame(): ExecutionContext<Player>.() -> BukkitChessSide {
+internal fun CommandBuilder.requireGame(): ExecutionContext<Player>.() -> BukkitChessSide {
     requirePlayer()
     validate(YOU_NOT_IN_GAME) { sender is Player && (sender as Player).currentGame != null }
     return { sender.chess!! }
 }
 
-fun CommandBuilder.requireNoGame() {
+internal fun CommandBuilder.requireNoGame() {
     validate(YOU_IN_GAME) { sender !is Player || (sender as Player).currentGame == null }
 }
 
-class PosArgument(name: String) : CommandArgumentType<Pos>(name) {
+internal class PosArgument(name: String) : CommandArgumentType<Pos>(name) {
     override fun tryParse(strings: List<String>): Pair<Pos, List<String>>? = try {
         if (strings.isEmpty()) null else Pos.parseFromString(strings.first()) to strings.drop(1)
     } catch (e: IllegalArgumentException) {
@@ -48,7 +48,7 @@ class PosArgument(name: String) : CommandArgumentType<Pos>(name) {
     }
 }
 
-class RegistryArgument<T>(name: String, val registryView: FiniteRegistryView<String, T>) : CommandArgumentType<T>(name) {
+internal class RegistryArgument<T>(name: String, val registryView: FiniteRegistryView<String, T>) : CommandArgumentType<T>(name) {
     override fun tryParse(strings: List<String>): Pair<T, List<String>>? = try {
         if (strings.isEmpty()) null else registryView[strings.first().toKey()] to strings.drop(1)
     } catch (e: IllegalArgumentException) {
@@ -60,7 +60,7 @@ class RegistryArgument<T>(name: String, val registryView: FiniteRegistryView<Str
 
 }
 
-class FENArgument(name: String) : CommandArgumentType<FEN>(name) {
+internal class FENArgument(name: String) : CommandArgumentType<FEN>(name) {
     override fun tryParse(strings: List<String>): Pair<FEN, List<String>>? = try {
         FEN.parseFromString(strings.joinToString(" ")) to emptyList()
     } catch (e: FEN.FENFormatException) {
@@ -68,7 +68,7 @@ class FENArgument(name: String) : CommandArgumentType<FEN>(name) {
     }
 }
 
-class DurationArgument(name: String) : CommandArgumentType<Duration>(name, WRONG_DURATION_FORMAT) {
+internal class DurationArgument(name: String) : CommandArgumentType<Duration>(name, WRONG_DURATION_FORMAT) {
     override fun tryParse(strings: List<String>): Pair<Duration, List<String>>? =
         strings.firstOrNull()?.toDurationOrNull()?.to(strings.drop(1))
 }

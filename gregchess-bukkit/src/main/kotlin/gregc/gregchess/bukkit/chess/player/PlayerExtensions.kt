@@ -8,14 +8,9 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.piece.Piece
-import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 val Player.gregchess: BukkitPlayer get() = BukkitPlayer(uniqueId, name)
-
-fun CommandSender.sendMessage(msg: Message) = sendMessage(msg.get())
-
-fun Player.sendTitleFull(title: String?, subtitle: String?) = sendTitle(title, subtitle, 10, 70, 20)
 
 private val SPECTATOR_WINNER = byColor { title("Spectator.${it.configName}Won") }
 private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")

@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.CLASS)
 @DslMarker
-annotation class CommandDsl
+private annotation class CommandDsl
 
 class CommandEnvironment(
     val plugin: JavaPlugin,

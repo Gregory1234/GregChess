@@ -4,7 +4,7 @@ import gregc.gregchess.bukkit.chess.configName
 import gregc.gregchess.bukkit.chess.item
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkit.title
-import gregc.gregchess.bukkitutils.Message
+import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece

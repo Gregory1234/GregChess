@@ -4,7 +4,7 @@ import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Color
 import gregc.gregchess.registry.ClassRegisteredSerializer
 import gregc.gregchess.registry.Registry
-import kotlinx.serialization.*
+import kotlinx.serialization.Serializable
 
 @Serializable(with = ChessPlayerSerializer::class)
 interface ChessPlayer {
@@ -12,7 +12,6 @@ interface ChessPlayer {
     fun initSide(color: Color, game: ChessGame): ChessSide<*>
 }
 
-@OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 @Suppress("UNCHECKED_CAST")
 object ChessPlayerSerializer : ClassRegisteredSerializer<ChessPlayer>("ChessPlayer", Registry.PLAYER_CLASS)
 

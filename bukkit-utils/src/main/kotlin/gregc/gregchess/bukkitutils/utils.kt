@@ -3,10 +3,15 @@ package gregc.gregchess.bukkitutils
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
+import org.bukkit.entity.Player
 
 class Message(val config: ConfigurationSection, val path: String) {
     fun get() = config.getPathString(path)
 }
+
+fun CommandSender.sendMessage(msg: Message) = sendMessage(msg.get())
+
+fun Player.sendTitleFull(title: String?, subtitle: String?) = sendTitle(title, subtitle, 10, 70, 20)
 
 fun ConfigurationSection.getPathString(path: String, vararg args: String) =
     getString(path)?.format(*args)?.chatColor() ?: ((currentPath ?: "") + "-" + path)
