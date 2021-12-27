@@ -1,9 +1,8 @@
 package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.GregChessPlugin
-import gregc.gregchess.bukkit.chess.localNameFormatter
+import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.*
-import gregc.gregchess.bukkit.chess.quick
 import gregc.gregchess.bukkit.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
@@ -72,6 +71,14 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
             it.bukkit?.let { player ->
                 game.coroutineScope.launch {
                     player.showGameResults(it.color, results)
+                    if (it.player != it.opponent.player) {
+                        val stats = ChessStats.of(it.player.uuid)
+                        when (results.score) {
+                            GameScore.Draw -> stats.addDraw(game.settings.name)
+                            GameScore.Victory(it.color) -> stats.addWin(game.settings.name)
+                            else -> stats.addLoss(game.settings.name)
+                        }
+                    }
                     if (!results.endReason.quick)
                         delay((if (quick[it.color]) 0 else 3).seconds)
                     callEvent(PlayerEvent(player, PlayerDirection.LEAVE))

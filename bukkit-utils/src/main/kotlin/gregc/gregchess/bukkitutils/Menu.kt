@@ -7,9 +7,12 @@ import org.bukkit.inventory.ItemStack
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 
-suspend fun <T> Player.openMenu(name: Message, content: List<ScreenOption<T>>): T? = suspendCoroutine {
-    openMenu(Menu(name.get(), it, content, null))
+suspend fun <T> Player.openMenu(name: Message, content: List<ScreenOption<T>>): T? = openMenu(name.get(), content)
+
+suspend fun <T> Player.openMenu(name: String, content: List<ScreenOption<T>>): T? = suspendCoroutine {
+    openMenu(Menu(name, it, content, null))
 }
+
 class Menu<T>(
     val name: String,
     private val cont: Continuation<T>,

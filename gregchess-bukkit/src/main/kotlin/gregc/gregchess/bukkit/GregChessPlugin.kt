@@ -24,7 +24,6 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.plugin.java.JavaPlugin
-import java.io.File
 
 object GregChessPlugin : Listener {
     class Plugin : JavaPlugin(), BukkitChessPlugin {
@@ -352,7 +351,7 @@ object GregChessPlugin : Listener {
                 val pl = requireGame()
                 argument(StringArgument("name")) { name ->
                     execute<Player> {
-                        val f = File(plugin.dataFolder, "snapshots/${name()}.json")
+                        val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
                         f.parentFile.mkdirs()
                         f.createNewFile()
                         f.writeText(json.encodeToString(pl().game))
@@ -364,7 +363,7 @@ object GregChessPlugin : Listener {
                 requireNoGame()
                 argument(StringArgument("name")) { name ->
                     execute<Player> {
-                        val f = File(plugin.dataFolder, "snapshots/${name()}.json")
+                        val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
                         json.decodeFromString<ChessGame>(f.readText()).sync()
                     }
                 }
@@ -410,6 +409,22 @@ object GregChessPlugin : Listener {
                 requirePlayer()
                 execute<Player> {
                     sender.isAdmin = !sender.isAdmin
+                }
+            }
+            subcommand("stats") {
+                requirePlayer()
+                execute<Player> {
+                    coroutineScope.launch {
+                        sender.openStatsMenu(sender.name, ChessStats.of(sender.uniqueId))
+                    }
+                }
+                argument(playerArgument("player")) { player ->
+                    execute<Player> {
+                        // TODO: allow checking the stats of offline players
+                        coroutineScope.launch {
+                            sender.openStatsMenu(player().name, ChessStats.of(player().uniqueId))
+                        }
+                    }
                 }
             }
         }
