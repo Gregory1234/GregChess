@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = "gregc.gregchess"
-    version = "1.1"
+    version = "1.2"
 }
 
 tasks {
