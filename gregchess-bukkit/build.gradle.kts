@@ -5,6 +5,11 @@ plugins {
     `maven-publish`
 }
 
+repositories {
+    mavenCentral()
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") { name = "Spigot" }
+}
+
 val shaded: Configuration by configurations.creating
 
 configurations["implementation"].extendsFrom(shaded)

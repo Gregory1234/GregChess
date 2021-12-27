@@ -14,10 +14,4 @@ pluginManagement {
         id("org.jetbrains.dokka") version dokkaVersion
     }
 }
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-        maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") { name = "Spigot" }
-    }
-}
 include("gregchess-core", "gregchess-bukkit", "gregchess-fabric", "bukkit-utils")

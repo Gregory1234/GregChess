@@ -5,6 +5,10 @@ plugins {
     `maven-publish`
 }
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     implementation(kotlin("reflect"))
     val kotlinxSerializationVersion: String by project

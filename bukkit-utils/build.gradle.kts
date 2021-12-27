@@ -4,6 +4,11 @@ plugins {
     `maven-publish`
 }
 
+repositories {
+    mavenCentral()
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") { name = "Spigot" }
+}
+
 dependencies {
     val spigotVersion: String by project
     api("org.spigotmc:spigot-api:$spigotVersion")
