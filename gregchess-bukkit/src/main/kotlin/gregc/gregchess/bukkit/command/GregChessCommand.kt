@@ -12,6 +12,8 @@ import kotlin.time.Duration
 
 internal fun playerArgument(name: String): PlayerArgument = PlayerArgument(name, PLAYER_NOT_FOUND)
 
+internal fun offlinePlayerArgument(name: String): OfflinePlayerArgument = OfflinePlayerArgument(name, PLAYER_NOT_FOUND)
+
 internal fun CommandBuilder.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
 
 internal fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) {

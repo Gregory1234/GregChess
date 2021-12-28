@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkitutils
 
-import org.bukkit.ChatColor
+import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
@@ -29,3 +29,6 @@ inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) 
     p.sendMessage(e.error.get())
     err(e)
 }
+
+fun getOfflinePlayerByName(name: String): OfflinePlayer? =
+    Bukkit.getOfflinePlayers().filter { it.name == name }.maxByOrNull { it.lastPlayed }

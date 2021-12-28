@@ -5,6 +5,7 @@ import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import kotlinx.coroutines.*
 import org.bukkit.Bukkit
+import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
@@ -245,6 +246,17 @@ inline fun <reified E : Enum<E>> enumArgument(name: String) = EnumArgument(E::cl
 class PlayerArgument(name: String, msg: Message) : CommandArgumentType<Player>(name, msg) {
     override fun tryParse(strings: List<String>): Pair<Player, List<String>>? = strings.firstOrNull()?.let { n ->
         Bukkit.getPlayer(n)?.let {
+            Pair(it, strings.drop(1))
+        }
+    }
+
+    override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? =
+        if (strings.isEmpty()) Bukkit.getOnlinePlayers().map { it.name }.toSet() else null
+}
+
+class OfflinePlayerArgument(name: String, msg: Message) : CommandArgumentType<OfflinePlayer>(name, msg) {
+    override fun tryParse(strings: List<String>): Pair<OfflinePlayer, List<String>>? = strings.firstOrNull()?.let { n ->
+        getOfflinePlayerByName(n)?.let {
             Pair(it, strings.drop(1))
         }
     }

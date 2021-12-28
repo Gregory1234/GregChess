@@ -418,11 +418,10 @@ object GregChessPlugin : Listener {
                         sender.openStatsMenu(sender.name, ChessStats.of(sender.uniqueId))
                     }
                 }
-                argument(playerArgument("player")) { player ->
+                argument(offlinePlayerArgument("player")) { player ->
                     execute<Player> {
-                        // TODO: allow checking the stats of offline players
                         coroutineScope.launch {
-                            sender.openStatsMenu(player().name, ChessStats.of(player().uniqueId))
+                            sender.openStatsMenu(player().name!!, ChessStats.of(player().uniqueId))
                         }
                     }
                 }

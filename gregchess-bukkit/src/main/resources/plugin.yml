@@ -45,6 +45,7 @@ permissions:
       gregchess.chess.serial: true
       gregchess.chess.info.*: true
       gregchess.chess.admin: true
+      gregchess.chess.stats: true
   gregchess.chess.duel:
     description: Can use /chess duel
     default: true
@@ -122,5 +123,8 @@ permissions:
     default: op
   gregchess.chess.admin:
     description: Can use /chess admin
+    default: op
+  gregchess.chess.stats:
+    description: Can use /chess stats
     default: op
 
