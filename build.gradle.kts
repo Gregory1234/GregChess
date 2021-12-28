@@ -10,6 +10,10 @@ allprojects {
     version = "1.2"
 }
 
+repositories {
+    mavenCentral()
+}
+
 tasks {
     project(":gregchess-core").getTasksByName("test", true).forEach {
         it.outputs.upToDateWhen { false }
