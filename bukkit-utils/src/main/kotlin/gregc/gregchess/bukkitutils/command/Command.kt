@@ -1,8 +1,6 @@
 package gregc.gregchess.bukkitutils.command
 
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.bukkitutils.coroutines.BukkitContext
-import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import kotlinx.coroutines.*
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
@@ -16,7 +14,7 @@ import kotlin.reflect.KClass
 @DslMarker
 private annotation class CommandDsl
 
-class CommandEnvironment(
+data class CommandEnvironment(
     val plugin: JavaPlugin,
     val coroutineScope: CoroutineScope,
     val wrongArgumentsNumberMessage: Message,
@@ -25,8 +23,7 @@ class CommandEnvironment(
 
 @CommandDsl
 class CommandBuilder {
-    private val onExecutePartial = mutableListOf<ExecutionContext<*>.() -> Unit>()
-    private val onExecute = mutableListOf<ExecutionContext<*>.() -> Unit>()
+    private val onExecute = mutableListOf<suspend ExecutionContext<*>.() -> Unit>()
     private val onArgument = mutableListOf<Pair<CommandArgumentType<*>, CommandBuilder>>()
     private val validator = mutableListOf<ExecutionContext<*>.() -> Message?>()
     private var index: Int = 0
@@ -55,9 +52,22 @@ class CommandBuilder {
         }
     }
 
-    fun execute(builder: ExecutionContext<*>.() -> Unit) {
+    fun executeSuspend(builder: suspend ExecutionContext<*>.() -> Unit) {
         canBeLast = true
         onExecute += builder
+    }
+
+    fun execute(builder: ExecutionContext<*>.() -> Unit) {
+        executeSuspend(builder)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <S : CommandSender> executeSuspend(cl: KClass<S>, builder: suspend ExecutionContext<S>.() -> Unit) {
+        executeSuspend {
+            if (cl.isInstance(this.sender)) {
+                (this as ExecutionContext<S>).builder()
+            }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -70,36 +80,22 @@ class CommandBuilder {
     }
 
     @JvmName("executeSpecial")
+    inline fun <reified S : CommandSender> executeSuspend(noinline builder: suspend ExecutionContext<S>.() -> Unit) {
+        executeSuspend(S::class, builder)
+    }
+
+    @JvmName("executeSpecial")
     inline fun <reified S : CommandSender> execute(noinline builder: ExecutionContext<S>.() -> Unit) {
         execute(S::class, builder)
-    }
-
-    fun partialExecute(builder: ExecutionContext<*>.() -> Unit) {
-        onExecutePartial += builder
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun <S : CommandSender> partialExecute(cl: KClass<S>, builder: ExecutionContext<S>.() -> Unit) {
-        partialExecute {
-            if (cl.isInstance(this.sender)) {
-                (this as ExecutionContext<S>).builder()
-            }
-        }
-    }
-
-    @JvmName("partialExecuteSpecial")
-    inline fun <reified S : CommandSender> partialExecute(noinline builder: ExecutionContext<S>.() -> Unit) {
-        partialExecute(S::class, builder)
     }
 
     private fun executeOn(
         env: CommandEnvironment,
         strings: List<String>,
-        toExec: MutableList<ExecutionContext<*>.() -> Unit>,
+        toExec: MutableList<suspend ExecutionContext<*>.() -> Unit>,
         toValidate: MutableList<ExecutionContext<*>.() -> Message?>,
         context: MutableList<Any?>
     ) {
-        toExec.addAll(onExecutePartial)
         var msg: Message? = null
         for ((arg, com) in onArgument) {
             val parse = arg.tryParse(strings)
@@ -120,21 +116,12 @@ class CommandBuilder {
         )
     }
 
-    fun executeOn(env: CommandEnvironment, sender: CommandSender, strings: List<String>) {
-        val toExec = mutableListOf<ExecutionContext<*>.() -> Unit>()
+    suspend fun executeOn(env: CommandEnvironment, sender: CommandSender, strings: List<String>) {
+        val toExec = mutableListOf<suspend ExecutionContext<*>.() -> Unit>()
         val toValidate = mutableListOf<ExecutionContext<*>.() -> Message?>()
         val ctx = mutableListOf<Any?>()
         executeOn(env, strings, toExec, toValidate, ctx)
-        val ectx = ExecutionContext(sender, ctx, CoroutineScope(
-        BukkitDispatcher(env.plugin, BukkitContext.SYNC) +
-                SupervisorJob(env.coroutineScope.coroutineContext.job) +
-                CoroutineExceptionHandler { _, e ->
-                    if (e is CommandException)
-                        sender.sendMessage(e.error.get())
-                    else
-                        e.printStackTrace()
-                }
-        ))
+        val ectx = ExecutionContext(sender, ctx)
         for (x in toValidate)
             ectx.x()?.let {
                 throw CommandException(it)
@@ -151,7 +138,7 @@ class CommandBuilder {
         context: MutableList<Any?>
     ) {
         outLoop@ for ((arg, com) in onArgument) {
-            val ctx = ExecutionContext(sender, context, env.coroutineScope)
+            val ctx = ExecutionContext(sender, context)
             for (v in validator) {
                 if (ctx.v() != null)
                     continue@outLoop
@@ -201,7 +188,7 @@ abstract class CommandArgumentType<R>(val name: String, val failMessage: Message
 }
 
 @CommandDsl
-class ExecutionContext<out S : CommandSender>(val sender: S, private val arguments: List<Any?>, val coroutineScope: CoroutineScope) {
+class ExecutionContext<out S : CommandSender>(val sender: S, private val arguments: List<Any?>) {
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T> CommandArgument<T>.invoke(): T = arguments[index] as T
@@ -271,9 +258,16 @@ fun CommandBuilder.requirePermission(permission: String, msg: Message) {
 
 fun CommandEnvironment.addCommand(name: String, command: CommandBuilder.() -> Unit) {
     val com = CommandBuilder().apply { command() }
-    plugin.getCommand(name)?.setExecutor { sender, _, _, args ->
-        cTry(sender) {
-            com.executeOn(this, sender, args.toList())
+    plugin.getCommand(name)?.setExecutor { sender, _, trueName, args ->
+        val commandScope = CoroutineScope(coroutineScope.coroutineContext +
+                SupervisorJob(coroutineScope.coroutineContext.job) +
+                CoroutineName("Command $trueName") +
+                CoroutineExceptionHandler { _, e ->
+                    if (e is CommandException)
+                        sender.sendMessage(e.error)
+                })
+        commandScope.launch {
+            com.executeOn(this@addCommand.copy(coroutineScope = commandScope), sender, args.toList())
         }
         true
     }

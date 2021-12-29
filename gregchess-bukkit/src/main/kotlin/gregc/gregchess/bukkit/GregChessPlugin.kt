@@ -118,20 +118,18 @@ object GregChessPlugin : Listener {
                 argument(playerArgument("opponent")) { opponentArg ->
                     validate(OPPONENT_IN_GAME) { !opponentArg().isInGame }
 
-                    execute<Player> {
+                    executeSuspend<Player> {
                         val opponent = opponentArg()
-                        coroutineScope.launch {
-                            val settings = try {
-                                sender.openSettingsMenu()
-                            } catch (e: NoFreeArenasException) {
-                                throw CommandException(NO_ARENAS)
-                            }
+                        val settings = try {
+                            sender.openSettingsMenu()
+                        } catch (e: NoFreeArenasException) {
+                            throw CommandException(NO_ARENAS)
+                        }
 
-                            if (settings != null) {
-                                val res = duelRequest.call(RequestData(sender, opponent, settings.name))
-                                if (res == RequestResponse.ACCEPT) {
-                                    ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, opponent.gregchess)).start()
-                                }
+                        if (settings != null) {
+                            val res = duelRequest.call(RequestData(sender, opponent, settings.name))
+                            if (res == RequestResponse.ACCEPT) {
+                                ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, opponent.gregchess)).start()
                             }
                         }
                     }
@@ -140,13 +138,11 @@ object GregChessPlugin : Listener {
             subcommand("stockfish") {
                 requirePlayer()
                 requireNoGame()
-                execute<Player> {
+                executeSuspend<Player> {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
-                    coroutineScope.launch {
-                        val settings = sender.openSettingsMenu()
-                        if (settings != null)
-                            ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, Stockfish())).start()
-                    }
+                    val settings = sender.openSettingsMenu()
+                    if (settings != null)
+                        ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, Stockfish())).start()
                 }
             }
             subcommand("resign") {
@@ -165,13 +161,11 @@ object GregChessPlugin : Listener {
             subcommand("draw") {
                 val pl = requireGame()
                 val op = requireHumanOpponent()
-                execute<Player> {
-                    coroutineScope.launch {
-                        drawRequest.invalidSender(sender) { !pl().hasTurn }
-                        val res = drawRequest.call(RequestData(sender, op().player.bukkit!!, ""), true)
-                        if (res == RequestResponse.ACCEPT) {
-                            pl().game.stop(drawBy(EndReason.DRAW_AGREEMENT))
-                        }
+                executeSuspend<Player> {
+                    drawRequest.invalidSender(sender) { !pl().hasTurn }
+                    val res = drawRequest.call(RequestData(sender, op().player.bukkit!!, ""), true)
+                    if (res == RequestResponse.ACCEPT) {
+                        pl().game.stop(drawBy(EndReason.DRAW_AGREEMENT))
                     }
                 }
             }
@@ -280,24 +274,20 @@ object GregChessPlugin : Listener {
                 literal("set") {
                     argument(StringArgument("option")) { option ->
                         argument(GreedyStringArgument("value")) { value ->
-                            execute<Player> {
-                                coroutineScope.launch {
-                                    pl().game.sides.toList().filterIsInstance<EngineChessSide<*>>()
-                                        .first().engine.setOption(option(), value())
-                                    sender.sendMessage(ENGINE_COMMAND_SENT)
-                                }
+                            executeSuspend<Player> {
+                                pl().game.sides.toList().filterIsInstance<EngineChessSide<*>>()
+                                    .first().engine.setOption(option(), value())
+                                sender.sendMessage(ENGINE_COMMAND_SENT)
                             }
                         }
                     }
                 }
                 literal("send") {
                     argument(GreedyStringArgument("command")) { command ->
-                        execute<Player> {
-                            coroutineScope.launch {
-                                pl().game.sides.toList().filterIsInstance<EngineChessSide<*>>()
-                                    .first().engine.sendCommand(command())
-                                sender.sendMessage(ENGINE_COMMAND_SENT)
-                            }
+                        executeSuspend<Player> {
+                            pl().game.sides.toList().filterIsInstance<EngineChessSide<*>>()
+                                .first().engine.sendCommand(command())
+                            sender.sendMessage(ENGINE_COMMAND_SENT)
                         }
                     }
                 }
@@ -328,16 +318,14 @@ object GregChessPlugin : Listener {
                 val pl = requireGame()
                 validate(NOTHING_TO_TAKEBACK) { (sender as? Player)?.currentGame?.board?.lastMove != null }
                 validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitChessSide }
-                execute<Player> {
+                executeSuspend<Player> {
                     val opponent = pl().opponent as BukkitChessSide
-                    coroutineScope.launch {
-                        drawRequest.invalidSender(sender) {
-                            (pl().game.currentOpponent as? BukkitChessSide)?.player != sender.gregchess
-                        }
-                        val res = takebackRequest.call(RequestData(sender, opponent.player.bukkit!!, ""), true)
-                        if (res == RequestResponse.ACCEPT) {
-                            pl().game.board.undoLastMove()
-                        }
+                    drawRequest.invalidSender(sender) {
+                        (pl().game.currentOpponent as? BukkitChessSide)?.player != sender.gregchess
+                    }
+                    val res = takebackRequest.call(RequestData(sender, opponent.player.bukkit!!, ""), true)
+                    if (res == RequestResponse.ACCEPT) {
+                        pl().game.board.undoLastMove()
                     }
                 }
             }
@@ -353,6 +341,7 @@ object GregChessPlugin : Listener {
                     execute<Player> {
                         val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
                         f.parentFile.mkdirs()
+                        @Suppress("BlockingMethodInNonBlockingContext")
                         f.createNewFile()
                         f.writeText(json.encodeToString(pl().game))
                     }
@@ -413,16 +402,12 @@ object GregChessPlugin : Listener {
             }
             subcommand("stats") {
                 requirePlayer()
-                execute<Player> {
-                    coroutineScope.launch {
-                        sender.openStatsMenu(sender.name, ChessStats.of(sender.uniqueId))
-                    }
+                executeSuspend<Player> {
+                    sender.openStatsMenu(sender.name, ChessStats.of(sender.uniqueId))
                 }
                 argument(offlinePlayerArgument("player")) { player ->
-                    execute<Player> {
-                        coroutineScope.launch {
-                            sender.openStatsMenu(player().name!!, ChessStats.of(player().uniqueId))
-                        }
+                    executeSuspend<Player> {
+                        sender.openStatsMenu(player().name!!, ChessStats.of(player().uniqueId))
                     }
                 }
             }
