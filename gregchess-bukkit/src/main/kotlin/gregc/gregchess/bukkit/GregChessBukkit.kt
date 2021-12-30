@@ -12,7 +12,7 @@ import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.chess.variant.ThreeChecks
 import kotlin.time.Duration
 
-object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin) {
+internal object GregChessBukkit : ChessExtension {
 
     private val clockSettings: Map<String, ChessClockData>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
@@ -76,7 +76,7 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
         registerQuickEndReason(ChessGameManager.PLUGIN_RESTART)
     }
 
-    override fun load() {
+    override fun load(): Unit = with(GregChess) {
         Arena
         ChessGameManager
         ScoreboardManager
@@ -88,5 +88,6 @@ object GregChessBukkit : BukkitChessExtension(GregChess, GregChessPlugin.plugin)
         GregChess.registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
         GregChess.completeFloorRenderers()
         registerPlayerTypes()
+        registerBukkitPlugin(GregChessPlugin.plugin)
     }
 }

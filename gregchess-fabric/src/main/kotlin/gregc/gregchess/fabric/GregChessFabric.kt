@@ -8,7 +8,7 @@ import gregc.gregchess.fabric.chess.component.*
 import gregc.gregchess.fabric.chess.player.FabricPlayer
 import net.minecraft.util.Rarity
 
-object GregChessFabric : FabricChessExtension(GregChess) {
+internal object GregChessFabric : ChessExtension {
     @JvmField
     val CHESSBOARD_BROKEN = GregChess.register("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY))
     @JvmField
@@ -28,12 +28,12 @@ object GregChessFabric : FabricChessExtension(GregChess) {
         registerSimpleComponent<GameController>("game_controller")
     }
 
-    override fun load() {
+    override fun load(): Unit = with(GregChess) {
         registerItems()
         registerComponents()
-        GregChess.register<FabricPlayer>("fabric")
-        GregChess.registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
-        GregChess.completeFloorRenderers()
+        register<FabricPlayer>("fabric")
+        registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
+        completeFloorRenderers()
     }
 
 }

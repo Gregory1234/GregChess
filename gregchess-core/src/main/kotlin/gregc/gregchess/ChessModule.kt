@@ -15,27 +15,8 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 
-class ChessModuleValidationException(val module: ChessModule, val text: String) : IllegalStateException("$module: $text")
-class ChessExtensionValidationException(val ext: ChessExtension, val text: String) : IllegalStateException("$ext: $text")
-
-class ExtensionType(val name: String) {
-    companion object {
-        val extensionTypes = mutableSetOf<ExtensionType>()
-    }
-
-    override fun toString() = "$name@${hashCode().toString(16)}"
-}
-
-abstract class ChessExtension(val module: ChessModule, val extensionType: ExtensionType) {
-    abstract fun load()
-
-    protected inline fun requireValid(condition: Boolean, message: () -> String) {
-        if (!condition)
-            throw ChessExtensionValidationException(this, message())
-    }
-
-    open fun validate() {}
-    final override fun toString() = "${module.namespace}:${extensionType.name}@${hashCode().toString(16)}"
+fun interface ChessExtension {
+    fun load()
 }
 
 abstract class ChessModule(val namespace: String) {
@@ -45,7 +26,6 @@ abstract class ChessModule(val namespace: String) {
         operator fun get(namespace: String) = modules.first { it.namespace == namespace }
     }
 
-    val extensions = mutableSetOf<ChessExtension>()
     var logger: GregLogger = SystemGregLogger()
     var locked: Boolean = false
         private set
@@ -57,35 +37,16 @@ abstract class ChessModule(val namespace: String) {
         return v
     }
 
-    private inline fun requireValid(condition: Boolean, message: () -> String) {
-        if (!condition)
-            throw ChessModuleValidationException(this, message())
-    }
-
     protected abstract fun load()
-    fun fullLoad() {
+    fun fullLoad(extensions: Collection<ChessExtension> = emptyList()) {
+        require(!locked) { "Module $this was already loaded!" }
         load()
         logger.info("Loaded chess module $this")
-        ExtensionType.extensionTypes.forEach { et ->
-            val count = extensions.count { e -> e.extensionType == et }
-            requireValid(count != 0) { "Extension $et not registered" }
-            requireValid(count == 1) { "Extension $et registered multiple times: $count" }
-        }
-        extensions.forEach {
-            if (it.extensionType in ExtensionType.extensionTypes) {
-                it.load()
-                logger.info("Loaded chess extension $it")
-            } else {
-                logger.warn("Unknown extension $it")
-            }
-        }
+        extensions.forEach { it.load() }
+        logger.info("Loaded ${extensions.size} extensions to $this")
         locked = true
         Registry.REGISTRIES.forEach { it[this].validate() }
         logger.info("Validated chess module $this")
-        extensions.forEach {
-            it.validate()
-            logger.info("Validated chess extension $it")
-        }
         modules += this
     }
 

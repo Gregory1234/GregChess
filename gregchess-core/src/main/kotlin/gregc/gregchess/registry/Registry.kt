@@ -20,7 +20,7 @@ private class RegistryValidationException(
 
 private class RegistryKeyValidationException(
     val module: ChessModule, val type: Registry<*, *, *>, val key: Any?, val value: Any?, val text: String
-) : IllegalArgumentException("$module:${type.name}: $text: $key - $value")
+) : IllegalArgumentException("$module:${type.name}: $text: $key")
 
 private inline fun <K, T, B : RegistryBlock<K, T>> B.requireValid(type: Registry<K, T, B>, condition: Boolean, message: () -> String) {
     if (!condition)
@@ -230,13 +230,6 @@ class ConnectedSetRegistry<E>(name: String, val base: FiniteBiRegistryView<*, E>
             members += key
         }
         fun add(key: E) = set(key, Unit)
-        fun remove(key: E) {
-            requireValidKey(this@ConnectedSetRegistry, key, Unit, !module.locked) { "Module is locked" }
-            requireValidKey(this@ConnectedSetRegistry, key, Unit, key in members) { "Key is not registered" }
-            members -= key
-        }
-        operator fun plusAssign(key: E) = add(key)
-        operator fun minusAssign(key: E) = remove(key)
 
         override fun validate() {}
         operator fun contains(key: E): Boolean = key in members
@@ -254,10 +247,34 @@ class ConnectedSetRegistry<E>(name: String, val base: FiniteBiRegistryView<*, E>
         get() = blocks.flatMap { b -> b.value.keys.map { RegistryKey(b.key, it) } }.toSet()
 
     override val values: Collection<Unit> get() = simpleKeys.map { }
+}
 
-    operator fun contains(key: E): Boolean = key in get(getKeyModule(key))
-    fun add(key: E) = get(getKeyModule(key)).add(key)
-    fun remove(key: E) = get(getKeyModule(key)).remove(key)
-    operator fun plusAssign(key: E) = add(key)
-    operator fun minusAssign(key: E) = remove(key)
+class ConstantRegistry<E>(name: String) : Registry<Unit, E, ConstantRegistry<E>.Block>(name) {
+    private val blocks = mutableMapOf<ChessModule, Block>()
+
+    inner class Block(module: ChessModule) : RegistryBlock<Unit, E>(module) {
+        private var member: E? = null
+        override val keys: Set<Unit> get() = setOfNotNull(member?.let {})
+        override val values: Collection<E> = listOfNotNull(member)
+
+        override fun set(key: Unit, value: E) {
+            requireValidKey(this@ConstantRegistry, key, value, !module.locked) { "Module is locked" }
+            requireValidKey(this@ConstantRegistry, key, value, member == null) { "Key is already registered" }
+            member = value
+        }
+        fun set(value: E) = set(Unit, value)
+
+        override fun validate() = requireValid(this@ConstantRegistry, member != null) { "Registry incomplete" }
+        override fun getValueOrNull(key: Unit): E? = member
+
+        fun getOrNull() = getOrNull(Unit)
+        fun get() = get(Unit)
+    }
+
+    override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
+
+    override val keys: Set<RegistryKey<Unit>>
+        get() = blocks.flatMap { b -> b.value.keys.map { RegistryKey(b.key, it) } }.toSet()
+
+    override val values: Collection<E> get() = blocks.values.flatMap { it.values }
 }

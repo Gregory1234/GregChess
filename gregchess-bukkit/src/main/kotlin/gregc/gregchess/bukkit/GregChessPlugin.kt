@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.ExtensionType
 import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
@@ -46,8 +45,7 @@ object GregChessPlugin : Listener {
 
         override fun onInitialize() {
             GregChess.logger = JavaGregLogger(GregChessPlugin.logger)
-            GregChess.extensions += GregChessBukkit
-            GregChess.fullLoad()
+            GregChess.fullLoad(listOf(GregChessBukkit))
         }
     }
 
@@ -83,7 +81,6 @@ object GregChessPlugin : Listener {
     fun onEnable() {
         registerEvents()
         plugin.saveDefaultConfig()
-        ExtensionType.extensionTypes += BukkitChessExtension.BUKKIT
         for (p in plugin.server.pluginManager.plugins)
             if (p is BukkitChessPlugin)
                 p.onInitialize()

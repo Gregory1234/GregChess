@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
 import gregc.gregchess.chess.EndReason
@@ -37,6 +37,8 @@ object BukkitRegistry {
     val QUICK_END_REASONS = ConnectedSetRegistry("quick_end_reasons", Registry.END_REASON)
     @JvmField
     val HOOKED_COMPONENTS = ConnectedSetRegistry("hooked_components", Registry.COMPONENT_CLASS)
+    @JvmField
+    val BUKKIT_PLUGIN = ConstantRegistry<Plugin>("bukkit_plugin")
 }
 
 fun ChessModule.register(id: String, propertyType: PropertyType) =
@@ -82,16 +84,7 @@ inline fun <reified T : Component> ChessModule.registerHookedComponent() = regis
 fun ChessModule.registerQuickEndReason(endReason: EndReason<*>) =
     get(BukkitRegistry.QUICK_END_REASONS).add(endReason)
 
-abstract class BukkitChessExtension(module: ChessModule, val plugin: Plugin) : ChessExtension(module, BUKKIT) {
-    companion object {
-        @JvmField
-        internal val BUKKIT = ExtensionType("bukkit")
-    }
-
-    open val config: ConfigurationSection get() = plugin.config
-}
-
-val ChessModule.bukkit get() = extensions.filterIsInstance<BukkitChessExtension>().first()
+fun ChessModule.registerBukkitPlugin(plugin: Plugin) = get(BukkitRegistry.BUKKIT_PLUGIN).set(plugin)
 
 interface BukkitChessPlugin {
     fun onInitialize()

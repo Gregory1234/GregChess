@@ -1,6 +1,6 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.Color
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.piece.*
@@ -59,10 +59,3 @@ fun ChessModule.registerSimpleFloorRenderer(variant: ChessVariant, specialSquare
 
 fun ChessModule.completeFloorRenderers() =
     get(FabricRegistry.VARIANT_FLOOR_RENDERER).completeWith { simpleFloorRenderer() }
-
-abstract class FabricChessExtension(module: ChessModule) : ChessExtension(module, FABRIC) {
-    companion object {
-        @JvmField
-        internal val FABRIC = ExtensionType("fabric")
-    }
-}

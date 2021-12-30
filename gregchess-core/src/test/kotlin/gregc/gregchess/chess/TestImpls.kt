@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.GregChess
+import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.chess.player.ChessSide
@@ -8,6 +8,7 @@ import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
 import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.serialization.Serializable
 
 fun testSettings(
     name: String, variant: ChessVariant = ChessVariant.Normal,
@@ -26,6 +27,7 @@ class TestPlayer(override val name: String) : ChessPlayer {
 
 class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSide<TestPlayer>(player, color, game)
 
+@Serializable
 object TestComponentData : ComponentData<TestComponent> {
     override val componentClass = TestComponent::class
 
@@ -61,7 +63,12 @@ inline fun <T> measureTime(block: () -> T): T {
 }
 
 fun setupRegistry() = with(GregChess) {
-    if (!GregChess.locked) {
-        fullLoad()
+    if (!locked) {
+        fullLoad(listOf(ChessExtension {
+            register("test", TEST_END_REASON)
+            register("test", TestVariant)
+            registerComponent<TestComponent, TestComponentData>("test")
+            register<TestPlayer>("test")
+        }))
     }
 }

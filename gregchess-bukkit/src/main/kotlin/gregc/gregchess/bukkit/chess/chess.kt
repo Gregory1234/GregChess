@@ -1,8 +1,10 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.bukkit.*
+import gregc.gregchess.ChessModule
+import gregc.gregchess.bukkit.BukkitRegistry
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitChessSide
+import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.componentKey
@@ -16,10 +18,13 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
+val ChessModule.plugin get() = get(BukkitRegistry.BUKKIT_PLUGIN).get()
+val ChessModule.config get() = plugin.config
+
 val Color.configName get() = name.snakeToPascal()
 
 val PieceType.configName get() = name.snakeToPascal()
-val PieceType.section get() = module.bukkit.config.getConfigurationSection("Chess.Piece.$configName")!!
+val PieceType.section get() = module.config.getConfigurationSection("Chess.Piece.$configName")!!
 val PieceType.localChar get() = section.getString("Char")!!.single()
 val PieceType.localName get() = section.getPathString("Name")
 fun PieceType.getSound(s: String) = Sound.valueOf(section.getString("Sound.$s")!!)
@@ -109,7 +114,7 @@ val EndReason<*>.quick
     get() = this in module[BukkitRegistry.QUICK_END_REASONS]
 
 val GameResults.name
-    get() = endReason.module.bukkit.config
+    get() = endReason.module.config
         .getPathString("Chess.EndReason.${endReason.name.snakeToPascal()}", *args.toTypedArray())
 
 val GameResults.message
@@ -120,4 +125,4 @@ val GameResults.message
         }
     }
 
-val PropertyType.localName get() = module.bukkit.config.getPathString("Scoreboard.${name.snakeToPascal()}")
+val PropertyType.localName get() = module.config.getPathString("Scoreboard.${name.snakeToPascal()}")
