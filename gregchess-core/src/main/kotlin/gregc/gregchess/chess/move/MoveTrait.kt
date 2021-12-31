@@ -217,9 +217,10 @@ class PieceOriginTrait : MoveTrait {
     private var uniquenessCoordinate: UniquenessCoordinate? = null
 
     override val nameTokens
-        get() = MoveName(uniquenessCoordinate?.let {
-            mapOf(MoveNameTokenType.PIECE_TYPE to pieceType, MoveNameTokenType.UNIQUENESS_COORDINATE to it)
-        } ?: emptyMap())
+        get() = MoveName(
+            mapOf(MoveNameTokenType.PIECE_TYPE to pieceType) +
+                (uniquenessCoordinate?.let { mapOf(MoveNameTokenType.UNIQUENESS_COORDINATE to it) } ?: emptyMap())
+        )
 
     override fun setup(game: ChessGame, move: Move) {
         pieceType = move.main.type
