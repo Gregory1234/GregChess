@@ -3,6 +3,8 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.bukkitutils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.bukkit.Bukkit
+import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -60,18 +62,18 @@ class RequestType(val name: String, private val acceptCommand: String, private v
 
     @OptIn(ExperimentalTime::class)
     private fun call(request: Request, simple: Boolean) {
-        if ((simple || config.getBoolean("Request.SelfAccept", true)) && request.sender == request.receiver) {
+        if ((simple || config.getBoolean("Request.SelfAccept", true)) && request.senderUUID == request.receiverUUID) {
             request.cont.resume(RequestResponse.ACCEPT)
             return
         }
         requests[request.uuid] = request
-        request.sender.sendCommandMessage(
+        request.sender?.sendCommandMessage(
             section.getPathString("Sent.Request"),
             config.getPathString("Request.Cancel"),
             if (simple) cancelCommand else "$cancelCommand ${request.uuid}"
         )
-        request.receiver.sendCommandMessage(
-            section.getPathString("Received.Request", request.sender.name, request.value),
+        request.receiver?.sendCommandMessage(
+            section.getPathString("Received.Request", request.senderName, request.value),
             config.getPathString("Request.Accept"),
             if (simple) acceptCommand else "$acceptCommand ${request.uuid}"
         )
@@ -87,7 +89,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     private operator fun plusAssign(request: Request) = call(request, false)
 
     suspend fun call(request: RequestData, simple: Boolean = false): RequestResponse = suspendCoroutine {
-        val req = Request(request.sender, request.receiver, request.value, it)
+        val req = Request(request.senderUUID, request.receiverUUID, request.value, it)
         if (simple) {
             simpleCall(req)
         } else {
@@ -96,11 +98,11 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     }
 
     private fun simpleCall(request: Request) {
-        requests.values.firstOrNull { it.sender == request.sender }?.let {
+        requests.values.firstOrNull { it.senderUUID == request.senderUUID }?.let {
             cancel(it)
             return
         }
-        requests.values.firstOrNull { it.sender == request.receiver && it.receiver == request.sender }?.let {
+        requests.values.firstOrNull { it.senderUUID == request.receiverUUID && it.receiverUUID == request.senderUUID }?.let {
             accept(it)
             return
         }
@@ -108,59 +110,68 @@ class RequestType(val name: String, private val acceptCommand: String, private v
     }
 
     private fun accept(request: Request) {
-        request.sender.sendMessage(section.getPathString("Sent.Accept", request.receiver.name))
-        request.receiver.sendMessage(section.getPathString("Received.Accept", request.sender.name))
+        request.sender?.sendMessage(section.getPathString("Sent.Accept", request.receiverName))
+        request.receiver?.sendMessage(section.getPathString("Received.Accept", request.senderName))
         requests.remove(request.uuid)
         request.cont.resume(RequestResponse.ACCEPT)
     }
 
-    fun accept(p: Player, uuid: UUID) {
+    fun accept(p: UUID, uuid: UUID) {
         val request = requests[uuid]
-        if (request == null || p != request.receiver)
-            p.sendMessage(section.getPathString("Error.NotFound"))
+        if (request == null || p != request.receiverUUID)
+            Bukkit.getPlayer(p)?.sendMessage(section.getPathString("Error.NotFound"))
         else
             accept(request)
     }
 
+    fun accept(p: OfflinePlayer, uuid: UUID) = accept(p.uniqueId, uuid)
+
     private fun cancel(request: Request) {
-        request.sender.sendMessage(section.getPathString("Sent.Cancel", request.receiver.name))
-        request.receiver.sendMessage(section.getPathString("Received.Cancel", request.sender.name))
+        request.sender?.sendMessage(section.getPathString("Sent.Cancel", request.receiverName))
+        request.receiver?.sendMessage(section.getPathString("Received.Cancel", request.senderName))
         requests.remove(request.uuid)
         request.cont.resume(RequestResponse.CANCEL)
     }
 
-    fun cancel(p: Player, uuid: UUID) {
+    fun cancel(p: UUID, uuid: UUID) {
         val request = requests[uuid]
-        if (request == null || p != request.sender)
-            p.sendMessage(section.getPathString("Error.NotFound"))
+        if (request == null || p != request.senderUUID)
+            Bukkit.getPlayer(p)?.sendMessage(section.getPathString("Error.NotFound"))
         else
             cancel(request)
     }
 
+    fun cancel(p: OfflinePlayer, uuid: UUID) = cancel(p.uniqueId, uuid)
+
     private fun expire(request: Request) {
-        request.sender.sendMessage(section.getPathString("Expired", request.receiver.name))
-        request.receiver.sendMessage(section.getPathString("Expired", request.sender.name))
+        request.sender?.sendMessage(section.getPathString("Expired", request.receiverName))
+        request.receiver?.sendMessage(section.getPathString("Expired", request.senderName))
         requests.remove(request.uuid)
         request.cont.resume(RequestResponse.EXPIRED)
     }
 
-    fun quietRemove(p: Player) {
+    fun quietRemove(p: UUID) {
         for (r in requests.values) {
-            if (r.sender == p || r.receiver == p) {
+            if (r.senderUUID == p || r.receiverUUID == p) {
                 requests.remove(r.uuid)
                 r.cont.resume(RequestResponse.QUIT)
             }
         }
     }
 
+    fun quietRemove(p: OfflinePlayer) = quietRemove(p.uniqueId)
 }
 
 enum class RequestResponse {
     ACCEPT, CANCEL, EXPIRED, QUIT
 }
 
-data class RequestData(val sender: Player, val receiver: Player, val value: String)
+data class RequestData(val senderUUID: UUID, val receiverUUID: UUID, val value: String)
 
-class Request(val sender: Player, val receiver: Player, val value: String, val cont: Continuation<RequestResponse>) {
+class Request(val senderUUID: UUID, val receiverUUID: UUID, val value: String, val cont: Continuation<RequestResponse>) {
     val uuid: UUID = UUID.randomUUID()
+    val senderName get() = Bukkit.getOfflinePlayer(senderUUID).name!!
+    val receiverName get() = Bukkit.getOfflinePlayer(receiverUUID).name!!
+    val sender get() = Bukkit.getPlayer(senderUUID)
+    val receiver get() = Bukkit.getPlayer(receiverUUID)
 }

@@ -8,9 +8,10 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.piece.Piece
+import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 
-val Player.gregchess: BukkitPlayer get() = BukkitPlayer(uniqueId, name)
+val OfflinePlayer.gregchess: BukkitPlayer get() = BukkitPlayer(uniqueId)
 
 private val SPECTATOR_WINNER = byColor { title("Spectator.${it.configName}Won") }
 private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")

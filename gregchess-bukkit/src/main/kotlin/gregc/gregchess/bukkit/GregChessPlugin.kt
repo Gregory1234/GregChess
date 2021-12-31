@@ -124,7 +124,7 @@ object GregChessPlugin : Listener {
                         }
 
                         if (settings != null) {
-                            val res = duelRequest.call(RequestData(sender, opponent, settings.name))
+                            val res = duelRequest.call(RequestData(sender.uniqueId, opponent.uniqueId, settings.name))
                             if (res == RequestResponse.ACCEPT) {
                                 ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, opponent.gregchess)).start()
                             }
@@ -160,7 +160,7 @@ object GregChessPlugin : Listener {
                 val op = requireHumanOpponent()
                 executeSuspend<Player> {
                     drawRequest.invalidSender(sender) { !pl().hasTurn }
-                    val res = drawRequest.call(RequestData(sender, op().player.bukkit!!, ""), true)
+                    val res = drawRequest.call(RequestData(sender.uniqueId, op().player.uuid, ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().game.stop(drawBy(EndReason.DRAW_AGREEMENT))
                     }
@@ -318,9 +318,9 @@ object GregChessPlugin : Listener {
                 executeSuspend<Player> {
                     val opponent = pl().opponent as BukkitChessSide
                     drawRequest.invalidSender(sender) {
-                        (pl().game.currentOpponent as? BukkitChessSide)?.player != sender.gregchess
+                        (pl().game.currentOpponent as? BukkitChessSide)?.player?.uuid != sender.uniqueId
                     }
-                    val res = takebackRequest.call(RequestData(sender, opponent.player.bukkit!!, ""), true)
+                    val res = takebackRequest.call(RequestData(sender.uniqueId, opponent.player.uuid, ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().game.board.undoLastMove()
                     }
@@ -419,16 +419,16 @@ object GregChessPlugin : Listener {
     @EventHandler
     fun onTurnEnd(e: TurnEndEvent) {
         if (e.player is BukkitChessSide) {
-            drawRequest.quietRemove(e.player.player.bukkit!!)
-            takebackRequest.quietRemove(e.player.player.bukkit!!)
+            drawRequest.quietRemove(e.player.player.uuid)
+            takebackRequest.quietRemove(e.player.player.uuid)
         }
     }
 
     @EventHandler
     fun onGameEnd(e: GameEndEvent) {
         e.game.sides.forEachReal {
-            drawRequest.quietRemove(it.bukkit!!)
-            takebackRequest.quietRemove(it.bukkit!!)
+            drawRequest.quietRemove(it.uuid)
+            takebackRequest.quietRemove(it.uuid)
         }
     }
 

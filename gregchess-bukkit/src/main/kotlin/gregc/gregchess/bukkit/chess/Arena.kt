@@ -1,10 +1,11 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.register
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
@@ -99,7 +100,7 @@ class SimpleArena(
         else if (e == GameStopStageEvent.PANIC)
             for (p in game?.sides?.toList().orEmpty())
                 if (p is BukkitChessSide)
-                    p.player.bukkit?.leave()
+                    p.bukkit?.leave()
     }
 
     private fun Player.leave() {

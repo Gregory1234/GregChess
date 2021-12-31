@@ -34,7 +34,7 @@ private val Player.extra get() = ExtraPlayerInfo.of(this)
 val Player.chess: BukkitChessSide?
     get() {
         val players = currentGame?.sides?.toList().orEmpty()
-            .filterIsInstance<BukkitChessSide>().filter { it.player == gregchess }
+            .filterIsInstance<BukkitChessSide>().filter { it.player.uuid == uniqueId }
         return if (players.size == 2)
             players.firstOrNull { it.hasTurn }
         else
