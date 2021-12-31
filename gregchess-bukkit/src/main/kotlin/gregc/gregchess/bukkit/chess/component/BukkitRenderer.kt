@@ -101,7 +101,6 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     @ChessEventHandler
     fun handleExplosion(e: AtomicChess.ExplosionEvent) {
-        // TODO: the explosion damages the player
         world.createExplosion(e.pos.location, 4.0f, false, false)
     }
 
