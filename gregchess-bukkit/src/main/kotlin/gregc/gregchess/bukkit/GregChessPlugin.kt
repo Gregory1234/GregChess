@@ -189,16 +189,15 @@ object GregChessPlugin : Listener {
                 argument(RegistryArgument("piece", PieceRegistryView)) { piece ->
                     execute<Player> {
                         val g = pl().game
-                        val p = g.board[g.renderer.getPos(sender.location.toLoc())]!!
-                        multiMove(g.board, p.capture(pl().color), null to BoardPiece(p.pos, piece(), false))
+                        val p = g.renderer.getPos(sender.location.toLoc())
+                        multiMove(g.board, g.board[p]?.capture(pl().color), null to BoardPiece(p, piece(), false))
                         g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
                     argument(PosArgument("pos")) { pos ->
                         execute<Player> {
                             val g = pl().game
-                            val p = g.board[pos()]!!
-                            multiMove(g.board, p.capture(pl().color), null to BoardPiece(p.pos, piece(), false))
+                            multiMove(g.board, g.board[pos()]?.capture(pl().color), null to BoardPiece(pos(), piece(), false))
                             g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }
