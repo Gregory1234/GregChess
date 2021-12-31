@@ -158,7 +158,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
 val ChessGame.gameController get() = requireComponent<GameController>()
 
 fun ChessGame.stop(results: GameResults, quick: ByColor<Boolean>) {
-    gameController.quick = quick
+    gameController.quick = if ((quick.white || quick.black) && sides.white.player == sides.black.player) byColor(true) else quick
     stop(results)
 }
 
