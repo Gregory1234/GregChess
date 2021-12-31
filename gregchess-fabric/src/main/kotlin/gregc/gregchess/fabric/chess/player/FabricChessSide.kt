@@ -81,3 +81,9 @@ inline fun ByColor<ChessSide<*>>.forEachUnique(block: (FabricChessSide) -> Unit)
     else
         players.forEach(block)
 }
+
+inline fun ByColor<ChessSide<*>>.forEachUniqueFabric(server: MinecraftServer?, block: (ServerPlayerEntity, Color) -> Unit) = forEachUnique {
+    it.player.getServerPlayer(server)?.let { player ->
+        block(player, it.color)
+    }
+}

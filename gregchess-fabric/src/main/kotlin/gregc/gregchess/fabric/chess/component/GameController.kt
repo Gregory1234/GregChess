@@ -4,8 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessGameManager
-import gregc.gregchess.fabric.chess.player.forEachUnique
-import gregc.gregchess.fabric.chess.player.showGameResults
+import gregc.gregchess.fabric.chess.player.*
 import kotlinx.coroutines.cancel
 
 class GameController(game: ChessGame) : SimpleComponent(game) {
@@ -18,8 +17,8 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
                 sides.forEachUnique { it.init() }
             }
             GameBaseEvent.STOP -> {
-                sides.forEachUnique {
-                    it.player.getServerPlayer(game.server)?.showGameResults(it.color, results!!)
+                sides.forEachUniqueFabric(game.server) { player, color ->
+                    player.showGameResults(color, results!!)
                 }
                 sides.forEach(ChessSide<*>::stop)
                 ChessGameManager -= game

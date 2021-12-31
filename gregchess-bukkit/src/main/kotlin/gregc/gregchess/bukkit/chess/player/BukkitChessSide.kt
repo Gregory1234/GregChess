@@ -32,6 +32,11 @@ inline fun ByColor<ChessSide<*>>.forEachUnique(block: (BukkitChessSide) -> Unit)
         players.forEach(block)
 }
 
+inline fun ByColor<ChessSide<*>>.forEachUniqueBukkit(block: (Player, Color) -> Unit) = forEachUnique {
+    it.bukkit?.let { player ->
+        block(player, it.color)
+    }
+}
 
 class BukkitChessSide(player: BukkitPlayer, color: Color, game: ChessGame) : ChessSide<BukkitPlayer>(player, color, game) {
 
