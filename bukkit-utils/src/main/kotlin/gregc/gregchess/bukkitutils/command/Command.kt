@@ -18,7 +18,8 @@ data class CommandEnvironment(
     val plugin: JavaPlugin,
     val coroutineScope: CoroutineScope,
     val wrongArgumentsNumberMessage: Message,
-    val wrongArgumentMessage: Message
+    val wrongArgumentMessage: Message,
+    val unhandledExceptionMessage: Message
 )
 
 @CommandDsl
@@ -265,6 +266,10 @@ fun CommandEnvironment.addCommand(name: String, command: CommandBuilder.() -> Un
                 CoroutineExceptionHandler { _, e ->
                     if (e is CommandException)
                         sender.sendMessage(e.error)
+                    else {
+                        sender.sendMessage(unhandledExceptionMessage)
+                        e.printStackTrace()
+                    }
                 })
         commandScope.launch {
             com.executeOn(this@addCommand.copy(coroutineScope = commandScope), sender, args.toList())

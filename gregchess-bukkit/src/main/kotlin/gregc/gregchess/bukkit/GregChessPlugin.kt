@@ -90,7 +90,7 @@ object GregChessPlugin : Listener {
 
         val json = Json { serializersModule = defaultModule() }
 
-        CommandEnvironment(plugin, coroutineScope, WRONG_ARGUMENTS_NUMBER, WRONG_ARGUMENT).addCommand("chess") {
+        CommandEnvironment(plugin, coroutineScope, WRONG_ARGUMENTS_NUMBER, WRONG_ARGUMENT, INTERNAL_ERROR).addCommand("chess") {
             subcommand("duel") {
                 requirePlayer()
                 requireNoGame()

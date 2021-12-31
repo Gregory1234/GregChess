@@ -15,6 +15,8 @@ internal val WRONG_ARGUMENTS_NUMBER = err("WrongArgumentsNumber")
 @JvmField
 internal val WRONG_ARGUMENT = err("WrongArgument")
 @JvmField
+internal val INTERNAL_ERROR = err("InternalError")
+@JvmField
 internal val NO_PERMISSION = err("NoPermission")
 @JvmField
 internal val NOT_PLAYER = err("NotPlayer")

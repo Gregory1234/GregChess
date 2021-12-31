@@ -70,6 +70,7 @@ Message:
     NotPlayer: "&cYou are not a player!"
     WrongArgumentsNumber: "&cWrong number of arguments!"
     WrongArgument: "&cWrong argument!"
+    InternalError: "&cAn internal error occurred!"
     NoPermission: "&cYou do not have permission to do this!"
     PlayerNotFound: "&cPlayer doesn't exist!"
     NoArenas: "&cThere are no free arenas!"
