@@ -224,9 +224,9 @@ class ChessGame private constructor(
 
     fun nextTurn() {
         requireState(State.RUNNING)
-        callEvent(TurnEvent.END)
         variant.checkForGameEnd(this)
         if (running) {
+            callEvent(TurnEvent.END)
             currentTurn++
             startTurn()
         }
