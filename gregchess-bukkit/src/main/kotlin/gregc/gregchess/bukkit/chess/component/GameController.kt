@@ -6,6 +6,7 @@ import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.player.ChessSide
 import kotlinx.coroutines.*
 import org.bukkit.entity.Player
@@ -30,6 +31,7 @@ class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 class GameController(game: ChessGame) : SimpleComponent(game) {
 
     internal var quick: ByColor<Boolean> = byColor(false)
+    private var lastPrintedMove: Move? = null
 
     private fun onStart() {
         game.sides.forEachRealBukkit {
@@ -59,10 +61,18 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         val results = game.results!!
         callEvent(GameStopStageEvent.STOP)
         with(game.board) {
-            if (lastMove?.main?.color == Color.WHITE) {
-                val wLast = lastMove
+            if (lastPrintedMove != lastMove) {
+                val wLast: Move?
+                val bLast: Move?
+                if (lastMove?.main?.color == Color.WHITE) {
+                    wLast = lastMove
+                    bLast = null
+                } else {
+                    wLast = if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2]
+                    bLast = lastMove
+                }
                 game.sides.forEachRealBukkit { p ->
-                    p.sendLastMoves(fullmoveCounter + 1u, wLast, null, game.variant.localNameFormatter)
+                    p.sendLastMoves(game.board.fullmoveCounter + 1u, wLast, bLast, game.variant.localNameFormatter)
                 }
             }
         }
@@ -140,11 +150,12 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         if (e == TurnEvent.END) {
             if (game.currentTurn == Color.BLACK) {
                 with(game.board) {
-                    val wLast = (if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2])
+                    val wLast = if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2]
                     val bLast = lastMove
                     game.sides.forEachRealBukkit { p ->
                         p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localNameFormatter)
                     }
+                    lastPrintedMove = lastMove
                 }
             }
         }
