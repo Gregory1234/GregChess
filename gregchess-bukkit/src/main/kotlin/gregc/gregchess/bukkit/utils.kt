@@ -65,16 +65,16 @@ fun String.toDurationOrNull(): Duration? {
     return null
 }
 
-fun Duration.format(formatString: String): String = toComponents { hours, minutes, seconds, nanoseconds ->
+fun Duration.format(formatString: String): String = (if (isNegative()) Duration.ZERO else this).toComponents { hours, minutes, seconds, nanoseconds ->
     formatString.replace(Regex("""HH|mm|ss|S|SS|SSS|\w|'(\w*)'|"""")) {
         when(it.value) {
             "HH" -> hours.toString()
             "mm" -> minutes.toString().padStart(2,'0')
             "ss" -> seconds.toString().padStart(2,'0')
-            "SSS" -> nanoseconds.toString().take(3).replace(Regex("0+$"), "").ifEmpty { "0" }
-            "SS" -> nanoseconds.toString().take(2).replace(Regex("0+$"), "").ifEmpty { "0" }
-            "S" -> nanoseconds.toString().take(1).replace(Regex("0+$"), "").ifEmpty { "0" }
-            "n" -> nanoseconds.toString()
+            "SSS" -> nanoseconds.toString().padStart(9, '0').take(3)
+            "SS" -> nanoseconds.toString().padStart(9, '0').take(2)
+            "S" -> nanoseconds.toString().padStart(9, '0').take(1)
+            "n" -> nanoseconds.toString().padStart(9, '0')
             "t" -> (nanoseconds / 50000000).toString()
             "T" -> (inWholeNanoseconds / 50000000).toString()
             "\"" -> "'"
