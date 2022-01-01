@@ -5,7 +5,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.register
+import gregc.gregchess.registerEndReason
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -68,7 +68,7 @@ object ThreeChecks : ChessVariant() {
     }
 
     @JvmField
-    val CHECK_LIMIT = GregChess.register("check_limit", DetEndReason(EndReason.Type.NORMAL))
+    val CHECK_LIMIT = GregChess.registerEndReason("check_limit", DetEndReason(EndReason.Type.NORMAL))
 
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
         Normal.getPieceMoves(piece, board).map {

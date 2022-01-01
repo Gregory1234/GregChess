@@ -5,7 +5,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
-import gregc.gregchess.register
+import gregc.gregchess.registerEndReason
 import kotlinx.serialization.Serializable
 
 object AtomicChess : ChessVariant() {
@@ -47,7 +47,7 @@ object AtomicChess : ChessVariant() {
     }
 
     @JvmField
-    val ATOMIC = GregChess.register("atomic", DetEndReason(EndReason.Type.NORMAL))
+    val ATOMIC = GregChess.registerEndReason("atomic", DetEndReason(EndReason.Type.NORMAL))
 
     private fun nextToKing(color: Color, pos: Pos, board: Chessboard): Boolean =
         pos in board.kingOf(color)?.pos?.neighbours().orEmpty()

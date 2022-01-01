@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit.chess.component
 import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.format
-import gregc.gregchess.bukkit.register
+import gregc.gregchess.bukkit.registerPropertyType
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.chess.ChessEventHandler
 import gregc.gregchess.chess.ChessGame
@@ -15,11 +15,11 @@ class BukkitGregChessAdapter(game: ChessGame) : SimpleComponent(game) {
 
     companion object {
         @JvmField
-        val TIME_REMAINING = GregChess.register("time_remaining", PropertyType())
+        val TIME_REMAINING = GregChess.registerPropertyType("time_remaining", PropertyType())
         @JvmField
-        val TIME_REMAINING_SIMPLE = GregChess.register("time_remaining_simple", PropertyType())
+        val TIME_REMAINING_SIMPLE = GregChess.registerPropertyType("time_remaining_simple", PropertyType())
         @JvmField
-        val CHECK_COUNTER = GregChess.register("check_counter", PropertyType())
+        val CHECK_COUNTER = GregChess.registerPropertyType("check_counter", PropertyType())
 
         private val timeFormat: String get() = GregChess.config.getPathString("TimeFormat")
     }

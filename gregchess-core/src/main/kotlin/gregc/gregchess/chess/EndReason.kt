@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.GregChess
-import gregc.gregchess.register
+import gregc.gregchess.registerEndReason
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
@@ -60,29 +60,29 @@ class EndReason<R : GameScore>(val type: Type) : NameRegistered {
 
     companion object {
         @JvmField
-        val CHECKMATE = GregChess.register("checkmate", DetEndReason(Type.NORMAL))
+        val CHECKMATE = GregChess.registerEndReason("checkmate", DetEndReason(Type.NORMAL))
         @JvmField
-        val RESIGNATION = GregChess.register("resignation", DetEndReason(Type.ABANDONED))
+        val RESIGNATION = GregChess.registerEndReason("resignation", DetEndReason(Type.ABANDONED))
         @JvmField
-        val WALKOVER = GregChess.register("walkover", DetEndReason(Type.ABANDONED))
+        val WALKOVER = GregChess.registerEndReason("walkover", DetEndReason(Type.ABANDONED))
         @JvmField
-        val STALEMATE = GregChess.register("stalemate", DrawEndReason(Type.NORMAL))
+        val STALEMATE = GregChess.registerEndReason("stalemate", DrawEndReason(Type.NORMAL))
         @JvmField
-        val INSUFFICIENT_MATERIAL = GregChess.register("insufficient_material", DrawEndReason(Type.NORMAL))
+        val INSUFFICIENT_MATERIAL = GregChess.registerEndReason("insufficient_material", DrawEndReason(Type.NORMAL))
         @JvmField
-        val FIFTY_MOVES = GregChess.register("fifty_moves", DrawEndReason(Type.NORMAL))
+        val FIFTY_MOVES = GregChess.registerEndReason("fifty_moves", DrawEndReason(Type.NORMAL))
         @JvmField
-        val REPETITION = GregChess.register("repetition", DrawEndReason(Type.NORMAL))
+        val REPETITION = GregChess.registerEndReason("repetition", DrawEndReason(Type.NORMAL))
         @JvmField
-        val DRAW_AGREEMENT = GregChess.register("draw_agreement", DrawEndReason(Type.NORMAL))
+        val DRAW_AGREEMENT = GregChess.registerEndReason("draw_agreement", DrawEndReason(Type.NORMAL))
         @JvmField
-        val TIMEOUT = GregChess.register("timeout", DetEndReason(Type.TIME_FORFEIT))
+        val TIMEOUT = GregChess.registerEndReason("timeout", DetEndReason(Type.TIME_FORFEIT))
         @JvmField
-        val DRAW_TIMEOUT = GregChess.register("draw_timeout", DrawEndReason(Type.TIME_FORFEIT))
+        val DRAW_TIMEOUT = GregChess.registerEndReason("draw_timeout", DrawEndReason(Type.TIME_FORFEIT))
         @JvmField
-        val ALL_PIECES_LOST = GregChess.register("all_pieces_lost", DetEndReason(Type.NORMAL))
+        val ALL_PIECES_LOST = GregChess.registerEndReason("all_pieces_lost", DetEndReason(Type.NORMAL))
         @JvmField
-        val ERROR = GregChess.register("error", DrawEndReason(Type.EMERGENCY))
+        val ERROR = GregChess.registerEndReason("error", DrawEndReason(Type.EMERGENCY))
     }
 
     val pgn get() = type.pgn

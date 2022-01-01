@@ -53,16 +53,16 @@ abstract class ChessModule(val namespace: String) {
     final override fun toString() = "$namespace@${hashCode().toString(16)}"
 }
 
-fun ChessModule.register(id: String, pieceType: PieceType) = register(Registry.PIECE_TYPE, id, pieceType)
+fun ChessModule.registerPieceType(id: String, pieceType: PieceType) = register(Registry.PIECE_TYPE, id, pieceType)
 
-fun <T : GameScore> ChessModule.register(id: String, endReason: EndReason<T>) =
+fun <T : GameScore> ChessModule.registerEndReason(id: String, endReason: EndReason<T>) =
     register(Registry.END_REASON, id, endReason)
 
-fun ChessModule.register(id: String, variant: ChessVariant) = register(Registry.VARIANT, id, variant)
+fun ChessModule.registerVariant(id: String, variant: ChessVariant) = register(Registry.VARIANT, id, variant)
 
-fun ChessModule.register(id: String, flagType: ChessFlag) = register(Registry.FLAG, id, flagType)
+fun ChessModule.registerFlag(id: String, flag: ChessFlag) = register(Registry.FLAG, id, flag)
 
-fun <T : Any> ChessModule.register(id: String, moveNameTokenType: MoveNameTokenType<T>) =
+fun <T : Any> ChessModule.registerMoveNameTokenType(id: String, moveNameTokenType: MoveNameTokenType<T>) =
     register(Registry.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
 
 @OptIn(InternalSerializationApi::class)
@@ -92,9 +92,8 @@ inline fun <reified T : SimpleComponent> ChessModule.registerSimpleComponent(id:
 inline fun <reified T : MoveTrait> ChessModule.registerMoveTrait(id: String) =
     register(Registry.MOVE_TRAIT_CLASS, id, T::class)
 
-inline fun <reified T : ChessPlayer> ChessModule.register(id: String) =
+inline fun <reified T : ChessPlayer> ChessModule.registerPlayerClass(id: String) =
     register(Registry.PLAYER_CLASS, id, T::class)
-
 
 inline fun <reified T : PlacedPiece> ChessModule.registerPlacedPieceClass(id: String) =
     register(Registry.PLACED_PIECE_CLASS, id, T::class)

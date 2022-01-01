@@ -67,13 +67,8 @@ internal object GregChessBukkit : ChessExtension {
     }
 
     private fun registerPlayerTypes() = with(GregChess) {
-        register<BukkitPlayer>("bukkit")
-        register<Stockfish>("stockfish")
-    }
-
-    private fun registerQuickEndReasons() = with(GregChess) {
-        registerQuickEndReason(Arena.ARENA_REMOVED)
-        registerQuickEndReason(ChessGameManager.PLUGIN_RESTART)
+        registerPlayerClass<BukkitPlayer>("bukkit")
+        registerPlayerClass<Stockfish>("stockfish")
     }
 
     override fun load(): Unit = with(GregChess) {
@@ -82,7 +77,6 @@ internal object GregChessBukkit : ChessExtension {
         ScoreboardManager
         registerComponents()
         registerSettings()
-        registerQuickEndReasons()
         GregChess.completeSimpleSettings()
         GregChess.completeLocalFormatters()
         GregChess.registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })

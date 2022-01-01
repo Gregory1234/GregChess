@@ -65,10 +65,10 @@ inline fun <T> measureTime(block: () -> T): T {
 fun setupRegistry() = with(GregChess) {
     if (!locked) {
         fullLoad(listOf(ChessExtension {
-            register("test", TEST_END_REASON)
-            register("test", TestVariant)
+            registerEndReason("test", TEST_END_REASON)
+            registerVariant("test", TestVariant)
             registerComponent<TestComponent, TestComponentData>("test")
-            register<TestPlayer>("test")
+            registerPlayerClass<TestPlayer>("test")
         }))
     }
 }

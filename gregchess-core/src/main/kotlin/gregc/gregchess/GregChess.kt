@@ -10,13 +10,13 @@ import gregc.gregchess.chess.variant.*
 object GregChess : ChessModule("gregchess") {
 
     private fun registerVariants() {
-        register("normal", ChessVariant.Normal)
-        register("antichess", Antichess)
-        register("atomic", AtomicChess)
-        register("capture_all", CaptureAll)
-        register("horde", HordeChess)
-        register("king_of_the_hill", KingOfTheHill)
-        register("three_checks", ThreeChecks)
+        registerVariant("normal", ChessVariant.Normal)
+        registerVariant("antichess", Antichess)
+        registerVariant("atomic", AtomicChess)
+        registerVariant("capture_all", CaptureAll)
+        registerVariant("horde", HordeChess)
+        registerVariant("king_of_the_hill", KingOfTheHill)
+        registerVariant("three_checks", ThreeChecks)
     }
 
     private fun registerComponents() {

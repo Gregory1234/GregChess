@@ -5,7 +5,6 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.register
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
@@ -18,7 +17,7 @@ abstract class Arena(val name: String) : ChessListener {
 
     companion object {
         @JvmField
-        val ARENA_REMOVED = GregChess.register("arena_removed", DrawEndReason(EndReason.Type.EMERGENCY))
+        val ARENA_REMOVED = GregChess.registerQuickEndReason("arena_removed", DrawEndReason(EndReason.Type.EMERGENCY))
 
         private val arenas = mutableListOf<Arena>()
 

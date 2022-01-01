@@ -147,7 +147,7 @@ class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
 
     companion object {
         @JvmField
-        val EN_PASSANT = GregChess.register("en_passant", ChessFlag { it == 1u })
+        val EN_PASSANT = GregChess.registerFlag("en_passant", ChessFlag { it == 1u })
     }
 
     override val key get() = Registry.FLAG[this]

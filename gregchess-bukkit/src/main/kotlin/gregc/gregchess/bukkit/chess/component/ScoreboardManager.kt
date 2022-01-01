@@ -5,7 +5,7 @@ import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.forEachRealBukkit
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.register
+import gregc.gregchess.bukkit.registerPropertyType
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
@@ -26,10 +26,10 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
         private val playerPrefix get() = config.getPathString("Scoreboard.PlayerPrefix")
 
         @JvmField
-        val PRESET = GregChess.register("preset", PropertyType())
+        val PRESET = GregChess.registerPropertyType("preset", PropertyType())
 
         @JvmField
-        val PLAYER = GregChess.register("player", PropertyType())
+        val PLAYER = GregChess.registerPropertyType("player", PropertyType())
     }
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard

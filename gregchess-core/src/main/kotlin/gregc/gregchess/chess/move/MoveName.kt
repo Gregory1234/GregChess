@@ -21,24 +21,27 @@ class MoveNameTokenType<T : Any>(val cl: KClass<T>) : NameRegistered {
 
     companion object {
 
+        private inline fun <reified T : Any> mk(name: String) =
+            GregChess.registerMoveNameTokenType(name, MoveNameTokenType(T::class))
+
         @JvmField
-        val PIECE_TYPE = GregChess.register("piece_type", MoveNameTokenType(PieceType::class))
+        val PIECE_TYPE = mk<PieceType>("piece_type")
         @JvmField
-        val UNIQUENESS_COORDINATE = GregChess.register("uniqueness_coordinate", MoveNameTokenType(UniquenessCoordinate::class))
+        val UNIQUENESS_COORDINATE = mk<UniquenessCoordinate>("uniqueness_coordinate")
         @JvmField
-        val CAPTURE = GregChess.register("capture", MoveNameTokenType(Unit::class))
+        val CAPTURE = mk<Unit>("capture")
         @JvmField
-        val TARGET = GregChess.register("target", MoveNameTokenType(Pos::class))
+        val TARGET = mk<Pos>("target")
         @JvmField
-        val PROMOTION = GregChess.register("promotion", MoveNameTokenType(PieceType::class))
+        val PROMOTION = mk<PieceType>("promotion")
         @JvmField
-        val CHECK = GregChess.register("check", MoveNameTokenType(Unit::class))
+        val CHECK = mk<Unit>("check")
         @JvmField
-        val CHECKMATE = GregChess.register("checkmate", MoveNameTokenType(Unit::class))
+        val CHECKMATE = mk<Unit>("checkmate")
         @JvmField
-        val CASTLE = GregChess.register("castle", MoveNameTokenType(BoardSide::class))
+        val CASTLE = mk<BoardSide>("castle")
         @JvmField
-        val EN_PASSANT = GregChess.register("en_passant", MoveNameTokenType(Unit::class))
+        val EN_PASSANT = mk<Unit>("en_passant")
     }
 }
 

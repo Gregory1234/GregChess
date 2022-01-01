@@ -3,8 +3,7 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
-import gregc.gregchess.chess.EndReason
-import gregc.gregchess.chess.Pos
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.variant.ChessVariant
@@ -41,7 +40,7 @@ object BukkitRegistry {
     val BUKKIT_PLUGIN = ConstantRegistry<Plugin>("bukkit_plugin")
 }
 
-fun ChessModule.register(id: String, propertyType: PropertyType) =
+fun ChessModule.registerPropertyType(id: String, propertyType: PropertyType) =
     register(BukkitRegistry.PROPERTY_TYPE, id, propertyType)
 
 inline fun <reified T : Component> ChessModule.registerSettings(noinline settings: SettingsParser<ComponentData<T>>) =
@@ -83,6 +82,11 @@ inline fun <reified T : Component> ChessModule.registerHookedComponent() = regis
 
 fun ChessModule.registerQuickEndReason(endReason: EndReason<*>) =
     get(BukkitRegistry.QUICK_END_REASONS).add(endReason)
+
+fun <T : GameScore> ChessModule.registerQuickEndReason(id: String, endReason: EndReason<T>) =
+    register(Registry.END_REASON, id, endReason).also {
+        registerQuickEndReason(it)
+    }
 
 fun ChessModule.registerBukkitPlugin(plugin: Plugin) = get(BukkitRegistry.BUKKIT_PLUGIN).set(plugin)
 

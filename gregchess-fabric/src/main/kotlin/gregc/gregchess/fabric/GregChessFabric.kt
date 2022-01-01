@@ -10,17 +10,17 @@ import net.minecraft.util.Rarity
 
 internal object GregChessFabric : ChessExtension {
     @JvmField
-    val CHESSBOARD_BROKEN = GregChess.register("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY))
+    val CHESSBOARD_BROKEN = GregChess.registerEndReason("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY))
     @JvmField
-    val ABORTED = GregChess.register("aborted", DrawEndReason(EndReason.Type.EMERGENCY))
+    val ABORTED = GregChess.registerEndReason("aborted", DrawEndReason(EndReason.Type.EMERGENCY))
 
-    private fun registerItems() = with(GregChess) {
-        registerShort(PieceType.PAWN)
-        registerTall(PieceType.KNIGHT, Rarity.UNCOMMON)
-        registerTall(PieceType.BISHOP, Rarity.UNCOMMON)
-        registerTall(PieceType.ROOK, Rarity.RARE)
-        registerTall(PieceType.QUEEN, Rarity.RARE)
-        registerTall(PieceType.KING, Rarity.EPIC)
+    private fun registerPieceBlocks() = with(GregChess) {
+        registerShortPieceBlock(PieceType.PAWN)
+        registerTallPieceBlock(PieceType.KNIGHT, Rarity.UNCOMMON)
+        registerTallPieceBlock(PieceType.BISHOP, Rarity.UNCOMMON)
+        registerTallPieceBlock(PieceType.ROOK, Rarity.RARE)
+        registerTallPieceBlock(PieceType.QUEEN, Rarity.RARE)
+        registerTallPieceBlock(PieceType.KING, Rarity.EPIC)
     }
 
     private fun registerComponents() = with(GregChess) {
@@ -29,9 +29,9 @@ internal object GregChessFabric : ChessExtension {
     }
 
     override fun load(): Unit = with(GregChess) {
-        registerItems()
+        registerPieceBlocks()
         registerComponents()
-        register<FabricPlayer>("fabric")
+        registerPlayerClass<FabricPlayer>("fabric")
         registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
         completeFloorRenderers()
     }
