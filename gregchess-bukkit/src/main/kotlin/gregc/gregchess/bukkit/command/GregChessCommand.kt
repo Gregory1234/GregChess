@@ -8,7 +8,6 @@ import gregc.gregchess.chess.Pos
 import gregc.gregchess.registry.FiniteRegistryView
 import gregc.gregchess.registry.toKey
 import org.bukkit.entity.Player
-import kotlin.time.Duration
 
 internal fun playerArgument(name: String): PlayerArgument = PlayerArgument(name, PLAYER_NOT_FOUND)
 
@@ -70,7 +69,4 @@ internal class FENArgument(name: String) : CommandArgumentType<FEN>(name) {
     }
 }
 
-internal class DurationArgument(name: String) : CommandArgumentType<Duration>(name, WRONG_DURATION_FORMAT) {
-    override fun tryParse(strings: List<String>): Pair<Duration, List<String>>? =
-        strings.firstOrNull()?.toDurationOrNull()?.to(strings.drop(1))
-}
+fun durationArgument(name: String) = DurationArgument(name, WRONG_DURATION_FORMAT)

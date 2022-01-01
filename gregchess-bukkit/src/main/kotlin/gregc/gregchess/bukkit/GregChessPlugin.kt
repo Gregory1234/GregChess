@@ -244,7 +244,7 @@ object GregChessPlugin : Listener {
                 validate(CLOCK_NOT_FOUND) { (sender as? Player)?.currentGame?.clock != null }
                 argument(enumArgument<Color>("side")) { side ->
                     literal("set") {
-                        argument(DurationArgument("time")) { time ->
+                        argument(durationArgument("time")) { time ->
                             execute<Player> {
                                 pl().game.clock!!.setTimer(side(), time())
                                 sender.sendMessage(TIME_OP_DONE)
@@ -252,7 +252,7 @@ object GregChessPlugin : Listener {
                         }
                     }
                     literal("add") {
-                        argument(DurationArgument("time")) { time ->
+                        argument(durationArgument("time")) { time ->
                             execute<Player> {
                                 pl().game.clock!!.addTimer(side(), time())
                                 sender.sendMessage(TIME_OP_DONE)

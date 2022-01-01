@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit.chess.component
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.*
-import gregc.gregchess.bukkit.ticks
+import gregc.gregchess.bukkitutils.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
 import gregc.gregchess.chess.move.Move

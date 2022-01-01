@@ -2,8 +2,8 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.format
 import gregc.gregchess.bukkit.registerPropertyType
+import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.chess.ChessEventHandler
 import gregc.gregchess.chess.ChessGame
