@@ -15,6 +15,9 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
     val kotlinxCoroutinesVersion: String by project
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
+    val slf4jVersion: String by project
+    api("org.slf4j:slf4j-api:$slf4jVersion")
+    testImplementation("org.slf4j:slf4j-jdk14:$slf4jVersion")
     testImplementation(kotlin("test"))
     val junitVersion: String by project
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")

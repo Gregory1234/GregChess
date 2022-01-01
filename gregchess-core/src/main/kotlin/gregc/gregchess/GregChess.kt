@@ -7,7 +7,7 @@ import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.*
 
-object GregChess : ChessModule("gregchess") {
+object GregChess : ChessModule("GregChess", "gregchess") {
 
     private fun registerVariants() {
         registerVariant("normal", ChessVariant.Normal)

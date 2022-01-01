@@ -12,6 +12,8 @@ import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.RegistryBlock
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 
@@ -19,14 +21,13 @@ fun interface ChessExtension {
     fun load()
 }
 
-abstract class ChessModule(val namespace: String) {
+abstract class ChessModule(val name: String, val namespace: String) {
     companion object {
         val modules = mutableSetOf<ChessModule>()
-        fun getOrNull(namespace: String) = modules.firstOrNull { it.namespace == namespace }
         operator fun get(namespace: String) = modules.first { it.namespace == namespace }
     }
 
-    var logger: GregLogger = SystemGregLogger()
+    val logger: Logger = LoggerFactory.getLogger(name)
     var locked: Boolean = false
         private set
 

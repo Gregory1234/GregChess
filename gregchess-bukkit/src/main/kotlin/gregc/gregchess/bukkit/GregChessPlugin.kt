@@ -35,18 +35,11 @@ object GregChessPlugin : Listener {
             INSTANCE = this
         }
 
-        override fun onEnable() {
-            GregChessPlugin.onEnable()
-        }
+        override fun onEnable() = GregChessPlugin.onEnable()
 
-        override fun onDisable() {
-            GregChessPlugin.onDisable()
-        }
+        override fun onDisable() = GregChessPlugin.onDisable()
 
-        override fun onInitialize() {
-            GregChess.logger = JavaGregLogger(GregChessPlugin.logger)
-            GregChess.fullLoad(listOf(GregChessBukkit))
-        }
+        override fun onInitialize() = GregChess.fullLoad(listOf(GregChessBukkit))
     }
 
     val coroutineScope = BukkitScope(plugin, BukkitContext.SYNC) + CoroutineExceptionHandler { _, e ->

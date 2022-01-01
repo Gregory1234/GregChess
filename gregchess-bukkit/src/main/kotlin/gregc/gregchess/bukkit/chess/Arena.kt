@@ -26,14 +26,14 @@ abstract class Arena(val name: String) : ChessListener {
         } ?: def
 
         private fun ConfigurationSection.parseArena(name: String): Arena? {
-            GregChessPlugin.logger.info("Loading arena $name")
+            GregChess.logger.info("Loading arena $name")
             val start = getLoc("Start", Loc(0, 101, 0))
 
             val world = Bukkit.getWorld(getString("World") ?: return null) ?: return null
 
             val tileSize = getInt("TileSize", 3)
 
-            GregChessPlugin.logger.info("Loaded arena $name")
+            GregChess.logger.info("Loaded arena $name")
 
             return SimpleArena(name, world, tileSize, start)
         }
@@ -46,7 +46,7 @@ abstract class Arena(val name: String) : ChessListener {
                     if (section != null)
                         section.parseArena(name)
                     else {
-                        GregChessPlugin.logger.warning("Arena $name has a wrong format")
+                        GregChess.logger.warn("Arena $name has a wrong format")
                         null
                     }
                 }.orEmpty()

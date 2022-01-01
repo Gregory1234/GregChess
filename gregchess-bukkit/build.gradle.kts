@@ -20,6 +20,8 @@ dependencies {
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
     implementation(kotlin("reflect"))
+    val slf4jVersion: String by project
+    implementation("org.slf4j:slf4j-jdk14:$slf4jVersion")
     api(project(":gregchess-core"))
     shaded(project(":gregchess-core"))
     shaded(project(":bukkit-utils"))
@@ -33,6 +35,7 @@ tasks {
         val kotlinVersion: String by project
         val kotlinxSerializationVersion: String by project
         val kotlinxCoroutinesVersion: String by project
+        val slf4jVersion: String by project
         val spigotMinecraftVersion: String by project
         from(sourceSets["main"].resources.srcDirs) {
             include("**/*.yml")
@@ -41,6 +44,7 @@ tasks {
                 "kotlin-version" to kotlinVersion,
                 "serialization-version" to kotlinxSerializationVersion,
                 "coroutines-version" to kotlinxCoroutinesVersion,
+                "slf4j-version" to slf4jVersion,
                 "minecraft-version" to spigotMinecraftVersion
             )
         }

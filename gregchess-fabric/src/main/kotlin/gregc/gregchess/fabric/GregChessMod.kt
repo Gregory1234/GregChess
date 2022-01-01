@@ -17,13 +17,9 @@ import net.minecraft.item.*
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.util.Util
 import net.minecraft.util.registry.Registry
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 
 
 object GregChessMod : ModInitializer {
-
-    val logger: Logger = LogManager.getFormatterLogger(MOD_NAME)
 
     @JvmField
     val CHESS_GROUP: ItemGroup = FabricItemGroupBuilder.build(ident("chess")) {

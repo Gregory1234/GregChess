@@ -1,6 +1,5 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.GregLogger
 import gregc.gregchess.chess.ChessEnvironment
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import kotlinx.serialization.KSerializer
@@ -16,7 +15,6 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import org.apache.logging.log4j.Logger
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -33,12 +31,6 @@ class BlockEntityDirtyDelegate<T>(var value: T) : ReadWriteProperty<BlockEntity,
         this.value = value
         thisRef.markDirty()
     }
-}
-
-class Log4jGregLogger(val logger: Logger) : GregLogger {
-    override fun info(msg: String) = logger.info(msg)
-    override fun warn(msg: String) = logger.warn(msg)
-    override fun err(msg: String) = logger.error(msg)
 }
 
 object BlockPosAsLongSerializer : KSerializer<BlockPos> {

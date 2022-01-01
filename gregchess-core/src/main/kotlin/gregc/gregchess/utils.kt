@@ -20,19 +20,6 @@ fun String.snakeToPascal(): String {
     return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
 }
 
-interface GregLogger {
-    fun info(msg: String)
-    fun warn(msg: String)
-    fun err(msg: String)
-}
-
-internal class SystemGregLogger : GregLogger {
-    @Suppress("ReplaceJavaStaticMethodWithKotlinAnalog")
-    override fun info(msg: String) = System.out.println(msg)
-    override fun warn(msg: String) = System.err.println(msg)
-    override fun err(msg: String) = System.err.println(msg)
-}
-
 class MultiExceptionContext {
     private val exceptions = mutableListOf<Exception>()
 
