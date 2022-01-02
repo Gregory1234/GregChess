@@ -9,6 +9,7 @@ import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
+import gregc.gregchess.bukkitutils.requests.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.player.EngineChessSide
@@ -65,11 +66,13 @@ object GregChessPlugin : Listener {
     private val LOADED_FEN = message("LoadedFEN")
     private val CONFIG_RELOADED = message("ConfigReloaded")
 
-    private val drawRequest = RequestManager.register("Draw", "/chess draw", "/chess draw")
+    private val requestManager = RequestManager(plugin, coroutineScope)
 
-    private val takebackRequest = RequestManager.register("Takeback", "/chess undo", "/chess undo")
+    private val drawRequest = requestManager.register("Draw", "/chess draw", "/chess draw")
 
-    private val duelRequest = RequestManager.register("Duel", "/chess duel accept", "/chess duel cancel")
+    private val takebackRequest = requestManager.register("Takeback", "/chess undo", "/chess undo")
+
+    private val duelRequest = requestManager.register("Duel", "/chess duel accept", "/chess duel cancel")
 
     fun onEnable() {
         registerEvents()
@@ -79,7 +82,7 @@ object GregChessPlugin : Listener {
                 p.onInitialize()
         ChessGameManager.start()
         Arena.reloadArenas()
-        RequestManager.start()
+        requestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
 

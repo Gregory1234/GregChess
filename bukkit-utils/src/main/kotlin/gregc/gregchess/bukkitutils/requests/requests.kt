@@ -1,32 +1,31 @@
-package gregc.gregchess.bukkit
+package gregc.gregchess.bukkitutils.requests
 
 import gregc.gregchess.bukkitutils.*
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.plugin.Plugin
 import java.util.*
-import kotlin.collections.set
 import kotlin.coroutines.*
 import kotlin.time.ExperimentalTime
 
-// TODO: move this to :bukkit-utils
 
-object RequestManager : Listener {
+class RequestManager(private val plugin: Plugin, private val coroutineScope: CoroutineScope) : Listener {
 
     private val requestTypes = mutableListOf<RequestType>()
 
     fun start() {
-        registerEvents()
+        Bukkit.getPluginManager().registerEvents(this, plugin)
     }
 
     fun register(name: String, accept: String, cancel: String): RequestType {
-        val requestType = RequestType(name, accept, cancel)
+        val requestType = RequestType(plugin.config, coroutineScope, name, accept, cancel)
         requestTypes.add(requestType)
         return requestType
     }
@@ -38,7 +37,13 @@ object RequestManager : Listener {
     }
 }
 
-class RequestType(val name: String, private val acceptCommand: String, private val cancelCommand: String) {
+class RequestType internal constructor(
+    private val config: ConfigurationSection,
+    private val coroutineScope: CoroutineScope,
+    val name: String,
+    private val acceptCommand: String,
+    private val cancelCommand: String
+) {
     private val requests = mutableMapOf<UUID, Request>()
     private val section get() = config.getConfigurationSection("Request.$name")!!
 
@@ -81,7 +86,7 @@ class RequestType(val name: String, private val acceptCommand: String, private v
         )
         val duration = section.getString("Duration")?.toDuration()
         if (duration != null)
-            GregChessPlugin.coroutineScope.launch {
+            coroutineScope.launch {
                 delay(duration)
                 if (request.uuid in requests)
                     expire(request)
