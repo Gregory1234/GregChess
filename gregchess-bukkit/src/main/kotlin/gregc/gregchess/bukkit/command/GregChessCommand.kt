@@ -69,4 +69,4 @@ internal class FENArgument(name: String) : CommandArgumentType<FEN>(name) {
     }
 }
 
-fun durationArgument(name: String) = DurationArgument(name, WRONG_DURATION_FORMAT)
+internal fun durationArgument(name: String) = DurationArgument(name, WRONG_DURATION_FORMAT)

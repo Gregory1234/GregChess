@@ -163,7 +163,7 @@ object GregChessPlugin : Listener {
                 val pl = requireGame()
                 execute<Player> {
                     val g = pl().game
-                    val pos = g.renderer.getPos(sender.location.toLoc())
+                    val pos = g.renderer.getPos(sender.location)
                     multiMove(g.board, g.board[pos]?.capture(pl().color))
                     g.board.updateMoves()
                     sender.sendMessage(BOARD_OP_DONE)
@@ -182,7 +182,7 @@ object GregChessPlugin : Listener {
                 argument(RegistryArgument("piece", PieceRegistryView)) { piece ->
                     execute<Player> {
                         val g = pl().game
-                        val p = g.renderer.getPos(sender.location.toLoc())
+                        val p = g.renderer.getPos(sender.location)
                         multiMove(g.board, g.board[p]?.capture(pl().color), null to BoardPiece(p, piece(), false))
                         g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
@@ -371,7 +371,7 @@ object GregChessPlugin : Listener {
                     val pl = requireGame()
                     execute<Player> {
                         sender.spigot().sendMessage(
-                            pl().game.board[pl().game.renderer.getPos(sender.location.toLoc())]
+                            pl().game.board[pl().game.renderer.getPos(sender.location)]
                                 .cNotNull(PIECE_NOT_FOUND).getInfo(pl().game)
                         )
                     }

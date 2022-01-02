@@ -2,28 +2,22 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.chess.ChessEnvironment
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import org.bukkit.*
-import org.bukkit.block.Block
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.event.Listener
 import java.util.*
 
-@Serializable
-data class Loc(val x: Int, val y: Int, val z: Int) {
+internal data class Loc(val x: Int, val y: Int, val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
 }
 
-fun Loc.toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
-fun Location.toLoc() = Loc(x.toInt(), y.toInt(), z.toInt())
-
-val Block.loc: Loc
-    get() = Loc(x, y, z)
+internal fun Loc.toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
+internal fun Location.toLoc() = Loc(blockX, blockY, blockZ)
 
 internal fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvents(this, GregChessPlugin.plugin)
 

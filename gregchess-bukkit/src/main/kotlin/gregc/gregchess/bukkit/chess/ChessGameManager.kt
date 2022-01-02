@@ -1,9 +1,10 @@
 package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.GregChess
-import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
+import gregc.gregchess.bukkit.registerEvents
+import gregc.gregchess.bukkit.registerQuickEndReason
 import gregc.gregchess.chess.*
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
@@ -67,7 +68,7 @@ object ChessGameManager : Listener {
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
-            val pos = player.game.renderer.getPos(block.loc)
+            val pos = player.game.renderer.getPos(block.location)
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
                 player.pickUp(pos)
             } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {

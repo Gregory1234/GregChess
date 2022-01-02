@@ -70,26 +70,27 @@ abstract class Arena(val name: String) : ChessListener {
 
     var game: ChessGame? = null
 
-    abstract val world: World
-    abstract val boardStart: Loc
+    abstract val boardStart: Location
     abstract val tileSize: Int
-    abstract val capturedStart: ByColor<Loc>
+    abstract val capturedStart: ByColor<Location>
 
 }
 
 class ResetPlayerEvent(val player: Player) : ChessEvent
 
-class SimpleArena(
+class SimpleArena internal constructor(
     name: String,
-    override val world: World,
+    private val world: World,
     override val tileSize: Int,
     offset: Loc
 ) : Arena(name) {
-    override val boardStart: Loc = offset + Loc(8, 0, 8)
-    override val capturedStart = byColor(
-        boardStart + Loc(8 * tileSize - 1, 0, -3),
-        boardStart + Loc(0, 0, 8 * tileSize + 2)
+    private val boardStartLoc: Loc = offset + Loc(8, 0, 8)
+    override val boardStart: Location get() = boardStartLoc.toLocation(world)
+    private val capturedStartLoc = byColor(
+        boardStartLoc + Loc(8 * tileSize - 1, 0, -3),
+        boardStartLoc + Loc(0, 0, 8 * tileSize + 2)
     )
+    override val capturedStart: ByColor<Location> get() = byColor { capturedStartLoc[it].toLocation(world) }
     private val spawn: Loc = offset + Loc(4, 0, 4)
     private val spawnLocation: Location get() = spawn.toLocation(world)
 

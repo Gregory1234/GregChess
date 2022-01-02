@@ -1,18 +1,17 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.bukkit.Loc
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.PiecePlayerActionEvent
-import gregc.gregchess.bukkit.toLocation
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.Color
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.AtomicChess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
 import kotlin.math.floor
 import kotlin.reflect.KClass
 
@@ -55,10 +54,12 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     private val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
     private val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
     private val boardSize get() = 8 * tileSize
-    private val boardStart get() = arena.boardStart
-    private val capturedStart get() = arena.capturedStart
+    private val boardStart get() = arena.boardStart.toLoc()
+    private val capturedStart get() = byColor { arena.capturedStart[it].toLoc() }
 
-    fun getPos(loc: Loc) =
+    fun getPos(location: Location) = getPos(location.toLoc())
+
+    private fun getPos(loc: Loc) =
         Pos(file = 7 - (loc.x - boardStart.x).floorDiv(tileSize), rank = (loc.z - boardStart.z).floorDiv(tileSize))
 
     private val Pos.loc
@@ -70,7 +71,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
             Color.BLACK -> Loc(2 * pos, 0, 2 * row)
         }
 
-    private val world get() = arena.world
+    private val world get() = arena.boardStart.world!!
 
     private fun Piece.render(loc: Loc) {
         for ((i, m) in structure.withIndex())
