@@ -22,7 +22,7 @@ dependencies {
     val yarnMappings: String by project
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     val fabricLoaderVersion: String by project
-    modImplementation("net.fabricmc:fabric-loader:$fabricLoaderVersion")
+    modApi("net.fabricmc:fabric-loader:$fabricLoaderVersion")
     val fabricVersion: String by project
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
     val fabricKotlinVersion: String by project
@@ -81,6 +81,8 @@ tasks {
                 externalDocumentationLinkElementList("https://cottonmc.github.io/docs/libgui/")
                 val yarnMappings: String by project
                 externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/yarn-$yarnMappings/")
+                val fabricLoaderVersion: String by project
+                externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/fabric-loader-$fabricLoaderVersion/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }

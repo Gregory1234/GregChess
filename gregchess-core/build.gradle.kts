@@ -56,6 +56,7 @@ tasks {
                 gregchessSourceLink(project)
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
+                externalDocumentationLink("https://www.slf4j.org/apidocs/")
             }
         }
     }
