@@ -47,8 +47,6 @@ object GregChessPlugin : Listener {
         e.printStackTrace()
     }
 
-    val logger get() = plugin.logger
-
     val plugin get() = Plugin.INSTANCE
 
     private val CLOCK_NOT_FOUND = err("ClockNotFound")
@@ -324,7 +322,7 @@ object GregChessPlugin : Listener {
             subcommand("serial") {
                 val pl = requireGame()
                 execute<Player> {
-                    logger.info(json.encodeToString(pl().game))
+                    GregChess.logger.info(json.encodeToString(pl().game))
                 }
             }
             subcommand("serialsave") {

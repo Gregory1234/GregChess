@@ -1,7 +1,9 @@
 package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.GregChess
-import gregc.gregchess.bukkit.chess.*
+import gregc.gregchess.bukkit.chess.AddPropertiesEvent
+import gregc.gregchess.bukkit.chess.PropertyType
+import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.registerPropertyType
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
@@ -21,7 +23,7 @@ class BukkitGregChessAdapter(game: ChessGame) : SimpleComponent(game) {
         @JvmField
         val CHECK_COUNTER = GregChess.registerPropertyType("check_counter", PropertyType())
 
-        private val timeFormat: String get() = GregChess.config.getPathString("TimeFormat")
+        private val timeFormat: String get() = config.getPathString("TimeFormat")
     }
 
     @ChessEventHandler
