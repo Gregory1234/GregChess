@@ -28,7 +28,7 @@ class PropertyException(property: PropertyType, color: Color? = null, override v
 class PropertyType : NameRegistered {
     override val key get() = BukkitRegistry.PROPERTY_TYPE[this]
 
-    override fun toString(): String = "$key@${hashCode().toString(16)}"
+    override fun toString(): String = BukkitRegistry.PROPERTY_TYPE.simpleElementToString(this)
 }
 
 abstract class PlayerProperty(val type: PropertyType) {

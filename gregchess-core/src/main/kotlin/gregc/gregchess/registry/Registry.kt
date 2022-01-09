@@ -20,7 +20,7 @@ private class RegistryValidationException(
 
 private class RegistryKeyValidationException(
     val module: ChessModule, val type: Registry<*, *, *>, val key: Any?, val value: Any?, val text: String
-) : IllegalArgumentException("$module:${type.name}: $text: $key")
+) : IllegalArgumentException("$module:${type.name}: $text: $key: $value")
 
 private inline fun <K, T, B : RegistryBlock<K, T>> B.requireValid(type: Registry<K, T, B>, condition: Boolean, message: () -> String) {
     if (!condition)
@@ -130,6 +130,8 @@ class NameRegistry<T>(name: String) : BiRegistry<String, T, NameRegistry<T>.Bloc
     override val values: Set<T> get() = valueEntries.keys
 
     override fun getOrNull(value: T): RegistryKey<String>? = valueEntries[value]
+
+    fun simpleElementToString(value: T): String = "${getOrNull(value)}@${value.hashCode().toString(16)}"
 }
 
 class ConnectedRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, K>) : Registry<K, T, ConnectedRegistry<K, T>.Block>(name), FiniteSplitRegistryView<K, T> {

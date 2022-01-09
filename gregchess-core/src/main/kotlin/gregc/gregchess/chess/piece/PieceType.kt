@@ -6,15 +6,13 @@ import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
 
 @Serializable(with = PieceType.Serializer::class)
-class PieceType(
-    val char: Char
-) : NameRegistered {
+class PieceType(val char: Char) : NameRegistered {
 
     object Serializer : NameRegisteredSerializer<PieceType>("PieceType", Registry.PIECE_TYPE)
 
     override val key get() = Registry.PIECE_TYPE[this]
 
-    override fun toString(): String = "$key@${hashCode().toString(16)}"
+    override fun toString(): String = Registry.PIECE_TYPE.simpleElementToString(this)
 
     companion object {
 

@@ -17,7 +17,7 @@ open class ChessVariant : NameRegistered {
 
     final override val key get() = Registry.VARIANT[this]
 
-    final override fun toString(): String = "$key@${hashCode().toString(16)}"
+    final override fun toString(): String = Registry.VARIANT.simpleElementToString(this)
 
     enum class MoveLegality(val prettyName: String) {
         INVALID("Invalid moves"),

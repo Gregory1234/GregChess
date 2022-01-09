@@ -56,7 +56,7 @@ class EndReason<R : GameScore>(val type: Type) : NameRegistered {
 
     override val key get() = Registry.END_REASON[this]
 
-    override fun toString(): String = "$key@${hashCode().toString(16)}"
+    override fun toString(): String = Registry.END_REASON.simpleElementToString(this)
 
     companion object {
         @JvmField

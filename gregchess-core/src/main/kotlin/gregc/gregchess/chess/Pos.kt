@@ -152,7 +152,7 @@ class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
 
     override val key get() = Registry.FLAG[this]
 
-    override fun toString(): String = "$key@${hashCode().toString(16)}"
+    override fun toString(): String = Registry.FLAG.simpleElementToString(this)
 }
 
 typealias ChessFlagReference = Map.Entry<ChessFlag, List<UInt>>

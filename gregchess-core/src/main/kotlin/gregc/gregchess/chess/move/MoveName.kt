@@ -17,7 +17,7 @@ class MoveNameTokenType<T : Any>(val cl: KClass<T>) : NameRegistered {
 
     override val key get() = Registry.MOVE_NAME_TOKEN_TYPE[this]
 
-    override fun toString(): String = "$key@${hashCode().toString(16)}"
+    override fun toString(): String = Registry.MOVE_NAME_TOKEN_TYPE.simpleElementToString(this)
 
     companion object {
 
