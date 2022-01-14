@@ -1,13 +1,13 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.GregChess
 import gregc.gregchess.chess.*
-import gregc.gregchess.registerEndReason
+import gregc.gregchess.registry.Register
 
 object KingOfTheHill : ChessVariant() {
 
     @JvmField
-    val KING_OF_THE_HILL = GregChess.registerEndReason("king_of_the_hill", DetEndReason(EndReason.Type.NORMAL))
+    @Register
+    val KING_OF_THE_HILL = DetEndReason(EndReason.Type.NORMAL)
 
     override fun checkForGameEnd(game: ChessGame) {
         val king = game.tryOrStopNull(game.board.kingOf(game.currentTurn))

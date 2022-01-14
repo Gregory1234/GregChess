@@ -1,6 +1,6 @@
 package gregc.gregchess.chess.piece
 
-import gregc.gregchess.GregChess
+import gregc.gregchess.ChessModule
 import gregc.gregchess.registerPieceType
 import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
@@ -16,18 +16,28 @@ class PieceType(val char: Char) : NameRegistered {
 
     companion object {
 
+        internal val AUTO_REGISTER = AutoRegisterType(PieceType::class) { v, m, n -> m.registerPieceType(n, v) }
+
         @JvmField
-        val KING = GregChess.registerPieceType("king", PieceType('k'))
+        @Register
+        val KING = PieceType('k')
         @JvmField
-        val QUEEN = GregChess.registerPieceType("queen", PieceType('q'))
+        @Register
+        val QUEEN = PieceType('q')
         @JvmField
-        val ROOK = GregChess.registerPieceType("rook", PieceType('r'))
+        @Register
+        val ROOK = PieceType('r')
         @JvmField
-        val BISHOP = GregChess.registerPieceType("bishop", PieceType('b'))
+        @Register
+        val BISHOP = PieceType('b')
         @JvmField
-        val KNIGHT = GregChess.registerPieceType("knight", PieceType('n'))
+        @Register
+        val KNIGHT = PieceType('n')
         @JvmField
-        val PAWN = GregChess.registerPieceType("pawn", PieceType('p'))
+        @Register
+        val PAWN = PieceType('p')
+
+        fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<PieceType>()
 
         fun chooseByChar(values: Collection<PieceType>, c: Char): PieceType =
             requireNotNull(values.firstOrNull { it.char == c.lowercaseChar() }) { "None of the pieces have character: '$c'" }

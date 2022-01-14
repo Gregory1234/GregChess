@@ -9,16 +9,6 @@ import gregc.gregchess.chess.variant.*
 
 object GregChess : ChessModule("GregChess", "gregchess") {
 
-    private fun registerVariants() {
-        registerVariant("normal", ChessVariant.Normal)
-        registerVariant("antichess", Antichess)
-        registerVariant("atomic", AtomicChess)
-        registerVariant("capture_all", CaptureAll)
-        registerVariant("horde", HordeChess)
-        registerVariant("king_of_the_hill", KingOfTheHill)
-        registerVariant("three_checks", ThreeChecks)
-    }
-
     private fun registerComponents() {
         registerComponent<Chessboard, ChessboardState>("chessboard")
         registerComponent<ChessClock, ChessClockData>("clock")
@@ -46,12 +36,12 @@ object GregChess : ChessModule("GregChess", "gregchess") {
     }
 
     override fun load() {
-        PieceType
-        EndReason
-        MoveNameTokenType
-        ChessFlag
+        PieceType.registerCore(this)
+        EndReason.registerCore(this)
+        MoveNameTokenType.registerCore(this)
+        ChessFlag.registerCore(this)
         registerComponents()
-        registerVariants()
+        ChessVariants.registerCore(this)
         registerMoveTraits()
         registerPlacedPieceClasses()
     }

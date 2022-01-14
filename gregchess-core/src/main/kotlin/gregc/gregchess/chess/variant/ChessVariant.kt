@@ -1,12 +1,12 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.*
-import gregc.gregchess.rotationsOf
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -138,6 +138,10 @@ open class ChessVariant : NameRegistered {
         getTrait<CaptureTrait>()?.capture != pin.origin &&
                 pin.neededEmpty.filter { board[it] != null }.all { it in stopBlocking } &&
                 startBlocking.none { it in pin.neededEmpty }
+
+    open fun registerAll(module: ChessModule) {
+        AutoRegister(module, AutoRegister.basicTypes).registerAll(this::class)
+    }
 
     object Normal : ChessVariant() {
 

@@ -145,14 +145,20 @@ data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
 class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
     object Serializer : NameRegisteredSerializer<ChessFlag>("ChessFlag", Registry.FLAG)
 
-    companion object {
-        @JvmField
-        val EN_PASSANT = GregChess.registerFlag("en_passant", ChessFlag { it == 1u })
-    }
-
     override val key get() = Registry.FLAG[this]
 
     override fun toString(): String = Registry.FLAG.simpleElementToString(this)
+
+    companion object {
+
+        internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { v, m, n -> m.registerFlag(n, v) }
+
+        @JvmField
+        @Register
+        val EN_PASSANT = ChessFlag { it == 1u }
+
+        fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<ChessFlag>()
+    }
 }
 
 typealias ChessFlagReference = Map.Entry<ChessFlag, List<UInt>>
