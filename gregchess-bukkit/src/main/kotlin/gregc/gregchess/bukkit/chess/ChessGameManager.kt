@@ -1,11 +1,10 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.registerEvents
-import gregc.gregchess.bukkit.registerQuickEndReason
 import gregc.gregchess.chess.*
+import gregc.gregchess.registry.Register
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -21,7 +20,8 @@ import java.util.*
 
 object ChessGameManager : Listener {
     @JvmField
-    val PLUGIN_RESTART = GregChess.registerQuickEndReason("plugin_restart", DrawEndReason(EndReason.Type.EMERGENCY))
+    @Register(data = ["quick"])
+    val PLUGIN_RESTART = DrawEndReason(EndReason.Type.EMERGENCY)
 
     private val games = mutableListOf<ChessGame>()
 

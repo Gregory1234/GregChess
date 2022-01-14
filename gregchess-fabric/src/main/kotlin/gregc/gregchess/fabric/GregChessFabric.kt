@@ -6,13 +6,17 @@ import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.fabric.chess.component.*
 import gregc.gregchess.fabric.chess.player.FabricPlayer
+import gregc.gregchess.registry.AutoRegister
+import gregc.gregchess.registry.Register
 import net.minecraft.util.Rarity
 
 internal object GregChessFabric : ChessExtension {
     @JvmField
-    val CHESSBOARD_BROKEN = GregChess.registerEndReason("chessboard_broken", DrawEndReason(EndReason.Type.EMERGENCY))
+    @Register
+    val CHESSBOARD_BROKEN = DrawEndReason(EndReason.Type.EMERGENCY)
     @JvmField
-    val ABORTED = GregChess.registerEndReason("aborted", DrawEndReason(EndReason.Type.EMERGENCY))
+    @Register
+    val ABORTED = DrawEndReason(EndReason.Type.EMERGENCY)
 
     private fun registerPieceBlocks() = with(GregChess) {
         registerShortPieceBlock(PieceType.PAWN)
@@ -31,6 +35,7 @@ internal object GregChessFabric : ChessExtension {
     override fun load(): Unit = with(GregChess) {
         registerPieceBlocks()
         registerComponents()
+        AutoRegister(this, AutoRegister.basicTypes).registerAll<GregChessFabric>()
         registerPlayerClass<FabricPlayer>("fabric")
         registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
         completeFloorRenderers()

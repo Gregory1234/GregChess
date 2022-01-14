@@ -1,14 +1,13 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.GregChess
 import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.forEachRealBukkit
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.registerPropertyType
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.registry.Register
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
@@ -26,10 +25,12 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
         private val playerPrefix get() = config.getPathString("Scoreboard.PlayerPrefix")
 
         @JvmField
-        val PRESET = GregChess.registerPropertyType("preset", PropertyType())
+        @Register
+        val PRESET = PropertyType()
 
         @JvmField
-        val PLAYER = GregChess.registerPropertyType("player", PropertyType())
+        @Register
+        val PLAYER = PropertyType()
     }
 
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard

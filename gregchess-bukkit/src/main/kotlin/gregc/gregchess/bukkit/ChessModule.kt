@@ -7,6 +7,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
@@ -40,8 +41,7 @@ object BukkitRegistry {
     val BUKKIT_PLUGIN = ConstantRegistry<Plugin>("bukkit_plugin")
 }
 
-fun ChessModule.registerPropertyType(id: String, propertyType: PropertyType) =
-    register(BukkitRegistry.PROPERTY_TYPE, id, propertyType)
+fun PropertyType.register(module: ChessModule, id: String) = module.register(BukkitRegistry.PROPERTY_TYPE, id, this)
 
 inline fun <reified T : Component> ChessModule.registerSettings(noinline settings: SettingsParser<ComponentData<T>>) =
     register(BukkitRegistry.SETTINGS_PARSER, T::class, settings)
@@ -80,13 +80,15 @@ fun ChessModule.registerHookedComponent(cl: KClass<out Component>) =
 
 inline fun <reified T : Component> ChessModule.registerHookedComponent() = registerHookedComponent(T::class)
 
-fun ChessModule.registerQuickEndReason(endReason: EndReason<*>) =
-    get(BukkitRegistry.QUICK_END_REASONS).add(endReason)
+fun <T : GameScore> EndReason<T>.registerQuick() = apply { module[BukkitRegistry.QUICK_END_REASONS].add(this) }
 
-fun <T : GameScore> ChessModule.registerQuickEndReason(id: String, endReason: EndReason<T>) =
-    register(Registry.END_REASON, id, endReason).also {
-        registerQuickEndReason(it)
-    }
+private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e -> register(m, n); if ("quick" in e) registerQuick() }
+
+internal val EndReason.Companion.BUKKIT_AUTO_REGISTER get() = BUKKIT_END_REASON_AUTO_REGISTER
+
+private val BUKKIT_AUTO_REGISTER_TYPES = listOf(EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER) + AutoRegister.basicTypes
+
+val AutoRegister.Companion.bukkitTypes get() = BUKKIT_AUTO_REGISTER_TYPES
 
 fun ChessModule.registerBukkitPlugin(plugin: Plugin) = get(BukkitRegistry.BUKKIT_PLUGIN).set(plugin)
 

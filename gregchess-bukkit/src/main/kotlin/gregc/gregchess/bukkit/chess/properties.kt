@@ -1,8 +1,10 @@
 package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.BukkitRegistry
+import gregc.gregchess.bukkit.register
 import gregc.gregchess.chess.ChessEvent
 import gregc.gregchess.chess.Color
+import gregc.gregchess.registry.AutoRegisterType
 import gregc.gregchess.registry.NameRegistered
 
 class AddPropertiesEvent(
@@ -29,6 +31,10 @@ class PropertyType : NameRegistered {
     override val key get() = BukkitRegistry.PROPERTY_TYPE[this]
 
     override fun toString(): String = BukkitRegistry.PROPERTY_TYPE.simpleElementToString(this)
+
+    companion object {
+        internal val AUTO_REGISTER = AutoRegisterType(PropertyType::class) { m, n, _ -> register(m, n) }
+    }
 }
 
 abstract class PlayerProperty(val type: PropertyType) {

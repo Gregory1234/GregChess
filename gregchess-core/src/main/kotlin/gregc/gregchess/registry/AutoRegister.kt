@@ -11,9 +11,9 @@ import kotlin.reflect.full.isSuperclassOf
 
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Register(val name: String = "")
+annotation class Register(val name: String = "", val data: Array<String> = [])
 
-class AutoRegisterType<T : Any>(val cl: KClass<T>, val register: (T, ChessModule, String) -> Unit)
+class AutoRegisterType<T : Any>(val cl: KClass<T>, val register: T.(ChessModule, String, Collection<String>) -> Unit)
 
 class AutoRegister(private val module: ChessModule, private val types: Collection<AutoRegisterType<*>>) {
     companion object {
@@ -27,7 +27,7 @@ class AutoRegister(private val module: ChessModule, private val types: Collectio
         for (p in cl.java.declaredFields) {
             p.annotations.filterIsInstance<Register>().forEach { a ->
                 (types.first { it.cl.isSuperclassOf(p.type.kotlin) } as AutoRegisterType<Any>)
-                    .register(p.get(null), module, a.name.ifBlank { p.name.lowercase() })
+                    .register(p.get(null), module, a.name.ifBlank { p.name.lowercase() }, a.data.toList())
             }
         }
     }

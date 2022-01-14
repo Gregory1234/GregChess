@@ -21,7 +21,7 @@ class MoveNameTokenType<T : Any>(val cl: KClass<T>) : NameRegistered {
 
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(MoveNameTokenType::class) { v, m, n -> m.registerMoveNameTokenType(n, v) }
+        internal val AUTO_REGISTER = AutoRegisterType(MoveNameTokenType::class) { m, n, _ -> register(m, n) }
 
         @JvmField
         @Register

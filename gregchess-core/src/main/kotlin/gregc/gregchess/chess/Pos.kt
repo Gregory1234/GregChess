@@ -151,7 +151,7 @@ class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
 
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { v, m, n -> m.registerFlag(n, v) }
+        internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { m, n, _ -> register(m, n) }
 
         @JvmField
         @Register

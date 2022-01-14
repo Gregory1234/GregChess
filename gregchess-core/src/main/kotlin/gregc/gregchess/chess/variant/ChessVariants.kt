@@ -1,11 +1,11 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.registerVariant
+import gregc.gregchess.register
 import gregc.gregchess.registry.*
 
 object ChessVariants {
-    internal val AUTO_REGISTER = AutoRegisterType(ChessVariant::class) { v, m, n -> m.registerVariant(n, v); v.registerAll(m) }
+    internal val AUTO_REGISTER = AutoRegisterType(ChessVariant::class) { m, n, _ -> register(m, n); registerAll(m) }
 
     @JvmField
     @Register

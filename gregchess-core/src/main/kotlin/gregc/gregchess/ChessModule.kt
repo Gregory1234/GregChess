@@ -54,17 +54,17 @@ abstract class ChessModule(val name: String, val namespace: String) {
     final override fun toString() = "$namespace@${hashCode().toString(16)}"
 }
 
-fun ChessModule.registerPieceType(id: String, pieceType: PieceType) = register(Registry.PIECE_TYPE, id, pieceType)
+fun PieceType.register(module: ChessModule, id: String) = module.register(Registry.PIECE_TYPE, id, this)
 
-fun <T : GameScore> ChessModule.registerEndReason(id: String, endReason: EndReason<T>) =
-    register(Registry.END_REASON, id, endReason)
+fun <T : GameScore> EndReason<T>.register(module: ChessModule, id: String) =
+    module.register(Registry.END_REASON, id, this)
 
-fun ChessModule.registerVariant(id: String, variant: ChessVariant) = register(Registry.VARIANT, id, variant)
+fun ChessVariant.register(module: ChessModule, id: String) = module.register(Registry.VARIANT, id, this)
 
-fun ChessModule.registerFlag(id: String, flag: ChessFlag) = register(Registry.FLAG, id, flag)
+fun ChessFlag.register(module: ChessModule, id: String) = module.register(Registry.FLAG, id, this)
 
-fun <T : Any> ChessModule.registerMoveNameTokenType(id: String, moveNameTokenType: MoveNameTokenType<T>) =
-    register(Registry.MOVE_NAME_TOKEN_TYPE, id, moveNameTokenType)
+fun <T : Any> MoveNameTokenType<T>.register(module: ChessModule, id: String) =
+    module.register(Registry.MOVE_NAME_TOKEN_TYPE, id, this)
 
 @OptIn(InternalSerializationApi::class)
 fun <T : Component, D : ComponentData<T>> ChessModule.registerComponent(

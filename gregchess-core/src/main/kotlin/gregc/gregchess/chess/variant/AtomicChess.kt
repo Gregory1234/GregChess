@@ -1,11 +1,9 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.GregChess
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
-import gregc.gregchess.registerEndReason
 import gregc.gregchess.registry.Register
 import kotlinx.serialization.Serializable
 

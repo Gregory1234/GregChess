@@ -1,7 +1,7 @@
 package gregc.gregchess.chess.piece
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.registerPieceType
+import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
 
@@ -16,7 +16,7 @@ class PieceType(val char: Char) : NameRegistered {
 
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(PieceType::class) { v, m, n -> m.registerPieceType(n, v) }
+        internal val AUTO_REGISTER = AutoRegisterType(PieceType::class) { m, n, _ -> register(m, n) }
 
         @JvmField
         @Register

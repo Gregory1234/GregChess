@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.registerEndReason
+import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
@@ -60,7 +60,7 @@ class EndReason<R : GameScore>(val type: Type) : NameRegistered {
 
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(EndReason::class) { v, m, n -> m.registerEndReason(n, v) }
+        internal val AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, _ -> register(m, n) }
 
         @JvmField
         @Register
