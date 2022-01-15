@@ -98,8 +98,8 @@ class SimpleArena internal constructor(
 
     @ChessEventHandler
     fun onStop(e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.VERY_END) game = null
-        else if (e == GameStopStageEvent.PANIC)
+        if (e == GameStopStageEvent.VERY_END || e == GameStopStageEvent.PANIC) game = null
+        if (e == GameStopStageEvent.PANIC)
             for (p in game?.sides?.toList().orEmpty())
                 if (p is BukkitChessSide)
                     p.bukkit?.leave()

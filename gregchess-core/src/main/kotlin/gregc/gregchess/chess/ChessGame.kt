@@ -51,7 +51,7 @@ class ChessGame private constructor(
     initialState: State,
     startTime: LocalDateTime?,
     results: GameResults?
-) : ChessEventCaller {
+) {
     constructor(environment: ChessEnvironment, settings: GameSettings, playerInfo: ByColor<ChessPlayer>)
             : this(environment, settings, playerInfo, UUID.randomUUID(), State.INITIAL, null, null)
 
@@ -185,7 +185,7 @@ class ChessGame private constructor(
 
     private fun requireState(s: State) = check(state == s)
 
-    override fun callEvent(e: ChessEvent) = with(MultiExceptionContext()) {
+    fun callEvent(e: ChessEvent) = with(MultiExceptionContext()) {
         components.forEach {
             exec {
                 it.handleEvent(e)

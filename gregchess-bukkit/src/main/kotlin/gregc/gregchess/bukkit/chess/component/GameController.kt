@@ -35,17 +35,17 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
 
     private fun onStart() {
         game.sides.forEachRealBukkit {
-            callEvent(PlayerEvent(it, PlayerDirection.JOIN))
+            game.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
             it.games += game
             it.currentGame = game
         }
-        callEvent(GameStartStageEvent.INIT)
+        game.callEvent(GameStartStageEvent.INIT)
         game.sides.forEachUnique { it.init() }
-        callEvent(GameStartStageEvent.START)
+        game.callEvent(GameStartStageEvent.START)
     }
 
     private fun onRunning() {
-        callEvent(GameStartStageEvent.BEGIN)
+        game.callEvent(GameStartStageEvent.BEGIN)
         object : BukkitRunnable() {
             override fun run() {
                 if (game.running)
@@ -59,7 +59,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
     @OptIn(ExperimentalTime::class)
     private fun onStop() {
         val results = game.results!!
-        callEvent(GameStopStageEvent.STOP)
+        game.callEvent(GameStopStageEvent.STOP)
         with(game.board) {
             if (lastPrintedMove != lastMove) {
                 val wLast: Move?
@@ -90,26 +90,26 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
                 }
                 if (!results.endReason.quick)
                     delay((if (quick[color]) 0 else 3).seconds)
-                callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
+                game.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
                 player.sendPGN(pgn)
                 player.games -= game
                 player.currentGame = null
             }
         }
         if (results.endReason.quick) {
-            callEvent(GameStopStageEvent.CLEAR)
+            game.callEvent(GameStopStageEvent.CLEAR)
             game.sides.forEach(ChessSide<*>::stop)
-            callEvent(GameStopStageEvent.VERY_END)
+            game.callEvent(GameStopStageEvent.VERY_END)
             game.coroutineScope.cancel()
             return
         }
         game.coroutineScope.launch {
             delay((if (quick.white && quick.black) 0 else 3).seconds)
             delay(1.ticks)
-            callEvent(GameStopStageEvent.CLEAR)
+            game.callEvent(GameStopStageEvent.CLEAR)
             delay(1.ticks)
             game.sides.forEach(ChessSide<*>::stop)
-            callEvent(GameStopStageEvent.VERY_END)
+            game.callEvent(GameStopStageEvent.VERY_END)
         }.invokeOnCompletion {
             game.coroutineScope.cancel()
             if (it != null)
@@ -127,7 +127,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
             player.games -= game
             player.currentGame = null
         }
-        callEvent(GameStopStageEvent.PANIC)
+        game.callEvent(GameStopStageEvent.PANIC)
         game.coroutineScope.cancel()
     }
 

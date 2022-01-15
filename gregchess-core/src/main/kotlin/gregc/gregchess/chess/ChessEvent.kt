@@ -10,10 +10,6 @@ interface ChessEvent
 @Retention(AnnotationRetention.RUNTIME)
 annotation class ChessEventHandler
 
-interface ChessEventCaller {
-    fun callEvent(e: ChessEvent)
-}
-
 interface ChessListener {
     fun handleEvent(e: ChessEvent) {
         for (f in this::class.members) {

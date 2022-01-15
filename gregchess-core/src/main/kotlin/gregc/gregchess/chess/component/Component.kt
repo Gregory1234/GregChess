@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.ChessListener
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
@@ -15,7 +16,7 @@ interface ComponentData<out T : Component> {
     fun getComponent(game: ChessGame): T
 }
 
-abstract class Component(protected val game: ChessGame) : ChessListener, ChessEventCaller {
+abstract class Component(protected val game: ChessGame) : ChessListener {
     abstract val data: ComponentData<*>
 
     open fun validate() {}
@@ -31,8 +32,6 @@ abstract class Component(protected val game: ChessGame) : ChessListener, ChessEv
         append(data)
         append(")")
     }
-
-    final override fun callEvent(e: ChessEvent) = game.callEvent(e)
 }
 
 object ComponentDataMapSerializer :

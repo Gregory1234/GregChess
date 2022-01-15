@@ -229,7 +229,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
         boardHashes.clear()
         addBoardHash(fen)
         pieces.forEach { it.sendCreated(this) }
-        callEvent(SetFenEvent(fen))
+        game.callEvent(SetFenEvent(fen))
     }
 
     fun getFEN(): FEN {
@@ -277,4 +277,6 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
             game.previousTurn()
         }
     }
+
+    fun callPieceEvent(e: PieceEvent) = game.callEvent(e)
 }

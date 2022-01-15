@@ -79,7 +79,7 @@ fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?
         t?.checkCanExist(board)
     for ((_,t) in realMoves)
         t?.create(board)
-    board.callEvent(PieceEvent.Moved(realMoves.toMap()))
+    board.callPieceEvent(PieceEvent.Moved(realMoves.toMap()))
 }
 
 object PlacedPieceSerializer : ClassRegisteredSerializer<PlacedPiece>("PlacedPiece", Registry.PLACED_PIECE_CLASS)
@@ -127,12 +127,12 @@ data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boo
 
     fun sendCreated(board: Chessboard) {
         checkExists(board)
-        board.callEvent(PieceEvent.Created(this))
+        board.callPieceEvent(PieceEvent.Created(this))
     }
 
     fun clear(board: Chessboard) {
         checkExists(board)
-        board.callEvent(PieceEvent.Cleared(this))
+        board.callPieceEvent(PieceEvent.Cleared(this))
         board.clearPiece(pos)
     }
 
