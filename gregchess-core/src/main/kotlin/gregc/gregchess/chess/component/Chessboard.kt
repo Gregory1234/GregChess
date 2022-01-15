@@ -13,19 +13,17 @@ import kotlin.reflect.KClass
 
 class SetFenEvent(val FEN: FEN) : ChessEvent
 
-private class Square(val pos: Pos, val game: ChessGame) {
-    var piece: BoardPiece? = null
-    val flags = mutableMapOf<ChessFlag, MutableList<UInt>>()
-
+private class Square(
+    val pos: Pos,
+    var piece: BoardPiece?,
+    val flags: MutableMap<ChessFlag, MutableList<UInt>>
+) {
     var bakedMoves: List<Move>? = null
     var bakedLegalMoves: List<Move>? = null
 
-    val board
-        get() = game.board
+    override fun toString() = "Square(pos=$pos, piece=$piece, flags=$flags)"
 
-    override fun toString() = "Square(game.uuid=${game.uuid}, pos=$pos, piece=$piece, flags=$flags)"
-
-    fun empty() {
+    fun empty(board: Chessboard) {
         piece?.clear(board)
         bakedMoves = null
         bakedLegalMoves = null
@@ -64,11 +62,11 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
 
 
     private val squares = (Pair(0, 0)..Pair(7, 7)).map { (i, j) -> Pos(i, j) }.associateWith { p ->
-        Square(p, game).also { s ->
-            val piece = initialState.pieces[p]
-            s.piece = piece
-            s.flags += initialState.flags[p].orEmpty().mapValues { it.value.toMutableList() }
-        }
+        Square(
+            p,
+            initialState.pieces[p],
+            initialState.flags[p].orEmpty().mapValues { it.value.toMutableList() }.toMutableMap()
+        )
     }
 
     private val boardState
@@ -209,7 +207,7 @@ class Chessboard(game: ChessGame, initialState: ChessboardState) : Component(gam
     }
 
     fun setFromFEN(fen: FEN) {
-        squares.values.forEach(Square::empty)
+        squares.values.forEach { it.empty(this) }
         fen.forEachSquare(game.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
