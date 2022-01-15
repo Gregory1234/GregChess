@@ -69,6 +69,52 @@ open class ClassRegisteredSerializer<T : Any>(
     }
 }
 
+@OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
+abstract class KeyRegisteredSerializer<K: Any, T : Any>(
+    val name: String,
+    val keySerializer: KSerializer<K>
+) : KSerializer<T> {
+
+    abstract val T.key: K
+    abstract val K.serializer: KSerializer<T>
+
+    final override val descriptor: SerialDescriptor
+        get() = buildClassSerialDescriptor(name) {
+            element("type", keySerializer.descriptor)
+            element("value", buildSerialDescriptor(name + "Value", SerialKind.CONTEXTUAL))
+        }
+
+    final override fun serialize(encoder: Encoder, value: T) {
+        val key = value.key
+        encoder.encodeStructure(descriptor) {
+            encodeSerializableElement(descriptor, 0, keySerializer, key)
+            encodeSerializableElement(descriptor, 1, key.serializer, value)
+        }
+    }
+
+    final override fun deserialize(decoder: Decoder): T = decoder.decodeStructure(descriptor) {
+        var key: K? = null
+        var ret: T? = null
+
+        if (decodeSequentially()) { // sequential decoding protocol
+            key = decodeSerializableElement(descriptor, 0, keySerializer)
+            ret = decodeSerializableElement(descriptor, 1, key.serializer)
+        } else {
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> key = decodeSerializableElement(descriptor, 0, keySerializer)
+                    1 -> {
+                        ret = decodeSerializableElement(descriptor, index, key!!.serializer)
+                    }
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+        }
+        ret!!
+    }
+}
+
 open class KeyRegisteredMapSerializer<V>(name: String, val registryType: RegistryView<String, KSerializer<out V>>)
     : ClassMapSerializer<Map<RegistryKey<String>, V>, RegistryKey<String>, V>(name, StringKeySerializer) {
     final override fun Map<RegistryKey<String>, V>.asMap(): Map<RegistryKey<String>, V> = this

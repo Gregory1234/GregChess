@@ -13,6 +13,8 @@ object AtomicChess : ChessVariant() {
 
     @Serializable
     class ExplosionTrait : MoveTrait {
+        override val type get() = EXPLOSION
+
         override val nameTokens: MoveName = MoveName(emptyMap())
 
         var explodedNumber = 0
@@ -48,6 +50,10 @@ object AtomicChess : ChessVariant() {
     @JvmField
     @Register
     val ATOMIC = DetEndReason(EndReason.Type.NORMAL)
+
+    @JvmField
+    @Register
+    val EXPLOSION = MoveTraitType(ExplosionTrait::class)
 
     private fun nextToKing(color: Color, pos: Pos, board: Chessboard): Boolean =
         pos in board.kingOf(color)?.pos?.neighbours().orEmpty()

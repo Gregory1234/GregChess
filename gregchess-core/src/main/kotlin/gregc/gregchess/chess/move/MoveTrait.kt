@@ -1,20 +1,23 @@
 package gregc.gregchess.chess.move
 
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
-import gregc.gregchess.registry.ClassRegisteredSerializer
-import gregc.gregchess.registry.Registry
-import kotlinx.serialization.Serializable
+import gregc.gregchess.register
+import gregc.gregchess.registry.*
+import kotlinx.serialization.*
 import kotlin.reflect.KClass
+import kotlin.reflect.full.createType
 
 class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>) :
-    Exception(traits.toList().map { Registry.MOVE_TRAIT_CLASS[it::class] }.toString())
+    Exception(traits.toList().map { Registry.MOVE_TRAIT_TYPE[it.type] }.toString())
 
 class TraitPreconditionException(trait: MoveTrait, message: String, cause: Throwable? = null) :
-    IllegalStateException("${trait::class.traitKey}: $message", cause)
+    IllegalStateException("${trait.type}: $message", cause)
 
 @Serializable(with = MoveTraitSerializer::class)
 interface MoveTrait {
+    val type: MoveTraitType<*>
     val shouldComeFirst: Boolean get() = false
     val shouldComeLast: Boolean get() = false
     val shouldComeBefore: Collection<KClass<out MoveTrait>> get() = emptyList()
@@ -23,6 +26,48 @@ interface MoveTrait {
     fun setup(game: ChessGame, move: Move) {}
     fun execute(game: ChessGame, move: Move) {}
     fun undo(game: ChessGame, move: Move) {}
+}
+
+@Serializable(with = MoveTraitType.Serializer::class)
+class MoveTraitType<T : MoveTrait>(val cl: KClass<T>): NameRegistered {
+    object Serializer : NameRegisteredSerializer<MoveTraitType<*>>("MoveTraitType", Registry.MOVE_TRAIT_TYPE)
+
+    override val key get() = Registry.MOVE_TRAIT_TYPE[this]
+
+    override fun toString(): String = Registry.MOVE_TRAIT_TYPE.simpleElementToString(this)
+
+    @RegisterAll(MoveTraitType::class)
+    companion object {
+
+        internal val AUTO_REGISTER = AutoRegisterType(MoveTraitType::class) { m, n, _ -> register(m, n) }
+
+        @JvmField
+        val HALFMOVE_CLOCK = MoveTraitType(DefaultHalfmoveClockTrait::class)
+        @JvmField
+        val CASTLES = MoveTraitType(CastlesTrait::class)
+        @JvmField
+        val PROMOTION = MoveTraitType(PromotionTrait::class)
+        @JvmField
+        val NAME = MoveTraitType(NameTrait::class)
+        @JvmField
+        val REQUIRE_FLAG = MoveTraitType(RequireFlagTrait::class)
+        @JvmField
+        val FLAG = MoveTraitType(FlagTrait::class)
+        @JvmField
+        val CHECK = MoveTraitType(CheckTrait::class)
+        @JvmField
+        val CAPTURE = MoveTraitType(CaptureTrait::class)
+        @JvmField
+        @Register("pawn_move")
+        val PAWN_ORIGIN = MoveTraitType(PawnOriginTrait::class)
+        @JvmField
+        @Register("piece_move")
+        val PIECE_ORIGIN = MoveTraitType(PieceOriginTrait::class)
+        @JvmField
+        val TARGET = MoveTraitType(TargetTrait::class)
+
+        fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<MoveTraitType<*>>()
+    }
 }
 
 inline fun MoveTrait.tryPiece(f: () -> Unit) =
@@ -34,7 +79,11 @@ inline fun MoveTrait.tryPiece(f: () -> Unit) =
         pieceOccupiesSquare(e)
     }
 
-object MoveTraitSerializer : ClassRegisteredSerializer<MoveTrait>("MoveTrait", Registry.MOVE_TRAIT_CLASS)
+object MoveTraitSerializer : KeyRegisteredSerializer<MoveTraitType<*>, MoveTrait>("MoveTrait", MoveTraitType.Serializer) {
+    override val MoveTrait.key: MoveTraitType<*> get() = type
+    @Suppress("UNCHECKED_CAST")
+    override val MoveTraitType<*>.serializer: KSerializer<MoveTrait> get() = serializer(cl.createType()) as KSerializer<MoveTrait>
+}
 
 fun MoveTrait.pieceNotExist(e: PieceDoesNotExistException): Nothing =
     throw TraitPreconditionException(this, "Piece ${e.piece} doesn't exist!", e)
@@ -43,12 +92,10 @@ fun MoveTrait.pieceOccupiesSquare(e: PieceAlreadyOccupiesSquareException): Nothi
 fun MoveTrait.traitNotExecuted(): Nothing =
     throw TraitPreconditionException(this, "Trait hasn't executed")
 
-val KClass<out MoveTrait>.traitKey get() = Registry.MOVE_TRAIT_CLASS[this]
-val KClass<out MoveTrait>.traitModule get() = traitKey.module
-val KClass<out MoveTrait>.traitName get() = traitKey.key
-
 @Serializable
 class DefaultHalfmoveClockTrait : MoveTrait {
+    override val type get() = MoveTraitType.HALFMOVE_CLOCK
+
     override val nameTokens get() = MoveName(emptyMap())
 
     override val shouldComeBefore get() = listOf(CaptureTrait::class)
@@ -71,6 +118,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
 @Serializable
 class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : MoveTrait {
+    override val type get() = MoveTraitType.CASTLES
 
     override val nameTokens get() = MoveName(mapOf(MoveNameTokenType.CASTLE to side))
 
@@ -87,6 +135,7 @@ class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : 
 
 @Serializable
 class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
+    override val type get() = MoveTraitType.PROMOTION
 
     var promotion: Piece? = null
 
@@ -109,15 +158,21 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
 }
 
 @Serializable
-class NameTrait(override val nameTokens: MoveName) : MoveTrait
+class NameTrait(override val nameTokens: MoveName) : MoveTrait {
+    override val type get() = MoveTraitType.NAME
+}
 
 @Serializable
 class RequireFlagTrait(val flags: Map<Pos, Set<ChessFlag>>) : MoveTrait {
+    override val type get() = MoveTraitType.REQUIRE_FLAG
+
     override val nameTokens get() = MoveName(emptyMap())
 }
 
 @Serializable
 class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
+    override val type get() = MoveTraitType.FLAG
+
     override val nameTokens get() = MoveName(emptyMap())
 
     override fun execute(game: ChessGame, move: Move) {
@@ -142,6 +197,7 @@ private fun checkForChecks(color: Color, game: ChessGame): MoveNameTokenType<Uni
 
 @Serializable
 class CheckTrait : MoveTrait {
+    override val type get() = MoveTraitType.CHECK
 
     override val shouldComeLast: Boolean = true
 
@@ -156,6 +212,7 @@ class CheckTrait : MoveTrait {
 
 @Serializable
 class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTrait {
+    override val type get() = MoveTraitType.CAPTURE
 
     private val Move.toCapture: BoardPiece get() = pieceTracker["capture"] as BoardPiece
     private val Move.captured: CapturedPiece get() = pieceTracker["capture"] as CapturedPiece
@@ -182,6 +239,8 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTr
 
 @Serializable
 class PawnOriginTrait : MoveTrait {
+    override val type get() = MoveTraitType.PAWN_ORIGIN
+
     private var uniquenessCoordinate: UniquenessCoordinate? = null
 
     override val nameTokens
@@ -213,6 +272,8 @@ private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessG
 
 @Serializable
 class PieceOriginTrait : MoveTrait {
+    override val type get() = MoveTraitType.PIECE_ORIGIN
+
     private lateinit var pieceType: PieceType
     private var uniquenessCoordinate: UniquenessCoordinate? = null
 
@@ -232,6 +293,8 @@ class PieceOriginTrait : MoveTrait {
 
 @Serializable
 class TargetTrait(val target: Pos) : MoveTrait {
+    override val type get() = MoveTraitType.TARGET
+
     override val nameTokens get() = MoveName(mapOf(MoveNameTokenType.TARGET to target))
 
     override val shouldComeBefore get() = listOf(CaptureTrait::class)

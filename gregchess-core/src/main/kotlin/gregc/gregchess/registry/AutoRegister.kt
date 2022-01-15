@@ -4,6 +4,7 @@ import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.ChessFlag
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.move.MoveNameTokenType
+import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.variant.ChessVariants
 import kotlin.reflect.KClass
@@ -22,7 +23,8 @@ class AutoRegisterType<T : Any>(val cl: KClass<T>, val register: T.(ChessModule,
 class AutoRegister(private val module: ChessModule, private val types: Collection<AutoRegisterType<*>>) {
     companion object {
         val basicTypes = listOf(
-            PieceType.AUTO_REGISTER, EndReason.AUTO_REGISTER, ChessFlag.AUTO_REGISTER, MoveNameTokenType.AUTO_REGISTER, ChessVariants.AUTO_REGISTER
+            PieceType.AUTO_REGISTER, EndReason.AUTO_REGISTER, ChessFlag.AUTO_REGISTER,
+            MoveNameTokenType.AUTO_REGISTER, ChessVariants.AUTO_REGISTER, MoveTraitType.AUTO_REGISTER
         )
     }
 

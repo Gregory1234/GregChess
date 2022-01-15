@@ -149,7 +149,7 @@ class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
 
     override fun toString(): String = Registry.FLAG.simpleElementToString(this)
 
-    @RegisterAll
+    @RegisterAll(ChessFlag::class)
     companion object {
 
         internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { m, n, _ -> register(m, n) }

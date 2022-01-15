@@ -43,6 +43,7 @@ object ThreeChecks : ChessVariant() {
 
     @Serializable
     class CheckCounterTrait : MoveTrait {
+        override val type get() = CHECK_COUNTER_TRAIT
 
         override val shouldComeLast: Boolean = true
 
@@ -69,6 +70,10 @@ object ThreeChecks : ChessVariant() {
     @JvmField
     @Register
     val CHECK_LIMIT = DetEndReason(EndReason.Type.NORMAL)
+
+    @JvmField
+    @Register("check_counter")
+    val CHECK_COUNTER_TRAIT = MoveTraitType(CheckCounterTrait::class)
 
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
         Normal.getPieceMoves(piece, board).map {

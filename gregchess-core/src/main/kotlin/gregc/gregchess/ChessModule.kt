@@ -2,8 +2,7 @@ package gregc.gregchess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.move.MoveNameTokenType
-import gregc.gregchess.chess.move.MoveTrait
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.player.ChessPlayer
@@ -66,6 +65,9 @@ fun ChessFlag.register(module: ChessModule, id: String) = module.register(Regist
 fun <T : Any> MoveNameTokenType<T>.register(module: ChessModule, id: String) =
     module.register(Registry.MOVE_NAME_TOKEN_TYPE, id, this)
 
+fun <T : MoveTrait> MoveTraitType<T>.register(module: ChessModule, id: String) =
+    module.register(Registry.MOVE_TRAIT_TYPE, id, this)
+
 @OptIn(InternalSerializationApi::class)
 fun <T : Component, D : ComponentData<T>> ChessModule.registerComponent(
     id: String, tcl: KClass<T>, dcl: KClass<D>
@@ -89,9 +91,6 @@ fun <T : SimpleComponent> ChessModule.registerSimpleComponent(id: String, tcl: K
 
 inline fun <reified T : SimpleComponent> ChessModule.registerSimpleComponent(id: String) =
     registerSimpleComponent(id, T::class)
-
-inline fun <reified T : MoveTrait> ChessModule.registerMoveTrait(id: String) =
-    register(Registry.MOVE_TRAIT_CLASS, id, T::class)
 
 inline fun <reified T : ChessPlayer> ChessModule.registerPlayerClass(id: String) =
     register(Registry.PLAYER_CLASS, id, T::class)

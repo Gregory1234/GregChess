@@ -6,7 +6,7 @@ import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.move.MoveNameTokenType
-import gregc.gregchess.chess.move.MoveTrait
+import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.player.ChessPlayer
@@ -80,7 +80,7 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
             "component_serializer", COMPONENT_CLASS
         )
         @JvmField
-        val MOVE_TRAIT_CLASS = NameRegistry<KClass<out MoveTrait>>("move_trait_class")
+        val MOVE_TRAIT_TYPE = NameRegistry<MoveTraitType<*>>("move_trait_type")
         @JvmField
         val PLAYER_CLASS = NameRegistry<KClass<out ChessPlayer>>("player_type")
         @JvmField
