@@ -149,12 +149,12 @@ class ChessFlag(@JvmField val isActive: (UInt) -> Boolean) : NameRegistered {
 
     override fun toString(): String = Registry.FLAG.simpleElementToString(this)
 
+    @RegisterAll
     companion object {
 
         internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { m, n, _ -> register(m, n) }
 
         @JvmField
-        @Register
         val EN_PASSANT = ChessFlag { it == 1u }
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<ChessFlag>()

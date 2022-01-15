@@ -19,36 +19,28 @@ class MoveNameTokenType<T : Any>(val cl: KClass<T>) : NameRegistered {
 
     override fun toString(): String = Registry.MOVE_NAME_TOKEN_TYPE.simpleElementToString(this)
 
+    @RegisterAll(MoveNameTokenType::class)
     companion object {
 
         internal val AUTO_REGISTER = AutoRegisterType(MoveNameTokenType::class) { m, n, _ -> register(m, n) }
 
         @JvmField
-        @Register
         val PIECE_TYPE = MoveNameTokenType(PieceType::class)
         @JvmField
-        @Register
         val UNIQUENESS_COORDINATE = MoveNameTokenType(UniquenessCoordinate::class)
         @JvmField
-        @Register
         val CAPTURE = MoveNameTokenType(Unit::class)
         @JvmField
-        @Register
         val TARGET = MoveNameTokenType(Pos::class)
         @JvmField
-        @Register
         val PROMOTION = MoveNameTokenType(PieceType::class)
         @JvmField
-        @Register
         val CHECK = MoveNameTokenType(Unit::class)
         @JvmField
-        @Register
         val CHECKMATE = MoveNameTokenType(Unit::class)
         @JvmField
-        @Register
         val CASTLE = MoveNameTokenType(BoardSide::class)
         @JvmField
-        @Register
         val EN_PASSANT = MoveNameTokenType(Unit::class)
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<MoveNameTokenType<*>>()

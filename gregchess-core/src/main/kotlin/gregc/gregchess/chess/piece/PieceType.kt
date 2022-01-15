@@ -14,27 +14,22 @@ class PieceType(val char: Char) : NameRegistered {
 
     override fun toString(): String = Registry.PIECE_TYPE.simpleElementToString(this)
 
+    @RegisterAll(PieceType::class)
     companion object {
 
         internal val AUTO_REGISTER = AutoRegisterType(PieceType::class) { m, n, _ -> register(m, n) }
 
         @JvmField
-        @Register
         val KING = PieceType('k')
         @JvmField
-        @Register
         val QUEEN = PieceType('q')
         @JvmField
-        @Register
         val ROOK = PieceType('r')
         @JvmField
-        @Register
         val BISHOP = PieceType('b')
         @JvmField
-        @Register
         val KNIGHT = PieceType('n')
         @JvmField
-        @Register
         val PAWN = PieceType('p')
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<PieceType>()

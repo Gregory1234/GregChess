@@ -45,6 +45,7 @@ sealed class GameScore(val pgn: String) {
 typealias DetEndReason = EndReason<GameScore.Victory>
 typealias DrawEndReason = EndReason<GameScore.Draw>
 
+@Suppress("unused")
 @Serializable(with = EndReason.Serializer::class)
 class EndReason<R : GameScore>(val type: Type) : NameRegistered {
 
@@ -58,45 +59,34 @@ class EndReason<R : GameScore>(val type: Type) : NameRegistered {
 
     override fun toString(): String = Registry.END_REASON.simpleElementToString(this)
 
+    @RegisterAll(EndReason::class)
     companion object {
 
         internal val AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, _ -> register(m, n) }
 
         @JvmField
-        @Register
         val CHECKMATE = DetEndReason(Type.NORMAL)
         @JvmField
-        @Register
         val RESIGNATION = DetEndReason(Type.ABANDONED)
         @JvmField
-        @Register
         val WALKOVER = DetEndReason(Type.ABANDONED)
         @JvmField
-        @Register
         val STALEMATE = DrawEndReason(Type.NORMAL)
         @JvmField
-        @Register
         val INSUFFICIENT_MATERIAL = DrawEndReason(Type.NORMAL)
         @JvmField
-        @Register
         val FIFTY_MOVES = DrawEndReason(Type.NORMAL)
         @JvmField
-        @Register
         val REPETITION = DrawEndReason(Type.NORMAL)
         @JvmField
-        @Register
         val DRAW_AGREEMENT = DrawEndReason(Type.NORMAL)
         @JvmField
-        @Register
         val TIMEOUT = DetEndReason(Type.TIME_FORFEIT)
         @JvmField
-        @Register
         val DRAW_TIMEOUT = DrawEndReason(Type.TIME_FORFEIT)
         @JvmField
-        @Register
         val ALL_PIECES_LOST = DetEndReason(Type.NORMAL)
         @JvmField
-        @Register
         val ERROR = DrawEndReason(Type.EMERGENCY)
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<EndReason<*>>()
