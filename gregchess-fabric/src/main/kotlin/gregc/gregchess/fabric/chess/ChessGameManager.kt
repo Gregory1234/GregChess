@@ -65,7 +65,7 @@ object ChessGameManager {
             this += SimpleComponentData(GameController::class)
             this += r
         }
-        return GameSettings("", false, ChessVariant.Normal, components)
+        return GameSettings("", ChessVariant.Normal, components)
     }
 
 

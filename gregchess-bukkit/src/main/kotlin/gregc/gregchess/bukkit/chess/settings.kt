@@ -16,7 +16,6 @@ object SettingsManager {
     fun getSettings(): List<GameSettings> =
         config.getConfigurationSection("Settings.Presets")?.getKeys(false).orEmpty().map { name ->
             val section = config.getConfigurationSection("Settings.Presets.$name")!!
-            val simpleCastling = section.getBoolean("SimpleCastling", false)
             val variant = section.getString("Variant")?.toKey()
                 ?.let { Registry.VARIANT.getOrNull(it) } ?: ChessVariant.Normal
             val requestedComponents = variant.requiredComponents + variant.optionalComponents +
@@ -26,7 +25,7 @@ object SettingsManager {
                 val f = BukkitRegistry.SETTINGS_PARSER[req]
                 context.f()
             }
-            GameSettings(name, simpleCastling, variant, components)
+            GameSettings(name, variant, components)
         }
 
 }

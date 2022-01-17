@@ -35,6 +35,7 @@ internal class Square(
 @Serializable
 class ChessboardState private constructor (
     val initialFEN: FEN,
+    val simpleCastling: Boolean,
     internal val squares: Map<Pos, Square>,
     @SerialName("halfmoveClock") internal var halfmoveClock_: UInt = initialFEN.halfmoveClock,
     @SerialName("fullmoveCounter") internal var fullmoveCounter_: UInt = initialFEN.fullmoveCounter,
@@ -42,9 +43,9 @@ class ChessboardState private constructor (
     @SerialName("capturedPieces") internal val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") internal val moveHistory_: MutableList<Move> = mutableListOf()
 ) : ComponentData<Chessboard> {
-    private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toSquares(variant))
-    constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
-            this(variant, fen ?: variant.genFEN(chess960))
+    private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
+    constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
+            this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
 
     override val componentClass: KClass<out Chessboard> get() = Chessboard::class
 
@@ -112,7 +113,7 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
 
     val moveHistory: List<Move> get() = moves
 
-    val simpleCastling: Boolean get() = game.settings.simpleCastling
+    val simpleCastling: Boolean get() = data.simpleCastling
 
     val chess960: Boolean
         get() {

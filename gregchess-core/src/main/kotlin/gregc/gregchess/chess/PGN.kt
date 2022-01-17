@@ -78,7 +78,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
                     this += game.variant.name.snakeToPascal()
                 if (game.board.chess960)
                     this += "Chess960"
-                if (game.settings.simpleCastling)
+                if (game.board.simpleCastling)
                     this += "SimpleCastling"
             }.joinToString(" ")
 

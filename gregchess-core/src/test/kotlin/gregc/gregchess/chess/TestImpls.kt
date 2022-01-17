@@ -18,7 +18,7 @@ fun testSettings(
         this += ChessboardState(variant)
         this.addAll(extra)
     }
-    return GameSettings(name, false, variant, components)
+    return GameSettings(name, variant, components)
 }
 
 class TestPlayer(override val name: String) : ChessPlayer {
