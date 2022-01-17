@@ -69,17 +69,17 @@ interface PlacedPiece {
 fun PlacedPiece?.boardPiece() = this as BoardPiece
 fun PlacedPiece?.capturedPiece() = this as CapturedPiece
 
-fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) {
+fun multiMove(game: ChessGame, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) {
     val realMoves = moves.filterNotNull()
     for ((o,_) in realMoves)
-        o?.checkExists(board)
+        o?.checkExists(game.board)
     for ((o,_) in realMoves)
-        o?.destroy(board)
+        o?.destroy(game.board)
     for ((_,t) in realMoves)
-        t?.checkCanExist(board)
+        t?.checkCanExist(game.board)
     for ((_,t) in realMoves)
-        t?.create(board)
-    board.callPieceEvent(PieceEvent.Moved(realMoves.toMap()))
+        t?.create(game.board)
+    game.callEvent(PieceEvent.Moved(realMoves.toMap()))
 }
 
 object PlacedPieceSerializer : ClassRegisteredSerializer<PlacedPiece>("PlacedPiece", Registry.PLACED_PIECE_CLASS)
@@ -125,15 +125,15 @@ data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boo
         board.clearPiece(pos)
     }
 
-    fun sendCreated(board: Chessboard) {
-        checkExists(board)
-        board.callPieceEvent(PieceEvent.Created(this))
+    fun sendCreated(game: ChessGame) {
+        checkExists(game.board)
+        game.callEvent(PieceEvent.Created(this))
     }
 
-    fun clear(board: Chessboard) {
-        checkExists(board)
-        board.callPieceEvent(PieceEvent.Cleared(this))
-        board.clearPiece(pos)
+    fun clear(game: ChessGame) {
+        checkExists(game.board)
+        game.callEvent(PieceEvent.Cleared(this))
+        game.board.clearPiece(pos)
     }
 
     fun getMoves(board: Chessboard) = board.getMoves(pos)

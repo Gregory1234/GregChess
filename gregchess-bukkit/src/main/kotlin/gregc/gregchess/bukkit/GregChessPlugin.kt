@@ -165,14 +165,14 @@ object GregChessPlugin : Listener {
                 execute<Player> {
                     val g = pl().game
                     val pos = g.renderer.getPos(sender.location)
-                    multiMove(g.board, g.board[pos]?.capture(pl().color))
+                    multiMove(g, g.board[pos]?.capture(pl().color))
                     g.board.updateMoves()
                     sender.sendMessage(BOARD_OP_DONE)
                 }
                 argument(PosArgument("pos")) { pos ->
                     execute<Player> {
                         val g = pl().game
-                        multiMove(g.board, g.board[pos()]?.capture(pl().color))
+                        multiMove(g, g.board[pos()]?.capture(pl().color))
                         g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
@@ -184,14 +184,14 @@ object GregChessPlugin : Listener {
                     execute<Player> {
                         val g = pl().game
                         val p = g.renderer.getPos(sender.location)
-                        multiMove(g.board, g.board[p]?.capture(pl().color), null to BoardPiece(p, piece(), false))
+                        multiMove(g, g.board[p]?.capture(pl().color), null to BoardPiece(p, piece(), false))
                         g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
                     argument(PosArgument("pos")) { pos ->
                         execute<Player> {
                             val g = pl().game
-                            multiMove(g.board, g.board[pos()]?.capture(pl().color), null to BoardPiece(pos(), piece(), false))
+                            multiMove(g, g.board[pos()]?.capture(pl().color), null to BoardPiece(pos(), piece(), false))
                             g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }
@@ -204,7 +204,7 @@ object GregChessPlugin : Listener {
                     argument(PosArgument("to")) { to ->
                         execute<Player> {
                             val g = pl().game
-                            multiMove(g.board, g.board[to()]?.capture(pl().color), g.board[from()]?.move(to()))
+                            multiMove(g, g.board[to()]?.capture(pl().color), g.board[from()]?.move(to()))
                             g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }

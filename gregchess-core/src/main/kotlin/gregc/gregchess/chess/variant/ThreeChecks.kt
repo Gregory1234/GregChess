@@ -5,24 +5,30 @@ import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.Register
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant() {
 
     @Serializable
-    data class CheckCounterData(val limit: UInt, val checks: ByColor<UInt> = byColor(0u)) : ComponentData<CheckCounter> {
+    class CheckCounterData private constructor(
+        val limit: UInt,
+        @SerialName("checks") internal val checks_: MutableByColor<UInt>
+    ) : ComponentData<CheckCounter> {
+        constructor(limit: UInt) : this(limit, mutableByColor(0u))
+
         override val componentClass: KClass<out CheckCounter> get() = CheckCounter::class
+
+        val check: ByColor<UInt> get() = byColor { checks_[it] }
 
         override fun getComponent(game: ChessGame) = CheckCounter(game, this)
     }
 
-    class CheckCounter(game: ChessGame, data: CheckCounterData) : Component(game) {
+    class CheckCounter(game: ChessGame, override val data: CheckCounterData) : Component(game) {
 
-        private val checks = mutableByColor { data.checks[it] }
+        private val checks = data.checks_
         private val limit = data.limit
-
-        override val data get() = CheckCounterData(limit, byColor { checks[it] })
 
         fun registerCheck(color: Color) {
             checks[color]++

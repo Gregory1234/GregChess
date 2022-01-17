@@ -24,8 +24,8 @@ internal class Square(
 
     override fun toString() = "Square(piece=$piece, flags=$flags)"
 
-    fun empty(board: Chessboard) {
-        piece?.clear(board)
+    fun empty(game: ChessGame) {
+        piece?.clear(game)
         bakedMoves = null
         bakedLegalMoves = null
         flags.clear()
@@ -171,7 +171,7 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.SYNC || e == GameBaseEvent.START) {
             updateMoves()
-            pieces.forEach { it.sendCreated(this) }
+            pieces.forEach { it.sendCreated(game) }
         }
     }
 
@@ -204,7 +204,7 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
     }
 
     fun setFromFEN(fen: FEN) {
-        squares.values.forEach { it.empty(this) }
+        squares.values.forEach { it.empty(game) }
         fen.forEachSquare(game.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
@@ -223,7 +223,7 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
 
         boardHashes.clear()
         addBoardHash(fen)
-        pieces.forEach { it.sendCreated(this) }
+        pieces.forEach { it.sendCreated(game) }
         game.callEvent(SetFenEvent(fen))
     }
 
@@ -272,6 +272,4 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
             game.previousTurn()
         }
     }
-
-    fun callPieceEvent(e: PieceEvent) = game.callEvent(e)
 }
