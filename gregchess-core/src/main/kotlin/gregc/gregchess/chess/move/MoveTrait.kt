@@ -20,8 +20,8 @@ interface MoveTrait {
     val type: MoveTraitType<*>
     val shouldComeFirst: Boolean get() = false
     val shouldComeLast: Boolean get() = false
-    val shouldComeBefore: Collection<KClass<out MoveTrait>> get() = emptyList()
-    val shouldComeAfter: Collection<KClass<out MoveTrait>> get() = emptyList()
+    val shouldComeBefore: Set<MoveTraitType<*>> get() = emptySet()
+    val shouldComeAfter: Set<MoveTraitType<*>> get() = emptySet()
     val nameTokens: MoveName
     fun setup(game: ChessGame, move: Move) {}
     fun execute(game: ChessGame, move: Move) {}
@@ -98,7 +98,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
     override val nameTokens get() = MoveName(emptyMap())
 
-    override val shouldComeBefore get() = listOf(CaptureTrait::class)
+    override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE)
 
     private var halfmoveClock: UInt = 0u
 
@@ -142,7 +142,7 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
     override val nameTokens
         get() = MoveName(promotion?.type?.let { mapOf(MoveNameTokenType.PROMOTION to it) } ?: emptyMap())
 
-    override val shouldComeBefore get() = listOf(TargetTrait::class)
+    override val shouldComeBefore get() = setOf(MoveTraitType.TARGET)
 
     override fun execute(game: ChessGame, move: Move) {
         val promotion = promotion ?: throw TraitPreconditionException(this, "Promotion not chosen", NullPointerException())
@@ -297,7 +297,7 @@ class TargetTrait(val target: Pos) : MoveTrait {
 
     override val nameTokens get() = MoveName(mapOf(MoveNameTokenType.TARGET to target))
 
-    override val shouldComeBefore get() = listOf(CaptureTrait::class)
+    override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE)
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
         move.pieceTracker.traceMove(game, move.main.boardPiece().move(target))

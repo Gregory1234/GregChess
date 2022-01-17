@@ -28,9 +28,9 @@ data class Move(
         var remainingTraits = traits
         for (pass in 0u..255u) {
             remainingTraits = remainingTraits.filterNot { mt ->
-                if (remainingTraits.any { it::class in mt.shouldComeBefore })
+                if (remainingTraits.any { it.type in mt.shouldComeBefore })
                     false
-                else if (remainingTraits.any { mt::class in it.shouldComeAfter })
+                else if (remainingTraits.any { mt.type in it.shouldComeAfter })
                     false
                 else if (!mt.shouldComeFirst && remainingTraits.any { it.shouldComeFirst })
                     false
@@ -52,9 +52,9 @@ data class Move(
         var remainingTraits = traits
         for (pass in 0u..255u) {
             remainingTraits = remainingTraits.filterNot { mt ->
-                if (remainingTraits.any { it::class in mt.shouldComeAfter })
+                if (remainingTraits.any { it.type in mt.shouldComeAfter })
                     false
-                else if (remainingTraits.any { mt::class in it.shouldComeBefore })
+                else if (remainingTraits.any { mt.type in it.shouldComeBefore })
                     false
                 else if (!mt.shouldComeLast && remainingTraits.any { it.shouldComeLast })
                     false

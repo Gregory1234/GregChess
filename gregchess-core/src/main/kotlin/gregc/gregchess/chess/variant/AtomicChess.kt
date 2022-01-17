@@ -20,7 +20,7 @@ object AtomicChess : ChessVariant() {
         var explodedNumber = 0
             private set
 
-        override val shouldComeBefore get() = listOf(CaptureTrait::class, TargetTrait::class, PromotionTrait::class)
+        override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE, MoveTraitType.TARGET, MoveTraitType.PROMOTION)
 
         private fun BoardPiece.explode(by: Color, tracker: PieceTracker): Pair<BoardPiece, CapturedPiece> {
             tracker.giveName("exploded${explodedNumber++}", this)
