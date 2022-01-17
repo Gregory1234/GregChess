@@ -4,8 +4,7 @@ package gregc.gregchess.chess.component
 
 import gregc.gregchess.DurationSerializer
 import gregc.gregchess.chess.*
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.UseSerializers
+import kotlinx.serialization.*
 import java.time.LocalDateTime
 import kotlin.reflect.KClass
 import kotlin.time.Duration
@@ -43,22 +42,29 @@ data class TimeControl(
 }
 
 @Serializable
-data class ChessClockData(
+class ChessClockData private constructor(
     val timeControl: TimeControl,
-    val timeRemaining: ByColor<Duration> = byColor(timeControl.initialTime),
-    val currentTurnLength: Duration = Duration.ZERO
+    @SerialName("timeRemaining") internal val timeRemaining_: MutableByColor<Duration>,
+    @SerialName("currentTurnLength") internal var currentTurnLength_: Duration
 ) : ComponentData<ChessClock> {
+    constructor(
+        timeControl: TimeControl,
+        timeRemaining: ByColor<Duration> = byColor(timeControl.initialTime),
+        currentTurnLength: Duration = Duration.ZERO
+    ) : this(timeControl, mutableByColor { timeRemaining[it] }, currentTurnLength)
+
     override val componentClass: KClass<out ChessClock> get() = ChessClock::class
+
+    val timeRemaining: ByColor<Duration> get() = byColor { timeRemaining_[it] }
+    val currentTurnLength: Duration get() = currentTurnLength_
 
     override fun getComponent(game: ChessGame) = ChessClock(game, this)
 }
 
-class ChessClock(game: ChessGame, settings: ChessClockData) : Component(game) {
-    private val time = mutableByColor { settings.timeRemaining[it] }
-    val timeControl = settings.timeControl
-    private var currentTurnLength = settings.currentTurnLength
-
-    override val data get() = ChessClockData(timeControl, byColor { time[it] }, currentTurnLength)
+class ChessClock(game: ChessGame, override val data: ChessClockData) : Component(game) {
+    private val time get() = data.timeRemaining_
+    val timeControl get() = data.timeControl
+    private var currentTurnLength by data::currentTurnLength_
 
     private var lastTime: LocalDateTime = LocalDateTime.now()
 
