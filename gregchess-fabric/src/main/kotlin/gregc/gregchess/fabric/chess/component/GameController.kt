@@ -1,16 +1,18 @@
 package gregc.gregchess.fabric.chess.component
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessGameManager
 import gregc.gregchess.fabric.chess.player.*
 import kotlinx.coroutines.cancel
+import kotlinx.serialization.Serializable
 
-class GameController(game: ChessGame) : SimpleComponent(game) {
+@Serializable
+object GameController : Component {
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) = with(game) {
+    fun handleEvents(game: ChessGame, e: GameBaseEvent) = with(game) {
         when (e) {
             GameBaseEvent.START -> {
                 ChessGameManager += game

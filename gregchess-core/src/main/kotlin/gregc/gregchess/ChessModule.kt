@@ -1,7 +1,7 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPiece
@@ -10,7 +10,6 @@ import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.RegistryBlock
 import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.serializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
@@ -69,28 +68,13 @@ fun <T : MoveTrait> MoveTraitType<T>.register(module: ChessModule, id: String) =
     module.register(Registry.MOVE_TRAIT_TYPE, id, this)
 
 @OptIn(InternalSerializationApi::class)
-fun <T : Component, D : ComponentData<T>> ChessModule.registerComponent(
-    id: String, tcl: KClass<T>, dcl: KClass<D>
-) {
-    tcl.companionObjectInstance
-    dcl.companionObjectInstance
-    register(Registry.COMPONENT_CLASS, id, tcl)
-    register(Registry.COMPONENT_DATA_CLASS, tcl, dcl)
-    register(Registry.COMPONENT_SERIALIZER, tcl, dcl.serializer())
-}
-
-inline fun <reified T : Component, reified D : ComponentData<T>> ChessModule.registerComponent(id: String) =
-    registerComponent(id, T::class, D::class)
-
-fun <T : SimpleComponent> ChessModule.registerSimpleComponent(id: String, tcl: KClass<T>) {
+fun <T : Component> ChessModule.registerComponent(id: String, tcl: KClass<T>) {
     tcl.companionObjectInstance
     register(Registry.COMPONENT_CLASS, id, tcl)
-    register(Registry.COMPONENT_DATA_CLASS, tcl, SimpleComponentData::class)
-    register(Registry.COMPONENT_SERIALIZER, tcl, SimpleComponentDataSerializer(tcl))
 }
 
-inline fun <reified T : SimpleComponent> ChessModule.registerSimpleComponent(id: String) =
-    registerSimpleComponent(id, T::class)
+inline fun <reified T : Component> ChessModule.registerComponent(id: String) =
+    registerComponent(id, T::class)
 
 inline fun <reified T : ChessPlayer> ChessModule.registerPlayerClass(id: String) =
     register(Registry.PLAYER_CLASS, id, T::class)

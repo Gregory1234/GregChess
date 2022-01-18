@@ -23,7 +23,7 @@ class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, game: ChessG
     override fun startTurn() {
         game.coroutineScope.launch {
             try {
-                val str = engine.getMove(game.board.getFEN())
+                val str = engine.getMove(game.board.getFEN(game))
                 val origin = Pos.parseFromString(str.take(2))
                 val target = Pos.parseFromString(str.drop(2).take(2))
                 val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }

@@ -2,7 +2,8 @@ package gregc.gregchess
 
 import gregc.gregchess.chess.ChessFlag
 import gregc.gregchess.chess.EndReason
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.ChessClock
+import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.*
@@ -12,9 +13,9 @@ import gregc.gregchess.chess.variant.ThreeChecks
 object GregChess : ChessModule("GregChess", "gregchess") {
 
     private fun registerComponents() {
-        registerComponent<Chessboard, ChessboardState>("chessboard")
-        registerComponent<ChessClock, ChessClockData>("clock")
-        registerComponent<ThreeChecks.CheckCounter, ThreeChecks.CheckCounterData>("check_counter")
+        registerComponent<Chessboard>("chessboard")
+        registerComponent<ChessClock>("clock")
+        registerComponent<ThreeChecks.CheckCounter>("check_counter")
     }
 
     private fun registerPlacedPieceClasses() {

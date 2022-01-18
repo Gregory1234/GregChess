@@ -1,7 +1,8 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.Register
@@ -12,39 +13,29 @@ import kotlin.reflect.KClass
 object ThreeChecks : ChessVariant() {
 
     @Serializable
-    class CheckCounterData private constructor(
+    class CheckCounter private constructor(
         val limit: UInt,
         @SerialName("checks") internal val checks_: MutableByColor<UInt>
-    ) : ComponentData<CheckCounter> {
+    ) : Component {
         constructor(limit: UInt) : this(limit, mutableByColor(0u))
-
-        override val componentClass: KClass<out CheckCounter> get() = CheckCounter::class
 
         val check: ByColor<UInt> get() = byColor { checks_[it] }
 
-        override fun getComponent(game: ChessGame) = CheckCounter(game, this)
-    }
-
-    class CheckCounter(game: ChessGame, override val data: CheckCounterData) : Component(game) {
-
-        private val checks = data.checks_
-        private val limit = data.limit
-
         fun registerCheck(color: Color) {
-            checks[color]++
+            checks_[color]++
         }
 
         fun removeCheck(color: Color) {
-            checks[color]--
+            checks_[color]--
         }
 
-        fun checkForGameEnd() {
-            for ((s, c) in checks.toIndexedList())
+        fun checkForGameEnd(game: ChessGame) {
+            for ((s, c) in checks_.toIndexedList())
                 if (c >= limit)
                     game.stop(s.lostBy(CHECK_LIMIT, limit.toString()))
         }
 
-        operator fun get(s: Color) = checks[s]
+        operator fun get(s: Color) = checks_[s]
     }
 
     @Serializable
@@ -59,7 +50,7 @@ object ThreeChecks : ChessVariant() {
             private set
 
         override fun execute(game: ChessGame, move: Move) {
-            game.board.updateMoves()
+            game.board.updateMoves(game)
             if (game.variant.isInCheck(game, !move.main.color)) {
                 game.requireComponent<CheckCounter>().registerCheck(!move.main.color)
                 checkRegistered = true
@@ -87,7 +78,7 @@ object ThreeChecks : ChessVariant() {
         }
 
     override fun checkForGameEnd(game: ChessGame) {
-        game.requireComponent<CheckCounter>().checkForGameEnd()
+        game.requireComponent<CheckCounter>().checkForGameEnd(game)
 
         Normal.checkForGameEnd(game)
     }

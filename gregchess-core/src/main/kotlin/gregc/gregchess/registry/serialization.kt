@@ -1,10 +1,8 @@
 package gregc.gregchess.registry
 
-import gregc.gregchess.ClassMapSerializer
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
-import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
 
 open class NameRegisteredSerializer<T : NameRegistered>(val name: String, val registryView: RegistryView<String, T>) :
@@ -113,13 +111,4 @@ abstract class KeyRegisteredSerializer<K: Any, T : Any>(
         }
         ret!!
     }
-}
-
-open class KeyRegisteredMapSerializer<V>(name: String, val registryType: RegistryView<String, KSerializer<out V>>)
-    : ClassMapSerializer<Map<RegistryKey<String>, V>, RegistryKey<String>, V>(name, StringKeySerializer) {
-    final override fun Map<RegistryKey<String>, V>.asMap(): Map<RegistryKey<String>, V> = this
-    final override fun fromMap(m: Map<RegistryKey<String>, V>): Map<RegistryKey<String>, V> = m
-    @Suppress("UNCHECKED_CAST")
-    final override fun RegistryKey<String>.valueSerializer(module: SerializersModule): KSerializer<V> =
-        registryType[this] as KSerializer<V>
 }

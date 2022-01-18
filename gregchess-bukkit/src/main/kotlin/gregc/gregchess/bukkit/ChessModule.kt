@@ -4,7 +4,7 @@ import gregc.gregchess.ChessModule
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.register
@@ -12,7 +12,6 @@ import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubclassOf
 
 class SettingsParserContext(val variant: ChessVariant, val section: ConfigurationSection)
 
@@ -22,7 +21,7 @@ object BukkitRegistry {
     @JvmField
     val PROPERTY_TYPE = NameRegistry<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER = ConnectedRegistry<KClass<out Component>, SettingsParser<out ComponentData<*>>>(
+    val SETTINGS_PARSER = ConnectedRegistry<KClass<out Component>, SettingsParser<out Component>>(
         "settings_parser", Registry.COMPONENT_CLASS
     )
     @JvmField
@@ -43,21 +42,24 @@ object BukkitRegistry {
 
 fun PropertyType.register(module: ChessModule, id: String) = module.register(BukkitRegistry.PROPERTY_TYPE, id, this)
 
-inline fun <reified T : Component> ChessModule.registerSettings(noinline settings: SettingsParser<ComponentData<T>>) =
+inline fun <reified T : Component> ChessModule.registerSettings(noinline settings: SettingsParser<T>) =
     register(BukkitRegistry.SETTINGS_PARSER, T::class, settings)
 
-fun <T : Component> ChessModule.registerConstSettings(cl: KClass<T>, settings: ComponentData<T>) =
+fun <T : Component> ChessModule.registerConstSettings(cl: KClass<T>, settings: T) =
     register(BukkitRegistry.SETTINGS_PARSER, cl) { settings }
 
-inline fun <reified T : Component> ChessModule.registerConstSettings(settings: ComponentData<T>) =
+inline fun <reified T : Component> ChessModule.registerConstSettings(settings: T) =
     registerConstSettings(T::class, settings)
 
 @Suppress("UNCHECKED_CAST")
 fun ChessModule.completeSimpleSettings() =
     get(BukkitRegistry.SETTINGS_PARSER)
         .completeWith { cl ->
-            require (cl.isSubclassOf(SimpleComponent::class));
-            { SimpleComponentData(cl as KClass<out SimpleComponent>) }
+            if (cl.objectInstance != null) {
+                { cl.objectInstance }
+            } else {
+                { cl.constructors.first { it.parameters.isEmpty() }.call() }
+            }
         }
 
 fun ChessModule.registerLocalFormatter(variant: ChessVariant, formatter: MoveNameFormatter) =

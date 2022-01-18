@@ -4,7 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.*
-import gregc.gregchess.fabric.chess.component.FabricRendererSettings
+import gregc.gregchess.fabric.chess.component.FabricRenderer
 import gregc.gregchess.fabric.chess.player.gregchess
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import gregc.gregchess.rangeTo
@@ -163,7 +163,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         if (currentGame != null) return
         currentGame = ChessGame(
             FabricChessEnvironment,
-            ChessGameManager.settings(ChessVariant.Normal, getBoardState(), FabricRendererSettings(this)),
+            ChessGameManager.settings(ChessVariant.Normal, getBoardState(), FabricRenderer(this)),
             byColor(whitePlayer.gregchess, blackPlayer.gregchess)
         ).start()
     }

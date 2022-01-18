@@ -183,7 +183,7 @@ class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
 }
 
 private fun checkForChecks(color: Color, game: ChessGame): MoveNameTokenType<Unit>? {
-    game.board.updateMoves()
+    game.board.updateMoves(game)
     val pieces = game.board.piecesOf(!color)
     val inCheck = game.variant.isInCheck(game, !color)
     val noMoves = pieces.all { it.getMoves(game.board).none { m -> game.variant.isLegal(m, game) } }

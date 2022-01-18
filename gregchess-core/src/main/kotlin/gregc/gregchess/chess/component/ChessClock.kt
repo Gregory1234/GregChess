@@ -6,7 +6,6 @@ import gregc.gregchess.DurationSerializer
 import gregc.gregchess.chess.*
 import kotlinx.serialization.*
 import java.time.LocalDateTime
-import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -42,37 +41,27 @@ data class TimeControl(
 }
 
 @Serializable
-class ChessClockData private constructor(
+class ChessClock private constructor(
     val timeControl: TimeControl,
-    @SerialName("timeRemaining") internal val timeRemaining_: MutableByColor<Duration>,
-    @SerialName("currentTurnLength") internal var currentTurnLength_: Duration
-) : ComponentData<ChessClock> {
+    @SerialName("timeRemaining") private val timeRemaining_: MutableByColor<Duration>,
+    @SerialName("currentTurnLength") private var currentTurnLength_: Duration
+) : Component {
     constructor(
         timeControl: TimeControl,
         timeRemaining: ByColor<Duration> = byColor(timeControl.initialTime),
         currentTurnLength: Duration = Duration.ZERO
     ) : this(timeControl, mutableByColor { timeRemaining[it] }, currentTurnLength)
 
-    override val componentClass: KClass<out ChessClock> get() = ChessClock::class
-
     val timeRemaining: ByColor<Duration> get() = byColor { timeRemaining_[it] }
     val currentTurnLength: Duration get() = currentTurnLength_
 
-    override fun getComponent(game: ChessGame) = ChessClock(game, this)
-}
+    @Transient private var lastTime: LocalDateTime = LocalDateTime.now()
 
-class ChessClock(game: ChessGame, override val data: ChessClockData) : Component(game) {
-    private val time get() = data.timeRemaining_
-    val timeControl get() = data.timeControl
-    private var currentTurnLength by data::currentTurnLength_
-
-    private var lastTime: LocalDateTime = LocalDateTime.now()
-
-    private var started = false
-    private var stopped = false
+    @Transient private var started = false
+    @Transient private var stopped = false
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) {
+    fun handleEvents(game: ChessGame, e: GameBaseEvent) {
         if (e == GameBaseEvent.START && timeControl.type == TimeControl.Type.FIXED) started = true
         else if (e == GameBaseEvent.SYNC) when (game.state) {
             ChessGame.State.INITIAL -> {
@@ -89,20 +78,18 @@ class ChessClock(game: ChessGame, override val data: ChessClockData) : Component
             }
         }
         else if (e == GameBaseEvent.STOP || e == GameBaseEvent.PANIC) stopped = true
-        else if (e == GameBaseEvent.UPDATE) updateTimer()
+        else if (e == GameBaseEvent.UPDATE) updateTimer(game)
     }
 
     fun addTimer(s: Color, d: Duration) {
-        time[s] += d
+        timeRemaining_[s] += d
     }
 
     fun setTimer(s: Color, d: Duration) {
-        time[s] = d
+        timeRemaining_[s] = d
     }
 
-    fun timeRemaining(s: Color) = time[s]
-
-    private fun updateTimer() {
+    private fun updateTimer(game: ChessGame) {
         if (!started)
             return
         if (stopped)
@@ -110,19 +97,19 @@ class ChessClock(game: ChessGame, override val data: ChessClockData) : Component
         val now = LocalDateTime.now()
         val dt = java.time.Duration.between(lastTime, now).toKotlinDuration()
         lastTime = now
-        currentTurnLength += dt
+        currentTurnLength_ += dt
         if (timeControl.type != TimeControl.Type.SIMPLE) {
-            time[game.currentTurn] -= dt
+            timeRemaining_[game.currentTurn] -= dt
         } else {
-            time[game.currentTurn] -= maxOf(minOf(dt, currentTurnLength - timeControl.increment), Duration.ZERO)
+            timeRemaining_[game.currentTurn] -= maxOf(minOf(dt, currentTurnLength_ - timeControl.increment), Duration.ZERO)
         }
-        for ((s, t) in time.toIndexedList())
+        for ((s, t) in timeRemaining_.toIndexedList())
             if (t.isNegative())
                 game.variant.timeout(game, s)
     }
 
     @ChessEventHandler
-    fun endTurn(e: TurnEvent) {
+    fun endTurn(game: ChessGame, e: TurnEvent) {
         if (e != TurnEvent.END)
             return
         val increment = if (started) timeControl.increment else Duration.ZERO
@@ -131,17 +118,17 @@ class ChessClock(game: ChessGame, override val data: ChessClockData) : Component
         val turn = game.currentTurn
         when (timeControl.type) {
             TimeControl.Type.FIXED -> {
-                time[turn] = timeControl.initialTime
+                timeRemaining_[turn] = timeControl.initialTime
             }
             TimeControl.Type.INCREMENT -> {
-                time[turn] += increment
+                timeRemaining_[turn] += increment
             }
             TimeControl.Type.BRONSTEIN -> {
-                time[turn] += minOf(increment, currentTurnLength)
+                timeRemaining_[turn] += minOf(increment, currentTurnLength_)
             }
             TimeControl.Type.SIMPLE -> {
             }
         }
-        currentTurnLength = Duration.ZERO
+        currentTurnLength_ = Duration.ZERO
     }
 }

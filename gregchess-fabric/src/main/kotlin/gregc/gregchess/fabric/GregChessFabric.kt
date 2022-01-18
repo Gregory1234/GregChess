@@ -28,8 +28,8 @@ internal object GregChessFabric : ChessExtension {
     }
 
     private fun registerComponents() = with(GregChess) {
-        registerComponent<FabricRenderer, FabricRendererSettings>("fabric_renderer")
-        registerSimpleComponent<GameController>("game_controller")
+        registerComponent<FabricRenderer>("fabric_renderer")
+        registerComponent<GameController>("game_controller")
     }
 
     override fun load(): Unit = with(GregChess) {

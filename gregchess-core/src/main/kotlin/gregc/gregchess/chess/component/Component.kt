@@ -1,70 +1,45 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.ChessListener
+import gregc.gregchess.ClassMapSerializer
+import gregc.gregchess.chess.*
 import gregc.gregchess.registry.*
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
-import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.full.*
+import kotlin.reflect.typeOf
 
-// TODO: remove this
-interface ComponentData<out T : Component> {
-    val componentClass: KClass<out T>
-    fun getComponent(game: ChessGame): T
-}
+// TODO: allow for components to own a reference to ChessGame?
+interface Component {
 
-abstract class Component(protected val game: ChessGame) : ChessListener {
-    abstract val data: ComponentData<*>
+    fun validate(game: ChessGame) {}
 
-    open fun validate() {}
-
-    final override fun toString(): String = buildString {
-        val cl = this@Component::class
-        append(cl.componentKey)
-        append("@")
-        append(cl.hashCode())
-        append("(game.uuid=")
-        append(game.uuid)
-        append(", data=")
-        append(data)
-        append(")")
+    fun handleEvent(game: ChessGame, e: ChessEvent) {
+        for (f in this::class.members) {
+            if (f.annotations.any { it is ChessEventHandler } && f.parameters.size == 3 &&
+                f.parameters[1].type == typeOf<ChessGame>() &&
+                f.parameters[2].type.isSupertypeOf(e::class.starProjectedType)
+            ) {
+                f.call(this, game, e)
+            }
+        }
     }
 }
 
-object ComponentDataMapSerializer :
-    KeyRegisteredMapSerializer<ComponentData<*>>("ComponentDataMap", ChainRegistryView(Registry.COMPONENT_CLASS, Registry.COMPONENT_SERIALIZER))
+object ComponentMapSerializer : ClassMapSerializer<Map<RegistryKey<String>, Component>, RegistryKey<String>, Component>("ComponentDataMap", StringKeySerializer) {
 
-val KClass<out Component>.componentDataClass get() = Registry.COMPONENT_DATA_CLASS[this]
+    override fun Map<RegistryKey<String>, Component>.asMap() = this
+
+    override fun fromMap(m: Map<RegistryKey<String>, Component>) = m
+
+    @Suppress("UNCHECKED_CAST")
+    override fun RegistryKey<String>.valueSerializer(module: SerializersModule) = module.serializer(Registry.COMPONENT_CLASS[this].createType()) as KSerializer<Component>
+
+}
+
 val KClass<out Component>.componentKey get() = Registry.COMPONENT_CLASS[this]
 val KClass<out Component>.componentModule get() = componentKey.module
 val KClass<out Component>.componentName get() = componentKey.key
 
 class ComponentNotFoundException(cl: KClass<out Component>) : Exception(cl.toString())
-
-@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-class SimpleComponentDataSerializer(private val componentClass: KClass<out SimpleComponent>)
-    : KSerializer<SimpleComponentData<*>> {
-
-    override val descriptor: SerialDescriptor
-        get() = buildSerialDescriptor("SimpleComponentData", StructureKind.OBJECT)
-
-    override fun serialize(encoder: Encoder, value: SimpleComponentData<*>) {
-        encoder.beginStructure(descriptor).endStructure(descriptor)
-    }
-
-    override fun deserialize(decoder: Decoder): SimpleComponentData<*> {
-        decoder.beginStructure(descriptor).endStructure(descriptor)
-        return SimpleComponentData(componentClass)
-    }
-}
-
-class SimpleComponentData<T : SimpleComponent>(override val componentClass: KClass<out T>) : ComponentData<T> {
-    override fun getComponent(game: ChessGame): T = componentClass.primaryConstructor!!.call(game)
-}
-
-open class SimpleComponent(game: ChessGame) : Component(game) {
-    override val data: SimpleComponentData<*> get() = SimpleComponentData(this::class)
-}

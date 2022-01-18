@@ -1,12 +1,13 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.*
+import gregc.gregchess.rotationsOf
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -69,8 +70,8 @@ open class ChessVariant : NameRegistered {
                 game.stop(drawBy(EndReason.STALEMATE))
         }
 
-        checkForRepetition()
-        checkForFiftyMoveRule()
+        checkForRepetition(game)
+        checkForFiftyMoveRule(game)
 
         val whitePieces = piecesOf(Color.WHITE)
         val blackPieces = piecesOf(Color.BLACK)

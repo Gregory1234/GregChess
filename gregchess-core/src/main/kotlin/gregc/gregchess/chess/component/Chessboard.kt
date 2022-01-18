@@ -8,14 +8,11 @@ import gregc.gregchess.rangeTo
 import kotlinx.serialization.*
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.set
-import kotlin.reflect.KClass
 
 class SetFenEvent(val FEN: FEN) : ChessEvent
 
-// TODO: make this private again
 @Serializable
-internal class Square(
+private class Square(
     var piece: BoardPiece? = null,
     val flags: MutableMap<ChessFlag, MutableList<UInt>> = mutableMapOf()
 ) {
@@ -33,23 +30,20 @@ internal class Square(
 }
 
 @Serializable
-class ChessboardState private constructor (
+class Chessboard private constructor (
     val initialFEN: FEN,
     val simpleCastling: Boolean,
-    internal val squares: Map<Pos, Square>,
-    @SerialName("halfmoveClock") internal var halfmoveClock_: UInt = initialFEN.halfmoveClock,
-    @SerialName("fullmoveCounter") internal var fullmoveCounter_: UInt = initialFEN.fullmoveCounter,
-    @SerialName("boardHashes") internal val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
-    @SerialName("capturedPieces") internal val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
-    @SerialName("moveHistory") internal val moveHistory_: MutableList<Move> = mutableListOf()
-) : ComponentData<Chessboard> {
+    private val squares: Map<Pos, Square>,
+    var halfmoveClock: UInt = initialFEN.halfmoveClock,
+    @SerialName("fullmoveCounter") private var fullmoveCounter_: UInt = initialFEN.fullmoveCounter,
+    @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
+    @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
+    @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf()
+) : Component {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
 
-    override val componentClass: KClass<out Chessboard> get() = Chessboard::class
-
-    val halfmoveClock get() = halfmoveClock_
     val fullmoveCounter get() = fullmoveCounter_
     val boardHashes get() = boardHashes_.toMap()
     val capturedPieces get() = capturedPieces_.toList()
@@ -57,35 +51,8 @@ class ChessboardState private constructor (
 
     val pieces get() = squares.values.mapNotNull { it.piece }
 
-    override fun getComponent(game: ChessGame) = Chessboard(game, this)
-
-    companion object {
-
-        private fun FEN.toSquares(variant: ChessVariant): Map<Pos, Square> = toPieces(variant).mapValues { (pos, piece) ->
-            Square(piece, if (pos == enPassantSquare) mutableMapOf(ChessFlag.EN_PASSANT to mutableListOf(1u)) else mutableMapOf())
-        }.let {
-            (Pair(0, 0)..Pair(7, 7)).associate { (i, j) -> Pos(i, j) to (it[Pos(i, j)] ?: Square()) }
-        }
-
-    }
-}
-
-class Chessboard(game: ChessGame, override val data: ChessboardState) : Component(game) {
-
-
-    private val squares = data.squares
-
     private val boardState
         get() = FEN.boardStateFromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it.piece) } }.toMap())
-
-    val initialFEN = data.initialFEN
-    var fullmoveCounter by data::fullmoveCounter_
-        private set
-    var halfmoveClock by data::halfmoveClock_
-    private val boardHashes = data.boardHashes_
-    private val capturedPieces = data.capturedPieces_
-
-    val pieces: List<BoardPiece> get() = data.pieces
 
     operator fun plusAssign(piece: BoardPiece) {
         squares[piece.pos]?.piece = piece
@@ -109,12 +76,6 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
 
     fun hasActiveFlag(pos: Pos, flag: ChessFlag): Boolean = getFlags(pos)[flag]?.let(flag.isActive) ?: false
 
-    private val moves: MutableList<Move> = data.moveHistory_
-
-    val moveHistory: List<Move> get() = moves
-
-    val simpleCastling: Boolean get() = data.simpleCastling
-
     val chess960: Boolean
         get() {
             if (initialFEN.chess960)
@@ -135,24 +96,24 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
         }
 
     var lastMove
-        get() = moves.lastOrNull()
+        get() = moveHistory_.lastOrNull()
         set(v) {
             if (v != null)
-                moves += v
+                moveHistory_ += v
             else
-                moves.clear()
+                moveHistory_.clear()
         }
 
     @ChessEventHandler
-    fun endTurn(e: TurnEvent) {
+    fun endTurn(game: ChessGame, e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (game.currentTurn == Color.BLACK) {
-                fullmoveCounter++
+                fullmoveCounter_++
             }
             for (s in squares.values)
                 for (f in s.flags)
                     f.value.replaceAll { it + 1u }
-            addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
+            addBoardHash(getFEN(game).copy(currentTurn = !game.currentTurn))
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
@@ -164,13 +125,13 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
             }
         }
         if (e.ending)
-            updateMoves()
+            updateMoves(game)
     }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) {
+    fun handleEvents(game: ChessGame, e: GameBaseEvent) {
         if (e == GameBaseEvent.SYNC || e == GameBaseEvent.START) {
-            updateMoves()
+            updateMoves(game)
             pieces.forEach { it.sendCreated(game) }
         }
     }
@@ -181,17 +142,17 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
     fun kingOf(color: Color) = piecesOf(color).firstOrNull { it.type == PieceType.KING }
 
     operator fun plusAssign(captured: CapturedPiece) {
-        capturedPieces += captured
+        capturedPieces_ += captured
     }
 
     operator fun minusAssign(captured: CapturedPiece) {
-        capturedPieces -= captured
+        capturedPieces_ -= captured
     }
 
     fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
     fun getLegalMoves(pos: Pos) = squares[pos]?.bakedLegalMoves.orEmpty()
 
-    fun updateMoves() {
+    fun updateMoves(game: ChessGame) {
         for ((_, square) in squares) {
             square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p, this) }
         }
@@ -203,13 +164,13 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
         }
     }
 
-    fun setFromFEN(fen: FEN) {
+    fun setFromFEN(game: ChessGame, fen: FEN) {
         squares.values.forEach { it.empty(game) }
         fen.forEachSquare(game.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
 
-        fullmoveCounter = fen.fullmoveCounter
+        fullmoveCounter_ = fen.fullmoveCounter
 
         if (fen.currentTurn != game.currentTurn)
             game.nextTurn()
@@ -219,15 +180,15 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
             addFlag(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1u)
         }
 
-        updateMoves()
+        updateMoves(game)
 
-        boardHashes.clear()
+        boardHashes_.clear()
         addBoardHash(fen)
         pieces.forEach { it.sendCreated(game) }
         game.callEvent(SetFenEvent(fen))
     }
 
-    fun getFEN(): FEN {
+    fun getFEN(game: ChessGame): FEN {
         fun castling(color: Color) =
             if (kingOf(color)?.hasMoved == false)
                 piecesOf(color, PieceType.ROOK)
@@ -241,35 +202,45 @@ class Chessboard(game: ChessGame, override val data: ChessboardState) : Componen
             byColor(::castling),
             squares.entries.firstOrNull { (_, s) -> s.flags.any { it.key == ChessFlag.EN_PASSANT && it.flagActive } }?.key,
             halfmoveClock,
-            fullmoveCounter
+            fullmoveCounter_
         )
     }
 
-    fun checkForRepetition() {
-        if ((boardHashes[getFEN().copy(currentTurn = !game.currentTurn).hashed()] ?: 0) >= 3)
+    fun checkForRepetition(game: ChessGame) {
+        if ((boardHashes_[getFEN(game).copy(currentTurn = !game.currentTurn).hashed()] ?: 0) >= 3)
             game.stop(drawBy(EndReason.REPETITION))
     }
 
-    fun checkForFiftyMoveRule() {
+    fun checkForFiftyMoveRule(game: ChessGame) {
         if (halfmoveClock >= 100u)
             game.stop(drawBy(EndReason.FIFTY_MOVES))
     }
 
     private fun addBoardHash(fen: FEN): Int {
         val hash = fen.hashed()
-        boardHashes[hash] = (boardHashes[hash] ?: 0) + 1
-        return boardHashes[hash]!!
+        boardHashes_[hash] = (boardHashes_[hash] ?: 0) + 1
+        return boardHashes_[hash]!!
     }
 
-    fun undoLastMove() {
+    fun undoLastMove(game: ChessGame) {
         lastMove?.let {
-            val hash = getFEN().hashed()
-            boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
+            val hash = getFEN(game).hashed()
+            boardHashes_[hash] = (boardHashes_[hash] ?: 1) - 1
             it.undo(game)
             if (game.currentTurn == Color.WHITE)
-                fullmoveCounter--
-            moves.removeLast()
+                fullmoveCounter_--
+            moveHistory_.removeLast()
             game.previousTurn()
         }
+    }
+
+    companion object {
+
+        private fun FEN.toSquares(variant: ChessVariant): Map<Pos, Square> = toPieces(variant).mapValues { (pos, piece) ->
+            Square(piece, if (pos == enPassantSquare) mutableMapOf(ChessFlag.EN_PASSANT to mutableListOf(1u)) else mutableMapOf())
+        }.let {
+            (Pair(0, 0)..Pair(7, 7)).associate { (i, j) -> Pos(i, j) to (it[Pos(i, j)] ?: Square()) }
+        }
+
     }
 }

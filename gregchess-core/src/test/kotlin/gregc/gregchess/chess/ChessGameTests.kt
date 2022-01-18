@@ -27,13 +27,20 @@ class ChessGameTests {
     @Nested
     inner class Constructing {
         @Test
-        fun `should only construct and verify components`() {
-            val cd = spyk(TestComponentData)
+        fun `should pass components through`() {
+            val cd = spyk(TestComponent)
+            val g = mkGame(testSettings("spy", extra = listOf(cd)))
+            val c = g.getComponent<TestComponent>()!!
+            assertThat(c).isEqualTo(cd)
+        }
+
+        @Test
+        fun `should only verify components`() {
+            val cd = spyk(TestComponent)
             val g = mkGame(testSettings("spy", extra = listOf(cd)))
             val c = g.getComponent<TestComponent>()!!
             verifySequence {
-                cd.getComponent(g)
-                c.validate()
+                c.validate(g)
             }
         }
 
@@ -76,16 +83,16 @@ class ChessGameTests {
 
         @Test
         fun `should start components`() {
-            val g = mkGame(testSettings("spy", extra = listOf(TestComponentData))).start()
+            val g = mkGame(testSettings("spy", extra = listOf(spyk(TestComponent)))).start()
             val c = g.getComponent<TestComponent>()!!
             excludeRecords {
-                c.handleEvent(match { it is PieceEvent })
+                c.handleEvent(g, match { it is PieceEvent })
             }
             verifySequence {
-                c.validate()
-                c.handleEvent(GameBaseEvent.START)
-                c.handleEvent(GameBaseEvent.RUNNING)
-                c.handleEvent(TurnEvent.START)
+                c.validate(g)
+                c.handleEvent(g, GameBaseEvent.START)
+                c.handleEvent(g, GameBaseEvent.RUNNING)
+                c.handleEvent(g, TurnEvent.START)
             }
         }
     }

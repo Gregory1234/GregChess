@@ -2,25 +2,29 @@ package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.chess.player.showGameResults
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.chess.component.Component
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.bukkit.entity.Player
 
 data class SpectatorEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
 class SpectatorNotFoundException(player: Player) : Exception(player.name)
 
-class SpectatorManager(game: ChessGame) : SimpleComponent(game) {
+@Serializable
+class SpectatorManager : Component {
 
+    @Transient
     private val spectatorList = mutableListOf<Player>()
 
     val spectators get() = spectatorList.toList()
 
-    operator fun plusAssign(p: Player) {
+    fun addPlayer(game: ChessGame, p: Player) {
         spectatorList += p
         game.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
-    operator fun minusAssign(p: Player) {
+    fun removePlayer(game: ChessGame, p: Player) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
         spectatorList -= p
@@ -28,18 +32,18 @@ class SpectatorManager(game: ChessGame) : SimpleComponent(game) {
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.STOP) stop()
-        else if (e == GameStopStageEvent.CLEAR) clear()
+    fun onStop(game: ChessGame, e: GameStopStageEvent) {
+        if (e == GameStopStageEvent.STOP) stop(game)
+        else if (e == GameStopStageEvent.CLEAR) clear(game)
     }
 
-    private fun stop() {
+    private fun stop(game: ChessGame) {
         for (it in spectators) {
             it.showGameResults(game.results!!)
         }
     }
 
-    private fun clear() {
+    private fun clear(game: ChessGame) {
         val s = spectators
         spectatorList.clear()
         for (it in s) {

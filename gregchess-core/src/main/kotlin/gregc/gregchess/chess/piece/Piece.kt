@@ -87,7 +87,7 @@ object PlacedPieceSerializer : ClassRegisteredSerializer<PlacedPiece>("PlacedPie
 @Serializable
 data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : PlacedPiece {
     override fun checkExists(board: Chessboard) {
-        if (board.data.capturedPieces.none { it == this })
+        if (board.capturedPieces.none { it == this })
             throw PieceDoesNotExistException(this)
     }
 

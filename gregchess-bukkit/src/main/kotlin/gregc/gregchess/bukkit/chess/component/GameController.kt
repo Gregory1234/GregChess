@@ -5,10 +5,12 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkitutils.ticks
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.player.ChessSide
 import kotlinx.coroutines.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import kotlin.time.Duration.Companion.seconds
@@ -28,12 +30,14 @@ enum class PlayerDirection {
 
 class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
-class GameController(game: ChessGame) : SimpleComponent(game) {
+@Serializable
+class GameController : Component {
 
     internal var quick: ByColor<Boolean> = byColor(false)
+    @Transient
     private var lastPrintedMove: Move? = null
 
-    private fun onStart() {
+    private fun onStart(game: ChessGame) {
         game.sides.forEachRealBukkit {
             game.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
             it.games += game
@@ -44,7 +48,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         game.callEvent(GameStartStageEvent.START)
     }
 
-    private fun onRunning() {
+    private fun onRunning(game: ChessGame) {
         game.callEvent(GameStartStageEvent.BEGIN)
         object : BukkitRunnable() {
             override fun run() {
@@ -57,7 +61,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
     }
 
     @OptIn(ExperimentalTime::class)
-    private fun onStop() {
+    private fun onStop(game: ChessGame) {
         val results = game.results!!
         game.callEvent(GameStopStageEvent.STOP)
         with(game.board) {
@@ -117,7 +121,7 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
         }
     }
 
-    private fun onPanic() {
+    private fun onPanic(game: ChessGame) {
         game.sides.forEach(ChessSide<*>::stop)
         val results = game.results!!
         val pgn = PGN.generate(game)
@@ -132,21 +136,21 @@ class GameController(game: ChessGame) : SimpleComponent(game) {
     }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) = when (e) {
-        GameBaseEvent.START -> onStart()
-        GameBaseEvent.RUNNING -> onRunning()
-        GameBaseEvent.STOP -> onStop()
-        GameBaseEvent.PANIC -> onPanic()
+    fun handleEvents(game: ChessGame, e: GameBaseEvent) = when (e) {
+        GameBaseEvent.START -> onStart(game)
+        GameBaseEvent.RUNNING -> onRunning(game)
+        GameBaseEvent.STOP -> onStop(game)
+        GameBaseEvent.PANIC -> onPanic(game)
         GameBaseEvent.SYNC -> if (game.state == ChessGame.State.RUNNING) {
             // TODO: make sync safer
-            onStart()
-            onRunning()
+            onStart(game)
+            onRunning(game)
         } else Unit
         GameBaseEvent.UPDATE -> Unit
     }
 
     @ChessEventHandler
-    fun handleTurn(e: TurnEvent) {
+    fun handleTurn(game: ChessGame, e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (game.currentTurn == Color.BLACK) {
                 with(game.board) {

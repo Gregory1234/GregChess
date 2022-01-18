@@ -6,14 +6,17 @@ import gregc.gregchess.bukkit.chess.player.forEachRealBukkit
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.SimpleComponent
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.registry.Register
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
-class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
+@Serializable
+class ScoreboardManager : Component {
 
     companion object {
         private val TITLE = Message(config, "Scoreboard.Title")
@@ -33,14 +36,20 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
         val PLAYER = PropertyType()
     }
 
+    @Transient
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
+    @Transient
     private val gameProperties = mutableMapOf<PropertyType, GameProperty>()
+    @Transient
     private val playerProperties = mutableMapOf<PropertyType, PlayerProperty>()
 
+    @Transient
     private val gamePropertyTeams = mutableMapOf<PropertyType, Team>()
+    @Transient
     private val playerPropertyTeams = mutableMapOf<PropertyType, ByColor<Team>>()
 
+    @Transient
     private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get())
 
     private fun randomString(size: Int) =
@@ -55,26 +64,26 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
     }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) {
+    fun handleEvents(game: ChessGame, e: GameBaseEvent) {
         if (e == GameBaseEvent.UPDATE)
             update()
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) {
-        if (e == GameStartStageEvent.INIT) init()
-        else if (e == GameStartStageEvent.START) start()
+    fun onStart(game: ChessGame, e: GameStartStageEvent) {
+        if (e == GameStartStageEvent.INIT) init(game)
+        else if (e == GameStartStageEvent.START) start(game)
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) {
+    fun onStop(game: ChessGame, e: GameStopStageEvent) {
         if (e == GameStopStageEvent.STOP)
             update()
         if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC)
             stop()
     }
 
-    private fun init() {
+    private fun init(game: ChessGame) {
         val e = AddPropertiesEvent(playerProperties, gameProperties)
         e.game(PRESET) { game.settings.name }
         e.player(PLAYER) { playerPrefix + game[it].name }
@@ -82,7 +91,7 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
     }
 
     @ChessEventHandler
-    fun resetPlayer(e: ResetPlayerEvent) {
+    fun resetPlayer(game: ChessGame, e: ResetPlayerEvent) {
         giveScoreboard(e.player)
     }
 
@@ -90,7 +99,7 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
         p.scoreboard = scoreboard
     }
 
-    private fun start() {
+    private fun start(game: ChessGame) {
         game.sides.forEachRealBukkit(::giveScoreboard)
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
@@ -117,7 +126,7 @@ class ScoreboardManager(game: ChessGame) : SimpleComponent(game) {
     }
 
     @ChessEventHandler
-    fun spectatorJoin(p: SpectatorEvent) {
+    fun spectatorJoin(game: ChessGame, p: SpectatorEvent) {
         if (p.dir == PlayerDirection.JOIN)
             giveScoreboard(p.player)
     }

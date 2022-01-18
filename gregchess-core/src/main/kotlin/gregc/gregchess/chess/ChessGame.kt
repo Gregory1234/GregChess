@@ -21,10 +21,8 @@ import kotlin.reflect.safeCast
 class GameSettings(
     val name: String,
     val variant: ChessVariant,
-    val components: Collection<ComponentData<*>>
-) {
-    inline fun <reified T : ComponentData<*>> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
-}
+    val components: Collection<Component>
+)
 
 enum class TurnEvent(val ending: Boolean) : ChessEvent {
     START(false), END(true), UNDO(true)
@@ -49,10 +47,11 @@ class ChessGame private constructor(
     val uuid: UUID,
     initialState: State,
     startTime: LocalDateTime?,
-    results: GameResults?
+    results: GameResults?,
+    startTurn: Color?
 ) {
     constructor(environment: ChessEnvironment, settings: GameSettings, playerInfo: ByColor<ChessPlayer>)
-            : this(environment, settings, playerInfo, UUID.randomUUID(), State.INITIAL, null, null)
+            : this(environment, settings, playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null)
 
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     object Serializer : KSerializer<ChessGame> {
@@ -64,8 +63,9 @@ class ChessGame private constructor(
             element<State>("state")
             element<String?>("startTime")
             element("results", GameResultsSerializer.descriptor.nullable)
-            element("components", ComponentDataMapSerializer.descriptor)
+            element("components", ComponentMapSerializer.descriptor)
             element("environment", buildSerialDescriptor("ChessEnvironment", SerialKind.CONTEXTUAL))
+            element<Color?>("currentTurn")
         }
 
         override fun serialize(encoder: Encoder, value: ChessGame) = encoder.encodeStructure(descriptor) {
@@ -76,8 +76,9 @@ class ChessGame private constructor(
             encodeSerializableElement(descriptor, 4, encoder.serializersModule.serializer(), value.state)
             encodeNullableSerializableElement(descriptor, 5, String.serializer().nullable, value.startTime?.toString())
             encodeNullableSerializableElement(descriptor, 6, GameResultsSerializer.nullable, value.results)
-            encodeSerializableElement(descriptor, 7, ComponentDataMapSerializer, value.componentData.associateBy { it.componentClass.componentKey })
+            encodeSerializableElement(descriptor, 7, ComponentMapSerializer, value.components.associateBy { it::class.componentKey })
             encodeSerializableElement(descriptor, 8, encoder.serializersModule.getContextual(ChessEnvironment::class)!!, value.environment)
+            encodeNullableSerializableElement(descriptor, 9, encoder.serializersModule.serializer(), value.currentTurn)
         }
 
         override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
@@ -88,8 +89,9 @@ class ChessGame private constructor(
             var state: State? = null
             var startTime: LocalDateTime? = null
             var results: GameResults? = null
-            var components: List<ComponentData<*>>? = null
+            var components: List<Component>? = null
             var environment: ChessEnvironment? = null
+            var currentTurn: Color? = null
             if (decodeSequentially()) { // sequential decoding protocol
                 uuid = decodeSerializableElement(descriptor, 0, decoder.serializersModule.serializer())
                 players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerSerializer))
@@ -98,8 +100,9 @@ class ChessGame private constructor(
                 state = decodeSerializableElement(descriptor, 4, decoder.serializersModule.serializer())
                 startTime = decodeNullableSerializableElement(descriptor, 5, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
                 results = decodeNullableSerializableElement(descriptor, 6, GameResultsSerializer.nullable)
-                components = decodeSerializableElement(descriptor, 7, ComponentDataMapSerializer).values.toList()
+                components = decodeSerializableElement(descriptor, 7, ComponentMapSerializer).values.toList()
                 environment = decodeSerializableElement(descriptor, 8, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
+                currentTurn = decodeNullableSerializableElement(descriptor, 9, decoder.serializersModule.serializer())
             } else {
                 while (true) {
                     when (val index = decodeElementIndex(descriptor)) {
@@ -112,9 +115,10 @@ class ChessGame private constructor(
                         5 -> startTime = decodeNullableSerializableElement(descriptor, 6, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
                         6 -> results = decodeNullableSerializableElement(descriptor, 7, GameResultsSerializer.nullable)
                         7 -> components =
-                            decodeSerializableElement(descriptor, index, ComponentDataMapSerializer).values.toList()
+                            decodeSerializableElement(descriptor, index, ComponentMapSerializer).values.toList()
                         8 -> environment =
                             decodeSerializableElement(descriptor, index, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
+                        9 -> currentTurn = decodeNullableSerializableElement(descriptor, 9, decoder.serializersModule.serializer())
                         CompositeDecoder.DECODE_DONE -> break
                         else -> error("Unexpected index: $index")
                     }
@@ -122,7 +126,7 @@ class ChessGame private constructor(
             }
             ChessGame(
                 environment!!, GameSettings(preset!!, variant!!, components!!),
-                players!!, uuid!!, state!!, startTime, results
+                players!!, uuid!!, state!!, startTime, results, currentTurn
             )
         }
     }
@@ -131,9 +135,7 @@ class ChessGame private constructor(
 
     val variant = settings.variant
 
-    val components = settings.components.map { it.getComponent(this) }
-
-    val componentData get() = components.map { it.data }
+    val components = settings.components
 
     init {
         require((initialState >= State.RUNNING) == (startTime != null)) { "Start time bad" }
@@ -143,7 +145,7 @@ class ChessGame private constructor(
             for (it in variant.requiredComponents) {
                 components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentNotFoundException(it)
             }
-            components.forEach { it.validate() }
+            components.forEach { it.validate(this) }
         } catch (e: Exception) {
             panic(e)
         }
@@ -182,13 +184,13 @@ class ChessGame private constructor(
     fun callEvent(e: ChessEvent) = with(MultiExceptionContext()) {
         components.forEach {
             exec {
-                it.handleEvent(e)
+                it.handleEvent(this@ChessGame, e)
             }
         }
         rethrow { ChessEventException(e, it) }
     }
 
-    var currentTurn: Color = board.initialFEN.currentTurn
+    var currentTurn: Color = startTurn ?: board.initialFEN.currentTurn
 
     val currentSide: ChessSide<*> get() = sides[currentTurn]
 

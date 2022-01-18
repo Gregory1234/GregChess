@@ -4,14 +4,12 @@ import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.ChessFlag
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.chess.variant.ChessVariant
-import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 
 private class RegistryValidationException(
@@ -72,13 +70,6 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
         val MOVE_NAME_TOKEN_TYPE = NameRegistry<MoveNameTokenType<*>>("move_name_token_type")
         @JvmField
         val COMPONENT_CLASS = NameRegistry<KClass<out Component>>("component_class")
-        val COMPONENT_DATA_CLASS = ConnectedRegistry<KClass<out Component>, KClass<out ComponentData<*>>>(
-            "component_data_class", COMPONENT_CLASS
-        )
-        @JvmField
-        val COMPONENT_SERIALIZER = ConnectedRegistry<KClass<out Component>, KSerializer<out ComponentData<*>>>(
-            "component_serializer", COMPONENT_CLASS
-        )
         @JvmField
         val MOVE_TRAIT_TYPE = NameRegistry<MoveTraitType<*>>("move_trait_type")
         @JvmField

@@ -47,8 +47,8 @@ object Antichess : ChessVariant() {
         if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, game) } })
             game.stop(game.currentTurn.lostBy(STALEMATE_VICTORY))
 
-        checkForRepetition()
-        checkForFiftyMoveRule()
+        checkForRepetition(game)
+        checkForFiftyMoveRule(game)
     }
 
     override fun timeout(game: ChessGame, color: Color) = game.stop(color.wonBy(EndReason.TIMEOUT))

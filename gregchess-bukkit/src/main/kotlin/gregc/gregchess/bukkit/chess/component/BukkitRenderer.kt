@@ -6,30 +6,18 @@ import gregc.gregchess.bukkit.chess.player.PiecePlayerActionEvent
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.Color
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.ComponentData
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.AtomicChess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.*
 import kotlin.math.floor
-import kotlin.reflect.KClass
 
 @Serializable
-data class BukkitRendererSettings(
+data class BukkitRenderer(
     @Transient val arena: Arena = Arena.nextArena(),
     val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
-) : ComponentData<BukkitRenderer> {
-    override val componentClass: KClass<out BukkitRenderer> get() = BukkitRenderer::class
-
-    override fun getComponent(game: ChessGame) = BukkitRenderer(game, this)
-}
-
-fun interface ChessFloorRenderer {
-    fun ChessGame.getFloorMaterial(p: Pos): Material
-}
-
-class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings) : Component(game) {
+) : Component {
     companion object {
 
         private class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
@@ -44,12 +32,11 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         }
     }
 
-    private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()
-    private val rowSize = byColor { mutableListOf<Int>() }
+    @Transient private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()
+    @Transient private val rowSize = byColor { mutableListOf<Int>() }
 
     private data class CapturedPos(val row: Int, val pos: Int, val by: Color)
 
-    val arena: Arena get() = data.arena
     private val tileSize get() = arena.tileSize
     private val highHalfTile get() = floor(tileSize.toDouble() / 2).toInt()
     private val lowHalfTile get() = floor((tileSize.toDouble() - 1) / 2).toInt()
@@ -95,13 +82,13 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
 
     private fun BoardPiece.playSound(sound: String) = playPieceSound(pos, sound, type)
 
-    override fun handleEvent(e: ChessEvent) {
+    override fun handleEvent(game: ChessGame, e: ChessEvent) {
         arena.handleEvent(e)
-        super.handleEvent(e)
+        super.handleEvent(game, e)
     }
 
     @ChessEventHandler
-    fun handleExplosion(e: AtomicChess.ExplosionEvent) {
+    fun handleExplosion(game: ChessGame, e: AtomicChess.ExplosionEvent) {
         world.createExplosion(e.pos.location, 4.0f, false, false)
     }
 
@@ -112,12 +99,12 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         fill(FillVolume(world, material, Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma)))
     }
 
-    override fun validate() {
+    override fun validate(game: ChessGame) {
         arena.game = game
     }
 
     private fun addCapturedPiece(piece: CapturedPiece) {
-        val row = data.pieceRows.getOrDefault(piece.type, 0)
+        val row = pieceRows.getOrDefault(piece.type, 0)
         if (row < 0) throw IndexOutOfBoundsException(row)
 
         val rows = rowSize[piece.capturedBy]
@@ -131,7 +118,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     }
 
     private fun removeCapturedPiece(piece: CapturedPiece) {
-        val row = data.pieceRows.getOrDefault(piece.type, 0)
+        val row = pieceRows.getOrDefault(piece.type, 0)
         if (row < 0) throw IndexOutOfBoundsException(row)
 
         val rows = rowSize[piece.capturedBy]
@@ -145,24 +132,24 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) {
+    fun onStart(game: ChessGame, e: GameStartStageEvent) {
         if (e == GameStartStageEvent.BEGIN) {
-            game.board.data.capturedPieces.forEach {
+            game.board.capturedPieces.forEach {
                 addCapturedPiece(it)
             }
-            redrawFloor()
+            redrawFloor(game)
         }
     }
 
     @ChessEventHandler
-    fun onTurnStart(e: TurnEvent) {
+    fun onTurnStart(game: ChessGame, e: TurnEvent) {
         if (e == TurnEvent.START || e == TurnEvent.UNDO) {
-            redrawFloor()
+            redrawFloor(game)
         }
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) {
+    fun onStop(game: ChessGame, e: GameStopStageEvent) {
         if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC) {
             game.board.pieces.forEach {
                 it.clearRender()
@@ -173,7 +160,7 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
         }
     }
 
-    private fun redrawFloor() {
+    private fun redrawFloor(game: ChessGame) {
         for (file in 0..7) {
             for (rank in 0..7) {
                 with (game.variant.floorRenderer) {
@@ -184,21 +171,21 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
     }
 
     @ChessEventHandler
-    fun onPiecePlayerAction(e: PiecePlayerActionEvent) = when (e.type) {
+    fun onPiecePlayerAction(game: ChessGame, e: PiecePlayerActionEvent) = when (e.type) {
         PiecePlayerActionEvent.Type.PICK_UP -> {
             e.piece.clearRender()
             e.piece.playSound("PickUp")
-            redrawFloor()
+            redrawFloor(game)
         }
         PiecePlayerActionEvent.Type.PLACE_DOWN -> {
             e.piece.render()
             e.piece.playSound("Move")
-            redrawFloor()
+            redrawFloor(game)
         }
     }
 
     @ChessEventHandler
-    fun handlePieceEvents(e: PieceEvent) {
+    fun handlePieceEvents(game: ChessGame, e: PieceEvent) {
         when (e) {
             is PieceEvent.Created -> e.piece.render()
             is PieceEvent.Cleared -> e.piece.clearRender()
@@ -223,6 +210,10 @@ class BukkitRenderer(game: ChessGame, override val data: BukkitRendererSettings)
             }
         }
     }
+}
+
+fun interface ChessFloorRenderer {
+    fun ChessGame.getFloorMaterial(p: Pos): Material
 }
 
 val ChessGame.arena get() = renderer.arena

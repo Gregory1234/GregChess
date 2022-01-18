@@ -1,21 +1,21 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
-import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
 
 fun testSettings(
     name: String, variant: ChessVariant = ChessVariant.Normal,
-    extra: List<ComponentData<*>> = emptyList()
+    extra: List<Component> = emptyList()
 ): GameSettings {
     val components = buildList {
-        this += ChessboardState(variant)
+        this += Chessboard(variant)
         this.addAll(extra)
     }
     return GameSettings(name, variant, components)
@@ -28,17 +28,11 @@ class TestPlayer(override val name: String) : ChessPlayer {
 class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSide<TestPlayer>(player, color, game)
 
 @Serializable
-object TestComponentData : ComponentData<TestComponent> {
-    override val componentClass = TestComponent::class
+object TestComponent : Component {
 
-    override fun getComponent(game: ChessGame): TestComponent = spyk(TestComponent(game, this))
-}
+    override fun validate(game: ChessGame) {}
 
-class TestComponent(game: ChessGame, override val data: TestComponentData) : Component(game) {
-
-    override fun validate() {}
-
-    override fun handleEvent(e: ChessEvent) {}
+    override fun handleEvent(game: ChessGame, e: ChessEvent) {}
 
 }
 
@@ -67,7 +61,7 @@ fun setupRegistry() = with(GregChess) {
         fullLoad(listOf(ChessExtension {
             TEST_END_REASON.register(this, "test")
             TestVariant.register(this, "test")
-            registerComponent<TestComponent, TestComponentData>("test")
+            registerComponent<TestComponent>("test")
             registerPlayerClass<TestPlayer>("test")
         }))
     }
