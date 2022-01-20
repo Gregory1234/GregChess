@@ -83,7 +83,7 @@ tasks {
                 externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/yarn-$yarnMappings/")
                 val fabricLoaderVersion: String by project
                 externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/fabric-loader-$fabricLoaderVersion/")
-                externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/")
+                externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
         }
