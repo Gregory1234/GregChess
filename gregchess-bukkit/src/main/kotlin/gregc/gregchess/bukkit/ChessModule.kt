@@ -21,17 +21,17 @@ object BukkitRegistry {
     @JvmField
     val PROPERTY_TYPE = NameRegistry<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER = ConnectedRegistry<ComponentType<*>, SettingsParser<out Component>>(
+    val SETTINGS_PARSER = DefaultedConnectedRegistry<String, ComponentType<*>, SettingsParser<out Component>>(
         "settings_parser", Registry.COMPONENT_TYPE
-    )
+    ) { type -> { type.key.cl.constructors.first { it.parameters.isEmpty() }.call() } }
     @JvmField
-    val VARIANT_LOCAL_MOVE_NAME_FORMATTER = ConnectedRegistry<ChessVariant, MoveNameFormatter>(
+    val VARIANT_LOCAL_MOVE_NAME_FORMATTER = DefaultedConnectedRegistry(
         "variant_local_move_name_formatter", Registry.VARIANT
-    )
+    ) { defaultLocalMoveNameFormatter }
     @JvmField
-    val VARIANT_FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>(
+    val VARIANT_FLOOR_RENDERER = DefaultedConnectedRegistry(
         "variant_floor_renderer", Registry.VARIANT
-    )
+    ) { simpleFloorRenderer() }
     @JvmField
     val QUICK_END_REASONS = ConnectedSetRegistry("quick_end_reasons", Registry.END_REASON)
     @JvmField
@@ -48,27 +48,14 @@ fun <T : Component> ComponentType<T>.registerSettings(settings: SettingsParser<T
 fun <T : Component> ComponentType<T>.registerConstSettings(settings: T) =
     apply { module.register(BukkitRegistry.SETTINGS_PARSER, this) { settings } }
 
-@Suppress("UNCHECKED_CAST")
-fun ChessModule.completeSimpleSettings() =
-    get(BukkitRegistry.SETTINGS_PARSER)
-        .completeWith { type ->
-            { type.cl.constructors.first { it.parameters.isEmpty() }.call() }
-        }
+fun ChessVariant.registerLocalFormatter(formatter: MoveNameFormatter) =
+    module.register(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER, this, formatter)
 
-fun ChessModule.registerLocalFormatter(variant: ChessVariant, formatter: MoveNameFormatter) =
-    register(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER, variant, formatter)
+fun ChessVariant.registerFloorRenderer(floorRenderer: ChessFloorRenderer) =
+    module.register(BukkitRegistry.VARIANT_FLOOR_RENDERER, this, floorRenderer)
 
-fun ChessModule.completeLocalFormatters() =
-    get(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER).completeWith { defaultLocalMoveNameFormatter }
-
-fun ChessModule.registerFloorRenderer(variant: ChessVariant, floorRenderer: ChessFloorRenderer) =
-    register(BukkitRegistry.VARIANT_FLOOR_RENDERER, variant, floorRenderer)
-
-fun ChessModule.registerSimpleFloorRenderer(variant: ChessVariant, specialSquares: Collection<Pos>) =
-    registerFloorRenderer(variant, simpleFloorRenderer(specialSquares))
-
-fun ChessModule.completeFloorRenderers() =
-    get(BukkitRegistry.VARIANT_FLOOR_RENDERER).completeWith { simpleFloorRenderer() }
+fun ChessVariant.registerSimpleFloorRenderer(specialSquares: Collection<Pos>) =
+    registerFloorRenderer(simpleFloorRenderer(specialSquares))
 
 fun <T : Component> ComponentType<T>.registerHooked() =
     apply { module[BukkitRegistry.HOOKED_COMPONENTS].add(this) }

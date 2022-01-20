@@ -91,7 +91,7 @@ class NameRegistry<T>(name: String) : BiRegistry<String, T, NameRegistry<T>.Bloc
     private val valueEntries = mutableMapOf<T, RegistryKey<String>>()
     private val blocks = mutableMapOf<ChessModule, Block>()
 
-    inner class Block(module: ChessModule) : BiRegistryBlock<String, T>(module) {
+    inner class Block internal constructor(module: ChessModule) : BiRegistryBlock<String, T>(module) {
         private val members = mutableMapOf<String, T>()
         private val names = mutableMapOf<T, String>()
 
@@ -128,7 +128,7 @@ class NameRegistry<T>(name: String) : BiRegistry<String, T, NameRegistry<T>.Bloc
 class ConnectedRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, K>) : Registry<K, T, ConnectedRegistry<K, T>.Block>(name), FiniteSplitRegistryView<K, T> {
     private val blocks = mutableMapOf<ChessModule, Block>()
 
-    inner class Block(module: ChessModule) : RegistryBlock<K, T>(module) {
+    inner class Block internal constructor(module: ChessModule) : RegistryBlock<K, T>(module) {
         private val members = mutableMapOf<K, T>()
 
         override val keys: Set<K> = members.keys
@@ -168,11 +168,46 @@ class ConnectedRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, K>
 
 }
 
+class DefaultedConnectedRegistry<O, K, T>(name: String, val base: FiniteBiRegistryView<O, K>, val default: (RegistryKey<K>) -> T) : Registry<K, T, DefaultedConnectedRegistry<O, K, T>.Block>(name), FiniteSplitRegistryView<K, T> {
+    private val blocks = mutableMapOf<ChessModule, Block>()
+
+    inner class Block internal constructor(module: ChessModule) : RegistryBlock<K, T>(module) {
+        private val members = mutableMapOf<K, T>().withDefault { default(RegistryKey(module, it)) }
+
+        override val keys: Set<K> = members.keys
+        override val values: Collection<T> = members.values
+
+        override fun set(key: K, value: T) {
+            requireValidKey(this@DefaultedConnectedRegistry, key, value, !module.locked) { "Module is locked" }
+            requireValidKey(this@DefaultedConnectedRegistry, key, value, key in base.valuesOf(module)) { "Key is invalid" }
+            requireValidKey(this@DefaultedConnectedRegistry, key, value, key !in members) { "Key is already registered" }
+            members[key] = value
+        }
+
+        override fun validate() = requireValid(this@DefaultedConnectedRegistry, base.valuesOf(module).all { it in members }) { "Registry incomplete" }
+
+        override fun getValueOrNull(key: K): T? = members[key]
+
+    }
+
+    override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
+
+    override fun getKeyModule(key: K): ChessModule = base[key].module
+
+    override val simpleKeys: Set<K>
+        get() = base.values
+    override val keys: Set<RegistryKey<K>>
+        get() = base.keys.map { RegistryKey(it.module, base[it.module, it.key]) }.toSet()
+    override val values: Collection<T>
+        get() = base.values.map { get(it) }
+
+}
+
 class ConnectedBiRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, K>) : BiRegistry<K, T, ConnectedBiRegistry<K, T>.Block>(name), FiniteSplitRegistryView<K, T> {
     private val valueEntries = mutableMapOf<T, RegistryKey<K>>()
     private val blocks = mutableMapOf<ChessModule, Block>()
 
-    inner class Block(module: ChessModule) : BiRegistryBlock<K, T>(module) {
+    inner class Block internal constructor(module: ChessModule) : BiRegistryBlock<K, T>(module) {
         private val members = mutableMapOf<K, T>()
         private val reversed = mutableMapOf<T, K>()
 
@@ -211,7 +246,7 @@ class ConnectedBiRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, 
 class ConnectedSetRegistry<E>(name: String, val base: FiniteBiRegistryView<*, E>) : Registry<E, Unit, ConnectedSetRegistry<E>.Block>(name), FiniteSplitRegistryView<E, Unit> {
     private val blocks = mutableMapOf<ChessModule, Block>()
 
-    inner class Block(module: ChessModule) : RegistryBlock<E, Unit>(module) {
+    inner class Block internal constructor(module: ChessModule) : RegistryBlock<E, Unit>(module) {
         private val members = mutableSetOf<E>()
         override val keys: Set<E> get() = members
         override val values: Collection<Unit> = members.map { }
@@ -245,7 +280,7 @@ class ConnectedSetRegistry<E>(name: String, val base: FiniteBiRegistryView<*, E>
 class ConstantRegistry<E>(name: String) : Registry<Unit, E, ConstantRegistry<E>.Block>(name) {
     private val blocks = mutableMapOf<ChessModule, Block>()
 
-    inner class Block(module: ChessModule) : RegistryBlock<Unit, E>(module) {
+    inner class Block internal constructor(module: ChessModule) : RegistryBlock<Unit, E>(module) {
         private var member: E? = null
         override val keys: Set<Unit> get() = setOfNotNull(member?.let {})
         override val values: Collection<E> = listOfNotNull(member)

@@ -77,10 +77,7 @@ internal object GregChessBukkit : ChessExtension {
         }
         hookComponents()
         registerSettings()
-        completeSimpleSettings()
-        completeLocalFormatters()
-        registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
-        completeFloorRenderers()
+        KingOfTheHill.registerSimpleFloorRenderer((Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
         registerPlayerTypes()
         registerBukkitPlugin(GregChessPlugin.plugin)
     }
