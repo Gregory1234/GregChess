@@ -12,23 +12,33 @@ import gregc.gregchess.chess.component.TimeControl
 import gregc.gregchess.chess.variant.ThreeChecks
 import gregc.gregchess.registry.Register
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
-object BukkitGregChessAdapter : Component {
-    @JvmField
-    @Register
-    val TIME_REMAINING = PropertyType()
-    @JvmField
-    @Register
-    val TIME_REMAINING_SIMPLE = PropertyType()
-    @JvmField
-    @Register
-    val CHECK_COUNTER = PropertyType()
+class BukkitGregChessAdapter : Component {
+    companion object {
+        @JvmField
+        @Register
+        val TIME_REMAINING = PropertyType()
+        @JvmField
+        @Register
+        val TIME_REMAINING_SIMPLE = PropertyType()
+        @JvmField
+        @Register
+        val CHECK_COUNTER = PropertyType()
+    }
+
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
 
     private val timeFormat: String get() = config.getPathString("TimeFormat")
 
     @ChessEventHandler
-    fun addProperties(game: ChessGame, e: AddPropertiesEvent) {
+    fun addProperties(e: AddPropertiesEvent) {
         game.clock?.apply {
             if (timeControl.type == TimeControl.Type.FIXED) {
                 e.game(TIME_REMAINING_SIMPLE) { timeRemaining[game.currentTurn].format(timeFormat) }

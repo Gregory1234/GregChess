@@ -125,11 +125,11 @@ class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : 
     private val Move.rook get() = pieceTracker["rook"] as BoardPiece
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMove(game, move.main.boardPiece().move(target), move.rook.move(rookTarget))
+        move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target), move.rook.move(rookTarget))
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game, move.main, move.rook)
+        move.pieceTracker.traceMoveBack(game.board, move.main, move.rook)
     }
 }
 
@@ -148,12 +148,12 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
         val promotion = promotion ?: throw TraitPreconditionException(this, "Promotion not chosen", NullPointerException())
         if (promotion !in promotions) throw TraitPreconditionException(this, "Promotion not valid: $promotion")
         tryPiece {
-            move.pieceTracker.traceMove(game, move.main.boardPiece().promote(promotion))
+            move.pieceTracker.traceMove(game.board, move.main.boardPiece().promote(promotion))
         }
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game, move.main)
+        move.pieceTracker.traceMoveBack(game.board, move.main)
     }
 }
 
@@ -183,7 +183,7 @@ class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
 }
 
 private fun checkForChecks(color: Color, game: ChessGame): MoveNameTokenType<Unit>? {
-    game.board.updateMoves(game)
+    game.board.updateMoves()
     val pieces = game.board.piecesOf(!color)
     val inCheck = game.variant.isInCheck(game, !color)
     val noMoves = pieces.all { it.getMoves(game.board).none { m -> game.variant.isLegal(m, game) } }
@@ -226,14 +226,14 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTr
     override fun execute(game: ChessGame, move: Move) {
         game.board[capture]?.let {
             move.pieceTracker.giveName("capture", it)
-            move.pieceTracker.traceMove(game, move.toCapture.capture(move.main.color))
+            move.pieceTracker.traceMove(game.board, move.toCapture.capture(move.main.color))
             captureSuccess = true
         }
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
         if (captureSuccess)
-            move.pieceTracker.traceMoveBack(game, move.captured)
+            move.pieceTracker.traceMoveBack(game.board, move.captured)
     }
 }
 
@@ -300,10 +300,10 @@ class TargetTrait(val target: Pos) : MoveTrait {
     override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE)
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMove(game, move.main.boardPiece().move(target))
+        move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target))
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game, move.main)
+        move.pieceTracker.traceMoveBack(game.board, move.main)
     }
 }

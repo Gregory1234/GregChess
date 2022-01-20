@@ -30,9 +30,9 @@ class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSi
 @Serializable
 object TestComponent : Component {
 
-    override fun validate(game: ChessGame) {}
+    override fun init(game: ChessGame) {}
 
-    override fun handleEvent(game: ChessGame, e: ChessEvent) {}
+    override fun handleEvent(e: ChessEvent) {}
 
 }
 

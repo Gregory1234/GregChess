@@ -21,7 +21,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
             field?.checkExists(game.board)
             v?.checkExists(game.board)
             field = v
-            game.renderer.redrawFloor(game)
+            game.renderer.redrawFloor()
         }
 
     override fun init() {

@@ -35,12 +35,12 @@ class ChessGameTests {
         }
 
         @Test
-        fun `should only verify components`() {
+        fun `should only initialize components`() {
             val cd = spyk(TestComponent)
             val g = mkGame(testSettings("spy", extra = listOf(cd)))
             val c = g.getComponent<TestComponent>()!!
             verifySequence {
-                c.validate(g)
+                c.init(g)
             }
         }
 
@@ -86,13 +86,13 @@ class ChessGameTests {
             val g = mkGame(testSettings("spy", extra = listOf(spyk(TestComponent)))).start()
             val c = g.getComponent<TestComponent>()!!
             excludeRecords {
-                c.handleEvent(g, match { it is PieceEvent })
+                c.init(g)
+                c.handleEvent(match { it is PieceEvent })
             }
             verifySequence {
-                c.validate(g)
-                c.handleEvent(g, GameBaseEvent.START)
-                c.handleEvent(g, GameBaseEvent.RUNNING)
-                c.handleEvent(g, TurnEvent.START)
+                c.handleEvent(GameBaseEvent.START)
+                c.handleEvent(GameBaseEvent.RUNNING)
+                c.handleEvent(TurnEvent.START)
             }
         }
     }

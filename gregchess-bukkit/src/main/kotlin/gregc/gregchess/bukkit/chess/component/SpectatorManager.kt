@@ -15,16 +15,23 @@ class SpectatorNotFoundException(player: Player) : Exception(player.name)
 class SpectatorManager : Component {
 
     @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
+
+    @Transient
     private val spectatorList = mutableListOf<Player>()
 
     val spectators get() = spectatorList.toList()
 
-    fun addPlayer(game: ChessGame, p: Player) {
+    operator fun plusAssign(p: Player) {
         spectatorList += p
         game.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
-    fun removePlayer(game: ChessGame, p: Player) {
+    operator fun minusAssign(p: Player) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
         spectatorList -= p
@@ -32,18 +39,18 @@ class SpectatorManager : Component {
     }
 
     @ChessEventHandler
-    fun onStop(game: ChessGame, e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.STOP) stop(game)
-        else if (e == GameStopStageEvent.CLEAR) clear(game)
+    fun onStop(e: GameStopStageEvent) {
+        if (e == GameStopStageEvent.STOP) stop()
+        else if (e == GameStopStageEvent.CLEAR) clear()
     }
 
-    private fun stop(game: ChessGame) {
+    private fun stop() {
         for (it in spectators) {
             it.showGameResults(game.results!!)
         }
     }
 
-    private fun clear(game: ChessGame) {
+    private fun clear() {
         val s = spectators
         spectatorList.clear()
         for (it in s) {

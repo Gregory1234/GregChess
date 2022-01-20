@@ -7,12 +7,20 @@ import gregc.gregchess.fabric.chess.ChessGameManager
 import gregc.gregchess.fabric.chess.player.*
 import kotlinx.coroutines.cancel
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 object GameController : Component {
 
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
+
     @ChessEventHandler
-    fun handleEvents(game: ChessGame, e: GameBaseEvent) = with(game) {
+    fun handleEvents(e: GameBaseEvent) = with(game) {
         when (e) {
             GameBaseEvent.START -> {
                 ChessGameManager += game

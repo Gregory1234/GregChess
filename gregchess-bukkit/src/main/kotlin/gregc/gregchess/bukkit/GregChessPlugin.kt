@@ -165,15 +165,15 @@ object GregChessPlugin : Listener {
                 execute<Player> {
                     val g = pl().game
                     val pos = g.renderer.getPos(sender.location)
-                    multiMove(g, g.board[pos]?.capture(pl().color))
-                    g.board.updateMoves(g)
+                    multiMove(g.board, g.board[pos]?.capture(pl().color))
+                    g.board.updateMoves()
                     sender.sendMessage(BOARD_OP_DONE)
                 }
                 argument(PosArgument("pos")) { pos ->
                     execute<Player> {
                         val g = pl().game
-                        multiMove(g, g.board[pos()]?.capture(pl().color))
-                        g.board.updateMoves(g)
+                        multiMove(g.board, g.board[pos()]?.capture(pl().color))
+                        g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
                 }
@@ -184,15 +184,15 @@ object GregChessPlugin : Listener {
                     execute<Player> {
                         val g = pl().game
                         val p = g.renderer.getPos(sender.location)
-                        multiMove(g, g.board[p]?.capture(pl().color), null to BoardPiece(p, piece(), false))
-                        g.board.updateMoves(g)
+                        multiMove(g.board, g.board[p]?.capture(pl().color), null to BoardPiece(p, piece(), false))
+                        g.board.updateMoves()
                         sender.sendMessage(BOARD_OP_DONE)
                     }
                     argument(PosArgument("pos")) { pos ->
                         execute<Player> {
                             val g = pl().game
-                            multiMove(g, g.board[pos()]?.capture(pl().color), null to BoardPiece(pos(), piece(), false))
-                            g.board.updateMoves(g)
+                            multiMove(g.board, g.board[pos()]?.capture(pl().color), null to BoardPiece(pos(), piece(), false))
+                            g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }
                     }
@@ -204,8 +204,8 @@ object GregChessPlugin : Listener {
                     argument(PosArgument("to")) { to ->
                         execute<Player> {
                             val g = pl().game
-                            multiMove(g, g.board[to()]?.capture(pl().color), g.board[from()]?.move(to()))
-                            g.board.updateMoves(g)
+                            multiMove(g.board, g.board[to()]?.capture(pl().color), g.board[from()]?.move(to()))
+                            g.board.updateMoves()
                             sender.sendMessage(BOARD_OP_DONE)
                         }
                     }
@@ -222,7 +222,7 @@ object GregChessPlugin : Listener {
                 val pl = requireGame()
                 argument(FENArgument("fen")) { fen ->
                     execute<Player> {
-                        pl().game.board.setFromFEN(pl().game, fen())
+                        pl().game.board.setFromFEN(fen())
                         sender.sendMessage(LOADED_FEN)
                     }
                 }
@@ -230,7 +230,7 @@ object GregChessPlugin : Listener {
             subcommand("save") {
                 val pl = requireGame()
                 execute<Player> {
-                    sender.sendFEN(pl().game.board.getFEN(pl().game))
+                    sender.sendFEN(pl().game.board.getFEN())
                 }
             }
             subcommand("time") {
@@ -315,7 +315,7 @@ object GregChessPlugin : Listener {
                     }
                     val res = takebackRequest.call(RequestData(sender.uniqueId, opponent.player.uuid, ""), true)
                     if (res == RequestResponse.ACCEPT) {
-                        pl().game.board.undoLastMove(pl().game)
+                        pl().game.board.undoLastMove()
                     }
                 }
             }

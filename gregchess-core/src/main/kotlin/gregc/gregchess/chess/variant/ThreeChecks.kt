@@ -6,8 +6,7 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.Register
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant() {
@@ -19,6 +18,13 @@ object ThreeChecks : ChessVariant() {
     ) : Component {
         constructor(limit: UInt) : this(limit, mutableByColor(0u))
 
+        @Transient
+        private lateinit var game: ChessGame
+
+        override fun init(game: ChessGame) {
+            this.game = game
+        }
+
         val check: ByColor<UInt> get() = byColor { checks_[it] }
 
         fun registerCheck(color: Color) {
@@ -29,7 +35,7 @@ object ThreeChecks : ChessVariant() {
             checks_[color]--
         }
 
-        fun checkForGameEnd(game: ChessGame) {
+        fun checkForGameEnd() {
             for ((s, c) in checks_.toIndexedList())
                 if (c >= limit)
                     game.stop(s.lostBy(CHECK_LIMIT, limit.toString()))
@@ -50,7 +56,7 @@ object ThreeChecks : ChessVariant() {
             private set
 
         override fun execute(game: ChessGame, move: Move) {
-            game.board.updateMoves(game)
+            game.board.updateMoves()
             if (game.variant.isInCheck(game, !move.main.color)) {
                 game.requireComponent<CheckCounter>().registerCheck(!move.main.color)
                 checkRegistered = true
@@ -78,7 +84,7 @@ object ThreeChecks : ChessVariant() {
         }
 
     override fun checkForGameEnd(game: ChessGame) {
-        game.requireComponent<CheckCounter>().checkForGameEnd(game)
+        game.requireComponent<CheckCounter>().checkForGameEnd()
 
         Normal.checkForGameEnd(game)
     }

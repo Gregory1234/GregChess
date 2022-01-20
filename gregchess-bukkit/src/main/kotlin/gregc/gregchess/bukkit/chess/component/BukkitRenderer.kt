@@ -32,6 +32,19 @@ data class BukkitRenderer(
         }
     }
 
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        arena.game = game
+        this.game = game
+    }
+
+    override fun handleEvent(e: ChessEvent) {
+        arena.handleEvent(e)
+        super.handleEvent(e)
+    }
+
     @Transient private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()
     @Transient private val rowSize = byColor { mutableListOf<Int>() }
 
@@ -82,13 +95,8 @@ data class BukkitRenderer(
 
     private fun BoardPiece.playSound(sound: String) = playPieceSound(pos, sound, type)
 
-    override fun handleEvent(game: ChessGame, e: ChessEvent) {
-        arena.handleEvent(e)
-        super.handleEvent(game, e)
-    }
-
     @ChessEventHandler
-    fun handleExplosion(game: ChessGame, e: AtomicChess.ExplosionEvent) {
+    fun handleExplosion(e: AtomicChess.ExplosionEvent) {
         world.createExplosion(e.pos.location, 4.0f, false, false)
     }
 
@@ -97,10 +105,6 @@ data class BukkitRenderer(
         val mi = -lowHalfTile
         val ma = highHalfTile
         fill(FillVolume(world, material, Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma)))
-    }
-
-    override fun validate(game: ChessGame) {
-        arena.game = game
     }
 
     private fun addCapturedPiece(piece: CapturedPiece) {
@@ -132,24 +136,24 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun onStart(game: ChessGame, e: GameStartStageEvent) {
+    fun onStart(e: GameStartStageEvent) {
         if (e == GameStartStageEvent.BEGIN) {
             game.board.capturedPieces.forEach {
                 addCapturedPiece(it)
             }
-            redrawFloor(game)
+            redrawFloor()
         }
     }
 
     @ChessEventHandler
-    fun onTurnStart(game: ChessGame, e: TurnEvent) {
+    fun onTurnStart(e: TurnEvent) {
         if (e == TurnEvent.START || e == TurnEvent.UNDO) {
-            redrawFloor(game)
+            redrawFloor()
         }
     }
 
     @ChessEventHandler
-    fun onStop(game: ChessGame, e: GameStopStageEvent) {
+    fun onStop(e: GameStopStageEvent) {
         if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC) {
             game.board.pieces.forEach {
                 it.clearRender()
@@ -160,7 +164,7 @@ data class BukkitRenderer(
         }
     }
 
-    private fun redrawFloor(game: ChessGame) {
+    private fun redrawFloor() {
         for (file in 0..7) {
             for (rank in 0..7) {
                 with (game.variant.floorRenderer) {
@@ -171,21 +175,21 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun onPiecePlayerAction(game: ChessGame, e: PiecePlayerActionEvent) = when (e.type) {
+    fun onPiecePlayerAction(e: PiecePlayerActionEvent) = when (e.type) {
         PiecePlayerActionEvent.Type.PICK_UP -> {
             e.piece.clearRender()
             e.piece.playSound("PickUp")
-            redrawFloor(game)
+            redrawFloor()
         }
         PiecePlayerActionEvent.Type.PLACE_DOWN -> {
             e.piece.render()
             e.piece.playSound("Move")
-            redrawFloor(game)
+            redrawFloor()
         }
     }
 
     @ChessEventHandler
-    fun handlePieceEvents(game: ChessGame, e: PieceEvent) {
+    fun handlePieceEvents(e: PieceEvent) {
         when (e) {
             is PieceEvent.Created -> e.piece.render()
             is PieceEvent.Cleared -> e.piece.clearRender()

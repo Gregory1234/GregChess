@@ -37,6 +37,13 @@ class ScoreboardManager : Component {
     }
 
     @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
+
+    @Transient
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     @Transient
@@ -64,26 +71,26 @@ class ScoreboardManager : Component {
     }
 
     @ChessEventHandler
-    fun handleEvents(game: ChessGame, e: GameBaseEvent) {
+    fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.UPDATE)
             update()
     }
 
     @ChessEventHandler
-    fun onStart(game: ChessGame, e: GameStartStageEvent) {
-        if (e == GameStartStageEvent.INIT) init(game)
-        else if (e == GameStartStageEvent.START) start(game)
+    fun onStart(e: GameStartStageEvent) {
+        if (e == GameStartStageEvent.INIT) init()
+        else if (e == GameStartStageEvent.START) start()
     }
 
     @ChessEventHandler
-    fun onStop(game: ChessGame, e: GameStopStageEvent) {
+    fun onStop(e: GameStopStageEvent) {
         if (e == GameStopStageEvent.STOP)
             update()
         if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC)
             stop()
     }
 
-    private fun init(game: ChessGame) {
+    private fun init() {
         val e = AddPropertiesEvent(playerProperties, gameProperties)
         e.game(PRESET) { game.settings.name }
         e.player(PLAYER) { playerPrefix + game[it].name }
@@ -91,7 +98,7 @@ class ScoreboardManager : Component {
     }
 
     @ChessEventHandler
-    fun resetPlayer(game: ChessGame, e: ResetPlayerEvent) {
+    fun resetPlayer(e: ResetPlayerEvent) {
         giveScoreboard(e.player)
     }
 
@@ -99,7 +106,7 @@ class ScoreboardManager : Component {
         p.scoreboard = scoreboard
     }
 
-    private fun start(game: ChessGame) {
+    private fun start() {
         game.sides.forEachRealBukkit(::giveScoreboard)
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
@@ -126,7 +133,7 @@ class ScoreboardManager : Component {
     }
 
     @ChessEventHandler
-    fun spectatorJoin(game: ChessGame, p: SpectatorEvent) {
+    fun spectatorJoin(p: SpectatorEvent) {
         if (p.dir == PlayerDirection.JOIN)
             giveScoreboard(p.player)
     }

@@ -52,6 +52,13 @@ class ChessClock private constructor(
         currentTurnLength: Duration = Duration.ZERO
     ) : this(timeControl, mutableByColor { timeRemaining[it] }, currentTurnLength)
 
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
+
     val timeRemaining: ByColor<Duration> get() = byColor { timeRemaining_[it] }
     val currentTurnLength: Duration get() = currentTurnLength_
 
@@ -61,7 +68,7 @@ class ChessClock private constructor(
     @Transient private var stopped = false
 
     @ChessEventHandler
-    fun handleEvents(game: ChessGame, e: GameBaseEvent) {
+    fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.START && timeControl.type == TimeControl.Type.FIXED) started = true
         else if (e == GameBaseEvent.SYNC) when (game.state) {
             ChessGame.State.INITIAL -> {
@@ -78,7 +85,7 @@ class ChessClock private constructor(
             }
         }
         else if (e == GameBaseEvent.STOP || e == GameBaseEvent.PANIC) stopped = true
-        else if (e == GameBaseEvent.UPDATE) updateTimer(game)
+        else if (e == GameBaseEvent.UPDATE) updateTimer()
     }
 
     fun addTimer(s: Color, d: Duration) {
@@ -89,7 +96,7 @@ class ChessClock private constructor(
         timeRemaining_[s] = d
     }
 
-    private fun updateTimer(game: ChessGame) {
+    private fun updateTimer() {
         if (!started)
             return
         if (stopped)
@@ -109,7 +116,7 @@ class ChessClock private constructor(
     }
 
     @ChessEventHandler
-    fun endTurn(game: ChessGame, e: TurnEvent) {
+    fun endTurn(e: TurnEvent) {
         if (e != TurnEvent.END)
             return
         val increment = if (started) timeControl.increment else Duration.ZERO

@@ -4,33 +4,41 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.player.ChessSide
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.bukkit.Bukkit
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 
 @Serializable
-object BukkitEventRelay : Component {
+class BukkitEventRelay : Component {
+
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
 
     @ChessEventHandler
-    fun onStart(game: ChessGame, e: GameStartStageEvent) {
+    fun onStart(e: GameStartStageEvent) {
         if (e == GameStartStageEvent.BEGIN)
             Bukkit.getPluginManager().callEvent(GameStartEvent(game))
     }
 
     @ChessEventHandler
-    fun onStop(game: ChessGame, e: GameStopStageEvent) {
+    fun onStop(e: GameStopStageEvent) {
         if (e == GameStopStageEvent.VERY_END || e == GameStopStageEvent.PANIC)
             Bukkit.getPluginManager().callEvent(GameEndEvent(game, e == GameStopStageEvent.VERY_END))
     }
 
     @ChessEventHandler
-    fun onTurnEnd(game: ChessGame, e: TurnEvent) {
+    fun onTurnEnd(e: TurnEvent) {
         if (e == TurnEvent.END)
             Bukkit.getPluginManager().callEvent(TurnEndEvent(game, game.currentSide))
     }
 
-    override fun handleEvent(game: ChessGame, e: ChessEvent) {
-        super.handleEvent(game, e)
+    override fun handleEvent(e: ChessEvent) {
+        super.handleEvent(e)
         Bukkit.getPluginManager().callEvent(ChessGameEvent(game, e))
     }
 

@@ -24,9 +24,9 @@ private class ExtraPlayerInfo(val player: Player) {
 
     var spectatedGame: ChessGame? = null
         set(v) {
-            field?.let { it.spectators.removePlayer(it, player) }
+            field?.let { it.spectators -= player }
             field = v
-            field?.let { it.spectators.addPlayer(it, player) }
+            field?.let { it.spectators += player }
         }
 }
 

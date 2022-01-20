@@ -33,11 +33,18 @@ class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 @Serializable
 class GameController : Component {
 
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
+
     internal var quick: ByColor<Boolean> = byColor(false)
     @Transient
     private var lastPrintedMove: Move? = null
 
-    private fun onStart(game: ChessGame) {
+    private fun onStart() {
         game.sides.forEachRealBukkit {
             game.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
             it.games += game
@@ -48,7 +55,7 @@ class GameController : Component {
         game.callEvent(GameStartStageEvent.START)
     }
 
-    private fun onRunning(game: ChessGame) {
+    private fun onRunning() {
         game.callEvent(GameStartStageEvent.BEGIN)
         object : BukkitRunnable() {
             override fun run() {
@@ -61,7 +68,7 @@ class GameController : Component {
     }
 
     @OptIn(ExperimentalTime::class)
-    private fun onStop(game: ChessGame) {
+    private fun onStop() {
         val results = game.results!!
         game.callEvent(GameStopStageEvent.STOP)
         with(game.board) {
@@ -121,7 +128,7 @@ class GameController : Component {
         }
     }
 
-    private fun onPanic(game: ChessGame) {
+    private fun onPanic() {
         game.sides.forEach(ChessSide<*>::stop)
         val results = game.results!!
         val pgn = PGN.generate(game)
@@ -136,21 +143,21 @@ class GameController : Component {
     }
 
     @ChessEventHandler
-    fun handleEvents(game: ChessGame, e: GameBaseEvent) = when (e) {
-        GameBaseEvent.START -> onStart(game)
-        GameBaseEvent.RUNNING -> onRunning(game)
-        GameBaseEvent.STOP -> onStop(game)
-        GameBaseEvent.PANIC -> onPanic(game)
+    fun handleEvents(e: GameBaseEvent) = when (e) {
+        GameBaseEvent.START -> onStart()
+        GameBaseEvent.RUNNING -> onRunning()
+        GameBaseEvent.STOP -> onStop()
+        GameBaseEvent.PANIC -> onPanic()
         GameBaseEvent.SYNC -> if (game.state == ChessGame.State.RUNNING) {
             // TODO: make sync safer
-            onStart(game)
-            onRunning(game)
+            onStart()
+            onRunning()
         } else Unit
         GameBaseEvent.UPDATE -> Unit
     }
 
     @ChessEventHandler
-    fun handleTurn(game: ChessGame, e: TurnEvent) {
+    fun handleTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (game.currentTurn == Color.BLACK) {
                 with(game.board) {

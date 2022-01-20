@@ -21,8 +21,8 @@ private class Square(
 
     override fun toString() = "Square(piece=$piece, flags=$flags)"
 
-    fun empty(game: ChessGame) {
-        piece?.clear(game)
+    fun empty(board: Chessboard) {
+        piece?.clear(board)
         bakedMoves = null
         bakedLegalMoves = null
         flags.clear()
@@ -43,6 +43,13 @@ class Chessboard private constructor (
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
+
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
 
     val fullmoveCounter get() = fullmoveCounter_
     val boardHashes get() = boardHashes_.toMap()
@@ -105,7 +112,7 @@ class Chessboard private constructor (
         }
 
     @ChessEventHandler
-    fun endTurn(game: ChessGame, e: TurnEvent) {
+    fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (game.currentTurn == Color.BLACK) {
                 fullmoveCounter_++
@@ -113,7 +120,7 @@ class Chessboard private constructor (
             for (s in squares.values)
                 for (f in s.flags)
                     f.value.replaceAll { it + 1u }
-            addBoardHash(getFEN(game).copy(currentTurn = !game.currentTurn))
+            addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
@@ -125,14 +132,14 @@ class Chessboard private constructor (
             }
         }
         if (e.ending)
-            updateMoves(game)
+            updateMoves()
     }
 
     @ChessEventHandler
-    fun handleEvents(game: ChessGame, e: GameBaseEvent) {
+    fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.SYNC || e == GameBaseEvent.START) {
-            updateMoves(game)
-            pieces.forEach { it.sendCreated(game) }
+            updateMoves()
+            pieces.forEach { it.sendCreated(this) }
         }
     }
 
@@ -152,7 +159,7 @@ class Chessboard private constructor (
     fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
     fun getLegalMoves(pos: Pos) = squares[pos]?.bakedLegalMoves.orEmpty()
 
-    fun updateMoves(game: ChessGame) {
+    fun updateMoves() {
         for ((_, square) in squares) {
             square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p, this) }
         }
@@ -164,8 +171,8 @@ class Chessboard private constructor (
         }
     }
 
-    fun setFromFEN(game: ChessGame, fen: FEN) {
-        squares.values.forEach { it.empty(game) }
+    fun setFromFEN(fen: FEN) {
+        squares.values.forEach { it.empty(this) }
         fen.forEachSquare(game.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
@@ -180,15 +187,15 @@ class Chessboard private constructor (
             addFlag(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1u)
         }
 
-        updateMoves(game)
+        updateMoves()
 
         boardHashes_.clear()
         addBoardHash(fen)
-        pieces.forEach { it.sendCreated(game) }
+        pieces.forEach { it.sendCreated(this) }
         game.callEvent(SetFenEvent(fen))
     }
 
-    fun getFEN(game: ChessGame): FEN {
+    fun getFEN(): FEN {
         fun castling(color: Color) =
             if (kingOf(color)?.hasMoved == false)
                 piecesOf(color, PieceType.ROOK)
@@ -206,12 +213,12 @@ class Chessboard private constructor (
         )
     }
 
-    fun checkForRepetition(game: ChessGame) {
-        if ((boardHashes_[getFEN(game).copy(currentTurn = !game.currentTurn).hashed()] ?: 0) >= 3)
+    fun checkForRepetition() {
+        if ((boardHashes_[getFEN().copy(currentTurn = !game.currentTurn).hashed()] ?: 0) >= 3)
             game.stop(drawBy(EndReason.REPETITION))
     }
 
-    fun checkForFiftyMoveRule(game: ChessGame) {
+    fun checkForFiftyMoveRule() {
         if (halfmoveClock >= 100u)
             game.stop(drawBy(EndReason.FIFTY_MOVES))
     }
@@ -222,9 +229,9 @@ class Chessboard private constructor (
         return boardHashes_[hash]!!
     }
 
-    fun undoLastMove(game: ChessGame) {
+    fun undoLastMove() {
         lastMove?.let {
-            val hash = getFEN(game).hashed()
+            val hash = getFEN().hashed()
             boardHashes_[hash] = (boardHashes_[hash] ?: 1) - 1
             it.undo(game)
             if (game.currentTurn == Color.WHITE)
@@ -233,6 +240,8 @@ class Chessboard private constructor (
             game.previousTurn()
         }
     }
+
+    fun callPieceEvent(e: PieceEvent) = game.callEvent(e)
 
     companion object {
 

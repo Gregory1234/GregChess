@@ -145,7 +145,7 @@ class ChessGame private constructor(
             for (it in variant.requiredComponents) {
                 components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentNotFoundException(it)
             }
-            components.forEach { it.validate(this) }
+            components.forEach { it.init(this) }
         } catch (e: Exception) {
             panic(e)
         }
@@ -184,7 +184,7 @@ class ChessGame private constructor(
     fun callEvent(e: ChessEvent) = with(MultiExceptionContext()) {
         components.forEach {
             exec {
-                it.handleEvent(this@ChessGame, e)
+                it.handleEvent(e)
             }
         }
         rethrow { ChessEventException(e, it) }

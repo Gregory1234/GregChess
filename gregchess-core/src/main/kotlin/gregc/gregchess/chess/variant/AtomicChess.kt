@@ -37,12 +37,12 @@ object AtomicChess : ChessVariant() {
                 if (it.type != PieceType.PAWN)
                     explosions += it.explode(piece.color, move.pieceTracker)
             }
-            move.pieceTracker.traceMove(game, *explosions.toTypedArray())
+            move.pieceTracker.traceMove(game.board, *explosions.toTypedArray())
             game.callEvent(ExplosionEvent(piece.pos))
         }
 
         override fun undo(game: ChessGame, move: Move) = tryPiece {
-            move.pieceTracker.traceMoveBack(game,
+            move.pieceTracker.traceMoveBack(game.board,
                 *((0 until explodedNumber).map { move.pieceTracker["exploded$it"] } + move.pieceTracker["main"]).toTypedArray())
         }
     }

@@ -5,8 +5,7 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceEvent
 import gregc.gregchess.fabric.chess.*
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -18,6 +17,13 @@ data class FabricRenderer(
 ) : Component {
     constructor(controller: ChessControllerBlockEntity) : this(controller.pos, controller.world!!)
 
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
+
     val controller: ChessControllerBlockEntity
         get() = world.getBlockEntity(controllerPos) as ChessControllerBlockEntity
 
@@ -26,7 +32,7 @@ data class FabricRenderer(
     private val tileBlocks: Map<Pos, List<ChessboardFloorBlockEntity>> by lazy { floor.groupBy { it.boardPos!! } }
 
     // TODO: make this private
-    fun redrawFloor(game: ChessGame) {
+    fun redrawFloor() {
         for (file in 0..7) {
             for (rank in 0..7) {
                 tileBlocks[Pos(file, rank)]?.forEach {
@@ -39,7 +45,7 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
-    fun onBaseEvent(game: ChessGame, e: GameBaseEvent) {
+    fun onBaseEvent(e: GameBaseEvent) {
         if (e == GameBaseEvent.STOP || e == GameBaseEvent.PANIC) {
             tileBlocks.forEach { (_,l) ->
                 l.forEach {
@@ -51,9 +57,9 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
-    fun onTurnStart(game: ChessGame, e: TurnEvent) {
+    fun onTurnStart(e: TurnEvent) {
         if (e == TurnEvent.START || e == TurnEvent.UNDO) {
-            redrawFloor(game)
+            redrawFloor()
         }
     }
 
@@ -68,7 +74,7 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
-    fun handlePieceEvents(game: ChessGame, e: PieceEvent) {
+    fun handlePieceEvents(e: PieceEvent) {
         println(e)
         when (e) {
             is PieceEvent.Created -> {}
