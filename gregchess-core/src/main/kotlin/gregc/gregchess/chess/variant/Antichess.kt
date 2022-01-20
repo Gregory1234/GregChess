@@ -6,8 +6,9 @@ import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.registry.Register
+import gregc.gregchess.registry.Registering
 
-object Antichess : ChessVariant() {
+object Antichess : ChessVariant(), Registering {
     @JvmField
     @Register
     val STALEMATE_VICTORY = DetEndReason(EndReason.Type.NORMAL)

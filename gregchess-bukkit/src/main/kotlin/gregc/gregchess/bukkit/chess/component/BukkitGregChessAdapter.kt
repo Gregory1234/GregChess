@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit.chess.component
 
+import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.chess.AddPropertiesEvent
 import gregc.gregchess.bukkit.chess.PropertyType
 import gregc.gregchess.bukkit.config
@@ -16,7 +17,7 @@ import kotlinx.serialization.Transient
 
 @Serializable
 class BukkitGregChessAdapter : Component {
-    companion object {
+    companion object : BukkitRegistering {
         @JvmField
         @Register
         val TIME_REMAINING = PropertyType()

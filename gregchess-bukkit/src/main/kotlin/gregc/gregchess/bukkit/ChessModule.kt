@@ -88,3 +88,9 @@ fun ChessModule.registerBukkitPlugin(plugin: Plugin) = get(BukkitRegistry.BUKKIT
 interface BukkitChessPlugin {
     fun onInitialize()
 }
+
+interface BukkitRegistering : Registering {
+    override fun registerAll(module: ChessModule) {
+        AutoRegister(module, AutoRegister.bukkitTypes).registerAll(this::class)
+    }
+}

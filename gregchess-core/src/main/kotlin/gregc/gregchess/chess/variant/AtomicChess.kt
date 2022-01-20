@@ -5,9 +5,10 @@ import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.Register
+import gregc.gregchess.registry.Registering
 import kotlinx.serialization.Serializable
 
-object AtomicChess : ChessVariant() {
+object AtomicChess : ChessVariant(), Registering {
 
     class ExplosionEvent(val pos: Pos) : ChessEvent
 

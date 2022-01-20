@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.MultiExceptionContext
+import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.forEachRealBukkit
 import gregc.gregchess.bukkit.config
@@ -18,7 +19,7 @@ import org.bukkit.scoreboard.Team
 @Serializable
 class ScoreboardManager : Component {
 
-    companion object {
+    companion object : BukkitRegistering {
         private val TITLE = Message(config, "Scoreboard.Title")
         private fun whiteFormat(s: String) = config.getPathString("Scoreboard.Format.White", s)
         private fun blackFormat(s: String) = config.getPathString("Scoreboard.Format.Black", s)

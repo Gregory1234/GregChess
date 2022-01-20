@@ -7,6 +7,7 @@ import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
+import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.createType
 
 @Serializable(with = ComponentType.Serializer::class)
@@ -20,7 +21,7 @@ class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
     @RegisterAll(ComponentType::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(ComponentType::class) { m, n, _ -> register(m, n) }
+        internal val AUTO_REGISTER = AutoRegisterType(ComponentType::class) { m, n, _ -> register(m, n); (cl.companionObjectInstance as? Registering)?.registerAll(m) }
 
         @JvmField
         val CHESSBOARD = ComponentType(Chessboard::class)

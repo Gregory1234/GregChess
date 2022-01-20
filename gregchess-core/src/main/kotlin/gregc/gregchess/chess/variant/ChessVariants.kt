@@ -5,7 +5,7 @@ import gregc.gregchess.register
 import gregc.gregchess.registry.*
 
 object ChessVariants {
-    internal val AUTO_REGISTER = AutoRegisterType(ChessVariant::class) { m, n, _ -> register(m, n); registerAll(m) }
+    internal val AUTO_REGISTER = AutoRegisterType(ChessVariant::class) { m, n, _ -> register(m, n); (this as? Registering)?.registerAll(m) }
 
     @JvmField
     @Register

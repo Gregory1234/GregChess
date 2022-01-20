@@ -33,7 +33,7 @@ class AutoRegister(private val module: ChessModule, private val types: Collectio
     fun registerAll(cl: KClass<*>) {
         val regAll = cl.annotations.filterIsInstance<RegisterAll>().firstOrNull()
             ?: cl.companionObject?.annotations?.filterIsInstance<RegisterAll>()?.firstOrNull()
-        for (p in cl.java.declaredFields) {
+        for (p in cl.java.nestHost.declaredFields.ifEmpty { cl.java.declaringClass.declaredFields }) {
             val reg = p.annotations.filterIsInstance<Register>().firstOrNull()
             if (reg != null || regAll != null && regAll.classes.any { it.isSuperclassOf(p.type.kotlin) }) {
                 (types.first { it.cl.isSuperclassOf(p.type.kotlin) } as AutoRegisterType<Any>)
@@ -45,3 +45,8 @@ class AutoRegister(private val module: ChessModule, private val types: Collectio
     inline fun <reified T : Any> registerAll() = registerAll(T::class)
 }
 
+interface Registering {
+    fun registerAll(module: ChessModule) {
+        AutoRegister(module, AutoRegister.basicTypes).registerAll(this::class)
+    }
+}

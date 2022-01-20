@@ -2,8 +2,9 @@ package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.registry.Register
+import gregc.gregchess.registry.Registering
 
-object KingOfTheHill : ChessVariant() {
+object KingOfTheHill : ChessVariant(), Registering {
 
     @JvmField
     @Register

@@ -5,9 +5,10 @@ import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.Register
+import gregc.gregchess.registry.Registering
 import kotlinx.serialization.*
 
-object ThreeChecks : ChessVariant() {
+object ThreeChecks : ChessVariant(), Registering {
 
     @Serializable
     class CheckCounter private constructor(
