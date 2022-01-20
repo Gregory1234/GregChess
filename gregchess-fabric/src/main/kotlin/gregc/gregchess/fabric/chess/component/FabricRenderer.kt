@@ -17,6 +17,8 @@ data class FabricRenderer(
 ) : Component {
     constructor(controller: ChessControllerBlockEntity) : this(controller.pos, controller.world!!)
 
+    override val type get() = FabricComponentType.RENDERER
+
     @Transient
     private lateinit var game: ChessGame
 

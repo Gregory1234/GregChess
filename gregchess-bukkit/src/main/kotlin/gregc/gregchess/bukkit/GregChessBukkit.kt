@@ -26,7 +26,7 @@ internal object GregChessBukkit : ChessExtension {
         }
 
     private fun registerSettings() = with(GregChess) {
-        registerSettings {
+        ComponentType.CHESSBOARD.registerSettings {
             val simpleCastling = section.getBoolean("SimpleCastling", false)
             when(val name = section.getString("Board")) {
                 null -> Chessboard(variant, simpleCastling = simpleCastling)
@@ -43,7 +43,7 @@ internal object GregChessBukkit : ChessExtension {
                 }
             }
         }
-        registerSettings {
+        ComponentType.CLOCK.registerSettings {
             SettingsManager.chooseOrParse(clockSettings, section.getString("Clock")) {
                 TimeControl.parseOrNull(it)?.let { t -> ChessClock(t) } ?: run {
                     logger.warn("Bad time control \"$it\", defaulted to none")
@@ -51,21 +51,15 @@ internal object GregChessBukkit : ChessExtension {
                 }
             }
         }
-        registerSettings { BukkitRenderer() }
-        registerSettings { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3).toUInt()) }
+        BukkitComponentType.RENDERER.registerSettings { BukkitRenderer() }
+        ThreeChecks.CHECK_COUNTER.registerSettings { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3).toUInt()) }
     }
 
-    private fun registerComponents() = with(GregChess) {
-        registerComponent<BukkitEventRelay>("bukkit_event_relay")
-        registerComponent<BukkitGregChessAdapter>("bukkit_adapter")
-        registerComponent<BukkitRenderer>("bukkit_renderer")
-        registerComponent<GameController>("game_controller")
-        registerComponent<ScoreboardManager>("scoreboard_manager")
-        registerComponent<SpectatorManager>("spectator_manager")
-        for (c in listOf(Chessboard::class, ChessClock::class, GameController::class,
-            SpectatorManager::class, ScoreboardManager::class, BukkitRenderer::class,
-            BukkitEventRelay::class, BukkitGregChessAdapter::class)) {
-            registerHookedComponent(c)
+    private fun hookComponents() {
+        for (c in listOf(ComponentType.CHESSBOARD, ComponentType.CLOCK, BukkitComponentType.GAME_CONTROLLER,
+            BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.RENDERER,
+            BukkitComponentType.EVENT_RELAY, BukkitComponentType.ADAPTER)) {
+            c.registerHooked()
         }
     }
 
@@ -80,8 +74,9 @@ internal object GregChessBukkit : ChessExtension {
             registerAll<ChessGameManager>()
             registerAll<ScoreboardManager>()
             registerAll<BukkitGregChessAdapter>()
+            registerAll<BukkitComponentType>()
         }
-        registerComponents()
+        hookComponents()
         registerSettings()
         completeSimpleSettings()
         completeLocalFormatters()

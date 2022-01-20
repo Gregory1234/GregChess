@@ -14,6 +14,8 @@ class SpectatorNotFoundException(player: Player) : Exception(player.name)
 @Serializable
 class SpectatorManager : Component {
 
+    override val type get() = BukkitComponentType.SPECTATOR_MANAGER
+
     @Transient
     private lateinit var game: ChessGame
 

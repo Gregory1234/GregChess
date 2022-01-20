@@ -12,6 +12,8 @@ import org.bukkit.event.HandlerList
 @Serializable
 class BukkitEventRelay : Component {
 
+    override val type get() = BukkitComponentType.EVENT_RELAY
+
     @Transient
     private lateinit var game: ChessGame
 

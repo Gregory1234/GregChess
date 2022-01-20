@@ -3,7 +3,7 @@ package gregc.gregchess.registry
 import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.ChessFlag
 import gregc.gregchess.chess.EndReason
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
@@ -69,7 +69,7 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
         @JvmField
         val MOVE_NAME_TOKEN_TYPE = NameRegistry<MoveNameTokenType<*>>("move_name_token_type")
         @JvmField
-        val COMPONENT_CLASS = NameRegistry<KClass<out Component>>("component_class")
+        val COMPONENT_TYPE = NameRegistry<ComponentType<*>>("component_type")
         @JvmField
         val MOVE_TRAIT_TYPE = NameRegistry<MoveTraitType<*>>("move_trait_type")
         @JvmField

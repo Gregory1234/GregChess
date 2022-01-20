@@ -2,6 +2,7 @@ package gregc.gregchess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPiece
@@ -9,11 +10,8 @@ import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.RegistryBlock
-import kotlinx.serialization.InternalSerializationApi
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.reflect.KClass
-import kotlin.reflect.full.companionObjectInstance
 
 fun interface ChessExtension {
     fun load()
@@ -67,14 +65,8 @@ fun <T : Any> MoveNameTokenType<T>.register(module: ChessModule, id: String) =
 fun <T : MoveTrait> MoveTraitType<T>.register(module: ChessModule, id: String) =
     module.register(Registry.MOVE_TRAIT_TYPE, id, this)
 
-@OptIn(InternalSerializationApi::class)
-fun <T : Component> ChessModule.registerComponent(id: String, tcl: KClass<T>) {
-    tcl.companionObjectInstance
-    register(Registry.COMPONENT_CLASS, id, tcl)
-}
-
-inline fun <reified T : Component> ChessModule.registerComponent(id: String) =
-    registerComponent(id, T::class)
+fun <T : Component> ComponentType<T>.register(module: ChessModule, id: String) =
+    module.register(Registry.COMPONENT_TYPE, id, this)
 
 inline fun <reified T : ChessPlayer> ChessModule.registerPlayerClass(id: String) =
     register(Registry.PLAYER_CLASS, id, T::class)

@@ -36,6 +36,8 @@ class ScoreboardManager : Component {
         val PLAYER = PropertyType()
     }
 
+    override val type get() = BukkitComponentType.SCOREBOARD_MANAGER
+
     @Transient
     private lateinit var game: ChessGame
 

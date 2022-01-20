@@ -44,6 +44,8 @@ class Chessboard private constructor (
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
 
+    override val type get() = ComponentType.CHESSBOARD
+
     @Transient
     private lateinit var game: ChessGame
 

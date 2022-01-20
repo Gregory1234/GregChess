@@ -32,6 +32,8 @@ data class BukkitRenderer(
         }
     }
 
+    override val type get() = BukkitComponentType.RENDERER
+
     @Transient
     private lateinit var game: ChessGame
 

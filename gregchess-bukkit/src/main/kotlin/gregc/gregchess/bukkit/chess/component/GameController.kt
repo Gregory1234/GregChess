@@ -33,6 +33,8 @@ class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 @Serializable
 class GameController : Component {
 
+    override val type get() = BukkitComponentType.GAME_CONTROLLER
+
     @Transient
     private lateinit var game: ChessGame
 

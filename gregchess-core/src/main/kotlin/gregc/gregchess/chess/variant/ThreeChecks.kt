@@ -1,13 +1,11 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.Register
 import kotlinx.serialization.*
-import kotlin.reflect.KClass
 
 object ThreeChecks : ChessVariant() {
 
@@ -17,6 +15,8 @@ object ThreeChecks : ChessVariant() {
         @SerialName("checks") internal val checks_: MutableByColor<UInt>
     ) : Component {
         constructor(limit: UInt) : this(limit, mutableByColor(0u))
+
+        override val type get() = CHECK_COUNTER
 
         @Transient
         private lateinit var game: ChessGame
@@ -78,6 +78,10 @@ object ThreeChecks : ChessVariant() {
     @Register("check_counter")
     val CHECK_COUNTER_TRAIT = MoveTraitType(CheckCounterTrait::class)
 
+    @JvmField
+    @Register
+    val CHECK_COUNTER = ComponentType(CheckCounter::class)
+
     override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
         Normal.getPieceMoves(piece, board).map {
             it.copy(traits = it.traits + CheckCounterTrait())
@@ -89,6 +93,6 @@ object ThreeChecks : ChessVariant() {
         Normal.checkForGameEnd(game)
     }
 
-    override val requiredComponents: Set<KClass<out Component>> = setOf(CheckCounter::class)
+    override val requiredComponents = setOf(CHECK_COUNTER)
 
 }

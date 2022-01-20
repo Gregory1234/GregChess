@@ -61,7 +61,7 @@ object ChessGameManager {
     fun settings(v: ChessVariant, boardState: Map<Pos, Piece>, r: FabricRenderer): GameSettings {
         val components = buildList {
             this += Chessboard(v, FEN.fromPieces(boardState))
-            this += GameController
+            this += GameController()
             this += r
         }
         return GameSettings("", ChessVariant.Normal, components)

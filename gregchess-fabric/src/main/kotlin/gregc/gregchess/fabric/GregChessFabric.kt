@@ -4,7 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.variant.KingOfTheHill
-import gregc.gregchess.fabric.chess.component.*
+import gregc.gregchess.fabric.chess.component.FabricComponentType
 import gregc.gregchess.fabric.chess.player.FabricPlayer
 import gregc.gregchess.registry.AutoRegister
 import gregc.gregchess.registry.Register
@@ -27,15 +27,12 @@ internal object GregChessFabric : ChessExtension {
         registerTallPieceBlock(PieceType.KING, Rarity.EPIC)
     }
 
-    private fun registerComponents() = with(GregChess) {
-        registerComponent<FabricRenderer>("fabric_renderer")
-        registerComponent<GameController>("game_controller")
-    }
-
     override fun load(): Unit = with(GregChess) {
+        AutoRegister(this, AutoRegister.basicTypes).apply {
+            registerAll<FabricComponentType>()
+            registerAll<GregChessFabric>()
+        }
         registerPieceBlocks()
-        registerComponents()
-        AutoRegister(this, AutoRegister.basicTypes).registerAll<GregChessFabric>()
         registerPlayerClass<FabricPlayer>("fabric")
         registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
         completeFloorRenderers()

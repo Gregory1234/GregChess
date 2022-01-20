@@ -76,7 +76,7 @@ class ChessGame private constructor(
             encodeSerializableElement(descriptor, 4, encoder.serializersModule.serializer(), value.state)
             encodeNullableSerializableElement(descriptor, 5, String.serializer().nullable, value.startTime?.toString())
             encodeNullableSerializableElement(descriptor, 6, GameResultsSerializer.nullable, value.results)
-            encodeSerializableElement(descriptor, 7, ComponentMapSerializer, value.components.associateBy { it::class.componentKey })
+            encodeSerializableElement(descriptor, 7, ComponentMapSerializer, value.components.associateBy { it.type })
             encodeSerializableElement(descriptor, 8, encoder.serializersModule.getContextual(ChessEnvironment::class)!!, value.environment)
             encodeNullableSerializableElement(descriptor, 9, encoder.serializersModule.serializer(), value.currentTurn)
         }
@@ -142,8 +142,8 @@ class ChessGame private constructor(
         require((initialState >= State.STOPPED) == (results != null)) { "Results bad" }
         try {
             requireComponent<Chessboard>()
-            for (it in variant.requiredComponents) {
-                components.filterIsInstance(it.java).firstOrNull() ?: throw ComponentNotFoundException(it)
+            for (t in variant.requiredComponents) {
+                components.firstOrNull { it.type == t } ?: throw ComponentNotFoundException(t)
             }
             components.forEach { it.init(this) }
         } catch (e: Exception) {

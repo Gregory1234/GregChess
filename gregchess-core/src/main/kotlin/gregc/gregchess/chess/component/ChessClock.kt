@@ -52,6 +52,8 @@ class ChessClock private constructor(
         currentTurnLength: Duration = Duration.ZERO
     ) : this(timeControl, mutableByColor { timeRemaining[it] }, currentTurnLength)
 
+    override val type get() = ComponentType.CLOCK
+
     @Transient
     private lateinit var game: ChessGame
 

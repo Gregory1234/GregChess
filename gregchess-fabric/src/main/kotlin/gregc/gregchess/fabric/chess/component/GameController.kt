@@ -10,7 +10,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 @Serializable
-object GameController : Component {
+class GameController : Component {
+
+    override val type get() = FabricComponentType.GAME_CONTROLLER
 
     @Transient
     private lateinit var game: ChessGame

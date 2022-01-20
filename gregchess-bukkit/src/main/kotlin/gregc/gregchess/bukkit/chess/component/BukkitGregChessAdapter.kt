@@ -28,6 +28,8 @@ class BukkitGregChessAdapter : Component {
         val CHECK_COUNTER = PropertyType()
     }
 
+    override val type get() = BukkitComponentType.ADAPTER
+
     @Transient
     private lateinit var game: ChessGame
 

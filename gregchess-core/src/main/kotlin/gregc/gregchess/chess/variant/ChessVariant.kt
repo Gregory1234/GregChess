@@ -3,13 +3,12 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.rotationsOf
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KClass
 
 @Serializable(with = ChessVariant.Serializer::class)
 open class ChessVariant : NameRegistered {
@@ -116,9 +115,9 @@ open class ChessVariant : NameRegistered {
     open val pieceTypes: Collection<PieceType>
         get() = PieceType.run { listOf(KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN) }
 
-    open val requiredComponents: Set<KClass<out Component>> get() = emptySet()
+    open val requiredComponents: Set<ComponentType<*>> get() = emptySet()
 
-    open val optionalComponents: Set<KClass<out Component>> get() = emptySet()
+    open val optionalComponents: Set<ComponentType<*>> get() = emptySet()
 
     open val pgnNameFormatter: MoveNameFormatter = MoveNameFormatter { name ->
         buildString {

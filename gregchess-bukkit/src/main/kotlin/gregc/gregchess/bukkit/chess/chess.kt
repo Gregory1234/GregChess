@@ -7,7 +7,6 @@ import gregc.gregchess.bukkit.chess.player.BukkitChessSide
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.componentKey
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
@@ -107,7 +106,7 @@ fun ChessGame.getInfo() = textComponent {
     text("Arena: ${arena.name}\n")
     text("Preset: ${settings.name}\n")
     text("Variant: ${variant.key}\n")
-    text("Components: ${components.joinToString { it::class.componentKey.toString() }}")
+    text("Components: ${components.joinToString { it.type.key.toString() }}")
 }
 
 val EndReason<*>.quick

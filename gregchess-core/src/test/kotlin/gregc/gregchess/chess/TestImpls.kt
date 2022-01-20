@@ -1,8 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.player.ChessPlayer
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.chess.variant.ChessVariant
@@ -27,8 +26,12 @@ class TestPlayer(override val name: String) : ChessPlayer {
 
 class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSide<TestPlayer>(player, color, game)
 
+val TEST_COMPONENT = ComponentType(TestComponent::class)
+
 @Serializable
 object TestComponent : Component {
+
+    override val type = TEST_COMPONENT
 
     override fun init(game: ChessGame) {}
 
@@ -61,7 +64,7 @@ fun setupRegistry() = with(GregChess) {
         fullLoad(listOf(ChessExtension {
             TEST_END_REASON.register(this, "test")
             TestVariant.register(this, "test")
-            registerComponent<TestComponent>("test")
+            TEST_COMPONENT.register(this, "test")
             registerPlayerClass<TestPlayer>("test")
         }))
     }
