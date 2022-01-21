@@ -1,14 +1,13 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.ChessListener
+import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
-import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
-import kotlin.reflect.full.createType
 
 @Serializable(with = ComponentType.Serializer::class)
 class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
@@ -32,6 +31,7 @@ class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
     }
 }
 
+@Serializable(with = ComponentSerializer::class)
 interface Component : ChessListener {
 
     val type: ComponentType<*>
@@ -40,14 +40,13 @@ interface Component : ChessListener {
 
 }
 
-object ComponentMapSerializer : ClassMapSerializer<Map<ComponentType<*>, Component>, ComponentType<*>, Component>("ComponentDataMap", ComponentType.Serializer) {
-
-    override fun Map<ComponentType<*>, Component>.asMap() = this
-
-    override fun fromMap(m: Map<ComponentType<*>, Component>) = m
+@OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
+object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component>("Component", ComponentType.Serializer) {
 
     @Suppress("UNCHECKED_CAST")
-    override fun ComponentType<*>.valueSerializer(module: SerializersModule) = module.serializer(cl.createType()) as KSerializer<Component>
+    override val ComponentType<*>.serializer get() = cl.serializer() as KSerializer<Component>
+
+    override val Component.key: ComponentType<*> get() = type
 
 }
 
