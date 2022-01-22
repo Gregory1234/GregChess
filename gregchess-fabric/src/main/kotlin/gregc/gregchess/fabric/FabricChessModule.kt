@@ -1,8 +1,7 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.chess.Color
-import gregc.gregchess.chess.Pos
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.chess.*
@@ -26,29 +25,29 @@ object FabricRegistry {
     ) { simpleFloorRenderer() }
 }
 
-fun PieceType.registerShortPieceBlock() {
+fun PieceType.registerPieceBlock(blocks: ByColor<PieceBlock>, itemSettings: FabricItemSettings) {
     Color.forEach {
         val p = of(it)
-        val block = ShortPieceBlock(p, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
+        val block = blocks[it]
         module.register(FabricRegistry.PIECE_BLOCK, p, block)
-        val item = BlockItem(block, FabricItemSettings().group(GregChessMod.CHESS_GROUP))
+        val item = BlockItem(block, itemSettings)
         module.register(FabricRegistry.PIECE_ITEM, p, item)
         MinecraftRegistry.register(MinecraftRegistry.BLOCK, p.id, block)
         MinecraftRegistry.register(MinecraftRegistry.ITEM, p.id, item)
     }
 }
 
-fun PieceType.registerTallPieceBlock(rarity: Rarity) {
-    Color.forEach {
-        val p = of(it)
-        val block = TallPieceBlock(p, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-        module.register(FabricRegistry.PIECE_BLOCK, p, block)
-        val item = BlockItem(block, FabricItemSettings().group(GregChessMod.CHESS_GROUP).rarity(rarity))
-        module.register(FabricRegistry.PIECE_ITEM, p, item)
-        MinecraftRegistry.register(MinecraftRegistry.BLOCK, p.id, block)
-        MinecraftRegistry.register(MinecraftRegistry.ITEM, p.id, item)
-    }
-}
+fun PieceType.registerShortPieceBlock() =
+    registerPieceBlock(
+        byColor { ShortPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)) },
+        FabricItemSettings().group(GregChessMod.CHESS_GROUP)
+    )
+
+fun PieceType.registerTallPieceBlock(rarity: Rarity) =
+    registerPieceBlock(
+        byColor { TallPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)) },
+        FabricItemSettings().group(GregChessMod.CHESS_GROUP).rarity(rarity)
+    )
 
 fun ChessVariant.registerFloorRenderer(floorRenderer: ChessFloorRenderer) =
     module.register(FabricRegistry.VARIANT_FLOOR_RENDERER, this, floorRenderer)
