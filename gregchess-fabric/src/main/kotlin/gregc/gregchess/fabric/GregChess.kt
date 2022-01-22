@@ -24,12 +24,12 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
     val ABORTED = DrawEndReason(EndReason.Type.EMERGENCY)
 
     private fun registerPieceBlocks() {
-        registerShortPieceBlock(PieceType.PAWN)
-        registerTallPieceBlock(PieceType.KNIGHT, Rarity.UNCOMMON)
-        registerTallPieceBlock(PieceType.BISHOP, Rarity.UNCOMMON)
-        registerTallPieceBlock(PieceType.ROOK, Rarity.RARE)
-        registerTallPieceBlock(PieceType.QUEEN, Rarity.RARE)
-        registerTallPieceBlock(PieceType.KING, Rarity.EPIC)
+        PieceType.PAWN.registerShortPieceBlock()
+        PieceType.KNIGHT.registerTallPieceBlock(Rarity.UNCOMMON)
+        PieceType.BISHOP.registerTallPieceBlock(Rarity.UNCOMMON)
+        PieceType.ROOK.registerTallPieceBlock(Rarity.RARE)
+        PieceType.QUEEN.registerTallPieceBlock(Rarity.RARE)
+        PieceType.KING.registerTallPieceBlock(Rarity.EPIC)
     }
 
     override fun load() {
@@ -47,8 +47,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
             registerAll<FabricPlayerType>()
         }
         registerPieceBlocks()
-        registerSimpleFloorRenderer(KingOfTheHill, (Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
-        completeFloorRenderers()
+        KingOfTheHill.registerSimpleFloorRenderer((Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
     }
 
 }

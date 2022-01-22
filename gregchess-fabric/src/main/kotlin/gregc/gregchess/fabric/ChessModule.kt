@@ -21,43 +21,40 @@ object FabricRegistry {
     @JvmField
     val PIECE_ITEM = ConnectedBiRegistry<Piece, BlockItem>("piece_item", PieceRegistryView)
     @JvmField
-    val VARIANT_FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>(
+    val VARIANT_FLOOR_RENDERER = DefaultedConnectedRegistry(
         "variant_floor_renderer", Registry.VARIANT
-    )
+    ) { simpleFloorRenderer() }
 }
 
-fun ChessModule.registerShortPieceBlock(t: PieceType) {
+fun PieceType.registerShortPieceBlock() {
     Color.forEach {
-        val p = t.of(it)
+        val p = of(it)
         val block = ShortPieceBlock(p, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-        register(FabricRegistry.PIECE_BLOCK, p, block)
+        module.register(FabricRegistry.PIECE_BLOCK, p, block)
         val item = BlockItem(block, FabricItemSettings().group(GregChessMod.CHESS_GROUP))
-        register(FabricRegistry.PIECE_ITEM, p, item)
+        module.register(FabricRegistry.PIECE_ITEM, p, item)
         MinecraftRegistry.register(MinecraftRegistry.BLOCK, p.id, block)
         MinecraftRegistry.register(MinecraftRegistry.ITEM, p.id, item)
     }
 }
 
-fun ChessModule.registerTallPieceBlock(t: PieceType, rarity: Rarity) {
+fun PieceType.registerTallPieceBlock(rarity: Rarity) {
     Color.forEach {
-        val p = t.of(it)
+        val p = of(it)
         val block = TallPieceBlock(p, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-        register(FabricRegistry.PIECE_BLOCK, p, block)
+        module.register(FabricRegistry.PIECE_BLOCK, p, block)
         val item = BlockItem(block, FabricItemSettings().group(GregChessMod.CHESS_GROUP).rarity(rarity))
-        register(FabricRegistry.PIECE_ITEM, p, item)
+        module.register(FabricRegistry.PIECE_ITEM, p, item)
         MinecraftRegistry.register(MinecraftRegistry.BLOCK, p.id, block)
         MinecraftRegistry.register(MinecraftRegistry.ITEM, p.id, item)
     }
 }
 
-fun ChessModule.registerFloorRenderer(variant: ChessVariant, floorRenderer: ChessFloorRenderer) =
-    register(FabricRegistry.VARIANT_FLOOR_RENDERER, variant, floorRenderer)
+fun ChessVariant.registerFloorRenderer(floorRenderer: ChessFloorRenderer) =
+    module.register(FabricRegistry.VARIANT_FLOOR_RENDERER, this, floorRenderer)
 
-fun ChessModule.registerSimpleFloorRenderer(variant: ChessVariant, specialSquares: Collection<Pos>) =
-    registerFloorRenderer(variant, simpleFloorRenderer(specialSquares))
-
-fun ChessModule.completeFloorRenderers() =
-    get(FabricRegistry.VARIANT_FLOOR_RENDERER).completeWith { simpleFloorRenderer() }
+fun ChessVariant.registerSimpleFloorRenderer(specialSquares: Collection<Pos>) =
+    registerFloorRenderer(simpleFloorRenderer(specialSquares))
 
 abstract class FabricChessModule(name: String, namespace: String) : ChessModule(name, namespace) {
     companion object {
