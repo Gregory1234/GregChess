@@ -116,11 +116,18 @@ abstract class KeyRegisteredSerializer<K: Any, T : Any>(
     }
 }
 
-open class KeyRegisteredMapSerializer<K : Any, T : Any>(val base: KeyRegisteredSerializer<K, T>, name: String = base.name + "Map") : ClassMapSerializer<Map<K, T>, K, T>(name, base.keySerializer) {
+open class KeyRegisteredListSerializer<K : Any, T : Any>(val base: KeyRegisteredSerializer<K, T>, name: String = base.name + "List") : ClassMapSerializer<Collection<T>, K, T>(name, base.keySerializer) {
 
-    override fun Map<K, T>.asMap() = this
+    override fun Collection<T>.asMap(): Map<K, T> {
+        val ret = associateBy { with(base) { it.key } }
+        require(ret.size == size)
+        return ret
+    }
 
-    override fun fromMap(m: Map<K, T>) = m
+    override fun fromMap(m: Map<K, T>): Collection<T> {
+        require(m.all { with(base) { it.value.key == it.key } })
+        return m.values
+    }
 
     @Suppress("UNCHECKED_CAST")
     override fun K.valueSerializer(module: SerializersModule) = with(base) { serializer }
