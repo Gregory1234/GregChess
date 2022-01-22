@@ -20,9 +20,7 @@ object FabricRegistry {
     @JvmField
     val PIECE_ITEM = ConnectedBiRegistry<Piece, BlockItem>("piece_item", PieceRegistryView)
     @JvmField
-    val VARIANT_FLOOR_RENDERER = DefaultedConnectedRegistry(
-        "variant_floor_renderer", Registry.VARIANT
-    ) { simpleFloorRenderer() }
+    val FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
 }
 
 fun PieceType.registerPieceBlock(blocks: ByColor<PieceBlock>, itemSettings: FabricItemSettings) {
@@ -50,7 +48,7 @@ fun PieceType.registerTallPieceBlock(rarity: Rarity) =
     )
 
 fun ChessVariant.registerFloorRenderer(floorRenderer: ChessFloorRenderer) =
-    module.register(FabricRegistry.VARIANT_FLOOR_RENDERER, this, floorRenderer)
+    module.register(FabricRegistry.FLOOR_RENDERER, this, floorRenderer)
 
 fun ChessVariant.registerSimpleFloorRenderer(specialSquares: Collection<Pos>) =
     registerFloorRenderer(simpleFloorRenderer(specialSquares))
@@ -62,6 +60,7 @@ abstract class FabricChessModule(name: String, namespace: String) : ChessModule(
     }
 
     final override fun postLoad() {
+        this[FabricRegistry.FLOOR_RENDERER].completeWith { simpleFloorRenderer() }
     }
 
     final override fun finish() {

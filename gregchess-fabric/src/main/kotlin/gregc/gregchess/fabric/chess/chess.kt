@@ -35,6 +35,6 @@ fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFl
 }
 
 val ChessVariant.floorRenderer: ChessFloorRenderer
-    get() = FabricRegistry.VARIANT_FLOOR_RENDERER[this]
+    get() = FabricRegistry.FLOOR_RENDERER[this]
 
 val GameResults.text: Text get() = TranslatableText("end_reason.${endReason.module.namespace}.${endReason.name}", *args.toTypedArray())

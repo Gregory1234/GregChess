@@ -21,17 +21,11 @@ object BukkitRegistry {
     @JvmField
     val PROPERTY_TYPE = NameRegistry<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER = DefaultedConnectedRegistry<String, ComponentType<*>, SettingsParser<out Component>>(
-        "settings_parser", Registry.COMPONENT_TYPE
-    ) { type -> { type.key.cl.constructors.first { it.parameters.isEmpty() }.call() } }
+    val SETTINGS_PARSER = ConnectedRegistry<ComponentType<*>, SettingsParser<out Component>>("settings_parser", Registry.COMPONENT_TYPE)
     @JvmField
-    val VARIANT_LOCAL_MOVE_NAME_FORMATTER = DefaultedConnectedRegistry(
-        "variant_local_move_name_formatter", Registry.VARIANT
-    ) { defaultLocalMoveNameFormatter }
+    val LOCAL_MOVE_NAME_FORMATTER = ConnectedRegistry<ChessVariant, MoveNameFormatter>("local_move_name_formatter", Registry.VARIANT)
     @JvmField
-    val VARIANT_FLOOR_RENDERER = DefaultedConnectedRegistry(
-        "variant_floor_renderer", Registry.VARIANT
-    ) { simpleFloorRenderer() }
+    val FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
     @JvmField
     val QUICK_END_REASONS = ConnectedSetRegistry("quick_end_reasons", Registry.END_REASON)
     @JvmField
@@ -49,10 +43,10 @@ fun <T : Component> ComponentType<T>.registerConstSettings(settings: T) =
     apply { module.register(BukkitRegistry.SETTINGS_PARSER, this) { settings } }
 
 fun ChessVariant.registerLocalFormatter(formatter: MoveNameFormatter) =
-    module.register(BukkitRegistry.VARIANT_LOCAL_MOVE_NAME_FORMATTER, this, formatter)
+    module.register(BukkitRegistry.LOCAL_MOVE_NAME_FORMATTER, this, formatter)
 
 fun ChessVariant.registerFloorRenderer(floorRenderer: ChessFloorRenderer) =
-    module.register(BukkitRegistry.VARIANT_FLOOR_RENDERER, this, floorRenderer)
+    module.register(BukkitRegistry.FLOOR_RENDERER, this, floorRenderer)
 
 fun ChessVariant.registerSimpleFloorRenderer(specialSquares: Collection<Pos>) =
     registerFloorRenderer(simpleFloorRenderer(specialSquares))
@@ -90,6 +84,9 @@ abstract class BukkitChessModule(val plugin: Plugin) : ChessModule(plugin.name, 
 
     final override fun postLoad() {
         registerBukkitPlugin(plugin)
+        this[BukkitRegistry.SETTINGS_PARSER].completeWith { type -> { type.cl.constructors.first { it.parameters.isEmpty() }.call() } }
+        this[BukkitRegistry.LOCAL_MOVE_NAME_FORMATTER].completeWith { defaultLocalMoveNameFormatter }
+        this[BukkitRegistry.FLOOR_RENDERER].completeWith { simpleFloorRenderer() }
     }
 
     final override fun finish() {
