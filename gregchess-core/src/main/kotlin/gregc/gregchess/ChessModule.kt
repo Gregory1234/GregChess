@@ -15,8 +15,9 @@ import org.slf4j.LoggerFactory
 
 abstract class ChessModule(val name: String, val namespace: String) {
     val logger: Logger = LoggerFactory.getLogger(name)
-    var locked: Boolean = false
-        private set
+    private var lockedBefore = true
+    private var lockedAfter = false
+    val locked: Boolean get() = lockedBefore || lockedAfter
 
     operator fun <K, T, B : RegistryBlock<K, T>> get(t: Registry<K, T, B>): B = t[this]
 
@@ -30,11 +31,12 @@ abstract class ChessModule(val name: String, val namespace: String) {
     protected abstract fun validate()
     protected abstract fun finish()
     fun fullLoad() {
-        require(!locked) { "Module $this was already loaded!" }
+        require(lockedBefore && !lockedAfter) { "Module $this was already loaded!" }
+        lockedBefore = false
         load()
         postLoad()
         logger.info("Loaded chess module $this")
-        locked = true
+        lockedAfter = true
         validate()
         logger.info("Validated chess module $this")
         finish()
