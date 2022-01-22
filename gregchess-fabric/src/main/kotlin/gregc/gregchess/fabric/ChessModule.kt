@@ -60,6 +60,11 @@ fun ChessModule.completeFloorRenderers() =
     get(FabricRegistry.VARIANT_FLOOR_RENDERER).completeWith { simpleFloorRenderer() }
 
 abstract class FabricChessModule(name: String, namespace: String) : ChessModule(name, namespace) {
+    companion object {
+        internal val modules = mutableSetOf<ChessModule>()
+        operator fun get(namespace: String) = modules.first { it.namespace == namespace }
+    }
+
     final override fun postLoad() {
     }
 

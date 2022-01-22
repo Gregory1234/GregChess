@@ -14,11 +14,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 abstract class ChessModule(val name: String, val namespace: String) {
-    companion object {
-        val modules = mutableSetOf<ChessModule>()
-        operator fun get(namespace: String) = modules.first { it.namespace == namespace }
-    }
-
     val logger: Logger = LoggerFactory.getLogger(name)
     var locked: Boolean = false
         private set

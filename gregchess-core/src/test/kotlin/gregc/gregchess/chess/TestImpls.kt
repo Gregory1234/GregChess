@@ -82,7 +82,6 @@ object GregChess : ChessModule("GregChess", "gregchess") {
     }
 
     override fun finish() {
-        modules += this
     }
 
     override fun validate() {

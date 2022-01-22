@@ -83,6 +83,11 @@ interface BukkitRegistering : Registering {
 }
 
 abstract class BukkitChessModule(val plugin: Plugin) : ChessModule(plugin.name, plugin.name.lowercase()) {
+    companion object {
+        internal val modules = mutableSetOf<ChessModule>()
+        operator fun get(namespace: String) = modules.first { it.namespace == namespace }
+    }
+
     final override fun postLoad() {
         registerBukkitPlugin(plugin)
     }

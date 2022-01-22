@@ -16,7 +16,7 @@ import gregc.gregchess.rangeTo
 import gregc.gregchess.registry.AutoRegister
 import kotlin.time.Duration
 
-object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
+internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
 
     private val clockSettings: Map<String, ChessClock>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {

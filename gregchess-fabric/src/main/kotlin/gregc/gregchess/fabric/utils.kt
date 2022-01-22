@@ -3,8 +3,10 @@ package gregc.gregchess.fabric
 import gregc.gregchess.chess.ChessEnvironment
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import gregc.gregchess.registry.RegistryKey
+import gregc.gregchess.registry.StringKeySerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.IntArraySerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -73,13 +75,19 @@ internal fun defaultModule(server: MinecraftServer): SerializersModule = Seriali
     contextual(UUID::class, UUIDAsIntArraySerializer)
     contextual(BlockPos::class, BlockPosAsLongSerializer)
     contextual(ChessEnvironment::class, FabricChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
+    contextual(RegistryKey::class) { ser ->
+        when(ser) {
+            listOf(String.serializer()) -> StringKeySerializer(FabricChessModule.modules)
+            else -> throw UnsupportedOperationException()
+        }
+    }
 }
 
 fun String.toKey(): RegistryKey<String> {
     val sections = split(":")
     return when (sections.size) {
         1 -> RegistryKey(GregChess, this)
-        2 -> RegistryKey(sections[0], sections[1])
+        2 -> RegistryKey(FabricChessModule[sections[0]], sections[1])
         else -> throw IllegalArgumentException("Bad registry key: $this")
     }
 }
