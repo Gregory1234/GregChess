@@ -2,8 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.player.ChessPlayer
-import gregc.gregchess.chess.player.ChessSide
+import gregc.gregchess.chess.player.*
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.clearMocks
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,7 +19,10 @@ fun testSettings(
     return GameSettings(name, variant, components)
 }
 
+val TEST_PLAYER = ChessPlayerType(TestPlayer::class)
+
 class TestPlayer(override val name: String) : ChessPlayer {
+    override val type get() = TEST_PLAYER
     override fun initSide(color: Color, game: ChessGame): TestChessSide = TestChessSide(this, color, game)
 }
 
@@ -65,7 +67,7 @@ fun setupRegistry() = with(GregChess) {
             TEST_END_REASON.register(this, "test")
             TestVariant.register(this, "test")
             TEST_COMPONENT.register(this, "test")
-            registerPlayerClass<TestPlayer>("test")
+            TEST_PLAYER.register(this, "test")
         }))
     }
 }

@@ -7,6 +7,7 @@ import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.RegistryBlock
@@ -68,8 +69,8 @@ fun <T : MoveTrait> MoveTraitType<T>.register(module: ChessModule, id: String) =
 fun <T : Component> ComponentType<T>.register(module: ChessModule, id: String) =
     module.register(Registry.COMPONENT_TYPE, id, this)
 
-inline fun <reified T : ChessPlayer> ChessModule.registerPlayerClass(id: String) =
-    register(Registry.PLAYER_CLASS, id, T::class)
+fun <T : ChessPlayer> ChessPlayerType<T>.register(module: ChessModule, id: String) =
+    module.register(Registry.PLAYER_TYPE, id, this)
 
 inline fun <reified T : PlacedPiece> ChessModule.registerPlacedPieceClass(id: String) =
     register(Registry.PLACED_PIECE_CLASS, id, T::class)

@@ -5,8 +5,7 @@ import gregc.gregchess.bukkit.chess.Arena
 import gregc.gregchess.bukkit.chess.SettingsManager
 import gregc.gregchess.bukkit.chess.component.BukkitComponentType
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
-import gregc.gregchess.bukkit.chess.player.BukkitPlayer
-import gregc.gregchess.bukkit.chess.player.Stockfish
+import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
@@ -65,20 +64,15 @@ internal object GregChessBukkit : ChessExtension {
         }
     }
 
-    private fun registerPlayerTypes() = with(GregChess) {
-        registerPlayerClass<BukkitPlayer>("bukkit")
-        registerPlayerClass<Stockfish>("stockfish")
-    }
-
     override fun load(): Unit = with(GregChess) {
         AutoRegister(this, AutoRegister.bukkitTypes).apply {
             registerAll<Arena>()
             registerAll<BukkitComponentType>()
+            registerAll<BukkitPlayerType>()
         }
         hookComponents()
         registerSettings()
         KingOfTheHill.registerSimpleFloorRenderer((Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
-        registerPlayerTypes()
         registerBukkitPlugin(GregChessPlugin.plugin)
     }
 }

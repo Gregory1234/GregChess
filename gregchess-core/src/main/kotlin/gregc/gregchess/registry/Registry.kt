@@ -8,7 +8,7 @@ import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPiece
-import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlin.reflect.KClass
 
@@ -73,7 +73,7 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
         @JvmField
         val MOVE_TRAIT_TYPE = NameRegistry<MoveTraitType<*>>("move_trait_type")
         @JvmField
-        val PLAYER_CLASS = NameRegistry<KClass<out ChessPlayer>>("player_type")
+        val PLAYER_TYPE = NameRegistry<ChessPlayerType<*>>("player_type")
         @JvmField
         val PLACED_PIECE_CLASS = NameRegistry<KClass<out PlacedPiece>>("placed_piece")
     }

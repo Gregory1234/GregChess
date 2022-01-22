@@ -24,6 +24,8 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
         val engineName get() = config.getPathString("Chess.Stockfish.Name")
     }
 
+    override val type get() = BukkitPlayerType.STOCKFISH
+
     @Transient
     private val process: Process = ProcessBuilder(Config.stockfishCommand).start()
 

@@ -7,6 +7,7 @@ import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariants
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObject
@@ -25,7 +26,8 @@ class AutoRegister(private val module: ChessModule, private val types: Collectio
     companion object {
         val basicTypes = listOf(
             PieceType.AUTO_REGISTER, EndReason.AUTO_REGISTER, ChessFlag.AUTO_REGISTER, ComponentType.AUTO_REGISTER,
-            MoveNameTokenType.AUTO_REGISTER, ChessVariants.AUTO_REGISTER, MoveTraitType.AUTO_REGISTER
+            MoveNameTokenType.AUTO_REGISTER, ChessVariants.AUTO_REGISTER, MoveTraitType.AUTO_REGISTER,
+            ChessPlayerType.AUTO_REGISTER
         )
     }
 

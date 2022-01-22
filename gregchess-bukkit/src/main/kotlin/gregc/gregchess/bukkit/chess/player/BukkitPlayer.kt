@@ -14,6 +14,8 @@ import java.util.*
 class BukkitPlayer(val uuid: @Contextual UUID) : ChessPlayer {
     override fun initSide(color: Color, game: ChessGame): BukkitChessSide = BukkitChessSide(this, color, game)
 
+    override val type get() = BukkitPlayerType.BUKKIT
+
     override val name: String get() = bukkitOffline.name!!
 
     val bukkit: Player? get() = Bukkit.getPlayer(uuid)

@@ -13,6 +13,8 @@ import java.util.*
 class FabricPlayer(val uuid: @Contextual UUID, private var _name: String) : ChessPlayer {
     override fun initSide(color: Color, game: ChessGame): FabricChessSide = FabricChessSide(this, color, game)
 
+    override val type get() = FabricPlayerType.FABRIC
+
     override val name: String get() = _name
 
     fun getServerPlayer(server: MinecraftServer?) : ServerPlayerEntity? = server?.playerManager?.getPlayer(uuid)
