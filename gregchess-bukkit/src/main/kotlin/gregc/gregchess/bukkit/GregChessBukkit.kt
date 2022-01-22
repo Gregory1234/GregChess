@@ -1,8 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.chess.Arena
-import gregc.gregchess.bukkit.chess.SettingsManager
+import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.BukkitComponentType
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
@@ -67,6 +66,7 @@ internal object GregChessBukkit : ChessExtension {
     override fun load(): Unit = with(GregChess) {
         AutoRegister(this, AutoRegister.bukkitTypes).apply {
             registerAll<Arena>()
+            registerAll<ChessGameManager>()
             registerAll<BukkitComponentType>()
             registerAll<BukkitPlayerType>()
         }

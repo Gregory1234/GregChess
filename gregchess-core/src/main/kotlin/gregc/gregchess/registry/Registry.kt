@@ -172,7 +172,7 @@ class DefaultedConnectedRegistry<O, K, T>(name: String, val base: FiniteBiRegist
     private val blocks = mutableMapOf<ChessModule, Block>()
 
     inner class Block internal constructor(module: ChessModule) : RegistryBlock<K, T>(module) {
-        private val members = mutableMapOf<K, T>().withDefault { default(RegistryKey(module, it)) }
+        private val members = mutableMapOf<K, T>()
 
         override val keys: Set<K> = members.keys
         override val values: Collection<T> = members.values
@@ -184,10 +184,9 @@ class DefaultedConnectedRegistry<O, K, T>(name: String, val base: FiniteBiRegist
             members[key] = value
         }
 
-        override fun validate() = requireValid(this@DefaultedConnectedRegistry, base.valuesOf(module).all { it in members }) { "Registry incomplete" }
+        override fun validate() {}
 
-        override fun getValueOrNull(key: K): T? = members[key]
-
+        override fun getValueOrNull(key: K): T? = members[key] ?: if (key in base.valuesOf(module)) default(RegistryKey(module, key)) else null
     }
 
     override fun get(module: ChessModule): Block = blocks.getOrPut(module) { Block(module) }
