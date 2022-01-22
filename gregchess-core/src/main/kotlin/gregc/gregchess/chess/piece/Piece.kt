@@ -3,8 +3,10 @@ package gregc.gregchess.chess.piece
 import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.register
 import gregc.gregchess.registry.*
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
+import kotlin.reflect.KClass
 
 object PieceRegistryView : FiniteBiRegistryView<String, Piece> {
 
@@ -52,8 +54,30 @@ fun PieceType.of(color: Color) = Piece(this, color)
 fun white(type: PieceType) = type.of(Color.WHITE)
 fun black(type: PieceType) = type.of(Color.BLACK)
 
+@Serializable(with = PlacedPieceType.Serializer::class)
+class PlacedPieceType<T : PlacedPiece>(val cl: KClass<T>) : NameRegistered {
+    object Serializer : NameRegisteredSerializer<PlacedPieceType<*>>("PlacedPieceType", Registry.PLACED_PIECE_TYPE)
+
+    override val key get() = Registry.PLACED_PIECE_TYPE[this]
+
+    override fun toString(): String = Registry.PLACED_PIECE_TYPE.simpleElementToString(this)
+
+    @RegisterAll(PlacedPieceType::class)
+    companion object {
+        internal val AUTO_REGISTER = AutoRegisterType(PlacedPieceType::class) { m, n, _ -> register(m, n) }
+
+        @JvmField
+        val BOARD = PlacedPieceType(BoardPiece::class)
+        @JvmField
+        val CAPTURED = PlacedPieceType(CapturedPiece::class)
+
+        fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<PlacedPieceType<*>>()
+    }
+}
+
 @Serializable(with = PlacedPieceSerializer::class)
 interface PlacedPiece {
+    val placedPieceType: PlacedPieceType<*>
     val piece: Piece
     val color: Color get() = piece.color
     val type: PieceType get() = piece.type
@@ -82,10 +106,17 @@ fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?
     board.callPieceEvent(PieceEvent.Moved(realMoves.toMap()))
 }
 
-object PlacedPieceSerializer : ClassRegisteredSerializer<PlacedPiece>("PlacedPiece", Registry.PLACED_PIECE_CLASS)
+object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, PlacedPiece>("PlacedPiece", PlacedPieceType.Serializer) {
+    @OptIn(InternalSerializationApi::class)
+    @Suppress("UNCHECKED_CAST")
+    override val PlacedPieceType<*>.serializer: KSerializer<PlacedPiece> get() = cl.serializer() as KSerializer<PlacedPiece>
+    override val PlacedPiece.key: PlacedPieceType<*> get() = placedPieceType
+}
 
 @Serializable
 data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : PlacedPiece {
+    override val placedPieceType get() = PlacedPieceType.CAPTURED
+
     override fun checkExists(board: Chessboard) {
         if (board.capturedPieces.none { it == this })
             throw PieceDoesNotExistException(this)
@@ -105,6 +136,7 @@ data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : Pla
 
 @Serializable
 data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boolean) : PlacedPiece {
+    override val placedPieceType get() = PlacedPieceType.BOARD
 
     override fun checkExists(board: Chessboard) {
         if (board[pos] != this)

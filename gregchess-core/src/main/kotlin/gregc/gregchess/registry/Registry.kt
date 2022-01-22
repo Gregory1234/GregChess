@@ -7,10 +7,9 @@ import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.piece.PlacedPiece
+import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariant
-import kotlin.reflect.KClass
 
 private class RegistryValidationException(
     val module: ChessModule, val type: Registry<*, *, *>, val text: String
@@ -75,7 +74,7 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
         @JvmField
         val PLAYER_TYPE = NameRegistry<ChessPlayerType<*>>("player_type")
         @JvmField
-        val PLACED_PIECE_CLASS = NameRegistry<KClass<out PlacedPiece>>("placed_piece")
+        val PLACED_PIECE_TYPE = NameRegistry<PlacedPieceType<*>>("placed_piece_type")
     }
 }
 

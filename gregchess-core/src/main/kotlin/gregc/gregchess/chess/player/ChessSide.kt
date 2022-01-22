@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 
 @Serializable(with = ChessPlayerType.Serializer::class)
 class ChessPlayerType<T : ChessPlayer>(val cl: KClass<T>) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("MoveTraitType", Registry.PLAYER_TYPE)
+    object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", Registry.PLAYER_TYPE)
 
     override val key get() = Registry.PLAYER_TYPE[this]
 

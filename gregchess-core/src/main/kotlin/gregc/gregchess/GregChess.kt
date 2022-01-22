@@ -5,15 +5,11 @@ import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.MoveNameTokenType
 import gregc.gregchess.chess.move.MoveTraitType
-import gregc.gregchess.chess.piece.*
+import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.variant.ChessVariants
 
 object GregChess : ChessModule("GregChess", "gregchess") {
-
-    private fun registerPlacedPieceClasses() {
-        registerPlacedPieceClass<BoardPiece>("board")
-        registerPlacedPieceClass<CapturedPiece>("captured")
-    }
 
     override fun load() {
         PieceType.registerCore(this)
@@ -23,6 +19,6 @@ object GregChess : ChessModule("GregChess", "gregchess") {
         ComponentType.registerCore(this)
         ChessVariants.registerCore(this)
         MoveTraitType.registerCore(this)
-        registerPlacedPieceClasses()
+        PlacedPieceType.registerCore(this)
     }
 }
