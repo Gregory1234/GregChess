@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.GregChess
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
@@ -40,7 +39,7 @@ object GregChessPlugin : Listener {
 
         override fun onDisable() = GregChessPlugin.onDisable()
 
-        override fun onInitialize() = GregChess.fullLoad(listOf(GregChessBukkit))
+        override fun onInitialize() = GregChess.fullLoad()
     }
 
     val coroutineScope = BukkitScope(plugin, BukkitContext.SYNC) + CoroutineExceptionHandler { _, e ->

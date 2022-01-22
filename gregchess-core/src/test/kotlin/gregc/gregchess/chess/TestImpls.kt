@@ -1,9 +1,15 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.move.MoveNameTokenType
+import gregc.gregchess.chess.move.MoveTraitType
+import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.player.*
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.chess.variant.ChessVariants
+import gregc.gregchess.registry.*
 import io.mockk.clearMocks
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
@@ -19,21 +25,17 @@ fun testSettings(
     return GameSettings(name, variant, components)
 }
 
-val TEST_PLAYER = ChessPlayerType(TestPlayer::class)
-
 class TestPlayer(override val name: String) : ChessPlayer {
-    override val type get() = TEST_PLAYER
+    override val type get() = GregChess.TEST_PLAYER
     override fun initSide(color: Color, game: ChessGame): TestChessSide = TestChessSide(this, color, game)
 }
 
 class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSide<TestPlayer>(player, color, game)
 
-val TEST_COMPONENT = ComponentType(TestComponent::class)
-
 @Serializable
 object TestComponent : Component {
 
-    override val type = TEST_COMPONENT
+    override val type = GregChess.TEST_COMPONENT
 
     override fun init(game: ChessGame) {}
 
@@ -42,9 +44,6 @@ object TestComponent : Component {
 }
 
 object TestVariant : ChessVariant()
-
-@JvmField
-val TEST_END_REASON = DetEndReason(EndReason.Type.EMERGENCY)
 
 object TestChessEnvironment : ChessEnvironment {
     override val pgnSite: String get() = "GregChess test"
@@ -61,13 +60,51 @@ inline fun <T> measureTime(block: () -> T): T {
     return ret
 }
 
-fun setupRegistry() = with(GregChess) {
-    if (!locked) {
-        fullLoad(listOf(ChessExtension {
-            TEST_END_REASON.register(this, "test")
-            TestVariant.register(this, "test")
-            TEST_COMPONENT.register(this, "test")
-            TEST_PLAYER.register(this, "test")
-        }))
+object GregChess : ChessModule("GregChess", "gregchess") {
+
+    @JvmField
+    @Register("test")
+    val TEST_END_REASON = DetEndReason(EndReason.Type.EMERGENCY)
+
+    @JvmField
+    @Register("test")
+    val TEST_COMPONENT = ComponentType(TestComponent::class)
+
+    @JvmField
+    @Register("test")
+    val TEST_VARIANT = TestVariant
+
+    @JvmField
+    @Register("test")
+    val TEST_PLAYER = ChessPlayerType(TestPlayer::class)
+
+    override fun postLoad() {
+    }
+
+    override fun finish() {
+        modules += this
+    }
+
+    override fun validate() {
+        Registry.REGISTRIES.forEach { it[this].validate() }
+    }
+
+    override fun load() {
+        PieceType.registerCore(this)
+        EndReason.registerCore(this)
+        MoveNameTokenType.registerCore(this)
+        ChessFlag.registerCore(this)
+        ComponentType.registerCore(this)
+        ChessVariants.registerCore(this)
+        MoveTraitType.registerCore(this)
+        PlacedPieceType.registerCore(this)
+
+        AutoRegister(this, AutoRegister.basicTypes).registerAll<GregChess>()
+    }
+}
+
+fun setupRegistry() {
+    if (!GregChess.locked) {
+        GregChess.fullLoad()
     }
 }

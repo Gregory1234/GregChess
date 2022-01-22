@@ -149,7 +149,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             block.updateFloor()
         }
         chessboardStart = null
-        currentGame?.stop(drawBy(GregChessFabric.CHESSBOARD_BROKEN))
+        currentGame?.stop(drawBy(GregChess.CHESSBOARD_BROKEN))
         currentGame = null
     }
 
@@ -364,7 +364,7 @@ class ChessControllerGuiDescription(
             context.run { world, pos ->
                 val entity = world.getBlockEntity(pos)
                 if (entity is ChessControllerBlockEntity && entity.chessboardStart != null) {
-                    entity.currentGame?.stop(drawBy(GregChessFabric.ABORTED))
+                    entity.currentGame?.stop(drawBy(GregChess.ABORTED))
                 }
             }
         }

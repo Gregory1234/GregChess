@@ -5,7 +5,6 @@ import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.GameSettings
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.Registry
-import gregc.gregchess.registry.toKey
 import org.bukkit.Material
 import org.bukkit.entity.Player
 

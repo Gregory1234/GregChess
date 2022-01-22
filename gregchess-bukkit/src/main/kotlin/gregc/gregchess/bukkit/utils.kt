@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.chess.ChessEnvironment
+import gregc.gregchess.registry.RegistryKey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -37,4 +38,13 @@ internal object UUIDAsStringSerializer : KSerializer<UUID> {
 internal fun defaultModule() = SerializersModule {
     contextual(UUID::class, UUIDAsStringSerializer)
     contextual(ChessEnvironment::class, BukkitChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
+}
+
+fun String.toKey(): RegistryKey<String> {
+    val sections = split(":")
+    return when (sections.size) {
+        1 -> RegistryKey(GregChess, this)
+        2 -> RegistryKey(sections[0], sections[1])
+        else -> throw IllegalArgumentException("Bad registry key: $this")
+    }
 }

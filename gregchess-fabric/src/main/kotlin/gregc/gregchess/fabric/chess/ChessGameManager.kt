@@ -1,10 +1,10 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.GregChess
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.chess.component.*
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator

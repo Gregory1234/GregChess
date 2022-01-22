@@ -6,7 +6,6 @@ import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.registry.FiniteRegistryView
-import gregc.gregchess.registry.toKey
 import org.bukkit.entity.Player
 
 internal fun playerArgument(name: String): PlayerArgument = PlayerArgument(name, PLAYER_NOT_FOUND)

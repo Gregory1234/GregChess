@@ -58,3 +58,16 @@ fun ChessModule.registerSimpleFloorRenderer(variant: ChessVariant, specialSquare
 
 fun ChessModule.completeFloorRenderers() =
     get(FabricRegistry.VARIANT_FLOOR_RENDERER).completeWith { simpleFloorRenderer() }
+
+abstract class FabricChessModule(name: String, namespace: String) : ChessModule(name, namespace) {
+    final override fun postLoad() {
+    }
+
+    final override fun finish() {
+        modules += this
+    }
+
+    final override fun validate() {
+        Registry.REGISTRIES.forEach { it[this].validate() }
+    }
+}

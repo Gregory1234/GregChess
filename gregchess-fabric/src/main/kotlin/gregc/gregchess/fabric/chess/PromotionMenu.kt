@@ -2,9 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.piece.PieceRegistryView
-import gregc.gregchess.fabric.GregChessMod
-import gregc.gregchess.fabric.ident
-import gregc.gregchess.registry.toKey
+import gregc.gregchess.fabric.*
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.client.CottonInventoryScreen
 import io.github.cottonmc.cotton.gui.networking.NetworkSide

@@ -13,10 +13,6 @@ import gregc.gregchess.registry.RegistryBlock
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-fun interface ChessExtension {
-    fun load()
-}
-
 abstract class ChessModule(val name: String, val namespace: String) {
     companion object {
         val modules = mutableSetOf<ChessModule>()
@@ -35,16 +31,18 @@ abstract class ChessModule(val name: String, val namespace: String) {
     }
 
     protected abstract fun load()
-    fun fullLoad(extensions: Collection<ChessExtension> = emptyList()) {
+    protected abstract fun postLoad()
+    protected abstract fun validate()
+    protected abstract fun finish()
+    fun fullLoad() {
         require(!locked) { "Module $this was already loaded!" }
         load()
+        postLoad()
         logger.info("Loaded chess module $this")
-        extensions.forEach { it.load() }
-        logger.info("Loaded ${extensions.size} extensions to $this")
         locked = true
-        Registry.REGISTRIES.forEach { it[this].validate() }
+        validate()
         logger.info("Validated chess module $this")
-        modules += this
+        finish()
     }
 
     final override fun toString() = "$namespace@${hashCode().toString(16)}"

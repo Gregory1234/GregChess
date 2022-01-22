@@ -1,20 +1,22 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.BukkitComponentType
 import gregc.gregchess.bukkit.chess.component.BukkitRenderer
 import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
 import gregc.gregchess.bukkitutils.toDuration
-import gregc.gregchess.chess.FEN
-import gregc.gregchess.chess.Pos
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.variant.KingOfTheHill
-import gregc.gregchess.chess.variant.ThreeChecks
+import gregc.gregchess.chess.move.MoveNameTokenType
+import gregc.gregchess.chess.move.MoveTraitType
+import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.piece.PlacedPieceType
+import gregc.gregchess.chess.variant.*
+import gregc.gregchess.rangeTo
 import gregc.gregchess.registry.AutoRegister
 import kotlin.time.Duration
 
-internal object GregChessBukkit : ChessExtension {
+object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
 
     private val clockSettings: Map<String, ChessClock>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
@@ -25,7 +27,7 @@ internal object GregChessBukkit : ChessExtension {
             ChessClock(TimeControl(t, initial, increment))
         }
 
-    private fun registerSettings() = with(GregChess) {
+    private fun registerSettings() {
         ComponentType.CHESSBOARD.registerSettings {
             val simpleCastling = section.getBoolean("SimpleCastling", false)
             when(val name = section.getString("Board")) {
@@ -63,7 +65,15 @@ internal object GregChessBukkit : ChessExtension {
         }
     }
 
-    override fun load(): Unit = with(GregChess) {
+    override fun load() {
+        PieceType.registerCore(this)
+        EndReason.registerCore(this)
+        MoveNameTokenType.registerCore(this)
+        ChessFlag.registerCore(this)
+        ComponentType.registerCore(this)
+        ChessVariants.registerCore(this)
+        MoveTraitType.registerCore(this)
+        PlacedPieceType.registerCore(this)
         AutoRegister(this, AutoRegister.bukkitTypes).apply {
             registerAll<Arena>()
             registerAll<ChessGameManager>()
@@ -73,6 +83,5 @@ internal object GregChessBukkit : ChessExtension {
         hookComponents()
         registerSettings()
         KingOfTheHill.registerSimpleFloorRenderer((Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
-        registerBukkitPlugin(GregChessPlugin.plugin)
     }
 }

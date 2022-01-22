@@ -62,6 +62,8 @@ fun <T : Component> ComponentType<T>.registerHooked() =
 
 fun <T : GameScore> EndReason<T>.registerQuick() = apply { module[BukkitRegistry.QUICK_END_REASONS].add(this) }
 
+fun ChessModule.registerBukkitPlugin(plugin: Plugin) = get(BukkitRegistry.BUKKIT_PLUGIN).set(plugin)
+
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e -> register(m, n); if ("quick" in e) registerQuick() }
 
 internal val EndReason.Companion.BUKKIT_AUTO_REGISTER get() = BUKKIT_END_REASON_AUTO_REGISTER
@@ -70,8 +72,6 @@ private val BUKKIT_AUTO_REGISTER_TYPES = listOf(EndReason.BUKKIT_AUTO_REGISTER, 
 
 val AutoRegister.Companion.bukkitTypes get() = BUKKIT_AUTO_REGISTER_TYPES
 
-fun ChessModule.registerBukkitPlugin(plugin: Plugin) = get(BukkitRegistry.BUKKIT_PLUGIN).set(plugin)
-
 interface BukkitChessPlugin {
     fun onInitialize()
 }
@@ -79,5 +79,19 @@ interface BukkitChessPlugin {
 interface BukkitRegistering : Registering {
     override fun registerAll(module: ChessModule) {
         AutoRegister(module, AutoRegister.bukkitTypes).registerAll(this::class)
+    }
+}
+
+abstract class BukkitChessModule(val plugin: Plugin) : ChessModule(plugin.name, plugin.name.lowercase()) {
+    final override fun postLoad() {
+        registerBukkitPlugin(plugin)
+    }
+
+    final override fun finish() {
+        modules += this
+    }
+
+    final override fun validate() {
+        Registry.REGISTRIES.forEach { it[this].validate() }
     }
 }
