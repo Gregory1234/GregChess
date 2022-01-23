@@ -25,7 +25,7 @@ dependencies {
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertKVersion")
     val mockkVersion: String by project
     testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxSerializationVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesVersion")
 }
 
 tasks {
