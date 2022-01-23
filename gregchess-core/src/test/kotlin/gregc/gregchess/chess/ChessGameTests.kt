@@ -158,6 +158,18 @@ class ChessGameTests {
         }
 
         @Test
+        fun `should stop and clear components`() {
+            val g = mkGame(testSettings("spy", extra = listOf(spyk(TestComponent)))).start()
+            val c = g.getComponent<TestComponent>()!!
+            clearRecords(c)
+            g.stop(results)
+            verifySequence {
+                c.handleEvent(GameBaseEvent.STOP)
+                c.handleEvent(GameBaseEvent.CLEAR)
+            }
+        }
+
+        @Test
         fun `should preserve results`() {
             val game = mkGame(normalSettings).start()
 

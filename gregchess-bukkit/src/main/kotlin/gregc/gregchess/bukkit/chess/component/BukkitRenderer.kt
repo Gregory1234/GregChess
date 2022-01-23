@@ -138,12 +138,20 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun onStart(e: GameBaseEvent) {
+    fun onBaseEvent(e: GameBaseEvent) {
         if (e == GameBaseEvent.RUNNING || e == GameBaseEvent.SYNC) {
             game.board.capturedPieces.forEach {
                 addCapturedPiece(it)
             }
             redrawFloor()
+        }
+        else if (e == GameBaseEvent.CLEAR || e == GameBaseEvent.PANIC) {
+            game.board.pieces.forEach {
+                it.clearRender()
+            }
+            capturedPieces.keys.forEach {
+                clearPiece(it.loc)
+            }
         }
     }
 
@@ -151,18 +159,6 @@ data class BukkitRenderer(
     fun onTurnStart(e: TurnEvent) {
         if (e == TurnEvent.START || e == TurnEvent.UNDO) {
             redrawFloor()
-        }
-    }
-
-    @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC) {
-            game.board.pieces.forEach {
-                it.clearRender()
-            }
-            capturedPieces.keys.forEach {
-                clearPiece(it.loc)
-            }
         }
     }
 

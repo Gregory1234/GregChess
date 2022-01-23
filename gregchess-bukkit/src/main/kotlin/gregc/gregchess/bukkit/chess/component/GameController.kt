@@ -3,7 +3,6 @@ package gregc.gregchess.bukkit.chess.component
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.*
-import gregc.gregchess.bukkitutils.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.Move
@@ -15,10 +14,6 @@ import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
-
-enum class GameStopStageEvent : ChessEvent {
-    STOP, CLEAR, VERY_END, PANIC
-}
 
 enum class PlayerDirection {
     JOIN, LEAVE
@@ -64,7 +59,6 @@ class GameController : Component {
     @OptIn(ExperimentalTime::class)
     private fun onStop() {
         val results = game.results!!
-        game.callEvent(GameStopStageEvent.STOP)
         with(game.board) {
             if (lastPrintedMove != lastMove) {
                 val wLast: Move?
@@ -101,18 +95,10 @@ class GameController : Component {
                 player.currentGame = null
             }
         }
-        if (results.endReason.quick) {
-            game.callEvent(GameStopStageEvent.CLEAR)
-            game.callEvent(GameStopStageEvent.VERY_END)
-            return
-        }
-        game.coroutineScope.launch {
-            delay((if (quick.white && quick.black) 0 else 3).seconds)
-            delay(1.ticks)
-            game.callEvent(GameStopStageEvent.CLEAR)
-            delay(1.ticks)
-            game.callEvent(GameStopStageEvent.VERY_END)
-        }
+        if (!results.endReason.quick)
+            game.coroutineScope.launch {
+                delay((if (quick.white && quick.black) 0 else 3).seconds)
+            }
     }
 
     private fun onPanic() {
@@ -124,7 +110,6 @@ class GameController : Component {
             player.games -= game
             player.currentGame = null
         }
-        game.callEvent(GameStopStageEvent.PANIC)
     }
 
     @ChessEventHandler

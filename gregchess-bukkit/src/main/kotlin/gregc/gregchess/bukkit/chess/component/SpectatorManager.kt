@@ -41,9 +41,9 @@ class SpectatorManager : Component {
     }
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.STOP) stop()
-        else if (e == GameStopStageEvent.CLEAR) clear()
+    fun onStop(e: GameBaseEvent) {
+        if (e == GameBaseEvent.STOP) stop()
+        else if (e == GameBaseEvent.CLEAR) clear()
     }
 
     private fun stop() {

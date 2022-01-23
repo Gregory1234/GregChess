@@ -22,15 +22,11 @@ class BukkitEventRelay : Component {
     }
 
     @ChessEventHandler
-    fun onStart(e: GameBaseEvent) {
+    fun onBaseEvent(e: GameBaseEvent) {
         if (e == GameBaseEvent.RUNNING || e == GameBaseEvent.SYNC)
             Bukkit.getPluginManager().callEvent(GameStartEvent(game))
-    }
-
-    @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.VERY_END || e == GameStopStageEvent.PANIC)
-            Bukkit.getPluginManager().callEvent(GameEndEvent(game, e == GameStopStageEvent.VERY_END))
+        if (e == GameBaseEvent.CLEAR || e == GameBaseEvent.PANIC)
+            Bukkit.getPluginManager().callEvent(GameEndEvent(game, e != GameBaseEvent.PANIC))
     }
 
     @ChessEventHandler

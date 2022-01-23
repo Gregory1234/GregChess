@@ -96,9 +96,9 @@ class SimpleArena internal constructor(
     private val spawnLocation: Location get() = spawn.toLocation(world)
 
     @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.VERY_END || e == GameStopStageEvent.PANIC) game = null
-        if (e == GameStopStageEvent.PANIC)
+    fun onBaseEvent(e: GameBaseEvent) {
+        if (e == GameBaseEvent.CLEAR || e == GameBaseEvent.PANIC) game = null
+        if (e == GameBaseEvent.PANIC)
             for (p in game?.sides?.toList().orEmpty())
                 if (p is BukkitChessSide)
                     p.bukkit?.leave()

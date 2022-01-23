@@ -80,16 +80,10 @@ class ScoreboardManager : Component {
     }
 
     @ChessEventHandler
-    fun onStart(e: GameBaseEvent) {
+    fun onBaseEvent(e: GameBaseEvent) {
         if (e == GameBaseEvent.START || e == GameBaseEvent.SYNC) start()
-    }
-
-    @ChessEventHandler
-    fun onStop(e: GameStopStageEvent) {
-        if (e == GameStopStageEvent.STOP)
-            update()
-        if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC)
-            stop()
+        else if (e == GameBaseEvent.STOP) update()
+        else if (e == GameBaseEvent.CLEAR || e == GameBaseEvent.PANIC) stop()
     }
 
     @ChessEventHandler
