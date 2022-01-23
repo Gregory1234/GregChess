@@ -243,6 +243,7 @@ class ChessGame private constructor(
     fun start() = apply {
         requireState(State.INITIAL)
         callEvent(GameBaseEvent.START)
+        sides.forEach(ChessSide<*>::init)
         state = State.RUNNING
         startTime = LocalDateTime.now()
         callEvent(GameBaseEvent.RUNNING)

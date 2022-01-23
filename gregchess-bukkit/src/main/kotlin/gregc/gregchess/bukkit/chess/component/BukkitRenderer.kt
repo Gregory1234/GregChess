@@ -138,8 +138,8 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) {
-        if (e == GameStartStageEvent.BEGIN) {
+    fun onStart(e: GameBaseEvent) {
+        if (e == GameBaseEvent.RUNNING || e == GameBaseEvent.SYNC) {
             game.board.capturedPieces.forEach {
                 addCapturedPiece(it)
             }

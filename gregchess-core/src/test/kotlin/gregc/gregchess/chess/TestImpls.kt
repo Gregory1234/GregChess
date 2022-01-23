@@ -11,6 +11,7 @@ import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.chess.variant.ChessVariants
 import gregc.gregchess.registry.*
 import io.mockk.clearMocks
+import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
 
@@ -27,10 +28,16 @@ fun testSettings(
 
 class TestPlayer(override val name: String) : ChessPlayer {
     override val type get() = GregChess.TEST_PLAYER
-    override fun initSide(color: Color, game: ChessGame): TestChessSide = TestChessSide(this, color, game)
+    override fun initSide(color: Color, game: ChessGame): TestChessSide = spyk(TestChessSide(this, color, game))
 }
 
-class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSide<TestPlayer>(player, color, game)
+class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSide<TestPlayer>(player, color, game) {
+    override fun init() {}
+
+    override fun startTurn() {}
+
+    override fun stop() {}
+}
 
 @Serializable
 object TestComponent : Component {

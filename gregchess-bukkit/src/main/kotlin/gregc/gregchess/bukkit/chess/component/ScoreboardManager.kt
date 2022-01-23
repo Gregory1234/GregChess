@@ -80,9 +80,8 @@ class ScoreboardManager : Component {
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) {
-        if (e == GameStartStageEvent.INIT) init()
-        else if (e == GameStartStageEvent.START) start()
+    fun onStart(e: GameBaseEvent) {
+        if (e == GameBaseEvent.START || e == GameBaseEvent.SYNC) start()
     }
 
     @ChessEventHandler
@@ -91,13 +90,6 @@ class ScoreboardManager : Component {
             update()
         if (e == GameStopStageEvent.CLEAR || e == GameStopStageEvent.PANIC)
             stop()
-    }
-
-    private fun init() {
-        val e = AddPropertiesEvent(playerProperties, gameProperties)
-        e.game(PRESET) { game.settings.name }
-        e.player(PLAYER) { playerPrefix + game[it].name }
-        game.callEvent(e)
     }
 
     @ChessEventHandler
@@ -110,6 +102,11 @@ class ScoreboardManager : Component {
     }
 
     private fun start() {
+        val e = AddPropertiesEvent(playerProperties, gameProperties)
+        e.game(PRESET) { game.settings.name }
+        e.player(PLAYER) { playerPrefix + game[it].name }
+        game.callEvent(e)
+
         game.sides.forEachRealBukkit(::giveScoreboard)
         objective.displaySlot = DisplaySlot.SIDEBAR
         val l = gameProperties.size + 1 + playerProperties.size * 2 + 1

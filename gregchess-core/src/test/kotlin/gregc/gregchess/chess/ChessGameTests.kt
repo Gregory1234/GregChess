@@ -45,6 +45,15 @@ class ChessGameTests {
         }
 
         @Test
+        fun `should only construct players`() {
+            val g = mkGame(testSettings("spy"))
+            val mocks = g.sides.toList()
+            verify {
+                mocks wasNot Called
+            }
+        }
+
+        @Test
         fun `should not make game run`() {
             val game = mkGame(normalSettings)
 
@@ -93,6 +102,16 @@ class ChessGameTests {
                 c.handleEvent(GameBaseEvent.START)
                 c.handleEvent(GameBaseEvent.RUNNING)
                 c.handleEvent(TurnEvent.START)
+            }
+        }
+
+        @Test
+        fun `should init players and start turn`() {
+            val g = mkGame(testSettings("spy")).start()
+            verifyAll {
+                g.sides.white.init()
+                g.sides.black.init()
+                g.sides.white.startTurn()
             }
         }
     }

@@ -16,10 +16,6 @@ import org.bukkit.scheduler.BukkitRunnable
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 
-enum class GameStartStageEvent : ChessEvent {
-    INIT, START, BEGIN
-}
-
 enum class GameStopStageEvent : ChessEvent {
     STOP, CLEAR, VERY_END, PANIC
 }
@@ -52,13 +48,9 @@ class GameController : Component {
             it.games += game
             it.currentGame = game
         }
-        game.callEvent(GameStartStageEvent.INIT)
-        game.sides.forEachUnique { it.init() }
-        game.callEvent(GameStartStageEvent.START)
     }
 
     private fun onRunning() {
-        game.callEvent(GameStartStageEvent.BEGIN)
         object : BukkitRunnable() {
             override fun run() {
                 if (game.running)

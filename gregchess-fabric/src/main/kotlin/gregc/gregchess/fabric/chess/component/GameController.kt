@@ -26,7 +26,6 @@ class GameController : Component {
         when (e) {
             GameBaseEvent.START -> {
                 ChessGameManager += game
-                sides.forEachUnique { it.init() }
             }
             GameBaseEvent.STOP -> {
                 sides.forEachUniqueFabric(game.server) { player, color ->

@@ -22,8 +22,8 @@ class BukkitEventRelay : Component {
     }
 
     @ChessEventHandler
-    fun onStart(e: GameStartStageEvent) {
-        if (e == GameStartStageEvent.BEGIN)
+    fun onStart(e: GameBaseEvent) {
+        if (e == GameBaseEvent.RUNNING || e == GameBaseEvent.SYNC)
             Bukkit.getPluginManager().callEvent(GameStartEvent(game))
     }
 

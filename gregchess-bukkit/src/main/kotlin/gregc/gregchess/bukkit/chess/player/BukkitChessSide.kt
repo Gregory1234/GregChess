@@ -120,11 +120,13 @@ class BukkitChessSide(player: BukkitPlayer, color: Color, game: ChessGame) : Che
     }
 
     override fun init() {
-        sendTitleList(buildList {
-            this += YOU_ARE_PLAYING_AS_TITLE[color] to false
-            if (hasTurn)
-                this += YOUR_TURN to true
-        })
-        bukkit?.sendMessage(YOU_ARE_PLAYING_AS_MSG[color])
+        if (hasTurn || !silent) {
+            sendTitleList(buildList {
+                this += YOU_ARE_PLAYING_AS_TITLE[color] to false
+                if (hasTurn)
+                    this += YOUR_TURN to true
+            })
+            bukkit?.sendMessage(YOU_ARE_PLAYING_AS_MSG[color])
+        }
     }
 }
