@@ -35,7 +35,8 @@ enum class GameBaseEvent : ChessEvent {
     RUNNING,
     UPDATE,
     STOP,
-    PANIC
+    PANIC,
+    CLEAR
 }
 
 class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : RuntimeException(event.toString(), cause)
@@ -243,7 +244,7 @@ class ChessGame private constructor(
     fun start() = apply {
         requireState(State.INITIAL)
         callEvent(GameBaseEvent.START)
-        sides.forEach(ChessSide<*>::init)
+        sides.forEach(ChessSide<*>::start)
         state = State.RUNNING
         startTime = LocalDateTime.now()
         callEvent(GameBaseEvent.RUNNING)
@@ -280,11 +281,14 @@ class ChessGame private constructor(
         requireState(State.RUNNING)
         state = State.STOPPED
         this.results = results
+        sides.forEach(ChessSide<*>::stop)
         callEvent(GameBaseEvent.STOP)
         coroutineScope.launch {
             coroutineScope.coroutineContext.job.children.filter { it != coroutineContext.job }.toList().joinAll()
         }.invokeOnCompletion {
             coroutineScope.cancel()
+            sides.forEach(ChessSide<*>::clear)
+            callEvent(GameBaseEvent.CLEAR)
             if (it != null)
                 throw it
         }
@@ -294,10 +298,17 @@ class ChessGame private constructor(
         state = State.ERROR
         results = drawBy(EndReason.ERROR, e.toString())
         try {
+            sides.forEach(ChessSide<*>::stop)
+            sides.forEach(ChessSide<*>::clear)
+        } catch (ex: Exception) {
+            e.addSuppressed(ex)
+        }
+        try {
             callEvent(GameBaseEvent.PANIC)
         } catch (ex: Exception) {
             e.addSuppressed(ex)
         }
+        coroutineScope.cancel() // TODO: join children?
         throw e
     }
 

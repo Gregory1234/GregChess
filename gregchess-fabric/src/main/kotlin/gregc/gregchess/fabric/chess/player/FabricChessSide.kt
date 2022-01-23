@@ -24,7 +24,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
             game.renderer.redrawFloor()
         }
 
-    override fun init() {
+    override fun start() {
         if (hasTurn || player != opponent.player)
             player.getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }

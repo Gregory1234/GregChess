@@ -7,8 +7,8 @@ import gregc.gregchess.bukkitutils.ticks
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.Move
-import gregc.gregchess.chess.player.ChessSide
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.entity.Player
@@ -103,9 +103,7 @@ class GameController : Component {
         }
         if (results.endReason.quick) {
             game.callEvent(GameStopStageEvent.CLEAR)
-            game.sides.forEach(ChessSide<*>::stop)
             game.callEvent(GameStopStageEvent.VERY_END)
-            game.coroutineScope.cancel()
             return
         }
         game.coroutineScope.launch {
@@ -113,13 +111,11 @@ class GameController : Component {
             delay(1.ticks)
             game.callEvent(GameStopStageEvent.CLEAR)
             delay(1.ticks)
-            game.sides.forEach(ChessSide<*>::stop)
             game.callEvent(GameStopStageEvent.VERY_END)
         }
     }
 
     private fun onPanic() {
-        game.sides.forEach(ChessSide<*>::stop)
         val results = game.results!!
         val pgn = PGN.generate(game)
         game.sides.forEachUniqueBukkit { player, color ->
@@ -129,7 +125,6 @@ class GameController : Component {
             player.currentGame = null
         }
         game.callEvent(GameStopStageEvent.PANIC)
-        game.coroutineScope.cancel()
     }
 
     @ChessEventHandler
@@ -144,6 +139,7 @@ class GameController : Component {
             onRunning()
         } else Unit
         GameBaseEvent.UPDATE -> Unit
+        GameBaseEvent.CLEAR -> Unit
     }
 
     @ChessEventHandler

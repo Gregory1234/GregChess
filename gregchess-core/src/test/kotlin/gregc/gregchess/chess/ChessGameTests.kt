@@ -46,7 +46,7 @@ class ChessGameTests {
         }
 
         @Test
-        fun `should only construct players`() {
+        fun `should only construct sides`() {
             val g = mkGame(testSettings("spy"))
             val mocks = g.sides.toList()
             verify {
@@ -93,10 +93,11 @@ class ChessGameTests {
 
         @Test
         fun `should start components`() {
-            val g = mkGame(testSettings("spy", extra = listOf(spyk(TestComponent)))).start()
+            val g = mkGame(testSettings("spy", extra = listOf(spyk(TestComponent))))
             val c = g.getComponent<TestComponent>()!!
+            clearRecords(c)
+            g.start()
             excludeRecords {
-                c.init(g)
                 c.handleEvent(match { it is PieceEvent })
             }
             verifySequence {
@@ -107,11 +108,11 @@ class ChessGameTests {
         }
 
         @Test
-        fun `should init players and start turn`() {
+        fun `should start sides and start turn`() {
             val g = mkGame(testSettings("spy")).start()
             verifyAll {
-                g.sides.white.init()
-                g.sides.black.init()
+                g.sides.white.start()
+                g.sides.black.start()
                 g.sides.white.startTurn()
             }
         }
@@ -137,6 +138,23 @@ class ChessGameTests {
             game.stop(results)
 
             assertThat(game.coroutineScope::isActive).isFalse()
+        }
+
+        @Test
+        fun `should stop and clear sides`() {
+            val g = mkGame(normalSettings).start()
+
+            clearRecords(g.sides.white)
+            clearRecords(g.sides.black)
+
+            g.stop(results)
+
+            verifyAll {
+                g.sides.white.stop()
+                g.sides.black.stop()
+                g.sides.white.clear()
+                g.sides.black.clear()
+            }
         }
 
         @Test

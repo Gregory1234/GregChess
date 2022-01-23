@@ -2,9 +2,9 @@ package gregc.gregchess.fabric.chess.component
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessGameManager
-import gregc.gregchess.fabric.chess.player.*
+import gregc.gregchess.fabric.chess.player.forEachUniqueFabric
+import gregc.gregchess.fabric.chess.player.showGameResults
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -30,7 +30,6 @@ class GameController : Component {
                 sides.forEachUniqueFabric(game.server) { player, color ->
                     player.showGameResults(color, results!!)
                 }
-                sides.forEach(ChessSide<*>::stop)
                 ChessGameManager -= game
             }
             else -> {

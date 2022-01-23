@@ -18,7 +18,7 @@ class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, game: ChessG
 
     override fun toString() = "EngineChessSide(engine=$engine, color=$color)"
 
-    override fun stop() = engine.stop()
+    override fun clear() = engine.stop()
 
     override fun startTurn() {
         game.coroutineScope.launch {

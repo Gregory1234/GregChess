@@ -34,11 +34,13 @@ class TestPlayer(override val name: String) : ChessPlayer {
 }
 
 class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSide<TestPlayer>(player, color, game) {
-    override fun init() {}
+    override fun start() {}
 
     override fun startTurn() {}
 
     override fun stop() {}
+
+    override fun clear() {}
 }
 
 @Serializable
