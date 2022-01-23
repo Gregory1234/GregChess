@@ -115,10 +115,6 @@ class GameController : Component {
             delay(1.ticks)
             game.sides.forEach(ChessSide<*>::stop)
             game.callEvent(GameStopStageEvent.VERY_END)
-        }.invokeOnCompletion {
-            game.coroutineScope.cancel()
-            if (it != null)
-                throw it
         }
     }
 

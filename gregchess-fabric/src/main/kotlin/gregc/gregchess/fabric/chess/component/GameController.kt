@@ -5,7 +5,6 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessGameManager
 import gregc.gregchess.fabric.chess.player.*
-import kotlinx.coroutines.cancel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -33,7 +32,6 @@ class GameController : Component {
                 }
                 sides.forEach(ChessSide<*>::stop)
                 ChessGameManager -= game
-                game.coroutineScope.cancel()
             }
             else -> {
             }

@@ -25,6 +25,7 @@ dependencies {
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertKVersion")
     val mockkVersion: String by project
     testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxSerializationVersion")
 }
 
 tasks {
@@ -45,9 +46,7 @@ tasks {
         kotlinOptions {
             val jvmVersion: String by project
             jvmTarget = jvmVersion
-            freeCompilerArgs = listOf(
-                "-Xjvm-default=all",
-                "-progressive")
+            freeCompilerArgs = defaultKotlinArgs
         }
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {

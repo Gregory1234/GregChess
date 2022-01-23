@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.*
 import gregc.gregchess.chess.piece.PieceEvent
 import io.mockk.*
+import kotlinx.coroutines.isActive
 import org.junit.jupiter.api.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -127,6 +128,15 @@ class ChessGameTests {
             game.stop(results)
 
             assertThat(game::running).isFalse()
+        }
+
+        @Test
+        fun `should cancel coroutine scope`() {
+            val game = mkGame(normalSettings).start()
+
+            game.stop(results)
+
+            assertThat(game.coroutineScope::isActive).isFalse()
         }
 
         @Test

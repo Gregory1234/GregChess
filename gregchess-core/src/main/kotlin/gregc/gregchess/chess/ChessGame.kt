@@ -281,6 +281,13 @@ class ChessGame private constructor(
         state = State.STOPPED
         this.results = results
         callEvent(GameBaseEvent.STOP)
+        coroutineScope.launch {
+            coroutineScope.coroutineContext.job.children.filter { it != coroutineContext.job }.toList().joinAll()
+        }.invokeOnCompletion {
+            coroutineScope.cancel()
+            if (it != null)
+                throw it
+        }
     }
 
     private fun panic(e: Exception): Nothing {

@@ -13,6 +13,8 @@ import gregc.gregchess.registry.*
 import io.mockk.clearMocks
 import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.Serializable
 
 fun testSettings(
@@ -54,7 +56,8 @@ object TestVariant : ChessVariant()
 
 object TestChessEnvironment : ChessEnvironment {
     override val pgnSite: String get() = "GregChess test"
-    override val coroutineDispatcher: CoroutineDispatcher get() = throw UnsupportedOperationException()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val coroutineDispatcher: CoroutineDispatcher get() = TestCoroutineDispatcher()
 }
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)
