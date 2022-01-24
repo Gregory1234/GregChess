@@ -5,6 +5,7 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceEvent
 import gregc.gregchess.fabric.chess.*
+import gregc.gregchess.fabric.chess.player.PiecePlayerActionEvent
 import kotlinx.serialization.*
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.util.math.BlockPos
@@ -26,15 +27,14 @@ data class FabricRenderer(
         this.game = game
     }
 
-    val controller: ChessControllerBlockEntity
+    private val controller: ChessControllerBlockEntity
         get() = world.getBlockEntity(controllerPos) as ChessControllerBlockEntity
 
-    val floor: List<ChessboardFloorBlockEntity> get() = controller.floorBlockEntities
+    private val floor: List<ChessboardFloorBlockEntity> get() = controller.floorBlockEntities
 
     private val tileBlocks: Map<Pos, List<ChessboardFloorBlockEntity>> by lazy { floor.groupBy { it.boardPos!! } }
 
-    // TODO: make this private
-    fun redrawFloor() {
+    private fun redrawFloor() {
         for (file in 0..7) {
             for (rank in 0..7) {
                 tileBlocks[Pos(file, rank)]?.forEach {
@@ -76,33 +76,33 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
-    fun handlePieceEvents(e: PieceEvent) {
-        println(e)
-        when (e) {
-            is PieceEvent.Created -> {}
-            is PieceEvent.Cleared -> {}
-            is PieceEvent.Moved -> {
-                for ((o, _) in e.moves)
-                    when (o) {
-                        is BoardPiece -> {
-                            val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
-                            pieceBlock?.safeBreak(!controller.addPiece(o.piece))
-                        }
+    fun onPiecePlayerAction(e: PiecePlayerActionEvent) = redrawFloor()
+
+    @ChessEventHandler
+    fun handlePieceEvents(e: PieceEvent) = when (e) {
+        is PieceEvent.Created -> {}
+        is PieceEvent.Cleared -> {}
+        is PieceEvent.Moved -> {
+            for ((o, _) in e.moves)
+                when (o) {
+                    is BoardPiece -> {
+                        val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
+                        pieceBlock?.safeBreak(!controller.addPiece(o.piece))
                     }
-                for ((_, t) in e.moves)
-                    when (t) {
-                        is BoardPiece -> {
-                            val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
-                            if (pieceBlock == null) {
-                                val newBlockPos = tileBlocks[t.pos]?.randomOrNull()?.pos
-                                if (newBlockPos != null) {
-                                    check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
-                                    t.place(newBlockPos)
-                                }
+                }
+            for ((_, t) in e.moves)
+                when (t) {
+                    is BoardPiece -> {
+                        val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                        if (pieceBlock == null) {
+                            val newBlockPos = tileBlocks[t.pos]?.randomOrNull()?.pos
+                            if (newBlockPos != null) {
+                                check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
+                                t.place(newBlockPos)
                             }
                         }
                     }
-            }
+                }
         }
     }
 }

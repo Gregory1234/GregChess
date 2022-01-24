@@ -1,21 +1,16 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.Pos
-import gregc.gregchess.fabric.*
+import gregc.gregchess.fabric.BlockEntityDirtyDelegate
+import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.chess.player.FabricChessSide
-import io.github.cottonmc.cotton.gui.networking.NetworkSide
-import io.github.cottonmc.cotton.gui.networking.ScreenNetworking
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.screen.*
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
-import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.*
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
@@ -23,9 +18,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 
 
-// TODO: make NamedScreenHandlerFactory a separate thing
-class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
-    BlockEntity(GregChessMod.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory {
+class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChessMod.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
     var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)
     var boardPos: Pos? by BlockEntityDirtyDelegate(null)
     override fun writeNbt(nbt: NbtCompound) {
@@ -97,20 +90,6 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     val chessControllerBlock: ChessControllerBlockEntity?
         get() = chessControllerBlockPos?.let { world?.getBlockEntity(it) as? ChessControllerBlockEntity }
-
-    override fun getDisplayName(): Text = TranslatableText("gui.gregchess.promotion_menu")
-
-    override fun createMenu(syncId: Int, inv: PlayerInventory?, player: PlayerEntity?): ScreenHandler {
-        return PromotionMenuGuiDescription(syncId, inv, ScreenHandlerContext.create(world, pos)).apply {
-            ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("setup_request")) {
-                ScreenNetworking.of(this, NetworkSide.SERVER).send(ident("setup")) {
-                    it.writeCollection(chessControllerBlock!!.promotions) { buf, p ->
-                        buf.writeString(p.key.toString())
-                    }
-                }
-            }
-        }
-    }
 }
 
 enum class Floor : StringIdentifiable {

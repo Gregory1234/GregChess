@@ -119,7 +119,6 @@ class GameController : Component {
         GameBaseEvent.STOP -> onStop()
         GameBaseEvent.PANIC -> onPanic()
         GameBaseEvent.SYNC -> if (game.state == ChessGame.State.RUNNING) {
-            // TODO: make sync safer
             onStart()
             onRunning()
         } else Unit

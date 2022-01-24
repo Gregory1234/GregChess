@@ -5,7 +5,7 @@ import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.ChessboardFloorBlockEntity
-import gregc.gregchess.fabric.chess.component.renderer
+import gregc.gregchess.fabric.chess.PromotionMenuFactory
 import gregc.gregchess.fabric.chess.component.server
 import kotlinx.coroutines.launch
 import net.minecraft.block.BlockState
@@ -14,14 +14,26 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.TranslatableText
 import kotlin.coroutines.suspendCoroutine
 
+class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent {
+    enum class Type {
+        PICK_UP, PLACE_DOWN
+    }
+}
+
 class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : ChessSide<FabricPlayer>(player, color, game) {
 
     var held: BoardPiece? = null
         private set(v) {
-            field?.checkExists(game.board)
-            v?.checkExists(game.board)
+            val oldHeld = field
             field = v
-            game.renderer.redrawFloor()
+            oldHeld?.let {
+                it.checkExists(game.board)
+                game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
+            }
+            v?.let {
+                it.checkExists(game.board)
+                game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
+            }
         }
 
     override fun start() {
@@ -55,9 +67,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         val move = chosenMoves.first()
         game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
-                floor.chessControllerBlock?.promotions = promotions
-                realPlayer.openHandledScreen(state.createScreenHandlerFactory(floor.world, floor.pos))
-                promotion = suspendCoroutine { floor.chessControllerBlock?.promotionContinuation = it }
+                promotion = suspendCoroutine { realPlayer.openHandledScreen(PromotionMenuFactory(promotions, floor.world!!, floor.pos, it)) } ?: promotions.first()
             }
         }.invokeOnCompletion {
             if (it != null)

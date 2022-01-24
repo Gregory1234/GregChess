@@ -87,6 +87,7 @@ class ChessStats private constructor(val uuid: UUID, private val perSettings: Mu
     }
 }
 
+// TODO: add support for other storage types
 // TODO: add combined stats
 suspend fun Player.openStatsMenu(playerName: String, stats: ChessStats) =
     openMenu(config.getPathString("Message.StatsOf", playerName), SettingsManager.getSettings().mapIndexed { index, s ->

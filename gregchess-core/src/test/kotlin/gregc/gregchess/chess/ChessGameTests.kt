@@ -10,9 +10,6 @@ import org.junit.jupiter.api.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ChessGameTests {
 
-    // TODO: move mocks to initialization to make tests faster
-    // TODO: mock Chessboard
-
     private val playerA = TestPlayer("A")
     private val playerB = TestPlayer("B")
 

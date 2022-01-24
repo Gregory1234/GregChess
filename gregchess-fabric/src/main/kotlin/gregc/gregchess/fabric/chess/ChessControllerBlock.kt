@@ -38,8 +38,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import java.util.*
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -207,15 +205,6 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             false
     }
 
-    // TODO: move this somewhere else
-
-    internal var promotions: List<Piece> = emptyList()
-
-    internal fun providePromotion(p: Piece) {
-        promotionContinuation?.resume(p)
-    }
-
-    internal var promotionContinuation: Continuation<Piece>? = null
 }
 
 fun interface ChessControllerInventory : SidedInventory {
