@@ -10,6 +10,7 @@ plugins {
 
 loom.runConfigs.forEach {
     it.runDir = "gregchess-fabric/" + it.runDir
+    it.vmArgs += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 }
 
 repositories {

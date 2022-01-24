@@ -12,6 +12,8 @@ pluginManagement {
         id("fabric-loom") version loomVersion
         val dokkaVersion: String by settings
         id("org.jetbrains.dokka") version dokkaVersion
+        val minecraftServerGradlePluginVersion: String by settings
+        id("dev.s7a.gradle.minecraft.server") version minecraftServerGradlePluginVersion
     }
 }
 include("gregchess-core", "gregchess-bukkit", "gregchess-fabric", "bukkit-utils")

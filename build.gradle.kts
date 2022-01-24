@@ -44,5 +44,10 @@ tasks {
         dependsOn(":gregchess-fabric:runClient")
         getByPath(":gregchess-fabric:compileKotlin").mustRunAfter(":gregchess-core:test")
     }
-    // TODO: add a way of running a spigot server with the plugin from a gradle task
+    create<DefaultTask>("runPaperServer") {
+        group = "gregchess"
+        dependsOn(":gregchess-core:test")
+        dependsOn(":gregchess-bukkit:runServer")
+        getByPath(":gregchess-bukkit:compileKotlin").mustRunAfter(":gregchess-core:test")
+    }
 }
