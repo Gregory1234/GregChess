@@ -8,7 +8,6 @@ import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.util.*
@@ -133,7 +132,7 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
         val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.held != null) {
-            cp.makeMove(floorEntity.boardPos!!, floorEntity, player as ServerPlayerEntity, state)
+            cp.makeMove(floorEntity.boardPos!!, floorEntity, world.server)
             return ActionResult.SUCCESS
         }
         return ActionResult.PASS

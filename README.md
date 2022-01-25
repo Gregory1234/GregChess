@@ -10,4 +10,6 @@ To build the fabric jar use gradle task `:createFabricJar`.
 
 The jars are moved to the root project directory.
 
-To run the fabric client use gradle task `:runFabricClient`.
+To run a fabric client with the mod use gradle task `:runFabricClient`.
+
+To run a paper server with the bukkit plugin use gradle task `:runPaperServer`.

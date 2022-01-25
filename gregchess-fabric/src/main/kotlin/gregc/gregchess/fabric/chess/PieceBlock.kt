@@ -12,7 +12,6 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.Properties
@@ -88,7 +87,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
-            cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, player as ServerPlayerEntity, state)
+            cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, world.server)
             return ActionResult.SUCCESS
         }
         return ActionResult.PASS
@@ -175,7 +174,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
-            cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, player as ServerPlayerEntity, state)
+            cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, world.server)
             return ActionResult.SUCCESS
         }
         return ActionResult.PASS

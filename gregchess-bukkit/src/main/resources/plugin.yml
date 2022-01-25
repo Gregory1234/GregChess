@@ -41,9 +41,9 @@ permissions:
       gregchess.chess.undo: true
       gregchess.chess.spectate: true
       gregchess.chess.reload: true
-      gregchess.chess.dev: true
-      gregchess.chess.debug: true
       gregchess.chess.serial: true
+      gregchess.chess.serialsave: true
+      gregchess.chess.serialload: true
       gregchess.chess.info.*: true
       gregchess.chess.admin: true
       gregchess.chess.stats: true
@@ -92,15 +92,9 @@ permissions:
   gregchess.chess.reload:
     description: Can use /chess reload
     default: op
-  gregchess.chess.dev:
-    description: Can use /chess dev
-    default: op
   gregchess.chess.undo:
     description: Can use /chess undo
     default: true
-  gregchess.chess.debug:
-    description: Can use /chess debug
-    default: op
   gregchess.chess.serial:
     description: Can use /chess serial
     default: op

@@ -16,7 +16,6 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -296,11 +295,6 @@ object GregChessPlugin : Listener {
                     plugin.reloadConfig()
                     Arena.reloadArenas()
                     sender.sendMessage(CONFIG_RELOADED)
-                }
-            }
-            subcommand("dev") {
-                execute {
-                    Bukkit.dispatchCommand(sender, "devhelp GregChess")
                 }
             }
             subcommand("undo") {

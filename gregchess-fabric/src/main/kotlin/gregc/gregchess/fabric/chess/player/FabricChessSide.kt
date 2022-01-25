@@ -8,7 +8,6 @@ import gregc.gregchess.fabric.chess.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.chess.PromotionMenuFactory
 import gregc.gregchess.fabric.chess.component.server
 import kotlinx.coroutines.launch
-import net.minecraft.block.BlockState
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.TranslatableText
@@ -56,7 +55,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         held = piece
     }
 
-    fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, realPlayer: ServerPlayerEntity, state: BlockState) {
+    fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, server: MinecraftServer?) {
         if (!game.running) return
         val piece = held ?: return
         val moves = piece.getLegalMoves(game.board)
@@ -67,7 +66,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         val move = chosenMoves.first()
         game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
-                promotion = suspendCoroutine { realPlayer.openHandledScreen(PromotionMenuFactory(promotions, floor.world!!, floor.pos, it)) } ?: promotions.first()
+                promotion = suspendCoroutine { player.getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, floor.world!!, floor.pos, it)) } ?: promotions.first()
             }
         }.invokeOnCompletion {
             if (it != null)
