@@ -54,6 +54,7 @@ Message:
   TimeOpDone: "&eCompleted the chess clock operation!"
   SkippedTurn: "&eSkipped a turn!"
   BoardOpDone: "&eCompleted the chessboard operation!"
+  StatsOpDone: "&eCompleted the stats operation!"
   StatsOf: "Stats of %s"
   Stats:
     Wins: "&aWins: %s"

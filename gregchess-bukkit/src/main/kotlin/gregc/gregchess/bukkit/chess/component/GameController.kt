@@ -82,9 +82,9 @@ class GameController : Component {
                 if (player.gregchess != game[!color].player) {
                     val stats = ChessStats.of(player.uniqueId)
                     when (results.score) {
-                        GameScore.Draw -> stats.addDraw(game.settings.name)
-                        GameScore.Victory(color) -> stats.addWin(game.settings.name)
-                        else -> stats.addLoss(game.settings.name)
+                        GameScore.Draw -> stats.addDraws(game.settings.name)
+                        GameScore.Victory(color) -> stats.addWins(game.settings.name)
+                        else -> stats.addLosses(game.settings.name)
                     }
                 }
                 if (!results.endReason.quick)

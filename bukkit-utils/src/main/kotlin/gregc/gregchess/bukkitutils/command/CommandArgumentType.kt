@@ -18,6 +18,11 @@ class StringArgument(name: String) : CommandArgumentType<String>(name) {
         if (strings.isEmpty()) null else Pair(strings.first(), strings.drop(1))
 }
 
+class IntArgument(name: String) : CommandArgumentType<Int>(name) {
+    override fun tryParse(strings: List<String>): Pair<Int, List<String>>? =
+        strings.firstOrNull()?.toIntOrNull()?.let { Pair(it , strings.drop(1)) }
+}
+
 class GreedyStringArgument(name: String) : CommandArgumentType<String>(name) {
     override fun tryParse(strings: List<String>): Pair<String, List<String>> =
         Pair(strings.joinToString(" "), emptyList())

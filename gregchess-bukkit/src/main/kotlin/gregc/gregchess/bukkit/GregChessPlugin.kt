@@ -61,6 +61,7 @@ object GregChessPlugin : Listener {
     private val ENGINE_COMMAND_SENT = message("EngineCommandSent")
     private val LOADED_FEN = message("LoadedFEN")
     private val CONFIG_RELOADED = message("ConfigReloaded")
+    private val STATS_OP_DONE = message("StatsOpDone")
 
     private val requestManager = RequestManager(plugin, coroutineScope)
 
@@ -384,11 +385,45 @@ object GregChessPlugin : Listener {
                 }
             }
             subcommand("stats") {
-                requirePlayer()
+                execute {
+                    cRequire(sender is Player, NOT_PLAYER)
+                }
                 executeSuspend<Player> {
                     sender.openStatsMenu(sender.name, ChessStats.of(sender.uniqueId))
                 }
+                literal("set") {
+                    requirePermission("gregchess.chess.stats.set")
+                    argument(offlinePlayerArgument("player")) { player ->
+                        argument(StringArgument("setting")) { setting ->
+                            argument(EnumArgument(listOf("wins", "losses", "draws"), "stat")) { stat ->
+                                argument(IntArgument("value")) { v ->
+                                    execute {
+                                        val stats = ChessStats.of(player().uniqueId)
+                                        when(stat()) {
+                                            "wins" -> stats.setWins(setting(), v())
+                                            "losses" -> stats.setLosses(setting(), v())
+                                            "draws" -> stats.setDraws(setting(), v())
+                                        }
+                                        sender.sendMessage(STATS_OP_DONE)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                literal("clear") {
+                    requirePermission("gregchess.chess.stats.set")
+                    argument(offlinePlayerArgument("player")) { player ->
+                        argument(StringArgument("setting")) { setting ->
+                            execute {
+                                ChessStats.of(player().uniqueId).clear(setting())
+                                sender.sendMessage(STATS_OP_DONE)
+                            }
+                        }
+                    }
+                }
                 argument(offlinePlayerArgument("player")) { player ->
+                    requirePlayer()
                     executeSuspend<Player> {
                         sender.openStatsMenu(player().name!!, ChessStats.of(player().uniqueId))
                     }

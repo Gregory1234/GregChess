@@ -12,10 +12,15 @@ import java.util.*
 interface ChessStats {
     val uuid: UUID
     operator fun get(name: String): PartialChessStats
+    operator fun set(name: String, stats: PartialChessStats)
     fun total(): PartialChessStats
-    fun addWin(name: String)
-    fun addLoss(name: String)
-    fun addDraw(name: String)
+    fun clear(name: String) = set(name, PartialChessStats(0, 0, 0))
+    fun setWins(name: String, value: Int) = set(name, get(name).copy(wins = value))
+    fun setLosses(name: String, value: Int) = set(name, get(name).copy(losses = value))
+    fun setDraws(name: String, value: Int) = set(name, get(name).copy(draws = value))
+    fun addWins(name: String, value: Int = 1) = set(name, get(name) + PartialChessStats(value, 0, 0))
+    fun addLosses(name: String, value: Int = 1) = set(name, get(name) + PartialChessStats(0, value, 0))
+    fun addDraws(name: String, value: Int = 1) = set(name, get(name) + PartialChessStats(0, 0, value))
     companion object {
         fun of(uuid: UUID) = BukkitRegistry.CHESS_STATS_PROVIDER[config.getString("StatsProvider")!!.toKey()](uuid)
     }
@@ -34,49 +39,23 @@ class YamlChessStats private constructor(
 
     override operator fun get(name: String) = perSettings[name] ?: PartialChessStats(0, 0, 0)
 
+    override operator fun set(name: String, stats: PartialChessStats) {
+        val config = getConfig(uuid)
+        config.set("$name.Wins", stats.wins)
+        config.set("$name.Losses", stats.losses)
+        config.set("$name.Draws", stats.draws)
+        perSettings[name] = stats
+        config.save(getFile(uuid))
+    }
+
     override fun total(): PartialChessStats =
         perSettings.values.reduceOrNull { acc, partialChessStats -> acc + partialChessStats }
             ?: PartialChessStats(0, 0, 0)
 
-    override fun addWin(name: String) {
+    override fun clear(name: String) {
         val config = getConfig(uuid)
-        if (name in config) {
-            config.set("$name.Wins", config.getInt("$name.Wins") + 1)
-            perSettings[name] = this[name] + PartialChessStats(1, 0, 0)
-        } else {
-            config.set("$name.Wins", 1)
-            config.set("$name.Losses", 0)
-            config.set("$name.Draws", 0)
-            perSettings[name] = PartialChessStats(1, 0, 0)
-        }
-        config.save(getFile(uuid))
-    }
-
-    override fun addLoss(name: String) {
-        val config = getConfig(uuid)
-        if (name in config) {
-            config.set("$name.Losses", config.getInt("$name.Losses") + 1)
-            perSettings[name] = this[name] + PartialChessStats(0, 1, 0)
-        } else {
-            config.set("$name.Wins", 0)
-            config.set("$name.Losses", 1)
-            config.set("$name.Draws", 0)
-            perSettings[name] = PartialChessStats(0, 1, 0)
-        }
-        config.save(getFile(uuid))
-    }
-
-    override fun addDraw(name: String) {
-        val config = getConfig(uuid)
-        if (name in config) {
-            config.set("$name.Draws", config.getInt("$name.Draws") + 1)
-            perSettings[name] = this[name] + PartialChessStats(0, 0, 1)
-        } else {
-            config.set("$name.Wins", 0)
-            config.set("$name.Losses", 0)
-            config.set("$name.Draws", 1)
-            perSettings[name] = PartialChessStats(0, 0, 1)
-        }
+        config.set(name, null)
+        perSettings.remove(name)
         config.save(getFile(uuid))
     }
 
