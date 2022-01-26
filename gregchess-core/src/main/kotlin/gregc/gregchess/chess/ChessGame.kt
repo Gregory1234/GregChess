@@ -157,7 +157,6 @@ class ChessGame private constructor(
 
     val clock get() = getComponent<ChessClock>()
 
-    // TODO: consider making component and player functions suspended
     val coroutineScope by lazy {
         CoroutineScope(
             environment.coroutineDispatcher +
@@ -277,20 +276,26 @@ class ChessGame private constructor(
             field = v
         }
 
+    private fun joinAllAndThen(callback: () -> Unit) = coroutineScope.launch {
+        coroutineScope.coroutineContext.job.children.filter { it != coroutineContext.job }.toList().joinAll()
+    }.invokeOnCompletion {
+        callback()
+        if (it != null) {
+            it.printStackTrace()
+            throw it
+        }
+    }
+
     fun stop(results: GameResults) {
         requireState(State.RUNNING)
         state = State.STOPPED
         this.results = results
         sides.forEach(ChessSide<*>::stop)
         callEvent(GameBaseEvent.STOP)
-        coroutineScope.launch {
-            coroutineScope.coroutineContext.job.children.filter { it != coroutineContext.job }.toList().joinAll()
-        }.invokeOnCompletion {
+        joinAllAndThen {
             coroutineScope.cancel()
             sides.forEach(ChessSide<*>::clear)
             callEvent(GameBaseEvent.CLEAR)
-            if (it != null)
-                throw it
         }
     }
 
@@ -299,16 +304,18 @@ class ChessGame private constructor(
         results = drawBy(EndReason.ERROR, e.toString())
         try {
             sides.forEach(ChessSide<*>::stop)
-            sides.forEach(ChessSide<*>::clear)
         } catch (ex: Exception) {
             e.addSuppressed(ex)
+        }
+        joinAllAndThen {
+            coroutineScope.cancel()
+            sides.forEach(ChessSide<*>::clear)
         }
         try {
             callEvent(GameBaseEvent.PANIC)
         } catch (ex: Exception) {
             e.addSuppressed(ex)
         }
-        coroutineScope.cancel() // TODO: join children?
         throw e
     }
 
