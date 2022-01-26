@@ -83,5 +83,6 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         hookComponents()
         registerSettings()
         KingOfTheHill.registerSimpleFloorRenderer((Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
+        registerStatsProvider("yaml", YamlChessStats.Companion::of)
     }
 }

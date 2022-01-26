@@ -12,6 +12,7 @@ import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
+import java.util.*
 
 class SettingsParserContext(val variant: ChessVariant, val section: ConfigurationSection)
 
@@ -32,6 +33,8 @@ object BukkitRegistry {
     val HOOKED_COMPONENTS = ConnectedSetRegistry("hooked_components", Registry.COMPONENT_TYPE)
     @JvmField
     val BUKKIT_PLUGIN = ConstantRegistry<Plugin>("bukkit_plugin")
+    @JvmField
+    val CHESS_STATS_PROVIDER = NameRegistry<(UUID) -> ChessStats>("chess_stats_provider")
 }
 
 fun PropertyType.register(module: ChessModule, id: String) = module.register(BukkitRegistry.PROPERTY_TYPE, id, this)
@@ -57,6 +60,9 @@ fun <T : Component> ComponentType<T>.registerHooked() =
 fun <T : GameScore> EndReason<T>.registerQuick() = apply { module[BukkitRegistry.QUICK_END_REASONS].add(this) }
 
 fun ChessModule.registerBukkitPlugin(plugin: Plugin) = get(BukkitRegistry.BUKKIT_PLUGIN).set(plugin)
+
+fun ChessModule.registerStatsProvider(id: String, provider: (UUID) -> ChessStats) =
+    register(BukkitRegistry.CHESS_STATS_PROVIDER, id, provider)
 
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e -> register(m, n); if ("quick" in e) registerQuick() }
 

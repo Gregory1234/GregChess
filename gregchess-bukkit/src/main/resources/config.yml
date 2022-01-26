@@ -256,3 +256,4 @@ Scoreboard:
   TimeRemainingSimple: "Time remaining"
 
 TimeFormat: "mm:ss.S"
+StatsProvider: yaml

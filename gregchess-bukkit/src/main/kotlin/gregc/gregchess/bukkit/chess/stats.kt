@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.bukkit.GregChessPlugin
-import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.*
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -10,17 +9,31 @@ import org.bukkit.entity.Player
 import java.io.File
 import java.util.*
 
+interface ChessStats {
+    val uuid: UUID
+    operator fun get(name: String): PartialChessStats
+    fun addWin(name: String)
+    fun addLoss(name: String)
+    fun addDraw(name: String)
+    companion object {
+        fun of(uuid: UUID) = BukkitRegistry.CHESS_STATS_PROVIDER[config.getString("StatsProvider")!!.toKey()](uuid)
+    }
+}
+
 data class PartialChessStats(val wins: Int, val losses: Int, val draws: Int) {
     operator fun plus(other: PartialChessStats) =
         PartialChessStats(wins + other.wins, losses + other.losses, draws + other.draws)
 }
 
-class ChessStats private constructor(val uuid: UUID, private val perSettings: MutableMap<String, PartialChessStats>) {
+class YamlChessStats private constructor(
+    override val uuid: UUID, private val perSettings: MutableMap<String, PartialChessStats>
+) : ChessStats {
+
     val player: Player? get() = Bukkit.getPlayer(uuid)
 
-    operator fun get(name: String) = perSettings[name] ?: PartialChessStats(0, 0, 0)
+    override operator fun get(name: String) = perSettings[name] ?: PartialChessStats(0, 0, 0)
 
-    fun addWin(name: String) {
+    override fun addWin(name: String) {
         val config = getConfig(uuid)
         if (name in config) {
             config.set("$name.Wins", config.getInt("$name.Wins") + 1)
@@ -34,7 +47,7 @@ class ChessStats private constructor(val uuid: UUID, private val perSettings: Mu
         config.save(getFile(uuid))
     }
 
-    fun addLoss(name: String) {
+    override fun addLoss(name: String) {
         val config = getConfig(uuid)
         if (name in config) {
             config.set("$name.Losses", config.getInt("$name.Losses") + 1)
@@ -48,7 +61,7 @@ class ChessStats private constructor(val uuid: UUID, private val perSettings: Mu
         config.save(getFile(uuid))
     }
 
-    fun addDraw(name: String) {
+    override fun addDraw(name: String) {
         val config = getConfig(uuid)
         if (name in config) {
             config.set("$name.Draws", config.getInt("$name.Draws") + 1)
@@ -82,12 +95,12 @@ class ChessStats private constructor(val uuid: UUID, private val perSettings: Mu
             for (name in config.getKeys(false)) {
                 stats[name] = PartialChessStats(config.getInt("$name.Wins"), config.getInt("$name.Losses"), config.getInt("$name.Draws"))
             }
-            return ChessStats(uuid, stats)
+            return YamlChessStats(uuid, stats)
         }
     }
 }
 
-// TODO: add support for other storage types
+// TODO: add variant-specific stats
 // TODO: add combined stats
 suspend fun Player.openStatsMenu(playerName: String, stats: ChessStats) =
     openMenu(config.getPathString("Message.StatsOf", playerName), SettingsManager.getSettings().mapIndexed { index, s ->
