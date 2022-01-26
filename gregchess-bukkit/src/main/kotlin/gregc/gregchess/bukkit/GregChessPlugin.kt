@@ -62,6 +62,7 @@ object GregChessPlugin : Listener {
     private val LOADED_FEN = message("LoadedFEN")
     private val CONFIG_RELOADED = message("ConfigReloaded")
     private val STATS_OP_DONE = message("StatsOpDone")
+    private val ADMIN_TOGGLED = message("AdminToggled")
 
     private val requestManager = RequestManager(plugin, coroutineScope)
 
@@ -314,31 +315,30 @@ object GregChessPlugin : Listener {
                 }
             }
             subcommand("serial") {
-                val pl = requireGame()
-                execute<Player> {
-                    GregChess.logger.info(json.encodeToString(pl().game))
-                }
-            }
-            subcommand("serialsave") {
-                val pl = requireGame()
-                argument(StringArgument("name")) { name ->
-                    execute<Player> {
-                        val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
-                        f.parentFile.mkdirs()
-                        @Suppress("BlockingMethodInNonBlockingContext")
-                        f.createNewFile()
-                        f.writeText(json.encodeToString(pl().game))
-                    }
-                }
-            }
-            subcommand("serialload") {
                 requirePlayer()
-                requireNoGame()
-                argument(StringArgument("name")) { name ->
-                    execute<Player> {
-                        val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
-                        json.decodeFromString<ChessGame>(f.readText()).sync()
+                literal("save") {
+                    val pl = requireGame()
+                    argument(StringArgument("name")) { name ->
+                        execute<Player> {
+                            val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
+                            f.parentFile.mkdirs()
+                            @Suppress("BlockingMethodInNonBlockingContext")
+                            f.createNewFile()
+                            f.writeText(json.encodeToString(pl().game))
+                        }
                     }
+                }
+                literal("load") {
+                    requireNoGame()
+                    argument(StringArgument("name")) { name ->
+                        execute<Player> {
+                            val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
+                            json.decodeFromString<ChessGame>(f.readText()).sync()
+                        }
+                    }
+                }
+                execute<Player> {
+                    GregChess.logger.info(json.encodeToString(sender.currentGame.cNotNull(YOU_NOT_IN_GAME)))
                 }
             }
             literal("info") {
@@ -382,10 +382,17 @@ object GregChessPlugin : Listener {
                 requirePlayer()
                 execute<Player> {
                     sender.isAdmin = !sender.isAdmin
+                    sender.sendMessage(ADMIN_TOGGLED)
                 }
             }
             subcommand("stats") {
+                validate(NO_PERMISSION) {
+                    sender.hasPermission("gregchess.chess.stats.self")
+                            || sender.hasPermission("gregchess.chess.stats.read")
+                            || sender.hasPermission("gregchess.chess.stats.set")
+                }
                 execute {
+                    cRequire(sender.hasPermission("gregchess.chess.stats.self"), NO_PERMISSION)
                     cRequire(sender is Player, NOT_PLAYER)
                 }
                 executeSuspend<Player> {
@@ -423,6 +430,7 @@ object GregChessPlugin : Listener {
                     }
                 }
                 argument(offlinePlayerArgument("player")) { player ->
+                    requirePermission("gregchess.chess.stats.read")
                     requirePlayer()
                     executeSuspend<Player> {
                         sender.openStatsMenu(player().name!!, ChessStats.of(player().uniqueId))

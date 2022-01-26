@@ -46,8 +46,7 @@ permissions:
       gregchess.chess.serialload: true
       gregchess.chess.info.*: true
       gregchess.chess.admin: true
-      gregchess.chess.stats: true
-      gregchess.chess.stats.set: true
+      gregchess.chess.stats.*: true
   gregchess.chess.duel:
     description: Can use /chess duel
     default: true
@@ -99,12 +98,6 @@ permissions:
   gregchess.chess.serial:
     description: Can use /chess serial
     default: op
-  gregchess.chess.serialsave:
-    description: Can use /chess serialsave
-    default: op
-  gregchess.chess.serialload:
-    description: Can use /chess serialload
-    default: op
   gregchess.chess.info.*:
     description: Can always use /chess info
     default: op
@@ -120,10 +113,21 @@ permissions:
   gregchess.chess.admin:
     description: Can use /chess admin
     default: op
-  gregchess.chess.stats:
-    description: Can use /chess stats
+  gregchess.chess.stats.*:
+    description: Can fully use /chess stats
     default: op
+    children:
+      gregchess.chess.stats.read: true
+      gregchess.chess.stats.set: true
+  gregchess.chess.stats.self:
+    description: Can use /chess stats
+    default: true
+  gregchess.chess.stats.read:
+    description: Can use /chess stats with players
+    default: true
+    children:
+      gregchess.chess.stats.self: true
   gregchess.chess.stats.set:
-    description: Can use /chess stats [set|clear]
+    description: Can use /chess stats set and clear
     default: op
 
