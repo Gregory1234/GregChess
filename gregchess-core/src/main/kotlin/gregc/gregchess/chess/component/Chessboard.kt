@@ -32,7 +32,7 @@ private class Square(
 @Serializable
 class Chessboard private constructor (
     val initialFEN: FEN,
-    val simpleCastling: Boolean,
+    val simpleCastling: Boolean, // TODO: add general move options or replace with variant transformers
     private val squares: Map<Pos, Square>,
     var halfmoveClock: UInt = initialFEN.halfmoveClock,
     @SerialName("fullmoveCounter") private var fullmoveCounter_: UInt = initialFEN.fullmoveCounter,

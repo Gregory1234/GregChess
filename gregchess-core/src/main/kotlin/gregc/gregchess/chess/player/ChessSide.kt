@@ -23,6 +23,7 @@ class ChessPlayerType<T : ChessPlayer>(val cl: KClass<T>) : NameRegistered {
 }
 
 // TODO: combine with ChessSide
+// TODO: add an interface for human players
 @Serializable(with = ChessPlayerSerializer::class)
 interface ChessPlayer {
     val type: ChessPlayerType<*>

@@ -95,6 +95,7 @@ private fun PartialChessStats.toItemStack(name: String) = itemStack(Material.IRO
     }
 }
 
+// TODO: add stats to core
 // TODO: add variant-specific stats
 suspend fun Player.openStatsMenu(playerName: String, stats: ChessStats) =
     openMenu(config.getPathString("Message.StatsOf", playerName), SettingsManager.getSettings().let { settings ->

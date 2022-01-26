@@ -55,6 +55,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         held = piece
     }
 
+    // TODO: try to place the piece on the clicked floor block
     fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, server: MinecraftServer?) {
         if (!game.running) return
         val piece = held ?: return
