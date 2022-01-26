@@ -5,7 +5,9 @@ import gregc.gregchess.chess.Color
 import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
+import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
+import kotlin.reflect.full.createType
 
 @Serializable(with = ChessPlayerType.Serializer::class)
 class ChessPlayerType<T : ChessPlayer>(val cl: KClass<T>) : NameRegistered {
@@ -31,9 +33,13 @@ interface ChessPlayer {
 
 @OptIn(InternalSerializationApi::class)
 object ChessPlayerSerializer : KeyRegisteredSerializer<ChessPlayerType<*>, ChessPlayer>("ChessPlayer", ChessPlayerType.Serializer) {
+
     @Suppress("UNCHECKED_CAST")
-    override val ChessPlayerType<*>.serializer get() = cl.serializer() as KSerializer<ChessPlayer>
+    override fun ChessPlayerType<*>.valueSerializer(module: SerializersModule): KSerializer<ChessPlayer> =
+        module.serializer(cl.createType()) as KSerializer<ChessPlayer>
+
     override val ChessPlayer.key: ChessPlayerType<*> get() = type
+
 }
 
 abstract class ChessSide<T : ChessPlayer>(val player: T, val color: Color, val game: ChessGame) {

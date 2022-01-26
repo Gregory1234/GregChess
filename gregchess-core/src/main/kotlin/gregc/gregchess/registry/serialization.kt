@@ -29,8 +29,7 @@ abstract class KeyRegisteredSerializer<K: Any, T : Any>(
 ) : KSerializer<T> {
 
     abstract val T.key: K
-    // TODO: add dependency on SerializersModule
-    abstract val K.serializer: KSerializer<T>
+    abstract fun K.valueSerializer(module: SerializersModule): KSerializer<T>
 
     final override val descriptor: SerialDescriptor
         get() = buildClassSerialDescriptor(name) {
@@ -42,7 +41,7 @@ abstract class KeyRegisteredSerializer<K: Any, T : Any>(
         val key = value.key
         encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, keySerializer, key)
-            encodeSerializableElement(descriptor, 1, key.serializer, value)
+            encodeSerializableElement(descriptor, 1, key.valueSerializer(encoder.serializersModule), value)
         }
     }
 
@@ -52,13 +51,13 @@ abstract class KeyRegisteredSerializer<K: Any, T : Any>(
 
         if (decodeSequentially()) { // sequential decoding protocol
             key = decodeSerializableElement(descriptor, 0, keySerializer)
-            ret = decodeSerializableElement(descriptor, 1, key.serializer)
+            ret = decodeSerializableElement(descriptor, 1, key.valueSerializer(decoder.serializersModule))
         } else {
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> key = decodeSerializableElement(descriptor, 0, keySerializer)
                     1 -> {
-                        ret = decodeSerializableElement(descriptor, index, key!!.serializer)
+                        ret = decodeSerializableElement(descriptor, index, key!!.valueSerializer(decoder.serializersModule))
                     }
                     CompositeDecoder.DECODE_DONE -> break
                     else -> error("Unexpected index: $index")
@@ -83,6 +82,6 @@ open class KeyRegisteredListSerializer<K : Any, T : Any>(val base: KeyRegistered
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun K.valueSerializer(module: SerializersModule) = with(base) { serializer }
+    override fun K.valueSerializer(module: SerializersModule) = with(base) { valueSerializer(module) }
 
 }

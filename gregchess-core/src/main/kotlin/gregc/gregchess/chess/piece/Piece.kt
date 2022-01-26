@@ -6,7 +6,9 @@ import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
+import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
+import kotlin.reflect.full.createType
 
 object PieceRegistryView : FiniteBiRegistryView<String, Piece> {
 
@@ -90,8 +92,8 @@ interface PlacedPiece {
     fun destroy(board: Chessboard)
 }
 
-fun PlacedPiece?.boardPiece() = this as BoardPiece
-fun PlacedPiece?.capturedPiece() = this as CapturedPiece
+internal fun PlacedPiece?.boardPiece() = this as BoardPiece
+internal fun PlacedPiece?.capturedPiece() = this as CapturedPiece
 
 fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) {
     val realMoves = moves.filterNotNull()
@@ -107,9 +109,11 @@ fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?
 }
 
 object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, PlacedPiece>("PlacedPiece", PlacedPieceType.Serializer) {
-    @OptIn(InternalSerializationApi::class)
+
     @Suppress("UNCHECKED_CAST")
-    override val PlacedPieceType<*>.serializer: KSerializer<PlacedPiece> get() = cl.serializer() as KSerializer<PlacedPiece>
+    override fun PlacedPieceType<*>.valueSerializer(module: SerializersModule): KSerializer<PlacedPiece> =
+        module.serializer(cl.createType()) as KSerializer<PlacedPiece>
+
     override val PlacedPiece.key: PlacedPieceType<*> get() = placedPieceType
 }
 

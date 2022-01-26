@@ -6,8 +6,10 @@ import gregc.gregchess.chess.ChessListener
 import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
+import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
+import kotlin.reflect.full.createType
 
 @Serializable(with = ComponentType.Serializer::class)
 class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
@@ -44,7 +46,8 @@ interface Component : ChessListener {
 object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component>("Component", ComponentType.Serializer) {
 
     @Suppress("UNCHECKED_CAST")
-    override val ComponentType<*>.serializer get() = cl.serializer() as KSerializer<Component>
+    override fun ComponentType<*>.valueSerializer(module: SerializersModule): KSerializer<Component> =
+        module.serializer(cl.createType()) as KSerializer<Component>
 
     override val Component.key: ComponentType<*> get() = type
 

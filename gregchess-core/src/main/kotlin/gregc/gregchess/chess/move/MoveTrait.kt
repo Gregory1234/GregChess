@@ -6,6 +6,7 @@ import gregc.gregchess.chess.piece.*
 import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
+import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createType
 
@@ -80,9 +81,13 @@ inline fun MoveTrait.tryPiece(f: () -> Unit) =
     }
 
 object MoveTraitSerializer : KeyRegisteredSerializer<MoveTraitType<*>, MoveTrait>("MoveTrait", MoveTraitType.Serializer) {
-    override val MoveTrait.key: MoveTraitType<*> get() = type
+
     @Suppress("UNCHECKED_CAST")
-    override val MoveTraitType<*>.serializer: KSerializer<MoveTrait> get() = serializer(cl.createType()) as KSerializer<MoveTrait>
+    override fun MoveTraitType<*>.valueSerializer(module: SerializersModule): KSerializer<MoveTrait> =
+        module.serializer(cl.createType()) as KSerializer<MoveTrait>
+
+    override val MoveTrait.key: MoveTraitType<*> get() = type
+
 }
 
 fun MoveTrait.pieceNotExist(e: PieceDoesNotExistException): Nothing =
