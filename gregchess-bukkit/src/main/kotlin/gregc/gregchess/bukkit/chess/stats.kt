@@ -12,6 +12,7 @@ import java.util.*
 interface ChessStats {
     val uuid: UUID
     operator fun get(name: String): PartialChessStats
+    fun total(): PartialChessStats
     fun addWin(name: String)
     fun addLoss(name: String)
     fun addDraw(name: String)
@@ -32,6 +33,10 @@ class YamlChessStats private constructor(
     val player: Player? get() = Bukkit.getPlayer(uuid)
 
     override operator fun get(name: String) = perSettings[name] ?: PartialChessStats(0, 0, 0)
+
+    override fun total(): PartialChessStats =
+        perSettings.values.reduceOrNull { acc, partialChessStats -> acc + partialChessStats }
+            ?: PartialChessStats(0, 0, 0)
 
     override fun addWin(name: String) {
         val config = getConfig(uuid)
@@ -100,20 +105,22 @@ class YamlChessStats private constructor(
     }
 }
 
+private fun PartialChessStats.toItemStack(name: String) = itemStack(Material.IRON_BLOCK) {
+    meta {
+        this.name = name
+        lore = listOf(
+            config.getPathString("Message.Stats.Wins", wins.toString()),
+            config.getPathString("Message.Stats.Losses", losses.toString()),
+            config.getPathString("Message.Stats.Draws", draws.toString())
+        )
+    }
+}
+
 // TODO: add variant-specific stats
-// TODO: add combined stats
 suspend fun Player.openStatsMenu(playerName: String, stats: ChessStats) =
-    openMenu(config.getPathString("Message.StatsOf", playerName), SettingsManager.getSettings().mapIndexed { index, s ->
-        val partialStats = stats[s.name]
-        val item = itemStack(Material.IRON_BLOCK) {
-            meta {
-                name = s.name
-                lore = listOf(
-                    config.getPathString("Message.Stats.Wins", partialStats.wins.toString()),
-                    config.getPathString("Message.Stats.Losses", partialStats.losses.toString()),
-                    config.getPathString("Message.Stats.Draws", partialStats.draws.toString())
-                )
-            }
-        }
-        ScreenOption(item, Unit, index.toInvPos())
+    openMenu(config.getPathString("Message.StatsOf", playerName), SettingsManager.getSettings().let { settings ->
+        settings.mapIndexed { index, s ->
+            val item = stats[s.name].toItemStack(s.name)
+            ScreenOption(item, Unit, index.toInvPos())
+        } + ScreenOption(stats.total().toItemStack(config.getPathString("Message.Stats.Total")), Unit, settings.size.toInvPos())
     })
