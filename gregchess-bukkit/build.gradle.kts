@@ -1,4 +1,5 @@
 import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask
+import dev.s7a.gradle.minecraft.server.tasks.RefreshMinecraftServerJarTask
 
 plugins {
     kotlin("jvm")
@@ -88,6 +89,10 @@ tasks {
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
     }
+    create<Delete>("cleanPluginJar") {
+        delete(projectDir.resolve("run/plugins")
+            .resolve(getByPath(":gregchess-bukkit:shadedJar").outputs.files.singleFile.name))
+    }
     create<LaunchMinecraftServerTask>("runServer") {
         dependsOn(":gregchess-bukkit:shadedJar")
         doFirst {
@@ -96,6 +101,7 @@ tasks {
                 into(projectDir.resolve("run/plugins"))
             }
         }
+        finalizedBy(":gregchess-bukkit:cleanPluginJar")
         val paperServerVersion: String by project
         jarUrl.set(LaunchMinecraftServerTask.JarUrl.Paper(paperServerVersion))
         serverDirectory.set(projectDir.resolve("run"))
@@ -108,6 +114,10 @@ tasks {
             "-XX:G1RSetUpdatingPauseTimePercent=5", "-XX:+PerfDisableSharedMem", "-XX:MaxTenuringThreshold=1",
             "-Dusing.aikars.flags=https://mcflags.emc.gs", "-Daikars.new.flags=true", "-Dkotlinx.coroutines.debug=on",
             "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"))
+    }
+    create<RefreshMinecraftServerJarTask>("cleanServer") {
+        serverDirectory.set(projectDir.resolve("run"))
+        jarName.set("server.jar")
     }
 }
 
