@@ -10,8 +10,8 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createType
 
-class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>) :
-    Exception(traits.toList().map { Registry.MOVE_TRAIT_TYPE[it.type] }.toString())
+class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>, cause: Throwable? = null) :
+    Exception(traits.toList().map { Registry.MOVE_TRAIT_TYPE[it.type] }.toString(), cause)
 
 class TraitPreconditionException(trait: MoveTrait, message: String, cause: Throwable? = null) :
     IllegalStateException("${trait.type}: $message", cause)

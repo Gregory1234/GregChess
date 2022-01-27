@@ -25,9 +25,10 @@ data class Move(
     }
 
     fun execute(game: ChessGame) {
-        var remainingTraits = traits
+        val completedTraits = mutableListOf<MoveTrait>()
+        val remainingTraits = traits.toMutableList()
         for (pass in 0u..255u) {
-            remainingTraits = remainingTraits.filterNot { mt ->
+            remainingTraits.removeIf { mt ->
                 if (remainingTraits.any { it.type in mt.shouldComeBefore })
                     false
                 else if (remainingTraits.any { mt.type in it.shouldComeAfter })
@@ -37,21 +38,33 @@ data class Move(
                 else if (mt.shouldComeLast && remainingTraits.any { !it.shouldComeLast })
                     false
                 else {
-                    mt.execute(game, this)
-                    true
+                    try {
+                        mt.execute(game, this)
+                        completedTraits += mt
+                        true
+                    } catch(e: Throwable) {
+                        for(t in completedTraits.asReversed())
+                            t.undo(game, this)
+                        game.board.updateMoves()
+                        throw TraitsCouldNotExecuteException(remainingTraits, e)
+                    }
                 }
             }
             if (remainingTraits.isEmpty()) return
         }
+
+        for(t in completedTraits.asReversed())
+            t.undo(game, this)
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 
     val name: MoveName get() = MoveName(traits.map { it.nameTokens })
 
     fun undo(game: ChessGame) {
-        var remainingTraits = traits
+        val completedTraits = mutableListOf<MoveTrait>()
+        val remainingTraits = traits.toMutableList()
         for (pass in 0u..255u) {
-            remainingTraits = remainingTraits.filterNot { mt ->
+            remainingTraits.removeIf { mt ->
                 if (remainingTraits.any { it.type in mt.shouldComeAfter })
                     false
                 else if (remainingTraits.any { mt.type in it.shouldComeBefore })
@@ -61,13 +74,21 @@ data class Move(
                 else if (mt.shouldComeFirst && remainingTraits.any { !it.shouldComeFirst })
                     false
                 else {
-                    mt.undo(game, this)
-                    true
+                    try {
+                        mt.undo(game, this)
+                        completedTraits += mt
+                        true
+                    } catch(e: Throwable) {
+                        for(t in completedTraits.asReversed())
+                            t.execute(game, this)
+                        game.board.updateMoves()
+                        throw TraitsCouldNotExecuteException(remainingTraits, e)
+                    }
                 }
             }
-            if (remainingTraits.isEmpty()) {
-                return
-            }
+            for(t in completedTraits.asReversed())
+                t.execute(game, this)
+            if (remainingTraits.isEmpty()) return
         }
         throw TraitsCouldNotExecuteException(remainingTraits)
     }

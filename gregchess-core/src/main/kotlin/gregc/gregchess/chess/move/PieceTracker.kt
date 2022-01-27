@@ -49,13 +49,13 @@ class PieceTracker private constructor(
 
     fun traceMoveBack(board: Chessboard, vararg pieces: PlacedPiece) {
         val revMoves = pieces.map { Pair(it, traceBack(it)) }.toTypedArray()
-        addMovesBack(*revMoves)
         multiMove(board, *revMoves)
+        addMovesBack(*revMoves)
     }
 
     fun traceMove(board: Chessboard, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
-        addMoves(*moves)
         multiMove(board, *moves)
+        addMoves(*moves)
     }
 
 }

@@ -69,9 +69,6 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
             move.getTrait<PromotionTrait>()?.apply {
                 promotion = suspendCoroutine { player.getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, floor.world!!, floor.pos, it)) } ?: promotions.first()
             }
-        }.invokeOnCompletion {
-            if (it != null)
-                throw it
             game.finishMove(move)
         }
     }

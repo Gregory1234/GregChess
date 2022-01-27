@@ -96,16 +96,30 @@ internal fun PlacedPiece?.boardPiece() = this as BoardPiece
 internal fun PlacedPiece?.capturedPiece() = this as CapturedPiece
 
 fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) {
+    val destroyed = mutableListOf<PlacedPiece?>()
+    val created = mutableListOf<PlacedPiece?>()
     val realMoves = moves.filterNotNull()
-    for ((o,_) in realMoves)
-        o?.checkExists(board)
-    for ((o,_) in realMoves)
-        o?.destroy(board)
-    for ((_,t) in realMoves)
-        t?.checkCanExist(board)
-    for ((_,t) in realMoves)
-        t?.create(board)
-    board.callPieceEvent(PieceEvent.Moved(realMoves.toMap()))
+    try {
+        for ((o, _) in realMoves)
+            o?.checkExists(board)
+        for ((o, _) in realMoves) {
+            o?.destroy(board)
+            destroyed += o
+        }
+        for ((_, t) in realMoves)
+            t?.checkCanExist(board)
+        for ((_, t) in realMoves) {
+            t?.create(board)
+            created += t
+        }
+        board.callPieceEvent(PieceEvent.Moved(realMoves.toMap()))
+    } catch (e: Throwable) {
+        for (t in created.asReversed())
+            t?.destroy(board)
+        for (o in destroyed.asReversed())
+            o?.create(board)
+        throw e
+    }
 }
 
 object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, PlacedPiece>("PlacedPiece", PlacedPieceType.Serializer) {
