@@ -58,7 +58,7 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
     val tileBlocks: Collection<ChessboardFloorBlockEntity>
         get() {
             if (pos == null)
-                return emptyList()
+                return listOf(this)
             fun findOffsets(d: Direction): Int {
                 var off = 1
                 while (true) {
@@ -69,9 +69,9 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
                         off++
                 }
             }
-            val minx = findOffsets(Direction.WEST)
+            val minx = -findOffsets(Direction.WEST)
             val maxx = findOffsets(Direction.EAST)
-            val minz = findOffsets(Direction.NORTH)
+            val minz = -findOffsets(Direction.NORTH)
             val maxz = findOffsets(Direction.SOUTH)
             return buildList {
                 for (x in minx..maxx)

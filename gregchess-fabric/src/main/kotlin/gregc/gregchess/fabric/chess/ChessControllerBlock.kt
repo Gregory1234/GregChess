@@ -112,6 +112,12 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
                         ent.boardPos = Pos(realposx, eposy / 3)
                         ent.updateFloor()
                     }
+                    for (ent in floorBlockEntities) {
+                        if (ent.directPiece != null && ent.directPiece != ent.pieceBlock) {
+                            resetBoard()
+                            return false
+                        }
+                    }
                     return true
                 }
             }

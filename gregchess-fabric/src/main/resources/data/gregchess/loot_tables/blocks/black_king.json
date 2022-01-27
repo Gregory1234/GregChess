@@ -18,19 +18,6 @@
           "name": "gregchess:black_king"
         }
       ],
-      "functions": [
-        {
-          "function": "minecraft:copy_nbt",
-          "source": "block_entity",
-          "ops": [
-            {
-              "source": "GameUUID",
-              "target": "BlockEntityTag.GameUUID",
-              "op": "replace"
-            }
-          ]
-        }
-      ],
       "conditions": [
         {
           "condition": "minecraft:survives_explosion"

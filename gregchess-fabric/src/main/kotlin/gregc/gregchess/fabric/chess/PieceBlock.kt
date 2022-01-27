@@ -1,6 +1,7 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.chess.player.FabricChessSide
@@ -38,7 +39,8 @@ class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChe
 
     override fun markRemoved() {
         if (world?.isClient == false && !moved) {
-            chessControllerBlock?.resetBoard()
+            currentGame?.board?.clearPiece(floorBlock!!.boardPos!!)
+            currentGame?.board?.updateMoves()
         }
         super.markRemoved()
     }
@@ -96,6 +98,14 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
     }
 
     override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean = true
+
+    override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
+        if (!world.isClient()) {
+            val entity = world.getBlockEntity(pos) as PieceBlockEntity
+            entity.currentGame?.board?.plusAssign(BoardPiece(entity.floorBlock!!.boardPos!!, piece, false))
+            entity.currentGame?.board?.updateMoves()
+        }
+    }
 }
 
 class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
@@ -142,6 +152,11 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
 
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), 3)
+        if (!world.isClient()) {
+            val entity = world.getBlockEntity(pos) as PieceBlockEntity
+            entity.currentGame?.board?.plusAssign(BoardPiece(entity.floorBlock!!.boardPos!!, piece, false))
+            entity.currentGame?.board?.updateMoves()
+        }
     }
 
     override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos) =
@@ -186,4 +201,26 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
 
     override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean =
         world != null && pos != null && pos.y < world.topY - 1 && world.getBlockState(pos.up()).material.isReplaceable
+
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
+        if (!world.isClient) {
+            if (player.isCreative) {
+                onBreakInCreative(world, pos, state, player)
+            } else {
+                dropStacks(state, world, pos, null as BlockEntity?, player, player.mainHandStack)
+            }
+        }
+        super.onBreak(world, pos, state, player)
+    }
+
+    private fun onBreakInCreative(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity?) {
+        if (state.get(HALF) == DoubleBlockHalf.UPPER) {
+            val blockPos = pos.down()
+            val blockState = world.getBlockState(blockPos)
+            if (blockState.isOf(state.block) && blockState.get(HALF) == DoubleBlockHalf.LOWER) {
+                world.setBlockState(blockPos, Blocks.AIR.defaultState, 35)
+                world.syncWorldEvent(player, 2001, blockPos, getRawIdFromState(blockState))
+            }
+        }
+    }
 }
