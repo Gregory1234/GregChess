@@ -86,36 +86,53 @@ data class FabricRenderer(
     @ChessEventHandler
     fun onPiecePlayerAction(e: PiecePlayerActionEvent) = redrawFloor()
 
+    private fun choosePlacePos(pos: Pos, block: PieceBlock): BlockPos {
+        val preferredBlock = preferredBlocks[pos]
+        return if (preferredBlock != null && block.canActuallyPlaceAt(preferredBlock.world, preferredBlock.pos.up()))
+            preferredBlock.pos
+        else
+            tileBlocks[pos]!!.filter { block.canActuallyPlaceAt(it.world, it.pos.up()) }.random().also {
+                preferredBlocks[pos] = it
+            }.pos
+    }
+
     @ChessEventHandler
     fun handlePieceEvents(e: PieceEvent) = when (e) {
         is PieceEvent.Created -> {}
         is PieceEvent.Cleared -> {}
         is PieceEvent.Moved -> {
-            for ((o, _) in e.moves)
-                when (o) {
-                    is BoardPiece -> {
-                        val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
-                        pieceBlock?.safeBreak(!controller.addPiece(o.piece))
-                    }
-                }
-            for ((_, t) in e.moves)
-                when (t) {
-                    is BoardPiece -> {
-                        val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
-                        if (pieceBlock == null) {
-                            val preferredBlock = preferredBlocks[t.pos]
-                            val newBlockPos =
-                                if (preferredBlock != null && t.piece.block.canActuallyPlaceAt(preferredBlock.world, preferredBlock.pos.up()))
-                                    preferredBlock.pos
-                                else
-                                    tileBlocks[t.pos]?.filter { t.piece.block.canActuallyPlaceAt(it.world, it.pos.up()) }?.random()?.pos
-                            if (newBlockPos != null) {
-                                check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
-                                t.place(newBlockPos)
-                            }
+            val broken = mutableListOf<BoardPiece>()
+            val placed = mutableListOf<BoardPiece>()
+            try {
+                for ((o, _) in e.moves)
+                    when (o) {
+                        is BoardPiece -> {
+                            val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
+                            pieceBlock?.safeBreak(!controller.addPiece(o.piece))
+                            broken += o
                         }
                     }
+                for ((_, t) in e.moves)
+                    when (t) {
+                        is BoardPiece -> {
+                            val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                            check(pieceBlock == null) { "There is a piece block on ${t.pos} already" }
+                            check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
+                            t.place(choosePlacePos(t.pos, t.piece.block))
+                            placed += t
+                        }
+                    }
+            } catch (e: Throwable) {
+                for (t in placed.asReversed()) {
+                    val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                    pieceBlock?.safeBreak(!controller.addPiece(t.piece))
                 }
+                for (o in broken.asReversed()) {
+                    check(controller.removePiece(o.piece)) { "Not enough pieces in the controller" }
+                    o.place(choosePlacePos(o.pos, o.piece.block))
+                }
+                throw e
+            }
         }
     }
 }
