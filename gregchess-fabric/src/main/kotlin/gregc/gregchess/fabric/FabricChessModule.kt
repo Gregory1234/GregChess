@@ -71,3 +71,7 @@ abstract class FabricChessModule(name: String, namespace: String) : ChessModule(
         Registry.REGISTRIES.forEach { it[this].validate() }
     }
 }
+
+fun interface ChessInitializer {
+    fun onInitializeChess()
+}

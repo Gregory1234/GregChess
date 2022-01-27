@@ -4,8 +4,8 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessSide
-import gregc.gregchess.fabric.chess.ChessboardFloorBlockEntity
-import gregc.gregchess.fabric.chess.PromotionMenuFactory
+import gregc.gregchess.fabric.chess.*
+import gregc.gregchess.fabric.chess.component.renderer
 import gregc.gregchess.fabric.chess.component.server
 import kotlinx.coroutines.launch
 import net.minecraft.server.MinecraftServer
@@ -55,10 +55,10 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         held = piece
     }
 
-    // TODO: try to place the piece on the clicked floor block
     fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, server: MinecraftServer?) {
         if (!game.running) return
         val piece = held ?: return
+        if (!piece.piece.block.canActuallyPlaceAt(floor.world, floor.pos.up())) return
         val moves = piece.getLegalMoves(game.board)
         if (pos != piece.pos && pos !in moves.map { it.display }) return
         held = null
@@ -69,6 +69,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
             move.getTrait<PromotionTrait>()?.apply {
                 promotion = suspendCoroutine { player.getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, floor.world!!, floor.pos, it)) } ?: promotions.first()
             }
+            game.renderer.preferBlock(floor)
             game.finishMove(move)
         }
     }

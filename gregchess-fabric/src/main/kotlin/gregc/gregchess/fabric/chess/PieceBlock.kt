@@ -63,6 +63,8 @@ sealed class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEntity
         pos: BlockPos?,
         context: ShapeContext?
     ): VoxelShape? = VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
+
+    abstract fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean
 }
 
 class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
@@ -92,6 +94,8 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
         }
         return ActionResult.PASS
     }
+
+    override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean = true
 }
 
 class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
@@ -179,4 +183,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         }
         return ActionResult.PASS
     }
+
+    override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean =
+        world != null && pos != null && pos.y < world.topY - 1 && world.getBlockState(pos.up()).material.isReplaceable
 }

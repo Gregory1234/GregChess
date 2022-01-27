@@ -34,6 +34,14 @@ data class FabricRenderer(
 
     private val tileBlocks: Map<Pos, List<ChessboardFloorBlockEntity>> by lazy { floor.groupBy { it.boardPos!! } }
 
+    private val preferredBlocks: MutableMap<Pos, ChessboardFloorBlockEntity> by lazy {
+        tileBlocks.mapValues { (_, fs) -> fs.firstOrNull { it.directPiece != null } ?: fs[4] }.toMutableMap()
+    }
+
+    internal fun preferBlock(floor: ChessboardFloorBlockEntity) {
+        preferredBlocks[floor.boardPos!!] = floor
+    }
+
     private fun redrawFloor() {
         for (file in 0..7) {
             for (rank in 0..7) {
@@ -95,7 +103,12 @@ data class FabricRenderer(
                     is BoardPiece -> {
                         val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
                         if (pieceBlock == null) {
-                            val newBlockPos = tileBlocks[t.pos]?.randomOrNull()?.pos
+                            val preferredBlock = preferredBlocks[t.pos]
+                            val newBlockPos =
+                                if (preferredBlock != null && t.piece.block.canActuallyPlaceAt(preferredBlock.world, preferredBlock.pos.up()))
+                                    preferredBlock.pos
+                                else
+                                    tileBlocks[t.pos]?.filter { t.piece.block.canActuallyPlaceAt(it.world, it.pos.up()) }?.random()?.pos
                             if (newBlockPos != null) {
                                 check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
                                 t.place(newBlockPos)
