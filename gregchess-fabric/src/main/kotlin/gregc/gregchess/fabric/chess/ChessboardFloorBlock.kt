@@ -8,6 +8,9 @@ import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.network.Packet
+import net.minecraft.network.listener.ClientPlayPacketListener
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.util.*
@@ -18,8 +21,8 @@ import net.minecraft.world.World
 
 
 class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChessMod.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
-    var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)
-    var boardPos: Pos? by BlockEntityDirtyDelegate(null)
+    var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null, true)
+    var boardPos: Pos? by BlockEntityDirtyDelegate(null, true)
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         chessControllerBlockPos?.let {
@@ -89,6 +92,14 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
 
     val chessControllerBlock: ChessControllerBlockEntity?
         get() = chessControllerBlockPos?.let { world?.getBlockEntity(it) as? ChessControllerBlockEntity }
+
+    override fun toInitialChunkDataNbt(): NbtCompound = NbtCompound().apply {
+        boardPos?.let {
+            putLong("Pos", ((it.file.toLong() shl 32) or (it.rank.toLong() and 0xFFFFFFFFL)))
+        }
+    }
+
+    override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 }
 
 enum class Floor : StringIdentifiable {

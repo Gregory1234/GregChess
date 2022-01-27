@@ -15,6 +15,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtHelper
 import net.minecraft.nbt.NbtIntArray
 import net.minecraft.server.MinecraftServer
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -27,12 +28,14 @@ internal const val MOD_NAME = "GregChess"
 
 internal fun ident(name: String) = Identifier(MOD_ID, name)
 
-class BlockEntityDirtyDelegate<T>(var value: T) : ReadWriteProperty<BlockEntity, T> {
+class BlockEntityDirtyDelegate<T>(var value: T, val markForUpdate: Boolean = false) : ReadWriteProperty<BlockEntity, T> {
     override operator fun getValue(thisRef: BlockEntity, property: KProperty<*>): T = value
 
     override operator fun setValue(thisRef: BlockEntity, property: KProperty<*>, value: T) {
         this.value = value
         thisRef.markDirty()
+        if (markForUpdate)
+            (thisRef.world as? ServerWorld)?.chunkManager?.markForUpdate(thisRef.pos)
     }
 }
 

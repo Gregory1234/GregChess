@@ -106,6 +106,11 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
             entity.currentGame?.board?.updateMoves()
         }
     }
+
+    override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean {
+        val floor = world.getBlockEntity(pos.down(1)) as? ChessboardFloorBlockEntity?
+        return floor?.pieceBlock == floor?.directPiece
+    }
 }
 
 class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
@@ -159,11 +164,18 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         }
     }
 
-    override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos) =
-        (state.get(HALF) != DoubleBlockHalf.UPPER) || run {
+    override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos) = when(state.get(HALF)) {
+        DoubleBlockHalf.UPPER -> {
             val blockState = world.getBlockState(pos.down())
-            blockState.isOf(this) && blockState.get(HALF) == DoubleBlockHalf.LOWER
+            val floor = world.getBlockEntity(pos.down(2)) as? ChessboardFloorBlockEntity?
+            blockState.isOf(this) && blockState.get(HALF) == DoubleBlockHalf.LOWER && floor?.pieceBlock == null
         }
+        DoubleBlockHalf.LOWER -> {
+            val floor = world.getBlockEntity(pos.down(1)) as? ChessboardFloorBlockEntity?
+            floor?.pieceBlock == floor?.directPiece
+        }
+        null -> false
+    }
 
     override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity? =
         if (state?.get(HALF) == DoubleBlockHalf.LOWER) super.createBlockEntity(pos, state) else null
