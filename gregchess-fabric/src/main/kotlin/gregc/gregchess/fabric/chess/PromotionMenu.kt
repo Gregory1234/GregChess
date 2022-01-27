@@ -34,19 +34,20 @@ class PromotionMenuGuiDescription(
 
     private var index = 0
 
-    private fun addButton(p: Piece) {
+    private fun addButton(p: Piece, available: Boolean) {
         val button = WButton(ItemIcon(p.item), p.item.name)
         button.onClick = Runnable {
             ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("promoted")) {
                 it.writeString(p.key.toString())
             }
         }
+        button.isEnabled = available
         root.add(button, 1, 2 * (++index) - 1, 6, 1)
     }
 
-    private fun addButtons(p: Collection<Piece>) {
+    private fun addButtons(p: Collection<Piece>, av: Collection<Piece>) {
         p.forEach {
-            addButton(it)
+            addButton(it, it in av)
         }
         root.validate(this)
     }
@@ -66,7 +67,9 @@ class PromotionMenuGuiDescription(
         }
 
         ScreenNetworking.of(this, NetworkSide.CLIENT).receive(ident("setup")) {
-            addButtons(it.readList { p -> PieceRegistryView[ p.readString().toKey() ] })
+            val promotions: List<Piece> = it.readList { p -> PieceRegistryView[ p.readString().toKey() ] }
+            val availablePromotions: List<Piece> = it.readList { p -> PieceRegistryView[ p.readString().toKey() ] }
+            addButtons(promotions, availablePromotions)
         }
 
         ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("setup_request")) { }
@@ -88,6 +91,7 @@ class PromotionMenu(gui: PromotionMenuGuiDescription?, player: PlayerEntity?, ti
 
 class PromotionMenuFactory(
     private val promotions: List<Piece>,
+    private val availablePromotions: List<Piece>,
     private val world: World, private val pos: BlockPos,
     private val promotionContinuation: Continuation<Piece?>
 ) : NamedScreenHandlerFactory {
@@ -98,6 +102,9 @@ class PromotionMenuFactory(
             ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("setup_request")) {
                 ScreenNetworking.of(this, NetworkSide.SERVER).send(ident("setup")) {
                     it.writeCollection(promotions) { buf, p ->
+                        buf.writeString(p.key.toString())
+                    }
+                    it.writeCollection(availablePromotions) { buf, p ->
                         buf.writeString(p.key.toString())
                     }
                 }

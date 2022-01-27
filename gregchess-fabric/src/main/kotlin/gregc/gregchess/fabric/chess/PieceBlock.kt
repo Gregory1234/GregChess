@@ -91,8 +91,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
-            cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, world.server)
-            return ActionResult.SUCCESS
+            return if (cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, world.server)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
     }
@@ -204,15 +203,16 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
             cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
             return ActionResult.SUCCESS
-        } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
-            cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, world.server)
-            return ActionResult.SUCCESS
+        } else if (cp.held?.piece != null) {
+            return if (cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, world.server)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
     }
 
     override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean =
-        world != null && pos != null && pos.y < world.topY - 1 && world.getBlockState(pos.up()).material.isReplaceable
+        world != null && pos != null && pos.y < world.topY - 1 &&
+                (world.getBlockState(pos.up()).material.isReplaceable
+                        || world.getBlockState(pos.up()).let { it.block is TallPieceBlock && it.get(HALF) == DoubleBlockHalf.UPPER})
 
     override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
         if (!world.isClient) {

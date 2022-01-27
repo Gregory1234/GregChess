@@ -143,8 +143,7 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
         val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.held != null) {
-            cp.makeMove(floorEntity.boardPos!!, floorEntity, world.server)
-            return ActionResult.SUCCESS
+            return if (cp.makeMove(floorEntity.boardPos!!, floorEntity, world.server)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
     }

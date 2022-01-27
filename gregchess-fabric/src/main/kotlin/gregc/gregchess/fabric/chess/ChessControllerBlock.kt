@@ -211,6 +211,11 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             false
     }
 
+    fun hasPiece(p: Piece): Boolean {
+        val slot = ChessControllerGuiDescription.slotOf(p)
+        return items[slot].item == p.item && items[slot].count >= 1
+    }
+
 }
 
 fun interface ChessControllerInventory : SidedInventory {

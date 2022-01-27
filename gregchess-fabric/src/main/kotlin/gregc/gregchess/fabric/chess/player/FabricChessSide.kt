@@ -55,23 +55,28 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         held = piece
     }
 
-    fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, server: MinecraftServer?) {
-        if (!game.running) return
-        val piece = held ?: return
-        if (!piece.piece.block.canActuallyPlaceAt(floor.world, floor.pos.up())) return
+    fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, server: MinecraftServer?): Boolean {
+        if (!game.running) return false
+        val piece = held ?: return false
+        if (!piece.piece.block.canActuallyPlaceAt(floor.world, floor.pos.up())) return false
         val moves = piece.getLegalMoves(game.board)
-        if (pos != piece.pos && pos !in moves.map { it.display }) return
+        if (pos != piece.pos && pos !in moves.map { it.display }) return false
         held = null
-        if (pos == piece.pos) return
+        if (pos == piece.pos) return true
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
+        val availablePromotions = move.getTrait<PromotionTrait>()?.promotions?.filter { floor.chessControllerBlock?.hasPiece(it) == true }.orEmpty()
+        move.getTrait<PromotionTrait>()?.apply {
+            if (availablePromotions.isEmpty()) return false
+        }
         game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
-                promotion = suspendCoroutine { player.getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, floor.world!!, floor.pos, it)) } ?: promotions.first()
+                promotion = suspendCoroutine { player.getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, availablePromotions, floor.world!!, floor.pos, it)) } ?: availablePromotions.first()
             }
             game.renderer.preferBlock(floor)
             game.finishMove(move)
         }
+        return true
     }
 }
 
