@@ -79,7 +79,7 @@ object GregChessPlugin : Listener {
             if (p is BukkitChessPlugin)
                 p.onInitialize()
         ChessGameManager.start()
-        Arena.reloadArenas()
+        ArenaManager.fromConfig().reloadArenas()
         requestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
@@ -294,8 +294,10 @@ object GregChessPlugin : Listener {
             }
             subcommand("reload") {
                 execute {
+                    val oldManager = ArenaManager.fromConfig()
                     plugin.reloadConfig()
-                    Arena.reloadArenas()
+                    if (ArenaManager.fromConfig() != oldManager) oldManager.unloadArenas()
+                    ArenaManager.fromConfig().reloadArenas()
                     sender.sendMessage(CONFIG_RELOADED)
                 }
             }

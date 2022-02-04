@@ -4,7 +4,7 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.registry.Register
+import gregc.gregchess.registry.*
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
@@ -13,61 +13,29 @@ import org.bukkit.potion.PotionEffectType
 
 class NoFreeArenasException : NoSuchElementException("No free arenas")
 
-abstract class Arena(val name: String) : ChessListener {
+object ArenaManagers {
+    internal val AUTO_REGISTER = AutoRegisterType(ArenaManager::class) { m, n, _ -> register(m, n); (this as? Registering)?.registerAll(m) }
 
+    @JvmField
+    @Register
+    val SIMPLE = SimpleArenaManager
+}
+
+interface ArenaManager<out A : Arena> {
     companion object {
-        @JvmField
-        @Register(data = ["quick"])
-        val ARENA_REMOVED = DrawEndReason(EndReason.Type.EMERGENCY)
-
-        private val arenas = mutableListOf<Arena>()
-
-        private fun ConfigurationSection.getLoc(path: String, def: Loc): Loc = getConfigurationSection(path)?.let {
-            Loc(getInt("x", def.x), getInt("y", def.y), getInt("z", def.z))
-        } ?: def
-
-        private fun ConfigurationSection.parseArena(name: String): Arena? {
-            GregChess.logger.info("Loading arena $name")
-            val start = getLoc("Start", Loc(0, 101, 0))
-
-            val world = Bukkit.getWorld(getString("World") ?: return null) ?: return null
-
-            val tileSize = getInt("TileSize", 3)
-
-            GregChess.logger.info("Loaded arena $name")
-
-            return SimpleArena(name, world, tileSize, start)
-        }
-
-        fun reloadArenas() {
-            val newArenas = config.getConfigurationSection("ChessArenas")
-                ?.getKeys(false)
-                ?.mapNotNull { name ->
-                    val section = config.getConfigurationSection("ChessArenas.$name")
-                    if (section != null)
-                        section.parseArena(name)
-                    else {
-                        GregChess.logger.warn("Arena $name has a wrong format")
-                        null
-                    }
-                }.orEmpty()
-            arenas.forEach {
-                it.game?.stop(drawBy(ARENA_REMOVED))
-            }
-            arenas.clear()
-            arenas.addAll(newArenas)
-        }
-
-        fun nextArenaOrNull(): Arena? = arenas.toList().firstOrNull { it.game == null }
-
-        fun nextArena(): Arena = nextArenaOrNull() ?: throw NoFreeArenasException()
-
-        @JvmStatic
-        protected val returnWorld: World
-            get() = config.getString("ReturnWorld")
-                ?.let { requireNotNull(Bukkit.getWorld(it)) { "Return world not found: $it" } }
-                ?: Bukkit.getWorlds().first()
+        fun fromConfig(): ArenaManager<*> = BukkitRegistry.ARENA_MANAGER[config.getString("ArenaManager")!!.toKey()]
     }
+
+    fun unloadArenas()
+
+    fun reloadArenas()
+
+    fun nextArenaOrNull(): A?
+
+    fun nextArena(): A = nextArenaOrNull() ?: throw NoFreeArenasException()
+}
+
+abstract class Arena(val name: String) : ChessListener {
 
     var game: ChessGame? = null
 
@@ -75,6 +43,64 @@ abstract class Arena(val name: String) : ChessListener {
     abstract val tileSize: Int
     abstract val capturedStart: ByColor<Location>
 
+}
+
+object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
+    @JvmField
+    @Register(data = ["quick"])
+    val ARENA_REMOVED = DrawEndReason(EndReason.Type.EMERGENCY)
+
+    private val arenas = mutableListOf<SimpleArena>()
+
+    private fun ConfigurationSection.getLoc(path: String, def: Loc): Loc = getConfigurationSection(path)?.let {
+        Loc(getInt("x", def.x), getInt("y", def.y), getInt("z", def.z))
+    } ?: def
+
+    private fun ConfigurationSection.parseArena(name: String): SimpleArena? {
+        GregChess.logger.info("Loading arena $name")
+        val start = getLoc("Start", Loc(0, 101, 0))
+
+        val world = Bukkit.getWorld(getString("World") ?: return null) ?: return null
+
+        val tileSize = getInt("TileSize", 3)
+
+        GregChess.logger.info("Loaded arena $name")
+
+        return SimpleArena(name, world, tileSize, start)
+    }
+
+    override fun unloadArenas() {
+        arenas.forEach {
+            it.game?.stop(drawBy(ARENA_REMOVED))
+        }
+        arenas.clear()
+    }
+
+    override fun reloadArenas() { // TODO: try preserving arenas that haven't changed
+        val newArenas = config.getConfigurationSection("ChessArenas")
+            ?.getKeys(false)
+            ?.mapNotNull { name ->
+                val section = config.getConfigurationSection("ChessArenas.$name")
+                if (section != null)
+                    section.parseArena(name)
+                else {
+                    GregChess.logger.warn("Arena $name has a wrong format")
+                    null
+                }
+            }.orEmpty()
+        arenas.forEach {
+            it.game?.stop(drawBy(ARENA_REMOVED))
+        }
+        arenas.clear()
+        arenas.addAll(newArenas)
+    }
+
+    override fun nextArenaOrNull(): SimpleArena? = arenas.toList().firstOrNull { it.game == null }
+
+    internal val returnWorld: World
+        get() = config.getString("ReturnWorld")
+            ?.let { requireNotNull(Bukkit.getWorld(it)) { "Return world not found: $it" } }
+            ?: Bukkit.getWorlds().first()
 }
 
 class ResetPlayerEvent(val player: Player) : ChessEvent
@@ -107,7 +133,7 @@ class SimpleArena internal constructor(
     private fun Player.leave() {
         for (e in activePotionEffects)
             removePotionEffect(e.type)
-        teleport(returnWorld.spawnLocation)
+        teleport(SimpleArenaManager.returnWorld.spawnLocation)
         gameMode = GameMode.SURVIVAL
         allowFlight = false
         isFlying = false

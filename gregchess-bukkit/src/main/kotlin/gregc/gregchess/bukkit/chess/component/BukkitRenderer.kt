@@ -15,7 +15,7 @@ import kotlin.math.floor
 
 @Serializable
 data class BukkitRenderer(
-    @Transient val arena: Arena = Arena.nextArena(),
+    @Transient val arena: Arena = ArenaManager.fromConfig().nextArena(), // TODO: what if the config gets reloaded while in the menu
     val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
 ) : Component {
     companion object {

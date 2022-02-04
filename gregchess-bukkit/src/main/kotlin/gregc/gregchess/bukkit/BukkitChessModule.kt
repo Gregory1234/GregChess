@@ -35,9 +35,13 @@ object BukkitRegistry {
     val BUKKIT_PLUGIN = ConstantRegistry<Plugin>("bukkit_plugin")
     @JvmField
     val CHESS_STATS_PROVIDER = NameRegistry<(UUID) -> ChessStats>("chess_stats_provider")
+    @JvmField
+    val ARENA_MANAGER = NameRegistry<ArenaManager<*>>("arena_manager")
 }
 
 fun PropertyType.register(module: ChessModule, id: String) = module.register(BukkitRegistry.PROPERTY_TYPE, id, this)
+
+fun <A : Arena> ArenaManager<A>.register(module: ChessModule, id: String) = module.register(BukkitRegistry.ARENA_MANAGER, id, this)
 
 fun <T : Component> ComponentType<T>.registerSettings(settings: SettingsParser<T>) =
     apply { module.register(BukkitRegistry.SETTINGS_PARSER, this, settings) }
@@ -68,7 +72,7 @@ private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class)
 
 internal val EndReason.Companion.BUKKIT_AUTO_REGISTER get() = BUKKIT_END_REASON_AUTO_REGISTER
 
-private val BUKKIT_AUTO_REGISTER_TYPES = listOf(EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER) + AutoRegister.basicTypes
+private val BUKKIT_AUTO_REGISTER_TYPES = listOf(EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER, ArenaManagers.AUTO_REGISTER) + AutoRegister.basicTypes
 
 val AutoRegister.Companion.bukkitTypes get() = BUKKIT_AUTO_REGISTER_TYPES
 

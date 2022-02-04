@@ -79,6 +79,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             registerAll<ChessGameManager>()
             registerAll<BukkitComponentType>()
             registerAll<BukkitPlayerType>()
+            registerAll<ArenaManagers>()
         }
         hookComponents()
         registerSettings()

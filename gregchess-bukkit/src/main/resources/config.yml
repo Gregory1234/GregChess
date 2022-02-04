@@ -260,3 +260,4 @@ Scoreboard:
 
 TimeFormat: "mm:ss.S"
 StatsProvider: yaml
+ArenaManager: simple
