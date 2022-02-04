@@ -60,13 +60,26 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
         GregChess.logger.info("Loading arena $name")
         val start = getLoc("Start", Loc(0, 101, 0))
 
-        val world = Bukkit.getWorld(getString("World") ?: return null) ?: return null
+        val world = Bukkit.getWorld(getString("World") ?: Bukkit.getWorlds().first().name) ?: run {
+            GregChess.logger.warn("World not found: ${getString("World")}!")
+            return null
+        }
 
         val tileSize = getInt("TileSize", 3)
 
-        GregChess.logger.info("Loaded arena $name")
+        val thisArena = arenas.firstOrNull {
+            it.name == name && it.offset == start && it.boardStart.world == world && it.tileSize == tileSize
+        }
 
-        return SimpleArena(name, world, tileSize, start)
+        return if (thisArena != null) {
+            GregChess.logger.info("Arena $name did not change")
+
+            thisArena
+        } else {
+            GregChess.logger.info("Loaded arena $name")
+
+            SimpleArena(name, world, tileSize, start)
+        }
     }
 
     override fun unloadArenas() {
@@ -76,7 +89,7 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
         arenas.clear()
     }
 
-    override fun reloadArenas() { // TODO: try preserving arenas that haven't changed
+    override fun reloadArenas() {
         val newArenas = config.getConfigurationSection("ChessArenas")
             ?.getKeys(false)
             ?.mapNotNull { name ->
@@ -89,7 +102,8 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
                 }
             }.orEmpty()
         arenas.forEach {
-            it.game?.stop(drawBy(ARENA_REMOVED))
+            if (it !in newArenas)
+                it.game?.stop(drawBy(ARENA_REMOVED))
         }
         arenas.clear()
         arenas.addAll(newArenas)
@@ -109,7 +123,7 @@ class SimpleArena internal constructor(
     name: String,
     private val world: World,
     override val tileSize: Int,
-    offset: Loc
+    internal val offset: Loc
 ) : Arena(name) {
     private val boardStartLoc: Loc = offset + Loc(8, 0, 8)
     override val boardStart: Location get() = boardStartLoc.toLocation(world)
