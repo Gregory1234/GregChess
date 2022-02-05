@@ -23,7 +23,7 @@ object ArenaManagers {
 
 interface ArenaManager<out A : Arena> {
     companion object {
-        fun fromConfig(): ArenaManager<*> = BukkitRegistry.ARENA_MANAGER[config.getString("ArenaManager")!!.toKey()]
+        fun fromConfig(): ArenaManager<*> = config.getFromRegistry(BukkitRegistry.ARENA_MANAGER, "ArenaManager")!!
     }
 
     fun unloadArenas()

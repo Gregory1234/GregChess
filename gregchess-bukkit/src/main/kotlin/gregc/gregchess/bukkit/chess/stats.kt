@@ -22,7 +22,7 @@ interface ChessStats {
     fun addLosses(name: String, value: Int = 1) = set(name, get(name) + PartialChessStats(0, value, 0))
     fun addDraws(name: String, value: Int = 1) = set(name, get(name) + PartialChessStats(0, 0, value))
     companion object {
-        fun of(uuid: UUID) = BukkitRegistry.CHESS_STATS_PROVIDER[config.getString("StatsProvider")!!.toKey()](uuid)
+        fun of(uuid: UUID) = config.getFromRegistry(BukkitRegistry.CHESS_STATS_PROVIDER, "StatsProvider")!!(uuid)
     }
 }
 

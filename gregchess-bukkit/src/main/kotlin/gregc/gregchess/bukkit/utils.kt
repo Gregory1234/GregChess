@@ -1,8 +1,8 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.chess.ChessEnvironment
-import gregc.gregchess.registry.RegistryKey
-import gregc.gregchess.registry.StringKeySerializer
+import gregc.gregchess.registry.*
+import gregc.gregchess.registry.Registry
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -56,3 +56,6 @@ fun String.toKey(): RegistryKey<String> {
         else -> throw IllegalArgumentException("Bad registry key: $this")
     }
 }
+
+fun <T> ConfigurationSection.getFromRegistry(reg: Registry<String, T, *>, path: String): T? =
+    getString(path)?.toKey()?.let { reg[it] }
