@@ -2,6 +2,7 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.GregChess
@@ -58,13 +59,10 @@ object ChessGameManager {
 
     fun clear() = loadedGames.clear()
 
-    fun settings(v: ChessVariant, boardState: Map<Pos, Piece>, r: FabricRenderer): GameSettings {
-        val components = buildList {
-            this += Chessboard(v, FEN.fromPieces(boardState))
-            this += GameController()
-            this += r
-        }
-        return GameSettings("", ChessVariant.Normal, components)
+    fun settings(v: ChessVariant, boardState: Map<Pos, Piece>, r: FabricRenderer): Collection<Component> = buildList {
+        this += Chessboard(v, FEN.fromPieces(boardState))
+        this += GameController()
+        this += r
     }
 
 

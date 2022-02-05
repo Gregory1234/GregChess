@@ -1,11 +1,13 @@
 package gregc.gregchess.bukkit.chess.component
 
+import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.Move
+import gregc.gregchess.registry.Register
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -22,7 +24,13 @@ enum class PlayerDirection {
 class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
 @Serializable
-class GameController : Component {
+class GameController(val presetName: String) : Component {
+
+    companion object : BukkitRegistering {
+        @JvmField
+        @Register
+        val PRESET = PropertyType()
+    }
 
     override val type get() = BukkitComponentType.GAME_CONTROLLER
 
@@ -82,9 +90,9 @@ class GameController : Component {
                 if (player.gregchess != game[!color].player) {
                     val stats = ChessStats.of(player.uniqueId)
                     when (results.score) {
-                        GameScore.Draw -> stats.addDraws(game.settings.name)
-                        GameScore.Victory(color) -> stats.addWins(game.settings.name)
-                        else -> stats.addLosses(game.settings.name)
+                        GameScore.Draw -> stats.addDraws(presetName)
+                        GameScore.Victory(color) -> stats.addWins(presetName)
+                        else -> stats.addLosses(presetName)
                     }
                 }
                 if (!results.endReason.quick)
@@ -140,6 +148,11 @@ class GameController : Component {
                 }
             }
         }
+    }
+
+    @ChessEventHandler
+    fun addProperties(e: AddPropertiesEvent) {
+        e.game(PRESET) { presetName }
     }
 }
 

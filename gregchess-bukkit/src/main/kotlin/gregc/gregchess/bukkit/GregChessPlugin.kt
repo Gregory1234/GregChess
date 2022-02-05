@@ -120,7 +120,7 @@ object GregChessPlugin : Listener {
                         if (settings != null) {
                             val res = duelRequest.call(RequestData(sender.uniqueId, opponent.uniqueId, settings.name))
                             if (res == RequestResponse.ACCEPT) {
-                                ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, opponent.gregchess)).start()
+                                ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.gregchess, opponent.gregchess)).start()
                             }
                         }
                     }
@@ -133,7 +133,7 @@ object GregChessPlugin : Listener {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     val settings = sender.openSettingsMenu()
                     if (settings != null)
-                        ChessGame(BukkitChessEnvironment, settings, byColor(sender.gregchess, Stockfish())).start()
+                        ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.gregchess, Stockfish())).start()
                 }
             }
             subcommand("resign") {

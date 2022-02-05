@@ -30,10 +30,6 @@ class ScoreboardManager : Component {
 
         @JvmField
         @Register
-        val PRESET = PropertyType()
-
-        @JvmField
-        @Register
         val PLAYER = PropertyType()
     }
 
@@ -97,7 +93,6 @@ class ScoreboardManager : Component {
 
     private fun start() {
         val e = AddPropertiesEvent(playerProperties, gameProperties)
-        e.game(PRESET) { game.settings.name }
         e.player(PLAYER) { playerPrefix + game[it].name }
         game.callEvent(e)
 

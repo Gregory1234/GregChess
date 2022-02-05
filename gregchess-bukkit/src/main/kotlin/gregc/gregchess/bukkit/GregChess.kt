@@ -1,8 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.component.BukkitComponentType
-import gregc.gregchess.bukkit.chess.component.BukkitRenderer
+import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.chess.*
@@ -54,6 +53,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             }
         }
         BukkitComponentType.RENDERER.registerSettings { BukkitRenderer() }
+        BukkitComponentType.GAME_CONTROLLER.registerSettings { GameController(presetName) }
         ThreeChecks.CHECK_COUNTER.registerSettings { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3).toUInt()) }
     }
 

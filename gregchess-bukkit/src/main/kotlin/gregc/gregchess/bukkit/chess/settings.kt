@@ -2,11 +2,18 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.chess.GameSettings
+import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.Registry
 import org.bukkit.Material
 import org.bukkit.entity.Player
+
+
+class GameSettings(
+    val name: String,
+    val variant: ChessVariant,
+    val components: Collection<Component>
+)
 
 object SettingsManager {
 
@@ -18,7 +25,7 @@ object SettingsManager {
             val variant = section.getFromRegistry(Registry.VARIANT, "Variant") ?: ChessVariant.Normal
             val requestedComponents = variant.requiredComponents + variant.optionalComponents +
                     BukkitRegistry.HOOKED_COMPONENTS.elements
-            val context = SettingsParserContext(variant, section)
+            val context = SettingsParserContext(variant, section, name)
             val components = requestedComponents.mapNotNull { req ->
                 val f = BukkitRegistry.SETTINGS_PARSER[req]
                 context.f()

@@ -17,17 +17,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.Serializable
 
-fun testSettings(
-    name: String, variant: ChessVariant = ChessVariant.Normal,
-    extra: List<Component> = emptyList()
-): GameSettings {
-    val components = buildList {
-        this += Chessboard(variant)
-        this.addAll(extra)
-    }
-    return GameSettings(name, variant, components)
-}
-
 class TestPlayer(override val name: String) : ChessPlayer {
     override val type get() = GregChess.TEST_PLAYER
     override fun initSide(color: Color, game: ChessGame): TestChessSide = spyk(TestChessSide(this, color, game))

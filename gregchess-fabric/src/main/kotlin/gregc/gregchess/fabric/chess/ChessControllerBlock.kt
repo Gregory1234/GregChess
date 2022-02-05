@@ -166,7 +166,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
         if (currentGame != null) return
         currentGame = ChessGame(
-            FabricChessEnvironment,
+            FabricChessEnvironment, ChessVariant.Normal,
             ChessGameManager.settings(ChessVariant.Normal, getBoardState(), FabricRenderer(this)),
             byColor(whitePlayer.gregchess, blackPlayer.gregchess)
         ).start()

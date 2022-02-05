@@ -14,7 +14,7 @@ import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
 import java.util.*
 
-class SettingsParserContext(val variant: ChessVariant, val section: ConfigurationSection)
+class SettingsParserContext(val variant: ChessVariant, val section: ConfigurationSection, val presetName: String)
 
 typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
