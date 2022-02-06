@@ -83,7 +83,7 @@ fun kingMovement(piece: BoardPiece, board: Chessboard): List<Move> {
                 if (rook.pos.rank == piece.pos.rank && !rook.hasMoved) {
                     val side = if (rook.pos.file < piece.pos.file) BoardSide.QUEENSIDE else BoardSide.KINGSIDE
                     add(
-                        if (board.simpleCastling) simplifiedCastles(piece, rook, side)
+                        if (board[ChessVariantOption.SIMPLE_CASTLING]) simplifiedCastles(piece, rook, side)
                         else normalCastles(piece, rook, side, board.chess960)
                     )
                 }

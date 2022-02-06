@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.move.ChessVariantOption
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
@@ -29,10 +30,14 @@ private class Square(
     }
 }
 
+class AddVariantOptionsEvent(private val options: MutableMap<ChessVariantOption<*>, Any>) : ChessEvent {
+    operator fun <T : Any> set(option: ChessVariantOption<T>, value: T) = options.put(option, value)
+}
+
 @Serializable
 class Chessboard private constructor (
     val initialFEN: FEN,
-    val simpleCastling: Boolean, // TODO: add general move options or replace with variant transformers
+    private val simpleCastling: Boolean,
     private val squares: Map<Pos, Square>,
     var halfmoveClock: UInt = initialFEN.halfmoveClock,
     @SerialName("fullmoveCounter") private var fullmoveCounter_: UInt = initialFEN.fullmoveCounter,
@@ -52,6 +57,9 @@ class Chessboard private constructor (
     override fun init(game: ChessGame) {
         this.game = game
     }
+
+    @Transient
+    private val variantOptions = mutableMapOf<ChessVariantOption<*>, Any>()
 
     val fullmoveCounter get() = fullmoveCounter_
     val boardHashes get() = boardHashes_.toMap()
@@ -138,8 +146,20 @@ class Chessboard private constructor (
     }
 
     @ChessEventHandler
+    fun addVariantOptions(e: AddVariantOptionsEvent) {
+        e[ChessVariantOption.SIMPLE_CASTLING] = simpleCastling
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T : Any> get(option: ChessVariantOption<T>): T = variantOptions[option] as T
+
+    @Suppress("UNCHECKED_CAST")
+    fun getVariantOptionStrings(): List<String> = variantOptions.mapNotNull { (o, v) -> (o as ChessVariantOption<Any>).pgnNameFragment(v) }
+
+    @ChessEventHandler
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.SYNC || e == GameBaseEvent.START) {
+            game.callEvent(AddVariantOptionsEvent(variantOptions))
             updateMoves()
             pieces.forEach { it.sendCreated(this) }
         }

@@ -6,8 +6,7 @@ import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.move.MoveNameTokenType
-import gregc.gregchess.chess.move.MoveTraitType
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.variant.*
@@ -74,6 +73,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         ChessVariants.registerCore(this)
         MoveTraitType.registerCore(this)
         PlacedPieceType.registerCore(this)
+        ChessVariantOption.registerCore(this)
         AutoRegister(this, AutoRegister.bukkitTypes).apply {
             registerAll<Arena>()
             registerAll<ChessGameManager>()

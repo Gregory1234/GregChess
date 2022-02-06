@@ -1,9 +1,9 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.move.MoveNameTokenType
-import gregc.gregchess.chess.move.MoveTraitType
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentType
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.player.*
@@ -98,6 +98,7 @@ object GregChess : ChessModule("GregChess", "gregchess") {
         ChessVariants.registerCore(this)
         MoveTraitType.registerCore(this)
         PlacedPieceType.registerCore(this)
+        ChessVariantOption.registerCore(this)
 
         AutoRegister(this, AutoRegister.basicTypes).registerAll<GregChess>()
     }

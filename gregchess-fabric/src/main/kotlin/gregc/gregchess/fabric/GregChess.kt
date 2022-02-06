@@ -2,8 +2,7 @@ package gregc.gregchess.fabric
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.ComponentType
-import gregc.gregchess.chess.move.MoveNameTokenType
-import gregc.gregchess.chess.move.MoveTraitType
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.variant.ChessVariants
@@ -41,6 +40,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
         ChessVariants.registerCore(this)
         MoveTraitType.registerCore(this)
         PlacedPieceType.registerCore(this)
+        ChessVariantOption.registerCore(this)
         AutoRegister(this, AutoRegister.basicTypes).apply {
             registerAll<FabricComponentType>()
             registerAll<GregChess>()

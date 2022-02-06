@@ -75,11 +75,10 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             }
             val variant = buildList {
                 if (game.variant != ChessVariant.Normal)
-                    this += game.variant.name.snakeToPascal()
+                    add(game.variant.name.snakeToPascal())
                 if (game.board.chess960)
-                    this += "Chess960"
-                if (game.board.simpleCastling)
-                    this += "SimpleCastling"
+                    add("Chess960")
+                addAll(game.board.getVariantOptionStrings())
             }.joinToString(" ")
 
             if (variant.isNotBlank())
