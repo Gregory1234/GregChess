@@ -60,10 +60,10 @@ tasks {
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
     }
-    create<RemapJarTask>("unshadedRemapJar") {
-        dependsOn(":gregchess-fabric:jar")
+    register<RemapJarTask>("unshadedRemapJar") {
+        dependsOn(jar)
         group = "fabric"
-        input.set((getByPath(":gregchess-fabric:remapJar") as RemapJarTask).input)
+        input.set(remapJar.get().input)
         archiveClassifier.set("remapped")
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
@@ -78,7 +78,7 @@ tasks {
             }
         }
     }
-    create<Jar>("sourcesJar") {
+    register<Jar>("sourcesJar") {
         group = "build"
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
@@ -92,7 +92,8 @@ publishing {
             artifactId = project.name
             version = project.version as String
             from(components["kotlin"])
-            artifact(tasks.getByPath(":gregchess-fabric:sourcesJar"))
+            artifact(tasks.sourcesJar)
+            artifact(tasks["unshadedRemapJar"])
         }
     }
 }

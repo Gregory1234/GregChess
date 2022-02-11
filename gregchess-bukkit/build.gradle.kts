@@ -1,5 +1,4 @@
 import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask
-import dev.s7a.gradle.minecraft.server.tasks.RefreshMinecraftServerJarTask
 
 plugins {
     kotlin("jvm")
@@ -7,6 +6,21 @@ plugins {
     id("org.jetbrains.dokka")
     id("dev.s7a.gradle.minecraft.server")
     `maven-publish`
+}
+
+minecraftServerConfig {
+    jarUrl.set(LaunchMinecraftServerTask.JarUrl.Paper(libs.versions.spigot.api.get().substringBefore("-")))
+    serverDirectory.set(projectDir.resolve("run"))
+    jvmArgument.set(listOf(
+        "-Xms1G", "-Xmx1G", "-XX:+UseG1GC", "-XX:+ParallelRefProcEnabled", "-XX:MaxGCPauseMillis=200",
+        "-XX:+UnlockExperimentalVMOptions", "-XX:+DisableExplicitGC", "-XX:+AlwaysPreTouch",
+        "-XX:G1NewSizePercent=30", "-XX:G1MaxNewSizePercent=40", "-XX:G1HeapRegionSize=8M",
+        "-XX:G1ReservePercent=20", "-XX:G1HeapWastePercent=5", "-XX:G1MixedGCCountTarget=4",
+        "-XX:InitiatingHeapOccupancyPercent=15", "-XX:G1MixedGCLiveThresholdPercent=90", "-XX:SurvivorRatio=32",
+        "-XX:G1RSetUpdatingPauseTimePercent=5", "-XX:+PerfDisableSharedMem", "-XX:MaxTenuringThreshold=1",
+        "-Dusing.aikars.flags=https://mcflags.emc.gs", "-Daikars.new.flags=true", "-Dkotlinx.coroutines.debug=on",
+        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"))
+    jarName.set("server.jar")
 }
 
 repositories {
@@ -62,10 +76,10 @@ tasks {
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
     }
-    create<Jar>("shadedJar") {
+    register<Jar>("shadedJar") {
         group = "build"
-        dependsOn(":gregchess-bukkit:jar")
-        from({ getByPath(":gregchess-bukkit:jar").outputs.files.map { zipTree(it) } })
+        dependsOn(jar)
+        from({ jar.get().outputs.files.map { zipTree(it) } })
         from({ shaded.resolvedConfiguration.firstLevelModuleDependencies.flatMap { dep -> dep.moduleArtifacts.map { zipTree(it.file) }}})
         archiveClassifier.set("shaded")
     }
@@ -79,39 +93,22 @@ tasks {
             }
         }
     }
-    create<Jar>("sourcesJar") {
+    register<Jar>("sourcesJar") {
         group = "build"
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
     }
-    create<Delete>("cleanPluginJar") {
-        delete(projectDir.resolve("run/plugins")
-            .resolve(getByPath(":gregchess-bukkit:shadedJar").outputs.files.singleFile.name))
+    val placePluginJar by registering(Copy::class) {
+        from(shadedJar)
+        rename { "plugin.jar" }
+        into(minecraftServerConfig.serverDirectory.dir("plugins"))
     }
-    create<LaunchMinecraftServerTask>("runServer") {
-        dependsOn(":gregchess-bukkit:shadedJar")
-        doFirst {
-            copy {
-                from(getByPath(":gregchess-bukkit:shadedJar"))
-                into(projectDir.resolve("run/plugins"))
-            }
-        }
-        finalizedBy(":gregchess-bukkit:cleanPluginJar")
-        jarUrl.set(LaunchMinecraftServerTask.JarUrl.Paper(libs.versions.spigot.api.get().substringBefore("-")))
-        serverDirectory.set(projectDir.resolve("run"))
-        jvmArgument.set(listOf(
-            "-Xms1G", "-Xmx1G", "-XX:+UseG1GC", "-XX:+ParallelRefProcEnabled", "-XX:MaxGCPauseMillis=200",
-            "-XX:+UnlockExperimentalVMOptions", "-XX:+DisableExplicitGC", "-XX:+AlwaysPreTouch",
-            "-XX:G1NewSizePercent=30", "-XX:G1MaxNewSizePercent=40", "-XX:G1HeapRegionSize=8M",
-            "-XX:G1ReservePercent=20", "-XX:G1HeapWastePercent=5", "-XX:G1MixedGCCountTarget=4",
-            "-XX:InitiatingHeapOccupancyPercent=15", "-XX:G1MixedGCLiveThresholdPercent=90", "-XX:SurvivorRatio=32",
-            "-XX:G1RSetUpdatingPauseTimePercent=5", "-XX:+PerfDisableSharedMem", "-XX:MaxTenuringThreshold=1",
-            "-Dusing.aikars.flags=https://mcflags.emc.gs", "-Daikars.new.flags=true", "-Dkotlinx.coroutines.debug=on",
-            "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"))
+    val cleanPluginJar by registering(Delete::class) {
+        delete(minecraftServerConfig.serverDirectory.file("plugins/plugin.jar"))
     }
-    create<RefreshMinecraftServerJarTask>("cleanServer") {
-        serverDirectory.set(projectDir.resolve("run"))
-        jarName.set("server.jar")
+    launchMinecraftServer {
+        dependsOn(placePluginJar)
+        finalizedBy(cleanPluginJar)
     }
 }
 
@@ -122,7 +119,7 @@ publishing {
             artifactId = project.name
             version = project.version as String
             from(components["kotlin"])
-            artifact(tasks.getByPath(":gregchess-bukkit:sourcesJar"))
+            artifact(tasks.sourcesJar)
         }
     }
 }

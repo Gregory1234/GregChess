@@ -19,7 +19,7 @@ tasks {
         it.outputs.upToDateWhen { false }
     }
 
-    create<Copy>("createSpigotJar") {
+    register<Copy>("createSpigotJar") {
         group = "gregchess"
         dependsOn(":gregchess-core:test")
         dependsOn(":gregchess-bukkit:shadedJar")
@@ -29,7 +29,7 @@ tasks {
         into(rootDir)
         rename { "${rootProject.name}-$version-bukkit.jar" }
     }
-    create<Copy>("createFabricJar") {
+    register<Copy>("createFabricJar") {
         group = "gregchess"
         dependsOn(":gregchess-core:test")
         dependsOn(":gregchess-fabric:remapJar")
@@ -38,16 +38,16 @@ tasks {
         into(rootDir)
         rename { "${rootProject.name}-$version-fabric.jar" }
     }
-    create<DefaultTask>("runFabricClient") {
+    register<DefaultTask>("runFabricClient") {
         group = "gregchess"
         dependsOn(":gregchess-core:test")
         dependsOn(":gregchess-fabric:runClient")
         getByPath(":gregchess-fabric:compileKotlin").mustRunAfter(":gregchess-core:test")
     }
-    create<DefaultTask>("runPaperServer") {
+    register<DefaultTask>("runPaperServer") {
         group = "gregchess"
         dependsOn(":gregchess-core:test")
-        dependsOn(":gregchess-bukkit:runServer")
+        dependsOn(":gregchess-bukkit:launchMinecraftServer")
         getByPath(":gregchess-bukkit:compileKotlin").mustRunAfter(":gregchess-core:test")
     }
 }

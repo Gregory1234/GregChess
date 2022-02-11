@@ -2,7 +2,11 @@
 import groovy.namespace.QName
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.api.file.CopySpec
+import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.filter
+import org.gradle.kotlin.dsl.named
 
 fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("tokens" to mapOf(*args))
 
@@ -20,3 +24,9 @@ fun lazyTrueSpigotVersion(spigotVersion: String) = lazy {
     println("Calculating spigot version")
     spigotVersion.replace("SNAPSHOT", snapshot.getAt("timestamp").text() + "-" + snapshot.getAt("buildNumber").text())
 }
+
+val TaskContainer.sourcesJar: TaskProvider<Jar>
+    get() = named<Jar>("sourcesJar")
+
+val TaskContainer.shadedJar: TaskProvider<Jar>
+    get() = named<Jar>("shadedJar")

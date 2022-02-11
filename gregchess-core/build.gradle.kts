@@ -53,7 +53,7 @@ tasks {
             }
         }
     }
-    create<Jar>("sourcesJar") {
+    register<Jar>("sourcesJar") {
         group = "build"
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
@@ -67,7 +67,7 @@ publishing {
             artifactId = project.name
             version = project.version as String
             from(components["kotlin"])
-            artifact(tasks.getByPath(":gregchess-core:sourcesJar"))
+            artifact(tasks.sourcesJar)
         }
     }
 }
