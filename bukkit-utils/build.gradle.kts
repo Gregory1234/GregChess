@@ -10,13 +10,11 @@ repositories {
 }
 
 dependencies {
-    val spigotVersion: String by project
-    api("org.spigotmc:spigot-api:$spigotVersion")
-    val kotlinxCoroutinesVersion: String by project
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
+    api(libs.spigot.api)
+    api(libs.kotlinx.coroutines.core)
 }
 
-val trueSpigotVersion by lazyTrueSpigotVersion(project)
+val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())
 
 tasks {
 
@@ -31,8 +29,7 @@ tasks {
         dokkaSourceSets {
             configureEach {
                 gregchessSourceLink(project)
-                val spigotVersion: String by project
-                externalDocumentationLinkElementList("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/$spigotVersion/spigot-api-$trueSpigotVersion-javadoc.jar/!/")
+                externalDocumentationLinkElementList("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/${libs.versions.spigot.api.get()}/spigot-api-$trueSpigotVersion-javadoc.jar/!/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
         }

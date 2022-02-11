@@ -18,19 +18,13 @@ repositories {
 }
 
 dependencies {
-    val fabricMinecraftVersion: String by project
-    minecraft("com.mojang:minecraft:$fabricMinecraftVersion")
-    val yarnMappings: String by project
-    mappings("net.fabricmc:yarn:$yarnMappings:v2")
-    val fabricLoaderVersion: String by project
-    modApi("net.fabricmc:fabric-loader:$fabricLoaderVersion")
-    val fabricVersion: String by project
-    modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
-    val fabricKotlinVersion: String by project
-    modImplementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
-    val fabricLibGuiVersion: String by project
-    modApi("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
-    include("io.github.cottonmc:LibGui:$fabricLibGuiVersion")
+    minecraft(libs.fabric.minecraft)
+    mappings(variantOf(libs.fabric.yarn) { classifier("v2") })
+    modApi(libs.fabric.loader)
+    modImplementation(libs.fabric.api)
+    modImplementation(libs.fabric.kotlin)
+    modApi(libs.fabric.libgui)
+    include(libs.fabric.libgui)
     api(project(":gregchess-core"))
     include(project(":gregchess-core"))
 }
@@ -49,17 +43,14 @@ tasks {
         }
     }
     processResources {
-        val fabricLoaderVersion: String by project
-        val fabricKotlinVersion: String by project
-        val fabricMinecraftVersion: String by project
         val jvmVersion: String by project
         from(sourceSets["main"].resources.srcDirs) {
             include("**/*.json")
             replace(
                 "version" to version,
-                "loader-version" to fabricLoaderVersion,
-                "fabric-kotlin-version" to fabricKotlinVersion,
-                "minecraft-version" to fabricMinecraftVersion.dropLastWhile { it != '.' } + "x",
+                "loader-version" to libs.versions.fabric.loader.get(),
+                "fabric-kotlin-version" to libs.versions.fabric.kotlin.get(),
+                "minecraft-version" to libs.versions.fabric.minecraft.get().dropLastWhile { it != '.' } + "x",
                 "java-min-version" to jvmVersion
             )
         }
@@ -80,10 +71,8 @@ tasks {
             configureEach {
                 gregchessSourceLink(project)
                 externalDocumentationLinkElementList("https://cottonmc.github.io/docs/libgui/")
-                val yarnMappings: String by project
-                externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/yarn-$yarnMappings/")
-                val fabricLoaderVersion: String by project
-                externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/fabric-loader-$fabricLoaderVersion/")
+                externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/yarn-${libs.versions.fabric.yarn.get()}/")
+                externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/fabric-loader-${libs.versions.fabric.loader.get()}/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }

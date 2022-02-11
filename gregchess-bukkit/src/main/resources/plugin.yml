@@ -5,11 +5,7 @@ api-version: @minecraft-version@
 author: GregC
 description: Chess Plugin
 libraries:
-  - org.jetbrains.kotlin:kotlin-stdlib-jdk8:@kotlin-version@
-  - org.jetbrains.kotlin:kotlin-reflect:@kotlin-version@
-  - org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:@serialization-version@
-  - org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:@coroutines-version@
-  - org.slf4j:slf4j-jdk14:@slf4j-version@
+@libraries@
 commands:
   chess:
     description: Main chess command

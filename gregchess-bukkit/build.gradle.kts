@@ -19,37 +19,33 @@ val shaded: Configuration by configurations.creating
 configurations["implementation"].extendsFrom(shaded)
 
 dependencies {
-    val spigotVersion: String by project
-    api("org.spigotmc:spigot-api:$spigotVersion")
-    val kotlinxSerializationVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion")
+    api(libs.spigot.api)
+    api(libs.kotlinx.serialization.json)
     implementation(kotlin("reflect"))
-    val slf4jVersion: String by project
-    implementation("org.slf4j:slf4j-jdk14:$slf4jVersion")
+    implementation(libs.slf4j.jdk14)
     api(project(":gregchess-core"))
     shaded(project(":gregchess-core"))
     shaded(project(":bukkit-utils"))
 }
 
-val trueSpigotVersion by lazyTrueSpigotVersion(project)
+val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())
 
 tasks {
 
     processResources {
         val kotlinVersion: String by project
-        val kotlinxSerializationVersion: String by project
-        val kotlinxCoroutinesVersion: String by project
-        val slf4jVersion: String by project
-        val spigotMinecraftVersion: String by project
         from(sourceSets["main"].resources.srcDirs) {
             include("**/*.yml")
             replace(
                 "version" to version,
-                "kotlin-version" to kotlinVersion,
-                "serialization-version" to kotlinxSerializationVersion,
-                "coroutines-version" to kotlinxCoroutinesVersion,
-                "slf4j-version" to slf4jVersion,
-                "minecraft-version" to spigotMinecraftVersion
+                "minecraft-version" to libs.versions.spigot.api.get().substringBefore("-").substringBeforeLast("."),
+                "libraries" to listOf(
+                    "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion",
+                    "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
+                    libs.kotlinx.serialization.json.get(),
+                    libs.kotlinx.coroutines.core.get(),
+                    libs.slf4j.jdk14.get(),
+                ).joinToString("\n") { "  - $it" }
             )
         }
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -77,8 +73,7 @@ tasks {
         dokkaSourceSets {
             configureEach {
                 gregchessSourceLink(project)
-                val spigotVersion: String by project
-                externalDocumentationLinkElementList("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/$spigotVersion/spigot-api-$trueSpigotVersion-javadoc.jar/!/")
+                externalDocumentationLinkElementList("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/${libs.versions.spigot.api.get()}/spigot-api-$trueSpigotVersion-javadoc.jar/!/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
@@ -102,8 +97,7 @@ tasks {
             }
         }
         finalizedBy(":gregchess-bukkit:cleanPluginJar")
-        val paperServerVersion: String by project
-        jarUrl.set(LaunchMinecraftServerTask.JarUrl.Paper(paperServerVersion))
+        jarUrl.set(LaunchMinecraftServerTask.JarUrl.Paper(libs.versions.spigot.api.get().substringBefore("-")))
         serverDirectory.set(projectDir.resolve("run"))
         jvmArgument.set(listOf(
             "-Xms1G", "-Xmx1G", "-XX:+UseG1GC", "-XX:+ParallelRefProcEnabled", "-XX:MaxGCPauseMillis=200",

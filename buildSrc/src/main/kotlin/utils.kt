@@ -1,9 +1,8 @@
+
 import groovy.namespace.QName
 import org.apache.tools.ant.filters.ReplaceTokens
-import org.gradle.api.Project
 import org.gradle.api.file.CopySpec
 import org.gradle.kotlin.dsl.filter
-import org.gradle.kotlin.dsl.provideDelegate
 
 fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("tokens" to mapOf(*args))
 
@@ -14,8 +13,7 @@ val defaultKotlinArgs = listOf(
     "-progressive"
 )
 
-fun lazyTrueSpigotVersion(project: Project) = lazy {
-    val spigotVersion: String by project
+fun lazyTrueSpigotVersion(spigotVersion: String) = lazy {
     val snapshot = groovy.xml.XmlParser()
         .parse("https://hub.spigotmc.org/nexus/content/repositories/snapshots/org/spigotmc/spigot-api/$spigotVersion/maven-metadata.xml")
         .getAt(QName.valueOf("versioning")).getAt("snapshot")

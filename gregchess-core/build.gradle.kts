@@ -11,21 +11,15 @@ repositories {
 
 dependencies {
     implementation(kotlin("reflect"))
-    val kotlinxSerializationVersion: String by project
-    api("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
-    val kotlinxCoroutinesVersion: String by project
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion")
-    val slf4jVersion: String by project
-    api("org.slf4j:slf4j-api:$slf4jVersion")
-    testImplementation("org.slf4j:slf4j-jdk14:$slf4jVersion")
+    api(libs.kotlinx.serialization.core)
+    api(libs.kotlinx.coroutines.core)
+    api(libs.slf4j.api)
+    testImplementation(libs.slf4j.jdk14)
     testImplementation(kotlin("test"))
-    val junitVersion: String by project
-    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
-    val assertKVersion: String by project
-    testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertKVersion")
-    val mockkVersion: String by project
-    testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesVersion")
+    testImplementation(libs.junit)
+    testImplementation(libs.assertk)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 tasks {
