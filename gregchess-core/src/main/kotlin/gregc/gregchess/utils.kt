@@ -20,6 +20,11 @@ fun String.snakeToPascal(): String {
     return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
 }
 
+fun String.pascalToSnake(): String {
+    val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
+    return camelRegex.replace(this) { "_${it.value}" }.lowercase()
+}
+
 class MultiExceptionContext {
     private val exceptions = mutableListOf<Exception>()
 

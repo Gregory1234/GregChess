@@ -87,14 +87,6 @@ class GameController(val presetName: String) : Component {
         game.sides.forEachUniqueBukkit { player, color ->
             game.coroutineScope.launch {
                 player.showGameResults(color, results)
-                if (player.gregchess != game[!color].player) {
-                    val stats = ChessStats.of(player.uniqueId)
-                    when (results.score) {
-                        GameScore.Draw -> stats.addDraws(presetName)
-                        GameScore.Victory(color) -> stats.addWins(presetName)
-                        else -> stats.addLosses(presetName)
-                    }
-                }
                 if (!results.endReason.quick)
                     delay((if (quick[color]) 0 else 3).seconds)
                 game.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
@@ -102,6 +94,15 @@ class GameController(val presetName: String) : Component {
                 player.games -= game
                 player.currentGame = null
             }
+        }
+        if (game.sides.white.player != game.sides.black.player) {
+            game.addStats(byColor {
+                val player = game.sides[it]
+                if (player is BukkitChessSide)
+                    BukkitPlayerStats.of(player.player.uuid)[it, presetName]
+                else
+                    VoidPlayerStatsSink
+            })
         }
         if (!results.endReason.quick)
             game.coroutineScope.launch {

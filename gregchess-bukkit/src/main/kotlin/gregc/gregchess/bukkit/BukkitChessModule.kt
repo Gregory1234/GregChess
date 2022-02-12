@@ -34,7 +34,7 @@ object BukkitRegistry {
     @JvmField
     val BUKKIT_PLUGIN = ConstantRegistry<Plugin>("bukkit_plugin")
     @JvmField
-    val CHESS_STATS_PROVIDER = NameRegistry<(UUID) -> ChessStats>("chess_stats_provider")
+    val CHESS_STATS_PROVIDER = NameRegistry<(UUID) -> BukkitPlayerStats>("chess_stats_provider")
     @JvmField
     val ARENA_MANAGER = NameRegistry<ArenaManager<*>>("arena_manager")
 }
@@ -65,7 +65,7 @@ fun <T : GameScore> EndReason<T>.registerQuick() = apply { module[BukkitRegistry
 
 fun ChessModule.registerBukkitPlugin(plugin: Plugin) = get(BukkitRegistry.BUKKIT_PLUGIN).set(plugin)
 
-fun ChessModule.registerStatsProvider(id: String, provider: (UUID) -> ChessStats) =
+fun ChessModule.registerStatsProvider(id: String, provider: (UUID) -> BukkitPlayerStats) =
     register(BukkitRegistry.CHESS_STATS_PROVIDER, id, provider)
 
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e -> register(m, n); if ("quick" in e) registerQuick() }

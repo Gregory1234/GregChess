@@ -32,3 +32,6 @@ inline fun cTry(p: CommandSender, err: (Exception) -> Unit = {}, f: () -> Unit) 
 
 fun getOfflinePlayerByName(name: String): OfflinePlayer? =
     Bukkit.getOfflinePlayers().filter { it.name == name }.maxByOrNull { it.lastPlayed }
+
+fun ConfigurationSection.getOrCreateSection(path: String): ConfigurationSection =
+    getConfigurationSection(path) ?: createSection(path)

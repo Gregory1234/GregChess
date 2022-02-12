@@ -48,15 +48,16 @@ internal class PosArgument(name: String) : CommandArgumentType<Pos>(name) {
     }
 }
 
-internal class RegistryArgument<T>(name: String, val registryView: FiniteRegistryView<String, T>) : CommandArgumentType<T>(name) {
+internal class RegistryArgument<T>(name: String, val registryView: FiniteRegistryView<String, T>, val condition: ((T) -> Boolean)? = null) : CommandArgumentType<T>(name) {
     override fun tryParse(strings: List<String>): Pair<T, List<String>>? = try {
-        if (strings.isEmpty()) null else registryView[strings.first().toKey()] to strings.drop(1)
+        if (strings.isEmpty()) null
+        else (registryView[strings.first().toKey()].also { require(condition?.invoke(it) ?: true) }) to strings.drop(1)
     } catch (e: IllegalArgumentException) {
         null
     }
 
     override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String> =
-        registryView.keys.map { it.toString() }.toSet()
+        registryView.keys.filter { condition?.invoke(registryView[it]) ?: true }.map { it.toString() }.toSet()
 
 }
 

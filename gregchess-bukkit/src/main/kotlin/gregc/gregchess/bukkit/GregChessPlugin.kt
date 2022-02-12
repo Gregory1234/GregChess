@@ -12,7 +12,9 @@ import gregc.gregchess.bukkitutils.requests.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.player.EngineChessSide
+import gregc.gregchess.registry.Registry
 import kotlinx.coroutines.*
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -398,22 +400,21 @@ object GregChessPlugin : Listener {
                     cRequire(sender is Player, NOT_PLAYER)
                 }
                 executeSuspend<Player> {
-                    sender.openStatsMenu(sender.name, ChessStats.of(sender.uniqueId))
+                    sender.openStatsMenu(sender.name, BukkitPlayerStats.of(sender.uniqueId))
                 }
                 literal("set") {
                     requirePermission("gregchess.chess.stats.set")
                     argument(offlinePlayerArgument("player")) { player ->
-                        argument(StringArgument("setting")) { setting ->
-                            argument(EnumArgument(listOf("wins", "losses", "draws"), "stat")) { stat ->
-                                argument(IntArgument("value")) { v ->
-                                    execute {
-                                        val stats = ChessStats.of(player().uniqueId)
-                                        when(stat()) {
-                                            "wins" -> stats.setWins(setting(), v())
-                                            "losses" -> stats.setLosses(setting(), v())
-                                            "draws" -> stats.setDraws(setting(), v())
+                        argument(enumArgument<Color>("color")) { color ->
+                            argument(StringArgument("setting")) { setting ->
+                                argument(RegistryArgument("stat", Registry.STAT) { it.serializer == Int.serializer() }) { stat ->
+                                    argument(IntArgument("value")) { v ->
+                                        execute {
+                                            val stats = BukkitPlayerStats.of(player().uniqueId)
+                                            @Suppress("UNCHECKED_CAST")
+                                            stats[color(), setting()].add(stat() as ChessStat<Int>, v())
+                                            sender.sendMessage(STATS_OP_DONE)
                                         }
-                                        sender.sendMessage(STATS_OP_DONE)
                                     }
                                 }
                             }
@@ -425,7 +426,7 @@ object GregChessPlugin : Listener {
                     argument(offlinePlayerArgument("player")) { player ->
                         argument(StringArgument("setting")) { setting ->
                             execute {
-                                ChessStats.of(player().uniqueId).clear(setting())
+                                BukkitPlayerStats.of(player().uniqueId).clear(setting())
                                 sender.sendMessage(STATS_OP_DONE)
                             }
                         }
@@ -435,7 +436,7 @@ object GregChessPlugin : Listener {
                     requirePermission("gregchess.chess.stats.read")
                     requirePlayer()
                     executeSuspend<Player> {
-                        sender.openStatsMenu(player().name!!, ChessStats.of(player().uniqueId))
+                        sender.openStatsMenu(player().name!!, BukkitPlayerStats.of(player().uniqueId))
                     }
                 }
             }

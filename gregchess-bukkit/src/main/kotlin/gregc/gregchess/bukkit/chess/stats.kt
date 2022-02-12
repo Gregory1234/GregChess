@@ -1,61 +1,142 @@
 package gregc.gregchess.bukkit.chess
 
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.chess.*
+import gregc.gregchess.registry.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import java.io.File
 import java.util.*
+import kotlin.time.Duration
 
-interface ChessStats {
+interface BukkitPlayerStats {
     val uuid: UUID
-    operator fun get(name: String): PartialChessStats
-    operator fun set(name: String, stats: PartialChessStats)
-    fun total(): PartialChessStats
-    fun clear(name: String) = set(name, PartialChessStats(0, 0, 0))
-    fun setWins(name: String, value: Int) = set(name, get(name).copy(wins = value))
-    fun setLosses(name: String, value: Int) = set(name, get(name).copy(losses = value))
-    fun setDraws(name: String, value: Int) = set(name, get(name).copy(draws = value))
-    fun addWins(name: String, value: Int = 1) = set(name, get(name) + PartialChessStats(value, 0, 0))
-    fun addLosses(name: String, value: Int = 1) = set(name, get(name) + PartialChessStats(0, value, 0))
-    fun addDraws(name: String, value: Int = 1) = set(name, get(name) + PartialChessStats(0, 0, value))
+    operator fun get(color: Color, name: String): PlayerStatsSink
+    operator fun set(color: Color, name: String, stats: PlayerStatsView)
+    fun clear(color: Color, name: String)
+    fun clear(name: String)
+    fun total(): PlayerStatsView
+    operator fun get(color: Color): PlayerStatsView
+    operator fun get(name: String): PlayerStatsView
     companion object {
         fun of(uuid: UUID) = config.getFromRegistry(BukkitRegistry.CHESS_STATS_PROVIDER, "StatsProvider")!!(uuid)
     }
 }
 
-data class PartialChessStats(val wins: Int, val losses: Int, val draws: Int) {
-    operator fun plus(other: PartialChessStats) =
-        PartialChessStats(wins + other.wins, losses + other.losses, draws + other.draws)
-}
+class YamlChessStats(override val uuid: UUID) : BukkitPlayerStats {
+    private inner class YamlPlayerStats(val config: ConfigurationSection, val saveFile: (() -> Unit)? = null) : PlayerStatsView, PlayerStatsSink {
+        // TODO: implement a proper serial format
+        private fun <T : Any> serialize(
+            serializer: KSerializer<T>, config: ConfigurationSection, path: String, value: T
+        ) = when(serializer) {
+            Int.serializer(), Long.serializer(), Short.serializer(), Byte.serializer(), String.serializer() -> config.set(path, value)
+            DurationSerializer -> config.set(path, (value as Duration).toIsoString())
+            else -> throw UnsupportedOperationException(serializer.descriptor.toString())
+        }
 
-class YamlChessStats private constructor(
-    override val uuid: UUID, private val perSettings: MutableMap<String, PartialChessStats>
-) : ChessStats {
+        // TODO: handle no value properly
+        @Suppress("UNCHECKED_CAST")
+        private fun <T : Any> deserialize(
+            serializer: KSerializer<T>, config: ConfigurationSection, path: String
+        ): T = when(serializer) {
+            Int.serializer() -> config.getInt(path) as T
+            Long.serializer() -> config.getLong(path) as T
+            Short.serializer() -> config.getInt(path).toShort() as T
+            Byte.serializer() -> config.getInt(path).toByte() as T
+            String.serializer() -> config.getString(path) as T
+            DurationSerializer -> (config.getString(path)?.let(Duration::parseIsoString) ?: Duration.ZERO) as T
+            else -> throw UnsupportedOperationException(serializer.descriptor.toString())
+        }
+
+        private fun pathOf(stat: ChessStat<*>): String =
+            "${stat.module.namespace.snakeToPascal()}.${stat.name.snakeToPascal()}"
+
+        override fun <T : Any> add(stat: ChessStat<T>, vararg values: T) {
+            if (values.isEmpty())
+                return
+            val path = pathOf(stat)
+            val oldValue = deserialize(stat.serializer, config, path)
+            val newValue = stat.aggregate(listOf(oldValue, *values))
+            serialize(stat.serializer, config, path, newValue)
+            commit()
+        }
+
+        override fun <T : Any> get(stat: ChessStat<T>): T {
+            return deserialize(stat.serializer, config, pathOf(stat))
+        }
+
+        override val stored: Set<ChessStat<*>>
+            get() = config.getKeys(false).flatMap { module ->
+                val trueModule = module.pascalToSnake()
+                config.getOrCreateSection(module).getKeys(false).map {
+                    Registry.STAT["$trueModule:${it.pascalToSnake()}".toKey()]
+                }
+            }.toSet()
+
+        override fun commit() {
+            saveFile?.invoke()
+        }
+    }
 
     val player: Player? get() = Bukkit.getPlayer(uuid)
 
-    override operator fun get(name: String) = perSettings[name] ?: PartialChessStats(0, 0, 0)
-
-    override operator fun set(name: String, stats: PartialChessStats) {
+    override fun get(color: Color, name: String): PlayerStatsSink {
         val config = getConfig(uuid)
-        config.set("$name.Wins", stats.wins)
-        config.set("$name.Losses", stats.losses)
-        config.set("$name.Draws", stats.draws)
-        perSettings[name] = stats
+        return YamlPlayerStats(config.getOrCreateSection ("$name.${color.toString().snakeToPascal()}")) {
+            config.save(getFile(uuid))
+        }
+    }
+
+    override fun get(color: Color): PlayerStatsView {
+        val config = getConfig(uuid)
+        return CombinedPlayerStatsView(config.getKeys(false).map { name ->
+            YamlPlayerStats(config.getOrCreateSection("$name.${color.toString().snakeToPascal()}"))
+        })
+    }
+
+    override fun get(name: String): PlayerStatsView {
+        val config = getConfig(uuid)
+        return CombinedPlayerStatsView(byColor { color ->
+            YamlPlayerStats(config.getOrCreateSection("$name.${color.toString().snakeToPascal()}"))
+        }.toList())
+    }
+
+    override fun total(): PlayerStatsView {
+        val config = getConfig(uuid)
+        return CombinedPlayerStatsView(config.getKeys(false).flatMap { name ->
+            byColor { color ->
+                YamlPlayerStats(config.getOrCreateSection("$name.${color.toString().snakeToPascal()}"))
+            }.toList()
+        })
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun set(color: Color, name: String, stats: PlayerStatsView) {
+        val config = getConfig(uuid)
+        config.set("$name.${color.toString().snakeToPascal()}", null)
+        val yamlStats = YamlPlayerStats(config.getOrCreateSection("$name.${color.toString().snakeToPascal()}"))
+        stats.stored.forEach {
+            yamlStats.add(it as ChessStat<Any>, stats[it])
+        }
         config.save(getFile(uuid))
     }
 
-    override fun total(): PartialChessStats =
-        perSettings.values.reduceOrNull { acc, partialChessStats -> acc + partialChessStats }
-            ?: PartialChessStats(0, 0, 0)
+    override fun clear(color: Color, name: String) {
+        val config = getConfig(uuid)
+        config.set("$name.${color.toString().snakeToPascal()}", null)
+        config.save(getFile(uuid))
+    }
 
     override fun clear(name: String) {
         val config = getConfig(uuid)
         config.set(name, null)
-        perSettings.remove(name)
         config.save(getFile(uuid))
     }
 
@@ -72,32 +153,23 @@ class YamlChessStats private constructor(
         }
 
         private fun getConfig(uuid: UUID): YamlConfiguration = YamlConfiguration.loadConfiguration(getFile(uuid))
-
-        fun of(uuid: UUID): ChessStats {
-            val config = getConfig(uuid)
-            val stats = mutableMapOf<String, PartialChessStats>()
-            for (name in config.getKeys(false)) {
-                stats[name] = PartialChessStats(config.getInt("$name.Wins"), config.getInt("$name.Losses"), config.getInt("$name.Draws"))
-            }
-            return YamlChessStats(uuid, stats)
-        }
     }
 }
 
-private fun PartialChessStats.toItemStack(name: String) = itemStack(Material.IRON_BLOCK) {
+private fun PlayerStatsView.toItemStack(name: String) = itemStack(Material.IRON_BLOCK) {
     meta {
         this.name = name
         lore = listOf(
-            config.getPathString("Message.Stats.Wins", wins.toString()),
-            config.getPathString("Message.Stats.Losses", losses.toString()),
-            config.getPathString("Message.Stats.Draws", draws.toString())
+            config.getPathString("Message.Stats.Wins", get(ChessStat.WINS).toString()),
+            config.getPathString("Message.Stats.Losses", get(ChessStat.LOSSES).toString()),
+            config.getPathString("Message.Stats.Draws", get(ChessStat.DRAWS).toString())
         )
     }
 }
 
 // TODO: add stats to core
 // TODO: add variant-specific stats
-suspend fun Player.openStatsMenu(playerName: String, stats: ChessStats) =
+suspend fun Player.openStatsMenu(playerName: String, stats: BukkitPlayerStats) =
     openMenu(config.getPathString("Message.StatsOf", playerName), SettingsManager.getSettings().let { settings ->
         settings.mapIndexed { index, s ->
             val item = stats[s.name].toItemStack(s.name)
