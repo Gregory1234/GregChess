@@ -41,6 +41,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
         MoveTraitType.registerCore(this)
         PlacedPieceType.registerCore(this)
         ChessVariantOption.registerCore(this)
+        ChessStat.registerCore(this)
         AutoRegister(this, AutoRegister.basicTypes).apply {
             registerAll<FabricComponentType>()
             registerAll<GregChess>()

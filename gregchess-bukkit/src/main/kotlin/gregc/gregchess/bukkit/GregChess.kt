@@ -74,6 +74,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         MoveTraitType.registerCore(this)
         PlacedPieceType.registerCore(this)
         ChessVariantOption.registerCore(this)
+        ChessStat.registerCore(this)
         AutoRegister(this, AutoRegister.bukkitTypes).apply {
             registerAll<Arena>()
             registerAll<ChessGameManager>()

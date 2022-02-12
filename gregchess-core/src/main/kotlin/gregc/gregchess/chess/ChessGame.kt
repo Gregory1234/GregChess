@@ -44,11 +44,12 @@ class ChessGame private constructor(
     val uuid: UUID,
     initialState: State,
     startTime: LocalDateTime?,
+    endTime: LocalDateTime?,
     results: GameResults?,
     startTurn: Color?
 ) {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>)
-            : this(environment, variant, components, playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null)
+            : this(environment, variant, components, playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null, null)
 
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     object Serializer : KSerializer<ChessGame> {
@@ -58,6 +59,7 @@ class ChessGame private constructor(
             element<ChessVariant>("variant")
             element<State>("state")
             element<String?>("startTime")
+            element<String?>("endTime")
             element("results", GameResultsSerializer.descriptor.nullable)
             element("components", KeyRegisteredListSerializer(ComponentSerializer).descriptor)
             element("environment", buildSerialDescriptor("ChessEnvironment", SerialKind.CONTEXTUAL))
@@ -70,10 +72,11 @@ class ChessGame private constructor(
             encodeSerializableElement(descriptor, 2, ChessVariant.serializer(), value.variant)
             encodeSerializableElement(descriptor, 3, encoder.serializersModule.serializer(), value.state)
             encodeNullableSerializableElement(descriptor, 4, String.serializer().nullable, value.startTime?.toString())
-            encodeNullableSerializableElement(descriptor, 5, GameResultsSerializer.nullable, value.results)
-            encodeSerializableElement(descriptor, 6, KeyRegisteredListSerializer(ComponentSerializer), value.components)
-            encodeSerializableElement(descriptor, 7, encoder.serializersModule.getContextual(ChessEnvironment::class)!!, value.environment)
-            encodeNullableSerializableElement(descriptor, 8, encoder.serializersModule.serializer(), value.currentTurn)
+            encodeNullableSerializableElement(descriptor, 5, String.serializer().nullable, value.endTime?.toString())
+            encodeNullableSerializableElement(descriptor, 6, GameResultsSerializer.nullable, value.results)
+            encodeSerializableElement(descriptor, 7, KeyRegisteredListSerializer(ComponentSerializer), value.components)
+            encodeSerializableElement(descriptor, 8, encoder.serializersModule.getContextual(ChessEnvironment::class)!!, value.environment)
+            encodeNullableSerializableElement(descriptor, 9, encoder.serializersModule.serializer(), value.currentTurn)
         }
 
         override fun deserialize(decoder: Decoder): ChessGame = decoder.decodeStructure(descriptor) {
@@ -82,6 +85,7 @@ class ChessGame private constructor(
             var variant: ChessVariant? = null
             var state: State? = null
             var startTime: LocalDateTime? = null
+            var endTime: LocalDateTime? = null
             var results: GameResults? = null
             var components: List<Component>? = null
             var environment: ChessEnvironment? = null
@@ -92,10 +96,11 @@ class ChessGame private constructor(
                 variant = decodeSerializableElement(descriptor, 2, ChessVariant.serializer())
                 state = decodeSerializableElement(descriptor, 3, decoder.serializersModule.serializer())
                 startTime = decodeNullableSerializableElement(descriptor, 4, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
-                results = decodeNullableSerializableElement(descriptor, 5, GameResultsSerializer.nullable)
-                components = decodeSerializableElement(descriptor, 6, KeyRegisteredListSerializer(ComponentSerializer)).toList()
-                environment = decodeSerializableElement(descriptor, 7, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
-                currentTurn = decodeNullableSerializableElement(descriptor, 8, decoder.serializersModule.serializer())
+                endTime = decodeNullableSerializableElement(descriptor, 5, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
+                results = decodeNullableSerializableElement(descriptor, 6, GameResultsSerializer.nullable)
+                components = decodeSerializableElement(descriptor, 7, KeyRegisteredListSerializer(ComponentSerializer)).toList()
+                environment = decodeSerializableElement(descriptor, 8, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
+                currentTurn = decodeNullableSerializableElement(descriptor, 9, decoder.serializersModule.serializer())
             } else {
                 while (true) {
                     when (val index = decodeElementIndex(descriptor)) {
@@ -104,16 +109,17 @@ class ChessGame private constructor(
                         2 -> variant = decodeSerializableElement(descriptor, index, ChessVariant.serializer())
                         3 -> state = decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
                         4 -> startTime = decodeNullableSerializableElement(descriptor, index, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
-                        5 -> results = decodeNullableSerializableElement(descriptor, index, GameResultsSerializer.nullable)
-                        6 -> components = decodeSerializableElement(descriptor, index, KeyRegisteredListSerializer(ComponentSerializer)).toList()
-                        7 -> environment = decodeSerializableElement(descriptor, index, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
-                        8 -> currentTurn = decodeNullableSerializableElement(descriptor, index, decoder.serializersModule.serializer())
+                        5 -> endTime = decodeNullableSerializableElement(descriptor, index, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
+                        6 -> results = decodeNullableSerializableElement(descriptor, index, GameResultsSerializer.nullable)
+                        7 -> components = decodeSerializableElement(descriptor, index, KeyRegisteredListSerializer(ComponentSerializer)).toList()
+                        8 -> environment = decodeSerializableElement(descriptor, index, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
+                        9 -> currentTurn = decodeNullableSerializableElement(descriptor, index, decoder.serializersModule.serializer())
                         CompositeDecoder.DECODE_DONE -> break
                         else -> error("Unexpected index: $index")
                     }
                 }
             }
-            ChessGame(environment!!, variant!!, components!!, players!!, uuid!!, state!!, startTime, results, currentTurn)
+            ChessGame(environment!!, variant!!, components!!, players!!, uuid!!, state!!, startTime, endTime, results, currentTurn)
         }
     }
 
@@ -121,6 +127,7 @@ class ChessGame private constructor(
 
     init {
         require((initialState >= State.RUNNING) == (startTime != null)) { "Start time bad" }
+        require((initialState >= State.STOPPED) == (endTime != null)) { "End time bad" }
         require((initialState >= State.STOPPED) == (results != null)) { "Results bad" }
         try {
             requireComponent<Chessboard>()
@@ -183,6 +190,16 @@ class ChessGame private constructor(
             check(field == null) {
                 val formatter = DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss")
                 "Start time already set: ${formatter.format(field)}, ${formatter.format(v)}"
+            }
+            field = v
+        }
+
+    var endTime: LocalDateTime? = endTime
+        private set(v) {
+            check(state == State.STOPPED) { "End time set when not stopped: $state" }
+            check(field == null) {
+                val formatter = DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss")
+                "End time already set: ${formatter.format(field)}, ${formatter.format(v)}"
             }
             field = v
         }
@@ -270,6 +287,7 @@ class ChessGame private constructor(
         requireState(State.RUNNING)
         state = State.STOPPED
         this.results = results
+        endTime = LocalDateTime.now()
         sides.forEach(ChessSide<*>::stop)
         callEvent(GameBaseEvent.STOP)
         joinAllAndThen {
