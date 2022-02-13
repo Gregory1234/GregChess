@@ -45,9 +45,9 @@ sealed class GameScore(val pgn: String) {
 typealias DetEndReason = EndReason<GameScore.Victory>
 typealias DrawEndReason = EndReason<GameScore.Draw>
 
-@Suppress("unused")
+
 @Serializable(with = EndReason.Serializer::class)
-class EndReason<R : GameScore>(val type: Type) : NameRegistered {
+class EndReason<@Suppress("UNUSED") R : GameScore>(val type: Type) : NameRegistered {
 
     object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", Registry.END_REASON)
 

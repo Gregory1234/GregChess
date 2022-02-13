@@ -6,5 +6,5 @@ import gregc.gregchess.registry.RegisterAll
 @RegisterAll(ChessPlayerType::class)
 object FabricPlayerType {
     @JvmField
-    val FABRIC = ChessPlayerType(FabricPlayer::class)
+    val FABRIC = ChessPlayerType(FabricPlayer.serializer())
 }

@@ -1,14 +1,12 @@
 package gregc.gregchess.chess.move
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
-import gregc.gregchess.register
 import gregc.gregchess.registry.*
-import kotlinx.serialization.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createType
 
 class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>, cause: Throwable? = null) :
     Exception(traits.toList().map { Registry.MOVE_TRAIT_TYPE[it.type] }.toString(), cause)
@@ -18,7 +16,7 @@ class TraitPreconditionException(trait: MoveTrait, message: String, cause: Throw
 
 @Serializable(with = MoveTraitSerializer::class)
 interface MoveTrait {
-    val type: MoveTraitType<*>
+    val type: MoveTraitType<out @SelfType MoveTrait>
     val shouldComeFirst: Boolean get() = false
     val shouldComeLast: Boolean get() = false
     val shouldComeBefore: Set<MoveTraitType<*>> get() = emptySet()
@@ -30,7 +28,7 @@ interface MoveTrait {
 }
 
 @Serializable(with = MoveTraitType.Serializer::class)
-class MoveTraitType<T : MoveTrait>(val cl: KClass<T>): NameRegistered {
+class MoveTraitType<T : MoveTrait>(val serializer: KSerializer<T>): NameRegistered {
     object Serializer : NameRegisteredSerializer<MoveTraitType<*>>("MoveTraitType", Registry.MOVE_TRAIT_TYPE)
 
     override val key get() = Registry.MOVE_TRAIT_TYPE[this]
@@ -43,29 +41,29 @@ class MoveTraitType<T : MoveTrait>(val cl: KClass<T>): NameRegistered {
         internal val AUTO_REGISTER = AutoRegisterType(MoveTraitType::class) { m, n, _ -> register(m, n) }
 
         @JvmField
-        val HALFMOVE_CLOCK = MoveTraitType(DefaultHalfmoveClockTrait::class)
+        val HALFMOVE_CLOCK = MoveTraitType(DefaultHalfmoveClockTrait.serializer())
         @JvmField
-        val CASTLES = MoveTraitType(CastlesTrait::class)
+        val CASTLES = MoveTraitType(CastlesTrait.serializer())
         @JvmField
-        val PROMOTION = MoveTraitType(PromotionTrait::class)
+        val PROMOTION = MoveTraitType(PromotionTrait.serializer())
         @JvmField
-        val NAME = MoveTraitType(NameTrait::class)
+        val NAME = MoveTraitType(NameTrait.serializer())
         @JvmField
-        val REQUIRE_FLAG = MoveTraitType(RequireFlagTrait::class)
+        val REQUIRE_FLAG = MoveTraitType(RequireFlagTrait.serializer())
         @JvmField
-        val FLAG = MoveTraitType(FlagTrait::class)
+        val FLAG = MoveTraitType(FlagTrait.serializer())
         @JvmField
-        val CHECK = MoveTraitType(CheckTrait::class)
+        val CHECK = MoveTraitType(CheckTrait.serializer())
         @JvmField
-        val CAPTURE = MoveTraitType(CaptureTrait::class)
+        val CAPTURE = MoveTraitType(CaptureTrait.serializer())
         @JvmField
         @Register("pawn_move")
-        val PAWN_ORIGIN = MoveTraitType(PawnOriginTrait::class)
+        val PAWN_ORIGIN = MoveTraitType(PawnOriginTrait.serializer())
         @JvmField
         @Register("piece_move")
-        val PIECE_ORIGIN = MoveTraitType(PieceOriginTrait::class)
+        val PIECE_ORIGIN = MoveTraitType(PieceOriginTrait.serializer())
         @JvmField
-        val TARGET = MoveTraitType(TargetTrait::class)
+        val TARGET = MoveTraitType(TargetTrait.serializer())
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<MoveTraitType<*>>()
     }
@@ -84,7 +82,7 @@ object MoveTraitSerializer : KeyRegisteredSerializer<MoveTraitType<*>, MoveTrait
 
     @Suppress("UNCHECKED_CAST")
     override fun MoveTraitType<*>.valueSerializer(module: SerializersModule): KSerializer<MoveTrait> =
-        module.serializer(cl.createType()) as KSerializer<MoveTrait>
+        serializer as KSerializer<MoveTrait>
 
     override val MoveTrait.key: MoveTraitType<*> get() = type
 

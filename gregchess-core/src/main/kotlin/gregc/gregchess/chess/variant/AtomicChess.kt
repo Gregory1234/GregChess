@@ -54,7 +54,7 @@ object AtomicChess : ChessVariant(), Registering {
 
     @JvmField
     @Register
-    val EXPLOSION = MoveTraitType(ExplosionTrait::class)
+    val EXPLOSION = MoveTraitType(ExplosionTrait.serializer())
 
     private fun nextToKing(color: Color, pos: Pos, board: Chessboard): Boolean =
         pos in board.kingOf(color)?.pos?.neighbours().orEmpty()

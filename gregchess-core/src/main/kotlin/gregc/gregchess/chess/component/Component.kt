@@ -1,9 +1,8 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.ChessListener
-import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.modules.SerializersModule
@@ -36,7 +35,7 @@ class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
 @Serializable(with = ComponentSerializer::class)
 interface Component : ChessListener {
 
-    val type: ComponentType<*>
+    val type: ComponentType<out @SelfType Component>
 
     fun init(game: ChessGame) {}
 

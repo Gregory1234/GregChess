@@ -77,7 +77,7 @@ object ThreeChecks : ChessVariant(), Registering {
 
     @JvmField
     @Register("check_counter")
-    val CHECK_COUNTER_TRAIT = MoveTraitType(CheckCounterTrait::class)
+    val CHECK_COUNTER_TRAIT = MoveTraitType(CheckCounterTrait.serializer())
 
     @JvmField
     @Register

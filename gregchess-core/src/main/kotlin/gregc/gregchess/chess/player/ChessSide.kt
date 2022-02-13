@@ -1,16 +1,15 @@
 package gregc.gregchess.chess.player
 
+import gregc.gregchess.SelfType
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Color
 import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.modules.SerializersModule
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createType
 
 @Serializable(with = ChessPlayerType.Serializer::class)
-class ChessPlayerType<T : ChessPlayer>(val cl: KClass<T>) : NameRegistered {
+class ChessPlayerType<T : ChessPlayer>(val serializer: KSerializer<T>) : NameRegistered {
     object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", Registry.PLAYER_TYPE)
 
     override val key get() = Registry.PLAYER_TYPE[this]
@@ -26,7 +25,7 @@ class ChessPlayerType<T : ChessPlayer>(val cl: KClass<T>) : NameRegistered {
 // TODO: add an interface for human players
 @Serializable(with = ChessPlayerSerializer::class)
 interface ChessPlayer {
-    val type: ChessPlayerType<*>
+    val type: ChessPlayerType<out @SelfType ChessPlayer>
     val name: String
     fun initSide(color: Color, game: ChessGame): ChessSide<*>
 }
@@ -37,7 +36,7 @@ object ChessPlayerSerializer : KeyRegisteredSerializer<ChessPlayerType<*>, Chess
 
     @Suppress("UNCHECKED_CAST")
     override fun ChessPlayerType<*>.valueSerializer(module: SerializersModule): KSerializer<ChessPlayer> =
-        module.serializer(cl.createType()) as KSerializer<ChessPlayer>
+        serializer as KSerializer<ChessPlayer>
 
     override val ChessPlayer.key: ChessPlayerType<*> get() = type
 

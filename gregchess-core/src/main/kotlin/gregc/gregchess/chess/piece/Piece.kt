@@ -1,14 +1,12 @@
 package gregc.gregchess.chess.piece
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.register
 import gregc.gregchess.registry.*
-import kotlinx.serialization.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createType
 
 object PieceRegistryView : FiniteBiRegistryView<String, Piece> {
 
@@ -57,7 +55,7 @@ fun white(type: PieceType) = type.of(Color.WHITE)
 fun black(type: PieceType) = type.of(Color.BLACK)
 
 @Serializable(with = PlacedPieceType.Serializer::class)
-class PlacedPieceType<T : PlacedPiece>(val cl: KClass<T>) : NameRegistered {
+class PlacedPieceType<T : PlacedPiece>(val serializer: KSerializer<T>) : NameRegistered {
     object Serializer : NameRegisteredSerializer<PlacedPieceType<*>>("PlacedPieceType", Registry.PLACED_PIECE_TYPE)
 
     override val key get() = Registry.PLACED_PIECE_TYPE[this]
@@ -69,9 +67,9 @@ class PlacedPieceType<T : PlacedPiece>(val cl: KClass<T>) : NameRegistered {
         internal val AUTO_REGISTER = AutoRegisterType(PlacedPieceType::class) { m, n, _ -> register(m, n) }
 
         @JvmField
-        val BOARD = PlacedPieceType(BoardPiece::class)
+        val BOARD = PlacedPieceType(BoardPiece.serializer())
         @JvmField
-        val CAPTURED = PlacedPieceType(CapturedPiece::class)
+        val CAPTURED = PlacedPieceType(CapturedPiece.serializer())
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<PlacedPieceType<*>>()
     }
@@ -79,7 +77,7 @@ class PlacedPieceType<T : PlacedPiece>(val cl: KClass<T>) : NameRegistered {
 
 @Serializable(with = PlacedPieceSerializer::class)
 interface PlacedPiece {
-    val placedPieceType: PlacedPieceType<*>
+    val placedPieceType: PlacedPieceType<out @SelfType PlacedPiece>
     val piece: Piece
     val color: Color get() = piece.color
     val type: PieceType get() = piece.type
@@ -126,7 +124,7 @@ object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, Place
 
     @Suppress("UNCHECKED_CAST")
     override fun PlacedPieceType<*>.valueSerializer(module: SerializersModule): KSerializer<PlacedPiece> =
-        module.serializer(cl.createType()) as KSerializer<PlacedPiece>
+        serializer as KSerializer<PlacedPiece>
 
     override val PlacedPiece.key: PlacedPieceType<*> get() = placedPieceType
 }

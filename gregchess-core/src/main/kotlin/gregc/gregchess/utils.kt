@@ -6,6 +6,12 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.time.Duration
 
+// TODO: check this statically
+@Target(AnnotationTarget.TYPE)
+@Retention(AnnotationRetention.SOURCE)
+@MustBeDocumented
+annotation class SelfType
+
 internal fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
     listOf(x to y, x to -y, -x to y, -x to -y, y to x, -y to x, y to -x, -y to -x).distinct()
 

@@ -6,7 +6,7 @@ import gregc.gregchess.registry.RegisterAll
 @RegisterAll(ChessPlayerType::class)
 object BukkitPlayerType {
     @JvmField
-    val BUKKIT = ChessPlayerType(BukkitPlayer::class)
+    val BUKKIT = ChessPlayerType(BukkitPlayer.serializer())
     @JvmField
-    val STOCKFISH = ChessPlayerType(Stockfish::class)
+    val STOCKFISH = ChessPlayerType(Stockfish.serializer())
 }
