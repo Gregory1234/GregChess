@@ -37,9 +37,9 @@ dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(kotlin("reflect"))
     implementation(libs.slf4j.jdk14)
-    api(project(":gregchess-core"))
-    shaded(project(":gregchess-core"))
-    shaded(project(":bukkit-utils"))
+    api(projects.gregchessCore)
+    shaded(projects.gregchessCore)
+    shaded(projects.bukkitUtils)
 }
 
 val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())

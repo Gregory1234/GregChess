@@ -14,40 +14,58 @@ repositories {
     mavenCentral()
 }
 
+val TaskContainer.test: TaskProvider<Test>
+    get() = named<Test>("test")
+
+val TaskContainer.compileKotlin: TaskProvider<Task>
+    get() = named<Task>("compileKotlin")
+
 tasks {
-    project(":gregchess-core").getTasksByName("test", true).forEach {
-        it.outputs.upToDateWhen { false }
-    }
+    val coreTasks = project.projects.gregchessCore.dependencyProject.tasks
+    val bukkitTasks = project.projects.gregchessBukkit.dependencyProject.tasks
+    val fabricTasks = project.projects.gregchessFabric.dependencyProject.tasks
+    val bukkitUtilsTasks = project.projects.bukkitUtils.dependencyProject.tasks
 
     register<Copy>("createSpigotJar") {
         group = "gregchess"
-        dependsOn(":gregchess-core:test")
-        dependsOn(":gregchess-bukkit:shadedJar")
-        getByPath(":gregchess-bukkit:compileKotlin").mustRunAfter(":gregchess-core:test")
-        getByPath(":bukkit-utils:compileKotlin").mustRunAfter(":gregchess-core:test")
-        from(getByPath(":gregchess-bukkit:shadedJar"))
+        coreTasks.test {
+            outputs.upToDateWhen { false }
+        }
+        dependsOn(coreTasks.test)
+        bukkitTasks.compileKotlin.get().mustRunAfter(coreTasks.test)
+        bukkitUtilsTasks.compileKotlin.get().mustRunAfter(coreTasks.test)
+        from(bukkitTasks.shadedJar)
         into(rootDir)
         rename { "${rootProject.name}-$version-bukkit.jar" }
     }
     register<Copy>("createFabricJar") {
         group = "gregchess"
-        dependsOn(":gregchess-core:test")
-        dependsOn(":gregchess-fabric:remapJar")
-        getByPath(":gregchess-fabric:compileKotlin").mustRunAfter(":gregchess-core:test")
-        from(getByPath(":gregchess-fabric:remapJar"))
+        coreTasks.test {
+            outputs.upToDateWhen { false }
+        }
+        dependsOn(coreTasks.test)
+        fabricTasks.compileKotlin.get().mustRunAfter(coreTasks.test)
+        from(fabricTasks["remapJar"])
         into(rootDir)
         rename { "${rootProject.name}-$version-fabric.jar" }
     }
     register<DefaultTask>("runFabricClient") {
         group = "gregchess"
-        dependsOn(":gregchess-core:test")
-        dependsOn(":gregchess-fabric:runClient")
-        getByPath(":gregchess-fabric:compileKotlin").mustRunAfter(":gregchess-core:test")
+        coreTasks.test {
+            outputs.upToDateWhen { false }
+        }
+        dependsOn(coreTasks.test)
+        dependsOn(fabricTasks["runClient"])
+        fabricTasks.compileKotlin.get().mustRunAfter(coreTasks.test)
     }
     register<DefaultTask>("runPaperServer") {
         group = "gregchess"
-        dependsOn(":gregchess-core:test")
-        dependsOn(":gregchess-bukkit:launchMinecraftServer")
-        getByPath(":gregchess-bukkit:compileKotlin").mustRunAfter(":gregchess-core:test")
+        coreTasks.test {
+            outputs.upToDateWhen { false }
+        }
+        dependsOn(coreTasks.test)
+        dependsOn(bukkitTasks["launchMinecraftServer"])
+        bukkitTasks.compileKotlin.get().mustRunAfter(coreTasks.test)
+        bukkitUtilsTasks.compileKotlin.get().mustRunAfter(coreTasks.test)
     }
 }

@@ -16,4 +16,7 @@ pluginManagement {
         id("dev.s7a.gradle.minecraft.server") version minecraftServerGradlePluginVersion
     }
 }
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 include("gregchess-core", "gregchess-bukkit", "gregchess-fabric", "bukkit-utils")

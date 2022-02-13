@@ -25,8 +25,8 @@ dependencies {
     modImplementation(libs.fabric.kotlin)
     modApi(libs.fabric.libgui)
     include(libs.fabric.libgui)
-    api(project(":gregchess-core"))
-    include(project(":gregchess-core"))
+    api(projects.gregchessCore)
+    include(projects.gregchessCore)
 }
 
 tasks {
