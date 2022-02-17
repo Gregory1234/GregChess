@@ -29,14 +29,18 @@ repositories {
 }
 
 val shaded: Configuration by configurations.creating
+val spigotLib: Configuration by configurations.creating
 
-configurations["implementation"].extendsFrom(shaded)
+configurations.implementation.get().extendsFrom(shaded, spigotLib)
 
 dependencies {
     api(libs.spigot.api)
     api(libs.kotlinx.serialization.json)
-    implementation(kotlin("reflect"))
-    implementation(libs.slf4j.jdk14)
+    spigotLib(kotlin("stdlib"))
+    spigotLib(kotlin("reflect"))
+    spigotLib(libs.kotlinx.serialization.json)
+    spigotLib(libs.kotlinx.coroutines.core)
+    spigotLib(libs.slf4j.jdk14)
     api(projects.gregchessCore)
     shaded(projects.gregchessCore)
     shaded(projects.bukkitUtils)
@@ -47,19 +51,13 @@ val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())
 tasks {
 
     processResources {
-        val kotlinVersion: String by project
         from(sourceSets["main"].resources.srcDirs) {
             include("**/*.yml")
             replace(
                 "version" to version,
                 "minecraft-version" to libs.versions.spigot.api.get().substringBefore("-").substringBeforeLast("."),
-                "libraries" to listOf(
-                    "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion",
-                    "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
-                    libs.kotlinx.serialization.json.get(),
-                    libs.kotlinx.coroutines.core.get(),
-                    libs.slf4j.jdk14.get(),
-                ).joinToString("\n") { "  - $it" }
+                "libraries" to spigotLib.resolvedConfiguration.firstLevelModuleDependencies.toList()
+                    .joinToString("\n") { "  - ${it.moduleGroup}:${it.moduleName}:${it.moduleVersion}" }
             )
         }
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
