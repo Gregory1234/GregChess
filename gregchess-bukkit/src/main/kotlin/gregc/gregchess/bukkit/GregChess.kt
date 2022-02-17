@@ -4,13 +4,13 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
 import gregc.gregchess.bukkitutils.toDuration
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.FEN
+import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.move.*
-import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.piece.PlacedPieceType
-import gregc.gregchess.chess.variant.*
+import gregc.gregchess.chess.variant.KingOfTheHill
+import gregc.gregchess.chess.variant.ThreeChecks
 import gregc.gregchess.rangeTo
+import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.AutoRegister
 import kotlin.time.Duration
 
@@ -65,16 +65,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     }
 
     override fun load() {
-        PieceType.registerCore(this)
-        EndReason.registerCore(this)
-        MoveNameTokenType.registerCore(this)
-        ChessFlag.registerCore(this)
-        ComponentType.registerCore(this)
-        ChessVariants.registerCore(this)
-        MoveTraitType.registerCore(this)
-        PlacedPieceType.registerCore(this)
-        ChessVariantOption.registerCore(this)
-        ChessStat.registerCore(this)
+        registerGregChessCore(this)
         AutoRegister(this, AutoRegister.bukkitTypes).apply {
             registerAll<Arena>()
             registerAll<ChessGameManager>()

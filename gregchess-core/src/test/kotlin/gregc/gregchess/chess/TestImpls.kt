@@ -3,12 +3,9 @@ package gregc.gregchess.chess
 import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentType
-import gregc.gregchess.chess.move.*
-import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.player.*
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.chess.variant.ChessVariants
+import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.*
 import io.mockk.clearMocks
 import io.mockk.spyk
@@ -91,15 +88,7 @@ object GregChess : ChessModule("GregChess", "gregchess") {
     }
 
     override fun load() {
-        PieceType.registerCore(this)
-        EndReason.registerCore(this)
-        MoveNameTokenType.registerCore(this)
-        ChessFlag.registerCore(this)
-        ComponentType.registerCore(this)
-        ChessVariants.registerCore(this)
-        MoveTraitType.registerCore(this)
-        PlacedPieceType.registerCore(this)
-        ChessVariantOption.registerCore(this)
+        registerGregChessCore(this)
 
         AutoRegister(this, AutoRegister.basicTypes).registerAll<GregChess>()
     }
