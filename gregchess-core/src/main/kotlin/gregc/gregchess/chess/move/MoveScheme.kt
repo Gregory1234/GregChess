@@ -98,7 +98,7 @@ fun List<Move>.promotions(what: (BoardPiece) -> List<Piece>?): List<Move> = map 
 }
 
 fun List<Move>.promotions(what: List<PieceType>): List<Move> = promotions { p ->
-    if (p.pos.rank in listOf(0,7)) what.map { white(it) } else null
+    if (p.pos.rank in listOf(0,7)) what.map { Piece(it, p.color) } else null
 }
 
 fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.hasMoved }) : List<Move> {

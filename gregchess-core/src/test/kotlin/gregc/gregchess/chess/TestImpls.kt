@@ -13,6 +13,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.Serializable
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
+
 
 @Serializable
 class TestPlayer(override val name: String) : ChessPlayer {
@@ -61,6 +64,9 @@ inline fun <T> measureTime(block: () -> T): T {
 
 object GregChess : ChessModule("GregChess", "gregchess") {
 
+    var finished = false
+        private set
+
     @JvmField
     @Register("test")
     val TEST_END_REASON = DetEndReason(EndReason.Type.EMERGENCY)
@@ -91,11 +97,16 @@ object GregChess : ChessModule("GregChess", "gregchess") {
         registerGregChessCore(this)
 
         AutoRegister(this, AutoRegister.basicTypes).registerAll<GregChess>()
+        finished = true
     }
 }
-
+private var started = false
+private val lock: Lock = ReentrantLock()
 fun setupRegistry() {
-    if (!GregChess.locked) {
+    lock.lock()
+    if (!started) {
+        started = true
         GregChess.fullLoad()
     }
+    lock.unlock()
 }

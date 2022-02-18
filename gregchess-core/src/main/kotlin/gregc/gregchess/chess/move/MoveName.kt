@@ -47,6 +47,7 @@ class MoveNameTokenType<T : Any>(val cl: KClass<T>) : NameRegistered {
     }
 }
 
+// TODO: consider removing MoveName and MoveNameTokenType
 @Serializable(with = MoveName.Serializer::class)
 data class MoveName(private val tokens: Map<MoveNameTokenType<*>, Any>) {
     constructor(names: Collection<MoveName>) : this(names.flatMap { it.tokens.toList() }.toMap())
