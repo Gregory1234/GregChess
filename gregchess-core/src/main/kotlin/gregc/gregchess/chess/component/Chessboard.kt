@@ -135,7 +135,7 @@ class Chessboard private constructor (
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
                 for (f in s.flags) {
-                    f.value.replaceAll { it + 1u }
+                    f.value.replaceAll { it - 1u }
                     f.value.removeIf { it == 0u }
                 }
                 s.flags.entries.removeIf { it.flagAges.isEmpty() }

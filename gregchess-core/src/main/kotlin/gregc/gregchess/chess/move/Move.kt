@@ -50,11 +50,15 @@ data class Move(
                     }
                 }
             }
-            if (remainingTraits.isEmpty()) return
+            if (remainingTraits.isEmpty()) {
+                game.board.updateMoves()
+                return
+            }
         }
 
         for(t in completedTraits.asReversed())
             t.undo(game, this)
+        game.board.updateMoves()
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 
@@ -86,10 +90,14 @@ data class Move(
                     }
                 }
             }
-            for(t in completedTraits.asReversed())
-                t.execute(game, this)
-            if (remainingTraits.isEmpty()) return
+            if (remainingTraits.isEmpty()) {
+                game.board.updateMoves()
+                return
+            }
         }
+        for(t in completedTraits.asReversed())
+            t.execute(game, this)
+        game.board.updateMoves()
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 }
