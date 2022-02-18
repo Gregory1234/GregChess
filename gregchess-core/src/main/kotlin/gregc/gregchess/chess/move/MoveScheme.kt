@@ -15,7 +15,7 @@ private operator fun Pair<Int, Int>.times(m: Int) = Pair(m * first, m * second)
 fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.map {
         Move(
-            PieceTracker(piece), it, setOf(piece.pos), setOf(it), emptySet(), setOf(it),
+            PieceTracker(piece), it, setOf(piece.pos), setOf(it), emptySet(), setOf(it), false,
             listOf(PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
         )
     }
@@ -25,7 +25,7 @@ fun rays(piece: BoardPiece, dirs: Collection<Dir>) =
         PosSteps(piece.pos + dir, dir).mapIndexedNotNull { index, it ->
             Move(
                 PieceTracker(piece), it, setOf(piece.pos), setOf(it),
-                PosSteps(piece.pos + dir, dir, index), PosSteps(piece.pos + dir, dir, index + 1),
+                PosSteps(piece.pos + dir, dir, index), PosSteps(piece.pos + dir, dir, index + 1), false,
                 listOf(
                     PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()
                 )
@@ -45,7 +45,7 @@ fun kingMovement(piece: BoardPiece, board: Chessboard): List<Move> {
     ) = Move(
         PieceTracker("main" to piece, "rook" to rook), display, setOf(piece.pos, rook.pos), setOf(pieceTarget, rookTarget),
         neededEmptyFiles(piece.pos.file, pieceTarget.file, rook.pos.file, rookTarget.file).toPosSet(piece.pos.rank),
-        betweenInc(piece.pos.file, pieceTarget.file).toList().toPosSet(piece.pos.rank),
+        betweenInc(piece.pos.file, pieceTarget.file).toList().toPosSet(piece.pos.rank), false,
         listOf(CastlesTrait(side, pieceTarget, rookTarget), DefaultHalfmoveClockTrait(), CheckTrait())
     )
 
@@ -110,7 +110,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
         if (forward.isValid()) {
             add(
                 Move(
-                    PieceTracker(piece), forward, setOf(pos), setOf(forward), setOf(forward), setOf(forward),
+                    PieceTracker(piece), forward, setOf(pos), setOf(forward), setOf(forward), setOf(forward), false,
                     listOf(PawnOriginTrait(), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait())
                 )
             )
@@ -120,7 +120,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
             add(
                 Move(
                     PieceTracker(piece), forward2,
-                    setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2),
+                    setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2), false,
                     listOf(
                         PawnOriginTrait(), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait(),
                         FlagTrait(mapOf(forward to mapOf(ChessFlag.EN_PASSANT to 0u)))
@@ -133,7 +133,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
             if (capture.isValid()) {
                 add(
                     Move(
-                        PieceTracker(piece), capture, setOf(pos), setOf(capture), emptySet(), setOf(capture),
+                        PieceTracker(piece), capture, setOf(pos), setOf(capture), emptySet(), setOf(capture), false,
                         listOf(
                             PawnOriginTrait(), CaptureTrait(capture, true),
                             TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()
@@ -143,7 +143,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                 val enPassant = pos + s.dir
                 add(
                     Move(
-                        PieceTracker(piece), capture, setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture),
+                        PieceTracker(piece), capture, setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture), false,
                         listOf(
                             PawnOriginTrait(), CaptureTrait(enPassant, true), TargetTrait(capture),
                             RequireFlagTrait(mapOf(capture to setOf(ChessFlag.EN_PASSANT))),

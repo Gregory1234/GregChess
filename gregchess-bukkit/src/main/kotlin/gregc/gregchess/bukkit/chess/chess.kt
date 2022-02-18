@@ -55,8 +55,8 @@ fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFl
         heldPiece?.pos -> getFloor("Nothing")
         in heldPiece?.getLegalMoves(board).orEmpty().map { it.display } ->
             heldPiece?.getLegalMoves(board).orEmpty().first { it.display == p }.getFloorMaterial()
-        board.lastMove?.origin -> getFloor("LastStart")
-        board.lastMove?.display -> getFloor("LastEnd")
+        board.lastNormalMove?.origin -> getFloor("LastStart")
+        board.lastNormalMove?.display -> getFloor("LastEnd")
         in specialSquares -> getFloor("Other")
         else -> if ((p.file + p.rank) % 2 == 0) getFloor("Dark") else getFloor("Light")
     }

@@ -64,6 +64,10 @@ class MoveTraitType<T : MoveTrait>(val serializer: KSerializer<T>): NameRegister
         val PIECE_ORIGIN = MoveTraitType(PieceOriginTrait.serializer())
         @JvmField
         val TARGET = MoveTraitType(TargetTrait.serializer())
+        @JvmField
+        val SPAWN = MoveTraitType(SpawnTrait.serializer())
+        @JvmField
+        val CLEAR = MoveTraitType(ClearTrait.serializer())
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<MoveTraitType<*>>()
     }
@@ -214,7 +218,7 @@ class CheckTrait : MoveTrait {
 }
 
 @Serializable
-class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTrait {
+class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, val by: Color? = null) : MoveTrait {
     override val type get() = MoveTraitType.CAPTURE
 
     private val Move.toCapture: BoardPiece get() = pieceTracker["capture"] as BoardPiece
@@ -229,7 +233,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false) : MoveTr
     override fun execute(game: ChessGame, move: Move) {
         game.board[capture]?.let {
             move.pieceTracker.giveName("capture", it)
-            move.pieceTracker.traceMove(game.board, move.toCapture.capture(move.main.color))
+            move.pieceTracker.traceMove(game.board, move.toCapture.capture(by ?: move.main.color))
             captureSuccess = true
         }
     }
@@ -309,4 +313,42 @@ class TargetTrait(val target: Pos) : MoveTrait {
     override fun undo(game: ChessGame, move: Move) = tryPiece {
         move.pieceTracker.traceMoveBack(game.board, move.main)
     }
+}
+
+@Serializable
+class SpawnTrait(val piece: BoardPiece) : MoveTrait {
+    override val type get() = MoveTraitType.SPAWN
+
+    override val nameTokens: MoveName get() = MoveName(emptyList())
+
+    override val shouldComeBefore get() = setOf(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
+
+    override fun execute(game: ChessGame, move: Move) = tryPiece {
+        piece.create(game.board)
+        piece.sendCreated(game.board)
+    }
+
+    override fun undo(game: ChessGame, move: Move) = tryPiece {
+        piece.clear(game.board)
+    }
+
+}
+
+@Serializable
+class ClearTrait(val piece: BoardPiece) : MoveTrait {
+    override val type get() = MoveTraitType.CLEAR
+
+    override val nameTokens: MoveName get() = MoveName(emptyList())
+
+    override val shouldComeAfter get() = setOf(MoveTraitType.TARGET)
+
+    override fun execute(game: ChessGame, move: Move) = tryPiece {
+        piece.clear(game.board)
+    }
+
+    override fun undo(game: ChessGame, move: Move) = tryPiece {
+        piece.create(game.board)
+        piece.sendCreated(game.board)
+    }
+
 }

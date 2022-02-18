@@ -165,6 +165,7 @@ data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boo
     }
 
     override fun create(board: Chessboard) {
+        checkCanExist(board)
         board += this
     }
 

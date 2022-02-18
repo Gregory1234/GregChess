@@ -68,15 +68,16 @@ class GameController(val presetName: String) : Component {
     private fun onStop() {
         val results = game.results!!
         with(game.board) {
-            if (lastPrintedMove != lastMove) {
+            val normalMoves = moveHistory.filter { !it.isPhantomMove }
+            if (lastPrintedMove != normalMoves.lastOrNull()) {
                 val wLast: Move?
                 val bLast: Move?
-                if (lastMove?.main?.color == Color.WHITE) {
-                    wLast = lastMove
+                if (normalMoves.lastOrNull()?.main?.color == Color.WHITE) {
+                    wLast = normalMoves.lastOrNull()
                     bLast = null
                 } else {
-                    wLast = if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2]
-                    bLast = lastMove
+                    wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
+                    bLast = normalMoves.lastOrNull()
                 }
                 game.sides.forEachRealBukkit { p ->
                     p.sendLastMoves(game.board.fullmoveCounter + 1u, wLast, bLast, game.variant.localNameFormatter)
@@ -140,12 +141,13 @@ class GameController(val presetName: String) : Component {
         if (e == TurnEvent.END) {
             if (game.currentTurn == Color.BLACK) {
                 with(game.board) {
-                    val wLast = if (moveHistory.size <= 1) null else moveHistory[moveHistory.size - 2]
-                    val bLast = lastMove
+                    val normalMoves = moveHistory.filter { !it.isPhantomMove }
+                    val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
+                    val bLast = normalMoves.last()
                     game.sides.forEachRealBukkit { p ->
                         p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localNameFormatter)
                     }
-                    lastPrintedMove = lastMove
+                    lastPrintedMove = normalMoves.last()
                 }
             }
         }

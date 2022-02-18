@@ -10,9 +10,9 @@ import kotlin.reflect.KClass
 @Serializable
 data class Move(
     val pieceTracker: PieceTracker, val display: Pos,
-    val stopBlocking: Set<Pos>, val startBlocking: Set<Pos>,
-    val neededEmpty: Set<Pos>, val passedThrough: Set<Pos>,
-    val traits: List<MoveTrait>
+    val stopBlocking: Set<Pos> = emptySet(), val startBlocking: Set<Pos> = emptySet(),
+    val neededEmpty: Set<Pos> = emptySet(), val passedThrough: Set<Pos> = emptySet(),
+    val isPhantomMove: Boolean = false, val traits: List<MoveTrait> = emptyList()
 ) {
     val origin: Pos get() = pieceTracker.getOriginal("main").boardPiece().pos
     val main: PlacedPiece get() = pieceTracker["main"]

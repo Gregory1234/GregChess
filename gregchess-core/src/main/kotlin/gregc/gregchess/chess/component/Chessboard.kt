@@ -112,6 +112,9 @@ class Chessboard private constructor (
             return false
         }
 
+    val lastNormalMove
+        get() = moveHistory_.lastOrNull { !it.isPhantomMove }
+
     var lastMove
         get() = moveHistory_.lastOrNull()
         set(v) {
@@ -253,13 +256,19 @@ class Chessboard private constructor (
 
     fun undoLastMove() {
         lastMove?.let {
-            val hash = getFEN().hashed()
-            boardHashes_[hash] = (boardHashes_[hash] ?: 1) - 1
-            it.undo(game)
-            if (game.currentTurn == Color.WHITE)
-                fullmoveCounter_--
-            moveHistory_.removeLast()
-            game.previousTurn()
+            if (!it.isPhantomMove) {
+                val hash = getFEN().hashed()
+                boardHashes_[hash] = (boardHashes_[hash] ?: 1) - 1
+                if (boardHashes_[hash] == 0) boardHashes_ -= hash
+                it.undo(game)
+                if (game.currentTurn == Color.WHITE)
+                    fullmoveCounter_--
+                moveHistory_.removeLast()
+                game.previousTurn()
+            } else {
+                it.undo(game)
+                moveHistory_.removeLast()
+            }
         }
     }
 

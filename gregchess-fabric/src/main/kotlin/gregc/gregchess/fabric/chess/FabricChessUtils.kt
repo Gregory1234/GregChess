@@ -33,8 +33,8 @@ fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFl
         heldPiece?.pos -> Floor.NOTHING
         in heldPiece?.getLegalMoves(board).orEmpty().map { it.display } ->
             heldPiece?.getLegalMoves(board).orEmpty().first { it.display == p }.getFloor()
-        board.lastMove?.origin -> Floor.LAST_START
-        board.lastMove?.display -> Floor.LAST_END
+        board.lastNormalMove?.origin -> Floor.LAST_START
+        board.lastNormalMove?.display -> Floor.LAST_END
         in specialSquares -> Floor.OTHER
         else -> if ((p.file + p.rank) % 2 == 0) Floor.DARK else Floor.LIGHT
     }

@@ -1,6 +1,8 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.chess.move.phantomClear
+import gregc.gregchess.chess.move.phantomSpawn
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.fabric.GregChessMod
@@ -39,8 +41,8 @@ class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChe
 
     override fun markRemoved() {
         if (world?.isClient == false && !moved) {
-            currentGame?.board?.clearPiece(floorBlock!!.boardPos!!)
-            currentGame?.board?.updateMoves()
+            val piece = currentGame?.board?.get(floorBlock!!.boardPos!!)
+            currentGame?.finishMove(phantomClear(piece!!))
         }
         super.markRemoved()
     }
@@ -101,8 +103,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         if (!world.isClient()) {
             val entity = world.getBlockEntity(pos) as PieceBlockEntity
-            entity.currentGame?.board?.plusAssign(BoardPiece(entity.floorBlock!!.boardPos!!, piece, false))
-            entity.currentGame?.board?.updateMoves()
+            entity.currentGame?.finishMove(phantomSpawn(BoardPiece(entity.floorBlock!!.boardPos!!, piece, false)))
         }
     }
 
@@ -158,8 +159,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), 3)
         if (!world.isClient()) {
             val entity = world.getBlockEntity(pos) as PieceBlockEntity
-            entity.currentGame?.board?.plusAssign(BoardPiece(entity.floorBlock!!.boardPos!!, piece, false))
-            entity.currentGame?.board?.updateMoves()
+            entity.currentGame?.finishMove(phantomSpawn(BoardPiece(entity.floorBlock!!.boardPos!!, piece, false)))
         }
     }
 

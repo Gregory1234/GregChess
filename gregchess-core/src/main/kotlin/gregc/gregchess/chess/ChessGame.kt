@@ -329,7 +329,10 @@ class ChessGame private constructor(
         requireState(State.RUNNING)
         move.execute(this)
         board.lastMove = move
-        nextTurn()
+        if (!move.isPhantomMove)
+            nextTurn()
+        else
+            variant.checkForGameEnd(this)
     }
 
 }

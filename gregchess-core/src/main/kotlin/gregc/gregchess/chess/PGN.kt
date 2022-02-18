@@ -61,7 +61,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             val result = game.results?.score?.pgn
 
             tags += TagPair("Result", result ?: "*")
-            tags += TagPair("PlyCount", game.board.moveHistory.size.toString())
+            tags += TagPair("PlyCount", game.board.moveHistory.count { !it.isPhantomMove }.toString())
             val timeControl = game.clock?.timeControl?.getPGN() ?: "-"
             tags += TagPair("TimeControl", timeControl)
             val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(game.startTime)
@@ -88,7 +88,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
 
             val tree = MoveTree(
                 game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveCounter,
-                game.board.moveHistory.map { it.name.format(game.variant.pgnNameFormatter) }, result
+                game.board.moveHistory.filter { !it.isPhantomMove }.map { it.name.format(game.variant.pgnNameFormatter) }, result
             )
 
             return PGN(tags, tree)
