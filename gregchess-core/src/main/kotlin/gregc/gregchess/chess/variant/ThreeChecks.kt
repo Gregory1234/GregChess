@@ -51,8 +51,6 @@ object ThreeChecks : ChessVariant(), Registering {
 
         override val shouldComeLast: Boolean = true
 
-        override val nameTokens: MoveName = MoveName(emptyMap())
-
         var checkRegistered: Boolean = false
             private set
 

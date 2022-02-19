@@ -80,7 +80,7 @@ class GameController(val presetName: String) : Component {
                     bLast = normalMoves.lastOrNull()
                 }
                 game.sides.forEachRealBukkit { p ->
-                    p.sendLastMoves(game.board.fullmoveCounter + 1u, wLast, bLast, game.variant.localNameFormatter)
+                    p.sendLastMoves(game.board.fullmoveCounter + 1u, wLast, bLast, game.variant.localMoveFormatter)
                 }
             }
         }
@@ -145,7 +145,7 @@ class GameController(val presetName: String) : Component {
                     val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
                     val bLast = normalMoves.last()
                     game.sides.forEachRealBukkit { p ->
-                        p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localNameFormatter)
+                        p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localMoveFormatter)
                     }
                     lastPrintedMove = normalMoves.last()
                 }

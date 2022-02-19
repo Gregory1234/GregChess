@@ -62,8 +62,6 @@ data class Move(
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 
-    val name: MoveName get() = MoveName(traits.map { it.nameTokens })
-
     fun undo(game: ChessGame) {
         val completedTraits = mutableListOf<MoveTrait>()
         val remainingTraits = traits.toMutableList()

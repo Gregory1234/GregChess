@@ -17,6 +17,10 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     protected fun mkGame(fen: FEN) =
         ChessGame(TestChessEnvironment, variant, listOf(Chessboard(variant, fen)) + extraComponents, byColor(playerA, playerB)).start()
 
+    protected fun Chessboard.getMove(from: Pos, to: Pos) = get(from)?.getLegalMoves(this)?.singleOrNull { it.display == to }
+
+    protected val Move.name get() = variant.pgnMoveFormatter.format(this)
+
     protected fun Assert<ChessGame>.pieceAt(pos: Pos) = prop("board[$pos]") { it.board[pos] }.isNotNull()
 
     protected fun Assert<BoardPiece>.legalMoves(game: ChessGame) = prop("legalMoves") { it.getLegalMoves(game.board) }
@@ -38,11 +42,8 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     protected fun Assert<Move>.hasTraitsExactly(vararg types: MoveTraitType<*>) =
         prop("traits") { it.traits.map { t -> t.type } }.containsExactlyInAnyOrder(*types)
 
-    protected fun Assert<Move>.hasExtraPawnTraitsExactly(vararg types: MoveTraitType<*>) =
-        hasTraitsExactly(MoveTraitType.PAWN_ORIGIN, MoveTraitType.CHECK, MoveTraitType.HALFMOVE_CLOCK, *types)
-
-    protected fun Assert<Move>.hasExtraPieceTraitsExactly(vararg types: MoveTraitType<*>) =
-        hasTraitsExactly(MoveTraitType.PIECE_ORIGIN, MoveTraitType.CHECK, MoveTraitType.HALFMOVE_CLOCK, *types)
+    protected fun Assert<Move>.hasExtraTraitsExactly(vararg types: MoveTraitType<*>) =
+        hasTraitsExactly(MoveTraitType.CHECK, MoveTraitType.HALFMOVE_CLOCK, *types)
 
     protected fun Assert<Move>.isNormalMove() = prop(Move::isPhantomMove).isFalse()
 
@@ -74,5 +75,13 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     @Suppress("UNCHECKED_CAST")
     protected fun <T : MoveTrait> Assert<Move>.trait(type: MoveTraitType<T>) =
         prop("traits[$type]") { it.traits.singleOrNull { t -> t.type == type } }.isNotNull() as Assert<T>
+
+    protected fun Assert<Move>.afterExecution(game: ChessGame, promotion: Piece? = null) = transform {
+        it.getTrait<PromotionTrait>()?.promotion = promotion
+        game.finishMove(it)
+        it
+    }
+
+    protected fun Assert<Move>.isNamed(name: String) = prop("name") { it.name }.isEqualTo(name)
 
 }

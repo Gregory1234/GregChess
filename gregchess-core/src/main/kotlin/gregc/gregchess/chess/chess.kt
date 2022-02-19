@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.chess.move.Move
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
 
@@ -74,4 +75,8 @@ inline fun <T> byColor(block: (Color) -> T) = byColor(block(Color.WHITE), block(
 interface ChessEnvironment {
     val pgnSite: String
     val coroutineDispatcher: CoroutineDispatcher
+}
+
+fun interface MoveFormatter {
+    fun format(move: Move): String
 }

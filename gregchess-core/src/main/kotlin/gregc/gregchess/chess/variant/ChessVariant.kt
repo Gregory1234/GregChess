@@ -118,16 +118,25 @@ open class ChessVariant : NameRegistered {
 
     open val optionalComponents: Set<ComponentType<*>> get() = emptySet()
 
-    open val pgnNameFormatter: MoveNameFormatter = MoveNameFormatter { name ->
+    open val pgnMoveFormatter: MoveFormatter = MoveFormatter { move ->
         buildString {
-            name.getOrNull(MoveNameTokenType.PIECE_TYPE)?.let { append(it.char.uppercase()) }
-            name.getOrNull(MoveNameTokenType.UNIQUENESS_COORDINATE)?.let { append(it) }
-            name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append("x") }
-            name.getOrNull(MoveNameTokenType.TARGET)?.let { append(it) }
-            name.getOrNull(MoveNameTokenType.CASTLE)?.let { append(it.castles) }
-            name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append("="+it.char.uppercase()) }
-            name.getOrNull(MoveNameTokenType.CHECK)?.let { append("+") }
-            name.getOrNull(MoveNameTokenType.CHECKMATE)?.let { append("#") }
+            operator fun Any?.unaryPlus() { if (this != null) append(this) }
+
+            val main = move.pieceTracker.getOriginalOrNull("main")
+
+            if (main?.piece?.type != PieceType.PAWN) {
+                +main?.piece?.char?.uppercase()
+                +move.getTrait<TargetTrait>()?.uniquenessCoordinate
+            }
+            if (move.getTrait<CaptureTrait>()?.captureSuccess == true) {
+                if (main?.piece?.type == PieceType.PAWN)
+                    +(main as? BoardPiece)?.pos?.fileStr
+                +"x"
+            }
+            +move.getTrait<TargetTrait>()?.target
+            +move.getTrait<CastlesTrait>()?.side?.castles
+            +move.getTrait<PromotionTrait>()?.promotion?.let { "="+it.char.uppercase() }
+            +move.getTrait<CheckTrait>()?.checkType?.char
         }
     }
 

@@ -2,7 +2,8 @@ package gregc.gregchess
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.ComponentType
-import gregc.gregchess.chess.move.*
+import gregc.gregchess.chess.move.ChessVariantOption
+import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.variant.ChessVariants
@@ -65,7 +66,6 @@ class MultiExceptionContext {
 fun registerGregChessCore(module: ChessModule) {
     PieceType.registerCore(module)
     EndReason.registerCore(module)
-    MoveNameTokenType.registerCore(module)
     ChessFlag.registerCore(module)
     ComponentType.registerCore(module)
     ChessVariants.registerCore(module)

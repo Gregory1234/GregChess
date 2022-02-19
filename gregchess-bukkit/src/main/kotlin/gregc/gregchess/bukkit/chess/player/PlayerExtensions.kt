@@ -6,7 +6,6 @@ import gregc.gregchess.bukkit.title
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.Move
-import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.piece.Piece
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
@@ -54,13 +53,13 @@ fun Player.sendPGN(pgn: PGN) {
     })
 }
 
-fun Player.sendLastMoves(num: UInt, wLast: Move?, bLast: Move?, formatter: MoveNameFormatter) {
+fun Player.sendLastMoves(num: UInt, wLast: Move?, bLast: Move?, formatter: MoveFormatter) {
     sendMessage(buildString {
         append(num - 1u)
         append(". ")
-        wLast?.let { append(it.name.format(formatter)) }
+        wLast?.let { append(formatter.format(it)) }
         append("  | ")
-        bLast?.let { append(it.name.format(formatter)) }
+        bLast?.let { append(formatter.format(it)) }
     })
 }
 

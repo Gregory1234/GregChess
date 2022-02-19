@@ -65,23 +65,33 @@ fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFl
 val ChessVariant.floorRenderer: ChessFloorRenderer
     get() = BukkitRegistry.FLOOR_RENDERER[this]
 
-val defaultLocalMoveNameFormatter: MoveNameFormatter
-    get() = MoveNameFormatter { name ->
-        buildString {
-            name.getOrNull(MoveNameTokenType.PIECE_TYPE)?.let { append(it.localChar.uppercase()) }
-            name.getOrNull(MoveNameTokenType.UNIQUENESS_COORDINATE)?.let { append(it) }
-            name.getOrNull(MoveNameTokenType.CAPTURE)?.let { append(config.getPathString("Chess.Capture")) }
-            name.getOrNull(MoveNameTokenType.TARGET)?.let { append(it) }
-            name.getOrNull(MoveNameTokenType.CASTLE)?.let { append(it.castles) }
-            name.getOrNull(MoveNameTokenType.PROMOTION)?.let { append(it.localChar.uppercase()) }
-            name.getOrNull(MoveNameTokenType.CHECK)?.let { append("+") }
-            name.getOrNull(MoveNameTokenType.CHECKMATE)?.let { append("#") }
-            name.getOrNull(MoveNameTokenType.EN_PASSANT)?.let { append(" e.p.") }
+val defaultLocalMoveFormatter: MoveFormatter
+    get() = MoveFormatter { move ->
+        buildString { // TODO: remove repetition
+            operator fun Any?.unaryPlus() { if (this != null) append(this) }
+
+            val main = move.pieceTracker.getOriginalOrNull("main")
+
+            if (main?.piece?.type != PieceType.PAWN) {
+                +main?.piece?.char?.uppercase()
+                +move.getTrait<TargetTrait>()?.uniquenessCoordinate
+            }
+            if (move.getTrait<CaptureTrait>()?.captureSuccess == true) {
+                if (main?.piece?.type == PieceType.PAWN)
+                    +(main as? BoardPiece)?.pos?.fileStr
+                +config.getPathString("Chess.Capture")
+            }
+            +move.getTrait<TargetTrait>()?.target
+            +move.getTrait<CastlesTrait>()?.side?.castles
+            +move.getTrait<PromotionTrait>()?.promotion?.let { "="+it.char.uppercase() }
+            +move.getTrait<CheckTrait>()?.checkType?.char
+            if (move.getTrait<RequireFlagTrait>()?.flags?.any { ChessFlag.EN_PASSANT in it.value } == true)
+                +" e.p."
         }
     }
 
-val ChessVariant.localNameFormatter: MoveNameFormatter
-    get() = BukkitRegistry.LOCAL_MOVE_NAME_FORMATTER[this]
+val ChessVariant.localMoveFormatter: MoveFormatter
+    get() = BukkitRegistry.LOCAL_MOVE_FORMATTER[this]
 
 fun BoardPiece.getInfo(game: ChessGame) = textComponent {
     text("Type: $color $type\n")
@@ -91,9 +101,9 @@ fun BoardPiece.getInfo(game: ChessGame) = textComponent {
         onClickCopy(game.uuid)
     }
     val moves = getLegalMoves(game.board)
-    text("All moves: ${moves.joinToString { it.name.format(game.variant.localNameFormatter) }}")
+    text("All moves: ${moves.joinToString { game.variant.localMoveFormatter.format(it) }}")
     moves.groupBy { m -> game.variant.getLegality(m, game) }.forEach { (l, m) ->
-        text("\n${l.prettyName}: ${m.joinToString { it.name.format(game.variant.localNameFormatter) }}")
+        text("\n${l.prettyName}: ${m.joinToString { game.variant.localMoveFormatter.format(it) }}")
     }
 }
 

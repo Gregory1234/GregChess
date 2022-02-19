@@ -6,7 +6,6 @@ import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentType
-import gregc.gregchess.chess.move.MoveNameFormatter
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.register
 import gregc.gregchess.registry.*
@@ -24,7 +23,7 @@ object BukkitRegistry {
     @JvmField
     val SETTINGS_PARSER = ConnectedRegistry<ComponentType<*>, SettingsParser<out Component>>("settings_parser", Registry.COMPONENT_TYPE)
     @JvmField
-    val LOCAL_MOVE_NAME_FORMATTER = ConnectedRegistry<ChessVariant, MoveNameFormatter>("local_move_name_formatter", Registry.VARIANT)
+    val LOCAL_MOVE_FORMATTER = ConnectedRegistry<ChessVariant, MoveFormatter>("local_move_formatter", Registry.VARIANT)
     @JvmField
     val FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
     @JvmField
@@ -49,8 +48,8 @@ fun <T : Component> ComponentType<T>.registerSettings(settings: SettingsParser<T
 fun <T : Component> ComponentType<T>.registerConstSettings(settings: T) =
     apply { module.register(BukkitRegistry.SETTINGS_PARSER, this) { settings } }
 
-fun ChessVariant.registerLocalFormatter(formatter: MoveNameFormatter) =
-    module.register(BukkitRegistry.LOCAL_MOVE_NAME_FORMATTER, this, formatter)
+fun ChessVariant.registerLocalFormatter(formatter: MoveFormatter) =
+    module.register(BukkitRegistry.LOCAL_MOVE_FORMATTER, this, formatter)
 
 fun ChessVariant.registerFloorRenderer(floorRenderer: ChessFloorRenderer) =
     module.register(BukkitRegistry.FLOOR_RENDERER, this, floorRenderer)
@@ -95,7 +94,7 @@ abstract class BukkitChessModule(val plugin: Plugin) : ChessModule(plugin.name, 
     final override fun postLoad() {
         registerBukkitPlugin(plugin)
         this[BukkitRegistry.SETTINGS_PARSER].completeWith { type -> { type.cl.constructors.first { it.parameters.isEmpty() }.call() } }
-        this[BukkitRegistry.LOCAL_MOVE_NAME_FORMATTER].completeWith { defaultLocalMoveNameFormatter }
+        this[BukkitRegistry.LOCAL_MOVE_FORMATTER].completeWith { defaultLocalMoveFormatter }
         this[BukkitRegistry.FLOOR_RENDERER].completeWith { simpleFloorRenderer() }
     }
 

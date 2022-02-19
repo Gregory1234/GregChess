@@ -16,8 +16,6 @@ object AtomicChess : ChessVariant(), Registering {
     class ExplosionTrait : MoveTrait {
         override val type get() = EXPLOSION
 
-        override val nameTokens: MoveName = MoveName(emptyMap())
-
         var explodedNumber = 0
             private set
 

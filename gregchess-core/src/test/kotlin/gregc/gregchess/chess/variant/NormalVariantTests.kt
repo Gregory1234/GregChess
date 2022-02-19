@@ -36,8 +36,9 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         passesThroughExactly(target)
                         stopsBlockingExactly(origin)
                         startsBlockingExactly(target)
-                        hasExtraPawnTraitsExactly(MoveTraitType.TARGET)
+                        hasExtraTraitsExactly(MoveTraitType.TARGET)
                         targets(target)
+                        afterExecution(game).isNamed(target.toString())
                     }
                 }
 
@@ -61,9 +62,10 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         passesThroughExactly(mid, target)
                         stopsBlockingExactly(origin)
                         startsBlockingExactly(target)
-                        hasExtraPawnTraitsExactly(MoveTraitType.TARGET, MoveTraitType.FLAG)
+                        hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.FLAG)
                         targets(target)
                         createsFlagsExactly(mid to (ChessFlag.EN_PASSANT to 0u))
+                        afterExecution(game).isNamed(target.toString())
                     }
                 }
 
@@ -90,9 +92,10 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         passesThroughExactly(target)
                         stopsBlockingExactly(origin)
                         startsBlockingExactly(target)
-                        hasExtraPawnTraitsExactly(MoveTraitType.TARGET, MoveTraitType.PROMOTION)
+                        hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.PROMOTION)
                         targets(target)
                         promotesTo(*promotions.map { Piece(it, color) }.toTypedArray())
+                        afterExecution(game, Piece(PieceType.BISHOP, color)).isNamed("$target=B")
                     }
                 }
 
@@ -119,14 +122,16 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         passesThroughExactly(target)
                         stopsBlockingExactly(origin)
                         startsBlockingExactly(target)
-                        hasExtraPawnTraitsExactly(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
+                        hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
                         targets(target)
                         captures(target, required = true)
+                        afterExecution(game).isNamed("${origin.fileStr}x$target")
                     }
                 }
 
                 check(Pos(3, 4), Pos(2, 5))
                 check(Pos(5, 4), Pos(4, 3))
+                game.board.setFromFEN(game.board.initialFEN)
                 check(Pos(3, 4), Pos(4, 5))
                 check(Pos(5, 4), Pos(6, 3))
             }
@@ -148,21 +153,21 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         passesThroughExactly(target)
                         stopsBlockingExactly(origin, capture)
                         startsBlockingExactly(target)
-                        hasExtraPawnTraitsExactly(MoveTraitType.TARGET, MoveTraitType.CAPTURE, MoveTraitType.REQUIRE_FLAG, MoveTraitType.NAME)
+                        hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.CAPTURE, MoveTraitType.REQUIRE_FLAG)
                         targets(target)
                         captures(capture, required = true)
                         requiresFlagsExactly(target to ChessFlag.EN_PASSANT)
+                        afterExecution(game).isNamed("${origin.fileStr}x$target")
                     }
                 }
 
                 game.board.addEnPassantFlag(Pos(2, 5))
-                game.board.addEnPassantFlag(Pos(4, 3))
                 assertThat(game).pieceAt(Pos(3, 4)).legalMoves(game).onlyGetTo(Pos(3, 5), Pos(2, 5))
                 check(Pos(3, 4), Pos(2, 5), Pos(2, 4))
+                game.board.addEnPassantFlag(Pos(4, 3))
                 assertThat(game).pieceAt(Pos(5, 4)).legalMoves(game).onlyGetTo(Pos(5, 3), Pos(4, 3))
                 check(Pos(5, 4), Pos(4, 3), Pos(4, 4))
             }
-
 
         }
     }

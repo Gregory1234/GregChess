@@ -16,7 +16,7 @@ fun jumps(piece: BoardPiece, dirs: Collection<Dir>) =
     dirs.map { piece.pos + it }.filter { it.isValid() }.map {
         Move(
             PieceTracker(piece), it, setOf(piece.pos), setOf(it), emptySet(), setOf(it), false,
-            listOf(PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
+            listOf(CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()),
         )
     }
 
@@ -26,9 +26,7 @@ fun rays(piece: BoardPiece, dirs: Collection<Dir>) =
             Move(
                 PieceTracker(piece), it, setOf(piece.pos), setOf(it),
                 PosSteps(piece.pos + dir, dir, index), PosSteps(piece.pos + dir, dir, index + 1), false,
-                listOf(
-                    PieceOriginTrait(), CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait()
-                )
+                listOf(CaptureTrait(it), TargetTrait(it), DefaultHalfmoveClockTrait(), CheckTrait())
             )
         }
     }
@@ -111,7 +109,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
             add(
                 Move(
                     PieceTracker(piece), forward, setOf(pos), setOf(forward), setOf(forward), setOf(forward), false,
-                    listOf(PawnOriginTrait(), TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait())
+                    listOf(TargetTrait(forward), DefaultHalfmoveClockTrait(), CheckTrait())
                 )
             )
         }
@@ -121,10 +119,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                 Move(
                     PieceTracker(piece), forward2,
                     setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2), false,
-                    listOf(
-                        PawnOriginTrait(), TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait(),
-                        FlagTrait(mapOf(forward to mapOf(ChessFlag.EN_PASSANT to 0u)))
-                    )
+                    listOf(TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait(), FlagTrait(mapOf(forward to mapOf(ChessFlag.EN_PASSANT to 0u))))
                 )
             )
         }
@@ -135,8 +130,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                     Move(
                         PieceTracker(piece), capture, setOf(pos), setOf(capture), emptySet(), setOf(capture), false,
                         listOf(
-                            PawnOriginTrait(), CaptureTrait(capture, true),
-                            TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()
+                            CaptureTrait(capture, true), TargetTrait(capture), DefaultHalfmoveClockTrait(), CheckTrait()
                         )
                     )
                 )
@@ -145,9 +139,8 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                     Move(
                         PieceTracker(piece), capture, setOf(pos, enPassant), setOf(capture), emptySet(), setOf(capture), false,
                         listOf(
-                            PawnOriginTrait(), CaptureTrait(enPassant, true), TargetTrait(capture),
+                            CaptureTrait(enPassant, true), TargetTrait(capture),
                             RequireFlagTrait(mapOf(capture to setOf(ChessFlag.EN_PASSANT))),
-                            NameTrait(MoveName(mapOf(MoveNameTokenType.EN_PASSANT to Unit))),
                             DefaultHalfmoveClockTrait(), CheckTrait()
                         )
                     )

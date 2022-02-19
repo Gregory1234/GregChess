@@ -41,6 +41,8 @@ class PieceTracker private constructor(
         }
     }
 
+    fun getOriginalOrNull(name: String): PlacedPiece? = pieces[synonyms[name] ?: name]?.firstOrNull()
+
     fun getOriginal(name: String): PlacedPiece = pieces[synonyms[name] ?: name]!!.first()
 
     private fun traceBack(piece: PlacedPiece): PlacedPiece = pieces.entries.single { it.value.last() == piece }.value.let {

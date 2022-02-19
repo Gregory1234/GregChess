@@ -54,9 +54,6 @@ fun ChessVariant.register(module: ChessModule, id: String) = module.register(Reg
 
 fun ChessFlag.register(module: ChessModule, id: String) = module.register(Registry.FLAG, id, this)
 
-fun <T : Any> MoveNameTokenType<T>.register(module: ChessModule, id: String) =
-    module.register(Registry.MOVE_NAME_TOKEN_TYPE, id, this)
-
 fun <T : MoveTrait> MoveTraitType<T>.register(module: ChessModule, id: String) =
     module.register(Registry.MOVE_TRAIT_TYPE, id, this)
 
