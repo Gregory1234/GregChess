@@ -21,7 +21,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
         inner class Pawn {
 
             @Test
-            fun `single forward move is correct`() {
+            fun `can move 1 square forward`() {
                 val game = mkGame(fen {
                     set(Pos(0, 0), white(PieceType.KING))
                     set(Pos(0, 2), black(PieceType.KING))
@@ -169,6 +169,75 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                 check(Pos(5, 4), Pos(4, 3), Pos(4, 4))
             }
 
+        }
+        @Nested
+        inner class King {
+            @Test
+            fun `can move to neighbouring squares`() {
+                val game = mkGame(fen {
+                    set(Pos(2, 2), white(PieceType.KING))
+                    set(Pos(5, 5), black(PieceType.KING))
+                    set(Pos(0, 6), black(PieceType.PAWN))
+                })
+                fun check(origin: Pos, target: Pos) {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                        isNormalMove()
+                        needsEmptyExactly()
+                        passesThroughExactly(target)
+                        stopsBlockingExactly(origin)
+                        startsBlockingExactly(target)
+                        hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
+                        targets(target)
+                        captures(target)
+                        afterExecution(game).isNamed("K$target")
+                    }
+                }
+
+                assertThat(game).pieceAt(Pos(2, 2)).legalMoves(game).onlyGetTo(*Pos(2, 2).neighbours().toTypedArray())
+                assertThat(game).pieceAt(Pos(5, 5)).legalMoves(game).onlyGetTo(*Pos(5, 5).neighbours().toTypedArray())
+                check(Pos(2, 2), Pos(3, 3))
+                check(Pos(5, 5), Pos(6, 6))
+                game.board.setFromFEN(game.board.initialFEN)
+                check(Pos(2, 2), Pos(3, 2))
+                check(Pos(5, 5), Pos(6, 5))
+            }
+
+            @Test
+            fun `can castle`() {
+                val game = mkGame(fen {
+                    set(Pos(4, 0), white(PieceType.KING))
+                    set(Pos(4, 7), black(PieceType.KING))
+                    set(Pos(0, 0), white(PieceType.ROOK))
+                    set(Pos(0, 7), black(PieceType.ROOK))
+                    set(Pos(7, 0), white(PieceType.ROOK))
+                    set(Pos(7, 7), black(PieceType.ROOK))
+                    for(i in 0..7) {
+                        set(Pos(i, 1), white(PieceType.PAWN))
+                        set(Pos(i, 6), black(PieceType.PAWN))
+                    }
+                    castlingRights = byColor(listOf(0, 7))
+                })
+                fun check(origin: Pos, mid: Pos, target: Pos, rookPos: Pos, side: BoardSide, vararg extraEmpty: Pos) {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                        isNormalMove()
+                        needsEmptyExactly(mid, target, *extraEmpty)
+                        passesThroughExactly(origin, mid, target)
+                        stopsBlockingExactly(origin, rookPos)
+                        startsBlockingExactly(target, mid)
+                        hasExtraTraitsExactly(MoveTraitType.CASTLES)
+                        castles(side, target, rookPos, mid)
+                        afterExecution(game).isNamed(side.castles)
+                    }
+                }
+
+                assertThat(game).pieceAt(Pos(4, 0)).legalMoves(game).onlyGetTo(Pos(2, 0), Pos(3, 0), Pos(5, 0), Pos(6, 0))
+                assertThat(game).pieceAt(Pos(4, 7)).legalMoves(game).onlyGetTo(Pos(2, 7), Pos(3, 7), Pos(5, 7), Pos(6, 7))
+                check(Pos(4, 0), Pos(5, 0), Pos(6, 0), Pos(7, 0), BoardSide.KINGSIDE)
+                check(Pos(4, 7), Pos(5, 7), Pos(6, 7), Pos(7, 7), BoardSide.KINGSIDE)
+                game.board.setFromFEN(game.board.initialFEN)
+                check(Pos(4, 0), Pos(3, 0), Pos(2, 0), Pos(0, 0), BoardSide.QUEENSIDE, Pos(1, 0))
+                check(Pos(4, 7), Pos(3, 7), Pos(2, 7), Pos(0, 7), BoardSide.QUEENSIDE, Pos(1, 7))
+            }
         }
     }
 }

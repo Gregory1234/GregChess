@@ -124,7 +124,7 @@ open class ChessVariant : NameRegistered {
 
             val main = move.pieceTracker.getOriginalOrNull("main")
 
-            if (main?.piece?.type != PieceType.PAWN) {
+            if (main?.piece?.type != PieceType.PAWN && move.getTrait<CastlesTrait>() == null) {
                 +main?.piece?.char?.uppercase()
                 +move.getTrait<TargetTrait>()?.uniquenessCoordinate
             }

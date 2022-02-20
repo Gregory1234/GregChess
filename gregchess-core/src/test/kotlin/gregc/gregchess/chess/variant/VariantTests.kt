@@ -7,8 +7,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.*
-import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.Piece
+import gregc.gregchess.chess.piece.*
 
 open class VariantTests(val variant: ChessVariant, val extraComponents: Collection<Component> = emptyList()) {
     private val playerA = TestPlayer("A")
@@ -72,6 +71,15 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
         prop(CaptureTrait::hasToCapture).isEqualTo(required)
     }
 
+    protected fun Assert<Move>.castles(side: BoardSide, target: Pos, rookOrigin: Pos, rookTarget: Pos) = all {
+        piece("rook").isNotNull().boardPiece().prop(BoardPiece::pos).isEqualTo(rookOrigin)
+        trait(MoveTraitType.CASTLES).all {
+            prop(CastlesTrait::side).isEqualTo(side)
+            prop(CastlesTrait::target).isEqualTo(target)
+            prop(CastlesTrait::rookTarget).isEqualTo(rookTarget)
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     protected fun <T : MoveTrait> Assert<Move>.trait(type: MoveTraitType<T>) =
         prop("traits[$type]") { it.traits.singleOrNull { t -> t.type == type } }.isNotNull() as Assert<T>
@@ -83,5 +91,9 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     }
 
     protected fun Assert<Move>.isNamed(name: String) = prop("name") { it.name }.isEqualTo(name)
+
+    protected fun Assert<Move>.piece(name: String) = prop(Move::pieceTracker).prop(name) { it.getOrNull(name) }
+
+    protected fun Assert<PlacedPiece>.boardPiece() = isInstanceOf(BoardPiece::class)
 
 }
