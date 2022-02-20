@@ -1,8 +1,7 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.ChessVariantOption
-import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.rangeTo
@@ -44,7 +43,7 @@ class Chessboard private constructor (
     @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf()
-) : Component {
+) : Component, ChessboardView {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
@@ -66,7 +65,7 @@ class Chessboard private constructor (
     val capturedPieces get() = capturedPieces_.toList()
     val moveHistory get() = moveHistory_.toList()
 
-    val pieces get() = squares.values.mapNotNull { it.piece }
+    override val pieces get() = squares.values.mapNotNull { it.piece }
 
     private val boardState
         get() = FEN.boardStateFromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it.piece) } }.toMap())
@@ -75,7 +74,7 @@ class Chessboard private constructor (
         squares[piece.pos]?.piece = piece
     }
 
-    operator fun get(pos: Pos) = squares[pos]?.piece
+    override operator fun get(pos: Pos) = squares[pos]?.piece
 
     fun clearPiece(pos: Pos) {
         squares[pos]?.piece = null
@@ -88,12 +87,10 @@ class Chessboard private constructor (
         }
     }
 
-    fun getFlags(pos: Pos): Map<ChessFlag, UInt> =
+    override fun getFlags(pos: Pos): Map<ChessFlag, UInt> =
         squares[pos]?.flags?.filterValues { it.isNotEmpty() }?.mapValues { it.value.last() }.orEmpty()
 
-    fun hasActiveFlag(pos: Pos, flag: ChessFlag): Boolean = getFlags(pos)[flag]?.let(flag.isActive) ?: false
-
-    val chess960: Boolean
+    override val chess960: Boolean
         get() {
             if (initialFEN.chess960)
                 return true
@@ -154,7 +151,7 @@ class Chessboard private constructor (
     }
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T : Any> get(option: ChessVariantOption<T>): T = variantOptions[option] as T
+    override operator fun <T : Any> get(option: ChessVariantOption<T>): T = variantOptions[option] as T
 
     @Suppress("UNCHECKED_CAST")
     fun getVariantOptionStrings(): List<String> = variantOptions.mapNotNull { (o, v) -> (o as ChessVariantOption<Any>).pgnNameFragment(v) }
@@ -168,11 +165,6 @@ class Chessboard private constructor (
         }
     }
 
-    fun piecesOf(color: Color) = pieces.filter { it.color == color }
-    fun piecesOf(color: Color, type: PieceType) = pieces.filter { it.color == color && it.type == type }
-
-    fun kingOf(color: Color) = piecesOf(color).firstOrNull { it.type == PieceType.KING }
-
     operator fun plusAssign(captured: CapturedPiece) {
         capturedPieces_ += captured
     }
@@ -181,8 +173,8 @@ class Chessboard private constructor (
         capturedPieces_ -= captured
     }
 
-    fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
-    fun getLegalMoves(pos: Pos) = squares[pos]?.bakedLegalMoves.orEmpty()
+    override fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
+    override fun getLegalMoves(pos: Pos) = squares[pos]?.bakedLegalMoves.orEmpty()
 
     fun updateMoves() {
         for ((_, square) in squares) {
@@ -220,7 +212,7 @@ class Chessboard private constructor (
         game.callEvent(SetFenEvent(fen))
     }
 
-    fun getFEN(): FEN {
+    override fun getFEN(): FEN {
         fun castling(color: Color) =
             if (kingOf(color)?.hasMoved == false)
                 piecesOf(color, PieceType.ROOK)
