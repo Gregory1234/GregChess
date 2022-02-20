@@ -41,7 +41,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
     }
 
     override fun startTurn() {
-        val inCheck = game.variant.isInCheck(game, color)
+        val inCheck = game.variant.isInCheck(game.board, color)
         if (inCheck) {
             player.getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.in_check"),false)
         }
@@ -51,7 +51,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         if (!game.running) return
         val piece = game.board[pos] ?: return
         if (piece.color != color) return
-        println(piece.getLegalMoves(game.board).groupBy { m -> game.variant.getLegality(m, game) })
+        println(piece.getMoves(game.board).groupBy { m -> game.variant.getLegality(m, game.board) })
         held = piece
     }
 

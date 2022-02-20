@@ -1,7 +1,6 @@
 package gregc.gregchess.chess.move
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.rotationsOf
 import kotlin.math.abs
@@ -31,7 +30,7 @@ fun rays(piece: BoardPiece, dirs: Collection<Dir>) =
         }
     }
 
-fun kingMovement(piece: BoardPiece, board: Chessboard): List<Move> {
+fun kingMovement(piece: BoardPiece, board: ChessboardView): List<Move> {
 
     fun Collection<Int>.toPosSet(rank: Int) = map { Pos(it, rank) }.toSet()
 

@@ -3,6 +3,7 @@ package gregc.gregchess.chess.piece
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Chessboard
+import gregc.gregchess.chess.move.ChessboardView
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -185,8 +186,8 @@ data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boo
         board.clearPiece(pos)
     }
 
-    fun getMoves(board: Chessboard) = board.getMoves(pos)
-    fun getLegalMoves(board: Chessboard) = board.getLegalMoves(pos)
+    fun getMoves(board: ChessboardView) = board.getMoves(pos)
+    fun getLegalMoves(board: ChessboardView) = board.getLegalMoves(pos)
 
     fun move(target: Pos) = this to this.copy(pos = target, hasMoved = true)
     fun capture(by: Color) = this to CapturedPiece(piece, by)

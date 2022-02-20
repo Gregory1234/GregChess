@@ -108,7 +108,7 @@ class BukkitChessSide(player: BukkitPlayer, color: Color, game: ChessGame) : Che
             firstTurn = false
             return
         }
-        val inCheck = game.variant.isInCheck(game, color)
+        val inCheck = game.variant.isInCheck(game.board, color)
         sendTitleList(buildList {
             if (inCheck)
                 this += IN_CHECK_TITLE to true

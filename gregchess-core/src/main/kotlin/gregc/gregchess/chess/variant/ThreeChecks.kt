@@ -1,7 +1,8 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.registry.Register
@@ -56,7 +57,7 @@ object ThreeChecks : ChessVariant(), Registering {
 
         override fun execute(game: ChessGame, move: Move) {
             game.board.updateMoves()
-            if (game.variant.isInCheck(game, !move.main.color)) {
+            if (game.variant.isInCheck(game.board, !move.main.color)) {
                 game.requireComponent<CheckCounter>().registerCheck(!move.main.color)
                 checkRegistered = true
             }
@@ -81,7 +82,7 @@ object ThreeChecks : ChessVariant(), Registering {
     @Register
     val CHECK_COUNTER = ComponentType(CheckCounter::class)
 
-    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
+    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> =
         Normal.getPieceMoves(piece, board).map {
             it.copy(traits = it.traits + CheckCounterTrait())
         }

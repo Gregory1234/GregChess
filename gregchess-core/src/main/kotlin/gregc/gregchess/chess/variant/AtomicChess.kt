@@ -54,61 +54,61 @@ object AtomicChess : ChessVariant(), Registering {
     @Register
     val EXPLOSION = MoveTraitType(ExplosionTrait.serializer())
 
-    private fun nextToKing(color: Color, pos: Pos, board: Chessboard): Boolean =
+    private fun nextToKing(color: Color, pos: Pos, board: ChessboardView): Boolean =
         pos in board.kingOf(color)?.pos?.neighbours().orEmpty()
 
-    private fun kingHug(board: Chessboard): Boolean {
+    private fun kingHug(board: ChessboardView): Boolean {
         val wk = board.kingOf(Color.WHITE)?.pos
         return wk != null && nextToKing(Color.BLACK, wk, board)
     }
 
-    private fun pinningMoves(by: Color, pos: Pos, board: Chessboard) =
+    private fun pinningMoves(by: Color, pos: Pos, board: ChessboardView) =
         if (kingHug(board)) emptyList() else Normal.pinningMoves(by, pos, board)
 
-    private fun checkingMoves(by: Color, pos: Pos, board: Chessboard) =
+    private fun checkingMoves(by: Color, pos: Pos, board: ChessboardView) =
         if (nextToKing(by, pos, board)) emptyList() else Normal.checkingMoves(by, pos, board)
 
-    override fun getPieceMoves(piece: BoardPiece, board: Chessboard): List<Move> =
+    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> =
         Normal.getPieceMoves(piece, board).map {
             if (it.getTrait<CaptureTrait>() != null) it.copy(traits = it.traits + ExplosionTrait()) else it
         }
 
-    override fun getLegality(move: Move, game: ChessGame): MoveLegality = with(move) {
+    override fun getLegality(move: Move, board: ChessboardView): MoveLegality = with(move) {
 
-        if (!Normal.isValid(this, game))
+        if (!Normal.isValid(this, board))
             return MoveLegality.INVALID
 
-        val captured = getTrait<CaptureTrait>()?.let { game.board[it.capture] }
+        val captured = getTrait<CaptureTrait>()?.let { board[it.capture] }
 
         if (main.type == PieceType.KING) {
             if (captured != null)
                 return MoveLegality.SPECIAL
 
-            return if (passedThrough.all { checkingMoves(!main.color, it, game.board).isEmpty() })
+            return if (passedThrough.all { checkingMoves(!main.color, it, board).isEmpty() })
                 MoveLegality.LEGAL
             else
                 MoveLegality.IN_CHECK
         }
 
-        val myKing = game.board.kingOf(main.color) ?: return MoveLegality.IN_CHECK
+        val myKing = board.kingOf(main.color) ?: return MoveLegality.IN_CHECK
 
         if (captured != null)
             if (myKing.pos in captured.pos.neighbours())
                 return MoveLegality.SPECIAL
 
-        val checks = checkingMoves(!main.color, myKing.pos, game.board)
+        val checks = checkingMoves(!main.color, myKing.pos, board)
         val capture = getTrait<CaptureTrait>()?.capture
         if (checks.any { ch -> capture != ch.origin && startBlocking.none { it in ch.neededEmpty } })
             return MoveLegality.IN_CHECK
 
-        val pins = pinningMoves(!main.color, myKing.pos, game.board)
-        if (pins.any { pin -> isPinnedBy(pin, game.board) })
+        val pins = pinningMoves(!main.color, myKing.pos, board)
+        if (pins.any { pin -> isPinnedBy(pin, board) })
             return MoveLegality.PINNED
 
         return MoveLegality.LEGAL
     }
 
-    override fun isInCheck(king: BoardPiece, board: Chessboard): Boolean =
+    override fun isInCheck(king: BoardPiece, board: ChessboardView): Boolean =
         checkingMoves(!king.color, king.pos, board).isNotEmpty()
 
     override fun checkForGameEnd(game: ChessGame) {

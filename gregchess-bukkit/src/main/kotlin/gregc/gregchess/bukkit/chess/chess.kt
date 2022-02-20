@@ -100,9 +100,9 @@ fun BoardPiece.getInfo(game: ChessGame) = textComponent {
     text("Game: ${game.uuid}\n") {
         onClickCopy(game.uuid)
     }
-    val moves = getLegalMoves(game.board)
+    val moves = getMoves(game.board)
     text("All moves: ${moves.joinToString { game.variant.localMoveFormatter.format(it) }}")
-    moves.groupBy { m -> game.variant.getLegality(m, game) }.forEach { (l, m) ->
+    moves.groupBy { m -> game.variant.getLegality(m, game.board) }.forEach { (l, m) ->
         text("\n${l.prettyName}: ${m.joinToString { game.variant.localMoveFormatter.format(it) }}")
     }
 }
