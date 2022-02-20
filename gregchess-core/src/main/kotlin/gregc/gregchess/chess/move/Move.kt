@@ -20,10 +20,6 @@ data class Move(
     fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
     inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)
 
-    fun setup(game: ChessGame) {
-        traits.forEach { it.setup(game, this) }
-    }
-
     fun execute(game: ChessGame) {
         val completedTraits = mutableListOf<MoveTrait>()
         val remainingTraits = traits.toMutableList()

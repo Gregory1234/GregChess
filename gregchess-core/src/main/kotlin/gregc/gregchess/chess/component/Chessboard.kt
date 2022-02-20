@@ -181,9 +181,6 @@ class Chessboard private constructor (
             square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p, this) }
         }
         for ((_, square) in squares) {
-            square.bakedMoves?.forEach { it.setup(game) }
-        }
-        for ((_, square) in squares) {
             square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it, game) }
         }
     }

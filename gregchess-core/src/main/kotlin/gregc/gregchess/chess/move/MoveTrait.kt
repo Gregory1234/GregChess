@@ -21,7 +21,6 @@ interface MoveTrait {
     val shouldComeLast: Boolean get() = false
     val shouldComeBefore: Set<MoveTraitType<*>> get() = emptySet()
     val shouldComeAfter: Set<MoveTraitType<*>> get() = emptySet()
-    fun setup(game: ChessGame, move: Move) {}
     fun execute(game: ChessGame, move: Move) {}
     fun undo(game: ChessGame, move: Move) {}
 }
@@ -168,18 +167,6 @@ enum class CheckType(val char: Char) {
     CHECK('+'), CHECKMATE('#')
 }
 
-fun checkForChecks(color: Color, game: ChessGame): CheckType? {
-    game.board.updateMoves()
-    val pieces = game.board.piecesOf(!color)
-    val inCheck = game.variant.isInCheck(game, !color)
-    val noMoves = pieces.all { it.getMoves(game.board).none { m -> game.variant.isLegal(m, game) } }
-    return when {
-        inCheck && noMoves -> CheckType.CHECKMATE
-        inCheck -> CheckType.CHECK
-        else -> null
-    }
-}
-
 // TODO: try to remove this
 @Serializable
 class CheckTrait : MoveTrait {
@@ -189,6 +176,18 @@ class CheckTrait : MoveTrait {
 
     var checkType: CheckType? = null
         private set
+
+    private fun checkForChecks(color: Color, game: ChessGame): CheckType? {
+        game.board.updateMoves()
+        val pieces = game.board.piecesOf(!color)
+        val inCheck = game.variant.isInCheck(game.board, !color)
+        val noMoves = pieces.all { it.getMoves(game.board).none { m -> game.variant.isLegal(m, game.board) } }
+        return when {
+            inCheck && noMoves -> CheckType.CHECKMATE
+            inCheck -> CheckType.CHECK
+            else -> null
+        }
+    }
 
     override fun execute(game: ChessGame, move: Move) {
         checkType = checkForChecks(move.main.color, game)
@@ -231,7 +230,7 @@ class TargetTrait(val target: Pos) : MoveTrait {
     private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessGame): UniquenessCoordinate {
         val pieces = game.board.pieces.filter { it.color == piece.color && it.type == piece.type }
         val consideredPieces = pieces.filter { p ->
-            p.getMoves(game.board).any { it.getTrait<TargetTrait>()?.target == target && game.variant.isLegal(it, game) }
+            p.getLegalMoves(game.board).any { it.getTrait<TargetTrait>()?.target == target }
         }
         return when {
             consideredPieces.size == 1 -> UniquenessCoordinate()
@@ -241,11 +240,8 @@ class TargetTrait(val target: Pos) : MoveTrait {
         }
     }
 
-    override fun setup(game: ChessGame, move: Move) {
-        uniquenessCoordinate = getUniquenessCoordinate(move.main.boardPiece(), target, game)
-    }
-
     override fun execute(game: ChessGame, move: Move) = tryPiece {
+        uniquenessCoordinate = getUniquenessCoordinate(move.main.boardPiece(), target, game) // TODO: this is not a good place to do this
         move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target))
     }
 
