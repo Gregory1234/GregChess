@@ -111,6 +111,9 @@ Title:
     ItWasADraw: "&eDraw"
 Chess:
   Capture: "x"
+  Check: "+"
+  Checkmate: "#"
+  EnPassant: " e.p."
   Color:
     White:
       Name: "White"
