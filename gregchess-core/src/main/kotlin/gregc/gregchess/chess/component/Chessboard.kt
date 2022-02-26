@@ -162,6 +162,7 @@ class Chessboard private constructor (
             game.callEvent(AddVariantOptionsEvent(variantOptions))
             updateMoves()
             pieces.forEach { it.sendCreated(this) }
+            capturedPieces.forEach { it.sendCreated(this) }
         }
     }
 
@@ -170,7 +171,7 @@ class Chessboard private constructor (
     }
 
     operator fun minusAssign(captured: CapturedPiece) {
-        capturedPieces_ -= captured
+        capturedPieces_.removeAt(capturedPieces_.lastIndexOf(captured))
     }
 
     override fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
@@ -186,6 +187,7 @@ class Chessboard private constructor (
     }
 
     fun setFromFEN(fen: FEN) {
+        capturedPieces.asReversed().forEach { it.clear(this) }
         squares.values.forEach { it.empty(this) }
         fen.forEachSquare(game.variant) { p -> this += p }
 
@@ -261,7 +263,7 @@ class Chessboard private constructor (
         }
     }
 
-    fun callPieceEvent(e: PieceEvent) = game.callEvent(e)
+    fun callPieceMoveEvent(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
 
     companion object {
 

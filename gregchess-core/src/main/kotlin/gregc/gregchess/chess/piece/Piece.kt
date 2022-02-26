@@ -111,7 +111,7 @@ fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?
             t?.create(board)
             created += t
         }
-        board.callPieceEvent(PieceEvent.Moved(realMoves.toMap()))
+        board.callPieceMoveEvent(*moves)
     } catch (e: Throwable) {
         for (t in created.asReversed())
             t?.destroy(board)
@@ -149,6 +149,17 @@ data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : Pla
         checkExists(board)
         board -= this
     }
+
+    fun sendCreated(board: Chessboard) {
+        checkExists(board)
+        board.callPieceMoveEvent(null to this)
+    }
+
+    fun clear(board: Chessboard) {
+        checkExists(board)
+        board.callPieceMoveEvent(this to null)
+        board -= this
+    }
 }
 
 @Serializable
@@ -177,12 +188,12 @@ data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boo
 
     fun sendCreated(board: Chessboard) {
         checkExists(board)
-        board.callPieceEvent(PieceEvent.Created(this))
+        board.callPieceMoveEvent(null to this)
     }
 
     fun clear(board: Chessboard) {
         checkExists(board)
-        board.callPieceEvent(PieceEvent.Cleared(this))
+        board.callPieceMoveEvent(this to null)
         board.clearPiece(pos)
     }
 
@@ -194,12 +205,7 @@ data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boo
     fun promote(promotion: Piece) = this to this.copy(piece = promotion)
 }
 
-sealed class PieceEvent : ChessEvent {
-    class Created(val piece: BoardPiece) : PieceEvent()
-    class Cleared(val piece: BoardPiece) : PieceEvent()
-
-    class Moved(val moves: Map<PlacedPiece?, PlacedPiece?>) : PieceEvent()
-}
+class PieceMoveEvent(val moves: List<Pair<PlacedPiece?, PlacedPiece?>>) : ChessEvent
 
 class PieceDoesNotExistException(val piece: PlacedPiece) : Exception(piece.toString())
 class PieceAlreadyOccupiesSquareException(val piece: PlacedPiece) : Exception(piece.toString())

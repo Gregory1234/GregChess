@@ -140,9 +140,6 @@ data class BukkitRenderer(
     @ChessEventHandler
     fun onBaseEvent(e: GameBaseEvent) {
         if (e == GameBaseEvent.RUNNING || e == GameBaseEvent.SYNC) {
-            game.board.capturedPieces.forEach {
-                addCapturedPiece(it)
-            }
             redrawFloor()
         }
         else if (e == GameBaseEvent.CLEAR || e == GameBaseEvent.PANIC) {
@@ -187,30 +184,25 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun handlePieceEvents(e: PieceEvent) {
-        when (e) {
-            is PieceEvent.Created -> e.piece.render()
-            is PieceEvent.Cleared -> e.piece.clearRender()
-            is PieceEvent.Moved -> {
-                for ((o, _) in e.moves)
-                    when (o) {
-                        is BoardPiece -> o.clearRender()
-                        is CapturedPiece -> removeCapturedPiece(o)
-                    }
-                for ((o, t) in e.moves)
-                    when (t) {
-                        is BoardPiece -> {
-                            t.render()
-                            t.playSound("Move")
-                        }
-                        is CapturedPiece -> {
-                            addCapturedPiece(t)
-                            if (o is BoardPiece)
-                                o.playSound("Capture")
-                        }
-                    }
+    fun handlePieceEvents(e: PieceMoveEvent) {
+        for ((o, _) in e.moves)
+            when (o) {
+                is BoardPiece -> o.clearRender()
+                is CapturedPiece -> removeCapturedPiece(o)
             }
-        }
+        for ((o, t) in e.moves)
+            when (t) {
+                is BoardPiece -> {
+                    t.render()
+                    if (o is BoardPiece)
+                        t.playSound("Move")
+                }
+                is CapturedPiece -> {
+                    addCapturedPiece(t)
+                    if (o is BoardPiece)
+                        o.playSound("Capture")
+                }
+            }
     }
 }
 

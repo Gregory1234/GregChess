@@ -3,7 +3,7 @@ package gregc.gregchess.fabric.chess.component
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.PieceEvent
+import gregc.gregchess.chess.piece.PieceMoveEvent
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.player.PiecePlayerActionEvent
 import kotlinx.serialization.*
@@ -97,42 +97,44 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
-    fun handlePieceEvents(e: PieceEvent) = when (e) {
-        is PieceEvent.Created -> {}
-        is PieceEvent.Cleared -> {}
-        is PieceEvent.Moved -> {
-            val broken = mutableListOf<BoardPiece>()
-            val placed = mutableListOf<BoardPiece>()
-            try {
-                for ((o, _) in e.moves)
-                    when (o) {
-                        is BoardPiece -> {
-                            val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
-                            pieceBlock?.safeBreak(!controller.addPiece(o.piece))
+    fun handlePieceEvents(e: PieceMoveEvent) {
+        val broken = mutableListOf<BoardPiece>()
+        val placed = mutableListOf<BoardPiece>()
+        try {
+            for ((o, t) in e.moves)
+                when (o) {
+                    is BoardPiece -> {
+                        if (t == null) continue
+                        val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
+                        if (pieceBlock != null) {
+                            pieceBlock.safeBreak(!controller.addPiece(o.piece))
                             broken += o
                         }
                     }
-                for ((_, t) in e.moves)
-                    when (t) {
-                        is BoardPiece -> {
-                            val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                }
+            for ((o, t) in e.moves)
+                when (t) {
+                    is BoardPiece -> {
+                        if (o == null) continue
+                        val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                        if (pieceBlock?.piece != t.piece) {
                             check(pieceBlock == null) { "There is a piece block on ${t.pos} already" }
                             check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
                             t.place(choosePlacePos(t.pos, t.piece.block))
                             placed += t
                         }
                     }
-            } catch (e: Throwable) {
-                for (t in placed.asReversed()) {
-                    val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
-                    pieceBlock?.safeBreak(!controller.addPiece(t.piece))
                 }
-                for (o in broken.asReversed()) {
-                    check(controller.removePiece(o.piece)) { "Not enough pieces in the controller" }
-                    o.place(choosePlacePos(o.pos, o.piece.block))
-                }
-                throw e
+        } catch (e: Throwable) {
+            for (t in placed.asReversed()) {
+                val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                pieceBlock?.safeBreak(!controller.addPiece(t.piece))
             }
+            for (o in broken.asReversed()) {
+                check(controller.removePiece(o.piece)) { "Not enough pieces in the controller" }
+                o.place(choosePlacePos(o.pos, o.piece.block))
+            }
+            throw e
         }
     }
 }

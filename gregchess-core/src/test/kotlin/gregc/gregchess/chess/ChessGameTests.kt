@@ -3,7 +3,7 @@ package gregc.gregchess.chess
 import assertk.assertThat
 import assertk.assertions.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.piece.PieceEvent
+import gregc.gregchess.chess.piece.PieceMoveEvent
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.*
 import kotlinx.coroutines.isActive
@@ -96,7 +96,7 @@ class ChessGameTests {
             clearRecords(c)
             g.start()
             excludeRecords {
-                c.handleEvent(match { it is PieceEvent })
+                c.handleEvent(match { it is PieceMoveEvent })
                 c.handleEvent(match { it is AddVariantOptionsEvent })
             }
             verifySequence {
