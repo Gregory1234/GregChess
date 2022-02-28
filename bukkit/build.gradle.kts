@@ -43,7 +43,7 @@ dependencies {
     spigotLib(libs.slf4j.jdk14)
     api(projects.gregchessCore)
     shaded(projects.gregchessCore)
-    shaded(projects.bukkitUtils)
+    shaded(projects.gregchessBukkitUtils)
 }
 
 val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())

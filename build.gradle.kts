@@ -24,7 +24,7 @@ tasks {
     val coreTasks = project.projects.gregchessCore.dependencyProject.tasks
     val bukkitTasks = project.projects.gregchessBukkit.dependencyProject.tasks
     val fabricTasks = project.projects.gregchessFabric.dependencyProject.tasks
-    val bukkitUtilsTasks = project.projects.bukkitUtils.dependencyProject.tasks
+    val bukkitUtilsTasks = project.projects.gregchessBukkitUtils.dependencyProject.tasks
 
     register<Copy>("createSpigotJar") {
         group = "gregchess"

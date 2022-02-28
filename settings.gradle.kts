@@ -19,4 +19,11 @@ pluginManagement {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-include("gregchess-core", "gregchess-bukkit", "gregchess-fabric", "bukkit-utils")
+include(":gregchess-core")
+project(":gregchess-core").projectDir = rootDir.resolve("core")
+include(":gregchess-bukkit")
+project(":gregchess-bukkit").projectDir = rootDir.resolve("bukkit")
+include(":gregchess-fabric")
+project(":gregchess-fabric").projectDir = rootDir.resolve("fabric")
+include(":gregchess-bukkit-utils")
+project(":gregchess-bukkit-utils").projectDir = rootDir.resolve("utils/bukkit")
