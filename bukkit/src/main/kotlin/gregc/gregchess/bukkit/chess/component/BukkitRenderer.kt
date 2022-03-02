@@ -13,6 +13,7 @@ import kotlinx.serialization.Transient
 import org.bukkit.*
 import kotlin.math.floor
 
+// TODO: add a way to use a custom renderer?
 @Serializable
 data class BukkitRenderer(
     @Transient val arena: Arena = ArenaManager.fromConfig().nextArena(), // TODO: what if the config gets reloaded while in the menu

@@ -19,7 +19,7 @@ data class CommandEnvironment(
 )
 
 @CommandDsl
-class CommandBuilder {
+class CommandBuilder { // TODO: redesign this api
     private val onExecute = mutableListOf<suspend ExecutionContext<*>.() -> Unit>()
     private val onArgument = mutableListOf<Pair<CommandArgumentType<*>, CommandBuilder>>()
     private val validator = mutableListOf<ExecutionContext<*>.() -> Message?>()

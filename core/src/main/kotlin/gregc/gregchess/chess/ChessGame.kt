@@ -43,7 +43,7 @@ class ChessGame private constructor(
     val playerData: ByColor<ChessPlayer>,
     val uuid: UUID,
     initialState: State,
-    startTime: LocalDateTime?,
+    startTime: LocalDateTime?, // TODO: add a way to track true game length and true length of each turn
     endTime: LocalDateTime?,
     results: GameResults?,
     startTurn: Color?
@@ -51,6 +51,7 @@ class ChessGame private constructor(
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>)
             : this(environment, variant, components, playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null, null)
 
+    // TODO: remove manual serializer
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     object Serializer : KSerializer<ChessGame> {
         override val descriptor = buildClassSerialDescriptor("ChessGame") {
@@ -242,7 +243,7 @@ class ChessGame private constructor(
         callEvent(GameBaseEvent.START)
         sides.forEach(ChessSide<*>::start)
         state = State.RUNNING
-        startTime = LocalDateTime.now()
+        startTime = LocalDateTime.now() // TODO: add a clock and change to instant
         callEvent(GameBaseEvent.RUNNING)
         startTurn()
     }

@@ -43,7 +43,7 @@ class RequestType internal constructor(
     val name: String,
     private val acceptCommand: String,
     private val cancelCommand: String
-) {
+) { // TODO: redesign this api
     private val requests = mutableMapOf<UUID, Request>()
     private val section get() = config.getConfigurationSection("Request.$name")!!
 

@@ -96,6 +96,7 @@ data class FabricRenderer(
             }.pos
     }
 
+    // TODO: add move and capture sounds
     @ChessEventHandler
     fun handlePieceEvents(e: PieceMoveEvent) {
         val broken = mutableListOf<BoardPiece>()

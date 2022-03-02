@@ -50,11 +50,11 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
     companion object {
         fun generate(game: ChessGame): PGN {
             val tags = mutableListOf<TagPair>()
-            tags += TagPair("Event", "Casual game")
+            tags += TagPair("Event", "Casual game") // TODO: add events
             tags += TagPair("Site", game.environment.pgnSite)
             val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(game.startTime)
             tags += TagPair("Date", date)
-            tags += TagPair("Round", "1")
+            tags += TagPair("Round", "1") // TODO: add rematches
             tags += TagPair("White", game[Color.WHITE].name)
             tags += TagPair("Black", game[Color.BLACK].name)
 

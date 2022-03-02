@@ -21,7 +21,7 @@ interface MoveTrait {
     val shouldComeLast: Boolean get() = false
     val shouldComeBefore: Set<MoveTraitType<*>> get() = emptySet()
     val shouldComeAfter: Set<MoveTraitType<*>> get() = emptySet()
-    fun execute(game: ChessGame, move: Move) {}
+    fun execute(game: ChessGame, move: Move) {} // TODO: create a move execution context instead of providing a full game
     fun undo(game: ChessGame, move: Move) {}
 }
 

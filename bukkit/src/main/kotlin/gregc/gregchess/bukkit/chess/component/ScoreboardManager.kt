@@ -16,6 +16,7 @@ import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Team
 
+// TODO: add a way to use a custom scoreboard layout
 @Serializable
 class ScoreboardManager : Component {
 

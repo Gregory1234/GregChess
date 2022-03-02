@@ -65,6 +65,8 @@ object GregChessMod : ModInitializer {
 
     override fun onInitialize() {
 
+        // TODO: add crafting recipes for all of the blocks
+        // TODO: add a chess clock
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)
         Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
         Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)
