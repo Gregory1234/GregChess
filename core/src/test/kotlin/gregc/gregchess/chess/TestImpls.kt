@@ -3,7 +3,8 @@ package gregc.gregchess.chess
 import gregc.gregchess.ChessModule
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentType
-import gregc.gregchess.chess.player.*
+import gregc.gregchess.chess.player.ChessPlayerType
+import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.*
@@ -13,17 +14,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
 
-@Serializable
-class TestPlayer(override val name: String) : ChessPlayer {
-    override val type get() = GregChess.TEST_PLAYER
-    override fun initSide(color: Color, game: ChessGame): TestChessSide = spyk(TestChessSide(this, color, game))
-}
-
-class TestChessSide(player: TestPlayer, color: Color, game: ChessGame) : ChessSide<TestPlayer>(player, color, game) {
+class TestChessSide(name: String, color: Color, game: ChessGame) : ChessSide<String>(GregChess.TEST_PLAYER, name, color, game) {
     override fun start() {}
 
     override fun startTurn() {}
@@ -81,7 +77,7 @@ object GregChess : ChessModule("GregChess", "gregchess") {
 
     @JvmField
     @Register("test")
-    val TEST_PLAYER = ChessPlayerType(TestPlayer.serializer())
+    val TEST_PLAYER = ChessPlayerType(String.serializer(), { it }) { n, c, g -> spyk(TestChessSide(n, c, g)) }
 
     override fun postLoad() {
     }

@@ -1,12 +1,15 @@
 package gregc.gregchess.bukkit.chess.player
 
+import gregc.gregchess.bukkit.UUIDAsStringSerializer
 import gregc.gregchess.chess.player.ChessPlayerType
+import gregc.gregchess.chess.player.enginePlayerType
 import gregc.gregchess.registry.RegisterAll
+import org.bukkit.Bukkit
 
 @RegisterAll(ChessPlayerType::class)
 object BukkitPlayerType {
     @JvmField
-    val BUKKIT = ChessPlayerType(BukkitPlayer.serializer())
+    val BUKKIT = ChessPlayerType(UUIDAsStringSerializer, { Bukkit.getOfflinePlayer(it).name ?: "-" }, ::BukkitChessSide)
     @JvmField
-    val STOCKFISH = ChessPlayerType(Stockfish.serializer())
+    val STOCKFISH = enginePlayerType(Stockfish.serializer())
 }

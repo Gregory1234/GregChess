@@ -56,7 +56,7 @@ class ChessGame private constructor(
     object Serializer : KSerializer<ChessGame> {
         override val descriptor = buildClassSerialDescriptor("ChessGame") {
             element("uuid", buildSerialDescriptor("ChessGameUUID", SerialKind.CONTEXTUAL))
-            element("players", ByColor.serializer(ChessPlayerSerializer).descriptor)
+            element("players", ByColor.serializer(ChessPlayer.Serializer).descriptor)
             element<ChessVariant>("variant")
             element<State>("state")
             element<String?>("startTime")
@@ -69,7 +69,7 @@ class ChessGame private constructor(
 
         override fun serialize(encoder: Encoder, value: ChessGame) = encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, encoder.serializersModule.serializer(), value.uuid)
-            encodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerSerializer), value.playerData)
+            encodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayer.Serializer), value.playerData)
             encodeSerializableElement(descriptor, 2, ChessVariant.serializer(), value.variant)
             encodeSerializableElement(descriptor, 3, encoder.serializersModule.serializer(), value.state)
             encodeNullableSerializableElement(descriptor, 4, String.serializer().nullable, value.startTime?.toString())
@@ -93,7 +93,7 @@ class ChessGame private constructor(
             var currentTurn: Color? = null
             if (decodeSequentially()) { // sequential decoding protocol
                 uuid = decodeSerializableElement(descriptor, 0, decoder.serializersModule.serializer())
-                players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayerSerializer))
+                players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayer.Serializer))
                 variant = decodeSerializableElement(descriptor, 2, ChessVariant.serializer())
                 state = decodeSerializableElement(descriptor, 3, decoder.serializersModule.serializer())
                 startTime = decodeNullableSerializableElement(descriptor, 4, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
@@ -106,7 +106,7 @@ class ChessGame private constructor(
                 while (true) {
                     when (val index = decodeElementIndex(descriptor)) {
                         0 -> uuid = decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
-                        1 -> players = decodeSerializableElement(descriptor, index, ByColor.serializer(ChessPlayerSerializer))
+                        1 -> players = decodeSerializableElement(descriptor, index, ByColor.serializer(ChessPlayer.Serializer))
                         2 -> variant = decodeSerializableElement(descriptor, index, ChessVariant.serializer())
                         3 -> state = decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
                         4 -> startTime = decodeNullableSerializableElement(descriptor, index, String.serializer().nullable)?.let { LocalDateTime.parse(it) }

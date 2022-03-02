@@ -1,15 +1,16 @@
 package gregc.gregchess.fabric
 
+import com.mojang.authlib.GameProfile
 import gregc.gregchess.chess.ChessEnvironment
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import gregc.gregchess.registry.RegistryKey
 import gregc.gregchess.registry.StringKeySerializer
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.IntArraySerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.*
 import kotlinx.serialization.modules.SerializersModule
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtHelper
@@ -59,6 +60,39 @@ object UUIDAsIntArraySerializer : KSerializer<UUID> {
 
     override fun deserialize(decoder: Decoder): UUID =
         NbtHelper.toUuid(NbtIntArray(decoder.decodeSerializableValue(IntArraySerializer())))
+}
+
+object GameProfileSerializer : KSerializer<GameProfile> {
+    override val descriptor: SerialDescriptor
+        get() = buildClassSerialDescriptor("GameProfile") {
+            element("id", UUIDAsIntArraySerializer.descriptor)
+            element<String>("name")
+        }
+
+    override fun serialize(encoder: Encoder, value: GameProfile) = encoder.encodeStructure(descriptor) {
+        encodeSerializableElement(descriptor, 0, UUIDAsIntArraySerializer, value.id)
+        encodeStringElement(descriptor, 1, value.name)
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    override fun deserialize(decoder: Decoder): GameProfile = decoder.decodeStructure(descriptor) {
+        var id: UUID? = null
+        var name: String? = null
+        if (decodeSequentially()) { // sequential decoding protocol
+            id = decodeSerializableElement(descriptor, 0, UUIDAsIntArraySerializer)
+            name = decodeStringElement(descriptor, 1)
+        } else {
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> id = decodeSerializableElement(descriptor, index, UUIDAsIntArraySerializer)
+                    1 -> name = decodeStringElement(descriptor, index)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+        }
+        GameProfile(id!!, name!!)
+    }
 }
 
 @Suppress("UNCHECKED_CAST")

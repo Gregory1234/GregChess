@@ -6,7 +6,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.TranslatableText
 
-val PlayerEntity.gregchess get() = FabricPlayer(uuid, name.asString())
+val PlayerEntity.gregchess get() = FabricPlayerType.FABRIC.of(gameProfile)
 
 fun ServerPlayerEntity.showGameResults(color: Color, results: GameResults) {
     val wonlostdraw = when(results.score) {

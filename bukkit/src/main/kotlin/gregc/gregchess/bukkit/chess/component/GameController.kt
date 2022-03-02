@@ -46,7 +46,7 @@ class GameController(val presetName: String) : Component {
     private var lastPrintedMove: Move? = null
 
     private fun onStart() {
-        game.sides.forEachRealBukkit {
+        game.sides.forEachReal {
             game.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
             it.games += game
             it.currentGame = game
@@ -79,7 +79,7 @@ class GameController(val presetName: String) : Component {
                     wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
                     bLast = normalMoves.lastOrNull()
                 }
-                game.sides.forEachRealBukkit { p ->
+                game.sides.forEachReal { p ->
                     p.sendLastMoves(game.board.fullmoveCounter + 1u, wLast, bLast, game.variant.localMoveFormatter)
                 }
             }
@@ -100,7 +100,7 @@ class GameController(val presetName: String) : Component {
             game.addStats(byColor {
                 val player = game.sides[it]
                 if (player is BukkitChessSide)
-                    BukkitPlayerStats.of(player.player.uuid)[it, presetName]
+                    BukkitPlayerStats.of(player.uuid)[it, presetName]
                 else
                     VoidPlayerStatsSink
             })
@@ -144,7 +144,7 @@ class GameController(val presetName: String) : Component {
                     val normalMoves = moveHistory.filter { !it.isPhantomMove }
                     val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
                     val bLast = normalMoves.last()
-                    game.sides.forEachRealBukkit { p ->
+                    game.sides.forEachReal { p ->
                         p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localMoveFormatter)
                     }
                     lastPrintedMove = normalMoves.last()

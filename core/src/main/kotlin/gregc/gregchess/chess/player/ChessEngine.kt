@@ -1,20 +1,29 @@
 package gregc.gregchess.chess.player
 
+import gregc.gregchess.SelfType
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.of
 import kotlinx.coroutines.launch
+import kotlinx.serialization.KSerializer
 
-interface ChessEngine : ChessPlayer {
+interface ChessEngine {
+    val name: String
+    val type: ChessPlayerType<out @SelfType ChessEngine>
     fun stop()
     suspend fun setOption(name: String, value: String)
     suspend fun sendCommand(command: String)
     suspend fun getMove(fen: FEN): String
-    override fun initSide(color: Color, game: ChessGame): EngineChessSide<*> = EngineChessSide(this, color, game)
 }
 
-class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, game: ChessGame) : ChessSide<T>(engine, color, game) {
+fun ChessEngine.toPlayer() = ChessPlayer(type, this)
+
+fun <T : ChessEngine> enginePlayerType(serializer: KSerializer<T>) : ChessPlayerType<T> = ChessPlayerType(serializer, { it.name }, ::EngineChessSide)
+
+@Suppress("UNCHECKED_CAST")
+class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, game: ChessGame)
+    : ChessSide<T>(engine.type as ChessPlayerType<T>, engine, color, game) {
 
     override fun toString() = "EngineChessSide(engine=$engine, color=$color)"
 

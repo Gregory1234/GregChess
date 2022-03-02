@@ -10,7 +10,10 @@ import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessSide
 import kotlinx.coroutines.launch
+import org.bukkit.Bukkit
+import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
+import java.util.*
 
 class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent {
     enum class Type {
@@ -18,11 +21,11 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent
     }
 }
 
-inline fun ByColor<ChessSide<*>>.forEachReal(block: (BukkitPlayer) -> Unit) {
-    toList().filterIsInstance<BukkitChessSide>().map { it.player }.distinct().forEach(block)
+inline fun ByColor<ChessSide<*>>.forEachRealOffline(block: (OfflinePlayer) -> Unit) {
+    toList().filterIsInstance<BukkitChessSide>().map { it.bukkitOffline }.distinct().forEach(block)
 }
 
-inline fun ByColor<ChessSide<*>>.forEachRealBukkit(block: (Player) -> Unit) = forEachReal { it.bukkit?.let(block) }
+inline fun ByColor<ChessSide<*>>.forEachReal(block: (Player) -> Unit) = forEachRealOffline { it.player?.let(block) }
 
 inline fun ByColor<ChessSide<*>>.forEachUnique(block: (BukkitChessSide) -> Unit) {
     val players = toList().filterIsInstance<BukkitChessSide>()
@@ -38,9 +41,11 @@ inline fun ByColor<ChessSide<*>>.forEachUniqueBukkit(block: (Player, Color) -> U
     }
 }
 
-class BukkitChessSide(player: BukkitPlayer, color: Color, game: ChessGame) : ChessSide<BukkitPlayer>(player, color, game) {
+class BukkitChessSide(val uuid: UUID, color: Color, game: ChessGame) : ChessSide<UUID>(BukkitPlayerType.BUKKIT, uuid, color, game) {
 
-    val bukkit: Player? get() = player.bukkit
+    val bukkitOffline: OfflinePlayer get() = Bukkit.getOfflinePlayer(uuid)
+
+    val bukkit: Player? get() = Bukkit.getPlayer(uuid)
 
     private val silent get() = this.player == opponent.player
 

@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric.chess.player
 
+import com.mojang.authlib.GameProfile
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.PromotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
@@ -19,7 +20,11 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent
     }
 }
 
-class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : ChessSide<FabricPlayer>(player, color, game) {
+class FabricChessSide(val gameProfile: GameProfile, color: Color, game: ChessGame) : ChessSide<GameProfile>(FabricPlayerType.FABRIC, gameProfile, color, game) {
+
+    val uuid get() = gameProfile.id
+
+    fun getServerPlayer(server: MinecraftServer?) = server?.playerManager?.getPlayer(uuid)
 
     var held: BoardPiece? = null
         private set(v) {
@@ -37,13 +42,13 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
 
     override fun start() {
         if (hasTurn || player != opponent.player)
-            player.getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
+            getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }
 
     override fun startTurn() {
         val inCheck = game.variant.isInCheck(game.board, color)
         if (inCheck) {
-            player.getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.in_check"),false)
+            getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.in_check"),false)
         }
     }
 
@@ -70,7 +75,7 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
         }
         game.coroutineScope.launch {
             move.getTrait<PromotionTrait>()?.apply {
-                promotion = suspendCoroutine { player.getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, availablePromotions, floor.world!!, floor.pos, it)) } ?: availablePromotions.first()
+                promotion = suspendCoroutine { getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, availablePromotions, floor.world!!, floor.pos, it)) } ?: availablePromotions.first()
             }
             game.renderer.preferBlock(floor)
             game.finishMove(move)
@@ -79,12 +84,12 @@ class FabricChessSide(player: FabricPlayer, color: Color, game: ChessGame) : Che
     }
 }
 
-inline fun ByColor<ChessSide<*>>.forEachReal(block: (FabricPlayer) -> Unit) {
-    toList().filterIsInstance<FabricChessSide>().map { it.player }.distinct().forEach(block)
+inline fun ByColor<ChessSide<*>>.forEachReal(block: (GameProfile) -> Unit) {
+    toList().filterIsInstance<FabricChessSide>().map { it.gameProfile }.distinct().forEach(block)
 }
 
-inline fun ByColor<ChessSide<*>>.forEachRealFabric(server: MinecraftServer?, block: (ServerPlayerEntity) -> Unit) = forEachReal {
-    it.getServerPlayer(server)?.let(block)
+inline fun ByColor<ChessSide<*>>.forEachRealEntity(server: MinecraftServer?, block: (ServerPlayerEntity) -> Unit) = forEachReal {
+    server?.playerManager?.getPlayer(it.id)?.let(block)
 }
 
 inline fun ByColor<ChessSide<*>>.forEachUnique(block: (FabricChessSide) -> Unit) {
@@ -95,8 +100,8 @@ inline fun ByColor<ChessSide<*>>.forEachUnique(block: (FabricChessSide) -> Unit)
         players.forEach(block)
 }
 
-inline fun ByColor<ChessSide<*>>.forEachUniqueFabric(server: MinecraftServer?, block: (ServerPlayerEntity, Color) -> Unit) = forEachUnique {
-    it.player.getServerPlayer(server)?.let { player ->
+inline fun ByColor<ChessSide<*>>.forEachUniqueEntity(server: MinecraftServer?, block: (ServerPlayerEntity, Color) -> Unit) = forEachUnique {
+    it.getServerPlayer(server)?.let { player ->
         block(player, it.color)
     }
 }

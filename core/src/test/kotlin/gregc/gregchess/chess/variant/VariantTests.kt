@@ -10,8 +10,8 @@ import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 
 open class VariantTests(val variant: ChessVariant, val extraComponents: Collection<Component> = emptyList()) {
-    private val playerA = TestPlayer("A")
-    private val playerB = TestPlayer("B")
+    private val playerA = GregChess.TEST_PLAYER.of("A")
+    private val playerB = GregChess.TEST_PLAYER.of("B")
 
     protected fun mkGame(fen: FEN) =
         ChessGame(TestChessEnvironment, variant, listOf(Chessboard(variant, fen)) + extraComponents, byColor(playerA, playerB)).start()

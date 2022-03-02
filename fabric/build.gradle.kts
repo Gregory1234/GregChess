@@ -9,7 +9,7 @@ plugins {
 }
 
 loom.runConfigs.forEach {
-    it.runDir = "gregchess-fabric/" + it.runDir
+    it.runDir = "fabric/" + it.runDir
     it.vmArgs += listOf("-Dkotlinx.coroutines.debug=on", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
 }
 

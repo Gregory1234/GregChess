@@ -1,51 +1,37 @@
 package gregc.gregchess.chess.player
 
-import gregc.gregchess.SelfType
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Color
 import gregc.gregchess.register
 import gregc.gregchess.registry.*
-import kotlinx.serialization.*
-import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 
 @Serializable(with = ChessPlayerType.Serializer::class)
-class ChessPlayerType<T : ChessPlayer>(val serializer: KSerializer<T>) : NameRegistered {
+class ChessPlayerType<P: Any>(
+    val serializer: KSerializer<P>,
+    val nameOf: (P) -> String,
+    val initSide: (P, Color, ChessGame) -> ChessSide<P>
+) : NameRegistered {
     object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", Registry.PLAYER_TYPE)
 
     override val key get() = Registry.PLAYER_TYPE[this]
 
     override fun toString(): String = Registry.PLAYER_TYPE.simpleElementToString(this)
 
+    fun of(data: P) = ChessPlayer(this, data)
+
     companion object {
         internal val AUTO_REGISTER = AutoRegisterType(ChessPlayerType::class) { m, n, _ -> register(m, n) }
     }
 }
 
-// TODO: combine with ChessSide
 // TODO: add an interface for human players
-@Serializable(with = ChessPlayerSerializer::class)
-interface ChessPlayer {
-    val type: ChessPlayerType<out @SelfType ChessPlayer>
-    val name: String
-    fun initSide(color: Color, game: ChessGame): ChessSide<*>
-}
+abstract class ChessSide<P : Any>(private val playerType: ChessPlayerType<P>, private val playerValue: P, val color: Color, val game: ChessGame) {
 
+    val player: ChessPlayer get() = playerType.of(playerValue)
 
-@OptIn(InternalSerializationApi::class)
-object ChessPlayerSerializer : KeyRegisteredSerializer<ChessPlayerType<*>, ChessPlayer>("ChessPlayer", ChessPlayerType.Serializer) {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun ChessPlayerType<*>.valueSerializer(module: SerializersModule): KSerializer<ChessPlayer> =
-        serializer as KSerializer<ChessPlayer>
-
-    override val ChessPlayer.key: ChessPlayerType<*> get() = type
-
-}
-
-abstract class ChessSide<T : ChessPlayer>(val player: T, val color: Color, val game: ChessGame) {
-
-    val name: String
-        get() = player.name
+    val name: String get() = playerType.nameOf(playerValue)
 
     val opponent
         get() = game[!color]

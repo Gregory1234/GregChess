@@ -35,7 +35,7 @@ sealed class GameScore(val pgn: String) {
     }
 
     class Victory(val winner: Color) : GameScore(victoryPgn(winner)) {
-        override fun equals(other: Any?): Boolean = other is Victory && winner == other.winner
+        override fun equals(other: Any?): Boolean = this === other || other is Victory && winner == other.winner
         override fun hashCode(): Int = winner.hashCode()
     }
 

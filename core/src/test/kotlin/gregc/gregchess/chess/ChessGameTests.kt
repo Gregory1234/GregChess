@@ -12,8 +12,8 @@ import org.junit.jupiter.api.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ChessGameTests {
 
-    private val playerA = TestPlayer("A")
-    private val playerB = TestPlayer("B")
+    private val playerA = GregChess.TEST_PLAYER.of("A")
+    private val playerB = GregChess.TEST_PLAYER.of("B")
 
     private fun mkGame(variant: ChessVariant = ChessVariant.Normal, extra: Collection<Component> = emptyList()) =
         ChessGame(TestChessEnvironment, variant, listOf(Chessboard(variant)) + extra, byColor(playerA, playerB))

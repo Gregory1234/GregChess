@@ -14,6 +14,7 @@ import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceRegistryView
 import gregc.gregchess.chess.player.EngineChessSide
+import gregc.gregchess.chess.player.toPlayer
 import gregc.gregchess.registry.Registry
 import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.serializer
@@ -137,7 +138,7 @@ object GregChessPlugin : Listener {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     val settings = sender.openSettingsMenu()
                     if (settings != null)
-                        ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.gregchess, Stockfish())).start()
+                        ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.gregchess, Stockfish().toPlayer())).start()
                 }
             }
             subcommand("resign") {
@@ -158,7 +159,7 @@ object GregChessPlugin : Listener {
                 val op = requireHumanOpponent()
                 executeSuspend<Player> {
                     drawRequest.invalidSender(sender) { !pl().hasTurn }
-                    val res = drawRequest.call(RequestData(sender.uniqueId, op().player.uuid, ""), true)
+                    val res = drawRequest.call(RequestData(sender.uniqueId, op().uuid, ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().game.stop(drawBy(EndReason.DRAW_AGREEMENT))
                     }
@@ -320,9 +321,9 @@ object GregChessPlugin : Listener {
                 executeSuspend<Player> {
                     val opponent = pl().opponent as BukkitChessSide
                     drawRequest.invalidSender(sender) {
-                        (pl().game.currentOpponent as? BukkitChessSide)?.player?.uuid != sender.uniqueId
+                        (pl().game.currentOpponent as? BukkitChessSide)?.uuid != sender.uniqueId
                     }
-                    val res = takebackRequest.call(RequestData(sender.uniqueId, opponent.player.uuid, ""), true)
+                    val res = takebackRequest.call(RequestData(sender.uniqueId, opponent.uuid, ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().game.board.undoLastMove()
                     }
@@ -461,16 +462,16 @@ object GregChessPlugin : Listener {
     @EventHandler
     fun onTurnEnd(e: TurnEndEvent) {
         if (e.player is BukkitChessSide) {
-            drawRequest.quietRemove(e.player.player.uuid)
-            takebackRequest.quietRemove(e.player.player.uuid)
+            drawRequest.quietRemove(e.player.uuid)
+            takebackRequest.quietRemove(e.player.uuid)
         }
     }
 
     @EventHandler
     fun onGameEnd(e: GameEndEvent) {
-        e.game.sides.forEachReal {
-            drawRequest.quietRemove(it.uuid)
-            takebackRequest.quietRemove(it.uuid)
+        e.game.sides.forEachRealOffline {
+            drawRequest.quietRemove(it.uniqueId)
+            takebackRequest.quietRemove(it.uniqueId)
         }
     }
 
