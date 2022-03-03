@@ -12,7 +12,8 @@ import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.reflect.KClass
@@ -43,8 +44,8 @@ class ChessGame private constructor(
     val playerData: ByColor<ChessPlayer>,
     val uuid: UUID,
     initialState: State,
-    startTime: LocalDateTime?, // TODO: add a way to track true game length and true length of each turn
-    endTime: LocalDateTime?,
+    startTime: Instant?, // TODO: add a way to track true game length and true length of each turn
+    endTime: Instant?,
     results: GameResults?,
     startTurn: Color?
 ) {
@@ -85,8 +86,8 @@ class ChessGame private constructor(
             var players: ByColor<ChessPlayer>? = null
             var variant: ChessVariant? = null
             var state: State? = null
-            var startTime: LocalDateTime? = null
-            var endTime: LocalDateTime? = null
+            var startTime: Instant? = null
+            var endTime: Instant? = null
             var results: GameResults? = null
             var components: List<Component>? = null
             var environment: ChessEnvironment? = null
@@ -96,8 +97,8 @@ class ChessGame private constructor(
                 players = decodeSerializableElement(descriptor, 1, ByColor.serializer(ChessPlayer.Serializer))
                 variant = decodeSerializableElement(descriptor, 2, ChessVariant.serializer())
                 state = decodeSerializableElement(descriptor, 3, decoder.serializersModule.serializer())
-                startTime = decodeNullableSerializableElement(descriptor, 4, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
-                endTime = decodeNullableSerializableElement(descriptor, 5, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
+                startTime = decodeNullableSerializableElement(descriptor, 4, String.serializer().nullable)?.let { Instant.parse(it) }
+                endTime = decodeNullableSerializableElement(descriptor, 5, String.serializer().nullable)?.let { Instant.parse(it) }
                 results = decodeNullableSerializableElement(descriptor, 6, GameResultsSerializer.nullable)
                 components = decodeSerializableElement(descriptor, 7, KeyRegisteredListSerializer(ComponentSerializer)).toList()
                 environment = decodeSerializableElement(descriptor, 8, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
@@ -109,8 +110,8 @@ class ChessGame private constructor(
                         1 -> players = decodeSerializableElement(descriptor, index, ByColor.serializer(ChessPlayer.Serializer))
                         2 -> variant = decodeSerializableElement(descriptor, index, ChessVariant.serializer())
                         3 -> state = decodeSerializableElement(descriptor, index, decoder.serializersModule.serializer())
-                        4 -> startTime = decodeNullableSerializableElement(descriptor, index, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
-                        5 -> endTime = decodeNullableSerializableElement(descriptor, index, String.serializer().nullable)?.let { LocalDateTime.parse(it) }
+                        4 -> startTime = decodeNullableSerializableElement(descriptor, index, String.serializer().nullable)?.let { Instant.parse(it) }
+                        5 -> endTime = decodeNullableSerializableElement(descriptor, index, String.serializer().nullable)?.let { Instant.parse(it) }
                         6 -> results = decodeNullableSerializableElement(descriptor, index, GameResultsSerializer.nullable)
                         7 -> components = decodeSerializableElement(descriptor, index, KeyRegisteredListSerializer(ComponentSerializer)).toList()
                         8 -> environment = decodeSerializableElement(descriptor, index, decoder.serializersModule.getContextual(ChessEnvironment::class)!!)
@@ -185,25 +186,31 @@ class ChessGame private constructor(
 
     val currentOpponent: ChessSide<*> get() = sides[!currentTurn]
 
-    var startTime: LocalDateTime? = startTime
+    private fun Instant.zoned() = atZone(environment.clock.zone)
+
+    var startTime: Instant? = startTime
         private set(v) {
             check(state == State.RUNNING) { "Start time set when not running: $state" }
             check(field == null) {
-                val formatter = DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss")
-                "Start time already set: ${formatter.format(field)}, ${formatter.format(v)}"
+                val formatter = DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss z")
+                "Start time already set: ${formatter.format(field?.zoned())}, ${formatter.format(v?.zoned())}"
             }
             field = v
         }
 
-    var endTime: LocalDateTime? = endTime
+    val zonedStartTime: ZonedDateTime? get() = startTime?.zoned()
+
+    var endTime: Instant? = endTime
         private set(v) {
             check(state == State.STOPPED) { "End time set when not stopped: $state" }
             check(field == null) {
-                val formatter = DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss")
-                "End time already set: ${formatter.format(field)}, ${formatter.format(v)}"
+                val formatter = DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss z")
+                "End time already set: ${formatter.format(field?.zoned())}, ${formatter.format(v?.zoned())}"
             }
             field = v
         }
+
+    val zonedEndTime: ZonedDateTime? get() = endTime?.zoned()
 
     enum class State {
         INITIAL, RUNNING, STOPPED, ERROR
@@ -243,7 +250,7 @@ class ChessGame private constructor(
         callEvent(GameBaseEvent.START)
         sides.forEach(ChessSide<*>::start)
         state = State.RUNNING
-        startTime = LocalDateTime.now() // TODO: add a clock and change to instant
+        startTime = Instant.now(environment.clock)
         callEvent(GameBaseEvent.RUNNING)
         startTurn()
     }
@@ -288,7 +295,7 @@ class ChessGame private constructor(
         requireState(State.RUNNING)
         state = State.STOPPED
         this.results = results
-        endTime = LocalDateTime.now()
+        endTime = Instant.now(environment.clock)
         sides.forEach(ChessSide<*>::stop)
         callEvent(GameBaseEvent.STOP)
         joinAllAndThen {

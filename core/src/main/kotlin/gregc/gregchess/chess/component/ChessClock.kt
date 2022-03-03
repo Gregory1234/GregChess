@@ -5,7 +5,7 @@ package gregc.gregchess.chess.component
 import gregc.gregchess.DurationSerializer
 import gregc.gregchess.chess.*
 import kotlinx.serialization.*
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -59,12 +59,13 @@ class ChessClock private constructor(
 
     override fun init(game: ChessGame) {
         this.game = game
+        lastTime = Instant.now(game.environment.clock)
     }
 
     val timeRemaining: ByColor<Duration> get() = byColor { timeRemaining_[it] }
     val currentTurnLength: Duration get() = currentTurnLength_
 
-    @Transient private var lastTime: LocalDateTime = LocalDateTime.now()
+    @Transient private lateinit var lastTime: Instant
 
     @Transient private var started = false
     @Transient private var stopped = false
@@ -103,7 +104,7 @@ class ChessClock private constructor(
             return
         if (stopped)
             return
-        val now = LocalDateTime.now()
+        val now = Instant.now(game.environment.clock)
         val dt = java.time.Duration.between(lastTime, now).toKotlinDuration()
         lastTime = now
         currentTurnLength_ += dt

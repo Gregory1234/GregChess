@@ -15,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import java.time.*
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
@@ -46,6 +47,7 @@ object TestChessEnvironment : ChessEnvironment {
     override val pgnSite: String get() = "GregChess test"
     @OptIn(ExperimentalCoroutinesApi::class)
     override val coroutineDispatcher: CoroutineDispatcher get() = TestCoroutineDispatcher()
+    override val clock: Clock get() = Clock.fixed(Instant.EPOCH, ZoneId.systemDefault())
 }
 
 fun clearRecords(m: Any) = clearMocks(m, answers = false)

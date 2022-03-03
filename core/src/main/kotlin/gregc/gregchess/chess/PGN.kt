@@ -52,7 +52,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             val tags = mutableListOf<TagPair>()
             tags += TagPair("Event", "Casual game") // TODO: add events
             tags += TagPair("Site", game.environment.pgnSite)
-            val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(game.startTime)
+            val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(game.zonedStartTime)
             tags += TagPair("Date", date)
             tags += TagPair("Round", "1") // TODO: add rematches
             tags += TagPair("White", game[Color.WHITE].name)
@@ -64,7 +64,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             tags += TagPair("PlyCount", game.board.moveHistory.count { !it.isPhantomMove }.toString())
             val timeControl = game.clock?.timeControl?.getPGN() ?: "-"
             tags += TagPair("TimeControl", timeControl)
-            val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(game.startTime)
+            val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(game.zonedStartTime)
             tags += TagPair("Time", time)
             tags += TagPair("Termination", game.results?.endReason?.pgn ?: "unterminated")
             tags += TagPair("Mode", "ICS")

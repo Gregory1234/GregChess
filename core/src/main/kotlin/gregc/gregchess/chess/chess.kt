@@ -3,6 +3,7 @@ package gregc.gregchess.chess
 import gregc.gregchess.chess.move.Move
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
+import java.time.Clock
 
 enum class Color(val char: Char, private val direction: Int) {
     WHITE('w', 1),
@@ -75,6 +76,7 @@ inline fun <T> byColor(block: (Color) -> T) = byColor(block(Color.WHITE), block(
 interface ChessEnvironment {
     val pgnSite: String
     val coroutineDispatcher: CoroutineDispatcher
+    val clock: Clock
 }
 
 fun interface MoveFormatter {
