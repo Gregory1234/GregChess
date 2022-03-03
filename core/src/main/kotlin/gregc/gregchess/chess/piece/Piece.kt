@@ -2,7 +2,6 @@ package gregc.gregchess.chess.piece
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.move.ChessboardView
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
@@ -100,34 +99,11 @@ object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, Place
 @Serializable
 data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : PlacedPiece {
     override val placedPieceType get() = PlacedPieceType.CAPTURED
-
-    fun sendCreated(board: Chessboard) {
-        board.checkExists(this)
-        board.callPieceMoveEvent(null to this)
-    }
-
-    fun clear(board: Chessboard) {
-        board.checkExists(this)
-        board.callPieceMoveEvent(this to null)
-        board -= this
-    }
 }
 
 @Serializable
 data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boolean) : PlacedPiece {
     override val placedPieceType get() = PlacedPieceType.BOARD
-
-    // TODO: move this somewhere else
-    fun sendCreated(board: Chessboard) {
-        board.checkExists(this)
-        board.callPieceMoveEvent(null to this)
-    }
-
-    fun clear(board: Chessboard) {
-        board.checkExists(this)
-        board.callPieceMoveEvent(this to null)
-        board.clearPiece(pos)
-    }
 
     fun getMoves(board: ChessboardView) = board.getMoves(pos)
     fun getLegalMoves(board: ChessboardView) = board.getLegalMoves(pos)

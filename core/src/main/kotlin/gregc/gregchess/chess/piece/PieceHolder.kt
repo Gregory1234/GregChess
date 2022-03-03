@@ -8,6 +8,18 @@ interface PieceHolder<in P : PlacedPiece> {
     fun create(p: P)
     fun destroy(p: P)
     fun callPieceMoveEvent(vararg moves: Pair<P?, P?>?)
+    fun sendSpawned(p: P) {
+        checkExists(p)
+        callPieceMoveEvent(null to p)
+    }
+    fun spawn(p: P) {
+        create(p)
+        callPieceMoveEvent(null to p)
+    }
+    fun clear(p: P) {
+        destroy(p)
+        callPieceMoveEvent(p to null)
+    }
 }
 
 class AddPieceHoldersEvent internal constructor(private val holders: MutableMap<PlacedPieceType<*>, PieceHolder<*>>) : ChessEvent {

@@ -22,7 +22,7 @@ private class Square(
     override fun toString() = "Square(piece=$piece, flags=$flags)"
 
     fun empty(board: Chessboard) {
-        piece?.clear(board)
+        piece?.let(board::clear)
         bakedMoves = null
         bakedLegalMoves = null
         flags.clear()
@@ -70,15 +70,11 @@ class Chessboard private constructor (
     private val boardState
         get() = FEN.boardStateFromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it.piece) } }.toMap())
 
-    operator fun plusAssign(piece: BoardPiece) {
+    internal operator fun plusAssign(piece: BoardPiece) {
         squares[piece.pos]?.piece = piece
     }
 
     override operator fun get(pos: Pos) = squares[pos]?.piece
-
-    fun clearPiece(pos: Pos) {
-        squares[pos]?.piece = null
-    }
 
     fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u) {
         squares[pos]?.flags?.let {
@@ -162,8 +158,8 @@ class Chessboard private constructor (
             game.callEvent(AddVariantOptionsEvent(variantOptions))
             game.callEvent(AddPieceHoldersEvent(pieceHolders))
             updateMoves()
-            pieces.forEach { it.sendCreated(this) }
-            capturedPieces.forEach { it.sendCreated(this) }
+            pieces.forEach(::sendSpawned)
+            capturedPieces.forEach(::sendSpawned)
         }
     }
 
@@ -188,7 +184,7 @@ class Chessboard private constructor (
     }
 
     fun setFromFEN(fen: FEN) {
-        capturedPieces.asReversed().forEach { it.clear(this) }
+        capturedPieces.asReversed().forEach(::clear)
         squares.values.forEach { it.empty(this) }
         fen.forEachSquare(game.variant) { p -> this += p }
 
@@ -208,7 +204,7 @@ class Chessboard private constructor (
 
         boardHashes_.clear()
         addBoardHash(fen)
-        pieces.forEach { it.sendCreated(this) }
+        pieces.forEach(::sendSpawned)
         game.callEvent(SetFenEvent(fen))
     }
 
@@ -283,7 +279,7 @@ class Chessboard private constructor (
 
         override fun destroy(p: BoardPiece) {
             checkExists(p)
-            clearPiece(p.pos)
+            squares[p.pos]?.piece = null
         }
 
         override fun callPieceMoveEvent(vararg moves: Pair<BoardPiece?, BoardPiece?>?) = this@Chessboard.callPieceMoveEvent(*moves)
