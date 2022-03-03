@@ -90,7 +90,7 @@ fun kingMovement(piece: BoardPiece, board: ChessboardView): List<Move> {
 }
 
 fun List<Move>.promotions(what: (BoardPiece) -> List<Piece>?): List<Move> = map {
-    val p = what(it.main.boardPiece().copy(pos = it.getTrait<TargetTrait>()?.target ?: it.origin))
+    val p = what(it.main.boardPiece().copy(pos = it.targetTrait?.target ?: it.origin))
     if (p == null) it else it.copy(traits = it.traits + PromotionTrait(p))
 }
 

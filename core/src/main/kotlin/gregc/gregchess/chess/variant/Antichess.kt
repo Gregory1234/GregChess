@@ -17,7 +17,7 @@ object Antichess : ChessVariant(), Registering {
 
     override fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> = when (piece.type) {
         PieceType.PAWN -> pawnMovement(piece).promotions(PROMOTIONS)
-        PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.getTrait<CastlesTrait>() == null }
+        PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.castlesTrait == null }
         else -> Normal.getPieceMoves(piece, board)
     }
 
@@ -25,12 +25,12 @@ object Antichess : ChessVariant(), Registering {
         if (!Normal.isValid(move, board))
             return MoveLegality.INVALID
 
-        if (move.getTrait<CaptureTrait>()?.capture?.let { board[it] } != null)
+        if (move.captureTrait?.capture?.let { board[it] } != null)
             return MoveLegality.LEGAL
 
         return if (board.piecesOf(move.main.color).flatMap { it.getMoves(board) }
                 .filter { Normal.isValid(it, board) }
-                .all { m -> m.getTrait<CaptureTrait>()?.capture?.let { board[it] } == null })
+                .all { m -> m.captureTrait?.capture?.let { board[it] } == null })
             MoveLegality.LEGAL
         else
             MoveLegality.SPECIAL

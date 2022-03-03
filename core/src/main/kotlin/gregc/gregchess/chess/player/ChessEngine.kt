@@ -2,7 +2,7 @@ package gregc.gregchess.chess.player
 
 import gregc.gregchess.SelfType
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.PromotionTrait
+import gregc.gregchess.chess.move.promotionTrait
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.of
 import kotlinx.coroutines.launch
@@ -37,7 +37,7 @@ class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, game: ChessG
                 val target = Pos.parseFromString(str.drop(2).take(2))
                 val promotion = str.drop(4).firstOrNull()?.let { PieceType.chooseByChar(game.variant.pieceTypes, it) }
                 val move = game.board.getMoves(origin).first { it.display == target }
-                move.getTrait<PromotionTrait>()?.promotion = promotion?.of(move.main.color)
+                move.promotionTrait?.promotion = promotion?.of(move.main.color)
                 game.finishMove(move)
             } catch (e: Exception) {
                 game.stop(drawBy(EndReason.ERROR))

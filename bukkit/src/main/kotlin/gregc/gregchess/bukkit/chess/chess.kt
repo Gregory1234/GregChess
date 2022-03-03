@@ -47,9 +47,9 @@ private fun getFloor(name: String): Material = Material.valueOf(config.getString
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
     val heldPiece = (currentSide as? BukkitChessSide)?.held
     fun Move.getFloorMaterial(): Material {
-        if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
+        if (castlesTrait != null || promotionTrait != null)
             return getFloor("Special")
-        getTrait<CaptureTrait>()?.let {
+        captureTrait?.let {
             if (board[it.capture]?.piece != null)
                 return getFloor("Capture")
         }
@@ -76,20 +76,20 @@ val defaultLocalMoveFormatter: MoveFormatter
 
             val main = move.pieceTracker.getOriginalOrNull("main")
 
-            if (main?.piece?.type != PieceType.PAWN && move.getTrait<CastlesTrait>() == null) {
+            if (main?.piece?.type != PieceType.PAWN && move.castlesTrait == null) {
                 +main?.piece?.localChar?.uppercase()
-                +move.getTrait<TargetTrait>()?.uniquenessCoordinate
+                +move.targetTrait?.uniquenessCoordinate
             }
-            if (move.getTrait<CaptureTrait>()?.captureSuccess == true) {
+            if (move.captureTrait?.captureSuccess == true) {
                 if (main?.piece?.type == PieceType.PAWN)
                     +(main as? BoardPiece)?.pos?.fileStr
                 +config.getPathString("Chess.Capture")
             }
-            +move.getTrait<TargetTrait>()?.target
-            +move.getTrait<CastlesTrait>()?.side?.castles
-            +move.getTrait<PromotionTrait>()?.promotion?.localChar?.uppercase()
-            +move.getTrait<CheckTrait>()?.checkType?.localChar
-            if (move.getTrait<RequireFlagTrait>()?.flags?.any { ChessFlag.EN_PASSANT in it.value } == true)
+            +move.targetTrait?.target
+            +move.castlesTrait?.side?.castles
+            +move.promotionTrait?.promotion?.localChar?.uppercase()
+            +move.checkTrait?.checkType?.localChar
+            if (move.requireFlagTrait?.flags?.any { ChessFlag.EN_PASSANT in it.value } == true)
                 +config.getPathString("Chess.EnPassant")
         }
     }

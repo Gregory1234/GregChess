@@ -2,7 +2,7 @@ package gregc.gregchess.fabric.chess.player
 
 import com.mojang.authlib.GameProfile
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.PromotionTrait
+import gregc.gregchess.chess.move.promotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.*
@@ -69,12 +69,12 @@ class FabricChessSide(val gameProfile: GameProfile, color: Color, game: ChessGam
         if (pos == piece.pos) return true
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
-        val availablePromotions = move.getTrait<PromotionTrait>()?.promotions?.filter { floor.chessControllerBlock?.hasPiece(it) == true }.orEmpty()
-        move.getTrait<PromotionTrait>()?.apply {
+        val availablePromotions = move.promotionTrait?.promotions?.filter { floor.chessControllerBlock?.hasPiece(it) == true }.orEmpty()
+        move.promotionTrait?.apply {
             if (availablePromotions.isEmpty()) return false
         }
         game.coroutineScope.launch {
-            move.getTrait<PromotionTrait>()?.apply {
+            move.promotionTrait?.apply {
                 promotion = suspendCoroutine { getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, availablePromotions, floor.world!!, floor.pos, it)) } ?: availablePromotions.first()
             }
             game.renderer.preferBlock(floor)

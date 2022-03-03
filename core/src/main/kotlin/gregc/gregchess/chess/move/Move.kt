@@ -5,7 +5,6 @@ import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.piece.boardPiece
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KClass
 
 @Serializable
 data class Move(
@@ -17,8 +16,8 @@ data class Move(
     val origin: Pos get() = pieceTracker.getOriginal("main").boardPiece().pos
     val main: PlacedPiece get() = pieceTracker["main"]
 
-    fun <T : MoveTrait> getTrait(cl: KClass<T>): T? = traits.filterIsInstance(cl.java).firstOrNull()
-    inline fun <reified T : MoveTrait> getTrait(): T? = getTrait(T::class)
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T : MoveTrait> get(type: MoveTraitType<T>): T? = traits.firstOrNull { it.type == type } as T?
 
     fun execute(game: ChessGame) {
         val completedTraits = mutableListOf<MoveTrait>()

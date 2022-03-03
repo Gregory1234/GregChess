@@ -1,7 +1,6 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.Register
@@ -27,7 +26,7 @@ object AtomicChess : ChessVariant(), Registering {
         }
 
         override fun execute(game: ChessGame, move: Move) {
-            val captureTrait = move.getTrait<CaptureTrait>() ?: throw TraitPreconditionException(this, "No capture trait")
+            val captureTrait = move.captureTrait ?: throw TraitPreconditionException(this, "No capture trait")
             if (!captureTrait.captureSuccess) return
             val explosions = mutableListOf<Pair<BoardPiece, CapturedPiece>>()
             val piece = move.main.boardPiece()
@@ -70,7 +69,7 @@ object AtomicChess : ChessVariant(), Registering {
 
     override fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> =
         Normal.getPieceMoves(piece, board).map {
-            if (it.getTrait<CaptureTrait>() != null) it.copy(traits = it.traits + ExplosionTrait()) else it
+            if (it.captureTrait != null) it.copy(traits = it.traits + ExplosionTrait()) else it
         }
 
     override fun getLegality(move: Move, board: ChessboardView): MoveLegality = with(move) {
@@ -78,7 +77,7 @@ object AtomicChess : ChessVariant(), Registering {
         if (!Normal.isValid(this, board))
             return MoveLegality.INVALID
 
-        val captured = getTrait<CaptureTrait>()?.let { board[it.capture] }
+        val captured = captureTrait?.let { board[it.capture] }
 
         if (main.type == PieceType.KING) {
             if (captured != null)
@@ -97,7 +96,7 @@ object AtomicChess : ChessVariant(), Registering {
                 return MoveLegality.SPECIAL
 
         val checks = checkingMoves(!main.color, myKing.pos, board)
-        val capture = getTrait<CaptureTrait>()?.capture
+        val capture = captureTrait?.capture
         if (checks.any { ch -> capture != ch.origin && startBlocking.none { it in ch.neededEmpty } })
             return MoveLegality.IN_CHECK
 

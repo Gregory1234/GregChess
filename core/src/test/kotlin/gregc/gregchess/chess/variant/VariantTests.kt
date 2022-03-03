@@ -85,7 +85,7 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
         prop("traits[$type]") { it.traits.singleOrNull { t -> t.type == type } }.isNotNull() as Assert<T>
 
     protected fun Assert<Move>.afterExecution(game: ChessGame, promotion: Piece? = null) = transform {
-        it.getTrait<PromotionTrait>()?.promotion = promotion
+        it.promotionTrait?.promotion = promotion
         game.finishMove(it)
         it
     }

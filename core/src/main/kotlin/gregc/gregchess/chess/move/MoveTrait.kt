@@ -99,7 +99,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
     override fun execute(game: ChessGame, move: Move) {
         halfmoveClock = game.board.halfmoveClock
-        if (move.main.type == PieceType.PAWN || move.getTrait<CaptureTrait>()?.captureSuccess != true) {
+        if (move.main.type == PieceType.PAWN || move.captureTrait?.captureSuccess != true) {
             game.board.halfmoveClock = 0u
         } else {
             game.board.halfmoveClock++
@@ -110,6 +110,8 @@ class DefaultHalfmoveClockTrait : MoveTrait {
         game.board.halfmoveClock = halfmoveClock
     }
 }
+
+val Move.halfmoveClockTrait get() = get(MoveTraitType.HALFMOVE_CLOCK)
 
 @Serializable
 class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : MoveTrait {
@@ -125,6 +127,8 @@ class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : 
         move.pieceTracker.traceMoveBack(game.board, move.main, move.rook)
     }
 }
+
+val Move.castlesTrait get() = get(MoveTraitType.CASTLES)
 
 @Serializable
 class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
@@ -147,10 +151,14 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
     }
 }
 
+val Move.promotionTrait get() = get(MoveTraitType.PROMOTION)
+
 @Serializable
 class RequireFlagTrait(val flags: Map<Pos, Set<ChessFlag>>) : MoveTrait {
     override val type get() = MoveTraitType.REQUIRE_FLAG
 }
+
+val Move.requireFlagTrait get() = get(MoveTraitType.REQUIRE_FLAG)
 
 @Serializable
 class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
@@ -162,6 +170,8 @@ class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
                 game.board.addFlag(p, t, a)
     }
 }
+
+val Move.flagTrait get() = get(MoveTraitType.FLAG)
 
 enum class CheckType(val char: Char) {
     CHECK('+'), CHECKMATE('#')
@@ -194,6 +204,8 @@ class CheckTrait : MoveTrait {
     }
 }
 
+val Move.checkTrait get() = get(MoveTraitType.CHECK)
+
 @Serializable
 class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, val by: Color? = null) : MoveTrait {
     override val type get() = MoveTraitType.CAPTURE
@@ -218,6 +230,8 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, val by: 
     }
 }
 
+val Move.captureTrait get() = get(MoveTraitType.CAPTURE)
+
 @Serializable
 class TargetTrait(val target: Pos) : MoveTrait {
     override val type get() = MoveTraitType.TARGET
@@ -230,7 +244,7 @@ class TargetTrait(val target: Pos) : MoveTrait {
     private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessGame): UniquenessCoordinate {
         val pieces = game.board.pieces.filter { it.color == piece.color && it.type == piece.type }
         val consideredPieces = pieces.filter { p ->
-            p.getLegalMoves(game.board).any { it.getTrait<TargetTrait>()?.target == target }
+            p.getLegalMoves(game.board).any { it.targetTrait?.target == target }
         }
         return when {
             consideredPieces.size == 1 -> UniquenessCoordinate()
@@ -250,6 +264,8 @@ class TargetTrait(val target: Pos) : MoveTrait {
     }
 }
 
+val Move.targetTrait get() = get(MoveTraitType.TARGET)
+
 @Serializable
 class SpawnTrait(val piece: BoardPiece) : MoveTrait {
     override val type get() = MoveTraitType.SPAWN
@@ -266,6 +282,8 @@ class SpawnTrait(val piece: BoardPiece) : MoveTrait {
 
 }
 
+val Move.spawnTrait get() = get(MoveTraitType.SPAWN)
+
 @Serializable
 class ClearTrait(val piece: BoardPiece) : MoveTrait {
     override val type get() = MoveTraitType.CLEAR
@@ -281,3 +299,5 @@ class ClearTrait(val piece: BoardPiece) : MoveTrait {
     }
 
 }
+
+val Move.clearTrait get() = get(MoveTraitType.CLEAR)

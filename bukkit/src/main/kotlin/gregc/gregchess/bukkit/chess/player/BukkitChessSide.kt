@@ -6,7 +6,7 @@ import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkit.title
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.PromotionTrait
+import gregc.gregchess.chess.move.promotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessSide
 import kotlinx.coroutines.launch
@@ -93,7 +93,7 @@ class BukkitChessSide(val uuid: UUID, color: Color, game: ChessGame) : ChessSide
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
         game.coroutineScope.launch {
-            move.getTrait<PromotionTrait>()?.apply {
+            move.promotionTrait?.apply {
                 promotion = bukkit?.openPawnPromotionMenu(promotions) ?: promotions.first()
             }
             game.finishMove(move)

@@ -21,9 +21,9 @@ val Piece.item get() = FabricRegistry.PIECE_ITEM[this]
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
     val heldPiece = (currentSide as? FabricChessSide)?.held
     fun Move.getFloor(): Floor {
-        if (getTrait<CastlesTrait>() != null || getTrait<PromotionTrait>() != null)
+        if (castlesTrait != null || promotionTrait != null)
             return Floor.SPECIAL
-        getTrait<CaptureTrait>()?.let {
+        captureTrait?.let {
             if (board[it.capture]?.piece != null)
                 return Floor.CAPTURE
         }
