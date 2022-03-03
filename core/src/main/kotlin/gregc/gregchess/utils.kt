@@ -11,6 +11,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlinx.serialization.modules.SerializersModule
+import java.time.Instant
 import kotlin.time.Duration
 
 // TODO: check this statically
@@ -81,6 +82,14 @@ object DurationSerializer : KSerializer<Duration> {
     override fun serialize(encoder: Encoder, value: Duration) = encoder.encodeString(value.toIsoString())
 
     override fun deserialize(decoder: Decoder): Duration = Duration.parseIsoString(decoder.decodeString())
+}
+
+object InstantSerializer : KSerializer<Instant> {
+    override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Instant", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: Instant) = encoder.encodeString(value.toString())
+
+    override fun deserialize(decoder: Decoder): Instant = Instant.parse(decoder.decodeString())
 }
 
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)

@@ -14,6 +14,7 @@ private fun victoryPgn(winner: Color) = when (winner) {
     Color.BLACK -> "0-1"
 }
 
+@Serializable(with = GameScore.Serializer::class)
 sealed class GameScore(val pgn: String) {
     override fun toString(): String = pgn
 

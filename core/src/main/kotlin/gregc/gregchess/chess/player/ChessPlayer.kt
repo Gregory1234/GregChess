@@ -15,12 +15,12 @@ class ChessPlayer internal constructor(val type: ChessPlayerType<*>, val value: 
             element("value", buildSerialDescriptor("ChessPlayerValue", SerialKind.CONTEXTUAL))
         }
 
-        override fun serialize(encoder: Encoder, value: ChessPlayer) = encoder.encodeStructure(ChessGame.Serializer.descriptor) {
+        override fun serialize(encoder: Encoder, value: ChessPlayer) = encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, ChessPlayerType.Serializer, value.type)
             encodeSerializableElement(descriptor, 1, value.unsafeType.serializer, value.value)
         }
 
-        override fun deserialize(decoder: Decoder): ChessPlayer = decoder.decodeStructure(ChessGame.Serializer.descriptor) {
+        override fun deserialize(decoder: Decoder): ChessPlayer = decoder.decodeStructure(descriptor) {
             var type: ChessPlayerType<*>? = null
             var data: Any? = null
             if (decodeSequentially()) { // sequential decoding protocol
