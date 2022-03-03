@@ -3,6 +3,7 @@ package gregc.gregchess.chess
 import assertk.assertThat
 import assertk.assertions.*
 import gregc.gregchess.chess.component.*
+import gregc.gregchess.chess.piece.AddPieceHoldersEvent
 import gregc.gregchess.chess.piece.PieceMoveEvent
 import gregc.gregchess.chess.variant.ChessVariant
 import io.mockk.*
@@ -98,6 +99,7 @@ class ChessGameTests {
             excludeRecords {
                 c.handleEvent(match { it is PieceMoveEvent })
                 c.handleEvent(match { it is AddVariantOptionsEvent })
+                c.handleEvent(match { it is AddPieceHoldersEvent })
             }
             verifySequence {
                 c.handleEvent(GameBaseEvent.START)

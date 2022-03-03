@@ -257,7 +257,7 @@ class SpawnTrait(val piece: BoardPiece) : MoveTrait {
     override val shouldComeBefore get() = setOf(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
-        piece.create(game.board)
+        game.board.create(piece)
         piece.sendCreated(game.board)
     }
 
@@ -278,7 +278,7 @@ class ClearTrait(val piece: BoardPiece) : MoveTrait {
     }
 
     override fun undo(game: ChessGame, move: Move) = tryPiece {
-        piece.create(game.board)
+        game.board.create(piece)
         piece.sendCreated(game.board)
     }
 

@@ -83,43 +83,10 @@ interface PlacedPiece {
     val color: Color get() = piece.color
     val type: PieceType get() = piece.type
     val char: Char get() = piece.char
-
-    fun checkExists(board: Chessboard)
-    fun checkCanExist(board: Chessboard)
-
-    fun create(board: Chessboard)
-    fun destroy(board: Chessboard)
 }
 
 internal fun PlacedPiece?.boardPiece() = this as BoardPiece
 internal fun PlacedPiece?.capturedPiece() = this as CapturedPiece
-
-fun multiMove(board: Chessboard, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) {
-    val destroyed = mutableListOf<PlacedPiece?>()
-    val created = mutableListOf<PlacedPiece?>()
-    val realMoves = moves.filterNotNull()
-    try {
-        for ((o, _) in realMoves)
-            o?.checkExists(board)
-        for ((o, _) in realMoves) {
-            o?.destroy(board)
-            destroyed += o
-        }
-        for ((_, t) in realMoves)
-            t?.checkCanExist(board)
-        for ((_, t) in realMoves) {
-            t?.create(board)
-            created += t
-        }
-        board.callPieceMoveEvent(*moves)
-    } catch (e: Throwable) {
-        for (t in created.asReversed())
-            t?.destroy(board)
-        for (o in destroyed.asReversed())
-            o?.create(board)
-        throw e
-    }
-}
 
 object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, PlacedPiece>("PlacedPiece", PlacedPieceType.Serializer) {
 
@@ -134,29 +101,13 @@ object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, Place
 data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : PlacedPiece {
     override val placedPieceType get() = PlacedPieceType.CAPTURED
 
-    override fun checkExists(board: Chessboard) {
-        if (board.capturedPieces.none { it == this })
-            throw PieceDoesNotExistException(this)
-    }
-
-    override fun checkCanExist(board: Chessboard) {}
-
-    override fun create(board: Chessboard) {
-        board += this
-    }
-
-    override fun destroy(board: Chessboard) {
-        checkExists(board)
-        board -= this
-    }
-
     fun sendCreated(board: Chessboard) {
-        checkExists(board)
+        board.checkExists(this)
         board.callPieceMoveEvent(null to this)
     }
 
     fun clear(board: Chessboard) {
-        checkExists(board)
+        board.checkExists(this)
         board.callPieceMoveEvent(this to null)
         board -= this
     }
@@ -166,33 +117,14 @@ data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : Pla
 data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boolean) : PlacedPiece {
     override val placedPieceType get() = PlacedPieceType.BOARD
 
-    override fun checkExists(board: Chessboard) {
-        if (board[pos] != this)
-            throw PieceDoesNotExistException(this)
-    }
-
-    override fun checkCanExist(board: Chessboard) {
-        if (board[pos] != null)
-            throw PieceAlreadyOccupiesSquareException(board[pos]!!)
-    }
-
-    override fun create(board: Chessboard) {
-        checkCanExist(board)
-        board += this
-    }
-
-    override fun destroy(board: Chessboard) {
-        checkExists(board)
-        board.clearPiece(pos)
-    }
-
+    // TODO: move this somewhere else
     fun sendCreated(board: Chessboard) {
-        checkExists(board)
+        board.checkExists(this)
         board.callPieceMoveEvent(null to this)
     }
 
     fun clear(board: Chessboard) {
-        checkExists(board)
+        board.checkExists(this)
         board.callPieceMoveEvent(this to null)
         board.clearPiece(pos)
     }

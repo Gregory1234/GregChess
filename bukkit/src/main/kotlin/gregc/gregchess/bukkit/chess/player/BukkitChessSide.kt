@@ -54,11 +54,11 @@ class BukkitChessSide(val uuid: UUID, color: Color, game: ChessGame) : ChessSide
             val oldHeld = field
             field = v
             oldHeld?.let {
-                it.checkExists(game.board)
+                game.board.checkExists(it)
                 game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
             }
             v?.let {
-                it.checkExists(game.board)
+                game.board.checkExists(it)
                 game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
             }
         }

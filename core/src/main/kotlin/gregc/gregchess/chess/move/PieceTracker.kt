@@ -1,8 +1,6 @@
 package gregc.gregchess.chess.move
 
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.piece.PlacedPiece
-import gregc.gregchess.chess.piece.multiMove
+import gregc.gregchess.chess.piece.*
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -49,14 +47,14 @@ class PieceTracker private constructor(
         it[it.size-2]
     }
 
-    fun traceMoveBack(board: Chessboard, vararg pieces: PlacedPiece) {
+    fun traceMoveBack(holder: PieceHolder<PlacedPiece>, vararg pieces: PlacedPiece) {
         val revMoves = pieces.map { Pair(it, traceBack(it)) }.toTypedArray()
-        multiMove(board, *revMoves)
+        multiMove(holder, *revMoves)
         addMovesBack(*revMoves)
     }
 
-    fun traceMove(board: Chessboard, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
-        multiMove(board, *moves)
+    fun traceMove(holder: PieceHolder<PlacedPiece>, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
+        multiMove(holder, *moves)
         addMoves(*moves)
     }
 
