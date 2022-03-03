@@ -167,8 +167,6 @@ private fun PlayerStatsView.toItemStack(name: String) = itemStack(Material.IRON_
     }
 }
 
-// TODO: add stats to core
-// TODO: add variant-specific stats
 suspend fun Player.openStatsMenu(playerName: String, stats: BukkitPlayerStats) =
     openMenu(config.getPathString("Message.StatsOf", playerName), SettingsManager.getSettings().let { settings ->
         settings.mapIndexed { index, s ->

@@ -177,7 +177,6 @@ enum class CheckType(val char: Char) {
     CHECK('+'), CHECKMATE('#')
 }
 
-// TODO: try to remove this
 @Serializable
 class CheckTrait : MoveTrait {
     override val type get() = MoveTraitType.CHECK
@@ -255,7 +254,7 @@ class TargetTrait(val target: Pos) : MoveTrait {
     }
 
     override fun execute(game: ChessGame, move: Move) = tryPiece {
-        uniquenessCoordinate = getUniquenessCoordinate(move.main.boardPiece(), target, game) // TODO: this is not a good place to do this
+        uniquenessCoordinate = getUniquenessCoordinate(move.main.boardPiece(), target, game)
         move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target))
     }
 
