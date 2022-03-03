@@ -49,7 +49,7 @@ class BukkitGregChessAdapter : Component {
                 e.player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) }
             }
         }
-        game.getComponent<ThreeChecks.CheckCounter>()?.apply {
+        game[ThreeChecks.CHECK_COUNTER]?.apply {
             e.player(CHECK_COUNTER) { this[it].toString() }
         }
     }

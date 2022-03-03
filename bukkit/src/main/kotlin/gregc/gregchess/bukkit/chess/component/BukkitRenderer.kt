@@ -213,4 +213,4 @@ fun interface ChessFloorRenderer {
 
 val ChessGame.arena get() = renderer.arena
 
-val ChessGame.renderer get() = requireComponent<BukkitRenderer>()
+val ChessGame.renderer get() = require(BukkitComponentType.RENDERER)

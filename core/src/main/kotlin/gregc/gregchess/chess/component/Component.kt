@@ -52,6 +52,4 @@ object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component
 
 }
 
-class ComponentNotFoundException(type: ComponentType<*>) : Exception(type.toString()) {
-    constructor(cl: KClass<out Component>) : this(Registry.COMPONENT_TYPE.values.first { it.cl == cl })
-}
+class ComponentNotFoundException(type: ComponentType<*>) : Exception(type.toString())

@@ -15,8 +15,6 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.reflect.KClass
-import kotlin.reflect.safeCast
 
 
 enum class TurnEvent(val ending: Boolean) : ChessEvent {
@@ -58,7 +56,7 @@ class ChessGame private constructor(
         require((state >= State.STOPPED) == (endTime != null)) { "End time bad" }
         require((state >= State.STOPPED) == (results != null)) { "Results bad" }
         try {
-            requireComponent<Chessboard>()
+            require(ComponentType.CHESSBOARD)
             for (t in variant.requiredComponents) {
                 components.firstOrNull { it.type == t } ?: throw ComponentNotFoundException(t)
             }
@@ -68,9 +66,9 @@ class ChessGame private constructor(
         }
     }
 
-    val board get() = requireComponent<Chessboard>()
+    val board get() = require(ComponentType.CHESSBOARD)
 
-    val clock get() = getComponent<ChessClock>()
+    val clock get() = get(ComponentType.CLOCK)
 
     val coroutineScope by lazy {
         CoroutineScope(
@@ -83,14 +81,10 @@ class ChessGame private constructor(
         )
     }
 
-    fun <T : Component> getComponent(cl: KClass<T>): T? =
-        components.mapNotNull { cl.safeCast(it) }.firstOrNull()
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T : Component> get(type: ComponentType<T>): T? = components.firstOrNull { it.type == type } as T?
 
-    fun <T : Component> requireComponent(cl: KClass<T>): T = getComponent(cl) ?: throw ComponentNotFoundException(cl)
-
-    inline fun <reified T : Component> getComponent(): T? = getComponent(T::class)
-
-    inline fun <reified T : Component> requireComponent(): T = requireComponent(T::class)
+    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
 
     @Transient
     @Suppress("UNCHECKED_CAST")

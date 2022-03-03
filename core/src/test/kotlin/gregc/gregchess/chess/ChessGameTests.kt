@@ -30,7 +30,7 @@ class ChessGameTests {
         fun `should pass components through`() {
             val cd = spyk(TestComponent)
             val g = mkGame(extra = listOf(cd))
-            val c = g.getComponent<TestComponent>()!!
+            val c = g.require(GregChess.TEST_COMPONENT)
             assertThat(c).isEqualTo(cd)
         }
 
@@ -38,7 +38,10 @@ class ChessGameTests {
         fun `should only initialize components`() {
             val cd = spyk(TestComponent)
             val g = mkGame(extra = listOf(cd))
-            val c = g.getComponent<TestComponent>()!!
+            val c = g.require(GregChess.TEST_COMPONENT)
+            excludeRecords {
+                c.type
+            }
             verifySequence {
                 c.init(g)
             }
@@ -93,10 +96,11 @@ class ChessGameTests {
         @Test
         fun `should start components`() {
             val g = mkGame(extra = listOf(spyk(TestComponent)))
-            val c = g.getComponent<TestComponent>()!!
+            val c = g.require(GregChess.TEST_COMPONENT)
             clearRecords(c)
             g.start()
             excludeRecords {
+                c.type
                 c.handleEvent(match { it is PieceMoveEvent })
                 c.handleEvent(match { it is AddVariantOptionsEvent })
                 c.handleEvent(match { it is AddPieceHoldersEvent })
@@ -161,9 +165,12 @@ class ChessGameTests {
         @Test
         fun `should stop and clear components`() {
             val g = mkGame(extra = listOf(spyk(TestComponent))).start()
-            val c = g.getComponent<TestComponent>()!!
+            val c = g.require(GregChess.TEST_COMPONENT)
             clearRecords(c)
             g.stop(results)
+            excludeRecords {
+                c.type
+            }
             verifySequence {
                 c.handleEvent(GameBaseEvent.STOP)
                 c.handleEvent(GameBaseEvent.CLEAR)

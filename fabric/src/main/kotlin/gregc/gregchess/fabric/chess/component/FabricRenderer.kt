@@ -146,4 +146,4 @@ fun interface ChessFloorRenderer {
     fun ChessGame.getFloorMaterial(p: Pos): Floor
 }
 
-val ChessGame.renderer get() = requireComponent<FabricRenderer>()
+val ChessGame.renderer get() = require(FabricComponentType.RENDERER)
