@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.chess.component.clock
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.name
 import gregc.gregchess.snakeToPascal

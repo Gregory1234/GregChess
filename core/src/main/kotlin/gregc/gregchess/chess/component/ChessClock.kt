@@ -142,3 +142,5 @@ class ChessClock private constructor(
         currentTurnLength_ = Duration.ZERO
     }
 }
+
+val ComponentHolder.clock get() = get(ComponentType.CLOCK)

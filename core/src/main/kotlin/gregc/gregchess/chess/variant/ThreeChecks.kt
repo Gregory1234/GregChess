@@ -55,17 +55,17 @@ object ThreeChecks : ChessVariant(), Registering {
         var checkRegistered: Boolean = false
             private set
 
-        override fun execute(game: ChessGame, move: Move) {
-            game.board.updateMoves()
-            if (game.variant.isInCheck(game.board, !move.main.color)) {
-                game.require(CHECK_COUNTER).registerCheck(!move.main.color)
+        override fun execute(env: MoveEnvironment, move: Move) {
+            env.updateMoves()
+            if (env.variant.isInCheck(env, !move.main.color)) {
+                env.require(CHECK_COUNTER).registerCheck(!move.main.color)
                 checkRegistered = true
             }
         }
 
-        override fun undo(game: ChessGame, move: Move) {
+        override fun undo(env: MoveEnvironment, move: Move) {
             if (checkRegistered) {
-                game.require(CHECK_COUNTER).removeCheck(!move.main.color)
+                env.require(CHECK_COUNTER).removeCheck(!move.main.color)
             }
         }
     }

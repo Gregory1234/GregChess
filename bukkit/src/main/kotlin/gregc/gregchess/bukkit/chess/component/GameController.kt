@@ -160,6 +160,7 @@ class GameController(val presetName: String) : Component {
 }
 
 val ChessGame.gameController get() = require(BukkitComponentType.GAME_CONTROLLER)
+val ComponentHolder.gameController get() = get(BukkitComponentType.GAME_CONTROLLER)
 
 fun ChessGame.stop(results: GameResults, quick: ByColor<Boolean>) {
     gameController.quick = if ((quick.white || quick.black) && sides.white.player == sides.black.player) byColor(true) else quick

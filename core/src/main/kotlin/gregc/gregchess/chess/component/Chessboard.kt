@@ -43,7 +43,7 @@ class Chessboard private constructor (
     @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf()
-) : Component, ChessboardView, PieceHolder<PlacedPiece> {
+) : Component, ChessboardView, PieceHolder<BoardPiece> {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
@@ -156,10 +156,9 @@ class Chessboard private constructor (
     fun handleEvents(e: GameBaseEvent) {
         if (e == GameBaseEvent.SYNC || e == GameBaseEvent.START) {
             game.callEvent(AddVariantOptionsEvent(variantOptions))
-            game.callEvent(AddPieceHoldersEvent(pieceHolders))
             updateMoves()
             pieces.forEach(::sendSpawned)
-            capturedPieces.forEach(::sendSpawned)
+            capturedPieces.forEach(CapturedPieceHolder()::sendSpawned)
         }
     }
 
@@ -184,7 +183,7 @@ class Chessboard private constructor (
     }
 
     fun setFromFEN(fen: FEN) {
-        capturedPieces.asReversed().forEach(::clear)
+        capturedPieces.asReversed().forEach(CapturedPieceHolder()::clear)
         squares.values.forEach { it.empty(this) }
         fen.forEachSquare(game.variant) { p -> this += p }
 
@@ -248,41 +247,16 @@ class Chessboard private constructor (
                 val hash = getFEN().hashed()
                 boardHashes_[hash] = (boardHashes_[hash] ?: 1) - 1
                 if (boardHashes_[hash] == 0) boardHashes_ -= hash
-                it.undo(game)
+                game.undoMove(it)
                 if (game.currentTurn == Color.WHITE)
                     fullmoveCounter_--
                 moveHistory_.removeLast()
                 game.previousTurn()
             } else {
-                it.undo(game)
+                game.undoMove(it)
                 moveHistory_.removeLast()
             }
         }
-    }
-
-    private inner class BoardPieceHolder: PieceHolder<BoardPiece> {
-
-        override fun checkExists(p: BoardPiece) {
-            if (this@Chessboard[p.pos] != p)
-                throw PieceDoesNotExistException(p)
-        }
-
-        override fun checkCanExist(p: BoardPiece) {
-            if (this@Chessboard[p.pos] != null)
-                throw PieceAlreadyOccupiesSquareException(this@Chessboard[p.pos]!!)
-        }
-
-        override fun create(p: BoardPiece) {
-            checkCanExist(p)
-            this@Chessboard += p
-        }
-
-        override fun destroy(p: BoardPiece) {
-            checkExists(p)
-            squares[p.pos]?.piece = null
-        }
-
-        override fun callPieceMoveEvent(vararg moves: Pair<BoardPiece?, BoardPiece?>?) = this@Chessboard.callPieceMoveEvent(*moves)
     }
 
     private inner class CapturedPieceHolder: PieceHolder<CapturedPiece> {
@@ -303,27 +277,38 @@ class Chessboard private constructor (
             this@Chessboard -= p
         }
 
-        override fun callPieceMoveEvent(vararg moves: Pair<CapturedPiece?, CapturedPiece?>?) = this@Chessboard.callPieceMoveEvent(*moves)
+        override fun callPieceMoveEvent(vararg moves: Pair<CapturedPiece?, CapturedPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
     }
 
     @ChessEventHandler
     fun addPieceHolders(e: AddPieceHoldersEvent) {
-        e[PlacedPieceType.BOARD] = BoardPieceHolder()
+        e[PlacedPieceType.BOARD] = this
         e[PlacedPieceType.CAPTURED] = CapturedPieceHolder()
     }
 
-    @Transient
-    private val pieceHolders = mutableMapOf<PlacedPieceType<*>, PieceHolder<*>>()
+    override fun checkExists(p: BoardPiece) {
+        if (this@Chessboard[p.pos] != p)
+            throw PieceDoesNotExistException(p)
+    }
 
-    @Suppress("UNCHECKED_CAST")
-    operator fun get(p: PlacedPieceType<*>): PieceHolder<PlacedPiece> = pieceHolders[p]!! as PieceHolder<PlacedPiece>
+    override fun checkCanExist(p: BoardPiece) {
+        if (this@Chessboard[p.pos] != null)
+            throw PieceAlreadyOccupiesSquareException(this@Chessboard[p.pos]!!)
+    }
 
-    override fun checkExists(p: PlacedPiece) = get(p.placedPieceType).checkExists(p)
-    override fun checkCanExist(p: PlacedPiece) = get(p.placedPieceType).checkCanExist(p)
-    override fun create(p: PlacedPiece) = get(p.placedPieceType).create(p)
-    override fun destroy(p: PlacedPiece) = get(p.placedPieceType).destroy(p)
+    override fun create(p: BoardPiece) {
+        checkCanExist(p)
+        this@Chessboard += p
+    }
 
-    override fun callPieceMoveEvent(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
+    override fun destroy(p: BoardPiece) {
+        checkExists(p)
+        squares[p.pos]?.piece = null
+    }
+
+    override fun callPieceMoveEvent(vararg moves: Pair<BoardPiece?, BoardPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
+
+    override val variant: ChessVariant get() = game.variant
 
     companion object {
 
@@ -335,3 +320,5 @@ class Chessboard private constructor (
 
     }
 }
+
+val ComponentHolder.board get() = get(ComponentType.CHESSBOARD)

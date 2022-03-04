@@ -4,7 +4,8 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.component.*
-import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.move.*
+import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.player.*
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.coroutines.*
@@ -33,6 +34,11 @@ enum class GameBaseEvent : ChessEvent {
 
 class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : RuntimeException(event.toString(), cause)
 
+interface ComponentHolder {
+    operator fun <T : Component> get(type: ComponentType<T>): T?
+    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
+}
+
 @Serializable
 class ChessGame private constructor(
     @Contextual val environment: ChessEnvironment,
@@ -45,7 +51,7 @@ class ChessGame private constructor(
     @SerialName("endTime") private var endTime_: Instant?,
     @SerialName("results") private var results_: GameResults?,
     var currentTurn: Color
-) {
+) : ComponentHolder {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>)
             : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null, components.filterIsInstance<Chessboard>().firstOrNull()?.initialFEN?.currentTurn ?: Color.WHITE)
 
@@ -66,10 +72,6 @@ class ChessGame private constructor(
         }
     }
 
-    val board get() = require(ComponentType.CHESSBOARD)
-
-    val clock get() = get(ComponentType.CLOCK)
-
     val coroutineScope by lazy {
         CoroutineScope(
             environment.coroutineDispatcher +
@@ -81,10 +83,12 @@ class ChessGame private constructor(
         )
     }
 
-    @Suppress("UNCHECKED_CAST")
-    operator fun <T : Component> get(type: ComponentType<T>): T? = components.firstOrNull { it.type == type } as T?
+    val board get() = require(ComponentType.CHESSBOARD)
 
-    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : Component> get(type: ComponentType<T>): T? = components.firstOrNull { it.type == type } as T?
+
+    override fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
 
     @Transient
     @Suppress("UNCHECKED_CAST")
@@ -165,11 +169,13 @@ class ChessGame private constructor(
 
     fun sync() = apply {
         callEvent(GameBaseEvent.SYNC)
+        callEvent(AddPieceHoldersEvent(pieceHolders))
     }
 
     fun start() = apply {
         requireState(State.INITIAL)
         callEvent(GameBaseEvent.START)
+        callEvent(AddPieceHoldersEvent(pieceHolders))
         sides.forEach(ChessSide<*>::start)
         state = State.RUNNING
         startTime = Instant.now(environment.clock)
@@ -256,14 +262,37 @@ class ChessGame private constructor(
 
     operator fun get(color: Color): ChessSide<*> = sides[color]
 
+    @Transient
+    private val pieceHolders = mutableMapOf<PlacedPieceType<*>, PieceHolder<*>>()
+
+    @Suppress("UNCHECKED_CAST")
+    private operator fun get(p: PlacedPieceType<*>): PieceHolder<PlacedPiece> = pieceHolders[p]!! as PieceHolder<PlacedPiece>
+
+    private inner class GameMoveEnvironment : ChessboardView by board, MoveEnvironment {
+        override fun checkExists(p: PlacedPiece) = this@ChessGame[p.placedPieceType].checkExists(p)
+        override fun checkCanExist(p: PlacedPiece) = this@ChessGame[p.placedPieceType].checkCanExist(p)
+        override fun create(p: PlacedPiece) = this@ChessGame[p.placedPieceType].create(p)
+        override fun destroy(p: PlacedPiece) = this@ChessGame[p.placedPieceType].destroy(p)
+
+        override fun updateMoves() = this@ChessGame.board.updateMoves()
+        override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) = this@ChessGame.board.addFlag(pos, flag, age)
+        override fun callEvent(e: ChessEvent) = this@ChessGame.callEvent(e)
+        override fun <T : Component> get(type: ComponentType<T>): T? = this@ChessGame[type]
+    }
+
     fun finishMove(move: Move) {
         requireState(State.RUNNING)
-        move.execute(this)
+        move.execute(GameMoveEnvironment())
         board.lastMove = move
         if (!move.isPhantomMove)
             nextTurn()
         else
             variant.checkForGameEnd(this)
+    }
+
+    fun undoMove(move: Move) {
+        requireState(State.RUNNING)
+        move.undo(GameMoveEnvironment())
     }
 
 }

@@ -1,6 +1,5 @@
 package gregc.gregchess.chess.move
 
-import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.piece.PlacedPiece
 import gregc.gregchess.chess.piece.boardPiece
@@ -19,7 +18,7 @@ data class Move(
     @Suppress("UNCHECKED_CAST")
     operator fun <T : MoveTrait> get(type: MoveTraitType<T>): T? = traits.firstOrNull { it.type == type } as T?
 
-    fun execute(game: ChessGame) {
+    fun execute(env: MoveEnvironment) {
         val completedTraits = mutableListOf<MoveTrait>()
         val remainingTraits = traits.toMutableList()
         for (pass in 0u..255u) {
@@ -34,30 +33,30 @@ data class Move(
                     false
                 else {
                     try {
-                        mt.execute(game, this)
+                        mt.execute(env, this)
                         completedTraits += mt
                         true
                     } catch(e: Throwable) {
                         for(t in completedTraits.asReversed())
-                            t.undo(game, this)
-                        game.board.updateMoves()
+                            t.undo(env, this)
+                        env.updateMoves()
                         throw TraitsCouldNotExecuteException(remainingTraits, e)
                     }
                 }
             }
             if (remainingTraits.isEmpty()) {
-                game.board.updateMoves()
+                env.updateMoves()
                 return
             }
         }
 
         for(t in completedTraits.asReversed())
-            t.undo(game, this)
-        game.board.updateMoves()
+            t.undo(env, this)
+        env.updateMoves()
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 
-    fun undo(game: ChessGame) {
+    fun undo(env: MoveEnvironment) {
         val completedTraits = mutableListOf<MoveTrait>()
         val remainingTraits = traits.toMutableList()
         for (pass in 0u..255u) {
@@ -72,25 +71,25 @@ data class Move(
                     false
                 else {
                     try {
-                        mt.undo(game, this)
+                        mt.undo(env, this)
                         completedTraits += mt
                         true
                     } catch(e: Throwable) {
                         for(t in completedTraits.asReversed())
-                            t.execute(game, this)
-                        game.board.updateMoves()
+                            t.execute(env, this)
+                        env.updateMoves()
                         throw TraitsCouldNotExecuteException(remainingTraits, e)
                     }
                 }
             }
             if (remainingTraits.isEmpty()) {
-                game.board.updateMoves()
+                env.updateMoves()
                 return
             }
         }
         for(t in completedTraits.asReversed())
-            t.execute(game, this)
-        game.board.updateMoves()
+            t.execute(env, this)
+        env.updateMoves()
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 }

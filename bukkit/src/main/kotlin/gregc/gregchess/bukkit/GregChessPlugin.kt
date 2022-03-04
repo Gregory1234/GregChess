@@ -10,6 +10,7 @@ import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
 import gregc.gregchess.bukkitutils.requests.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.clock
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceRegistryView

@@ -3,6 +3,7 @@ package gregc.gregchess.chess.move
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.variant.ChessVariant
 
 interface ChessboardView {
     operator fun get(pos: Pos): BoardPiece?
@@ -17,4 +18,5 @@ interface ChessboardView {
     fun getLegalMoves(pos: Pos): List<Move>
     operator fun <T : Any> get(option: ChessVariantOption<T>): T
     val chess960: Boolean
+    val variant: ChessVariant
 }

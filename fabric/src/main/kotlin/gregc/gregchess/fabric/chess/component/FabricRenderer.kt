@@ -140,10 +140,11 @@ data class FabricRenderer(
     }
 }
 
-val ChessGame.server get() = renderer.world.server
+val ComponentHolder.server get() = renderer?.world?.server
 
 fun interface ChessFloorRenderer {
     fun ChessGame.getFloorMaterial(p: Pos): Floor
 }
 
 val ChessGame.renderer get() = require(FabricComponentType.RENDERER)
+val ComponentHolder.renderer get() = get(FabricComponentType.RENDERER)

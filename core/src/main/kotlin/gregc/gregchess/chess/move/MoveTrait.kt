@@ -2,6 +2,7 @@ package gregc.gregchess.chess.move
 
 import gregc.gregchess.*
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.component.board
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
@@ -21,8 +22,8 @@ interface MoveTrait {
     val shouldComeLast: Boolean get() = false
     val shouldComeBefore: Set<MoveTraitType<*>> get() = emptySet()
     val shouldComeAfter: Set<MoveTraitType<*>> get() = emptySet()
-    fun execute(game: ChessGame, move: Move) {} // TODO: create a move execution context instead of providing a full game
-    fun undo(game: ChessGame, move: Move) {}
+    fun execute(env: MoveEnvironment, move: Move) {} // TODO: create a move execution context instead of providing a full game
+    fun undo(env: MoveEnvironment, move: Move) {}
 }
 
 @Serializable(with = MoveTraitType.Serializer::class)
@@ -97,17 +98,18 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
     private var halfmoveClock: UInt = 0u
 
-    override fun execute(game: ChessGame, move: Move) {
-        halfmoveClock = game.board.halfmoveClock
+    override fun execute(env: MoveEnvironment, move: Move) {
+        val board = env.board ?: return
+        halfmoveClock = board.halfmoveClock
         if (move.main.type == PieceType.PAWN || move.captureTrait?.captureSuccess != true) {
-            game.board.halfmoveClock = 0u
+            board.halfmoveClock = 0u
         } else {
-            game.board.halfmoveClock++
+            board.halfmoveClock++
         }
     }
 
-    override fun undo(game: ChessGame, move: Move) {
-        game.board.halfmoveClock = halfmoveClock
+    override fun undo(env: MoveEnvironment, move: Move) {
+        env.board?.halfmoveClock = halfmoveClock
     }
 }
 
@@ -119,12 +121,12 @@ class CastlesTrait(val side: BoardSide, val target: Pos, val rookTarget: Pos) : 
 
     private val Move.rook get() = pieceTracker["rook"] as BoardPiece
 
-    override fun execute(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target), move.rook.move(rookTarget))
+    override fun execute(env: MoveEnvironment, move: Move) = tryPiece {
+        move.pieceTracker.traceMove(env, move.main.boardPiece().move(target), move.rook.move(rookTarget))
     }
 
-    override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game.board, move.main, move.rook)
+    override fun undo(env: MoveEnvironment, move: Move) = tryPiece {
+        move.pieceTracker.traceMoveBack(env, move.main, move.rook)
     }
 }
 
@@ -138,16 +140,16 @@ class PromotionTrait(val promotions: List<Piece>) : MoveTrait {
 
     override val shouldComeBefore get() = setOf(MoveTraitType.TARGET)
 
-    override fun execute(game: ChessGame, move: Move) {
+    override fun execute(env: MoveEnvironment, move: Move) {
         val promotion = promotion ?: throw TraitPreconditionException(this, "Promotion not chosen", NullPointerException())
         if (promotion !in promotions) throw TraitPreconditionException(this, "Promotion not valid: $promotion")
         tryPiece {
-            move.pieceTracker.traceMove(game.board, move.main.boardPiece().promote(promotion))
+            move.pieceTracker.traceMove(env, move.main.boardPiece().promote(promotion))
         }
     }
 
-    override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game.board, move.main)
+    override fun undo(env: MoveEnvironment, move: Move) = tryPiece {
+        move.pieceTracker.traceMoveBack(env, move.main)
     }
 }
 
@@ -164,10 +166,10 @@ val Move.requireFlagTrait get() = get(MoveTraitType.REQUIRE_FLAG)
 class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
     override val type get() = MoveTraitType.FLAG
 
-    override fun execute(game: ChessGame, move: Move) {
+    override fun execute(env: MoveEnvironment, move: Move) {
         for ((p, f) in flags)
             for ((t, a) in f)
-                game.board.addFlag(p, t, a)
+                env.board?.addFlag(p, t, a)
     }
 }
 
@@ -186,11 +188,11 @@ class CheckTrait : MoveTrait {
     var checkType: CheckType? = null
         private set
 
-    private fun checkForChecks(color: Color, game: ChessGame): CheckType? {
-        game.board.updateMoves()
-        val pieces = game.board.piecesOf(!color)
-        val inCheck = game.variant.isInCheck(game.board, !color)
-        val noMoves = pieces.all { it.getMoves(game.board).none { m -> game.variant.isLegal(m, game.board) } }
+    private fun checkForChecks(color: Color, env: MoveEnvironment): CheckType? {
+        env.updateMoves()
+        val pieces = env.piecesOf(!color)
+        val inCheck = env.variant.isInCheck(env, !color)
+        val noMoves = pieces.all { it.getMoves(env).none { m -> env.variant.isLegal(m, env) } }
         return when {
             inCheck && noMoves -> CheckType.CHECKMATE
             inCheck -> CheckType.CHECK
@@ -198,8 +200,8 @@ class CheckTrait : MoveTrait {
         }
     }
 
-    override fun execute(game: ChessGame, move: Move) {
-        checkType = checkForChecks(move.main.color, game)
+    override fun execute(env: MoveEnvironment, move: Move) {
+        checkType = checkForChecks(move.main.color, env)
     }
 }
 
@@ -215,17 +217,17 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, val by: 
     var captureSuccess: Boolean = false
         private set
 
-    override fun execute(game: ChessGame, move: Move) {
-        game.board[capture]?.let {
+    override fun execute(env: MoveEnvironment, move: Move) {
+        env[capture]?.let {
             move.pieceTracker.giveName("capture", it)
-            move.pieceTracker.traceMove(game.board, move.toCapture.capture(by ?: move.main.color))
+            move.pieceTracker.traceMove(env, move.toCapture.capture(by ?: move.main.color))
             captureSuccess = true
         }
     }
 
-    override fun undo(game: ChessGame, move: Move) = tryPiece {
+    override fun undo(env: MoveEnvironment, move: Move) = tryPiece {
         if (captureSuccess)
-            move.pieceTracker.traceMoveBack(game.board, move.captured)
+            move.pieceTracker.traceMoveBack(env, move.captured)
     }
 }
 
@@ -240,10 +242,10 @@ class TargetTrait(val target: Pos) : MoveTrait {
 
     override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE)
 
-    private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, game: ChessGame): UniquenessCoordinate {
-        val pieces = game.board.pieces.filter { it.color == piece.color && it.type == piece.type }
+    private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, env: MoveEnvironment): UniquenessCoordinate {
+        val pieces = env.pieces.filter { it.color == piece.color && it.type == piece.type }
         val consideredPieces = pieces.filter { p ->
-            p.getLegalMoves(game.board).any { it.targetTrait?.target == target }
+            p.getLegalMoves(env).any { it.targetTrait?.target == target }
         }
         return when {
             consideredPieces.size == 1 -> UniquenessCoordinate()
@@ -253,13 +255,13 @@ class TargetTrait(val target: Pos) : MoveTrait {
         }
     }
 
-    override fun execute(game: ChessGame, move: Move) = tryPiece {
-        uniquenessCoordinate = getUniquenessCoordinate(move.main.boardPiece(), target, game)
-        move.pieceTracker.traceMove(game.board, move.main.boardPiece().move(target))
+    override fun execute(env: MoveEnvironment, move: Move) = tryPiece {
+        uniquenessCoordinate = getUniquenessCoordinate(move.main.boardPiece(), target, env)
+        move.pieceTracker.traceMove(env, move.main.boardPiece().move(target))
     }
 
-    override fun undo(game: ChessGame, move: Move) = tryPiece {
-        move.pieceTracker.traceMoveBack(game.board, move.main)
+    override fun undo(env: MoveEnvironment, move: Move) = tryPiece {
+        move.pieceTracker.traceMoveBack(env, move.main)
     }
 }
 
@@ -271,12 +273,12 @@ class SpawnTrait(val piece: BoardPiece) : MoveTrait {
 
     override val shouldComeBefore get() = setOf(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
 
-    override fun execute(game: ChessGame, move: Move) = tryPiece {
-        game.board.spawn(piece)
+    override fun execute(env: MoveEnvironment, move: Move) = tryPiece {
+        env.spawn(piece)
     }
 
-    override fun undo(game: ChessGame, move: Move) = tryPiece {
-        game.board.clear(piece)
+    override fun undo(env: MoveEnvironment, move: Move) = tryPiece {
+        env.clear(piece)
     }
 
 }
@@ -289,12 +291,12 @@ class ClearTrait(val piece: BoardPiece) : MoveTrait {
 
     override val shouldComeAfter get() = setOf(MoveTraitType.TARGET)
 
-    override fun execute(game: ChessGame, move: Move) = tryPiece {
-        game.board.clear(piece)
+    override fun execute(env: MoveEnvironment, move: Move) = tryPiece {
+        env.clear(piece)
     }
 
-    override fun undo(game: ChessGame, move: Move) = tryPiece {
-        game.board.spawn(piece)
+    override fun undo(env: MoveEnvironment, move: Move) = tryPiece {
+        env.spawn(piece)
     }
 
 }
