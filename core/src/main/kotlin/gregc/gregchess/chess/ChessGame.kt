@@ -278,6 +278,8 @@ class ChessGame private constructor(
         override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) = this@ChessGame.board.addFlag(pos, flag, age)
         override fun callEvent(e: ChessEvent) = this@ChessGame.callEvent(e)
         override fun <T : Component> get(type: ComponentType<T>): T? = this@ChessGame[type]
+
+        override val variant: ChessVariant get() = this@ChessGame.variant
     }
 
     fun finishMove(move: Move) {

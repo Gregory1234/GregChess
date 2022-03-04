@@ -33,58 +33,20 @@ class AddVariantOptionsEvent(private val options: MutableMap<ChessVariantOption<
     operator fun <T : Any> set(option: ChessVariantOption<T>, value: T) = options.put(option, value)
 }
 
-@Serializable
-class Chessboard private constructor (
-    val initialFEN: FEN,
-    private val simpleCastling: Boolean,
-    private val squares: Map<Pos, Square>,
-    var halfmoveClock: UInt = initialFEN.halfmoveClock,
-    @SerialName("fullmoveCounter") private var fullmoveCounter_: UInt = initialFEN.fullmoveCounter,
-    @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
-    @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
-    @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf()
-) : Component, ChessboardView, PieceHolder<BoardPiece> {
-    private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
-    constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
-            this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
-
-    override val type get() = ComponentType.CHESSBOARD
-
-    @Transient
-    private lateinit var game: ChessGame
-
-    override fun init(game: ChessGame) {
-        this.game = game
-    }
-
-    @Transient
-    private val variantOptions = mutableMapOf<ChessVariantOption<*>, Any>()
-
-    val fullmoveCounter get() = fullmoveCounter_
-    val boardHashes get() = boardHashes_.toMap()
-    val capturedPieces get() = capturedPieces_.toList()
-    val moveHistory get() = moveHistory_.toList()
+private class SquareChessboard(val initialFEN: FEN, private val variantOptions: Map<ChessVariantOption<*>, Any>, private val squares: Map<Pos, Square>) : ChessboardView {
 
     override val pieces get() = squares.values.mapNotNull { it.piece }
 
-    private val boardState
-        get() = FEN.boardStateFromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it.piece) } }.toMap())
-
-    internal operator fun plusAssign(piece: BoardPiece) {
-        squares[piece.pos]?.piece = piece
-    }
-
     override operator fun get(pos: Pos) = squares[pos]?.piece
-
-    fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u) {
-        squares[pos]?.flags?.let {
-            it[flag] = it[flag] ?: mutableListOf()
-            it[flag]!! += age
-        }
-    }
 
     override fun getFlags(pos: Pos): Map<ChessFlag, UInt> =
         squares[pos]?.flags?.filterValues { it.isNotEmpty() }?.mapValues { it.value.last() }.orEmpty()
+
+    override fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
+    override fun getLegalMoves(pos: Pos) = squares[pos]?.bakedLegalMoves.orEmpty()
+
+    @Suppress("UNCHECKED_CAST")
+    override operator fun <T : Any> get(option: ChessVariantOption<T>): T = variantOptions[option] as T
 
     override val chess960: Boolean
         get() {
@@ -104,6 +66,51 @@ class Chessboard private constructor (
                 return true
             return false
         }
+}
+
+@Serializable
+class Chessboard private constructor (
+    val initialFEN: FEN,
+    private val simpleCastling: Boolean,
+    private val squares: Map<Pos, Square>,
+    var halfmoveClock: UInt = initialFEN.halfmoveClock,
+    @SerialName("fullmoveCounter") private var fullmoveCounter_: UInt = initialFEN.fullmoveCounter,
+    @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
+    @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
+    @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
+    @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf()
+) : Component, ChessboardView by SquareChessboard(initialFEN, variantOptions, squares), PieceHolder<BoardPiece> {
+    private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
+    constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
+            this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
+
+    override val type get() = ComponentType.CHESSBOARD
+
+    @Transient
+    private lateinit var game: ChessGame
+
+    override fun init(game: ChessGame) {
+        this.game = game
+    }
+
+    val fullmoveCounter get() = fullmoveCounter_
+    val boardHashes get() = boardHashes_.toMap()
+    val capturedPieces get() = capturedPieces_.toList()
+    val moveHistory get() = moveHistory_.toList()
+
+    private val boardState
+        get() = FEN.boardStateFromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it.piece) } }.toMap())
+
+    internal operator fun plusAssign(piece: BoardPiece) {
+        squares[piece.pos]?.piece = piece
+    }
+
+    fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u) {
+        squares[pos]?.flags?.let {
+            it[flag] = it[flag] ?: mutableListOf()
+            it[flag]!! += age
+        }
+    }
 
     val lastNormalMove
         get() = moveHistory_.lastOrNull { !it.isPhantomMove }
@@ -147,9 +154,6 @@ class Chessboard private constructor (
     }
 
     @Suppress("UNCHECKED_CAST")
-    override operator fun <T : Any> get(option: ChessVariantOption<T>): T = variantOptions[option] as T
-
-    @Suppress("UNCHECKED_CAST")
     fun getVariantOptionStrings(): List<String> = variantOptions.mapNotNull { (o, v) -> (o as ChessVariantOption<Any>).pgnNameFragment(v) }
 
     @ChessEventHandler
@@ -169,9 +173,6 @@ class Chessboard private constructor (
     operator fun minusAssign(captured: CapturedPiece) {
         capturedPieces_.removeAt(capturedPieces_.lastIndexOf(captured))
     }
-
-    override fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
-    override fun getLegalMoves(pos: Pos) = squares[pos]?.bakedLegalMoves.orEmpty()
 
     fun updateMoves() {
         for ((_, square) in squares) {
@@ -207,7 +208,7 @@ class Chessboard private constructor (
         game.callEvent(SetFenEvent(fen))
     }
 
-    override fun getFEN(): FEN {
+    fun getFEN(): FEN {
         fun castling(color: Color) =
             if (kingOf(color)?.hasMoved == false)
                 piecesOf(color, PieceType.ROOK)
@@ -307,8 +308,6 @@ class Chessboard private constructor (
     }
 
     override fun callPieceMoveEvent(vararg moves: Pair<BoardPiece?, BoardPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
-
-    override val variant: ChessVariant get() = game.variant
 
     companion object {
 

@@ -22,7 +22,7 @@ interface MoveTrait {
     val shouldComeLast: Boolean get() = false
     val shouldComeBefore: Set<MoveTraitType<*>> get() = emptySet()
     val shouldComeAfter: Set<MoveTraitType<*>> get() = emptySet()
-    fun execute(env: MoveEnvironment, move: Move) {} // TODO: create a move execution context instead of providing a full game
+    fun execute(env: MoveEnvironment, move: Move) {}
     fun undo(env: MoveEnvironment, move: Move) {}
 }
 
