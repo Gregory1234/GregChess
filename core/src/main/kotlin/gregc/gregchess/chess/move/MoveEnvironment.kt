@@ -11,4 +11,8 @@ interface MoveEnvironment : PieceHolder<PlacedPiece>, ChessboardView, ComponentH
 
     override fun callPieceMoveEvent(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = callEvent(PieceMoveEvent(listOfNotNull(*moves)))
     val variant: ChessVariant
+
+    fun <T : PlacedPiece> heldPiecesOf(t: PlacedPieceType<T>): Collection<T>
+    fun <T : PlacedPiece> heldPiecesOf(t: PlacedPieceType<T>, color: Color) = heldPiecesOf(t).filter { it.color == color }
+    fun <T : PlacedPiece> heldPiecesOf(t: PlacedPieceType<T>, color: Color, type: PieceType) = heldPiecesOf(t).filter { it.color == color && it.type == type }
 }

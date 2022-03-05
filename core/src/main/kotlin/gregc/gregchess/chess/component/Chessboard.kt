@@ -98,6 +98,8 @@ class Chessboard private constructor (
     val capturedPieces get() = capturedPieces_.toList()
     val moveHistory get() = moveHistory_.toList()
 
+    override val heldPieces get() = pieces
+
     private val boardState
         get() = FEN.boardStateFromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it.piece) } }.toMap())
 
@@ -279,6 +281,8 @@ class Chessboard private constructor (
         }
 
         override fun callPieceMoveEvent(vararg moves: Pair<CapturedPiece?, CapturedPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
+
+        override val heldPieces get() = capturedPieces
     }
 
     @ChessEventHandler

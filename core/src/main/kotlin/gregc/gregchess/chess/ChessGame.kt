@@ -274,6 +274,11 @@ class ChessGame private constructor(
         override fun create(p: PlacedPiece) = this@ChessGame[p.placedPieceType].create(p)
         override fun destroy(p: PlacedPiece) = this@ChessGame[p.placedPieceType].destroy(p)
 
+        override val heldPieces get() = pieceHolders.flatMap { it.value.heldPieces }
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : PlacedPiece> heldPiecesOf(t: PlacedPieceType<T>) = get(t).heldPieces as Collection<T>
+
         override fun updateMoves() = this@ChessGame.board.updateMoves()
         override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) = this@ChessGame.board.addFlag(pos, flag, age)
         override fun callEvent(e: ChessEvent) = this@ChessGame.callEvent(e)
