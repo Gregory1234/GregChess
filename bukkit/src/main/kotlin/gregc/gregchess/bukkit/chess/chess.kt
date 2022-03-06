@@ -107,6 +107,8 @@ fun BoardPiece.getInfo(game: ChessGame) = textComponent {
     val moves = getMoves(game.board)
     text("All moves: ${moves.joinToString { game.variant.localMoveFormatter.format(it) }}")
     moves.groupBy { m -> game.variant.getLegality(m, game.board) }.forEach { (l, m) ->
+        if (l == ChessVariant.MoveLegality.LEGAL)
+            game.resolveName(*m.toTypedArray())
         text("\n${l.prettyName}: ${m.joinToString { game.variant.localMoveFormatter.format(it) }}")
     }
 }

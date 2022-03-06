@@ -302,4 +302,15 @@ class ChessGame private constructor(
         move.undo(GameMoveEnvironment())
     }
 
+    fun resolveName(vararg move: Move) = with(MultiExceptionContext()) {
+        val env = board.createSimpleMoveEnvironment()
+        for (m in move) {
+            exec {
+                m.execute(env)
+                m.undo(env)
+            }
+        }
+        rethrow()
+    }
+
 }

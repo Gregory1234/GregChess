@@ -84,9 +84,9 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     protected fun <T : MoveTrait> Assert<Move>.trait(type: MoveTraitType<T>) =
         prop("traits[$type]") { it.traits.singleOrNull { t -> t.type == type } }.isNotNull() as Assert<T>
 
-    protected fun Assert<Move>.afterExecution(game: ChessGame, promotion: Piece? = null) = transform {
+    protected fun Assert<Move>.resolveName(game: ChessGame, promotion: Piece? = null) = transform {
         it.promotionTrait?.promotion = promotion
-        game.finishMove(it)
+        game.resolveName(it)
         it
     }
 

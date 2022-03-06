@@ -237,7 +237,7 @@ val Move.captureTrait get() = get(MoveTraitType.CAPTURE)
 class TargetTrait(val target: Pos) : MoveTrait {
     override val type get() = MoveTraitType.TARGET
 
-    lateinit var uniquenessCoordinate: UniquenessCoordinate
+    var uniquenessCoordinate: UniquenessCoordinate = UniquenessCoordinate()
         private set
 
     override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE)

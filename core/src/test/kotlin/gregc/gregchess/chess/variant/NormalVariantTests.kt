@@ -30,7 +30,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                 })
                 fun check(origin: Pos, target: Pos) {
                     assertThat(game).pieceAt(origin).legalMoves(game).onlyGetTo(target)
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
                         isNormalMove()
                         needsEmptyExactly(target)
                         passesThroughExactly(target)
@@ -38,7 +38,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         startsBlockingExactly(target)
                         hasExtraTraitsExactly(MoveTraitType.TARGET)
                         targets(target)
-                        afterExecution(game).isNamed(target.toString())
+                        isNamed(target.toString())
                     }
                 }
 
@@ -56,7 +56,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                 })
                 fun check(origin: Pos, mid: Pos, target: Pos) {
                     assertThat(game).pieceAt(origin).legalMoves(game).onlyGetTo(mid, target)
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
                         isNormalMove()
                         needsEmptyExactly(mid, target)
                         passesThroughExactly(mid, target)
@@ -65,7 +65,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.FLAG)
                         targets(target)
                         createsFlagsExactly(mid to (ChessFlag.EN_PASSANT to 0u))
-                        afterExecution(game).isNamed(target.toString())
+                        isNamed(target.toString())
                     }
                 }
 
@@ -86,7 +86,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                 val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
 
                 fun check(origin: Pos, target: Pos, color: Color) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game, Piece(PieceType.BISHOP, color)).all {
                         isNormalMove()
                         needsEmptyExactly(target)
                         passesThroughExactly(target)
@@ -95,7 +95,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.PROMOTION)
                         targets(target)
                         promotesTo(*promotions.map { Piece(it, color) }.toTypedArray())
-                        afterExecution(game, Piece(PieceType.BISHOP, color)).isNamed("$target=B")
+                        isNamed("$target=B")
                     }
                 }
 
@@ -116,7 +116,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     set(Pos(5, 4), black(PieceType.PAWN))
                 })
                 fun check(origin: Pos, target: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
                         isNormalMove()
                         needsEmptyExactly()
                         passesThroughExactly(target)
@@ -125,13 +125,12 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
                         targets(target)
                         captures(target, required = true)
-                        afterExecution(game).isNamed("${origin.fileStr}x$target")
+                        isNamed("${origin.fileStr}x$target")
                     }
                 }
 
                 check(Pos(3, 4), Pos(2, 5))
                 check(Pos(5, 4), Pos(4, 3))
-                game.board.setFromFEN(game.board.initialFEN)
                 check(Pos(3, 4), Pos(4, 5))
                 check(Pos(5, 4), Pos(6, 3))
             }
@@ -147,7 +146,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     set(Pos(4, 4), white(PieceType.PAWN))
                 })
                 fun check(origin: Pos, target: Pos, capture: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
                         isNormalMove()
                         needsEmptyExactly()
                         passesThroughExactly(target)
@@ -157,7 +156,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         targets(target)
                         captures(capture, required = true)
                         requiresFlagsExactly(target to ChessFlag.EN_PASSANT)
-                        afterExecution(game).isNamed("${origin.fileStr}x$target")
+                        isNamed("${origin.fileStr}x$target")
                     }
                 }
 
@@ -180,7 +179,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     set(Pos(0, 6), black(PieceType.PAWN))
                 })
                 fun check(origin: Pos, target: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
                         isNormalMove()
                         needsEmptyExactly()
                         passesThroughExactly(target)
@@ -189,7 +188,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
                         targets(target)
                         captures(target)
-                        afterExecution(game).isNamed("K$target")
+                        isNamed("K$target")
                     }
                 }
 
@@ -197,7 +196,6 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                 assertThat(game).pieceAt(Pos(5, 5)).legalMoves(game).onlyGetTo(*Pos(5, 5).neighbours().toTypedArray())
                 check(Pos(2, 2), Pos(3, 3))
                 check(Pos(5, 5), Pos(6, 6))
-                game.board.setFromFEN(game.board.initialFEN)
                 check(Pos(2, 2), Pos(3, 2))
                 check(Pos(5, 5), Pos(6, 5))
             }
@@ -218,7 +216,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     castlingRights = byColor(listOf(0, 7))
                 })
                 fun check(origin: Pos, mid: Pos, target: Pos, rookPos: Pos, side: BoardSide, vararg extraEmpty: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().all {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
                         isNormalMove()
                         needsEmptyExactly(mid, target, *extraEmpty)
                         passesThroughExactly(origin, mid, target)
@@ -226,7 +224,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         startsBlockingExactly(target, mid)
                         hasExtraTraitsExactly(MoveTraitType.CASTLES)
                         castles(side, target, rookPos, mid)
-                        afterExecution(game).isNamed(side.castles)
+                        isNamed(side.castles)
                     }
                 }
 
@@ -234,7 +232,6 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                 assertThat(game).pieceAt(Pos(4, 7)).legalMoves(game).onlyGetTo(Pos(2, 7), Pos(3, 7), Pos(5, 7), Pos(6, 7))
                 check(Pos(4, 0), Pos(5, 0), Pos(6, 0), Pos(7, 0), BoardSide.KINGSIDE)
                 check(Pos(4, 7), Pos(5, 7), Pos(6, 7), Pos(7, 7), BoardSide.KINGSIDE)
-                game.board.setFromFEN(game.board.initialFEN)
                 check(Pos(4, 0), Pos(3, 0), Pos(2, 0), Pos(0, 0), BoardSide.QUEENSIDE, Pos(1, 0))
                 check(Pos(4, 7), Pos(3, 7), Pos(2, 7), Pos(0, 7), BoardSide.QUEENSIDE, Pos(1, 7))
             }
