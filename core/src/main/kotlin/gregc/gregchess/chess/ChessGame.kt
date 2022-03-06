@@ -263,18 +263,15 @@ class ChessGame private constructor(
     operator fun get(color: Color): ChessSide<*> = sides[color]
 
     @Transient
-    private val pieceHolders = mutableMapOf<PlacedPieceType<*>, PieceHolder<*>>()
+    private val pieceHolders = mutableMapOf<PlacedPieceType<*, *>, PieceHolder<*>>()
 
     private inner class GameMoveEnvironment : MoveEnvironment {
         @Suppress("UNCHECKED_CAST")
-        override fun <P : PlacedPiece> get(p: PlacedPieceType<P>): PieceHolder<P> = pieceHolders[p] as PieceHolder<P>
-
-        override val boardView get() = this@ChessGame.board
+        override fun <P : PlacedPiece, H : PieceHolder<P>> get(p: PlacedPieceType<P, H>): H = pieceHolders[p] as H
 
         override val pieces get() = pieceHolders.flatMap { it.value.pieces }
 
         override fun updateMoves() = this@ChessGame.board.updateMoves()
-        override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) = this@ChessGame.board.addFlag(pos, flag, age)
         override fun callEvent(e: ChessEvent) = this@ChessGame.callEvent(e)
         override fun <T : Component> get(type: ComponentType<T>): T? = this@ChessGame[type]
 

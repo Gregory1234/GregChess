@@ -1,7 +1,8 @@
 package gregc.gregchess.chess.piece
 
-import gregc.gregchess.chess.ChessEvent
-import gregc.gregchess.chess.Color
+import gregc.gregchess.chess.*
+import gregc.gregchess.chess.move.ChessboardView
+import gregc.gregchess.chess.move.MoveEnvironment
 
 interface PieceHolderView<out P : PlacedPiece> {
     val pieces: Collection<P>
@@ -22,8 +23,8 @@ fun interface PieceEventCaller {
 
 operator fun PieceEventCaller.invoke(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = callPieceMoveEvent(PieceMoveEvent(listOfNotNull(*moves)))
 
-class AddPieceHoldersEvent internal constructor(private val holders: MutableMap<PlacedPieceType<*>, PieceHolder<*>>) : ChessEvent {
-    operator fun <T : PlacedPiece> set(type: PlacedPieceType<T>, holder: PieceHolder<T>) = holders.put(type, holder)
+class AddPieceHoldersEvent internal constructor(private val holders: MutableMap<PlacedPieceType<*, *>, PieceHolder<*>>) : ChessEvent {
+    operator fun <P : PlacedPiece, H : PieceHolder<P>> set(type: PlacedPieceType<P, H>, holder: H) = holders.put(type, holder)
 }
 
 fun <P : PlacedPiece, T> T.sendSpawned(p: P) where T : PieceHolder<P>, T : PieceEventCaller = sendSpawned(p, this)
@@ -74,3 +75,9 @@ fun <P : PlacedPiece> PieceHolder<P>.multiMove(callEvent: PieceEventCaller, vara
         throw e
     }
 }
+
+interface BoardPieceHolder : PieceHolder<BoardPiece>, ChessboardView {
+    fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u)
+}
+
+val MoveEnvironment.boardView: BoardPieceHolder get() = get(PlacedPieceType.BOARD)

@@ -62,7 +62,7 @@ fun <T : Component> ComponentType<T>.register(module: ChessModule, id: String) =
 fun <T : Any> ChessPlayerType<T>.register(module: ChessModule, id: String) =
     module.register(Registry.PLAYER_TYPE, id, this)
 
-fun <T : PlacedPiece> PlacedPieceType<T>.register(module: ChessModule, id: String) =
+fun <P : PlacedPiece, H : PieceHolder<P>> PlacedPieceType<P, H>.register(module: ChessModule, id: String) =
     module.register(Registry.PLACED_PIECE_TYPE, id, this)
 
 fun <T> ChessVariantOption<T>.register(module: ChessModule, id: String) =

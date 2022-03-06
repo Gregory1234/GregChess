@@ -35,11 +35,11 @@ class AddVariantOptionsEvent(private val options: MutableMap<ChessVariantOption<
     operator fun <T : Any> set(option: ChessVariantOption<T>, value: T) = options.put(option, value)
 }
 
-class CreateFakePieceHolderEvent(private val holders: MutableMap<PlacedPieceType<*>, PieceHolder<*>>) : ChessEvent {
-    operator fun <T : PlacedPiece> set(option: PlacedPieceType<T>, value: PieceHolder<T>) = holders.put(option, value)
+class CreateFakePieceHolderEvent(private val holders: MutableMap<PlacedPieceType<*, *>, PieceHolder<*>>) : ChessEvent {
+    operator fun <P : PlacedPiece, H : PieceHolder<P>> set(option: PlacedPieceType<P, H>, value: PieceHolder<P>) = holders.put(option, value)
 }
 
-private class SquareChessboard(val initialFEN: FEN, private val variantOptions: Map<ChessVariantOption<*>, Any>, private val squares: Map<Pos, Square>) : ChessboardView {
+private class SquareChessboard(val initialFEN: FEN, private val variantOptions: Map<ChessVariantOption<*>, Any>, private val squares: Map<Pos, Square>) : BoardPieceHolder {
 
     override val pieces get() = squares.values.mapNotNull { it.piece }
 
@@ -72,6 +72,33 @@ private class SquareChessboard(val initialFEN: FEN, private val variantOptions: 
                 return true
             return false
         }
+
+    override fun checkExists(p: BoardPiece) {
+        if (this[p.pos] != p)
+            throw PieceDoesNotExistException(p)
+    }
+
+    override fun checkCanExist(p: BoardPiece) {
+        if (this[p.pos] != null)
+            throw PieceAlreadyOccupiesSquareException(this[p.pos]!!)
+    }
+
+    override fun create(p: BoardPiece) {
+        checkCanExist(p)
+        squares[p.pos]?.piece = p
+    }
+
+    override fun destroy(p: BoardPiece) {
+        checkExists(p)
+        squares[p.pos]?.piece = null
+    }
+
+    override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) {
+        squares[pos]?.flags?.let {
+            it[flag] = it[flag] ?: mutableListOf()
+            it[flag]!! += age
+        }
+    }
 }
 
 @Serializable
@@ -85,7 +112,7 @@ class Chessboard private constructor (
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
     @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf()
-) : Component, ChessboardView by SquareChessboard(initialFEN, variantOptions, squares), PieceHolder<BoardPiece>, PieceEventCaller {
+) : Component, BoardPieceHolder by SquareChessboard(initialFEN, variantOptions, squares), PieceEventCaller {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
@@ -109,13 +136,6 @@ class Chessboard private constructor (
 
     internal operator fun plusAssign(piece: BoardPiece) {
         squares[piece.pos]?.piece = piece
-    }
-
-    fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u) {
-        squares[pos]?.flags?.let {
-            it[flag] = it[flag] ?: mutableListOf()
-            it[flag]!! += age
-        }
     }
 
     val lastNormalMove
@@ -295,50 +315,11 @@ class Chessboard private constructor (
         e[PlacedPieceType.CAPTURED] = CapturedPieceHolder()
     }
 
-    override fun checkExists(p: BoardPiece) {
-        if (this@Chessboard[p.pos] != p)
-            throw PieceDoesNotExistException(p)
-    }
-
-    override fun checkCanExist(p: BoardPiece) {
-        if (this@Chessboard[p.pos] != null)
-            throw PieceAlreadyOccupiesSquareException(this@Chessboard[p.pos]!!)
-    }
-
-    override fun create(p: BoardPiece) {
-        checkCanExist(p)
-        this@Chessboard += p
-    }
-
-    override fun destroy(p: BoardPiece) {
-        checkExists(p)
-        squares[p.pos]?.piece = null
-    }
-
     override fun callPieceMoveEvent(e: PieceMoveEvent) = game.callEvent(e)
 
     // TODO: add a way of creating this without a Chessboard instance
-    private class FakeBoardPieceHolder(val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>) : ChessboardView by SquareChessboard(initialFEN, variantOptions, squares), PieceHolder<BoardPiece> {
-        override fun checkExists(p: BoardPiece) {
-            if (this[p.pos] != p)
-                throw PieceDoesNotExistException(p)
-        }
-
-        override fun checkCanExist(p: BoardPiece) {
-            if (this[p.pos] != null)
-                throw PieceAlreadyOccupiesSquareException(this[p.pos]!!)
-        }
-
-        override fun create(p: BoardPiece) {
-            checkCanExist(p)
-            squares[p.pos]?.piece = p
-        }
-
-        override fun destroy(p: BoardPiece) {
-            checkExists(p)
-            squares[p.pos]?.piece = null
-        }
-    }
+    private class FakeBoardPieceHolder(val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>)
+        : BoardPieceHolder by SquareChessboard(initialFEN, variantOptions, squares)
 
     private class FakeCapturedPieceHolder(val capturedPieces : MutableList<CapturedPiece>) : PieceHolder<CapturedPiece> {
         override fun checkExists(p: CapturedPiece) {
@@ -367,24 +348,20 @@ class Chessboard private constructor (
     }
 
     fun createSimpleMoveEnvironment(): MoveEnvironment {
-        val holders = mutableMapOf<PlacedPieceType<*>, PieceHolder<*>>()
+        val holders = mutableMapOf<PlacedPieceType<*, *>, PieceHolder<*>>()
         game.callEvent(CreateFakePieceHolderEvent(holders))
         val board = holders[PlacedPieceType.BOARD] as FakeBoardPieceHolder
         return SimpleMoveEnvironment(game.variant, holders, board)
     }
 
-    private class SimpleMoveEnvironment(override val variant: ChessVariant, val holders: MutableMap<PlacedPieceType<*>, PieceHolder<*>>, override val boardView: FakeBoardPieceHolder) : MoveEnvironment {
+    private class SimpleMoveEnvironment(override val variant: ChessVariant, val holders: MutableMap<PlacedPieceType<*, *>, PieceHolder<*>>, val board: FakeBoardPieceHolder) : MoveEnvironment {
         override fun updateMoves() {
-            for ((_, square) in boardView.squares) {
-                square.bakedMoves = square.piece?.let { p -> variant.getPieceMoves(p, boardView) }
+            for ((_, square) in board.squares) {
+                square.bakedMoves = square.piece?.let { p -> variant.getPieceMoves(p, board) }
             }
-            for ((_, square) in boardView.squares) {
-                square.bakedLegalMoves = square.bakedMoves?.filter { variant.isLegal(it, boardView) }
+            for ((_, square) in board.squares) {
+                square.bakedLegalMoves = square.bakedMoves?.filter { variant.isLegal(it, board) }
             }
-        }
-
-        override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) {
-            boardView.squares[pos]?.flags?.get(flag)?.add(age)
         }
 
         override fun callEvent(e: ChessEvent) {}
@@ -394,7 +371,7 @@ class Chessboard private constructor (
         override fun <T : Component> get(type: ComponentType<T>): T? = null
 
         @Suppress("UNCHECKED_CAST")
-        override fun <P : PlacedPiece> get(p: PlacedPieceType<P>): PieceHolder<P> = holders[p]!! as PieceHolder<P>
+        override fun <P : PlacedPiece, H : PieceHolder<P>> get(p: PlacedPieceType<P, H>): H = holders[p]!! as H
     }
 
     companion object {
