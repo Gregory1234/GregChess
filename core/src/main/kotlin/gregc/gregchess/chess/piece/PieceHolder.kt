@@ -3,7 +3,13 @@ package gregc.gregchess.chess.piece
 import gregc.gregchess.chess.ChessEvent
 import gregc.gregchess.chess.Color
 
-interface PieceHolder<P : PlacedPiece> {
+interface PieceHolderView<out P : PlacedPiece> {
+    val pieces: Collection<P>
+    fun piecesOf(color: Color) = pieces.filter { it.color == color }
+    fun piecesOf(color: Color, type: PieceType) = pieces.filter { it.color == color && it.type == type }
+}
+
+interface PieceHolder<P : PlacedPiece> : PieceHolderView<P> {
     fun checkExists(p: P)
     fun checkCanExist(p: P)
     fun create(p: P)
@@ -21,10 +27,6 @@ interface PieceHolder<P : PlacedPiece> {
         destroy(p)
         callPieceMoveEvent(p to null)
     }
-
-    val heldPieces: Collection<P>
-    fun heldPiecesOf(color: Color) = heldPieces.filter { it.color == color }
-    fun heldPiecesOf(color: Color, type: PieceType) = heldPieces.filter { it.color == color && it.type == type }
 }
 
 class AddPieceHoldersEvent internal constructor(private val holders: MutableMap<PlacedPieceType<*>, PieceHolder<*>>) : ChessEvent {

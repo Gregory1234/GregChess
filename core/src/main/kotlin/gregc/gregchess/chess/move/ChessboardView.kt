@@ -1,16 +1,12 @@
 package gregc.gregchess.chess.move
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.chess.piece.*
 
-interface ChessboardView {
+interface ChessboardView : PieceHolderView<BoardPiece> {
     operator fun get(pos: Pos): BoardPiece?
     fun getFlags(pos: Pos): Map<ChessFlag, UInt>
     fun hasActiveFlag(pos: Pos, flag: ChessFlag): Boolean = getFlags(pos)[flag]?.let(flag.isActive) ?: false
-    val pieces: Collection<BoardPiece>
-    fun piecesOf(color: Color) = pieces.filter { it.color == color }
-    fun piecesOf(color: Color, type: PieceType) = pieces.filter { it.color == color && it.type == type }
     fun kingOf(color: Color) = piecesOf(color).firstOrNull { it.type == PieceType.KING }
     fun getMoves(pos: Pos): List<Move>
     fun getLegalMoves(pos: Pos): List<Move>

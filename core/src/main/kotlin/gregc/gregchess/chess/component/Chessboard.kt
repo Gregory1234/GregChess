@@ -104,8 +104,6 @@ class Chessboard private constructor (
     val capturedPieces get() = capturedPieces_.toList()
     val moveHistory get() = moveHistory_.toList()
 
-    override val heldPieces get() = pieces
-
     private val boardState
         get() = FEN.boardStateFromPieces(squares.mapNotNull { (p, s) -> s.piece?.let { Pair(p, it.piece) } }.toMap())
 
@@ -288,7 +286,7 @@ class Chessboard private constructor (
 
         override fun callPieceMoveEvent(vararg moves: Pair<CapturedPiece?, CapturedPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
 
-        override val heldPieces get() = capturedPieces
+        override val pieces get() = capturedPieces
     }
 
     @ChessEventHandler
@@ -342,8 +340,6 @@ class Chessboard private constructor (
         }
 
         override fun callPieceMoveEvent(vararg moves: Pair<BoardPiece?, BoardPiece?>?) {}
-
-        override val heldPieces: Collection<BoardPiece> get() = pieces
     }
 
     private class FakeCapturedPieceHolder(val capturedPieces : MutableList<CapturedPiece>) : PieceHolder<CapturedPiece> {
@@ -365,7 +361,7 @@ class Chessboard private constructor (
 
         override fun callPieceMoveEvent(vararg moves: Pair<CapturedPiece?, CapturedPiece?>?) {}
 
-        override val heldPieces get() = capturedPieces
+        override val pieces get() = capturedPieces
     }
 
     @ChessEventHandler
@@ -381,28 +377,28 @@ class Chessboard private constructor (
         return SimpleMoveEnvironment(game.variant, holders, board)
     }
 
-    private class SimpleMoveEnvironment(override val variant: ChessVariant, val holders: MutableMap<PlacedPieceType<*>, PieceHolder<*>>, val board: FakeBoardPieceHolder) : MoveEnvironment, ChessboardView by board {
+    private class SimpleMoveEnvironment(override val variant: ChessVariant, val holders: MutableMap<PlacedPieceType<*>, PieceHolder<*>>, override val boardView: FakeBoardPieceHolder) : MoveEnvironment {
         override fun updateMoves() {
-            for ((_, square) in board.squares) {
-                square.bakedMoves = square.piece?.let { p -> variant.getPieceMoves(p, this) }
+            for ((_, square) in boardView.squares) {
+                square.bakedMoves = square.piece?.let { p -> variant.getPieceMoves(p, boardView) }
             }
-            for ((_, square) in board.squares) {
-                square.bakedLegalMoves = square.bakedMoves?.filter { variant.isLegal(it, this) }
+            for ((_, square) in boardView.squares) {
+                square.bakedLegalMoves = square.bakedMoves?.filter { variant.isLegal(it, boardView) }
             }
         }
 
         override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) {
-            board.squares[pos]?.flags?.get(flag)?.add(age)
+            boardView.squares[pos]?.flags?.get(flag)?.add(age)
         }
 
         override fun callEvent(e: ChessEvent) {}
 
-        override val heldPieces get() = holders.flatMap { it.value.heldPieces }
+        override val pieces get() = holders.flatMap { it.value.pieces }
 
         override fun <T : Component> get(type: ComponentType<T>): T? = null
 
         @Suppress("UNCHECKED_CAST")
-        override fun <T : PlacedPiece> heldPiecesOf(t: PlacedPieceType<T>): Collection<T> = holders[t]?.heldPieces.orEmpty() as Collection<T>
+        override fun <T : PlacedPiece> piecesOf(t: PlacedPieceType<T>): Collection<T> = holders[t]?.pieces.orEmpty() as Collection<T>
 
         @Suppress("UNCHECKED_CAST")
         private fun get(p: PlacedPieceType<*>): PieceHolder<PlacedPiece> = holders[p]!! as PieceHolder<PlacedPiece>

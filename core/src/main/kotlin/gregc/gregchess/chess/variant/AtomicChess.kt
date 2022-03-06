@@ -31,7 +31,7 @@ object AtomicChess : ChessVariant(), Registering {
             val explosions = mutableListOf<Pair<BoardPiece, CapturedPiece>>()
             val piece = move.main.boardPiece()
             explosions += move.main.boardPiece().explode(piece.color, move.pieceTracker)
-            piece.pos.neighbours().mapNotNull { env[it] }.forEach {
+            piece.pos.neighbours().mapNotNull { env.boardView[it] }.forEach {
                 if (it.type != PieceType.PAWN)
                     explosions += it.explode(piece.color, move.pieceTracker)
             }

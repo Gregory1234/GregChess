@@ -190,9 +190,9 @@ class CheckTrait : MoveTrait {
 
     private fun checkForChecks(color: Color, env: MoveEnvironment): CheckType? {
         env.updateMoves()
-        val pieces = env.piecesOf(!color)
-        val inCheck = env.variant.isInCheck(env, !color)
-        val noMoves = pieces.all { it.getMoves(env).none { m -> env.variant.isLegal(m, env) } }
+        val pieces = env.boardView.piecesOf(!color)
+        val inCheck = env.variant.isInCheck(env.boardView, !color)
+        val noMoves = pieces.all { it.getMoves(env.boardView).none { m -> env.variant.isLegal(m, env.boardView) } }
         return when {
             inCheck && noMoves -> CheckType.CHECKMATE
             inCheck -> CheckType.CHECK
@@ -218,7 +218,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, val by: 
         private set
 
     override fun execute(env: MoveEnvironment, move: Move) {
-        env[capture]?.let {
+        env.boardView[capture]?.let {
             move.pieceTracker.giveName("capture", it)
             move.pieceTracker.traceMove(env, move.toCapture.capture(by ?: move.main.color))
             captureSuccess = true
@@ -243,9 +243,9 @@ class TargetTrait(val target: Pos) : MoveTrait {
     override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE)
 
     private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, env: MoveEnvironment): UniquenessCoordinate {
-        val pieces = env.pieces.filter { it.color == piece.color && it.type == piece.type }
+        val pieces = env.boardView.pieces.filter { it.color == piece.color && it.type == piece.type }
         val consideredPieces = pieces.filter { p ->
-            p.getLegalMoves(env).any { it.targetTrait?.target == target }
+            p.getLegalMoves(env.boardView).any { it.targetTrait?.target == target }
         }
         return when {
             consideredPieces.size == 1 -> UniquenessCoordinate()
