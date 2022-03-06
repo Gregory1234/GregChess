@@ -47,15 +47,19 @@ class PieceTracker private constructor(
         it[it.size-2]
     }
 
-    fun traceMoveBack(holder: PieceHolder<PlacedPiece>, vararg pieces: PlacedPiece) {
+    fun traceMoveBack(holder: PieceHolder<PlacedPiece>, pieceEventCaller: PieceEventCaller, vararg pieces: PlacedPiece) {
         val revMoves = pieces.map { Pair(it, traceBack(it)) }.toTypedArray()
-        multiMove(holder, *revMoves)
+        holder.multiMove(pieceEventCaller, *revMoves)
         addMovesBack(*revMoves)
     }
 
-    fun traceMove(holder: PieceHolder<PlacedPiece>, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
-        multiMove(holder, *moves)
+    fun <T> traceMoveBack(holder: T, vararg pieces: PlacedPiece) where T : PieceHolder<PlacedPiece>, T : PieceEventCaller = traceMoveBack(holder, holder, *pieces)
+
+    fun traceMove(holder: PieceHolder<PlacedPiece>, pieceEventCaller: PieceEventCaller, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
+        holder.multiMove(pieceEventCaller, *moves)
         addMoves(*moves)
     }
+
+    fun <T> traceMove(holder: T, vararg moves: Pair<PlacedPiece, PlacedPiece>) where T : PieceHolder<PlacedPiece>, T : PieceEventCaller = traceMove(holder, holder, *moves)
 
 }

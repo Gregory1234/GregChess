@@ -14,52 +14,63 @@ interface PieceHolder<P : PlacedPiece> : PieceHolderView<P> {
     fun checkCanExist(p: P)
     fun create(p: P)
     fun destroy(p: P)
-    fun callPieceMoveEvent(vararg moves: Pair<P?, P?>?)
-    fun sendSpawned(p: P) {
-        checkExists(p)
-        callPieceMoveEvent(null to p)
-    }
-    fun spawn(p: P) {
-        create(p)
-        callPieceMoveEvent(null to p)
-    }
-    fun clear(p: P) {
-        destroy(p)
-        callPieceMoveEvent(p to null)
-    }
 }
+
+fun interface PieceEventCaller {
+    fun callPieceMoveEvent(e: PieceMoveEvent)
+}
+
+operator fun PieceEventCaller.invoke(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = callPieceMoveEvent(PieceMoveEvent(listOfNotNull(*moves)))
 
 class AddPieceHoldersEvent internal constructor(private val holders: MutableMap<PlacedPieceType<*>, PieceHolder<*>>) : ChessEvent {
     operator fun <T : PlacedPiece> set(type: PlacedPieceType<T>, holder: PieceHolder<T>) = holders.put(type, holder)
 }
 
-fun <P : PlacedPiece> multiMove(holder: PieceHolder<P>, vararg moves: Pair<P?, P?>?) {
+fun <P : PlacedPiece, T> T.sendSpawned(p: P) where T : PieceHolder<P>, T : PieceEventCaller = sendSpawned(p, this)
+fun <P : PlacedPiece, T> T.spawn(p: P) where T : PieceHolder<P>, T : PieceEventCaller = spawn(p, this)
+fun <P : PlacedPiece, T> T.clear(p: P) where T : PieceHolder<P>, T : PieceEventCaller = clear(p, this)
+fun <P : PlacedPiece, T> T.multiMove(vararg moves: Pair<P?, P?>?) where T : PieceHolder<P>, T : PieceEventCaller = multiMove(this, *moves)
+
+fun <P : PlacedPiece> PieceHolder<P>.sendSpawned(p: P, callEvent: PieceEventCaller) {
+    checkExists(p)
+    callEvent(null to p)
+}
+fun <P : PlacedPiece> PieceHolder<P>.spawn(p: P, callEvent: PieceEventCaller) {
+    create(p)
+    callEvent(null to p)
+}
+fun <P : PlacedPiece> PieceHolder<P>.clear(p: P, callEvent: PieceEventCaller) {
+    destroy(p)
+    callEvent(p to null)
+}
+
+fun <P : PlacedPiece> PieceHolder<P>.multiMove(callEvent: PieceEventCaller, vararg moves: Pair<P?, P?>?) {
     val destroyed = mutableListOf<P>()
     val created = mutableListOf<P>()
     val realMoves = moves.filterNotNull()
     try {
         for ((o, _) in realMoves)
             if (o != null)
-                holder.checkExists(o)
+                checkExists(o)
         for ((o, _) in realMoves)
             if (o != null) {
-                holder.destroy(o)
+                destroy(o)
                 destroyed += o
             }
         for ((_, t) in realMoves)
             if (t != null)
-                holder.checkCanExist(t)
+                checkCanExist(t)
         for ((_, t) in realMoves)
             if (t != null) {
-                holder.create(t)
+                create(t)
                 created += t
             }
-        holder.callPieceMoveEvent(*moves)
+        callEvent(*moves)
     } catch (e: Throwable) {
         for (t in created.asReversed())
-            holder.destroy(t)
+            destroy(t)
         for (o in destroyed.asReversed())
-            holder.create(o)
+            create(o)
         throw e
     }
 }

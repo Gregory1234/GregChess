@@ -85,7 +85,7 @@ class Chessboard private constructor (
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
     @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf()
-) : Component, ChessboardView by SquareChessboard(initialFEN, variantOptions, squares), PieceHolder<BoardPiece> {
+) : Component, ChessboardView by SquareChessboard(initialFEN, variantOptions, squares), PieceHolder<BoardPiece>, PieceEventCaller {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
@@ -266,7 +266,7 @@ class Chessboard private constructor (
         }
     }
 
-    private inner class CapturedPieceHolder: PieceHolder<CapturedPiece> {
+    private inner class CapturedPieceHolder: PieceHolder<CapturedPiece>, PieceEventCaller {
 
         override fun checkExists(p: CapturedPiece) {
             if (this@Chessboard.capturedPieces.none { it == p })
@@ -284,7 +284,7 @@ class Chessboard private constructor (
             this@Chessboard -= p
         }
 
-        override fun callPieceMoveEvent(vararg moves: Pair<CapturedPiece?, CapturedPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
+        override fun callPieceMoveEvent(e: PieceMoveEvent) = game.callEvent(e)
 
         override val pieces get() = capturedPieces
     }
@@ -315,7 +315,7 @@ class Chessboard private constructor (
         squares[p.pos]?.piece = null
     }
 
-    override fun callPieceMoveEvent(vararg moves: Pair<BoardPiece?, BoardPiece?>?) = game.callEvent(PieceMoveEvent(listOfNotNull(*moves)))
+    override fun callPieceMoveEvent(e: PieceMoveEvent) = game.callEvent(e)
 
     // TODO: add a way of creating this without a Chessboard instance
     private class FakeBoardPieceHolder(val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>) : ChessboardView by SquareChessboard(initialFEN, variantOptions, squares), PieceHolder<BoardPiece> {
@@ -338,8 +338,6 @@ class Chessboard private constructor (
             checkExists(p)
             squares[p.pos]?.piece = null
         }
-
-        override fun callPieceMoveEvent(vararg moves: Pair<BoardPiece?, BoardPiece?>?) {}
     }
 
     private class FakeCapturedPieceHolder(val capturedPieces : MutableList<CapturedPiece>) : PieceHolder<CapturedPiece> {
@@ -358,8 +356,6 @@ class Chessboard private constructor (
             checkExists(p)
             capturedPieces.removeAt(capturedPieces.lastIndexOf(p))
         }
-
-        override fun callPieceMoveEvent(vararg moves: Pair<CapturedPiece?, CapturedPiece?>?) {}
 
         override val pieces get() = capturedPieces
     }

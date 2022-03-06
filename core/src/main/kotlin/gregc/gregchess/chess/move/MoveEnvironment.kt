@@ -4,12 +4,12 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 
-interface MoveEnvironment : PieceHolder<PlacedPiece>, ComponentHolder {
+interface MoveEnvironment : PieceHolder<PlacedPiece>, ComponentHolder, PieceEventCaller {
     fun updateMoves()
     fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u)
     fun callEvent(e: ChessEvent)
 
-    override fun callPieceMoveEvent(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = callEvent(PieceMoveEvent(listOfNotNull(*moves)))
+    override fun callPieceMoveEvent(e: PieceMoveEvent) = callEvent(e)
     val variant: ChessVariant
 
     val boardView: ChessboardView
