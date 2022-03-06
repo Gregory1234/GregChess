@@ -265,21 +265,13 @@ class ChessGame private constructor(
     @Transient
     private val pieceHolders = mutableMapOf<PlacedPieceType<*>, PieceHolder<*>>()
 
-    @Suppress("UNCHECKED_CAST")
-    private operator fun get(p: PlacedPieceType<*>): PieceHolder<PlacedPiece> = pieceHolders[p]!! as PieceHolder<PlacedPiece>
-
     private inner class GameMoveEnvironment : MoveEnvironment {
-        override fun checkExists(p: PlacedPiece) = this@ChessGame[p.placedPieceType].checkExists(p)
-        override fun checkCanExist(p: PlacedPiece) = this@ChessGame[p.placedPieceType].checkCanExist(p)
-        override fun create(p: PlacedPiece) = this@ChessGame[p.placedPieceType].create(p)
-        override fun destroy(p: PlacedPiece) = this@ChessGame[p.placedPieceType].destroy(p)
+        @Suppress("UNCHECKED_CAST")
+        override fun <P : PlacedPiece> get(p: PlacedPieceType<P>): PieceHolder<P> = pieceHolders[p] as PieceHolder<P>
 
         override val boardView get() = this@ChessGame.board
 
         override val pieces get() = pieceHolders.flatMap { it.value.pieces }
-
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : PlacedPiece> piecesOf(t: PlacedPieceType<T>) = get(t).pieces as Collection<T>
 
         override fun updateMoves() = this@ChessGame.board.updateMoves()
         override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) = this@ChessGame.board.addFlag(pos, flag, age)

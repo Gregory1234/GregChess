@@ -394,18 +394,7 @@ class Chessboard private constructor (
         override fun <T : Component> get(type: ComponentType<T>): T? = null
 
         @Suppress("UNCHECKED_CAST")
-        override fun <T : PlacedPiece> piecesOf(t: PlacedPieceType<T>): Collection<T> = holders[t]?.pieces.orEmpty() as Collection<T>
-
-        @Suppress("UNCHECKED_CAST")
-        private fun get(p: PlacedPieceType<*>): PieceHolder<PlacedPiece> = holders[p]!! as PieceHolder<PlacedPiece>
-
-        override fun checkExists(p: PlacedPiece) = get(p.placedPieceType).checkExists(p)
-
-        override fun checkCanExist(p: PlacedPiece) = get(p.placedPieceType).checkCanExist(p)
-
-        override fun create(p: PlacedPiece) = get(p.placedPieceType).create(p)
-
-        override fun destroy(p: PlacedPiece) = get(p.placedPieceType).destroy(p)
+        override fun <P : PlacedPiece> get(p: PlacedPieceType<P>): PieceHolder<P> = holders[p]!! as PieceHolder<P>
     }
 
     companion object {
