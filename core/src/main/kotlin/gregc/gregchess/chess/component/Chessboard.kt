@@ -111,8 +111,9 @@ class Chessboard private constructor (
     @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
-    @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf()
-) : Component, BoardPieceHolder by SquareChessboard(initialFEN, variantOptions, squares), PieceEventCaller {
+    @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf(),
+    @Transient private val internalBoard: SquareChessboard = SquareChessboard(initialFEN, variantOptions, squares) // https://github.com/Kotlin/kotlinx.serialization/issues/241
+) : Component, BoardPieceHolder by internalBoard, PieceEventCaller {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
