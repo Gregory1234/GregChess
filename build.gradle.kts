@@ -45,7 +45,7 @@ tasks {
         }
         dependsOn(coreTasks.test)
         fabricTasks.compileKotlin.get().mustRunAfter(coreTasks.test)
-        from(fabricTasks["remapJar"])
+        from(fabricTasks.named("remapShadedJar"))
         into(rootDir)
         rename { "${rootProject.name}-$version-fabric.jar" }
     }

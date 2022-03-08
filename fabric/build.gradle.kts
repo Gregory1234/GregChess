@@ -8,14 +8,21 @@ plugins {
     `maven-publish`
 }
 
-loom.runConfigs.forEach {
-    it.runDir = "fabric/" + it.runDir
-    it.vmArgs += listOf("-Dkotlinx.coroutines.debug=on", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
+loom {
+    runConfigs.forEach {
+        it.runDir = "fabric/" + it.runDir
+        it.vmArgs += listOf("-Dkotlinx.coroutines.debug=on", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
+    }
+    runtimeOnlyLog4j.set(true)
 }
 
 repositories {
     maven ("https://server.bbkr.space/artifactory/libs-release") { name = "LibGui" }
 }
+
+val shaded: Configuration by configurations.creating
+
+configurations.implementation.get().extendsFrom(shaded)
 
 dependencies {
     minecraft(libs.fabric.minecraft)
@@ -26,7 +33,7 @@ dependencies {
     modApi(libs.fabric.libgui)
     include(libs.fabric.libgui)
     api(projects.gregchessCore)
-    include(projects.gregchessCore)
+    shaded(projects.gregchessCore)
 }
 
 tasks {
@@ -60,11 +67,22 @@ tasks {
         exclude { it.file.extension == "kotlin_metadata" }
         duplicatesStrategy = DuplicatesStrategy.WARN
     }
-    register<RemapJarTask>("unshadedRemapJar") {
+    remapJar {
+        addNestedDependencies.set(false)
+    }
+    val shadedJar by registering(Jar::class) {
+        group = "build"
         dependsOn(jar)
+        from({ jar.get().outputs.files.map { zipTree(it) } })
+        from({ shaded.resolvedConfiguration.firstLevelModuleDependencies.flatMap { dep -> dep.moduleArtifacts.map { zipTree(it.file) }}})
+        archiveClassifier.set("shaded-dev")
+        destinationDirectory.set(jar.get().destinationDirectory)
+    }
+    register<RemapJarTask>("remapShadedJar") {
+        dependsOn(shadedJar)
         group = "fabric"
-        input.set(remapJar.get().input)
-        archiveClassifier.set("remapped")
+        inputFile.set(shadedJar.get().archiveFile)
+        archiveClassifier.set("shaded")
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
@@ -78,11 +96,10 @@ tasks {
             }
         }
     }
-    register<Jar>("sourcesJar") {
-        group = "build"
-        archiveClassifier.set("sources")
-        from(sourceSets.main.get().allSource)
-    }
+}
+
+java {
+    withSourcesJar()
 }
 
 publishing {
@@ -91,9 +108,7 @@ publishing {
             groupId = project.group as String
             artifactId = project.name
             version = project.version as String
-            from(components["kotlin"])
-            artifact(tasks.sourcesJar)
-            artifact(tasks["unshadedRemapJar"])
+            from(components["java"])
         }
     }
 }
