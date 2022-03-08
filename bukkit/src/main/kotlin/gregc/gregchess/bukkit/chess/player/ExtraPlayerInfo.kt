@@ -1,32 +1,38 @@
 package gregc.gregchess.bukkit.chess.player
 
+import gregc.gregchess.bukkit.chess.ChessGameManager
 import gregc.gregchess.bukkit.chess.ResetPlayerEvent
 import gregc.gregchess.bukkit.chess.component.spectators
 import gregc.gregchess.chess.ChessGame
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import java.util.*
 
-private class ExtraPlayerInfo(val player: Player) {
+private class ExtraPlayerInfo(val uuid: UUID) {
     companion object {
-        private val infos = mutableMapOf<Player, ExtraPlayerInfo>()
-        fun of(p: Player) = infos.getOrPut(p) { ExtraPlayerInfo(p) }
+        private val infos = mutableMapOf<UUID, ExtraPlayerInfo>()
+        fun of(p: Player) = infos.getOrPut(p.uniqueId) { ExtraPlayerInfo(p.uniqueId) }
     }
+    private val player: Player? get() = Bukkit.getPlayer(uuid)
 
+    var lastLeftGame: UUID? = null
+    // TODO: make currentGame more similar to spectatedGame
     var currentGame: ChessGame? = null
     val games = mutableListOf<ChessGame>()
 
     var isAdmin = false
         set(value) {
             field = value
-            val loc = player.location
-            currentGame?.callEvent(ResetPlayerEvent(player))
-            player.teleport(loc)
+            val loc = player!!.location
+            currentGame?.callEvent(ResetPlayerEvent(player!!))
+            player!!.teleport(loc)
         }
 
     var spectatedGame: ChessGame? = null
         set(v) {
-            field?.let { it.spectators -= player }
+            field?.let { it.spectators -= player!! }
             field = v
-            field?.let { it.spectators += player }
+            field?.let { it.spectators += player!! }
         }
 }
 
@@ -58,3 +64,8 @@ var Player.spectatedGame
         extra.spectatedGame = v
     }
 val Player.isSpectating get() = spectatedGame != null
+var Player.lastLeftGame
+    get() = extra.lastLeftGame?.let(ChessGameManager::get)
+    set(v) {
+        extra.lastLeftGame = v?.uuid
+    }

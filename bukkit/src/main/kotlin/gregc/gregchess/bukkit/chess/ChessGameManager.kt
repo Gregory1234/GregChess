@@ -40,7 +40,18 @@ object ChessGameManager : Listener {
     fun leave(player: Player) {
         val g = player.chess
         player.spectatedGame = null
-        g?.game?.stop(g.color.lostBy(EndReason.WALKOVER), byColor { it == g.color })
+        g?.game?.let {
+            player.lastLeftGame = it
+            it.gameController.leave(g.color)
+        }
+        player.currentGame = null
+    }
+
+    fun rejoin(player: Player) {
+        player.lastLeftGame?.let {
+            it.gameController.rejoin(it.sides.toList().first { s -> s is BukkitChessSide && s.bukkit == player }.color)
+            player.currentGame = it
+        }
     }
 
     @EventHandler

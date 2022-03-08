@@ -123,9 +123,15 @@ class ScoreboardManager : Component {
     }
 
     @ChessEventHandler
-    fun spectatorJoin(p: SpectatorEvent) {
-        if (p.dir == PlayerDirection.JOIN)
-            giveScoreboard(p.player)
+    fun playerEvent(p: PlayerEvent) = when(p.dir) {
+        PlayerDirection.JOIN -> giveScoreboard(p.player)
+        PlayerDirection.LEAVE -> p.player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
+    }
+
+    @ChessEventHandler
+    fun spectatorEvent(p: SpectatorEvent) = when(p.dir) {
+        PlayerDirection.JOIN -> giveScoreboard(p.player)
+        PlayerDirection.LEAVE -> p.player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
     }
 
     private fun update() = with(MultiExceptionContext()) {

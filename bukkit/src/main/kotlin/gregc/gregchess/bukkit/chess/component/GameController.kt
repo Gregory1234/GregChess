@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.bukkit.BukkitRegistering
-import gregc.gregchess.bukkit.GregChessPlugin
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.*
@@ -30,6 +29,7 @@ class GameController(val presetName: String) : Component {
         @JvmField
         @Register
         val PRESET = PropertyType()
+        val allowRejoining get() = config.getBoolean("Rejoin.AllowRejoining")
     }
 
     override val type get() = BukkitComponentType.GAME_CONTROLLER
@@ -150,6 +150,26 @@ class GameController(val presetName: String) : Component {
                     lastPrintedMove = normalMoves.last()
                 }
             }
+        }
+    }
+
+    fun leave(c: Color) {
+        // TODO: add a reminder message about rejoining
+        // TODO: add a time limit for rejoining
+        val player = game[c]
+        if (allowRejoining && player is BukkitChessSide) {
+            game.callEvent(PlayerEvent(player.bukkit!!, PlayerDirection.LEAVE))
+        } else {
+            game.stop(c.lostBy(EndReason.WALKOVER), byColor { it == c })
+        }
+    }
+
+    fun rejoin(c: Color) {
+        val player = game[c]
+        if (player is BukkitChessSide) {
+            val p = player.bukkit ?: return
+            game.callEvent(PlayerEvent(p, PlayerDirection.JOIN))
+            player.start()
         }
     }
 

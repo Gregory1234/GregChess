@@ -72,6 +72,8 @@ class EndReason<@Suppress("UNUSED") R : GameScore>(val type: Type) : NameRegiste
         @JvmField
         val WALKOVER = DetEndReason(Type.ABANDONED)
         @JvmField
+        val WALKOVER_DRAW = DrawEndReason(Type.ABANDONED)
+        @JvmField
         val STALEMATE = DrawEndReason(Type.NORMAL)
         @JvmField
         val INSUFFICIENT_MATERIAL = DrawEndReason(Type.NORMAL)

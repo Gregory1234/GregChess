@@ -86,6 +86,7 @@ Message:
     NothingToTakeback: "&cThere are no moves to takeback!"
     WrongDurationFormat: "&cWrong duration format!"
     TeleportFailed: "&cTeleport failed!"
+    NoGameToRejoin: "&cNo game to rejoin!"
     NotHuman:
       Opponent: "&cYour opponent is not a human!"
     InGame:
@@ -232,6 +233,7 @@ Chess:
     Checkmate: "checkmate"
     Resignation: "resignation"
     Walkover: "walkover"
+    WalkoverDraw: "walkover"
     PluginRestart: "the plugin restarting"
     ArenaRemoved: "the arena getting removed"
     Stalemate: "stalemate"
@@ -260,6 +262,9 @@ Scoreboard:
   CheckCounter: "check counter"
   TimeRemaining: "time"
   TimeRemainingSimple: "Time remaining"
+
+Rejoin:
+  AllowRejoining: true
 
 TimeFormat: "mm:ss.S"
 StatsProvider: yaml

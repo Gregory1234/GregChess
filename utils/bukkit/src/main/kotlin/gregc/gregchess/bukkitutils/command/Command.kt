@@ -106,6 +106,7 @@ class CommandBuilder { // TODO: redesign this api
         }
         if (strings.isEmpty() && canBeLast) {
             toExec.addAll(onExecute)
+            toValidate.addAll(validator)
             return
         }
         throw CommandException(

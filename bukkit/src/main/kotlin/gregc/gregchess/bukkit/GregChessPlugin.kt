@@ -60,6 +60,7 @@ object GregChessPlugin : Listener {
     private val GAME_NOT_FOUND = err("GameNotFound")
     private val NOTHING_TO_TAKEBACK = err("NothingToTakeback")
     private val NO_ARENAS = err("NoArenas")
+    private val NO_GAME_TO_REJOIN = err("NoGameToRejoin")
 
     private val BOARD_OP_DONE = message("BoardOpDone")
     private val SKIPPED_TURN = message("SkippedTurn")
@@ -450,6 +451,15 @@ object GregChessPlugin : Listener {
                     executeSuspend<Player> {
                         sender.openStatsMenu(player().name!!, BukkitPlayerStats.of(player().uniqueId))
                     }
+                }
+            }
+            subcommand("rejoin") {
+                requirePlayer()
+                validate(WRONG_ARGUMENT) { GameController.allowRejoining }
+                validate(YOU_IN_GAME) { !(sender as Player).isInGame && !(sender as Player).isSpectating }
+                validate(NO_GAME_TO_REJOIN) { (sender as Player).lastLeftGame != null }
+                execute<Player> {
+                    ChessGameManager.rejoin(sender)
                 }
             }
         }
