@@ -96,17 +96,9 @@ tasks {
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
     }
-    val placePluginJar by registering(Copy::class) {
-        from(shadedJar)
-        rename { "plugin.jar" }
-        into(minecraftServerConfig.serverDirectory.dir("plugins"))
-    }
-    val cleanPluginJar by registering(Delete::class) {
-        delete(minecraftServerConfig.serverDirectory.file("plugins/plugin.jar"))
-    }
     launchMinecraftServer {
-        dependsOn(placePluginJar)
-        finalizedBy(cleanPluginJar)
+        dependsOn(shadedJar)
+        serverArgument.add("-add-plugin=${shadedJar.get().archiveFile.get().asFile.absolutePath}")
     }
 }
 
