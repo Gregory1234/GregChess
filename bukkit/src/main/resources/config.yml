@@ -234,7 +234,7 @@ Chess:
     Resignation: "resignation"
     Walkover: "walkover"
     WalkoverDraw: "walkover"
-    PluginRestart: "the plugin restarting"
+    PluginDisabled: "plugin disabled"
     ArenaRemoved: "the arena getting removed"
     Stalemate: "stalemate"
     StalemateVictory: "stalemate"

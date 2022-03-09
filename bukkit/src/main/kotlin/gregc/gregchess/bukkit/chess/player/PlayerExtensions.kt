@@ -1,8 +1,8 @@
 package gregc.gregchess.bukkit.chess.player
 
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.message
-import gregc.gregchess.bukkit.title
+import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.Move
@@ -70,3 +70,29 @@ suspend fun Player.openPawnPromotionMenu(promotions: Collection<Piece>) =
     openMenu(PAWN_PROMOTION, promotions.mapIndexed { i, p ->
         ScreenOption(p.item, p, i.toInvPos())
     }) ?: promotions.first()
+
+private val allowRejoining get() = config.getBoolean("Rejoin.AllowRejoining")
+
+fun Player.leaveGame() {
+    // TODO: add a reminder message about rejoining
+    // TODO: add a time limit for rejoining
+    val g = chess
+    spectatedGame = null
+    g?.game?.let { game ->
+        lastLeftGame = game
+        if (allowRejoining) {
+            game.callEvent(PlayerEvent(this, PlayerDirection.LEAVE))
+        } else {
+            game.stop(g.color.lostBy(EndReason.WALKOVER), byColor { it == g.color })
+        }
+    }
+    currentGame = null
+}
+
+fun Player.rejoinGame() {
+    lastLeftGame?.let { game ->
+        currentGame = game
+        game.callEvent(PlayerEvent(this, PlayerDirection.JOIN))
+        chess!!.start()
+    }
+}

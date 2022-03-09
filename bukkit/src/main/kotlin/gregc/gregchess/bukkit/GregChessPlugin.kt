@@ -153,7 +153,7 @@ object GregChessPlugin : Listener {
                 requirePlayer()
                 validate(YOU_NOT_IN_GAME) { sender !is Player || (sender as Player).isInGame || (sender as Player).isSpectating }
                 execute<Player> {
-                    ChessGameManager.leave(sender)
+                    sender.leaveGame()
                 }
             }
             subcommand("draw") {
@@ -455,11 +455,11 @@ object GregChessPlugin : Listener {
             }
             subcommand("rejoin") {
                 requirePlayer()
-                validate(WRONG_ARGUMENT) { GameController.allowRejoining }
+                validate(WRONG_ARGUMENT) { config.getBoolean("Rejoin.AllowRejoining") }
                 validate(YOU_IN_GAME) { !(sender as Player).isInGame && !(sender as Player).isSpectating }
                 validate(NO_GAME_TO_REJOIN) { (sender as Player).lastLeftGame != null }
                 execute<Player> {
-                    ChessGameManager.rejoin(sender)
+                    sender.rejoinGame()
                 }
             }
         }

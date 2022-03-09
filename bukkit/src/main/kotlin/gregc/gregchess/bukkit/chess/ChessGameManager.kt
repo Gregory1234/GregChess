@@ -21,7 +21,7 @@ import java.util.*
 object ChessGameManager : Listener {
     @JvmField
     @Register(data = ["quick"])
-    val PLUGIN_RESTART = DrawEndReason(EndReason.Type.EMERGENCY)
+    val PLUGIN_DISABLED = DrawEndReason(EndReason.Type.EMERGENCY)
 
     private val games = mutableListOf<ChessGame>()
 
@@ -34,28 +34,11 @@ object ChessGameManager : Listener {
 
     fun stop() {
         for (g in games)
-            g.quickStop(drawBy(PLUGIN_RESTART))
-    }
-
-    fun leave(player: Player) {
-        val g = player.chess
-        player.spectatedGame = null
-        g?.game?.let {
-            player.lastLeftGame = it
-            it.gameController.leave(g.color)
-        }
-        player.currentGame = null
-    }
-
-    fun rejoin(player: Player) {
-        player.lastLeftGame?.let {
-            it.gameController.rejoin(it.sides.toList().first { s -> s is BukkitChessSide && s.bukkit == player }.color)
-            player.currentGame = it
-        }
+            g.quickStop(drawBy(PLUGIN_DISABLED))
     }
 
     @EventHandler
-    fun onPlayerLeave(e: PlayerQuitEvent) = leave(e.player)
+    fun onPlayerLeave(e: PlayerQuitEvent) = e.player.leaveGame()
 
     @EventHandler
     fun onPlayerDeath(e: EntityDeathEvent) {
