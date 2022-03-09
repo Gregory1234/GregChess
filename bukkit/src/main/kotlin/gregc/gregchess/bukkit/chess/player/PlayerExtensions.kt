@@ -73,8 +73,17 @@ suspend fun Player.openPawnPromotionMenu(promotions: Collection<Piece>) =
 
 private val allowRejoining get() = config.getBoolean("Rejoin.AllowRejoining")
 
+private val REJOIN_REMINDER = message("RejoinReminder")
+
+fun Player.sendRejoinReminder() {
+    if (allowRejoining && config.getBoolean("Rejoin.SendReminder") && lastLeftGame != null) {
+        spigot().sendMessage(textComponent(REJOIN_REMINDER.get()) {
+            onClickCommand("/chess rejoin")
+        })
+    }
+}
+
 fun Player.leaveGame() {
-    // TODO: add a reminder message about rejoining
     // TODO: add a time limit for rejoining
     val g = chess
     spectatedGame = null
@@ -87,6 +96,7 @@ fun Player.leaveGame() {
         }
     }
     currentGame = null
+    sendRejoinReminder()
 }
 
 fun Player.rejoinGame() {

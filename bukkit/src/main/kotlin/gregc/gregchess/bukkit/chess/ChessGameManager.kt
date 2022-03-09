@@ -1,10 +1,12 @@
 package gregc.gregchess.bukkit.chess
 
+import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.registerEvents
 import gregc.gregchess.chess.*
 import gregc.gregchess.registry.Register
+import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -35,6 +37,11 @@ object ChessGameManager : Listener {
     fun stop() {
         for (g in games)
             g.quickStop(drawBy(PLUGIN_DISABLED))
+    }
+
+    @EventHandler
+    fun onPlayerJoin(e: PlayerJoinEvent) {
+        Bukkit.getScheduler().scheduleSyncDelayedTask(GregChessPlugin.plugin, { e.player.sendRejoinReminder() }, 1)
     }
 
     @EventHandler

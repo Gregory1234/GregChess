@@ -57,6 +57,7 @@ Message:
   StatsOpDone: "&eCompleted the stats operation!"
   AdminToggled: "&eAdmin mode toggled!"
   StatsOf: "Stats of %s"
+  RejoinReminder: "&eClick to rejoin the game!"
   Stats:
     Wins: "&aWins: %s"
     Losses: "&cLosses: %s"
@@ -265,6 +266,7 @@ Scoreboard:
 
 Rejoin:
   AllowRejoining: true
+  SendReminder: true
 
 TimeFormat: "mm:ss.S"
 StatsProvider: yaml
