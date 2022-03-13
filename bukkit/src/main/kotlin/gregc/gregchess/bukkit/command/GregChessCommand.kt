@@ -8,9 +8,9 @@ import gregc.gregchess.chess.Pos
 import gregc.gregchess.registry.FiniteRegistryView
 import org.bukkit.entity.Player
 
-internal fun playerArgument(name: String): PlayerArgument = PlayerArgument(name, PLAYER_NOT_FOUND)
+internal fun playerArgument(name: String) = playerArgument(name, PLAYER_NOT_FOUND)
 
-internal fun offlinePlayerArgument(name: String): OfflinePlayerArgument = OfflinePlayerArgument(name, PLAYER_NOT_FOUND)
+internal fun offlinePlayerArgument(name: String) = offlinePlayerArgument(name, PLAYER_NOT_FOUND)
 
 internal fun CommandBuilder.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
 
@@ -40,33 +40,26 @@ internal fun CommandBuilder.requireNoGame() {
     validate(YOU_IN_GAME) { sender !is Player || (sender as Player).currentGame == null }
 }
 
-internal class PosArgument(name: String) : CommandArgumentType<Pos>(name) {
-    override fun tryParse(strings: List<String>): Pair<Pos, List<String>>? = try {
-        if (strings.isEmpty()) null else Pos.parseFromString(strings.first()) to strings.drop(1)
-    } catch (e: IllegalArgumentException) {
-        null
+internal fun posArgument(name: String) = SimpleArgument(name) { try { Pos.parseFromString(it) } catch (e : IllegalArgumentException) { null } }
+
+internal fun <T : Any> registryArgument(name: String, registryView: FiniteRegistryView<String, T>, condition: ((T) -> Boolean)? = null) =
+    SimpleArgument(
+        name,
+        defaults = { registryView.keys.filter { condition?.invoke(registryView[it]) ?: true }.map { it.toString() }.toSet() }
+    ) {
+        try {
+            registryView[it.toKey()].also { v -> require(condition?.invoke(v) ?: true) }
+        } catch (e: IllegalArgumentException) {
+            null
+        }
     }
-}
-
-internal class RegistryArgument<T>(name: String, val registryView: FiniteRegistryView<String, T>, val condition: ((T) -> Boolean)? = null) : CommandArgumentType<T>(name) {
-    override fun tryParse(strings: List<String>): Pair<T, List<String>>? = try {
-        if (strings.isEmpty()) null
-        else (registryView[strings.first().toKey()].also { require(condition?.invoke(it) ?: true) }) to strings.drop(1)
-    } catch (e: IllegalArgumentException) {
-        null
-    }
-
-    override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String> =
-        registryView.keys.filter { condition?.invoke(registryView[it]) ?: true }.map { it.toString() }.toSet()
-
-}
 
 internal class FENArgument(name: String) : CommandArgumentType<FEN>(name) {
-    override fun tryParse(strings: List<String>): Pair<FEN, List<String>>? = try {
-        FEN.parseFromString(strings.joinToString(" ")) to emptyList()
+    override fun tryParse(args: StringArguments): FEN? = try {
+        FEN.parseFromString(args.nextMany().joinToString(" "))
     } catch (e: FEN.FENFormatException) {
         null
     }
 }
 
-internal fun durationArgument(name: String) = DurationArgument(name, WRONG_DURATION_FORMAT)
+internal fun durationArgument(name: String) = durationArgument(name, WRONG_DURATION_FORMAT)

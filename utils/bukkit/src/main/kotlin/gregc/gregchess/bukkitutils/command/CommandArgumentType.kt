@@ -2,81 +2,78 @@ package gregc.gregchess.bukkitutils.command
 
 import gregc.gregchess.bukkitutils.*
 import org.bukkit.Bukkit
-import org.bukkit.OfflinePlayer
-import org.bukkit.entity.Player
 import java.util.*
-import kotlin.time.Duration
+import kotlin.math.min
+
+class StringArguments(private val args: List<String>) : Iterator<String> {
+    var index: Int = 0
+    fun lookup() = args[index]
+    fun lookupOrNull() = args.getOrNull(index)
+    fun lookupMany(len: Int = args.size - index) = args.subList(index, min(len, args.size - index))
+    override fun next() = args[index++]
+    fun nextOrNull() = args.getOrNull(index++)
+    fun nextMany(len: Int = args.size - index): List<String> {
+        val ret = args.subList(index, min(index + len, args.size))
+        index = min(index + len, args.size)
+        return ret
+    }
+    override fun hasNext(): Boolean = index < args.size
+    fun hasNext(len: Int): Boolean = index + len <= args.size
+
+    fun <R : Any> tryUndo(block: StringArguments.() -> R?): R? {
+        val startIndex = index
+        val ret = block()
+        index = startIndex
+        return ret
+    }
+
+    fun <R : Any> transaction(block: StringArguments.() -> R?): R? {
+        val startIndex = index
+        val ret = block()
+        if (ret == null)
+            index = startIndex
+        return ret
+    }
+}
 
 abstract class CommandArgumentType<R>(val name: String, val failMessage: Message? = null) {
-    abstract fun tryParse(strings: List<String>): Pair<R, List<String>>?
-    open fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? =
-        if (tryParse(strings) == null) emptySet() else null
+    abstract fun tryParse(args: StringArguments): R?
+    open fun autocomplete(args: StringArguments, ctx: ExecutionContext<*>): Set<String>? =
+        if (args.tryUndo { tryParse(this) } == null) emptySet() else null
 }
 
-class StringArgument(name: String) : CommandArgumentType<String>(name) {
-    override fun tryParse(strings: List<String>): Pair<String, List<String>>? =
-        if (strings.isEmpty()) null else Pair(strings.first(), strings.drop(1))
+class SimpleArgument<R : Any>(
+    name: String,
+    val defaults: () -> Set<String> = ::emptySet,
+    failMessage: Message? = null,
+    val simpleParser: (String) -> R?
+) : CommandArgumentType<R>(name, failMessage) {
+
+    override fun tryParse(args: StringArguments): R? = args.nextOrNull()?.let(simpleParser)
+    override fun autocomplete(args: StringArguments, ctx: ExecutionContext<*>): Set<String>? =
+        if (!args.hasNext()) defaults() else null
+
 }
 
-class IntArgument(name: String) : CommandArgumentType<Int>(name) {
-    override fun tryParse(strings: List<String>): Pair<Int, List<String>>? =
-        strings.firstOrNull()?.toIntOrNull()?.let { Pair(it , strings.drop(1)) }
-}
+fun stringArgument(name: String) = SimpleArgument(name) { it }
+
+fun intArgument(name: String) = SimpleArgument(name) { it.toIntOrNull() }
 
 class GreedyStringArgument(name: String) : CommandArgumentType<String>(name) {
-    override fun tryParse(strings: List<String>): Pair<String, List<String>> =
-        Pair(strings.joinToString(" "), emptyList())
+    override fun tryParse(args: StringArguments): String =
+        args.nextMany().joinToString(" ")
 }
 
-class UUIDArgument(name: String) : CommandArgumentType<UUID>(name) {
-    override fun tryParse(strings: List<String>): Pair<UUID, List<String>>? = try {
-        if (strings.isEmpty()) null else Pair(UUID.fromString(strings.first()), strings.drop(1))
-    } catch (e: IllegalArgumentException) {
-        null
-    }
-}
+fun uuidArgument(name: String) = SimpleArgument(name) { try { UUID.fromString(it) } catch (e : IllegalArgumentException) { null } }
 
-class LiteralArgument(val value: String, name: String = value) : CommandArgumentType<Unit>(name) {
-    override fun tryParse(strings: List<String>): Pair<Unit, List<String>>? =
-        if (strings.firstOrNull() == value) Pair(Unit, strings.drop(1)) else null
+fun literalArgument(value: String, name: String = value) = SimpleArgument(name, defaults = { setOf(value) }) { if (it == value) Unit else null }
 
-    override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? =
-        if (strings.isEmpty()) setOf(value) else null
-}
+fun <T : Any> enumArgument(values: Collection<T>, name: String) = SimpleArgument(name, defaults = { values.map(Any::toString).toSet() }) { values.firstOrNull { v -> v.toString() == it } }
 
-class EnumArgument<T>(val values: Collection<T>, name: String) : CommandArgumentType<T>(name) {
-    override fun tryParse(strings: List<String>): Pair<T, List<String>>? =
-        values.firstOrNull { it.toString() == strings.firstOrNull() }?.to(strings.drop(1))
+inline fun <reified E : Enum<E>> enumArgument(name: String) = enumArgument(E::class.java.enumConstants.toList(), name)
 
-    override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? =
-        if (strings.isEmpty()) values.map { it.toString() }.toSet() else null
-}
+fun playerArgument(name: String, msg: Message) = SimpleArgument(name, defaults = { Bukkit.getOnlinePlayers().map { it.name }.toSet() }, failMessage = msg) { Bukkit.getPlayer(it) }
 
-inline fun <reified E : Enum<E>> enumArgument(name: String) = EnumArgument(E::class.java.enumConstants.toList(), name)
+fun offlinePlayerArgument(name: String, msg: Message) = SimpleArgument(name, defaults = { Bukkit.getOnlinePlayers().map { it.name }.toSet() }, failMessage = msg) { getOfflinePlayerByName(it) }
 
-class PlayerArgument(name: String, msg: Message) : CommandArgumentType<Player>(name, msg) {
-    override fun tryParse(strings: List<String>): Pair<Player, List<String>>? = strings.firstOrNull()?.let { n ->
-        Bukkit.getPlayer(n)?.let {
-            Pair(it, strings.drop(1))
-        }
-    }
-
-    override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? =
-        if (strings.isEmpty()) Bukkit.getOnlinePlayers().map { it.name }.toSet() else null
-}
-
-class OfflinePlayerArgument(name: String, msg: Message) : CommandArgumentType<OfflinePlayer>(name, msg) {
-    override fun tryParse(strings: List<String>): Pair<OfflinePlayer, List<String>>? = strings.firstOrNull()?.let { n ->
-        getOfflinePlayerByName(n)?.let {
-            Pair(it, strings.drop(1))
-        }
-    }
-
-    override fun autocomplete(ctx: ExecutionContext<*>, strings: List<String>): Set<String>? =
-        if (strings.isEmpty()) Bukkit.getOnlinePlayers().map { it.name }.toSet() else null
-}
-
-class DurationArgument(name: String, failMessage: Message) : CommandArgumentType<Duration>(name, failMessage) {
-    override fun tryParse(strings: List<String>): Pair<Duration, List<String>>? =
-        strings.firstOrNull()?.toDurationOrNull()?.to(strings.drop(1))
-}
+fun durationArgument(name: String, msg: Message) = SimpleArgument(name, failMessage = msg) { it.toDurationOrNull() }

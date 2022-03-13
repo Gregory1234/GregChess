@@ -43,7 +43,7 @@ class CommandBuilder { // TODO: redesign this api
     }
 
     fun literal(name: String, builder: CommandBuilder.() -> Unit) {
-        onArgument += LiteralArgument(name) to CommandBuilder().also {
+        onArgument += literalArgument(name) to CommandBuilder().also {
             it.index = index + 1
             it.builder()
         }
@@ -88,29 +88,29 @@ class CommandBuilder { // TODO: redesign this api
 
     private fun executeOn(
         env: CommandEnvironment,
-        strings: List<String>,
+        strings: StringArguments,
         toExec: MutableList<suspend ExecutionContext<*>.() -> Unit>,
         toValidate: MutableList<ExecutionContext<*>.() -> Message?>,
         context: MutableList<Any?>
     ) {
         var msg: Message? = null
         for ((arg, com) in onArgument) {
-            val parse = arg.tryParse(strings)
+            val parse = strings.transaction { arg.tryParse(this) }
             if (parse != null) {
-                context += parse.first
+                context += parse
                 toValidate.addAll(validator)
-                return com.executeOn(env, parse.second, toExec, toValidate, context)
+                return com.executeOn(env, strings, toExec, toValidate, context)
             } else {
                 msg = msg ?: arg.failMessage
             }
         }
-        if (strings.isEmpty() && canBeLast) {
+        if (!strings.hasNext() && canBeLast) {
             toExec.addAll(onExecute)
             toValidate.addAll(validator)
             return
         }
         throw CommandException(
-            if (strings.isEmpty() || onArgument.isEmpty()) env.wrongArgumentsNumberMessage else msg ?: env.wrongArgumentMessage
+            if (!strings.hasNext() || onArgument.isEmpty()) env.wrongArgumentsNumberMessage else msg ?: env.wrongArgumentMessage
         )
     }
 
@@ -118,7 +118,8 @@ class CommandBuilder { // TODO: redesign this api
         val toExec = mutableListOf<suspend ExecutionContext<*>.() -> Unit>()
         val toValidate = mutableListOf<ExecutionContext<*>.() -> Message?>()
         val ctx = mutableListOf<Any?>()
-        executeOn(env, strings, toExec, toValidate, ctx)
+        val arguments = StringArguments(strings)
+        executeOn(env, arguments, toExec, toValidate, ctx)
         val ectx = ExecutionContext(sender, ctx)
         for (x in toValidate)
             ectx.x()?.let {
@@ -131,7 +132,8 @@ class CommandBuilder { // TODO: redesign this api
     private fun autocompleteOn(
         env: CommandEnvironment,
         sender: CommandSender,
-        strings: List<String>,
+        strings: StringArguments,
+        setLast: (String?) -> Unit,
         ac: MutableSet<String>,
         context: MutableList<Any?>
     ) {
@@ -141,13 +143,14 @@ class CommandBuilder { // TODO: redesign this api
                 if (ctx.v() != null)
                     continue@outLoop
             }
-            val new = arg.autocomplete(ctx, strings)?.toMutableList()
+            val new = strings.transaction { arg.autocomplete(this, ctx)?.toMutableList() }
             if (new != null) {
                 new.removeIf {
                     var ret = false
-                    val parse = arg.tryParse(strings + listOf(it))
+                    setLast(it)
+                    val parse = strings.tryUndo { arg.tryParse(this) }
                     if (parse != null) {
-                        context += parse.first
+                        context += parse
                         for (v in com.validator) {
                             if (ctx.v() != null) {
                                 ret = true
@@ -156,14 +159,15 @@ class CommandBuilder { // TODO: redesign this api
                         }
                         context.removeLast()
                     }
+                    setLast(null)
                     ret
                 }
                 ac.addAll(new)
-            } else {
-                val parse = arg.tryParse(strings)
+            } else strings.tryUndo {
+                val parse = arg.tryParse(this)
                 if (parse != null) {
-                    context += parse.first
-                    com.autocompleteOn(env, sender, parse.second, ac, context)
+                    context += parse
+                    com.autocompleteOn(env, sender, this, setLast, ac, context)
                     context.removeLast()
                 }
             }
@@ -172,7 +176,9 @@ class CommandBuilder { // TODO: redesign this api
 
     fun autocompleteOn(env: CommandEnvironment, sender: CommandSender, strings: List<String>): Set<String> {
         val ret = mutableSetOf<String>()
-        autocompleteOn(env, sender, strings, ret, mutableListOf())
+        val mutStrings = strings.toMutableList()
+        val arguments = StringArguments(mutStrings)
+        autocompleteOn(env, sender, arguments, { if (it == null) mutStrings.removeAt(strings.size) else mutStrings.add(strings.size, it) }, ret, mutableListOf())
         return ret
     }
 }

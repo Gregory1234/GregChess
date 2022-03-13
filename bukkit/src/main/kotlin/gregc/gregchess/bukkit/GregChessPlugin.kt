@@ -96,7 +96,7 @@ object GregChessPlugin : Listener {
                 requirePlayer()
                 requireNoGame()
                 literal("accept") {
-                    argument(UUIDArgument("request")) { req ->
+                    argument(uuidArgument("request")) { req ->
                         execute<Player> {
                             cWrongArgument {
                                 duelRequest.accept(sender, req())
@@ -105,7 +105,7 @@ object GregChessPlugin : Listener {
                     }
                 }
                 literal("cancel") {
-                    argument(UUIDArgument("request")) { req ->
+                    argument(uuidArgument("request")) { req ->
                         execute<Player> {
                             cWrongArgument {
                                 duelRequest.cancel(sender, req())
@@ -179,7 +179,7 @@ object GregChessPlugin : Listener {
                         sender.sendMessage(PIECE_NOT_FOUND)
                     }
                 }
-                argument(PosArgument("pos")) { pos ->
+                argument(posArgument("pos")) { pos ->
                     execute<Player> {
                         val g = pl().game
                         val piece = g.board[pos()]
@@ -194,13 +194,13 @@ object GregChessPlugin : Listener {
             }
             subcommand("spawn") {
                 val pl = requireGame()
-                argument(RegistryArgument("piece", PieceRegistryView)) { piece ->
+                argument(registryArgument("piece", PieceRegistryView)) { piece ->
                     execute<Player> {
                         val g = pl().game
                         g.finishMove(phantomSpawn(BoardPiece(g.renderer.getPos(sender.location), piece(), false)))
                         sender.sendMessage(BOARD_OP_DONE)
                     }
-                    argument(PosArgument("pos")) { pos ->
+                    argument(posArgument("pos")) { pos ->
                         execute<Player> {
                             val g = pl().game
                             g.finishMove(phantomSpawn(BoardPiece(pos(), piece(), false)))
@@ -211,8 +211,8 @@ object GregChessPlugin : Listener {
             }
             subcommand("move") {
                 val pl = requireGame()
-                argument(PosArgument("from")) { from ->
-                    argument(PosArgument("to")) { to ->
+                argument(posArgument("from")) { from ->
+                    argument(posArgument("to")) { to ->
                         execute<Player> {
                             val g = pl().game
                             val piece = g.board[from()]
@@ -277,7 +277,7 @@ object GregChessPlugin : Listener {
                         ?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
                 }
                 literal("set") {
-                    argument(StringArgument("option")) { option ->
+                    argument(stringArgument("option")) { option ->
                         argument(GreedyStringArgument("value")) { value ->
                             executeSuspend<Player> {
                                 pl().game.sides.toList().filterIsInstance<EngineChessSide<*>>()
@@ -335,7 +335,7 @@ object GregChessPlugin : Listener {
                 requirePlayer()
                 literal("save") {
                     val pl = requireGame()
-                    argument(StringArgument("name")) { name ->
+                    argument(stringArgument("name")) { name ->
                         execute<Player> {
                             val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
                             f.parentFile.mkdirs()
@@ -347,7 +347,7 @@ object GregChessPlugin : Listener {
                 }
                 literal("load") {
                     requireNoGame()
-                    argument(StringArgument("name")) { name ->
+                    argument(stringArgument("name")) { name ->
                         execute<Player> {
                             val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
                             json.decodeFromString<ChessGame>(f.readText()).sync()
@@ -371,7 +371,7 @@ object GregChessPlugin : Listener {
                         cRequire(sender.hasPermission("gregchess.chess.info.ingame"), NO_PERMISSION)
                         sender.spigot().sendMessage((sender as? Player)?.currentGame.cNotNull(YOU_NOT_IN_GAME).getInfo())
                     }
-                    argument(UUIDArgument("game")) { game ->
+                    argument(uuidArgument("game")) { game ->
                         requirePermission("gregchess.chess.info.remote")
                         execute {
                             sender.spigot().sendMessage(ChessGameManager[game()].cNotNull(GAME_NOT_FOUND).getInfo())
@@ -387,7 +387,7 @@ object GregChessPlugin : Listener {
                                 .cNotNull(PIECE_NOT_FOUND).getInfo(pl().game)
                         )
                     }
-                    argument(PosArgument("pos")) { pos ->
+                    argument(posArgument("pos")) { pos ->
                         execute<Player> {
                             sender.spigot().sendMessage(
                                 pl().game.board[pos()].cNotNull(PIECE_NOT_FOUND).getInfo(pl().game))
@@ -419,9 +419,9 @@ object GregChessPlugin : Listener {
                     requirePermission("gregchess.chess.stats.set")
                     argument(offlinePlayerArgument("player")) { player ->
                         argument(enumArgument<Color>("color")) { color ->
-                            argument(StringArgument("setting")) { setting ->
-                                argument(RegistryArgument("stat", Registry.STAT) { it.serializer == Int.serializer() }) { stat ->
-                                    argument(IntArgument("value")) { v ->
+                            argument(stringArgument("setting")) { setting ->
+                                argument(registryArgument("stat", Registry.STAT) { it.serializer == Int.serializer() }) { stat ->
+                                    argument(intArgument("value")) { v ->
                                         execute {
                                             val stats = BukkitPlayerStats.of(player().uniqueId)
                                             @Suppress("UNCHECKED_CAST")
@@ -437,7 +437,7 @@ object GregChessPlugin : Listener {
                 literal("clear") {
                     requirePermission("gregchess.chess.stats.set")
                     argument(offlinePlayerArgument("player")) { player ->
-                        argument(StringArgument("setting")) { setting ->
+                        argument(stringArgument("setting")) { setting ->
                             execute {
                                 BukkitPlayerStats.of(player().uniqueId).clear(setting())
                                 sender.sendMessage(STATS_OP_DONE)
