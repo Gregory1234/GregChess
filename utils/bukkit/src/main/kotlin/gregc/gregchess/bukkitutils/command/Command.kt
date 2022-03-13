@@ -15,91 +15,76 @@ data class CommandEnvironment(
     val coroutineScope: CoroutineScope,
     val wrongArgumentsNumberMessage: Message,
     val wrongArgumentMessage: Message,
-    val unhandledExceptionMessage: Message
+    val unhandledExceptionMessage: Message,
+    val notPlayer: Message
 )
 
 @CommandDsl
-class CommandBuilder { // TODO: redesign this api
-    private val onExecute = mutableListOf<suspend ExecutionContext<*>.() -> Unit>()
-    private val onArgument = mutableListOf<Pair<CommandArgumentType<*>, CommandBuilder>>()
-    private val validator = mutableListOf<ExecutionContext<*>.() -> Message?>()
+class CommandBuilder<S : CommandSender>(val senderClass: KClass<S>) {
+    private val onExecute = mutableListOf<suspend ExecutionContext<S>.() -> Unit>()
+    private val onArgument = mutableListOf<Pair<CommandArgumentType<*>, CommandBuilder<out S>>>()
+    private val validator = mutableListOf<ExecutionContext<S>.() -> Message?>()
     private var index: Int = 0
 
     var canBeLast: Boolean = false
 
-    fun validate(msg: Message, f: ExecutionContext<*>.() -> Boolean) {
+    fun validate(msg: Message, f: ExecutionContext<S>.() -> Boolean) {
         validate { if (f()) null else msg }
     }
 
-    fun validate(f: ExecutionContext<*>.() -> Message?) {
+    fun validate(f: ExecutionContext<S>.() -> Message?) {
         validator += f
     }
 
-    fun <T> argument(type: CommandArgumentType<T>, builder: CommandBuilder.(CommandArgument<T>) -> Unit) {
-        onArgument += type to CommandBuilder().also {
+    fun <T, U : S> argument(senderClass: KClass<U>, type: CommandArgumentType<T>, builder: CommandBuilder<U>.(CommandArgument<T>) -> Unit) {
+        onArgument += type to CommandBuilder(senderClass).also {
             it.index = index + 1
             it.builder(CommandArgument(index, type))
         }
     }
 
-    fun literal(name: String, builder: CommandBuilder.() -> Unit) {
-        onArgument += literalArgument(name) to CommandBuilder().also {
+    fun <T> argument(type: CommandArgumentType<T>, builder: CommandBuilder<S>.(CommandArgument<T>) -> Unit) =
+        argument(senderClass, type, builder)
+
+    fun <U : S> literal(senderClass: KClass<U>, name: String, builder: CommandBuilder<U>.() -> Unit) {
+        onArgument += literalArgument(name) to CommandBuilder(senderClass).also {
             it.index = index + 1
             it.builder()
         }
     }
 
-    fun executeSuspend(builder: suspend ExecutionContext<*>.() -> Unit) {
+    fun literal(name: String, builder: CommandBuilder<S>.() -> Unit) =
+        literal(senderClass, name, builder)
+
+    fun executeSuspend(builder: suspend ExecutionContext<S>.() -> Unit) {
         canBeLast = true
         onExecute += builder
     }
 
-    fun execute(builder: ExecutionContext<*>.() -> Unit) {
+    fun execute(builder: ExecutionContext<S>.() -> Unit) {
         executeSuspend(builder)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <S : CommandSender> executeSuspend(cl: KClass<S>, builder: suspend ExecutionContext<S>.() -> Unit) {
-        executeSuspend {
-            if (cl.isInstance(this.sender)) {
-                (this as ExecutionContext<S>).builder()
-            }
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun <S : CommandSender> execute(cl: KClass<S>, builder: ExecutionContext<S>.() -> Unit) {
-        execute {
-            if (cl.isInstance(this.sender)) {
-                (this as ExecutionContext<S>).builder()
-            }
-        }
-    }
-
-    @JvmName("executeSpecial")
-    inline fun <reified S : CommandSender> executeSuspend(noinline builder: suspend ExecutionContext<S>.() -> Unit) {
-        executeSuspend(S::class, builder)
-    }
-
-    @JvmName("executeSpecial")
-    inline fun <reified S : CommandSender> execute(noinline builder: ExecutionContext<S>.() -> Unit) {
-        execute(S::class, builder)
-    }
-
     private fun executeOn(
+        sender: S,
         env: CommandEnvironment,
         strings: StringArguments,
-        toExec: MutableList<suspend ExecutionContext<*>.() -> Unit>,
-        toValidate: MutableList<ExecutionContext<*>.() -> Message?>,
+        toExec: MutableList<suspend ExecutionContext<S>.() -> Unit>,
+        toValidate: MutableList<ExecutionContext<S>.() -> Message?>,
         context: MutableList<Any?>
     ) {
         var msg: Message? = null
-        for ((arg, com) in onArgument) {
+        for ((arg, com) in (onArgument as MutableList<Pair<CommandArgumentType<*>, CommandBuilder<S>>>)) {
+            if (!com.senderClass.isInstance(sender)) {
+                msg = msg ?: env.notPlayer
+                continue
+            }
             val parse = strings.transaction { arg.tryParse(this) }
             if (parse != null) {
                 context += parse
                 toValidate.addAll(validator)
-                return com.executeOn(env, strings, toExec, toValidate, context)
+                return com.executeOn(sender, env, strings, toExec, toValidate, context)
             } else {
                 msg = msg ?: arg.failMessage
             }
@@ -114,12 +99,12 @@ class CommandBuilder { // TODO: redesign this api
         )
     }
 
-    suspend fun executeOn(env: CommandEnvironment, sender: CommandSender, strings: List<String>) {
-        val toExec = mutableListOf<suspend ExecutionContext<*>.() -> Unit>()
-        val toValidate = mutableListOf<ExecutionContext<*>.() -> Message?>()
+    suspend fun executeOn(env: CommandEnvironment, sender: S, strings: List<String>) {
+        val toExec = mutableListOf<suspend ExecutionContext<S>.() -> Unit>()
+        val toValidate = mutableListOf<ExecutionContext<S>.() -> Message?>()
         val ctx = mutableListOf<Any?>()
         val arguments = StringArguments(strings)
-        executeOn(env, arguments, toExec, toValidate, ctx)
+        executeOn(sender, env, arguments, toExec, toValidate, ctx)
         val ectx = ExecutionContext(sender, ctx)
         for (x in toValidate)
             ectx.x()?.let {
@@ -129,15 +114,18 @@ class CommandBuilder { // TODO: redesign this api
             ectx.x()
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun autocompleteOn(
         env: CommandEnvironment,
-        sender: CommandSender,
+        sender: S,
         strings: StringArguments,
         setLast: (String?) -> Unit,
         ac: MutableSet<String>,
         context: MutableList<Any?>
     ) {
-        outLoop@ for ((arg, com) in onArgument) {
+        outLoop@ for ((arg, com) in (onArgument as MutableList<Pair<CommandArgumentType<*>, CommandBuilder<S>>>)) {
+            if (!com.senderClass.isInstance(sender))
+                continue
             val ctx = ExecutionContext(sender, context)
             for (v in validator) {
                 if (ctx.v() != null)
@@ -174,7 +162,7 @@ class CommandBuilder { // TODO: redesign this api
         }
     }
 
-    fun autocompleteOn(env: CommandEnvironment, sender: CommandSender, strings: List<String>): Set<String> {
+    fun autocompleteOn(env: CommandEnvironment, sender: S, strings: List<String>): Set<String> {
         val ret = mutableSetOf<String>()
         val mutStrings = strings.toMutableList()
         val arguments = StringArguments(mutStrings)
@@ -192,12 +180,12 @@ class ExecutionContext<out S : CommandSender>(val sender: S, private val argumen
     operator fun <T> CommandArgument<T>.invoke(): T = arguments[index] as T
 }
 
-fun CommandBuilder.requirePermission(permission: String, msg: Message) {
+fun CommandBuilder<*>.requirePermission(permission: String, msg: Message) {
     validate(msg) { sender.hasPermission(permission) }
 }
 
-fun CommandEnvironment.addCommand(name: String, command: CommandBuilder.() -> Unit) {
-    val com = CommandBuilder().apply { command() }
+fun CommandEnvironment.addCommand(name: String, command: CommandBuilder<CommandSender>.() -> Unit) {
+    val com = CommandBuilder(CommandSender::class).apply { command() }
     plugin.getCommand(name)?.setExecutor { sender, _, trueName, args ->
         val commandScope = CoroutineScope(coroutineScope.coroutineContext +
                 SupervisorJob(coroutineScope.coroutineContext.job) +

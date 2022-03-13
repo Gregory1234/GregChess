@@ -6,37 +6,40 @@ import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.registry.FiniteRegistryView
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 internal fun playerArgument(name: String) = playerArgument(name, PLAYER_NOT_FOUND)
 
 internal fun offlinePlayerArgument(name: String) = offlinePlayerArgument(name, PLAYER_NOT_FOUND)
 
-internal fun CommandBuilder.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
+internal fun CommandBuilder<*>.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
 
-internal fun CommandBuilder.subcommand(name: String, builder: CommandBuilder.() -> Unit) {
+internal fun <S : CommandSender> CommandBuilder<S>.subcommand(name: String, builder: CommandBuilder<S>.() -> Unit) {
     literal(name) {
         requirePermission("gregchess.chess.$name")
         builder()
     }
 }
 
-internal fun CommandBuilder.requirePlayer() {
-    validate(NOT_PLAYER) { sender is Player }
+internal fun CommandBuilder<CommandSender>.playerSubcommand(name: String, builder: CommandBuilder<Player>.() -> Unit) {
+    literal(Player::class, name) {
+        requirePermission("gregchess.chess.$name")
+        builder()
+    }
 }
 
-internal fun CommandBuilder.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSide {
-    validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitChessSide }
+internal fun CommandBuilder<Player>.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSide {
+    validate(OPPONENT_NOT_HUMAN) { sender.chess?.opponent is BukkitChessSide }
     return { sender.chess!!.opponent as BukkitChessSide }
 }
 
-internal fun CommandBuilder.requireGame(): ExecutionContext<Player>.() -> BukkitChessSide {
-    requirePlayer()
-    validate(YOU_NOT_IN_GAME) { sender is Player && (sender as Player).currentGame != null }
+internal fun CommandBuilder<Player>.requireGame(): ExecutionContext<Player>.() -> BukkitChessSide {
+    validate(YOU_NOT_IN_GAME) { sender.currentGame != null }
     return { sender.chess!! }
 }
 
-internal fun CommandBuilder.requireNoGame() {
+internal fun CommandBuilder<*>.requireNoGame() {
     validate(YOU_IN_GAME) { sender !is Player || (sender as Player).currentGame == null }
 }
 
