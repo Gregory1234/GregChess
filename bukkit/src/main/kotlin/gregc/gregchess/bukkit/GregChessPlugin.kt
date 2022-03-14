@@ -248,7 +248,7 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("time") {
                 val pl = requireGame()
-                validate(CLOCK_NOT_FOUND) { (sender as? Player)?.currentGame?.clock != null }
+                validate(CLOCK_NOT_FOUND) { sender.currentGame?.clock != null }
                 argument(enumArgument<Color>("side")) { side ->
                     literal("set") {
                         argument(durationArgument("time")) { time ->
@@ -271,8 +271,7 @@ object GregChessPlugin : Listener {
             playerSubcommand("uci") {
                 val pl = requireGame()
                 validate(ENGINE_NOT_FOUND) {
-                    (sender as? Player)?.currentGame?.sides?.toList()
-                        ?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
+                    sender.currentGame?.sides?.toList()?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
                 }
                 literal("set") {
                     argument(stringArgument("option")) { option ->
@@ -315,14 +314,13 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("undo") {
                 val pl = requireGame()
-                validate(NOTHING_TO_TAKEBACK) { (sender as? Player)?.currentGame?.board?.lastMove != null }
-                validate(OPPONENT_NOT_HUMAN) { (sender as? Player)?.chess?.opponent is BukkitChessSide }
+                validate(NOTHING_TO_TAKEBACK) { sender.currentGame?.board?.lastMove != null }
+                val op = requireHumanOpponent()
                 executeSuspend {
-                    val opponent = pl().opponent as BukkitChessSide
-                    drawRequest.invalidSender(sender) {
+                    takebackRequest.invalidSender(sender) {
                         (pl().game.currentOpponent as? BukkitChessSide)?.uuid != sender.uniqueId
                     }
-                    val res = takebackRequest.call(RequestData(sender.uniqueId, opponent.uuid, ""), true)
+                    val res = takebackRequest.call(RequestData(sender.uniqueId, op().uuid, ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().game.board.undoLastMove()
                     }
