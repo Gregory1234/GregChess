@@ -5,12 +5,15 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class PieceTracker private constructor(
-    private val pieces: MutableMap<String, MutableList<PlacedPiece>>,
+    private val pieces: MutableMap<String, MutableList<PlacedPiece>> = mutableMapOf(),
     private val synonyms: MutableMap<String, String> = mutableMapOf()
 ) {
 
-    constructor(vararg pieces: Pair<String, PlacedPiece>)
-            : this(mapOf(*pieces).mapValues { mutableListOf(it.value) }.toMutableMap())
+    constructor(vararg pieces: Pair<String, PlacedPiece>) : this() {
+        for ((n, p) in pieces) {
+            giveName(n, p)
+        }
+    }
 
     constructor(piece: PlacedPiece) : this("main" to piece)
 
@@ -31,7 +34,7 @@ class PieceTracker private constructor(
             require(piece == get(name))
             return
         }
-        val candidate = pieces.entries.singleOrNull { it.value.last() == piece }
+        val candidate = pieces.entries.singleOrNull { it.value.last() conflictsWith piece }
         if (candidate != null) {
             synonyms[name] = candidate.key
         } else {

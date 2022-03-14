@@ -37,6 +37,7 @@ interface PlacedPiece {
     val color: Color get() = piece.color
     val type: PieceType get() = piece.type
     val char: Char get() = piece.char
+    infix fun conflictsWith(p: PlacedPiece): Boolean
 }
 
 internal fun PlacedPiece?.boardPiece() = this as BoardPiece
@@ -54,6 +55,7 @@ object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*, *>, Pl
 @Serializable
 data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : PlacedPiece {
     override val placedPieceType get() = PlacedPieceType.CAPTURED
+    override fun conflictsWith(p: PlacedPiece): Boolean = false
 }
 
 @Serializable
@@ -66,4 +68,6 @@ data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boo
     fun move(target: Pos) = this to this.copy(pos = target, hasMoved = true)
     fun capture(by: Color) = this to CapturedPiece(piece, by)
     fun promote(promotion: Piece) = this to this.copy(piece = promotion)
+
+    override fun conflictsWith(p: PlacedPiece): Boolean = this == p
 }
