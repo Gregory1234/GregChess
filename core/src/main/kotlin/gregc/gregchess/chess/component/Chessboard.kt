@@ -73,16 +73,6 @@ private class SquareChessboard(val initialFEN: FEN, private val variantOptions: 
             return false
         }
 
-    override fun checkExists(p: BoardPiece) {
-        if (this[p.pos] != p)
-            throw PieceDoesNotExistException(p)
-    }
-
-    override fun checkCanExist(p: BoardPiece) {
-        if (this[p.pos] != null)
-            throw PieceAlreadyOccupiesSquareException(this[p.pos]!!)
-    }
-
     override fun create(p: BoardPiece) {
         checkCanExist(p)
         squares[p.pos]?.piece = p
@@ -289,12 +279,9 @@ class Chessboard private constructor (
 
     private inner class CapturedPieceHolder: PieceHolder<CapturedPiece>, PieceEventCaller {
 
-        override fun checkExists(p: CapturedPiece) {
-            if (this@Chessboard.capturedPieces.none { it == p })
-                throw PieceDoesNotExistException(p)
-        }
+        override fun exists(p: CapturedPiece) = this@Chessboard.capturedPieces.any { it == p }
 
-        override fun checkCanExist(p: CapturedPiece) {}
+        override fun canExist(p: CapturedPiece) = true
 
         override fun create(p: CapturedPiece) {
             this@Chessboard += p
@@ -323,12 +310,9 @@ class Chessboard private constructor (
         : BoardPieceHolder by SquareChessboard(initialFEN, variantOptions, squares)
 
     private class FakeCapturedPieceHolder(val capturedPieces : MutableList<CapturedPiece>) : PieceHolder<CapturedPiece> {
-        override fun checkExists(p: CapturedPiece) {
-            if (capturedPieces.none { it == p })
-                throw PieceDoesNotExistException(p)
-        }
+        override fun exists(p: CapturedPiece) = capturedPieces.any { it == p }
 
-        override fun checkCanExist(p: CapturedPiece) {}
+        override fun canExist(p: CapturedPiece) = true
 
         override fun create(p: CapturedPiece) {
             capturedPieces += p

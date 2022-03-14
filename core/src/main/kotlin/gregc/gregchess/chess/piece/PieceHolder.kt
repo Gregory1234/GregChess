@@ -4,15 +4,23 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.ChessboardView
 import gregc.gregchess.chess.move.MoveEnvironment
 
-interface PieceHolderView<out P : PlacedPiece> {
+interface PieceHolderView<P : PlacedPiece> {
     val pieces: Collection<P>
     fun piecesOf(color: Color) = pieces.filter { it.color == color }
     fun piecesOf(color: Color, type: PieceType) = pieces.filter { it.color == color && it.type == type }
+    fun exists(p: P): Boolean
+    fun canExist(p: P): Boolean
+    fun checkExists(p: P) {
+        if (!exists(p))
+            throw PieceDoesNotExistException(p)
+    }
+    fun checkCanExist(p: P) {
+        if (!canExist(p))
+            throw PieceAlreadyOccupiesSquareException(p)
+    }
 }
 
 interface PieceHolder<P : PlacedPiece> : PieceHolderView<P> {
-    fun checkExists(p: P)
-    fun checkCanExist(p: P)
     fun create(p: P)
     fun destroy(p: P)
 }
@@ -78,6 +86,8 @@ fun <P : PlacedPiece> PieceHolder<P>.multiMove(callEvent: PieceEventCaller, vara
 
 interface BoardPieceHolder : PieceHolder<BoardPiece>, ChessboardView {
     fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u)
+    override fun exists(p: BoardPiece) = super.exists(p)
+    override fun canExist(p: BoardPiece) = super.canExist(p)
 }
 
 val MoveEnvironment.boardView: BoardPieceHolder get() = get(PlacedPieceType.BOARD)

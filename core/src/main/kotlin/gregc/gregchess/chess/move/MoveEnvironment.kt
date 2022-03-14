@@ -14,6 +14,8 @@ interface MoveEnvironment : PieceHolder<PlacedPiece>, ComponentHolder, PieceEven
 
     operator fun <P : PlacedPiece, H : PieceHolder<P>> get(p: PlacedPieceType<P, H>): H
 
+    override fun exists(p: PlacedPiece) = (get(p.placedPieceType) as PieceHolder<PlacedPiece>).exists(p)
+    override fun canExist(p: PlacedPiece) = (get(p.placedPieceType) as PieceHolder<PlacedPiece>).canExist(p)
     override fun checkExists(p: PlacedPiece) = (get(p.placedPieceType) as PieceHolder<PlacedPiece>).checkExists(p)
     override fun checkCanExist(p: PlacedPiece) = (get(p.placedPieceType) as PieceHolder<PlacedPiece>).checkCanExist(p)
     override fun create(p: PlacedPiece) = (get(p.placedPieceType) as PieceHolder<PlacedPiece>).create(p)

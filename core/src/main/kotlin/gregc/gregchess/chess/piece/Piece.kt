@@ -1,12 +1,10 @@
 package gregc.gregchess.chess.piece
 
-import gregc.gregchess.*
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.ChessboardView
+import gregc.gregchess.ChessModule
+import gregc.gregchess.chess.ChessEvent
+import gregc.gregchess.chess.Color
 import gregc.gregchess.registry.*
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
 
 object PieceRegistryView : FiniteBiRegistryView<String, Piece> {
 
@@ -53,65 +51,6 @@ fun PieceType.of(color: Color) = Piece(this, color)
 
 fun white(type: PieceType) = type.of(Color.WHITE)
 fun black(type: PieceType) = type.of(Color.BLACK)
-
-@Serializable(with = PlacedPieceType.Serializer::class)
-class PlacedPieceType<P : PlacedPiece, H : PieceHolder<P>>(val serializer: KSerializer<P>) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<PlacedPieceType<*, *>>("PlacedPieceType", Registry.PLACED_PIECE_TYPE)
-
-    override val key get() = Registry.PLACED_PIECE_TYPE[this]
-
-    override fun toString(): String = Registry.PLACED_PIECE_TYPE.simpleElementToString(this)
-
-    @RegisterAll(PlacedPieceType::class)
-    companion object {
-        internal val AUTO_REGISTER = AutoRegisterType(PlacedPieceType::class) { m, n, _ -> register(m, n) }
-
-        @JvmField
-        val BOARD = PlacedPieceType<BoardPiece, BoardPieceHolder>(BoardPiece.serializer())
-        @JvmField
-        val CAPTURED = PlacedPieceType(CapturedPiece.serializer())
-
-        fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<PlacedPieceType<*, *>>()
-    }
-}
-
-@Serializable(with = PlacedPieceSerializer::class)
-interface PlacedPiece {
-    val placedPieceType: PlacedPieceType<out @SelfType PlacedPiece, *>
-    val piece: Piece
-    val color: Color get() = piece.color
-    val type: PieceType get() = piece.type
-    val char: Char get() = piece.char
-}
-
-internal fun PlacedPiece?.boardPiece() = this as BoardPiece
-internal fun PlacedPiece?.capturedPiece() = this as CapturedPiece
-
-object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*, *>, PlacedPiece>("PlacedPiece", PlacedPieceType.Serializer) {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun PlacedPieceType<*, *>.valueSerializer(module: SerializersModule): KSerializer<PlacedPiece> =
-        serializer as KSerializer<PlacedPiece>
-
-    override val PlacedPiece.key: PlacedPieceType<*, *> get() = placedPieceType
-}
-
-@Serializable
-data class CapturedPiece(override val piece: Piece, val capturedBy: Color) : PlacedPiece {
-    override val placedPieceType get() = PlacedPieceType.CAPTURED
-}
-
-@Serializable
-data class BoardPiece(val pos: Pos, override val piece: Piece, val hasMoved: Boolean) : PlacedPiece {
-    override val placedPieceType get() = PlacedPieceType.BOARD
-
-    fun getMoves(board: ChessboardView) = board.getMoves(pos)
-    fun getLegalMoves(board: ChessboardView) = board.getLegalMoves(pos)
-
-    fun move(target: Pos) = this to this.copy(pos = target, hasMoved = true)
-    fun capture(by: Color) = this to CapturedPiece(piece, by)
-    fun promote(promotion: Piece) = this to this.copy(piece = promotion)
-}
 
 class PieceMoveEvent(val moves: List<Pair<PlacedPiece?, PlacedPiece?>>) : ChessEvent
 
