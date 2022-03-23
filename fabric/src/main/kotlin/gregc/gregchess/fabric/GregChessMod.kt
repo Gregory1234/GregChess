@@ -31,11 +31,6 @@ object GregChessMod : ModInitializer {
     }
 
     @JvmField
-    val PIECE_ENTITY_TYPE: BlockEntityType<*> = BlockEntityType.Builder.create(
-        ::PieceBlockEntity, *FabricRegistry.PIECE_BLOCK.values.toTypedArray()
-    ).build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "piece"))
-
-    @JvmField
     val CHESSBOARD_FLOOR_BLOCK: Block = ChessboardFloorBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
     @JvmField
     val CHESSBOARD_FLOOR_BLOCK_ITEM: Item = BlockItem(CHESSBOARD_FLOOR_BLOCK, FabricItemSettings().group(CHESS_GROUP))
@@ -67,7 +62,6 @@ object GregChessMod : ModInitializer {
 
         // TODO: add crafting recipes for all of the blocks
         // TODO: add a chess clock
-        Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("piece"), PIECE_ENTITY_TYPE)
         Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
         Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("chessboard_floor"), CHESSBOARD_FLOOR_ENTITY_TYPE)

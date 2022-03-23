@@ -12,8 +12,9 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlinx.serialization.modules.SerializersModule
-import net.minecraft.block.Blocks
+import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtHelper
 import net.minecraft.nbt.NbtIntArray
 import net.minecraft.server.MinecraftServer
@@ -22,6 +23,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
+import net.minecraft.world.event.GameEvent
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.*
@@ -30,6 +32,27 @@ internal const val MOD_ID = "gregchess"
 internal const val MOD_NAME = "GregChess"
 
 internal fun ident(name: String) = Identifier(MOD_ID, name)
+
+fun World.moveBlock(pos: BlockPos, drop: Boolean): Boolean {
+    val blockState = getBlockState(pos)
+    return if (blockState.isAir) {
+        false
+    } else {
+        val fluidState = getFluidState(pos)
+        if (blockState.block !is AbstractFireBlock) {
+            this.syncWorldEvent(2001, pos, Block.getRawIdFromState(blockState))
+        }
+        if (drop) {
+            val blockEntity = if (blockState.hasBlockEntity()) this.getBlockEntity(pos) else null
+            Block.dropStacks(blockState, this, pos, blockEntity, null, ItemStack.EMPTY)
+        }
+        val bl = this.setBlockState(pos, fluidState.blockState, 67, 512)
+        if (bl) {
+            this.emitGameEvent(null, GameEvent.BLOCK_DESTROY, pos)
+        }
+        bl
+    }
+}
 
 class BlockEntityDirtyDelegate<T>(var value: T) : ReadWriteProperty<BlockEntity, T> {
     override operator fun getValue(thisRef: BlockEntity, property: KProperty<*>): T = value
@@ -45,8 +68,8 @@ class BlockReference<BE : BlockEntity>(val entityClass: KClass<BE>, private val 
     val pos get() = posRef()?.add(posOffset)
     val world get() = worldRef()
     val entity get() = pos?.let { world?.getBlockEntity(it) }?.let { entityClass.safeCast(it) }
-    val state get() = pos?.let { world?.getBlockState(it) } ?: Blocks.AIR.defaultState!!
-    val block get() = state.block
+    val state: BlockState get() = pos?.let { world?.getBlockState(it) } ?: Blocks.AIR.defaultState!!
+    val block: Block get() = state.block
     fun offset(off: BlockPos) = BlockReference(entityClass, posRef, worldRef, posOffset.add(off))
     fun <T : BlockEntity> ofEntity(ent: KClass<T>) = BlockReference(ent, posRef, worldRef, posOffset)
 }

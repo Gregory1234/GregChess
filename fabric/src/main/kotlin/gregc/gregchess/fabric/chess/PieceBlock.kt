@@ -1,17 +1,15 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.move.phantomClear
 import gregc.gregchess.chess.move.phantomSpawn
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
-import gregc.gregchess.fabric.BlockReference
-import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.chess.player.FabricChessSide
 import gregc.gregchess.fabric.chess.player.gregchess
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf
+import net.minecraft.block.piston.PistonBehavior
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -28,40 +26,9 @@ import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.*
 
-class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChessMod.PIECE_ENTITY_TYPE, pos, state) {
-    private var moved: Boolean = false
-
-    val piece: Piece
-        get() = (world!!.getBlockState(pos).block as PieceBlock).piece
-
-    val floorBlock get() = BlockReference(ChessboardFloorBlockEntity::class, { pos.down() }, { world })
-
-    val chessControllerBlock get() = floorBlock.entity?.chessControllerBlock
-
-    val currentGame: ChessGame? get() = chessControllerBlock?.entity?.currentGame
-
-    override fun markRemoved() {
-        if (world?.isClient == false && !moved) {
-            val piece = currentGame?.board?.get(floorBlock.entity?.boardPos!!)
-            currentGame?.finishMove(phantomClear(piece!!))
-        }
-        super.markRemoved()
-    }
-
-    fun safeBreak(drop: Boolean = false) {
-        moved = true
-        world?.breakBlock(pos, drop)
-    }
-
-    val exists
-        get() = floorBlock.entity?.boardPos?.let { boardPos -> currentGame?.board?.get(boardPos) }?.piece == piece
-
-}
-
-sealed class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEntity(settings) {
+sealed class PieceBlock(val piece: Piece, settings: Settings?) : Block(settings) {
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
 
-    override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity? = PieceBlockEntity(pos, state)
     override fun getOutlineShape(
         state: BlockState?,
         view: BlockView?,
@@ -70,48 +37,62 @@ sealed class PieceBlock(val piece: Piece, settings: Settings?) : BlockWithEntity
     ): VoxelShape? = VoxelShapes.cuboid(0.125, 0.0, 0.125, 0.875, 1.0, 0.875)
 
     abstract fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean
-}
 
-class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
+    abstract fun getFloor(world: World, pos: BlockPos, state: BlockState): ChessboardFloorBlockEntity?
+
     override fun onUse(
         state: BlockState,
-        world: World?,
-        pos: BlockPos?,
+        world: World,
+        pos: BlockPos,
         player: PlayerEntity,
         hand: Hand,
         hit: BlockHitResult?
     ): ActionResult {
-        if (world?.isClient == true) return ActionResult.PASS
+        if (world.isClient) return ActionResult.PASS
         if (hand != Hand.MAIN_HAND) return ActionResult.PASS
 
-        val pieceEntity = world?.getBlockEntity(pos) as? PieceBlockEntity ?: return ActionResult.PASS
-        if (!pieceEntity.exists) return ActionResult.PASS
-        val game = pieceEntity.currentGame ?: return ActionResult.PASS
+        if (!exists(world, pos, state)) return ActionResult.PASS
+
+        val floor = getFloor(world, pos, state) ?: return ActionResult.PASS
+        val game = floor.chessControllerBlock.entity?.currentGame ?: return ActionResult.PASS
 
         val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
-            cp.pickUp(pieceEntity.floorBlock.entity?.boardPos!!)
+            cp.pickUp(floor.boardPos!!)
             return ActionResult.SUCCESS
-        } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock.entity?.boardPos) {
-            return if (cp.makeMove(pieceEntity.floorBlock.entity?.boardPos!!, pieceEntity.floorBlock.entity!!, world.server)) ActionResult.SUCCESS else ActionResult.PASS
+        } else if (cp.held?.piece == piece && cp.held?.pos == floor.boardPos) {
+            return if (cp.makeMove(floor.boardPos!!, floor, world.server)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
     }
+
+    fun exists(world: World, pos: BlockPos, state: BlockState): Boolean {
+        val floor = getFloor(world, pos, state) ?: return false
+        return floor.chessControllerBlock.entity?.currentGame?.board?.get(floor.boardPos!!)?.piece == piece
+    }
+
+    override fun getPistonBehavior(state: BlockState?): PistonBehavior = PistonBehavior.BLOCK
+}
+
+class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
 
     override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean = true
 
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         if (!world.isClient()) {
-            val entity = world.getBlockEntity(pos) as PieceBlockEntity
-            entity.currentGame?.finishMove(phantomSpawn(BoardPiece(entity.floorBlock.entity!!.boardPos!!, piece, false)))
+            val floor = getFloor(world, pos, state) ?: return
+            floor.chessControllerBlock.entity?.currentGame?.finishMove(phantomSpawn(BoardPiece(floor.boardPos!!, piece, false)))
         }
     }
 
     override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean {
         val floor = world.getBlockEntity(pos.down(1)) as? ChessboardFloorBlockEntity?
-        return floor?.pieceBlock?.entity == floor?.directPiece?.entity
+        return floor?.pieceBlock?.pos?.takeIf { floor.pieceBlock.block is PieceBlock } == floor?.directPiece?.pos?.takeIf { floor.directPiece.block is PieceBlock }
     }
+
+    override fun getFloor(world: World, pos: BlockPos, state: BlockState) =
+        world.getBlockEntity(pos.down()) as? ChessboardFloorBlockEntity
 }
 
 class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
@@ -133,10 +114,10 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         pos: BlockPos?,
         neighborPos: BlockPos?
     ): BlockState? {
-        val doubleBlockHalf = state.get(HALF)
+        val doubleBlockHalf = state[HALF]
         return if (direction.axis === Direction.Axis.Y &&
             (doubleBlockHalf == DoubleBlockHalf.LOWER) == (direction == Direction.UP) &&
-            (!neighborState.isOf(this) || neighborState.get(HALF) == doubleBlockHalf)
+            (!neighborState.isOf(this) || neighborState[HALF] == doubleBlockHalf)
         ) {
             Blocks.AIR.defaultState
         } else if (doubleBlockHalf == DoubleBlockHalf.LOWER && direction == Direction.DOWN &&
@@ -159,55 +140,26 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), 3)
         if (!world.isClient()) {
-            val entity = world.getBlockEntity(pos) as PieceBlockEntity
-            entity.currentGame?.finishMove(phantomSpawn(BoardPiece(entity.floorBlock.entity!!.boardPos!!, piece, false)))
+            val floor = getFloor(world, pos, state) ?: return
+            floor.chessControllerBlock.entity?.currentGame?.finishMove(phantomSpawn(BoardPiece(floor.boardPos!!, piece, false)))
         }
     }
 
-    override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos) = when(state.get(HALF)) {
+    override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos) = when(state[HALF]) {
         DoubleBlockHalf.UPPER -> {
             val blockState = world.getBlockState(pos.down())
             val floor = world.getBlockEntity(pos.down(2)) as? ChessboardFloorBlockEntity?
-            blockState.isOf(this) && blockState.get(HALF) == DoubleBlockHalf.LOWER && floor?.pieceBlock?.entity == null
+            blockState.isOf(this) && blockState[HALF] == DoubleBlockHalf.LOWER && floor?.pieceBlock?.block is PieceBlock
         }
         DoubleBlockHalf.LOWER -> {
             val floor = world.getBlockEntity(pos.down(1)) as? ChessboardFloorBlockEntity?
-            floor?.pieceBlock?.entity == floor?.directPiece?.entity
+            floor?.pieceBlock?.pos?.takeIf { floor.pieceBlock.block is PieceBlock } == floor?.directPiece?.pos?.takeIf { floor.directPiece.block is PieceBlock }
         }
         null -> false
     }
 
-    override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity? =
-        if (state?.get(HALF) == DoubleBlockHalf.LOWER) super.createBlockEntity(pos, state) else null
-
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         builder.add(HALF)
-    }
-
-    override fun onUse(
-        state: BlockState,
-        world: World?,
-        pos: BlockPos?,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult?
-    ): ActionResult {
-        if (world?.isClient == true) return ActionResult.PASS
-        if (hand != Hand.MAIN_HAND) return ActionResult.PASS
-        val realPos = when(state.get(HALF)!!) { DoubleBlockHalf.UPPER -> pos?.down(); DoubleBlockHalf.LOWER -> pos }
-        val pieceEntity = (world?.getBlockEntity(realPos) as? PieceBlockEntity) ?: return ActionResult.PASS
-        if (!pieceEntity.exists) return ActionResult.PASS
-        val game = pieceEntity.currentGame ?: return ActionResult.PASS
-
-        val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
-
-        if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
-            cp.pickUp(pieceEntity.floorBlock.entity?.boardPos!!)
-            return ActionResult.SUCCESS
-        } else if (cp.held?.piece != null) {
-            return if (cp.makeMove(pieceEntity.floorBlock.entity?.boardPos!!, pieceEntity.floorBlock.entity!!, world.server)) ActionResult.SUCCESS else ActionResult.PASS
-        }
-        return ActionResult.PASS
     }
 
     override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean =
@@ -235,5 +187,21 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
                 world.syncWorldEvent(player, 2001, blockPos, getRawIdFromState(blockState))
             }
         }
+    }
+
+    override fun getFloor(world: World, pos: BlockPos, state: BlockState) =
+        world.getBlockEntity(if (state[HALF] == DoubleBlockHalf.UPPER) pos.down(2) else pos.down()) as? ChessboardFloorBlockEntity
+
+    @Suppress("DEPRECATION")
+    override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        if (!moved && state[HALF] == DoubleBlockHalf.LOWER) {
+            val floor = getFloor(world, pos, state)
+            val currentGame = floor?.chessControllerBlock?.entity?.currentGame
+            if (floor != null && currentGame != null) {
+                val piece = currentGame.board[floor.boardPos!!]
+                currentGame.finishMove(phantomClear(piece!!))
+            }
+        }
+        super.onStateReplaced(state, world, pos, newState, moved)
     }
 }

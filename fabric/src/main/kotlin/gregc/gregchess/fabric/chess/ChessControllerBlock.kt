@@ -48,11 +48,7 @@ import kotlin.math.min
 class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChessMod.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder, ChessControllerInventory {
     var currentGameUUID: UUID? by BlockEntityDirtyDelegate(null)
-    var currentGame: ChessGame? = null
-        set(v) {
-            field = v
-            currentGameUUID = v?.uuid
-        }
+    val currentGame: ChessGame? get() = currentGameUUID?.takeIf { world?.isClient == false }?.let { ChessGameManager[it] }
     var chessboardStartPos: BlockPos? by BlockEntityDirtyDelegate(null)
     private val selfRef = BlockReference(ChessControllerBlockEntity::class, { this.pos }, { world })
 
@@ -75,7 +71,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             chessboardStartPos = BlockPos.fromLong(nbt.getLong("ChessboardStart"))
         }
         if (nbt.containsUuid("GameUUID")) {
-            currentGame = ChessGameManager[nbt.getUuid("GameUUID")]
+            currentGameUUID = nbt.getUuid("GameUUID")
         }
         Inventories.readNbt(nbt, items)
     }
@@ -88,7 +84,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     fun detectBoard(): Boolean {
         val dirs = mutableListOf(Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH)
         fun BlockReference<ChessboardFloorBlockEntity>.isFloor(): Boolean {
-            if (block == null || block !is ChessboardFloorBlock)
+            if (block !is ChessboardFloorBlock)
                 return false
             if (entity == null)
                 return false
@@ -114,7 +110,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
                         ent.register(pos, Pos(realposx, eposy / 3))
                     }
                     for (ent in floorBlockEntities) {
-                        if (ent.directPiece.entity != null && ent.directPiece.entity != ent.pieceBlock.entity) {
+                        if (ent.directPiece.block is PieceBlock && ent.directPiece.pos != ent.pieceBlock.pos) {
                             resetBoard()
                             return false
                         }
@@ -153,7 +149,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         }
         chessboardStartPos = null
         currentGame?.stop(drawBy(GregChess.CHESSBOARD_BROKEN))
-        currentGame = null
+        currentGameUUID = null
     }
 
     override fun markRemoved() {
@@ -163,17 +159,17 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
         if (currentGame != null) return
-        currentGame = ChessGame(
+        currentGameUUID = ChessGame(
             FabricChessEnvironment, ChessVariant.Normal,
             ChessGameManager.settings(ChessVariant.Normal, getBoardState(), FabricRenderer(this)),
             byColor(whitePlayer.gregchess, blackPlayer.gregchess)
-        ).start()
+        ).start().uuid
     }
 
     fun getBoardState(): Map<Pos, Piece> = buildMap {
         for (t in floorBlockEntities) {
-            val p = t.directPiece.entity
-            if (p != null)
+            val p = t.directPiece.block
+            if (p is PieceBlock)
                 put(t.boardPos!!, p.piece)
         }
     }

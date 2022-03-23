@@ -94,7 +94,7 @@ class ChessGame private constructor(
     @Suppress("UNCHECKED_CAST")
     val sides: ByColor<ChessSide<*>> = byColor { playerData[it].initSide(it, this@ChessGame) }
 
-    private fun requireState(s: State) = check(state == s)
+    private fun requireState(s: State) = check(state == s) { "Expected state $s, got state $state!" }
 
     fun callEvent(e: ChessEvent) = with(MultiExceptionContext()) {
         components.forEach {

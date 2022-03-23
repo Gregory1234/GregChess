@@ -6,6 +6,7 @@ import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceMoveEvent
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.player.PiecePlayerActionEvent
+import gregc.gregchess.fabric.moveBlock
 import kotlinx.serialization.*
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.util.math.BlockPos
@@ -35,7 +36,7 @@ data class FabricRenderer(
     private val tileBlocks: Map<Pos, List<ChessboardFloorBlockEntity>> by lazy { floor.groupBy { it.boardPos!! } }
 
     private val preferredBlocks: MutableMap<Pos, ChessboardFloorBlockEntity> by lazy {
-        tileBlocks.mapValues { (_, fs) -> fs.firstOrNull { it.directPiece.entity != null } ?: fs[4] }.toMutableMap()
+        tileBlocks.mapValues { (_, fs) -> fs.firstOrNull { it.directPiece.block is PieceBlock } ?: fs[4] }.toMutableMap()
     }
 
     internal fun preferBlock(floor: ChessboardFloorBlockEntity) {
@@ -62,7 +63,7 @@ data class FabricRenderer(
                     it.updateFloor()
                 }
             }
-            (world.getBlockEntity(controllerPos) as? ChessControllerBlockEntity)?.currentGame = null
+            (world.getBlockEntity(controllerPos) as? ChessControllerBlockEntity)?.currentGameUUID = null
         }
     }
 
@@ -106,9 +107,9 @@ data class FabricRenderer(
                 when (o) {
                     is BoardPiece -> {
                         if (t == null) continue
-                        val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece.entity }
+                        val pieceBlock = tileBlocks[o.pos]?.map { it.directPiece }?.firstOrNull { it.block is PieceBlock }
                         if (pieceBlock != null) {
-                            pieceBlock.safeBreak(!controller.addPiece(o.piece))
+                            pieceBlock.pos?.let { world.moveBlock(it, !controller.addPiece(o.piece)) }
                             broken += o
                         }
                     }
@@ -117,8 +118,8 @@ data class FabricRenderer(
                 when (t) {
                     is BoardPiece -> {
                         if (o == null) continue
-                        val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece.entity }
-                        if (pieceBlock?.piece != t.piece) {
+                        val pieceBlock = tileBlocks[t.pos]?.map { it.directPiece }?.firstOrNull { it.block is PieceBlock }
+                        if ((pieceBlock?.block as? PieceBlock)?.piece != t.piece) {
                             check(pieceBlock == null) { "There is a piece block on ${t.pos} already" }
                             check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
                             t.place(choosePlacePos(t.pos, t.piece.block))
@@ -128,8 +129,8 @@ data class FabricRenderer(
                 }
         } catch (e: Throwable) {
             for (t in placed.asReversed()) {
-                val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece.entity }
-                pieceBlock?.safeBreak(!controller.addPiece(t.piece))
+                val pieceBlock = tileBlocks[t.pos]?.map { it.directPiece }?.firstOrNull { it.block is PieceBlock }
+                pieceBlock?.pos?.let { world.moveBlock(it, !controller.addPiece(t.piece)) }
             }
             for (o in broken.asReversed()) {
                 check(controller.removePiece(o.piece)) { "Not enough pieces in the controller" }
