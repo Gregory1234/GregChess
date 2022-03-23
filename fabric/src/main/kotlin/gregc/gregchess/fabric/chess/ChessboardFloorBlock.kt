@@ -1,8 +1,7 @@
 package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.Pos
-import gregc.gregchess.fabric.BlockEntityDirtyDelegate
-import gregc.gregchess.fabric.GregChessMod
+import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.chess.player.FabricChessSide
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
@@ -21,8 +20,11 @@ import net.minecraft.world.World
 
 
 class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChessMod.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
-    var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null, true)
-    var boardPos: Pos? by BlockEntityDirtyDelegate(null, true)
+    private var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)
+    var boardPos: Pos? by BlockEntityDirtyDelegate(null)
+
+    val chessControllerBlock = BlockReference(ChessControllerBlockEntity::class, { chessControllerBlockPos }, { world })
+
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         chessControllerBlockPos?.let {
@@ -51,16 +53,26 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
             world?.setBlockState(pos, world!!.getBlockState(pos).with(ChessboardFloorBlock.FLOOR, floor))
     }
 
+    fun reset() {
+        chessControllerBlockPos = null
+        boardPos = null
+        updateFloor()
+    }
+
+    fun register(controller: BlockPos, bp: Pos) {
+        chessControllerBlockPos = controller
+        boardPos = bp
+        updateFloor()
+    }
+
     override fun markRemoved() {
-        if (world?.isClient == false) {
-            chessControllerBlock?.resetBoard()
-        }
+        chessControllerBlock.entity?.resetBoard()
         super.markRemoved()
     }
 
     val tileBlocks: Collection<ChessboardFloorBlockEntity>
         get() {
-            if (pos == null)
+            if (boardPos == null)
                 return listOf(this)
             fun findOffsets(d: Direction): Int {
                 var off = 1
@@ -90,14 +102,7 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
     val pieceBlock: PieceBlockEntity?
         get() = tileBlocks.firstNotNullOfOrNull { it.directPiece }
 
-    val chessControllerBlock: ChessControllerBlockEntity?
-        get() = chessControllerBlockPos?.let { world?.getBlockEntity(it) as? ChessControllerBlockEntity }
-
-    override fun toInitialChunkDataNbt(): NbtCompound = NbtCompound().apply {
-        boardPos?.let {
-            putLong("Pos", ((it.file.toLong() shl 32) or (it.rank.toLong() and 0xFFFFFFFFL)))
-        }
-    }
+    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 }
@@ -138,7 +143,7 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
         if (world?.isClient == true) return ActionResult.PASS
         if (hand != Hand.MAIN_HAND) return ActionResult.PASS
         val floorEntity = (world?.getBlockEntity(pos) as? ChessboardFloorBlockEntity) ?: return ActionResult.PASS
-        val game = floorEntity.chessControllerBlock?.currentGame ?: return ActionResult.PASS
+        val game = floorEntity.chessControllerBlock.entity?.currentGame ?: return ActionResult.PASS
 
         val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 

@@ -69,7 +69,7 @@ class FabricChessSide(val gameProfile: GameProfile, color: Color, game: ChessGam
         if (pos == piece.pos) return true
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
-        val availablePromotions = move.promotionTrait?.promotions?.filter { floor.chessControllerBlock?.hasPiece(it) == true }.orEmpty()
+        val availablePromotions = move.promotionTrait?.promotions?.filter { floor.chessControllerBlock.entity?.hasPiece(it) == true }.orEmpty()
         move.promotionTrait?.apply {
             if (availablePromotions.isEmpty()) return false
         }

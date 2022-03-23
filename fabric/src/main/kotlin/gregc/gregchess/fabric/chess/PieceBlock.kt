@@ -5,6 +5,7 @@ import gregc.gregchess.chess.move.phantomClear
 import gregc.gregchess.chess.move.phantomSpawn
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
+import gregc.gregchess.fabric.BlockReference
 import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.chess.player.FabricChessSide
 import gregc.gregchess.fabric.chess.player.gregchess
@@ -33,15 +34,15 @@ class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChe
     val piece: Piece
         get() = (world!!.getBlockState(pos).block as PieceBlock).piece
 
-    val floorBlock get() = world?.getBlockEntity(pos.down()) as? ChessboardFloorBlockEntity
+    val floorBlock get() = BlockReference(ChessboardFloorBlockEntity::class, { pos.down() }, { world })
 
-    val chessControllerBlock: ChessControllerBlockEntity? get() = floorBlock?.chessControllerBlock
+    val chessControllerBlock get() = floorBlock.entity?.chessControllerBlock
 
-    val currentGame: ChessGame? get() = chessControllerBlock?.currentGame
+    val currentGame: ChessGame? get() = chessControllerBlock?.entity?.currentGame
 
     override fun markRemoved() {
         if (world?.isClient == false && !moved) {
-            val piece = currentGame?.board?.get(floorBlock!!.boardPos!!)
+            val piece = currentGame?.board?.get(floorBlock.entity?.boardPos!!)
             currentGame?.finishMove(phantomClear(piece!!))
         }
         super.markRemoved()
@@ -53,7 +54,7 @@ class PieceBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChe
     }
 
     val exists
-        get() = floorBlock?.boardPos?.let { boardPos -> currentGame?.board?.get(boardPos) }?.piece == piece
+        get() = floorBlock.entity?.boardPos?.let { boardPos -> currentGame?.board?.get(boardPos) }?.piece == piece
 
 }
 
@@ -90,10 +91,10 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
         val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
-            cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
+            cp.pickUp(pieceEntity.floorBlock.entity?.boardPos!!)
             return ActionResult.SUCCESS
-        } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock?.boardPos) {
-            return if (cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, world.server)) ActionResult.SUCCESS else ActionResult.PASS
+        } else if (cp.held?.piece == piece && cp.held?.pos == pieceEntity.floorBlock.entity?.boardPos) {
+            return if (cp.makeMove(pieceEntity.floorBlock.entity?.boardPos!!, pieceEntity.floorBlock.entity!!, world.server)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
     }
@@ -103,7 +104,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         if (!world.isClient()) {
             val entity = world.getBlockEntity(pos) as PieceBlockEntity
-            entity.currentGame?.finishMove(phantomSpawn(BoardPiece(entity.floorBlock!!.boardPos!!, piece, false)))
+            entity.currentGame?.finishMove(phantomSpawn(BoardPiece(entity.floorBlock.entity!!.boardPos!!, piece, false)))
         }
     }
 
@@ -159,7 +160,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), 3)
         if (!world.isClient()) {
             val entity = world.getBlockEntity(pos) as PieceBlockEntity
-            entity.currentGame?.finishMove(phantomSpawn(BoardPiece(entity.floorBlock!!.boardPos!!, piece, false)))
+            entity.currentGame?.finishMove(phantomSpawn(BoardPiece(entity.floorBlock.entity!!.boardPos!!, piece, false)))
         }
     }
 
@@ -201,10 +202,10 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
-            cp.pickUp(pieceEntity.floorBlock?.boardPos!!)
+            cp.pickUp(pieceEntity.floorBlock.entity?.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece != null) {
-            return if (cp.makeMove(pieceEntity.floorBlock?.boardPos!!, pieceEntity.floorBlock!!, world.server)) ActionResult.SUCCESS else ActionResult.PASS
+            return if (cp.makeMove(pieceEntity.floorBlock.entity?.boardPos!!, pieceEntity.floorBlock.entity!!, world.server)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
     }

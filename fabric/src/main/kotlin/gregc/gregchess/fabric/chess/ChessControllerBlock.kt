@@ -26,6 +26,9 @@ import net.minecraft.inventory.SidedInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.network.Packet
+import net.minecraft.network.listener.ClientPlayPacketListener
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.screen.*
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -50,12 +53,13 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             field = v
             currentGameUUID = v?.uuid
         }
-    var chessboardStart: BlockPos? by BlockEntityDirtyDelegate(null)
+    var chessboardStartPos: BlockPos? by BlockEntityDirtyDelegate(null)
+    private val selfRef = BlockReference(ChessControllerBlockEntity::class, { this.pos }, { world })
 
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
 
-        chessboardStart?.let {
+        chessboardStartPos?.let {
             nbt.putLong("ChessboardStart", it.asLong())
         }
         currentGame?.let {
@@ -68,7 +72,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         super.readNbt(nbt)
 
         if (nbt.contains("ChessboardStart", 4)) {
-            chessboardStart = BlockPos.fromLong(nbt.getLong("ChessboardStart"))
+            chessboardStartPos = BlockPos.fromLong(nbt.getLong("ChessboardStart"))
         }
         if (nbt.containsUuid("GameUUID")) {
             currentGame = ChessGameManager[nbt.getUuid("GameUUID")]
@@ -83,34 +87,31 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     fun detectBoard(): Boolean {
         val dirs = mutableListOf(Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH)
-        fun BlockPos.isFloor(): Boolean {
-            val block = world?.getBlockState(this)?.block
+        fun BlockReference<ChessboardFloorBlockEntity>.isFloor(): Boolean {
             if (block == null || block !is ChessboardFloorBlock)
                 return false
-
-            val blockEntity = world?.getBlockEntity(this)
-            if (blockEntity == null || blockEntity !is ChessboardFloorBlockEntity)
+            if (entity == null)
                 return false
-            return blockEntity.chessControllerBlockPos == null || blockEntity.chessControllerBlockPos == pos
+            return entity?.chessControllerBlock?.pos == null || entity?.chessControllerBlock?.pos == this@ChessControllerBlockEntity.pos
         }
 
+        val ref = selfRef.ofEntity(ChessboardFloorBlockEntity::class)
+
         for (d in dirs) {
-            if ((1..8 * 3).any { i -> !pos.offset(d, i).isFloor() })
+            if ((1..8 * 3).any { i -> !ref.offset(BlockPos.ORIGIN.offset(d, i)).isFloor() })
                 continue
             val o = listOf(d.rotateYClockwise(), d.rotateYCounterclockwise())
             for (d2 in o) {
-                if ((1..8 * 3).all { i -> (0 until 8 * 3).all { j -> pos.offset(d, i).offset(d2, j).isFloor() } }) {
+                if ((1..8 * 3).all { i -> (0 until 8 * 3).all { j -> ref.offset(BlockPos.ORIGIN.offset(d, i).offset(d2, j)).isFloor() } }) {
                     val v1 = pos.offset(d)
                     val v2 = pos.offset(d, 8 * 3).offset(d2, 8 * 3 - 1)
                     val st = BlockPos(min(v1.x, v2.x), pos.y, min(v1.z, v2.z))
-                    chessboardStart = st
+                    chessboardStartPos = st
                     for (ent in floorBlockEntities) {
-                        ent.chessControllerBlockPos = pos
                         val eposx = abs(ent.pos.getComponentAlongAxis(d2.axis) - v1.getComponentAlongAxis(d2.axis))
                         val realposx = if (d2 == d.rotateYClockwise()) eposx / 3 else 7 - (eposx / 3)
                         val eposy = abs(ent.pos.getComponentAlongAxis(d.axis) - v1.getComponentAlongAxis(d.axis))
-                        ent.boardPos = Pos(realposx, eposy / 3)
-                        ent.updateFloor()
+                        ent.register(pos, Pos(realposx, eposy / 3))
                     }
                     for (ent in floorBlockEntities) {
                         if (ent.directPiece != null && ent.directPiece != ent.pieceBlock) {
@@ -127,7 +128,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     }
 
     val floorBlockEntities
-        get() = chessboardStart?.let { st ->
+        get() = chessboardStartPos?.let { st ->
             (Pair(0, 0)..Pair(8 * 3 - 1, 8 * 3 - 1)).mapNotNull { (i, j) ->
                 world?.getBlockEntity(st.offset(Direction.Axis.X, i).offset(Direction.Axis.Z, j))
             }.filterIsInstance<ChessboardFloorBlockEntity>()
@@ -135,7 +136,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     private val propertyDelegate = object : PropertyDelegate {
         override fun get(index: Int): Int = when (index) {
-            0 -> if (chessboardStart != null) 1 else 0
+            0 -> if (chessboardStartPos != null) 1 else 0
             else -> -1
         }
 
@@ -148,19 +149,16 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     fun resetBoard() {
         for (block in floorBlockEntities) {
-            block.chessControllerBlockPos = null
-            block.boardPos = null
-            block.updateFloor()
+            block.reset()
         }
-        chessboardStart = null
+        chessboardStartPos = null
         currentGame?.stop(drawBy(GregChess.CHESSBOARD_BROKEN))
         currentGame = null
     }
 
     override fun markRemoved() {
-        if (world?.isClient == false) {
-            resetBoard()
-        }
+        resetBoard()
+        super.markRemoved()
     }
 
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
@@ -215,6 +213,10 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         val slot = ChessControllerGuiDescription.slotOf(p)
         return items[slot].item == p.item && items[slot].count >= 1
     }
+
+    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+
+    override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 
 }
 
@@ -353,7 +355,7 @@ class ChessControllerGuiDescription(
         ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("start_game")) {
             context.run { world, pos ->
                 val entity = world.getBlockEntity(pos)
-                if (entity is ChessControllerBlockEntity && entity.chessboardStart != null && entity.currentGame == null) {
+                if (entity is ChessControllerBlockEntity && entity.chessboardStartPos != null && entity.currentGame == null) {
                     val player = world.getPlayerByUuid(it.readUuid()) as ServerPlayerEntity
                     entity.startGame(player, player)
                 }
@@ -363,7 +365,7 @@ class ChessControllerGuiDescription(
         ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("abort_game")) {
             context.run { world, pos ->
                 val entity = world.getBlockEntity(pos)
-                if (entity is ChessControllerBlockEntity && entity.chessboardStart != null) {
+                if (entity is ChessControllerBlockEntity && entity.chessboardStartPos != null) {
                     entity.currentGame?.stop(drawBy(GregChess.ABORTED))
                 }
             }

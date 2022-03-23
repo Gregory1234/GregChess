@@ -12,6 +12,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlinx.serialization.modules.SerializersModule
+import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtHelper
 import net.minecraft.nbt.NbtIntArray
@@ -20,24 +21,34 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.world.WorldAccess
 import java.util.*
 import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
+import kotlin.reflect.*
 
 internal const val MOD_ID = "gregchess"
 internal const val MOD_NAME = "GregChess"
 
 internal fun ident(name: String) = Identifier(MOD_ID, name)
 
-class BlockEntityDirtyDelegate<T>(var value: T, val markForUpdate: Boolean = false) : ReadWriteProperty<BlockEntity, T> {
+class BlockEntityDirtyDelegate<T>(var value: T) : ReadWriteProperty<BlockEntity, T> {
     override operator fun getValue(thisRef: BlockEntity, property: KProperty<*>): T = value
 
     override operator fun setValue(thisRef: BlockEntity, property: KProperty<*>, value: T) {
         this.value = value
         thisRef.markDirty()
-        if (markForUpdate)
-            (thisRef.world as? ServerWorld)?.chunkManager?.markForUpdate(thisRef.pos)
+        (thisRef.world as? ServerWorld)?.chunkManager?.markForUpdate(thisRef.pos)
     }
+}
+
+class BlockReference<BE : BlockEntity>(val entityClass: KClass<BE>, private val posRef: () -> BlockPos?, private val worldRef: () -> WorldAccess?, private val posOffset: BlockPos = BlockPos.ORIGIN) {
+    val pos get() = posRef()?.add(posOffset)
+    val world get() = worldRef()
+    val entity get() = pos?.let { world?.getBlockEntity(it) }?.let { entityClass.safeCast(it) }
+    val state get() = pos?.let { world?.getBlockState(it) } ?: Blocks.AIR.defaultState!!
+    val block get() = state.block
+    fun offset(off: BlockPos) = BlockReference(entityClass, posRef, worldRef, posOffset.add(off))
+    fun <T : BlockEntity> ofEntity(ent: KClass<T>) = BlockReference(ent, posRef, worldRef, posOffset)
 }
 
 object BlockPosAsLongSerializer : KSerializer<BlockPos> {
