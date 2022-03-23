@@ -96,11 +96,9 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
             }
         }
 
-    internal val directPiece: PieceBlockEntity?
-        get() = world?.getBlockEntity(pos.offset(Direction.UP)) as? PieceBlockEntity
+    internal val directPiece = BlockReference(PieceBlockEntity::class, { pos?.up() }, { world })
 
-    val pieceBlock: PieceBlockEntity?
-        get() = tileBlocks.firstNotNullOfOrNull { it.directPiece }
+    val pieceBlock = BlockReference(PieceBlockEntity::class, { tileBlocks.firstNotNullOfOrNull { it.directPiece.entity }?.pos }, { world })
 
     override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
 

@@ -110,7 +110,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
 
     override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean {
         val floor = world.getBlockEntity(pos.down(1)) as? ChessboardFloorBlockEntity?
-        return floor?.pieceBlock == floor?.directPiece
+        return floor?.pieceBlock?.entity == floor?.directPiece?.entity
     }
 }
 
@@ -168,11 +168,11 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         DoubleBlockHalf.UPPER -> {
             val blockState = world.getBlockState(pos.down())
             val floor = world.getBlockEntity(pos.down(2)) as? ChessboardFloorBlockEntity?
-            blockState.isOf(this) && blockState.get(HALF) == DoubleBlockHalf.LOWER && floor?.pieceBlock == null
+            blockState.isOf(this) && blockState.get(HALF) == DoubleBlockHalf.LOWER && floor?.pieceBlock?.entity == null
         }
         DoubleBlockHalf.LOWER -> {
             val floor = world.getBlockEntity(pos.down(1)) as? ChessboardFloorBlockEntity?
-            floor?.pieceBlock == floor?.directPiece
+            floor?.pieceBlock?.entity == floor?.directPiece?.entity
         }
         null -> false
     }

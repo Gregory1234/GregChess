@@ -35,7 +35,7 @@ data class FabricRenderer(
     private val tileBlocks: Map<Pos, List<ChessboardFloorBlockEntity>> by lazy { floor.groupBy { it.boardPos!! } }
 
     private val preferredBlocks: MutableMap<Pos, ChessboardFloorBlockEntity> by lazy {
-        tileBlocks.mapValues { (_, fs) -> fs.firstOrNull { it.directPiece != null } ?: fs[4] }.toMutableMap()
+        tileBlocks.mapValues { (_, fs) -> fs.firstOrNull { it.directPiece.entity != null } ?: fs[4] }.toMutableMap()
     }
 
     internal fun preferBlock(floor: ChessboardFloorBlockEntity) {
@@ -106,7 +106,7 @@ data class FabricRenderer(
                 when (o) {
                     is BoardPiece -> {
                         if (t == null) continue
-                        val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece }
+                        val pieceBlock = tileBlocks[o.pos]?.firstNotNullOfOrNull { it.directPiece.entity }
                         if (pieceBlock != null) {
                             pieceBlock.safeBreak(!controller.addPiece(o.piece))
                             broken += o
@@ -117,7 +117,7 @@ data class FabricRenderer(
                 when (t) {
                     is BoardPiece -> {
                         if (o == null) continue
-                        val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                        val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece.entity }
                         if (pieceBlock?.piece != t.piece) {
                             check(pieceBlock == null) { "There is a piece block on ${t.pos} already" }
                             check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
@@ -128,7 +128,7 @@ data class FabricRenderer(
                 }
         } catch (e: Throwable) {
             for (t in placed.asReversed()) {
-                val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece }
+                val pieceBlock = tileBlocks[t.pos]?.firstNotNullOfOrNull { it.directPiece.entity }
                 pieceBlock?.safeBreak(!controller.addPiece(t.piece))
             }
             for (o in broken.asReversed()) {

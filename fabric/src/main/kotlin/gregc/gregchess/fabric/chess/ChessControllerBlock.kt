@@ -114,7 +114,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
                         ent.register(pos, Pos(realposx, eposy / 3))
                     }
                     for (ent in floorBlockEntities) {
-                        if (ent.directPiece != null && ent.directPiece != ent.pieceBlock) {
+                        if (ent.directPiece.entity != null && ent.directPiece.entity != ent.pieceBlock.entity) {
                             resetBoard()
                             return false
                         }
@@ -172,7 +172,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     fun getBoardState(): Map<Pos, Piece> = buildMap {
         for (t in floorBlockEntities) {
-            val p = t.directPiece
+            val p = t.directPiece.entity
             if (p != null)
                 put(t.boardPos!!, p.piece)
         }
