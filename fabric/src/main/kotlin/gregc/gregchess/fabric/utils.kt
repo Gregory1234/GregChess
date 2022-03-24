@@ -15,8 +15,7 @@ import kotlinx.serialization.modules.SerializersModule
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtHelper
-import net.minecraft.nbt.NbtIntArray
+import net.minecraft.nbt.*
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
@@ -54,13 +53,20 @@ fun World.moveBlock(pos: BlockPos, drop: Boolean): Boolean {
     }
 }
 
+fun NbtCompound.ensureNotEmpty() = apply {
+    if (isEmpty)
+        putBoolean("empty", true)
+}
+
 class BlockEntityDirtyDelegate<T>(var value: T) : ReadWriteProperty<BlockEntity, T> {
     override operator fun getValue(thisRef: BlockEntity, property: KProperty<*>): T = value
 
     override operator fun setValue(thisRef: BlockEntity, property: KProperty<*>, value: T) {
         this.value = value
-        thisRef.markDirty()
-        (thisRef.world as? ServerWorld)?.chunkManager?.markForUpdate(thisRef.pos)
+        if (thisRef.world?.isClient == false) {
+            thisRef.markDirty()
+            (thisRef.world as? ServerWorld)?.chunkManager?.markForUpdate(thisRef.pos)
+        }
     }
 }
 

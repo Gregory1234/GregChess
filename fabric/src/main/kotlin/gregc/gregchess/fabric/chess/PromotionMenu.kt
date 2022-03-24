@@ -83,9 +83,9 @@ class PromotionMenuGuiDescription(
 class PromotionMenu(gui: PromotionMenuGuiDescription?, player: PlayerEntity?, title: Text?) :
     CottonInventoryScreen<PromotionMenuGuiDescription?>(gui, player, title) {
 
-    override fun onClose() {
+    override fun close() {
         (this.description as? PromotionMenuGuiDescription)?.onClose()
-        super.onClose()
+        super.close()
     }
 }
 

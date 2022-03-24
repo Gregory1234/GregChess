@@ -67,12 +67,8 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
 
-        if (nbt.contains("ChessboardStart", 4)) {
-            chessboardStartPos = BlockPos.fromLong(nbt.getLong("ChessboardStart"))
-        }
-        if (nbt.containsUuid("GameUUID")) {
-            currentGameUUID = nbt.getUuid("GameUUID")
-        }
+        chessboardStartPos = if (nbt.contains("ChessboardStart", 4)) BlockPos.fromLong(nbt.getLong("ChessboardStart")) else null
+        currentGameUUID = if (nbt.containsUuid("GameUUID")) nbt.getUuid("GameUUID") else null
         Inventories.readNbt(nbt, items)
     }
 
@@ -152,11 +148,6 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         currentGameUUID = null
     }
 
-    override fun markRemoved() {
-        resetBoard()
-        super.markRemoved()
-    }
-
     fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
         if (currentGame != null) return
         currentGameUUID = ChessGame(
@@ -210,7 +201,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         return items[slot].item == p.item && items[slot].count >= 1
     }
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(): NbtCompound = createNbt().ensureNotEmpty()
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 
@@ -392,5 +383,12 @@ class ChessControllerBlock(settings: Settings?) : BlockWithEntity(settings) {
     ): ActionResult {
         player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
         return ActionResult.SUCCESS
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        val entity = world.getBlockEntity(pos) as? ChessControllerBlockEntity
+        entity?.resetBoard()
+        super.onStateReplaced(state, world, pos, newState, moved)
     }
 }

@@ -38,14 +38,12 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
 
-        if (nbt.contains("Controller", 4)) {
-            chessControllerBlockPos = BlockPos.fromLong(nbt.getLong("Controller"))
-        }
+        chessControllerBlockPos = if (nbt.contains("Controller", 4)) BlockPos.fromLong(nbt.getLong("Controller")) else null
 
-        if (nbt.contains("Pos", 4)) {
+        boardPos = if (nbt.contains("Pos", 4)) {
             val v = nbt.getLong("Pos")
-            boardPos = Pos((v shr 32).toInt(), v.toInt())
-        }
+            Pos((v shr 32).toInt(), v.toInt())
+        } else null
     }
 
     fun updateFloor(floor: Floor = boardPos?.let { if ((it.rank + it.file) % 2 == 0) Floor.DARK else Floor.LIGHT } ?: Floor.INACTIVE) {
@@ -63,11 +61,6 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
         chessControllerBlockPos = controller
         boardPos = bp
         updateFloor()
-    }
-
-    override fun markRemoved() {
-        chessControllerBlock.entity?.resetBoard()
-        super.markRemoved()
     }
 
     val tileBlocks: Collection<ChessboardFloorBlockEntity>
@@ -100,7 +93,7 @@ class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEnti
 
     val pieceBlock = BlockReference(Nothing::class, { tileBlocks.firstOrNull { it.directPiece.block is PieceBlock }?.directPiece?.pos }, { world })
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(): NbtCompound = createNbt().ensureNotEmpty()
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 }
@@ -149,5 +142,14 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
             return if (cp.makeMove(floorEntity.boardPos!!, floorEntity, world.server)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        if (!newState.isOf(this)) {
+            val entity = world.getBlockEntity(pos) as? ChessboardFloorBlockEntity
+            entity?.chessControllerBlock?.entity?.resetBoard()
+        }
+        super.onStateReplaced(state, world, pos, newState, moved)
     }
 }
