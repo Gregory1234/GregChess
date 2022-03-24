@@ -14,7 +14,7 @@ class SetFenEvent(val FEN: FEN) : ChessEvent
 @Serializable
 private class Square(
     var piece: BoardPiece? = null,
-    val flags: MutableMap<ChessFlag, MutableList<UInt>> = mutableMapOf()
+    val flags: MutableMap<ChessFlag, MutableList<Int>> = mutableMapOf()
 ) {
     @Transient var bakedMoves: List<Move>? = null
     @Transient var bakedLegalMoves: List<Move>? = null
@@ -45,7 +45,7 @@ private class SquareChessboard(val initialFEN: FEN, private val variantOptions: 
 
     override operator fun get(pos: Pos) = squares[pos]?.piece
 
-    override fun getFlags(pos: Pos): Map<ChessFlag, UInt> =
+    override fun getFlags(pos: Pos): Map<ChessFlag, Int> =
         squares[pos]?.flags?.filterValues { it.isNotEmpty() }?.mapValues { it.value.last() }.orEmpty()
 
     override fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
@@ -83,7 +83,7 @@ private class SquareChessboard(val initialFEN: FEN, private val variantOptions: 
         squares[p.pos]?.piece = null
     }
 
-    override fun addFlag(pos: Pos, flag: ChessFlag, age: UInt) {
+    override fun addFlag(pos: Pos, flag: ChessFlag, age: Int) {
         squares[pos]?.flags?.let {
             it[flag] = it[flag] ?: mutableListOf()
             it[flag]!! += age
@@ -96,8 +96,8 @@ class Chessboard private constructor (
     val initialFEN: FEN,
     private val simpleCastling: Boolean,
     private val squares: Map<Pos, Square>,
-    var halfmoveClock: UInt = initialFEN.halfmoveClock,
-    @SerialName("fullmoveCounter") private var fullmoveCounter_: UInt = initialFEN.fullmoveCounter,
+    var halfmoveClock: Int = initialFEN.halfmoveClock,
+    @SerialName("fullmoveCounter") private var fullmoveCounter_: Int = initialFEN.fullmoveCounter,
     @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
@@ -149,14 +149,14 @@ class Chessboard private constructor (
             }
             for (s in squares.values)
                 for (f in s.flags)
-                    f.value.replaceAll { it + 1u }
+                    f.value.replaceAll { it + 1 }
             addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
                 for (f in s.flags) {
-                    f.value.replaceAll { it - 1u }
-                    f.value.removeIf { it == 0u }
+                    f.value.replaceAll { it - 1 }
+                    f.value.removeIf { it == 0 }
                 }
                 s.flags.entries.removeIf { it.flagAges.isEmpty() }
             }
@@ -214,7 +214,7 @@ class Chessboard private constructor (
 
 
         if (fen.enPassantSquare != null) {
-            addFlag(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1u)
+            addFlag(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1)
         }
 
         updateMoves()
@@ -249,7 +249,7 @@ class Chessboard private constructor (
     }
 
     fun checkForFiftyMoveRule() {
-        if (halfmoveClock >= 100u)
+        if (halfmoveClock >= 100)
             game.stop(drawBy(EndReason.FIFTY_MOVES))
     }
 
@@ -362,7 +362,7 @@ class Chessboard private constructor (
     companion object {
 
         private fun FEN.toSquares(variant: ChessVariant): Map<Pos, Square> = toPieces(variant).mapValues { (pos, piece) ->
-            Square(piece, if (pos == enPassantSquare) mutableMapOf(ChessFlag.EN_PASSANT to mutableListOf(1u)) else mutableMapOf())
+            Square(piece, if (pos == enPassantSquare) mutableMapOf(ChessFlag.EN_PASSANT to mutableListOf(1)) else mutableMapOf())
         }.let {
             (Pair(0, 0)..Pair(7, 7)).associate { (i, j) -> Pos(i, j) to (it[Pos(i, j)] ?: Square()) }
         }

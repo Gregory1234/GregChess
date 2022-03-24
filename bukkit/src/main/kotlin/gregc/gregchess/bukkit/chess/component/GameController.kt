@@ -80,7 +80,7 @@ class GameController(val presetName: String) : Component {
                     bLast = normalMoves.lastOrNull()
                 }
                 game.sides.forEachReal { p ->
-                    p.sendLastMoves(game.board.fullmoveCounter + 1u, wLast, bLast, game.variant.localMoveFormatter)
+                    p.sendLastMoves(game.board.fullmoveCounter + 1, wLast, bLast, game.variant.localMoveFormatter)
                 }
             }
         }

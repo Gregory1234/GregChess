@@ -14,10 +14,10 @@ object ThreeChecks : ChessVariant(), Registering {
 
     @Serializable
     class CheckCounter private constructor(
-        val limit: UInt,
-        @SerialName("checks") internal val checks_: MutableByColor<UInt>
+        val limit: Int,
+        @SerialName("checks") internal val checks_: MutableByColor<Int>
     ) : Component {
-        constructor(limit: UInt) : this(limit, mutableByColor(0u))
+        constructor(limit: Int) : this(limit, mutableByColor(0))
 
         override val type get() = CHECK_COUNTER
 
@@ -28,7 +28,7 @@ object ThreeChecks : ChessVariant(), Registering {
             this.game = game
         }
 
-        val check: ByColor<UInt> get() = byColor { checks_[it] }
+        val check: ByColor<Int> get() = byColor { checks_[it] }
 
         fun registerCheck(color: Color) {
             checks_[color]++

@@ -5,7 +5,7 @@ import gregc.gregchess.chess.piece.*
 
 interface ChessboardView : PieceHolderView<BoardPiece> {
     operator fun get(pos: Pos): BoardPiece?
-    fun getFlags(pos: Pos): Map<ChessFlag, UInt>
+    fun getFlags(pos: Pos): Map<ChessFlag, Int>
     fun hasActiveFlag(pos: Pos, flag: ChessFlag): Boolean = getFlags(pos)[flag]?.let(flag.isActive) ?: false
     fun kingOf(color: Color) = piecesOf(color).firstOrNull { it.type == PieceType.KING }
     fun getMoves(pos: Pos): List<Move>

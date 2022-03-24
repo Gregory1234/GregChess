@@ -54,9 +54,9 @@ fun Player.sendPGN(pgn: PGN) {
     })
 }
 
-fun Player.sendLastMoves(num: UInt, wLast: Move?, bLast: Move?, formatter: MoveFormatter) {
+fun Player.sendLastMoves(num: Int, wLast: Move?, bLast: Move?, formatter: MoveFormatter) {
     sendMessage(buildString {
-        append(num - 1u)
+        append(num - 1)
         append(". ")
         wLast?.let { append(formatter.format(it)) }
         append("  | ")

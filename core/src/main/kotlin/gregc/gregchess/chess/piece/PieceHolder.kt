@@ -85,7 +85,7 @@ fun <P : PlacedPiece> PieceHolder<P>.multiMove(callEvent: PieceEventCaller, vara
 }
 
 interface BoardPieceHolder : PieceHolder<BoardPiece>, ChessboardView {
-    fun addFlag(pos: Pos, flag: ChessFlag, age: UInt = 0u)
+    fun addFlag(pos: Pos, flag: ChessFlag, age: Int = 0)
     override fun exists(p: BoardPiece) = super.exists(p)
     override fun canExist(p: BoardPiece) = super.canExist(p)
 }

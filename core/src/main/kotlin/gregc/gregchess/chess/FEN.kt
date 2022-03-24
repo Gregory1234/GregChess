@@ -10,8 +10,8 @@ data class FEN(
     val currentTurn: Color = Color.WHITE,
     val castlingRights: ByColor<List<Int>> = byColor(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
-    val halfmoveClock: UInt = 0u,
-    val fullmoveCounter: UInt = 1u,
+    val halfmoveClock: Int = 0,
+    val fullmoveCounter: Int = 1,
     val chess960: Boolean = false
 ) {
 
@@ -129,8 +129,8 @@ data class FEN(
                     parseCastlingRights(board.split("/").last(), castling.filter { it.isLowerCase() })
                 ),
                 if (enPassant == "-") null else Pos.parseFromString(enPassant),
-                halfmove.toUInt(),
-                fullmove.toUInt(),
+                halfmove.toInt(),
+                fullmove.toInt(),
                 detectChess960(board, castling)
             )
         } catch (e : IllegalArgumentException) {

@@ -64,7 +64,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                         startsBlockingExactly(target)
                         hasExtraTraitsExactly(MoveTraitType.TARGET, MoveTraitType.FLAG)
                         targets(target)
-                        createsFlagsExactly(mid to (ChessFlag.EN_PASSANT to 0u))
+                        createsFlagsExactly(mid to (ChessFlag.EN_PASSANT to 0))
                         isNamed(target.toString())
                     }
                 }

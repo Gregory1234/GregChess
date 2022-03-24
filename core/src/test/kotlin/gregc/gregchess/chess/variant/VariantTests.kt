@@ -34,7 +34,7 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     }
 
     protected fun Chessboard.addEnPassantFlag(pos: Pos) {
-        addFlag(pos, ChessFlag.EN_PASSANT, 1u)
+        addFlag(pos, ChessFlag.EN_PASSANT, 1)
         updateMoves()
     }
 
@@ -59,7 +59,7 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     protected fun Assert<Move>.requiresFlagsExactly(vararg flags: Pair<Pos, ChessFlag>) =
         trait(MoveTraitType.REQUIRE_FLAG).prop(RequireFlagTrait::flags).transform { it.toList().flatMap { (k,v) -> v.map { f -> k to f } } }.containsExactlyInAnyOrder(*flags)
 
-    protected fun Assert<Move>.createsFlagsExactly(vararg flags: Pair<Pos, Pair<ChessFlag, UInt>>) =
+    protected fun Assert<Move>.createsFlagsExactly(vararg flags: Pair<Pos, Pair<ChessFlag, Int>>) =
         trait(MoveTraitType.FLAG).prop(FlagTrait::flags).transform { it.toList().flatMap { (k,v) -> v.map { (f, a) -> k to (f to a) } } }.containsExactlyInAnyOrder(*flags)
 
     protected fun Assert<Move>.promotesTo(vararg promotions: Piece) =

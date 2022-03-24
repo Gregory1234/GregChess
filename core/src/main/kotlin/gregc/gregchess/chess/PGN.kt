@@ -20,18 +20,18 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
 
     private class MoveTree(
         private val initial: Color,
-        private val initialMove: UInt,
+        private val initialMove: Int,
         private val moves: List<String>,
         private val result: String?
     ) {
         override fun toString() = buildString {
-            val indexShift = if (initial == Color.WHITE) (initialMove * 2u - 2u) else (initialMove * 2u - 1u)
+            val indexShift = if (initial == Color.WHITE) (initialMove * 2 - 2) else (initialMove * 2 - 1)
             if (initial == Color.BLACK) {
                 append(initialMove, ". ")
             }
             for ((index, moveData) in moves.withIndex()) {
                 if (index % 2 == 0)
-                    append((index.toUInt() + indexShift).div(2u) + 1u, ". ")
+                    append((index.toInt() + indexShift).div(2) + 1, ". ")
                 append(moveData, " ")
                 if (index % 2 == 1)
                     append("\n")

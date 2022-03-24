@@ -53,7 +53,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         }
         BukkitComponentType.RENDERER.registerSettings { BukkitRenderer() }
         BukkitComponentType.GAME_CONTROLLER.registerSettings { GameController(presetName) }
-        ThreeChecks.CHECK_COUNTER.registerSettings { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3).toUInt()) }
+        ThreeChecks.CHECK_COUNTER.registerSettings { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3)) }
     }
 
     private fun hookComponents() {

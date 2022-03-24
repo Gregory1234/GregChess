@@ -21,7 +21,7 @@ data class Move(
     fun execute(env: MoveEnvironment) {
         val completedTraits = mutableListOf<MoveTrait>()
         val remainingTraits = traits.toMutableList()
-        for (pass in 0u..255u) {
+        repeat(256) {
             remainingTraits.removeIf { mt ->
                 if (remainingTraits.any { it.type in mt.shouldComeBefore })
                     false
@@ -59,7 +59,7 @@ data class Move(
     fun undo(env: MoveEnvironment) {
         val completedTraits = mutableListOf<MoveTrait>()
         val remainingTraits = traits.toMutableList()
-        for (pass in 0u..255u) {
+        repeat(256) {
             remainingTraits.removeIf { mt ->
                 if (remainingTraits.any { it.type in mt.shouldComeAfter })
                     false

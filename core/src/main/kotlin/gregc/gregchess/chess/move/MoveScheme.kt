@@ -118,7 +118,7 @@ fun pawnMovement(piece: BoardPiece, canDouble: (BoardPiece) -> Boolean = { !it.h
                 Move(
                     PieceTracker(piece), forward2,
                     setOf(pos), setOf(forward2), setOf(forward, forward2), setOf(forward, forward2), false,
-                    listOf(TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait(), FlagTrait(mapOf(forward to mapOf(ChessFlag.EN_PASSANT to 0u))))
+                    listOf(TargetTrait(forward2), DefaultHalfmoveClockTrait(), CheckTrait(), FlagTrait(mapOf(forward to mapOf(ChessFlag.EN_PASSANT to 0))))
                 )
             )
         }

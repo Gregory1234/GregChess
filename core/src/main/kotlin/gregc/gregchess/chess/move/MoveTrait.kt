@@ -96,13 +96,13 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
     override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE)
 
-    private var halfmoveClock: UInt = 0u
+    private var halfmoveClock: Int = 0
 
     override fun execute(env: MoveEnvironment, move: Move) {
         val board = env.board ?: return
         halfmoveClock = board.halfmoveClock
         if (move.main.type == PieceType.PAWN || move.captureTrait?.captureSuccess != true) {
-            board.halfmoveClock = 0u
+            board.halfmoveClock = 0
         } else {
             board.halfmoveClock++
         }
@@ -163,7 +163,7 @@ class RequireFlagTrait(val flags: Map<Pos, Set<ChessFlag>>) : MoveTrait {
 val Move.requireFlagTrait get() = get(MoveTraitType.REQUIRE_FLAG)
 
 @Serializable
-class FlagTrait(val flags: Map<Pos, Map<ChessFlag, UInt>>) : MoveTrait {
+class FlagTrait(val flags: Map<Pos, Map<ChessFlag, Int>>) : MoveTrait {
     override val type get() = MoveTraitType.FLAG
 
     override fun execute(env: MoveEnvironment, move: Move) {
