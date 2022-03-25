@@ -85,6 +85,7 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
+    @Suppress("UNUSED_PARAMETER")
     fun onPiecePlayerAction(e: PiecePlayerActionEvent) = redrawFloor()
 
     private fun choosePlacePos(pos: Pos, block: PieceBlock): BlockPos {

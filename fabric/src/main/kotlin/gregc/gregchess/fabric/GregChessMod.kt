@@ -8,12 +8,13 @@ import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
 import net.fabricmc.loader.impl.entrypoint.EntrypointUtils
-import net.minecraft.block.*
+import net.minecraft.block.AbstractBlock
+import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.datafixer.TypeReferences
-import net.minecraft.item.*
+import net.minecraft.item.BlockItem
+import net.minecraft.item.ItemGroup
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.util.Util
 import net.minecraft.util.registry.Registry
@@ -31,32 +32,30 @@ object GregChessMod : ModInitializer {
     }
 
     @JvmField
-    val CHESSBOARD_FLOOR_BLOCK: Block = ChessboardFloorBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
+    val CHESSBOARD_FLOOR_BLOCK = ChessboardFloorBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
     @JvmField
-    val CHESSBOARD_FLOOR_BLOCK_ITEM: Item = BlockItem(CHESSBOARD_FLOOR_BLOCK, FabricItemSettings().group(CHESS_GROUP))
+    val CHESSBOARD_FLOOR_BLOCK_ITEM = BlockItem(CHESSBOARD_FLOOR_BLOCK, FabricItemSettings().group(CHESS_GROUP))
 
     @JvmField
-    val CHESSBOARD_FLOOR_ENTITY_TYPE: BlockEntityType<*> =
+    val CHESSBOARD_FLOOR_ENTITY_TYPE: BlockEntityType<ChessboardFloorBlockEntity> =
         BlockEntityType.Builder.create(::ChessboardFloorBlockEntity, CHESSBOARD_FLOOR_BLOCK)
             .build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chessboard_floor"))
 
     @JvmField
-    val CHESS_CONTROLLER_BLOCK: Block = ChessControllerBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
+    val CHESS_CONTROLLER_BLOCK = ChessControllerBlock(AbstractBlock.Settings.copy(Blocks.GLASS))
     @JvmField
-    val CHESS_CONTROLLER_ITEM: Item = BlockItem(CHESS_CONTROLLER_BLOCK, FabricItemSettings().group(CHESS_GROUP))
+    val CHESS_CONTROLLER_ITEM = BlockItem(CHESS_CONTROLLER_BLOCK, FabricItemSettings().group(CHESS_GROUP))
 
     @JvmField
-    val CHESS_CONTROLLER_ENTITY_TYPE: BlockEntityType<*> =
+    val CHESS_CONTROLLER_ENTITY_TYPE: BlockEntityType<ChessControllerBlockEntity> =
         BlockEntityType.Builder.create(::ChessControllerBlockEntity, CHESS_CONTROLLER_BLOCK)
             .build(Util.getChoiceType(TypeReferences.BLOCK_ENTITY, "chess_controller"))
 
     @JvmField
-    val CHESS_CONTROLLER_SCREEN_HANDLER_TYPE: ScreenHandlerType<ChessControllerGuiDescription> =
-        ScreenHandlerRegistry.registerSimple(ident("chess_controller"), ::ChessControllerGuiDescription)
+    val CHESS_CONTROLLER_SCREEN_HANDLER_TYPE = ScreenHandlerType(::ChessControllerGuiDescription)
 
     @JvmField
-    val PROMOTION_MENU_HANDLER_TYPE: ScreenHandlerType<PromotionMenuGuiDescription> =
-        ScreenHandlerRegistry.registerSimple(ident("promotion_menu"), ::PromotionMenuGuiDescription)
+    val PROMOTION_MENU_HANDLER_TYPE = ScreenHandlerType(::PromotionMenuGuiDescription)
 
     override fun onInitialize() {
 
@@ -68,6 +67,9 @@ object GregChessMod : ModInitializer {
         Registry.register(Registry.BLOCK, ident("chess_controller"), CHESS_CONTROLLER_BLOCK)
         Registry.register(Registry.ITEM, ident("chess_controller"), CHESS_CONTROLLER_ITEM)
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("chess_controller"), CHESS_CONTROLLER_ENTITY_TYPE)
+
+        Registry.register(Registry.SCREEN_HANDLER, ident("chess_controller"), CHESS_CONTROLLER_SCREEN_HANDLER_TYPE)
+        Registry.register(Registry.SCREEN_HANDLER, ident("promotion_menu"), PROMOTION_MENU_HANDLER_TYPE)
 
         ServerLifecycleEvents.SERVER_STARTING.register {
             ChessGameManager.server = it
