@@ -39,15 +39,15 @@ fun World.moveBlock(pos: BlockPos, drop: Boolean): Boolean {
     } else {
         val fluidState = getFluidState(pos)
         if (blockState.block !is AbstractFireBlock) {
-            this.syncWorldEvent(2001, pos, Block.getRawIdFromState(blockState))
+            syncWorldEvent(2001, pos, Block.getRawIdFromState(blockState))
         }
         if (drop) {
             val blockEntity = if (blockState.hasBlockEntity()) this.getBlockEntity(pos) else null
             Block.dropStacks(blockState, this, pos, blockEntity, null, ItemStack.EMPTY)
         }
-        val bl = this.setBlockState(pos, fluidState.blockState, 67, 512)
+        val bl = setBlockState(pos, fluidState.blockState, Block.NOTIFY_ALL or Block.MOVED, 512)
         if (bl) {
-            this.emitGameEvent(null, GameEvent.BLOCK_DESTROY, pos)
+            emitGameEvent(null, GameEvent.BLOCK_DESTROY, pos)
         }
         bl
     }
@@ -56,6 +56,20 @@ fun World.moveBlock(pos: BlockPos, drop: Boolean): Boolean {
 fun NbtCompound.ensureNotEmpty() = apply {
     if (isEmpty)
         putBoolean("empty", true)
+}
+
+fun NbtCompound.contains(key: String, type: Byte) = contains(key, type.toInt())
+
+fun NbtCompound.getLongOrNull(key: String): Long? = if (contains(key, NbtCompound.LONG_TYPE)) getLong(key) else null
+
+fun NbtCompound.putLongOrNull(key: String, value: Long?) {
+    value?.let { putLong(key, it) }
+}
+
+fun NbtCompound.getUuidOrNull(key: String): UUID? = if (containsUuid(key)) getUuid(key) else null
+
+fun NbtCompound.putUuidOrNull(key: String, value: UUID?) {
+    value?.let { putUuid(key, it) }
 }
 
 class BlockEntityDirtyDelegate<T>(var value: T) : ReadWriteProperty<BlockEntity, T> {

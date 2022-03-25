@@ -53,22 +53,14 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     private val selfRef = BlockReference(ChessControllerBlockEntity::class, { this.pos }, { world })
 
     override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-
-        chessboardStartPos?.let {
-            nbt.putLong("ChessboardStart", it.asLong())
-        }
-        currentGame?.let {
-            nbt.putUuid("GameUUID", it.uuid)
-        }
+        nbt.putLongOrNull("ChessboardStart", chessboardStartPos?.asLong())
+        nbt.putUuidOrNull("GameUUID", currentGame?.uuid)
         Inventories.writeNbt(nbt, items)
     }
 
     override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-
-        chessboardStartPos = if (nbt.contains("ChessboardStart", 4)) BlockPos.fromLong(nbt.getLong("ChessboardStart")) else null
-        currentGameUUID = if (nbt.containsUuid("GameUUID")) nbt.getUuid("GameUUID") else null
+        chessboardStartPos = nbt.getLongOrNull("ChessboardStart")?.let(BlockPos::fromLong)
+        currentGameUUID = nbt.getUuidOrNull("GameUUID")
         Inventories.readNbt(nbt, items)
     }
 

@@ -1,11 +1,11 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.chess.*
+import gregc.gregchess.chess.DrawEndReason
+import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.fabric.chess.component.FabricComponentType
 import gregc.gregchess.fabric.chess.player.FabricPlayerType
-import gregc.gregchess.rangeTo
 import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.AutoRegister
 import gregc.gregchess.registry.Register
@@ -36,7 +36,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
             registerAll<FabricPlayerType>()
         }
         registerPieceBlocks()
-        KingOfTheHill.registerSimpleFloorRenderer((Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
+        KingOfTheHill.registerSimpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
     }
 
 }

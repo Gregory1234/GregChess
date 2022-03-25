@@ -44,3 +44,7 @@ val ChessVariant.floorRenderer: ChessFloorRenderer
     get() = FabricRegistry.FLOOR_RENDERER[this]
 
 val GameResults.text: Text get() = TranslatableText("end_reason.${endReason.module.namespace}.${endReason.name}", *args.toTypedArray())
+
+fun Pos.toLong() = (file.toLong() shl 32) or rank.toLong()
+
+fun Pos.Companion.fromLong(v: Long) = Pos((v shr 32).toInt(), v.toInt())

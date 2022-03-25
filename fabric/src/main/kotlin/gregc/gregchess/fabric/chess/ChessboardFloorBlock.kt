@@ -22,28 +22,18 @@ import net.minecraft.world.World
 class ChessboardFloorBlockEntity(pos: BlockPos?, state: BlockState?) : BlockEntity(GregChessMod.CHESSBOARD_FLOOR_ENTITY_TYPE, pos, state) {
     private var chessControllerBlockPos: BlockPos? by BlockEntityDirtyDelegate(null)
     var boardPos: Pos? by BlockEntityDirtyDelegate(null)
+        private set
 
     val chessControllerBlock = BlockReference(ChessControllerBlockEntity::class, { chessControllerBlockPos }, { world })
 
     override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        chessControllerBlockPos?.let {
-            nbt.putLong("Controller", it.asLong())
-        }
-        boardPos?.let {
-            nbt.putLong("Pos", ((it.file.toLong() shl 32) or (it.rank.toLong() and 0xFFFFFFFFL)))
-        }
+        nbt.putLongOrNull("Controller", chessControllerBlockPos?.asLong())
+        nbt.putLongOrNull("Pos", boardPos?.toLong())
     }
 
     override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-
-        chessControllerBlockPos = if (nbt.contains("Controller", 4)) BlockPos.fromLong(nbt.getLong("Controller")) else null
-
-        boardPos = if (nbt.contains("Pos", 4)) {
-            val v = nbt.getLong("Pos")
-            Pos((v shr 32).toInt(), v.toInt())
-        } else null
+        chessControllerBlockPos = nbt.getLongOrNull("Controller")?.let(BlockPos::fromLong)
+        boardPos = nbt.getLongOrNull("Pos")?.let(Pos::fromLong)
     }
 
     fun updateFloor(floor: Floor = boardPos?.let { if ((it.rank + it.file) % 2 == 0) Floor.DARK else Floor.LIGHT } ?: Floor.INACTIVE) {

@@ -5,11 +5,9 @@ import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.chess.FEN
-import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.chess.variant.ThreeChecks
-import gregc.gregchess.rangeTo
 import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.AutoRegister
 import kotlin.time.Duration
@@ -75,7 +73,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         }
         hookComponents()
         registerSettings()
-        KingOfTheHill.registerSimpleFloorRenderer((Pair(3, 3)..Pair(4, 4)).map { (x,y) -> Pos(x,y) })
+        KingOfTheHill.registerSimpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
         registerStatsProvider("yaml", ::YamlChessStats)
     }
 }

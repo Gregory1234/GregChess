@@ -138,7 +138,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
     }
 
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
-        world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), 3)
+        world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), Block.NOTIFY_ALL)
         if (!world.isClient()) {
             val floor = getFloor(world, pos, state) ?: return
             floor.chessControllerBlock.entity?.currentGame?.finishMove(phantomSpawn(BoardPiece(floor.boardPos!!, piece, false)))
@@ -183,7 +183,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
             val blockPos = pos.down()
             val blockState = world.getBlockState(blockPos)
             if (blockState.isOf(state.block) && blockState.get(HALF) == DoubleBlockHalf.LOWER) {
-                world.setBlockState(blockPos, Blocks.AIR.defaultState, 35)
+                world.setBlockState(blockPos, Blocks.AIR.defaultState, NOTIFY_ALL or SKIP_DROPS)
                 world.syncWorldEvent(player, 2001, blockPos, getRawIdFromState(blockState))
             }
         }
