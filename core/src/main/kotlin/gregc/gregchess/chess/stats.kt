@@ -64,7 +64,7 @@ class ChessStat<T : Any>(val serializer: KSerializer<T>, @JvmField val aggregate
     @RegisterAll(ChessStat::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(ChessStat::class) { m, n, _ -> register(m, n) }
+        internal val AUTO_REGISTER = AutoRegisterType(ChessStat::class) { m, n, _ -> Registry.STAT[m, n] = this }
 
         fun intStat() = ChessStat(Int.serializer(), Collection<Int>::sum)
         fun durationStat() = ChessStat(DurationSerializer) { it.reduceOrNull(Duration::plus) ?: Duration.ZERO }

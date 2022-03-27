@@ -14,7 +14,10 @@ import org.bukkit.potion.PotionEffectType
 class NoFreeArenasException : NoSuchElementException("No free arenas")
 
 object ArenaManagers {
-    internal val AUTO_REGISTER = AutoRegisterType(ArenaManager::class) { m, n, _ -> register(m, n); (this as? Registering)?.registerAll(m) }
+    internal val AUTO_REGISTER = AutoRegisterType(ArenaManager::class) { m, n, _ ->
+        BukkitRegistry.ARENA_MANAGER[m, n] = this
+        (this as? Registering)?.registerAll(m)
+    }
 
     @JvmField
     @Register

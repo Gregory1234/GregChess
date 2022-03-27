@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
+import gregc.gregchess.rangeTo
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -152,7 +153,7 @@ class ChessFlag(@JvmField val isActive: (Int) -> Boolean) : NameRegistered {
     @RegisterAll(ChessFlag::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { m, n, _ -> register(m, n) }
+        internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { m, n, _ -> Registry.FLAG[m, n] = this }
 
         @JvmField
         val EN_PASSANT = ChessFlag { it == 1 }

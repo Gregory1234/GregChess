@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.move
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
+import gregc.gregchess.SelfType
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.board
 import gregc.gregchess.chess.piece.*
@@ -37,7 +38,7 @@ class MoveTraitType<T : MoveTrait>(val serializer: KSerializer<T>): NameRegister
     @RegisterAll(MoveTraitType::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(MoveTraitType::class) { m, n, _ -> register(m, n) }
+        internal val AUTO_REGISTER = AutoRegisterType(MoveTraitType::class) { m, n, _ -> Registry.MOVE_TRAIT_TYPE[m, n] = this }
 
         @JvmField
         val HALFMOVE_CLOCK = MoveTraitType(DefaultHalfmoveClockTrait.serializer())

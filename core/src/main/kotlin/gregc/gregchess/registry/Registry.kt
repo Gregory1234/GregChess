@@ -166,6 +166,7 @@ class ConnectedRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, K>
     override val values: Collection<T>
         get() = blocks.flatMap { b -> b.value.values }
 
+    operator fun set(key: K, value: T) = set(getKeyModule(key), key, value)
 }
 
 
@@ -207,6 +208,7 @@ class ConnectedBiRegistry<K, T>(name: String, val base: FiniteBiRegistryView<*, 
 
     override fun getOrNull(value: T): RegistryKey<K>? = valueEntries[value]
 
+    operator fun set(key: K, value: T) = set(getKeyModule(key), key, value)
 }
 
 class ConnectedSetRegistry<E>(name: String, val base: FiniteBiRegistryView<*, E>) : Registry<E, Unit, ConnectedSetRegistry<E>.Block>(name), FiniteSplitRegistryView<E, Unit> {
@@ -241,6 +243,12 @@ class ConnectedSetRegistry<E>(name: String, val base: FiniteBiRegistryView<*, E>
         get() = blocks.flatMap { b -> b.value.keys.map { RegistryKey(b.key, it) } }.toSet()
 
     override val values: Collection<Unit> get() = simpleKeys.map { }
+
+    fun add(key: E) = set(getKeyModule(key), key, Unit)
+
+    operator fun plusAssign(key: E) = add(key)
+
+    operator fun contains(key: E) = get(getKeyModule(key)).contains(key)
 }
 
 class ConstantRegistry<E>(name: String) : Registry<Unit, E, ConstantRegistry<E>.Block>(name) {
@@ -271,4 +279,6 @@ class ConstantRegistry<E>(name: String) : Registry<Unit, E, ConstantRegistry<E>.
         get() = blocks.flatMap { b -> b.value.keys.map { RegistryKey(b.key, it) } }.toSet()
 
     override val values: Collection<E> get() = blocks.values.flatMap { it.values }
+
+    operator fun set(module: ChessModule, value: E) = get(module).set(value)
 }

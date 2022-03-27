@@ -9,6 +9,7 @@ import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
 import gregc.gregchess.fabric.chess.player.FabricChessSide
 import gregc.gregchess.registry.*
+import net.minecraft.item.Item
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
@@ -16,7 +17,7 @@ import net.minecraft.util.Identifier
 val NameRegistered.id get() = Identifier(module.namespace, name)
 
 val Piece.block get() = FabricRegistry.PIECE_BLOCK[this]
-val Piece.item get() = FabricRegistry.PIECE_ITEM[this]
+val Piece.item: Item get() = block.asItem()
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
     val heldPiece = (currentSide as? FabricChessSide)?.held

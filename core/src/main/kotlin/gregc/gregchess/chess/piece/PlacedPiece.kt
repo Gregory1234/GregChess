@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.piece
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
+import gregc.gregchess.SelfType
 import gregc.gregchess.chess.Color
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.move.ChessboardView
@@ -19,7 +20,7 @@ class PlacedPieceType<P : PlacedPiece, H : PieceHolder<P>>(val serializer: KSeri
 
     @RegisterAll(PlacedPieceType::class)
     companion object {
-        internal val AUTO_REGISTER = AutoRegisterType(PlacedPieceType::class) { m, n, _ -> register(m, n) }
+        internal val AUTO_REGISTER = AutoRegisterType(PlacedPieceType::class) { m, n, _ -> Registry.PLACED_PIECE_TYPE[m, n] = this }
 
         @JvmField
         val BOARD = PlacedPieceType<BoardPiece, BoardPieceHolder>(BoardPiece.serializer())

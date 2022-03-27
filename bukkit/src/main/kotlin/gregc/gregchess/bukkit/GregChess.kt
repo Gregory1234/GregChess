@@ -24,7 +24,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         }
 
     private fun registerSettings() {
-        ComponentType.CHESSBOARD.registerSettings {
+        BukkitRegistry.SETTINGS_PARSER[ComponentType.CHESSBOARD] = {
             val simpleCastling = section.getBoolean("SimpleCastling", false)
             when(val name = section.getString("Board")) {
                 null -> Chessboard(variant, simpleCastling = simpleCastling)
@@ -41,7 +41,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
                 }
             }
         }
-        ComponentType.CLOCK.registerSettings {
+        BukkitRegistry.SETTINGS_PARSER[ComponentType.CLOCK] =  {
             SettingsManager.chooseOrParse(clockSettings, section.getString("Clock")) {
                 TimeControl.parseOrNull(it)?.let { t -> ChessClock(t) } ?: run {
                     logger.warn("Bad time control \"$it\", defaulted to none")
@@ -49,16 +49,16 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
                 }
             }
         }
-        BukkitComponentType.RENDERER.registerSettings { BukkitRenderer() }
-        BukkitComponentType.GAME_CONTROLLER.registerSettings { GameController(presetName) }
-        ThreeChecks.CHECK_COUNTER.registerSettings { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3)) }
+        BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.RENDERER] = { BukkitRenderer() }
+        BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.GAME_CONTROLLER] = { GameController(presetName) }
+        BukkitRegistry.SETTINGS_PARSER[ThreeChecks.CHECK_COUNTER] = { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3)) }
     }
 
     private fun hookComponents() {
         for (c in listOf(ComponentType.CHESSBOARD, ComponentType.CLOCK, BukkitComponentType.GAME_CONTROLLER,
             BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.RENDERER,
             BukkitComponentType.EVENT_RELAY, BukkitComponentType.ADAPTER)) {
-            c.registerHooked()
+            BukkitRegistry.HOOKED_COMPONENTS += c
         }
     }
 
@@ -73,7 +73,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         }
         hookComponents()
         registerSettings()
-        KingOfTheHill.registerSimpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
-        registerStatsProvider("yaml", ::YamlChessStats)
+        BukkitRegistry.FLOOR_RENDERER[KingOfTheHill] = simpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
+        BukkitRegistry.CHESS_STATS_PROVIDER["yaml"] = ::YamlChessStats
     }
 }

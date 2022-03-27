@@ -17,7 +17,7 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack
 
-val ChessModule.plugin get() = get(BukkitRegistry.BUKKIT_PLUGIN).get()
+val ChessModule.plugin get() = BukkitRegistry.BUKKIT_PLUGIN[this].get()
 val ChessModule.config get() = plugin.config
 
 val Color.configName get() = name.snakeToPascal()
@@ -126,7 +126,7 @@ fun ChessGame.getInfo() = textComponent {
 }
 
 val EndReason<*>.quick
-    get() = this in module[BukkitRegistry.QUICK_END_REASONS]
+    get() = this in BukkitRegistry.QUICK_END_REASONS
 
 val GameResults.name
     get() = endReason.module.config

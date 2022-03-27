@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.ChessModule
+import gregc.gregchess.SelfType
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.ChessListener
 import gregc.gregchess.registry.*
@@ -21,7 +22,10 @@ class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
     @RegisterAll(ComponentType::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(ComponentType::class) { m, n, _ -> register(m, n); (cl.companionObjectInstance as? Registering)?.registerAll(m) }
+        internal val AUTO_REGISTER = AutoRegisterType(ComponentType::class) { m, n, _ ->
+            Registry.COMPONENT_TYPE[m, n] = this
+            (cl.companionObjectInstance as? Registering)?.registerAll(m)
+        }
 
         @JvmField
         val CHESSBOARD = ComponentType(Chessboard::class)

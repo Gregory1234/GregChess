@@ -2,7 +2,6 @@ package gregc.gregchess.chess.player
 
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Color
-import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -22,7 +21,7 @@ class ChessPlayerType<P: Any>(
     fun of(data: P) = ChessPlayer(this, data)
 
     companion object {
-        internal val AUTO_REGISTER = AutoRegisterType(ChessPlayerType::class) { m, n, _ -> register(m, n) }
+        internal val AUTO_REGISTER = AutoRegisterType(ChessPlayerType::class) { m, n, _ -> Registry.PLAYER_TYPE[m, n] = this }
     }
 }
 

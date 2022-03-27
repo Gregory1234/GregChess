@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.register
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
@@ -63,7 +62,7 @@ class EndReason<@Suppress("UNUSED") R : GameScore>(val type: Type) : NameRegiste
     @RegisterAll(EndReason::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, _ -> register(m, n) }
+        internal val AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, _ -> Registry.END_REASON[m, n] = this }
 
         @JvmField
         val CHECKMATE = DetEndReason(Type.NORMAL)

@@ -6,6 +6,7 @@ import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.fabric.chess.component.FabricComponentType
 import gregc.gregchess.fabric.chess.player.FabricPlayerType
+import gregc.gregchess.fabric.chess.simpleFloorRenderer
 import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.AutoRegister
 import gregc.gregchess.registry.Register
@@ -20,12 +21,12 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
     val ABORTED = DrawEndReason(EndReason.Type.EMERGENCY)
 
     private fun registerPieceBlocks() {
-        PieceType.PAWN.registerShortPieceBlock()
-        PieceType.KNIGHT.registerTallPieceBlock(Rarity.UNCOMMON)
-        PieceType.BISHOP.registerTallPieceBlock(Rarity.UNCOMMON)
-        PieceType.ROOK.registerTallPieceBlock(Rarity.RARE)
-        PieceType.QUEEN.registerTallPieceBlock(Rarity.RARE)
-        PieceType.KING.registerTallPieceBlock(Rarity.EPIC)
+        FabricRegistry.PIECE_BLOCK[PieceType.PAWN] = PieceType.PAWN.shortPieceBlocks()
+        FabricRegistry.PIECE_BLOCK[PieceType.KNIGHT] = PieceType.KNIGHT.tallPieceBlocks(Rarity.UNCOMMON)
+        FabricRegistry.PIECE_BLOCK[PieceType.BISHOP] = PieceType.BISHOP.tallPieceBlocks(Rarity.UNCOMMON)
+        FabricRegistry.PIECE_BLOCK[PieceType.ROOK] = PieceType.ROOK.tallPieceBlocks(Rarity.RARE)
+        FabricRegistry.PIECE_BLOCK[PieceType.QUEEN] = PieceType.QUEEN.tallPieceBlocks(Rarity.RARE)
+        FabricRegistry.PIECE_BLOCK[PieceType.KING] = PieceType.KING.tallPieceBlocks(Rarity.EPIC)
     }
 
     override fun load() {
@@ -36,7 +37,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
             registerAll<FabricPlayerType>()
         }
         registerPieceBlocks()
-        KingOfTheHill.registerSimpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
+        FabricRegistry.FLOOR_RENDERER[KingOfTheHill] = simpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
     }
 
 }
