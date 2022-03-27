@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric
 
+import gregc.gregchess.GregChessCore
 import gregc.gregchess.chess.DrawEndReason
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.piece.PieceType
@@ -7,7 +8,6 @@ import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.fabric.chess.component.FabricComponentType
 import gregc.gregchess.fabric.chess.player.FabricPlayerType
 import gregc.gregchess.fabric.chess.simpleFloorRenderer
-import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.AutoRegister
 import gregc.gregchess.registry.Register
 import net.minecraft.util.Rarity
@@ -30,7 +30,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
     }
 
     override fun load() {
-        registerGregChessCore(this)
+        GregChessCore.registerAll(this)
         AutoRegister(this, AutoRegister.basicTypes).apply {
             registerAll<FabricComponentType>()
             registerAll<GregChess>()

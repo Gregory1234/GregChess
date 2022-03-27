@@ -4,7 +4,6 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.rangeTo
 import kotlinx.serialization.*
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -361,10 +360,17 @@ class Chessboard private constructor (
 
     companion object {
 
-        private fun FEN.toSquares(variant: ChessVariant): Map<Pos, Square> = toPieces(variant).mapValues { (pos, piece) ->
-            Square(piece, if (pos == enPassantSquare) mutableMapOf(ChessFlag.EN_PASSANT to mutableListOf(1)) else mutableMapOf())
-        }.let {
-            (Pair(0, 0)..Pair(7, 7)).associate { (i, j) -> Pos(i, j) to (it[Pos(i, j)] ?: Square()) }
+        private fun FEN.toSquares(variant: ChessVariant): Map<Pos, Square> {
+            val pieces = toPieces(variant)
+            return buildMap {
+                for (i in 0 until 8)
+                    for (j in 0 until 8) {
+                        val pos = Pos(i, j)
+                        val piece = pieces[pos]
+                        val flags = if (pos == enPassantSquare) mutableMapOf(ChessFlag.EN_PASSANT to mutableListOf(1)) else mutableMapOf()
+                        put(pos, Square(piece, flags))
+                    }
+            }
         }
 
     }

@@ -1,12 +1,12 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ChessModule
+import gregc.gregchess.GregChessCore
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.*
 import io.mockk.clearMocks
 import io.mockk.spyk
@@ -92,7 +92,7 @@ object GregChess : ChessModule("GregChess", "gregchess") {
     }
 
     override fun load() {
-        registerGregChessCore(this)
+        GregChessCore.registerAll(this)
 
         AutoRegister(this, AutoRegister.basicTypes).registerAll<GregChess>()
         finished = true

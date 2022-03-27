@@ -7,7 +7,6 @@ import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.chess.component.FabricRenderer
 import gregc.gregchess.fabric.chess.player.gregchess
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
-import gregc.gregchess.rangeTo
 import gregc.gregchess.registry.Registry
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
@@ -113,9 +112,14 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     val floorBlockEntities
         get() = chessboardStartPos?.let { st ->
-            (Pair(0, 0)..Pair(8 * 3 - 1, 8 * 3 - 1)).mapNotNull { (i, j) ->
-                world?.getBlockEntity(st.offset(Direction.Axis.X, i).offset(Direction.Axis.Z, j))
-            }.filterIsInstance<ChessboardFloorBlockEntity>()
+            buildList {
+                for (i in 0 until 8 * 3)
+                    for (j in 0 until 8 * 3)
+                        world?.getBlockEntity(st.offset(Direction.Axis.X, i).offset(Direction.Axis.Z, j))?.let {
+                            if (it is ChessboardFloorBlockEntity)
+                                add(it)
+                        }
+            }
         }.orEmpty()
 
     private val propertyDelegate = object : PropertyDelegate {

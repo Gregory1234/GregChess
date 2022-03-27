@@ -26,6 +26,11 @@ internal fun Listener.registerEvents() = Bukkit.getPluginManager().registerEvent
 
 internal val config: ConfigurationSection get() = GregChessPlugin.plugin.config
 
+internal fun String.pascalToSnake(): String {
+    val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
+    return camelRegex.replace(this) { "_${it.value}" }.lowercase()
+}
+
 internal object UUIDAsStringSerializer : KSerializer<UUID> {
     override val descriptor = PrimitiveSerialDescriptor("UUIDAsString", PrimitiveKind.STRING)
 

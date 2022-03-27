@@ -1,14 +1,13 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.rangeTo
 import gregc.gregchess.registry.Register
 import gregc.gregchess.registry.Registering
 
 object KingOfTheHill : ChessVariant(), Registering {
 
     @JvmField
-    val SPECIAL_SQUARES = (Pair(3,3)..Pair(4,4)).map { Pos(it.first, it.second) }
+    val SPECIAL_SQUARES = listOf(Pos(3, 3), Pos(3, 4), Pos(4, 3), Pos(4, 4))
 
     @JvmField
     @Register

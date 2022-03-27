@@ -1,7 +1,6 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.rangeTo
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -30,7 +29,12 @@ data class Pos(val file: Int, val rank: Int) {
     val fileStr get() = "${'a' + file}"
     val rankStr get() = (rank + 1).toString()
 
-    fun neighbours(): List<Pos> = (Pair(-1, -1)..Pair(1, 1)).map(::plus).filter { it.isValid() } - this
+    fun neighbours(): List<Pos> = buildList {
+        for (i in file-1..file+1)
+            for (j in rank-1..rank+1)
+                if (i != file || j != rank)
+                    add(Pos(i, j))
+    }
 
     fun isValid() = file in (0..7) && rank in (0..7)
 

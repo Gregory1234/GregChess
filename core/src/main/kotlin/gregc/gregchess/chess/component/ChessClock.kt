@@ -3,13 +3,13 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.DurationSerializer
+import gregc.gregchess.between
 import gregc.gregchess.chess.*
 import kotlinx.serialization.*
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toKotlinDuration
 
 @Serializable
 data class TimeControl(
@@ -105,7 +105,7 @@ class ChessClock private constructor(
         if (stopped)
             return
         val now = Instant.now(game.environment.clock)
-        val dt = java.time.Duration.between(lastTime, now).toKotlinDuration()
+        val dt = Duration.between(lastTime, now)
         lastTime = now
         currentTurnLength_ += dt
         if (timeControl.type != TimeControl.Type.SIMPLE) {

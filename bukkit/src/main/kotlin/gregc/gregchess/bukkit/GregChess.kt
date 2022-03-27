@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit
 
+import gregc.gregchess.GregChessCore
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
@@ -8,7 +9,6 @@ import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.chess.variant.ThreeChecks
-import gregc.gregchess.registerGregChessCore
 import gregc.gregchess.registry.AutoRegister
 import kotlin.time.Duration
 
@@ -63,7 +63,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     }
 
     override fun load() {
-        registerGregChessCore(this)
+        GregChessCore.registerAll(this)
         AutoRegister(this, AutoRegister.bukkitTypes).apply {
             registerAll<Arena>()
             registerAll<ChessGameManager>()

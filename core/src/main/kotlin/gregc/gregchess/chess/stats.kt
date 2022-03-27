@@ -6,7 +6,6 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlin.time.Duration
-import kotlin.time.toKotlinDuration
 
 class AddStatsEvent(val stats: ByColor<PlayerStatsSink>) : ChessEvent
 
@@ -25,7 +24,7 @@ fun ChessGame.addStats(stats: ByColor<PlayerStatsSink>) {
     }
     stats.white.add(ChessStat.MOVES_PLAYED, board.fullmoveCounter.toInt() - 1, if (currentTurn == Color.BLACK) 1 else 0)
     stats.black.add(ChessStat.MOVES_PLAYED, board.fullmoveCounter.toInt() - 1)
-    stats.forEach { it.add(ChessStat.TIME_PLAYED, java.time.Duration.between(startTime!!, endTime!!).toKotlinDuration()) }
+    stats.forEach { it.add(ChessStat.TIME_PLAYED, Duration.between(startTime!!, endTime!!)) }
     callEvent(AddStatsEvent(stats))
     stats.forEach { it.commit() }
 }
