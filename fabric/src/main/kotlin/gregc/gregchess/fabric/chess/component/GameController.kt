@@ -1,10 +1,10 @@
 package gregc.gregchess.fabric.chess.component
 
-import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.fabric.chess.ChessGameManager
 import gregc.gregchess.fabric.chess.player.forEachUniqueEntity
 import gregc.gregchess.fabric.chess.player.showGameResults
+import gregc.gregchess.game.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 

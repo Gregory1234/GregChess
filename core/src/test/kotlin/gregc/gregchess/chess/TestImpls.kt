@@ -7,6 +7,7 @@ import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.game.*
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.util.Register
 import io.mockk.clearMocks

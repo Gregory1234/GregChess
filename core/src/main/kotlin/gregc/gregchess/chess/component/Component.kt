@@ -1,8 +1,8 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.chess.ChessGame
-import gregc.gregchess.chess.ChessListener
+import gregc.gregchess.game.ChessGame
+import gregc.gregchess.game.ChessListener
 import gregc.gregchess.registry.*
 import gregc.gregchess.util.*
 import kotlinx.serialization.*
@@ -57,3 +57,8 @@ object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component
 }
 
 class ComponentNotFoundException(type: ComponentType<*>) : Exception(type.toString())
+
+interface ComponentHolder {
+    operator fun <T : Component> get(type: ComponentType<T>): T?
+    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
+}

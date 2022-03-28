@@ -6,6 +6,7 @@ import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.piece.AddPieceHoldersEvent
 import gregc.gregchess.chess.piece.PieceMoveEvent
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.game.*
 import io.mockk.*
 import kotlinx.coroutines.isActive
 import org.junit.jupiter.api.*

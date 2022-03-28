@@ -8,6 +8,7 @@ import gregc.gregchess.chess.component.Chessboard
 import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
+import gregc.gregchess.game.ChessGame
 
 open class VariantTests(val variant: ChessVariant, val extraComponents: Collection<Component> = emptyList()) {
     private val playerA = GregChess.TEST_PLAYER.of("A")

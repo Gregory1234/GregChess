@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.chess.ChessEnvironment
+import gregc.gregchess.game.ChessEnvironment
 import gregc.gregchess.registry.*
 import gregc.gregchess.registry.Registry
 import kotlinx.serialization.KSerializer

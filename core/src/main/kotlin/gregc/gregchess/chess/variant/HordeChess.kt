@@ -4,6 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceType
+import gregc.gregchess.game.ChessGame
 
 object HordeChess : ChessVariant() {
 

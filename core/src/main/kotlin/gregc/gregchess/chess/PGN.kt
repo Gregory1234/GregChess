@@ -2,6 +2,8 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.chess.component.clock
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.game.ChessEvent
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.registry.name
 import gregc.gregchess.util.snakeToPascal
 import java.time.format.DateTimeFormatter

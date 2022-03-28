@@ -1,6 +1,7 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.util.Register
 import gregc.gregchess.util.Registering
 

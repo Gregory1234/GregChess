@@ -3,6 +3,7 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.game.*
 import gregc.gregchess.util.DurationSerializer
 import gregc.gregchess.util.between
 import kotlinx.serialization.*

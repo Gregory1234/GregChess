@@ -1,8 +1,8 @@
 package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.BukkitRegistry
-import gregc.gregchess.chess.ChessEvent
 import gregc.gregchess.chess.Color
+import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.registry.NameRegistered
 import gregc.gregchess.util.AutoRegisterType
 

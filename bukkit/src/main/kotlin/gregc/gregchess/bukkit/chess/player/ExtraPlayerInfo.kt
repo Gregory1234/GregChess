@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit.chess.player
 import gregc.gregchess.bukkit.chess.ChessGameManager
 import gregc.gregchess.bukkit.chess.ResetPlayerEvent
 import gregc.gregchess.bukkit.chess.component.spectators
-import gregc.gregchess.chess.ChessGame
+import gregc.gregchess.game.ChessGame
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*

@@ -10,6 +10,7 @@ import gregc.gregchess.fabric.chess.component.*
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
 import gregc.gregchess.fabric.nbt.*
+import gregc.gregchess.game.ChessGame
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtIo
 import net.minecraft.server.MinecraftServer

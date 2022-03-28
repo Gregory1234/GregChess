@@ -1,7 +1,7 @@
 package gregc.gregchess.chess.player
 
-import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.Color
+import gregc.gregchess.game.ChessGame
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*

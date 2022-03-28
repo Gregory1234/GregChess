@@ -10,6 +10,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
 import gregc.gregchess.util.snakeToPascal

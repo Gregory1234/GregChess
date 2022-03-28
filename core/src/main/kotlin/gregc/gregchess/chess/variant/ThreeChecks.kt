@@ -6,6 +6,7 @@ import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.boardView
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.util.Register
 import gregc.gregchess.util.Registering
 import kotlinx.serialization.*

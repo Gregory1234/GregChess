@@ -7,6 +7,7 @@ import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.game.*
 import gregc.gregchess.util.MultiExceptionContext
 import gregc.gregchess.util.Register
 import kotlinx.serialization.Serializable

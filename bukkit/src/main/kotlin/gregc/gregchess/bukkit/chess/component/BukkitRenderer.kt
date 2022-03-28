@@ -6,8 +6,10 @@ import gregc.gregchess.bukkit.chess.player.PiecePlayerActionEvent
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.Color
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentHolder
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.AtomicChess
+import gregc.gregchess.game.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.*

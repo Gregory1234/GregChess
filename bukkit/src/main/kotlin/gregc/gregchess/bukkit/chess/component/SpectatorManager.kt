@@ -1,8 +1,9 @@
 package gregc.gregchess.bukkit.chess.component
 
 import gregc.gregchess.bukkit.chess.player.showGameResults
-import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentHolder
+import gregc.gregchess.game.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.entity.Player

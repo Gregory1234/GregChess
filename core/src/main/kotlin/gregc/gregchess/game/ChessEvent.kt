@@ -1,4 +1,4 @@
-package gregc.gregchess.chess
+package gregc.gregchess.game
 
 import kotlin.reflect.full.isSupertypeOf
 import kotlin.reflect.full.starProjectedType
@@ -22,3 +22,18 @@ interface ChessListener {
     }
 }
 
+enum class TurnEvent(val ending: Boolean) : ChessEvent {
+    START(false), END(true), UNDO(true)
+}
+
+enum class GameBaseEvent : ChessEvent {
+    START,
+    SYNC,
+    RUNNING,
+    UPDATE,
+    STOP,
+    PANIC,
+    CLEAR
+}
+
+class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : RuntimeException(event.toString(), cause)

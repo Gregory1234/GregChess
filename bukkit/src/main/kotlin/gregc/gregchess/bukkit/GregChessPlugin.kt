@@ -16,6 +16,7 @@ import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceRegistryView
 import gregc.gregchess.chess.player.EngineChessSide
 import gregc.gregchess.chess.player.toPlayer
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.registry.Registry
 import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.serializer

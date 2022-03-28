@@ -4,6 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.game.*
 import kotlinx.serialization.*
 import kotlin.collections.component1
 import kotlin.collections.component2

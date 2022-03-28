@@ -1,8 +1,8 @@
 package gregc.gregchess.chess.piece
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.chess.ChessEvent
 import gregc.gregchess.chess.Color
+import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
 

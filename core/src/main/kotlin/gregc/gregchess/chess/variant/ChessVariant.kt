@@ -4,6 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.registry.*
 import gregc.gregchess.util.rotationsOf
 import kotlinx.serialization.Serializable

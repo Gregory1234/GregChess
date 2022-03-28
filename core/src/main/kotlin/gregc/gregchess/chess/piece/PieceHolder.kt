@@ -3,6 +3,7 @@ package gregc.gregchess.chess.piece
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.ChessboardView
 import gregc.gregchess.chess.move.MoveEnvironment
+import gregc.gregchess.game.ChessEvent
 
 interface PieceHolderView<P : PlacedPiece> {
     val pieces: Collection<P>

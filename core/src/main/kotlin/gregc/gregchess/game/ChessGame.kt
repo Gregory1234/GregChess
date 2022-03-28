@@ -1,8 +1,9 @@
 @file:UseSerializers(InstantSerializer::class)
 
-package gregc.gregchess.chess
+package gregc.gregchess.game
 
 import gregc.gregchess.*
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
@@ -18,28 +19,6 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
-
-
-enum class TurnEvent(val ending: Boolean) : ChessEvent {
-    START(false), END(true), UNDO(true)
-}
-
-enum class GameBaseEvent : ChessEvent {
-    START,
-    SYNC,
-    RUNNING,
-    UPDATE,
-    STOP,
-    PANIC,
-    CLEAR
-}
-
-class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : RuntimeException(event.toString(), cause)
-
-interface ComponentHolder {
-    operator fun <T : Component> get(type: ComponentType<T>): T?
-    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
-}
 
 @Serializable
 class ChessGame private constructor(

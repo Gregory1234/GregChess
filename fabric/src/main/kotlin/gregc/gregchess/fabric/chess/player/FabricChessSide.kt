@@ -8,6 +8,8 @@ import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.component.renderer
 import gregc.gregchess.fabric.chess.component.server
+import gregc.gregchess.game.ChessEvent
+import gregc.gregchess.game.ChessGame
 import kotlinx.coroutines.launch
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity

@@ -4,6 +4,7 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.ChessboardView
 import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.piece.BoardPiece
+import gregc.gregchess.game.ChessGame
 
 object CaptureAll : ChessVariant() {
     override fun getLegality(move: Move, board: ChessboardView): MoveLegality =

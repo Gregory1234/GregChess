@@ -6,10 +6,10 @@ import gregc.gregchess.bukkit.chess.PropertyType
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
-import gregc.gregchess.chess.ChessEventHandler
-import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.ThreeChecks
+import gregc.gregchess.game.ChessEventHandler
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.util.Register
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

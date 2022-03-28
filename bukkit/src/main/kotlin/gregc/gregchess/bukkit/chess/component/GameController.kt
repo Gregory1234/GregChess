@@ -6,7 +6,9 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
+import gregc.gregchess.chess.component.ComponentHolder
 import gregc.gregchess.chess.move.Move
+import gregc.gregchess.game.*
 import gregc.gregchess.util.Register
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
