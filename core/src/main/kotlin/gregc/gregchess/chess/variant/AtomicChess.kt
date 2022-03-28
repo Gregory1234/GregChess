@@ -3,8 +3,8 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
-import gregc.gregchess.registry.Register
-import gregc.gregchess.registry.Registering
+import gregc.gregchess.util.Register
+import gregc.gregchess.util.Registering
 import kotlinx.serialization.Serializable
 
 object AtomicChess : ChessVariant(), Registering {

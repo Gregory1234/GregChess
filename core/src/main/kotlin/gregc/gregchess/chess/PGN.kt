@@ -3,7 +3,7 @@ package gregc.gregchess.chess
 import gregc.gregchess.chess.component.clock
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.name
-import gregc.gregchess.snakeToPascal
+import gregc.gregchess.util.snakeToPascal
 import java.time.format.DateTimeFormatter
 
 class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {

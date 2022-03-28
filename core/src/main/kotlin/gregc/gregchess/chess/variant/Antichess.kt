@@ -4,8 +4,8 @@ import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.registry.Register
-import gregc.gregchess.registry.Registering
+import gregc.gregchess.util.Register
+import gregc.gregchess.util.Registering
 
 object Antichess : ChessVariant(), Registering {
     @JvmField

@@ -9,7 +9,6 @@ import gregc.gregchess.chess.FEN
 import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.chess.variant.ThreeChecks
-import gregc.gregchess.registry.AutoRegister
 import kotlin.time.Duration
 
 internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
@@ -64,7 +63,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
 
     override fun load() {
         GregChessCore.registerAll(this)
-        AutoRegister(this, AutoRegister.bukkitTypes).apply {
+        BukkitGregChessCore.autoRegister(this).apply {
             registerAll<Arena>()
             registerAll<ChessGameManager>()
             registerAll<BukkitComponentType>()

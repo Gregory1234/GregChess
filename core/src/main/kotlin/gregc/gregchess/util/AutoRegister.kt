@@ -1,14 +1,7 @@
-package gregc.gregchess.registry
+package gregc.gregchess.util
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.ComponentType
-import gregc.gregchess.chess.move.ChessVariantOption
-import gregc.gregchess.chess.move.MoveTraitType
-import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.piece.PlacedPieceType
-import gregc.gregchess.chess.player.ChessPlayerType
-import gregc.gregchess.chess.variant.ChessVariants
+import gregc.gregchess.GregChessCore
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSuperclassOf
@@ -23,13 +16,6 @@ annotation class RegisterAll(vararg val classes: KClass<*>)
 class AutoRegisterType<T : Any>(val cl: KClass<T>, val register: T.(ChessModule, String, Collection<String>) -> Unit)
 
 class AutoRegister(private val module: ChessModule, private val types: Collection<AutoRegisterType<*>>) {
-    companion object {
-        val basicTypes = listOf(
-            PieceType.AUTO_REGISTER, EndReason.AUTO_REGISTER, ChessFlag.AUTO_REGISTER, ComponentType.AUTO_REGISTER,
-            ChessVariants.AUTO_REGISTER, MoveTraitType.AUTO_REGISTER, ChessStat.AUTO_REGISTER,
-            ChessPlayerType.AUTO_REGISTER, PlacedPieceType.AUTO_REGISTER, ChessVariantOption.AUTO_REGISTER,
-        )
-    }
 
     @Suppress("UNCHECKED_CAST")
     fun registerAll(cl: KClass<*>) {
@@ -49,6 +35,6 @@ class AutoRegister(private val module: ChessModule, private val types: Collectio
 
 interface Registering {
     fun registerAll(module: ChessModule) {
-        AutoRegister(module, AutoRegister.basicTypes).registerAll(this::class)
+        GregChessCore.autoRegister(module).registerAll(this::class)
     }
 }

@@ -1,8 +1,8 @@
 package gregc.gregchess.chess.variant
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.registry.Register
-import gregc.gregchess.registry.Registering
+import gregc.gregchess.util.Register
+import gregc.gregchess.util.Registering
 
 object KingOfTheHill : ChessVariant(), Registering {
 

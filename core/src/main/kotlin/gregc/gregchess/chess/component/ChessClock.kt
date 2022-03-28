@@ -2,9 +2,9 @@
 
 package gregc.gregchess.chess.component
 
-import gregc.gregchess.DurationSerializer
-import gregc.gregchess.between
 import gregc.gregchess.chess.*
+import gregc.gregchess.util.DurationSerializer
+import gregc.gregchess.util.between
 import kotlinx.serialization.*
 import java.time.Instant
 import kotlin.time.Duration

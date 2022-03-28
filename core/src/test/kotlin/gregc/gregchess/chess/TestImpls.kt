@@ -7,7 +7,8 @@ import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.chess.variant.ChessVariant
-import gregc.gregchess.registry.*
+import gregc.gregchess.registry.Registry
+import gregc.gregchess.util.Register
 import io.mockk.clearMocks
 import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
@@ -94,7 +95,7 @@ object GregChess : ChessModule("GregChess", "gregchess") {
     override fun load() {
         GregChessCore.registerAll(this)
 
-        AutoRegister(this, AutoRegister.basicTypes).registerAll<GregChess>()
+        GregChessCore.autoRegister(this).registerAll<GregChess>()
         finished = true
     }
 }

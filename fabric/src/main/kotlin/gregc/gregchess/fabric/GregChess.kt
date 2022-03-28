@@ -8,8 +8,7 @@ import gregc.gregchess.chess.variant.KingOfTheHill
 import gregc.gregchess.fabric.chess.component.FabricComponentType
 import gregc.gregchess.fabric.chess.player.FabricPlayerType
 import gregc.gregchess.fabric.chess.simpleFloorRenderer
-import gregc.gregchess.registry.AutoRegister
-import gregc.gregchess.registry.Register
+import gregc.gregchess.util.Register
 import net.minecraft.util.Rarity
 
 internal object GregChess : FabricChessModule("GregChess", "gregchess") {
@@ -31,7 +30,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
 
     override fun load() {
         GregChessCore.registerAll(this)
-        AutoRegister(this, AutoRegister.basicTypes).apply {
+        GregChessCore.autoRegister(this).apply {
             registerAll<FabricComponentType>()
             registerAll<GregChess>()
             registerAll<FabricPlayerType>()

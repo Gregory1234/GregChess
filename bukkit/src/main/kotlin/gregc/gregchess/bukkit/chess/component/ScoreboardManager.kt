@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.MultiExceptionContext
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.forEachReal
@@ -8,7 +7,8 @@ import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.component.Component
-import gregc.gregchess.registry.Register
+import gregc.gregchess.util.MultiExceptionContext
+import gregc.gregchess.util.Register
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.Bukkit

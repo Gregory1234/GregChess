@@ -1,11 +1,11 @@
 package gregc.gregchess.chess.piece
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.SelfType
 import gregc.gregchess.chess.Color
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.chess.move.ChessboardView
 import gregc.gregchess.registry.*
+import gregc.gregchess.util.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule

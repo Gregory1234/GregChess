@@ -1,10 +1,10 @@
 package gregc.gregchess.chess.component
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.SelfType
 import gregc.gregchess.chess.ChessGame
 import gregc.gregchess.chess.ChessListener
 import gregc.gregchess.registry.*
+import gregc.gregchess.util.*
 import kotlinx.serialization.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass

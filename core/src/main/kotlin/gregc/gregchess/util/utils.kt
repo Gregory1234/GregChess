@@ -1,4 +1,4 @@
-package gregc.gregchess
+package gregc.gregchess.util
 
 import java.time.Instant
 import kotlin.time.Duration

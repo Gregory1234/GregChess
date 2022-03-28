@@ -1,10 +1,10 @@
 package gregc.gregchess.chess.player
 
-import gregc.gregchess.SelfType
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.promotionTrait
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.of
+import gregc.gregchess.util.SelfType
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 

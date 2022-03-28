@@ -2,6 +2,7 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.registry.*
+import gregc.gregchess.util.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.*

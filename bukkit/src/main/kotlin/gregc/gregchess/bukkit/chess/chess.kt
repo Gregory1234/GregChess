@@ -12,7 +12,7 @@ import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
-import gregc.gregchess.snakeToPascal
+import gregc.gregchess.util.snakeToPascal
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.inventory.ItemStack

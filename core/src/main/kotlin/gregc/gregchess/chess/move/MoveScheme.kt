@@ -2,7 +2,7 @@ package gregc.gregchess.chess.move
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
-import gregc.gregchess.rotationsOf
+import gregc.gregchess.util.rotationsOf
 import kotlin.math.abs
 
 private fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)

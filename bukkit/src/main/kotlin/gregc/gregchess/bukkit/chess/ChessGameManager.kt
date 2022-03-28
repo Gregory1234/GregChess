@@ -5,7 +5,7 @@ import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.registerEvents
 import gregc.gregchess.chess.*
-import gregc.gregchess.registry.Register
+import gregc.gregchess.util.Register
 import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player

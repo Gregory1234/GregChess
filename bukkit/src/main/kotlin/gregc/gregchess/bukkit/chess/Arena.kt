@@ -4,7 +4,7 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.registry.*
+import gregc.gregchess.util.*
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player

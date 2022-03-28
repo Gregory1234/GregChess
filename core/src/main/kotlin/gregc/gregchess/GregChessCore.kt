@@ -6,7 +6,9 @@ import gregc.gregchess.chess.move.ChessVariantOption
 import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPieceType
+import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariants
+import gregc.gregchess.util.AutoRegister
 
 object GregChessCore {
     fun registerAll(module: ChessModule) {
@@ -20,4 +22,13 @@ object GregChessCore {
         ChessVariantOption.registerCore(module)
         ChessStat.registerCore(module)
     }
+
+    @JvmField
+    val AUTO_REGISTER = listOf(
+        PieceType.AUTO_REGISTER, EndReason.AUTO_REGISTER, ChessFlag.AUTO_REGISTER, ComponentType.AUTO_REGISTER,
+        ChessVariants.AUTO_REGISTER, MoveTraitType.AUTO_REGISTER, ChessStat.AUTO_REGISTER,
+        ChessPlayerType.AUTO_REGISTER, PlacedPieceType.AUTO_REGISTER, ChessVariantOption.AUTO_REGISTER,
+    )
+
+    fun autoRegister(module: ChessModule) = AutoRegister(module, AUTO_REGISTER)
 }

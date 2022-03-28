@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.ChessModule
+import gregc.gregchess.GregChessCore
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
 import gregc.gregchess.chess.EndReason
@@ -9,6 +10,7 @@ import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.registry.*
+import gregc.gregchess.util.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
 import java.util.*
@@ -46,9 +48,11 @@ private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class)
 
 internal val EndReason.Companion.BUKKIT_AUTO_REGISTER get() = BUKKIT_END_REASON_AUTO_REGISTER
 
-private val BUKKIT_AUTO_REGISTER_TYPES = listOf(EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER, ArenaManagers.AUTO_REGISTER) + AutoRegister.basicTypes
+object BukkitGregChessCore {
+    val AUTO_REGISTER = listOf(EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER, ArenaManagers.AUTO_REGISTER) + GregChessCore.AUTO_REGISTER
 
-val AutoRegister.Companion.bukkitTypes get() = BUKKIT_AUTO_REGISTER_TYPES
+    fun autoRegister(module: ChessModule) = AutoRegister(module, AUTO_REGISTER)
+}
 
 interface BukkitChessPlugin {
     fun onInitialize()
@@ -56,7 +60,7 @@ interface BukkitChessPlugin {
 
 interface BukkitRegistering : Registering {
     override fun registerAll(module: ChessModule) {
-        AutoRegister(module, AutoRegister.bukkitTypes).registerAll(this::class)
+        BukkitGregChessCore.autoRegister(module).registerAll(this::class)
     }
 }
 
