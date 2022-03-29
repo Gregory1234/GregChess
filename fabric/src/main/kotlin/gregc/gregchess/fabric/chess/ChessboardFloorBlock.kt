@@ -1,8 +1,8 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.chess.Pos
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.chess.player.FabricChessSide
+import gregc.gregchess.util.Pos
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity

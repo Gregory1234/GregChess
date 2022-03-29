@@ -1,15 +1,15 @@
 package gregc.gregchess.fabric.chess.player
 
 import com.mojang.authlib.GameProfile
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.component.renderer
 import gregc.gregchess.fabric.chess.component.server
 import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.move.trait.promotionTrait
+import gregc.gregchess.piece.BoardPiece
+import gregc.gregchess.player.ChessSide
+import gregc.gregchess.util.*
 import kotlinx.coroutines.launch
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity

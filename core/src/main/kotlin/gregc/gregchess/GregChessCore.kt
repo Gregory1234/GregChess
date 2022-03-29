@@ -1,14 +1,16 @@
 package gregc.gregchess
 
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.piece.PlacedPieceType
-import gregc.gregchess.chess.player.ChessPlayerType
-import gregc.gregchess.chess.variant.ChessVariants
-import gregc.gregchess.game.ComponentType
 import gregc.gregchess.board.ChessVariantOption
+import gregc.gregchess.game.ComponentType
 import gregc.gregchess.move.trait.MoveTraitType
+import gregc.gregchess.piece.PieceType
+import gregc.gregchess.piece.PlacedPieceType
+import gregc.gregchess.player.ChessPlayerType
+import gregc.gregchess.results.EndReason
+import gregc.gregchess.stats.ChessStat
 import gregc.gregchess.util.AutoRegister
+import gregc.gregchess.util.ChessFlag
+import gregc.gregchess.variant.ChessVariants
 
 object GregChessCore {
     fun registerAll(module: ChessModule) {

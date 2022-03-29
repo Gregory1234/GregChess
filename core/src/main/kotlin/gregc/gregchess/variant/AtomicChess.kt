@@ -1,15 +1,14 @@
-package gregc.gregchess.chess.variant
+package gregc.gregchess.variant
 
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.boardView
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.*
 import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.move.*
 import gregc.gregchess.move.trait.*
-import gregc.gregchess.util.Register
-import gregc.gregchess.util.Registering
+import gregc.gregchess.piece.*
+import gregc.gregchess.results.*
+import gregc.gregchess.util.*
 import kotlinx.serialization.Serializable
 
 object AtomicChess : ChessVariant(), Registering {

@@ -1,9 +1,9 @@
-package gregc.gregchess.chess.player
+package gregc.gregchess.player
 
-import gregc.gregchess.chess.Color
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.registry.*
 import gregc.gregchess.util.AutoRegisterType
+import gregc.gregchess.util.Color
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 

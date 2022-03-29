@@ -1,11 +1,11 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.fabric.chess.player.FabricChessSide
 import gregc.gregchess.fabric.chess.player.gregchess
 import gregc.gregchess.move.scheme.phantomClear
 import gregc.gregchess.move.scheme.phantomSpawn
+import gregc.gregchess.piece.BoardPiece
+import gregc.gregchess.piece.Piece
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf

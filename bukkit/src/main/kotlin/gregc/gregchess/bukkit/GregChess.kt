@@ -7,8 +7,8 @@ import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.board.FEN
-import gregc.gregchess.chess.variant.KingOfTheHill
-import gregc.gregchess.chess.variant.ThreeChecks
+import gregc.gregchess.variant.KingOfTheHill
+import gregc.gregchess.variant.ThreeChecks
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.clock.TimeControl
 import gregc.gregchess.game.ComponentType

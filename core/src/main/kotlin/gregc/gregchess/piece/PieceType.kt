@@ -1,4 +1,4 @@
-package gregc.gregchess.chess.piece
+package gregc.gregchess.piece
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.registry.*

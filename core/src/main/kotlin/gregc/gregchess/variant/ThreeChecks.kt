@@ -1,16 +1,15 @@
-package gregc.gregchess.chess.variant
+package gregc.gregchess.variant
 
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.boardView
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.game.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.trait.MoveTrait
 import gregc.gregchess.move.trait.MoveTraitType
-import gregc.gregchess.util.Register
-import gregc.gregchess.util.Registering
+import gregc.gregchess.piece.BoardPiece
+import gregc.gregchess.results.*
+import gregc.gregchess.util.*
 import kotlinx.serialization.*
 
 object ThreeChecks : ChessVariant(), Registering {

@@ -6,11 +6,11 @@ import gregc.gregchess.bukkit.chess.PropertyType
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
-import gregc.gregchess.chess.variant.ThreeChecks
 import gregc.gregchess.clock.TimeControl
 import gregc.gregchess.clock.clock
 import gregc.gregchess.game.*
 import gregc.gregchess.util.Register
+import gregc.gregchess.variant.ThreeChecks
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 

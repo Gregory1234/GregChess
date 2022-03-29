@@ -1,4 +1,4 @@
-package gregc.gregchess.chess.variant
+package gregc.gregchess.variant
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.registry.Registry

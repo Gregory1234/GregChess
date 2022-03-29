@@ -1,7 +1,7 @@
-package gregc.gregchess.chess.piece
+package gregc.gregchess.piece
 
-import gregc.gregchess.chess.Color
 import gregc.gregchess.game.ChessEvent
+import gregc.gregchess.util.Color
 
 interface PieceHolderView<P : PlacedPiece> {
     val pieces: Collection<P>
@@ -28,7 +28,9 @@ fun interface PieceEventCaller {
     fun callPieceMoveEvent(e: PieceMoveEvent)
 }
 
-operator fun PieceEventCaller.invoke(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = callPieceMoveEvent(PieceMoveEvent(listOfNotNull(*moves)))
+operator fun PieceEventCaller.invoke(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = callPieceMoveEvent(
+    PieceMoveEvent(listOfNotNull(*moves))
+)
 
 class AddPieceHoldersEvent internal constructor(private val holders: MutableMap<PlacedPieceType<*, *>, PieceHolder<*>>) : ChessEvent {
     operator fun <P : PlacedPiece, H : PieceHolder<P>> set(type: PlacedPieceType<P, H>, holder: H) = holders.put(type, holder)

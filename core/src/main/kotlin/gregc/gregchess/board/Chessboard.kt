@@ -1,11 +1,13 @@
 package gregc.gregchess.board
 
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.*
-import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.variant.ChessVariant
 import gregc.gregchess.game.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
+import gregc.gregchess.piece.*
+import gregc.gregchess.results.EndReason
+import gregc.gregchess.results.drawBy
+import gregc.gregchess.util.*
 import kotlinx.serialization.*
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -310,7 +312,8 @@ class Chessboard private constructor (
     private class FakeBoardPieceHolder(val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>)
         : BoardPieceHolder by SquareChessboard(initialFEN, variantOptions, squares)
 
-    private class FakeCapturedPieceHolder(val capturedPieces : MutableList<CapturedPiece>) : PieceHolder<CapturedPiece> {
+    private class FakeCapturedPieceHolder(val capturedPieces : MutableList<CapturedPiece>) :
+        PieceHolder<CapturedPiece> {
         override fun exists(p: CapturedPiece) = capturedPieces.any { it == p }
 
         override fun canExist(p: CapturedPiece) = true

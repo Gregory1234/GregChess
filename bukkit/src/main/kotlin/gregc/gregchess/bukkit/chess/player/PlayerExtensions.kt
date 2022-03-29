@@ -5,10 +5,12 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.Piece
-import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.game.PGN
 import gregc.gregchess.move.Move
+import gregc.gregchess.piece.Piece
+import gregc.gregchess.player.ChessPlayer
+import gregc.gregchess.results.*
+import gregc.gregchess.util.*
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 

@@ -4,10 +4,12 @@ import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.*
-import gregc.gregchess.chess.*
 import gregc.gregchess.game.*
 import gregc.gregchess.move.Move
-import gregc.gregchess.util.Register
+import gregc.gregchess.results.GameResults
+import gregc.gregchess.stats.VoidPlayerStatsSink
+import gregc.gregchess.stats.addStats
+import gregc.gregchess.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable

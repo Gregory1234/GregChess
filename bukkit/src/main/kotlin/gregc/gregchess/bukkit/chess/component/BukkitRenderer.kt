@@ -3,11 +3,11 @@ package gregc.gregchess.bukkit.chess.component
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.PiecePlayerActionEvent
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.Color
-import gregc.gregchess.chess.piece.*
-import gregc.gregchess.chess.variant.AtomicChess
 import gregc.gregchess.game.*
+import gregc.gregchess.piece.*
+import gregc.gregchess.util.*
+import gregc.gregchess.util.Color
+import gregc.gregchess.variant.AtomicChess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.*

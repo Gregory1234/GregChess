@@ -4,10 +4,13 @@ import assertk.assertThat
 import assertk.assertions.*
 import gregc.gregchess.board.AddVariantOptionsEvent
 import gregc.gregchess.board.Chessboard
-import gregc.gregchess.chess.piece.AddPieceHoldersEvent
-import gregc.gregchess.chess.piece.PieceMoveEvent
-import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.game.*
+import gregc.gregchess.piece.AddPieceHoldersEvent
+import gregc.gregchess.piece.PieceMoveEvent
+import gregc.gregchess.results.EndReason
+import gregc.gregchess.results.drawBy
+import gregc.gregchess.util.byColor
+import gregc.gregchess.variant.ChessVariant
 import io.mockk.*
 import kotlinx.coroutines.isActive
 import org.junit.jupiter.api.*

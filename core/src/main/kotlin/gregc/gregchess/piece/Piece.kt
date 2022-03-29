@@ -1,9 +1,9 @@
-package gregc.gregchess.chess.piece
+package gregc.gregchess.piece
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.chess.Color
 import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.registry.*
+import gregc.gregchess.util.Color
 import kotlinx.serialization.Serializable
 
 object PieceRegistryView : FiniteBiRegistryView<String, Piece> {

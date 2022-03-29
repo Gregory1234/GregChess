@@ -5,10 +5,8 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.player.forEachReal
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.chess.*
 import gregc.gregchess.game.*
-import gregc.gregchess.util.MultiExceptionContext
-import gregc.gregchess.util.Register
+import gregc.gregchess.util.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.Bukkit

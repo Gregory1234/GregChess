@@ -2,9 +2,6 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
-import gregc.gregchess.chess.Pos
-import gregc.gregchess.chess.piece.Piece
-import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.chess.component.*
 import gregc.gregchess.fabric.defaultModule
@@ -12,6 +9,9 @@ import gregc.gregchess.fabric.mixin.WorldSavePathCreator
 import gregc.gregchess.fabric.nbt.*
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.game.Component
+import gregc.gregchess.piece.Piece
+import gregc.gregchess.util.Pos
+import gregc.gregchess.variant.ChessVariant
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtIo
 import net.minecraft.server.MinecraftServer

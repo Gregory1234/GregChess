@@ -3,9 +3,12 @@ package gregc.gregchess.chess.variant
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.isNotNull
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.*
+import gregc.gregchess.chess.fen
+import gregc.gregchess.chess.setupRegistry
 import gregc.gregchess.move.trait.MoveTraitType
+import gregc.gregchess.piece.*
+import gregc.gregchess.util.*
+import gregc.gregchess.variant.ChessVariant
 import org.junit.jupiter.api.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -86,7 +89,9 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                 val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
 
                 fun check(origin: Pos, target: Pos, color: Color) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game, Piece(PieceType.BISHOP, color)).all {
+                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game, Piece(
+                        PieceType.BISHOP, color)
+                    ).all {
                         isNormalMove()
                         needsEmptyExactly(target)
                         passesThroughExactly(target)

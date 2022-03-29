@@ -1,9 +1,10 @@
-package gregc.gregchess.chess
+package gregc.gregchess.stats
 
 import gregc.gregchess.*
 import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.registry.*
+import gregc.gregchess.results.GameScore
 import gregc.gregchess.util.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

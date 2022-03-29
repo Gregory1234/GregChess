@@ -1,6 +1,6 @@
 package gregc.gregchess.move
 
-import gregc.gregchess.chess.piece.*
+import gregc.gregchess.piece.*
 import kotlinx.serialization.Serializable
 
 @Serializable

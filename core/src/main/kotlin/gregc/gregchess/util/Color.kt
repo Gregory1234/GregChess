@@ -1,6 +1,5 @@
-package gregc.gregchess.chess
+package gregc.gregchess.util
 
-import gregc.gregchess.move.Move
 import kotlinx.serialization.Serializable
 
 enum class Color(val char: Char, private val direction: Int) {
@@ -19,12 +18,6 @@ enum class Color(val char: Char, private val direction: Int) {
         inline fun forEach(block: (Color) -> Unit) = values().forEach(block)
     }
 
-}
-
-enum class BoardSide(private val direction: Int, val castles: String) {
-    QUEENSIDE(-1, "O-O-O"), KINGSIDE(1, "O-O");
-
-    val dir get() = Dir(direction, 0)
 }
 
 @Serializable
@@ -70,7 +63,3 @@ data class ByColor<out T> internal constructor(val white: T, val black: T) {
 fun <T> byColor(white: T, black: T) = ByColor(white, black)
 fun <T> byColor(both: T) = ByColor(both, both)
 inline fun <T> byColor(block: (Color) -> T) = byColor(block(Color.WHITE), block(Color.BLACK))
-
-fun interface MoveFormatter {
-    fun format(move: Move): String
-}

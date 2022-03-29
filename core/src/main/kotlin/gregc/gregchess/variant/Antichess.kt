@@ -1,17 +1,16 @@
-package gregc.gregchess.chess.variant
+package gregc.gregchess.variant
 
 import gregc.gregchess.board.ChessboardView
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.scheme.pawnMovement
 import gregc.gregchess.move.scheme.promotions
 import gregc.gregchess.move.trait.captureTrait
 import gregc.gregchess.move.trait.castlesTrait
-import gregc.gregchess.util.Register
-import gregc.gregchess.util.Registering
+import gregc.gregchess.piece.BoardPiece
+import gregc.gregchess.piece.PieceType
+import gregc.gregchess.results.*
+import gregc.gregchess.util.*
 
 object Antichess : ChessVariant(), Registering {
     @JvmField

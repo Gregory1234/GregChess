@@ -1,8 +1,8 @@
 package gregc.gregchess.bukkit.chess.player
 
 import gregc.gregchess.bukkit.UUIDAsStringSerializer
-import gregc.gregchess.chess.player.ChessPlayerType
-import gregc.gregchess.chess.player.enginePlayerType
+import gregc.gregchess.player.ChessPlayerType
+import gregc.gregchess.player.enginePlayerType
 import gregc.gregchess.util.RegisterAll
 import org.bukkit.Bukkit
 

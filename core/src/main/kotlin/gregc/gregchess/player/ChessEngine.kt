@@ -1,12 +1,13 @@
-package gregc.gregchess.chess.player
+package gregc.gregchess.player
 
 import gregc.gregchess.board.FEN
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.PieceType
-import gregc.gregchess.chess.piece.of
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.move.trait.promotionTrait
-import gregc.gregchess.util.SelfType
+import gregc.gregchess.piece.PieceType
+import gregc.gregchess.piece.of
+import gregc.gregchess.results.EndReason
+import gregc.gregchess.results.drawBy
+import gregc.gregchess.util.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 

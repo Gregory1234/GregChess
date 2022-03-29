@@ -1,12 +1,12 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.*
-import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
+import gregc.gregchess.piece.*
 import gregc.gregchess.registry.*
+import gregc.gregchess.util.*
+import gregc.gregchess.variant.ChessVariant
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks

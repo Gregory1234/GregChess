@@ -1,11 +1,10 @@
-package gregc.gregchess.chess
+package gregc.gregchess.game
 
-import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.clock.clock
-import gregc.gregchess.game.ChessEvent
-import gregc.gregchess.game.ChessGame
 import gregc.gregchess.registry.name
+import gregc.gregchess.util.Color
 import gregc.gregchess.util.snakeToPascal
+import gregc.gregchess.variant.ChessVariant
 import java.time.format.DateTimeFormatter
 
 class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {

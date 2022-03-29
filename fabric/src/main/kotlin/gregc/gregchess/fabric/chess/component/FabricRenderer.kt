@@ -1,12 +1,12 @@
 package gregc.gregchess.fabric.chess.component
 
-import gregc.gregchess.chess.Pos
-import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.PieceMoveEvent
 import gregc.gregchess.fabric.chess.*
 import gregc.gregchess.fabric.chess.player.PiecePlayerActionEvent
 import gregc.gregchess.fabric.moveBlock
 import gregc.gregchess.game.*
+import gregc.gregchess.piece.BoardPiece
+import gregc.gregchess.piece.PieceMoveEvent
+import gregc.gregchess.util.Pos
 import kotlinx.serialization.*
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.util.math.BlockPos

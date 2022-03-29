@@ -2,10 +2,9 @@ package gregc.gregchess.bukkit.chess
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.chess.*
 import gregc.gregchess.registry.*
-import gregc.gregchess.util.DurationSerializer
-import gregc.gregchess.util.snakeToPascal
+import gregc.gregchess.stats.*
+import gregc.gregchess.util.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import org.bukkit.Bukkit

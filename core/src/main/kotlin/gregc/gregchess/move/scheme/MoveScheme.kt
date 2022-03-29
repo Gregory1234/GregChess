@@ -2,11 +2,11 @@ package gregc.gregchess.move.scheme
 
 import gregc.gregchess.board.ChessVariantOption
 import gregc.gregchess.board.ChessboardView
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.piece.*
-import gregc.gregchess.move.*
+import gregc.gregchess.move.Move
+import gregc.gregchess.move.PieceTracker
 import gregc.gregchess.move.trait.*
-import gregc.gregchess.util.rotationsOf
+import gregc.gregchess.piece.*
+import gregc.gregchess.util.*
 import kotlin.math.abs
 
 private fun between(i: Int, j: Int): IntRange = if (i > j) (j + 1 until i) else (i + 1 until j)

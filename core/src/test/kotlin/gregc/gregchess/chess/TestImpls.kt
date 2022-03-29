@@ -2,12 +2,15 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.GregChessCore
-import gregc.gregchess.chess.player.ChessPlayerType
-import gregc.gregchess.chess.player.ChessSide
-import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.game.*
+import gregc.gregchess.player.ChessPlayerType
+import gregc.gregchess.player.ChessSide
 import gregc.gregchess.registry.Registry
+import gregc.gregchess.results.DetEndReason
+import gregc.gregchess.results.EndReason
+import gregc.gregchess.util.Color
 import gregc.gregchess.util.Register
+import gregc.gregchess.variant.ChessVariant
 import io.mockk.clearMocks
 import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher

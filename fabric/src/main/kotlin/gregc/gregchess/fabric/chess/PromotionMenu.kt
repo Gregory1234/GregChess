@@ -1,8 +1,8 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.chess.piece.Piece
-import gregc.gregchess.chess.piece.PieceRegistryView
 import gregc.gregchess.fabric.*
+import gregc.gregchess.piece.Piece
+import gregc.gregchess.piece.PieceRegistryView
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.client.CottonInventoryScreen
 import io.github.cottonmc.cotton.gui.networking.NetworkSide
