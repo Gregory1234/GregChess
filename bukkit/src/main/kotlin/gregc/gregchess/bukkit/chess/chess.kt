@@ -7,10 +7,11 @@ import gregc.gregchess.bukkit.chess.player.BukkitChessSide
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.game.ChessGame
+import gregc.gregchess.move.Move
+import gregc.gregchess.move.trait.*
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
 import gregc.gregchess.util.snakeToPascal

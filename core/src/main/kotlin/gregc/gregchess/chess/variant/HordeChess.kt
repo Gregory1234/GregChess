@@ -3,10 +3,12 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.FEN
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.game.ChessGame
+import gregc.gregchess.move.Move
+import gregc.gregchess.move.scheme.pawnMovement
+import gregc.gregchess.move.scheme.promotions
 
 object HordeChess : ChessVariant() {
 

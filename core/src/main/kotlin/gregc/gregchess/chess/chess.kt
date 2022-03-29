@@ -1,6 +1,6 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.chess.move.Move
+import gregc.gregchess.move.Move
 import kotlinx.serialization.Serializable
 
 enum class Color(val char: Char, private val direction: Int) {

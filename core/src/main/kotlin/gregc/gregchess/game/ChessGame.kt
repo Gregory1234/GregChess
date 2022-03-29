@@ -5,10 +5,11 @@ package gregc.gregchess.game
 import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.player.*
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.move.Move
+import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.util.InstantSerializer
 import gregc.gregchess.util.MultiExceptionContext
 import kotlinx.coroutines.*

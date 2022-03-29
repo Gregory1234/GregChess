@@ -6,9 +6,9 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.player.ChessPlayer
+import gregc.gregchess.move.Move
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 

@@ -4,8 +4,8 @@ import assertk.all
 import assertk.assertThat
 import assertk.assertions.isNotNull
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.*
+import gregc.gregchess.move.trait.MoveTraitType
 import org.junit.jupiter.api.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

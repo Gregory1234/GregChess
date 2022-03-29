@@ -1,10 +1,10 @@
 package gregc.gregchess.chess.variant
 
-import gregc.gregchess.chess.*
 import gregc.gregchess.board.ChessboardView
-import gregc.gregchess.chess.move.Move
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.game.ChessGame
+import gregc.gregchess.move.Move
 
 object CaptureAll : ChessVariant() {
     override fun getLegality(move: Move, board: ChessboardView): MoveLegality =

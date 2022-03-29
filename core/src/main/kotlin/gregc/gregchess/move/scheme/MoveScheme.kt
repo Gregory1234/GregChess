@@ -1,8 +1,11 @@
-package gregc.gregchess.chess.move
+package gregc.gregchess.move.scheme
 
+import gregc.gregchess.board.ChessVariantOption
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
+import gregc.gregchess.move.*
+import gregc.gregchess.move.trait.*
 import gregc.gregchess.util.rotationsOf
 import kotlin.math.abs
 

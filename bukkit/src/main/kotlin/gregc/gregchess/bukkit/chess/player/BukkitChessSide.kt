@@ -6,11 +6,11 @@ import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkit.title
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.promotionTrait
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.game.ChessGame
+import gregc.gregchess.move.trait.promotionTrait
 import kotlinx.coroutines.launch
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer

@@ -10,13 +10,13 @@ import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
 import gregc.gregchess.bukkitutils.requests.*
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceRegistryView
 import gregc.gregchess.chess.player.EngineChessSide
 import gregc.gregchess.chess.player.toPlayer
 import gregc.gregchess.clock.clock
 import gregc.gregchess.game.ChessGame
+import gregc.gregchess.move.scheme.*
 import gregc.gregchess.registry.Registry
 import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.serializer

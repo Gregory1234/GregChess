@@ -3,10 +3,12 @@ package gregc.gregchess.chess.variant
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.FEN
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.game.ComponentType
+import gregc.gregchess.move.Move
+import gregc.gregchess.move.scheme.*
+import gregc.gregchess.move.trait.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.util.rotationsOf
 import kotlinx.serialization.Serializable

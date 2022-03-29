@@ -1,10 +1,12 @@
-package gregc.gregchess.chess.move
+package gregc.gregchess.move.trait
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.board.board
 import gregc.gregchess.board.boardView
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
+import gregc.gregchess.move.Move
+import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.registry.*
 import gregc.gregchess.util.*
 import kotlinx.serialization.KSerializer

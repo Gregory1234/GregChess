@@ -1,4 +1,4 @@
-package gregc.gregchess.chess.move
+package gregc.gregchess.board
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.registry.NameRegistered

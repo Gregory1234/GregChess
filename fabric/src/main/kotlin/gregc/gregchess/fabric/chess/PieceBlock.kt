@@ -1,11 +1,11 @@
 package gregc.gregchess.fabric.chess
 
-import gregc.gregchess.chess.move.phantomClear
-import gregc.gregchess.chess.move.phantomSpawn
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.fabric.chess.player.FabricChessSide
 import gregc.gregchess.fabric.chess.player.gregchess
+import gregc.gregchess.move.scheme.phantomClear
+import gregc.gregchess.move.scheme.phantomSpawn
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf
@@ -138,7 +138,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
     }
 
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
-        world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), Block.NOTIFY_ALL)
+        world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), NOTIFY_ALL)
         if (!world.isClient()) {
             val floor = getFloor(world, pos, state) ?: return
             floor.chessControllerBlock.entity?.currentGame?.finishMove(phantomSpawn(BoardPiece(floor.boardPos!!, piece, false)))

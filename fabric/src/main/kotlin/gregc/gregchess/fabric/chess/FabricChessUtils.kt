@@ -2,12 +2,13 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.chess.GameResults
 import gregc.gregchess.chess.Pos
-import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.Piece
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
 import gregc.gregchess.fabric.chess.player.FabricChessSide
+import gregc.gregchess.move.Move
+import gregc.gregchess.move.trait.*
 import gregc.gregchess.registry.*
 import net.minecraft.item.Item
 import net.minecraft.text.Text
