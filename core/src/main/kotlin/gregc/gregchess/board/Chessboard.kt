@@ -1,4 +1,4 @@
-package gregc.gregchess.chess.component
+package gregc.gregchess.board
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*

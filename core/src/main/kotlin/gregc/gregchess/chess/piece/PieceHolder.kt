@@ -1,8 +1,6 @@
 package gregc.gregchess.chess.piece
 
-import gregc.gregchess.chess.*
-import gregc.gregchess.chess.move.ChessboardView
-import gregc.gregchess.chess.move.MoveEnvironment
+import gregc.gregchess.chess.Color
 import gregc.gregchess.game.ChessEvent
 
 interface PieceHolderView<P : PlacedPiece> {
@@ -84,11 +82,3 @@ fun <P : PlacedPiece> PieceHolder<P>.multiMove(callEvent: PieceEventCaller, vara
         throw e
     }
 }
-
-interface BoardPieceHolder : PieceHolder<BoardPiece>, ChessboardView {
-    fun addFlag(pos: Pos, flag: ChessFlag, age: Int = 0)
-    override fun exists(p: BoardPiece) = super.exists(p)
-    override fun canExist(p: BoardPiece) = super.canExist(p)
-}
-
-val MoveEnvironment.boardView: BoardPieceHolder get() = get(PlacedPieceType.BOARD)

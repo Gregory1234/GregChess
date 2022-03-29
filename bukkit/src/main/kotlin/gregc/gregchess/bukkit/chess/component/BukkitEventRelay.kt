@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit.chess.component
 
-import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.game.*
 import kotlinx.serialization.Serializable

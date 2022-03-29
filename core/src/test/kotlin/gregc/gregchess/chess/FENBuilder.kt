@@ -1,5 +1,6 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.board.FEN
 import gregc.gregchess.chess.piece.Piece
 
 class FENBuilder {

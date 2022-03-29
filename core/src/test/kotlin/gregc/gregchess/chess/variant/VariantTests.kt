@@ -3,12 +3,13 @@ package gregc.gregchess.chess.variant
 import assertk.Assert
 import assertk.all
 import assertk.assertions.*
+import gregc.gregchess.board.Chessboard
+import gregc.gregchess.board.FEN
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Chessboard
-import gregc.gregchess.chess.component.Component
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.game.ChessGame
+import gregc.gregchess.game.Component
 
 open class VariantTests(val variant: ChessVariant, val extraComponents: Collection<Component> = emptyList()) {
     private val playerA = GregChess.TEST_PLAYER.of("A")

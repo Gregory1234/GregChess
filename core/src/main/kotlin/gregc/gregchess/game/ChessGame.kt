@@ -3,8 +3,8 @@
 package gregc.gregchess.game
 
 import gregc.gregchess.*
+import gregc.gregchess.board.Chessboard
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.player.*

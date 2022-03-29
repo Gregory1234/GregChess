@@ -1,13 +1,13 @@
 package gregc.gregchess
 
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.ChessVariantOption
 import gregc.gregchess.chess.move.MoveTraitType
 import gregc.gregchess.chess.piece.PieceType
 import gregc.gregchess.chess.piece.PlacedPieceType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.variant.ChessVariants
+import gregc.gregchess.game.ComponentType
 import gregc.gregchess.util.AutoRegister
 
 object GregChessCore {

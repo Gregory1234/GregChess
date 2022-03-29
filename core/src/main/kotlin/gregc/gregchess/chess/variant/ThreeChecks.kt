@@ -1,12 +1,11 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.board.ChessboardView
+import gregc.gregchess.board.boardView
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.BoardPiece
-import gregc.gregchess.chess.piece.boardView
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.game.*
 import gregc.gregchess.util.Register
 import gregc.gregchess.util.Registering
 import kotlinx.serialization.*

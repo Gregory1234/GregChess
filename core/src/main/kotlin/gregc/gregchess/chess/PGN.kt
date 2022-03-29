@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.chess.component.clock
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.clock.clock
 import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.registry.name
@@ -33,7 +33,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             }
             for ((index, moveData) in moves.withIndex()) {
                 if (index % 2 == 0)
-                    append((index.toInt() + indexShift).div(2) + 1, ". ")
+                    append((index + indexShift).div(2) + 1, ". ")
                 append(moveData, " ")
                 if (index % 2 == 1)
                     append("\n")

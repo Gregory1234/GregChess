@@ -2,8 +2,6 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.GregChessCore
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.player.ChessPlayerType
 import gregc.gregchess.chess.player.ChessSide
 import gregc.gregchess.chess.variant.ChessVariant

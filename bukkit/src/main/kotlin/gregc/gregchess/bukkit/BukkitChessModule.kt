@@ -6,9 +6,9 @@ import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
 import gregc.gregchess.chess.EndReason
 import gregc.gregchess.chess.MoveFormatter
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.ComponentType
 import gregc.gregchess.chess.variant.ChessVariant
+import gregc.gregchess.game.Component
+import gregc.gregchess.game.ComponentType
 import gregc.gregchess.registry.*
 import gregc.gregchess.util.*
 import org.bukkit.configuration.ConfigurationSection

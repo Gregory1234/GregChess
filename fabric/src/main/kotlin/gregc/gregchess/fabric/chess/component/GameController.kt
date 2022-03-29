@@ -1,6 +1,5 @@
 package gregc.gregchess.fabric.chess.component
 
-import gregc.gregchess.chess.component.Component
 import gregc.gregchess.fabric.chess.ChessGameManager
 import gregc.gregchess.fabric.chess.player.forEachUniqueEntity
 import gregc.gregchess.fabric.chess.player.showGameResults

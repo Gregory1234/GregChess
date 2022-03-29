@@ -6,7 +6,7 @@ import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.bukkitutils.toDuration
-import gregc.gregchess.chess.FEN
+import gregc.gregchess.board.FEN
 import gregc.gregchess.chess.player.ChessEngine
 import gregc.gregchess.chess.player.NoEngineMoveException
 import kotlinx.coroutines.*

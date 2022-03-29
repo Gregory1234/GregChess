@@ -1,6 +1,8 @@
-package gregc.gregchess.chess.move
+package gregc.gregchess.board
 
 import gregc.gregchess.chess.*
+import gregc.gregchess.chess.move.ChessVariantOption
+import gregc.gregchess.chess.move.Move
 import gregc.gregchess.chess.piece.*
 
 interface ChessboardView : PieceHolderView<BoardPiece> {

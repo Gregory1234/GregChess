@@ -1,6 +1,6 @@
 @file:UseSerializers(DurationSerializer::class)
 
-package gregc.gregchess.chess.component
+package gregc.gregchess.clock
 
 import gregc.gregchess.chess.*
 import gregc.gregchess.game.*

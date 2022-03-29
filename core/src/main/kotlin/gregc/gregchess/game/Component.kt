@@ -1,8 +1,8 @@
-package gregc.gregchess.chess.component
+package gregc.gregchess.game
 
 import gregc.gregchess.ChessModule
-import gregc.gregchess.game.ChessGame
-import gregc.gregchess.game.ChessListener
+import gregc.gregchess.board.Chessboard
+import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.registry.*
 import gregc.gregchess.util.*
 import kotlinx.serialization.*

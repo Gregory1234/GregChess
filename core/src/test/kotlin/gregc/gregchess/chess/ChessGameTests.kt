@@ -2,7 +2,8 @@ package gregc.gregchess.chess
 
 import assertk.assertThat
 import assertk.assertions.*
-import gregc.gregchess.chess.component.*
+import gregc.gregchess.board.AddVariantOptionsEvent
+import gregc.gregchess.board.Chessboard
 import gregc.gregchess.chess.piece.AddPieceHoldersEvent
 import gregc.gregchess.chess.piece.PieceMoveEvent
 import gregc.gregchess.chess.variant.ChessVariant

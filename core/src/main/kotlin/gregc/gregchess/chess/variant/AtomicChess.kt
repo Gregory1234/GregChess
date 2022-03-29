@@ -1,5 +1,7 @@
 package gregc.gregchess.chess.variant
 
+import gregc.gregchess.board.ChessboardView
+import gregc.gregchess.board.boardView
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.move.*
 import gregc.gregchess.chess.piece.*

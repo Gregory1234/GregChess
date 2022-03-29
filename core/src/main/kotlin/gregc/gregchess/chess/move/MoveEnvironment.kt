@@ -1,10 +1,10 @@
 package gregc.gregchess.chess.move
 
 import gregc.gregchess.chess.Color
-import gregc.gregchess.chess.component.ComponentHolder
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import gregc.gregchess.game.ChessEvent
+import gregc.gregchess.game.ComponentHolder
 
 @Suppress("UNCHECKED_CAST")
 interface MoveEnvironment : PieceHolder<PlacedPiece>, ComponentHolder, PieceEventCaller {

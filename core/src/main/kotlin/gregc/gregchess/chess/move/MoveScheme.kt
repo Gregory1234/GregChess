@@ -1,5 +1,6 @@
 package gregc.gregchess.chess.move
 
+import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.util.rotationsOf

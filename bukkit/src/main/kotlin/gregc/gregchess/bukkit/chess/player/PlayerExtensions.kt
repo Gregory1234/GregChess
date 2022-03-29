@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit.chess.player
 
+import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*

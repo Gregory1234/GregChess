@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit.command
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkitutils.command.*
-import gregc.gregchess.chess.FEN
+import gregc.gregchess.board.FEN
 import gregc.gregchess.chess.Pos
 import gregc.gregchess.registry.FiniteRegistryView
 import org.bukkit.command.CommandSender

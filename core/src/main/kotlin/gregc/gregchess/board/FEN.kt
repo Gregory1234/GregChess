@@ -1,5 +1,6 @@
-package gregc.gregchess.chess
+package gregc.gregchess.board
 
+import gregc.gregchess.chess.*
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.chess.variant.ChessVariant
 import kotlinx.serialization.Serializable

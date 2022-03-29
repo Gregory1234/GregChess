@@ -1,8 +1,9 @@
 package gregc.gregchess.chess.move
 
 import gregc.gregchess.ChessModule
+import gregc.gregchess.board.board
+import gregc.gregchess.board.boardView
 import gregc.gregchess.chess.*
-import gregc.gregchess.chess.component.board
 import gregc.gregchess.chess.piece.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.util.*

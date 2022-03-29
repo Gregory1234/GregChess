@@ -1,8 +1,6 @@
 package gregc.gregchess.fabric.chess.component
 
 import gregc.gregchess.chess.Pos
-import gregc.gregchess.chess.component.Component
-import gregc.gregchess.chess.component.ComponentHolder
 import gregc.gregchess.chess.piece.BoardPiece
 import gregc.gregchess.chess.piece.PieceMoveEvent
 import gregc.gregchess.fabric.chess.*

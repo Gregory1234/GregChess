@@ -1,6 +1,6 @@
 package gregc.gregchess.fabric.chess.component
 
-import gregc.gregchess.chess.component.ComponentType
+import gregc.gregchess.game.ComponentType
 import gregc.gregchess.util.RegisterAll
 
 @RegisterAll(ComponentType::class)
