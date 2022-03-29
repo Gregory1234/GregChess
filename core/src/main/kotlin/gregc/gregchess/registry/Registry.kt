@@ -1,5 +1,6 @@
 package gregc.gregchess.registry
 
+import gregc.gregchess.ChessFlag
 import gregc.gregchess.ChessModule
 import gregc.gregchess.board.ChessVariantOption
 import gregc.gregchess.game.ComponentType
@@ -9,7 +10,6 @@ import gregc.gregchess.piece.PlacedPieceType
 import gregc.gregchess.player.ChessPlayerType
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.stats.ChessStat
-import gregc.gregchess.util.ChessFlag
 import gregc.gregchess.variant.ChessVariant
 
 private class RegistryValidationException(

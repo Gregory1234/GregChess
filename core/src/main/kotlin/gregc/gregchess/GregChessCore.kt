@@ -8,8 +8,6 @@ import gregc.gregchess.piece.PlacedPieceType
 import gregc.gregchess.player.ChessPlayerType
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.stats.ChessStat
-import gregc.gregchess.util.AutoRegister
-import gregc.gregchess.util.ChessFlag
 import gregc.gregchess.variant.ChessVariants
 
 object GregChessCore {

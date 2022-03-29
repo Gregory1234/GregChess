@@ -1,8 +1,8 @@
 package gregc.gregchess.board
 
+import gregc.gregchess.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.piece.*
-import gregc.gregchess.util.*
 
 interface ChessboardView : PieceHolderView<BoardPiece> {
     operator fun get(pos: Pos): BoardPiece?

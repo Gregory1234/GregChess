@@ -1,14 +1,12 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.ChessModule
-import gregc.gregchess.GregChessCore
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
 import gregc.gregchess.game.Component
 import gregc.gregchess.game.ComponentType
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.EndReason
-import gregc.gregchess.util.*
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin

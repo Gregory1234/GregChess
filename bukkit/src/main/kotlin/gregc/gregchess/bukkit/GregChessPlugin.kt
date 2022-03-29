@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit
 
+import gregc.gregchess.Color
 import gregc.gregchess.bukkit.chess.*
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.*
@@ -9,9 +10,10 @@ import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
 import gregc.gregchess.bukkitutils.requests.*
+import gregc.gregchess.byColor
 import gregc.gregchess.clock.clock
 import gregc.gregchess.game.ChessGame
-import gregc.gregchess.move.scheme.*
+import gregc.gregchess.move.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceRegistryView
 import gregc.gregchess.player.EngineChessSide
@@ -19,8 +21,6 @@ import gregc.gregchess.player.toPlayer
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.*
 import gregc.gregchess.stats.ChessStat
-import gregc.gregchess.util.Color
-import gregc.gregchess.util.byColor
 import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString

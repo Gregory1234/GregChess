@@ -1,15 +1,13 @@
 package gregc.gregchess.variant
 
+import gregc.gregchess.Color
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.FEN
 import gregc.gregchess.game.ChessGame
-import gregc.gregchess.move.Move
-import gregc.gregchess.move.scheme.pawnMovement
-import gregc.gregchess.move.scheme.promotions
+import gregc.gregchess.move.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.results.*
-import gregc.gregchess.util.Color
 
 object HordeChess : ChessVariant() {
 

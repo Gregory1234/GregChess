@@ -1,8 +1,8 @@
 package gregc.gregchess.chess
 
+import gregc.gregchess.*
 import gregc.gregchess.board.FEN
 import gregc.gregchess.piece.Piece
-import gregc.gregchess.util.*
 
 class FENBuilder {
     private val pieces = mutableMapOf<Pos, Piece>()

@@ -1,6 +1,6 @@
 package gregc.gregchess.results
 
-import gregc.gregchess.util.Color
+import gregc.gregchess.Color
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.*

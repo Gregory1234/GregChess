@@ -1,9 +1,9 @@
 package gregc.gregchess.move
 
+import gregc.gregchess.Pos
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.PlacedPiece
 import gregc.gregchess.piece.boardPiece
-import gregc.gregchess.util.Pos
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -2,8 +2,8 @@
 
 package gregc.gregchess.clock
 
+import gregc.gregchess.*
 import gregc.gregchess.game.*
-import gregc.gregchess.util.*
 import kotlinx.serialization.*
 import java.time.Instant
 import kotlin.time.Duration

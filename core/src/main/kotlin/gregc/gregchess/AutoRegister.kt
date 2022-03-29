@@ -1,7 +1,5 @@
-package gregc.gregchess.util
+package gregc.gregchess
 
-import gregc.gregchess.ChessModule
-import gregc.gregchess.GregChessCore
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSuperclassOf

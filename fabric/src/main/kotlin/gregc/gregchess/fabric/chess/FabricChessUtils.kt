@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric.chess
 
+import gregc.gregchess.Pos
 import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
 import gregc.gregchess.fabric.chess.player.FabricChessSide
@@ -8,7 +9,6 @@ import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.GameResults
-import gregc.gregchess.util.Pos
 import gregc.gregchess.variant.ChessVariant
 import net.minecraft.item.Item
 import net.minecraft.text.Text

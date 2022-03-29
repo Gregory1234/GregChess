@@ -1,4 +1,4 @@
-package gregc.gregchess.util
+package gregc.gregchess
 
 import kotlinx.serialization.Serializable
 

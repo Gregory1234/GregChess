@@ -1,10 +1,9 @@
 package gregc.gregchess.game
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.registry.*
-import gregc.gregchess.util.*
 import kotlinx.serialization.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.KClass

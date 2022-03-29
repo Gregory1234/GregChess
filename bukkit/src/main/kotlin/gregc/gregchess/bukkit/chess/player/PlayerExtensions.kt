@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit.chess.player
 
+import gregc.gregchess.*
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.*
@@ -10,7 +11,6 @@ import gregc.gregchess.move.Move
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.results.*
-import gregc.gregchess.util.*
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 

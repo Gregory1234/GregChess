@@ -1,11 +1,11 @@
 package gregc.gregchess.bukkit.command
 
+import gregc.gregchess.Pos
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.registry.FiniteRegistryView
-import gregc.gregchess.util.Pos
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 

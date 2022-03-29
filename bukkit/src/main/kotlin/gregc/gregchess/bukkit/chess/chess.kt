@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.chess
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.BukkitRegistry
 import gregc.gregchess.bukkit.chess.component.*
 import gregc.gregchess.bukkit.chess.player.BukkitChessSide
@@ -13,7 +13,6 @@ import gregc.gregchess.piece.*
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
 import gregc.gregchess.results.*
-import gregc.gregchess.util.*
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.Sound

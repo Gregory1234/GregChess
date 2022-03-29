@@ -1,13 +1,12 @@
 package gregc.gregchess.move.trait
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.board.board
 import gregc.gregchess.board.boardView
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.*
-import gregc.gregchess.util.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule

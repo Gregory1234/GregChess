@@ -1,5 +1,7 @@
 package gregc.gregchess.fabric.chess
 
+import gregc.gregchess.Pos
+import gregc.gregchess.byColor
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.chess.component.FabricRenderer
 import gregc.gregchess.fabric.chess.player.gregchess
@@ -8,8 +10,6 @@ import gregc.gregchess.game.ChessGame
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.drawBy
-import gregc.gregchess.util.Pos
-import gregc.gregchess.util.byColor
 import gregc.gregchess.variant.ChessVariant
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription

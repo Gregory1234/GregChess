@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit.chess.component
 
+import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.chess.AddPropertiesEvent
 import gregc.gregchess.bukkit.chess.PropertyType
@@ -9,7 +10,6 @@ import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.clock.TimeControl
 import gregc.gregchess.clock.clock
 import gregc.gregchess.game.*
-import gregc.gregchess.util.Register
 import gregc.gregchess.variant.ThreeChecks
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

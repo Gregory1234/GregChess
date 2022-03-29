@@ -1,13 +1,13 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.GregChessCore
+import gregc.gregchess.Register
 import gregc.gregchess.fabric.chess.component.FabricComponentType
 import gregc.gregchess.fabric.chess.player.FabricPlayerType
 import gregc.gregchess.fabric.chess.simpleFloorRenderer
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.results.DrawEndReason
 import gregc.gregchess.results.EndReason
-import gregc.gregchess.util.Register
 import gregc.gregchess.variant.KingOfTheHill
 import net.minecraft.util.Rarity
 

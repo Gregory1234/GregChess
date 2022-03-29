@@ -1,6 +1,6 @@
 package gregc.gregchess.registry
 
-import gregc.gregchess.util.ClassMapSerializer
+import gregc.gregchess.ClassMapSerializer
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*

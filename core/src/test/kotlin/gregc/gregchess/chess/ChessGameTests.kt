@@ -4,12 +4,12 @@ import assertk.assertThat
 import assertk.assertions.*
 import gregc.gregchess.board.AddVariantOptionsEvent
 import gregc.gregchess.board.Chessboard
+import gregc.gregchess.byColor
 import gregc.gregchess.game.*
 import gregc.gregchess.piece.AddPieceHoldersEvent
 import gregc.gregchess.piece.PieceMoveEvent
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
-import gregc.gregchess.util.byColor
 import gregc.gregchess.variant.ChessVariant
 import io.mockk.*
 import kotlinx.coroutines.isActive

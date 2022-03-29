@@ -1,15 +1,12 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.ChessModule
-import gregc.gregchess.GregChessCore
+import gregc.gregchess.*
 import gregc.gregchess.game.*
 import gregc.gregchess.player.ChessPlayerType
 import gregc.gregchess.player.ChessSide
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.DetEndReason
 import gregc.gregchess.results.EndReason
-import gregc.gregchess.util.Color
-import gregc.gregchess.util.Register
 import gregc.gregchess.variant.ChessVariant
 import io.mockk.clearMocks
 import io.mockk.spyk

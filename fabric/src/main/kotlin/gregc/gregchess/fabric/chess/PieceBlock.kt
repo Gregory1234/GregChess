@@ -2,8 +2,8 @@ package gregc.gregchess.fabric.chess
 
 import gregc.gregchess.fabric.chess.player.FabricChessSide
 import gregc.gregchess.fabric.chess.player.gregchess
-import gregc.gregchess.move.scheme.phantomClear
-import gregc.gregchess.move.scheme.phantomSpawn
+import gregc.gregchess.move.phantomClear
+import gregc.gregchess.move.phantomSpawn
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.Piece
 import net.minecraft.block.*

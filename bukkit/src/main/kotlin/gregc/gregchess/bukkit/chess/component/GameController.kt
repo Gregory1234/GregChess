@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit.chess.component
 
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.chess.*
@@ -9,7 +10,6 @@ import gregc.gregchess.move.Move
 import gregc.gregchess.results.GameResults
 import gregc.gregchess.stats.VoidPlayerStatsSink
 import gregc.gregchess.stats.addStats
-import gregc.gregchess.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable

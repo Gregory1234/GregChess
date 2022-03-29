@@ -1,5 +1,6 @@
 package gregc.gregchess.variant
 
+import gregc.gregchess.*
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.boardView
 import gregc.gregchess.game.*
@@ -9,7 +10,6 @@ import gregc.gregchess.move.trait.MoveTrait
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.results.*
-import gregc.gregchess.util.*
 import kotlinx.serialization.*
 
 object ThreeChecks : ChessVariant(), Registering {

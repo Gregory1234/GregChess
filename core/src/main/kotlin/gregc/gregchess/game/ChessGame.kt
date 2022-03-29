@@ -10,7 +10,6 @@ import gregc.gregchess.piece.*
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.player.ChessSide
 import gregc.gregchess.results.*
-import gregc.gregchess.util.*
 import gregc.gregchess.variant.ChessVariant
 import kotlinx.coroutines.*
 import kotlinx.serialization.*

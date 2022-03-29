@@ -3,6 +3,7 @@ package gregc.gregchess.chess.variant
 import assertk.Assert
 import assertk.all
 import assertk.assertions.*
+import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.chess.GregChess
@@ -12,7 +13,6 @@ import gregc.gregchess.game.Component
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
-import gregc.gregchess.util.*
 import gregc.gregchess.variant.ChessVariant
 
 open class VariantTests(val variant: ChessVariant, val extraComponents: Collection<Component> = emptyList()) {

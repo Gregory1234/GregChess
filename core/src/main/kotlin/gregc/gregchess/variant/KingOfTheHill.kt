@@ -1,8 +1,8 @@
 package gregc.gregchess.variant
 
+import gregc.gregchess.*
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.results.*
-import gregc.gregchess.util.*
 
 object KingOfTheHill : ChessVariant(), Registering {
 

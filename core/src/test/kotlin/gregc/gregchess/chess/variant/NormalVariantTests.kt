@@ -3,11 +3,11 @@ package gregc.gregchess.chess.variant
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.isNotNull
+import gregc.gregchess.*
 import gregc.gregchess.chess.fen
 import gregc.gregchess.chess.setupRegistry
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.*
-import gregc.gregchess.util.*
 import gregc.gregchess.variant.ChessVariant
 import org.junit.jupiter.api.*
 

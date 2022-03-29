@@ -1,9 +1,9 @@
 package gregc.gregchess.move
 
+import gregc.gregchess.Color
 import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.game.ComponentHolder
 import gregc.gregchess.piece.*
-import gregc.gregchess.util.Color
 import gregc.gregchess.variant.ChessVariant
 
 @Suppress("UNCHECKED_CAST")

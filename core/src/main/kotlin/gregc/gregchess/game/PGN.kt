@@ -1,9 +1,9 @@
 package gregc.gregchess.game
 
+import gregc.gregchess.Color
 import gregc.gregchess.clock.clock
 import gregc.gregchess.registry.name
-import gregc.gregchess.util.Color
-import gregc.gregchess.util.snakeToPascal
+import gregc.gregchess.snakeToPascal
 import gregc.gregchess.variant.ChessVariant
 import java.time.format.DateTimeFormatter
 

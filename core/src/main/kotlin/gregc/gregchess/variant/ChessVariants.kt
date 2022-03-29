@@ -1,8 +1,7 @@
 package gregc.gregchess.variant
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.registry.Registry
-import gregc.gregchess.util.*
 
 object ChessVariants {
     internal val AUTO_REGISTER = AutoRegisterType(ChessVariant::class) { m, n, _ ->

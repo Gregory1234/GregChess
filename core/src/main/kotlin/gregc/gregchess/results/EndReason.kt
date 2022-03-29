@@ -1,8 +1,7 @@
 package gregc.gregchess.results
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.registry.*
-import gregc.gregchess.util.*
 import kotlinx.serialization.Serializable
 
 typealias DetEndReason = EndReason<GameScore.Victory>

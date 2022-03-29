@@ -1,11 +1,9 @@
-package gregc.gregchess.move.scheme
+package gregc.gregchess.move
 
-import gregc.gregchess.move.Move
-import gregc.gregchess.move.PieceTracker
+import gregc.gregchess.Color
+import gregc.gregchess.Pos
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.BoardPiece
-import gregc.gregchess.util.Color
-import gregc.gregchess.util.Pos
 
 fun phantomSpawn(piece: BoardPiece): Move = Move(
     PieceTracker(), piece.pos, emptySet(), setOf(piece.pos), setOf(piece.pos), setOf(piece.pos), true,

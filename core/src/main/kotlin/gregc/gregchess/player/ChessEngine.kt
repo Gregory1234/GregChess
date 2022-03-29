@@ -1,5 +1,6 @@
 package gregc.gregchess.player
 
+import gregc.gregchess.*
 import gregc.gregchess.board.FEN
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.move.trait.promotionTrait
@@ -7,7 +8,6 @@ import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.of
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
-import gregc.gregchess.util.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 

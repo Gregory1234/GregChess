@@ -1,9 +1,8 @@
 package gregc.gregchess.board
 
-import gregc.gregchess.ChessModule
+import gregc.gregchess.*
 import gregc.gregchess.registry.NameRegistered
 import gregc.gregchess.registry.Registry
-import gregc.gregchess.util.*
 
 class ChessVariantOption<T>(val pgnNameFragment: (T) -> String?) : NameRegistered {
 

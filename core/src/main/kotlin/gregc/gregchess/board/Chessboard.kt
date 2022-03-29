@@ -1,13 +1,13 @@
 package gregc.gregchess.board
 
-import gregc.gregchess.variant.ChessVariant
+import gregc.gregchess.*
 import gregc.gregchess.game.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.piece.*
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
-import gregc.gregchess.util.*
+import gregc.gregchess.variant.ChessVariant
 import kotlinx.serialization.*
 import kotlin.collections.component1
 import kotlin.collections.component2

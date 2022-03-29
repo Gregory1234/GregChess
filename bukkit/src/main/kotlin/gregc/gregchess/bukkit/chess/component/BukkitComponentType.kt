@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit.chess.component
 
+import gregc.gregchess.RegisterAll
 import gregc.gregchess.game.ComponentType
-import gregc.gregchess.util.RegisterAll
 
 @RegisterAll(ComponentType::class)
 object BukkitComponentType {

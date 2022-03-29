@@ -1,10 +1,10 @@
 package gregc.gregchess.bukkit.chess
 
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.stats.*
-import gregc.gregchess.util.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import org.bukkit.Bukkit
