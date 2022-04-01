@@ -1,10 +1,8 @@
-package gregc.gregchess.bukkit.chess.player
+package gregc.gregchess.bukkit.player
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.chess.configName
-import gregc.gregchess.bukkit.chess.item
-import gregc.gregchess.bukkit.message
-import gregc.gregchess.bukkit.title
+import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.game.ChessEvent
 import gregc.gregchess.game.ChessGame

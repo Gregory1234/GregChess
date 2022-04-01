@@ -1,10 +1,11 @@
-package gregc.gregchess.bukkit.chess
+package gregc.gregchess.bukkit.game
 
 import gregc.gregchess.Register
 import gregc.gregchess.bukkit.GregChessPlugin
-import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.bukkit.chess.player.*
+import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.registerEvents
+import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
+import gregc.gregchess.bukkit.renderer.renderer
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.results.*
 import org.bukkit.Bukkit

@@ -3,9 +3,10 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.GregChessCore
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
-import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.bukkit.chess.player.BukkitPlayerType
+import gregc.gregchess.bukkit.game.*
+import gregc.gregchess.bukkit.player.BukkitPlayerType
+import gregc.gregchess.bukkit.renderer.*
+import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.clock.TimeControl

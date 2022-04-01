@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkit.chess
+package gregc.gregchess.bukkit.game
 
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.*

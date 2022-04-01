@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkit.chess.component
+package gregc.gregchess.bukkit.game
 
 import gregc.gregchess.game.*
 import gregc.gregchess.player.ChessSide

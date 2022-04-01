@@ -1,10 +1,12 @@
-package gregc.gregchess.bukkit.chess.component
+package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
 import gregc.gregchess.Color
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.player.PiecePlayerActionEvent
+import gregc.gregchess.bukkit.game.BukkitComponentType
+import gregc.gregchess.bukkit.piece.getSound
+import gregc.gregchess.bukkit.piece.structure
+import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
 import gregc.gregchess.game.*
 import gregc.gregchess.piece.*
 import gregc.gregchess.variant.AtomicChess
@@ -205,10 +207,6 @@ data class BukkitRenderer(
                 }
             }
     }
-}
-
-fun interface ChessFloorRenderer {
-    fun ChessGame.getFloorMaterial(p: Pos): Material
 }
 
 val ChessGame.arena get() = renderer.arena

@@ -1,10 +1,13 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.Color
-import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.bukkit.chess.player.*
 import gregc.gregchess.bukkit.command.*
+import gregc.gregchess.bukkit.game.*
+import gregc.gregchess.bukkit.piece.getInfo
+import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.renderer.*
+import gregc.gregchess.bukkit.stats.BukkitPlayerStats
+import gregc.gregchess.bukkit.stats.openStatsMenu
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext

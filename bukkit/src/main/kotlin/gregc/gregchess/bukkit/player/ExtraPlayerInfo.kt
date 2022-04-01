@@ -1,8 +1,8 @@
-package gregc.gregchess.bukkit.chess.player
+package gregc.gregchess.bukkit.player
 
-import gregc.gregchess.bukkit.chess.ChessGameManager
-import gregc.gregchess.bukkit.chess.ResetPlayerEvent
-import gregc.gregchess.bukkit.chess.component.spectators
+import gregc.gregchess.bukkit.game.ChessGameManager
+import gregc.gregchess.bukkit.game.spectators
+import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.game.ChessGame
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player

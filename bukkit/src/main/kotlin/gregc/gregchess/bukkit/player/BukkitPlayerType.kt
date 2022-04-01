@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkit.chess.player
+package gregc.gregchess.bukkit.player
 
 import gregc.gregchess.RegisterAll
 import gregc.gregchess.bukkit.UUIDAsStringSerializer

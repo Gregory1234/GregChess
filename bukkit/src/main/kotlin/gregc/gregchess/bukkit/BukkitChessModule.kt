@@ -1,8 +1,9 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.component.ChessFloorRenderer
+import gregc.gregchess.bukkit.properties.PropertyType
+import gregc.gregchess.bukkit.renderer.*
+import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.game.Component
 import gregc.gregchess.game.ComponentType
 import gregc.gregchess.registry.*

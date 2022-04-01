@@ -1,9 +1,10 @@
-package gregc.gregchess.bukkit.chess
+package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.chess.component.*
-import gregc.gregchess.bukkit.chess.player.*
+import gregc.gregchess.bukkit.game.*
+import gregc.gregchess.bukkit.piece.item
+import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.game.*
 import gregc.gregchess.results.*
 import org.bukkit.*

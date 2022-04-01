@@ -1,6 +1,6 @@
-package gregc.gregchess.bukkit.chess.component
+package gregc.gregchess.bukkit.game
 
-import gregc.gregchess.bukkit.chess.player.showGameResults
+import gregc.gregchess.bukkit.player.showGameResults
 import gregc.gregchess.game.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

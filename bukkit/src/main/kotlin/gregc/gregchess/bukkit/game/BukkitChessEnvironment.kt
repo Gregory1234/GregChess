@@ -1,5 +1,7 @@
-package gregc.gregchess.bukkit
+package gregc.gregchess.bukkit.game
 
+import gregc.gregchess.bukkit.GregChessPlugin
+import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import gregc.gregchess.game.ChessEnvironment

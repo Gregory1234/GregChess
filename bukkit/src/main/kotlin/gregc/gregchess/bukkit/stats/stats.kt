@@ -1,7 +1,8 @@
-package gregc.gregchess.bukkit.chess
+package gregc.gregchess.bukkit.stats
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.game.SettingsManager
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.stats.*

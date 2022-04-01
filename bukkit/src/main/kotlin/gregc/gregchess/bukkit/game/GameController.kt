@@ -1,10 +1,12 @@
-package gregc.gregchess.bukkit.chess.component
+package gregc.gregchess.bukkit.game
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.BukkitRegistering
-import gregc.gregchess.bukkit.GregChessPlugin
-import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.player.*
+import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.properties.AddPropertiesEvent
+import gregc.gregchess.bukkit.properties.PropertyType
+import gregc.gregchess.bukkit.results.quick
+import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.game.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.results.GameResults

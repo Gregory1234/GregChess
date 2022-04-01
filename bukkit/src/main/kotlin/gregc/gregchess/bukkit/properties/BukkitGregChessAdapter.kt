@@ -1,10 +1,9 @@
-package gregc.gregchess.bukkit.chess.component
+package gregc.gregchess.bukkit.properties
 
 import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
-import gregc.gregchess.bukkit.chess.AddPropertiesEvent
-import gregc.gregchess.bukkit.chess.PropertyType
 import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.game.BukkitComponentType
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.clock.TimeControl

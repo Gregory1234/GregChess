@@ -1,6 +1,9 @@
-package gregc.gregchess.bukkit.chess.component
+package gregc.gregchess.bukkit.game
 
 import gregc.gregchess.RegisterAll
+import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
+import gregc.gregchess.bukkit.properties.ScoreboardManager
+import gregc.gregchess.bukkit.renderer.BukkitRenderer
 import gregc.gregchess.game.ComponentType
 
 @RegisterAll(ComponentType::class)

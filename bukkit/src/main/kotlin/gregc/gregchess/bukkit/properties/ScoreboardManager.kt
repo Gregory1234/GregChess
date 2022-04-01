@@ -1,10 +1,10 @@
-package gregc.gregchess.bukkit.chess.component
+package gregc.gregchess.bukkit.properties
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.BukkitRegistering
-import gregc.gregchess.bukkit.chess.*
-import gregc.gregchess.bukkit.chess.player.forEachReal
-import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.game.*
+import gregc.gregchess.bukkit.player.forEachReal
+import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.game.*
 import kotlinx.serialization.Serializable

@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit
 
+import gregc.gregchess.bukkit.game.BukkitChessEnvironment
 import gregc.gregchess.game.ChessEnvironment
 import gregc.gregchess.registry.*
 import gregc.gregchess.registry.Registry

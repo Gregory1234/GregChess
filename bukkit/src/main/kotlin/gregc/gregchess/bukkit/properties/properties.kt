@@ -1,10 +1,11 @@
-package gregc.gregchess.bukkit.chess
+package gregc.gregchess.bukkit.properties
 
-import gregc.gregchess.AutoRegisterType
-import gregc.gregchess.Color
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.BukkitRegistry
+import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.game.ChessEvent
-import gregc.gregchess.registry.NameRegistered
+import gregc.gregchess.registry.*
 
 class AddPropertiesEvent(
     private val playerProperties: MutableMap<PropertyType, PlayerProperty>,
@@ -43,3 +44,5 @@ abstract class PlayerProperty(val type: PropertyType) {
 abstract class GameProperty(val type: PropertyType) {
     abstract operator fun invoke(): String
 }
+
+val PropertyType.localName get() = module.config.getPathString("Scoreboard.${name.snakeToPascal()}")
