@@ -1,7 +1,8 @@
-package gregc.gregchess.fabric.chess
+package gregc.gregchess.fabric.piece
 
-import gregc.gregchess.fabric.chess.player.FabricChessSide
-import gregc.gregchess.fabric.chess.player.gregchess
+import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
+import gregc.gregchess.fabric.player.FabricChessSide
+import gregc.gregchess.fabric.player.gregchess
 import gregc.gregchess.move.phantomClear
 import gregc.gregchess.move.phantomSpawn
 import gregc.gregchess.piece.BoardPiece

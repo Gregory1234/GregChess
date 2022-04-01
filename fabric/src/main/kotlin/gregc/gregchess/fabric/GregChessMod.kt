@@ -1,6 +1,10 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.fabric.chess.*
+import gregc.gregchess.fabric.block.*
+import gregc.gregchess.fabric.client.ChessControllerGuiDescription
+import gregc.gregchess.fabric.client.PromotionMenuGuiDescription
+import gregc.gregchess.fabric.game.ChessGameManager
+import gregc.gregchess.fabric.piece.item
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.white
 import net.fabricmc.api.ModInitializer

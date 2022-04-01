@@ -1,7 +1,7 @@
-package gregc.gregchess.fabric.chess.player
+package gregc.gregchess.fabric.player
 
 import gregc.gregchess.Color
-import gregc.gregchess.fabric.chess.text
+import gregc.gregchess.fabric.results.text
 import gregc.gregchess.results.GameResults
 import gregc.gregchess.results.GameScore
 import net.minecraft.entity.player.PlayerEntity

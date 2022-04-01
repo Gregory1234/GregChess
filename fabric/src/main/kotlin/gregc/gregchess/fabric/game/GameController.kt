@@ -1,8 +1,8 @@
-package gregc.gregchess.fabric.chess.component
+package gregc.gregchess.fabric.game
 
-import gregc.gregchess.fabric.chess.ChessGameManager
-import gregc.gregchess.fabric.chess.player.forEachUniqueEntity
-import gregc.gregchess.fabric.chess.player.showGameResults
+import gregc.gregchess.fabric.player.forEachUniqueEntity
+import gregc.gregchess.fabric.player.showGameResults
+import gregc.gregchess.fabric.renderer.server
 import gregc.gregchess.game.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

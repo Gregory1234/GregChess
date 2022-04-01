@@ -1,17 +1,12 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.*
-import gregc.gregchess.fabric.chess.*
-import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
+import gregc.gregchess.fabric.piece.PieceBlock
+import gregc.gregchess.fabric.renderer.ChessFloorRenderer
+import gregc.gregchess.fabric.renderer.simpleFloorRenderer
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.variant.ChessVariant
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Blocks
-import net.minecraft.item.BlockItem
-import net.minecraft.util.Rarity
-import net.minecraft.util.registry.Registry as MinecraftRegistry
 
 object FabricRegistry {
     @JvmField
@@ -24,21 +19,6 @@ operator fun <T> ConnectedBiRegistry<Piece, T>.set(key: PieceType, v: ByColor<T>
     Color.forEach {
         set(key.of(it), v[it])
     }
-}
-
-private fun PieceBlock.registerMinecraft(p: Piece, itemSettings: FabricItemSettings): PieceBlock = apply {
-    MinecraftRegistry.register(MinecraftRegistry.BLOCK, p.id, this)
-    MinecraftRegistry.register(MinecraftRegistry.ITEM, p.id, BlockItem(this, itemSettings))
-}
-
-fun PieceType.shortPieceBlocks() = byColor {
-    ShortPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-        .registerMinecraft(of(it), FabricItemSettings().group(GregChessMod.CHESS_GROUP))
-}
-
-fun PieceType.tallPieceBlocks(rarity: Rarity) = byColor {
-    TallPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-        .registerMinecraft(of(it), FabricItemSettings().group(GregChessMod.CHESS_GROUP).rarity(rarity))
 }
 
 abstract class FabricChessModule(name: String, namespace: String) : ChessModule(name, namespace) {

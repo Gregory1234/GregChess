@@ -1,24 +1,18 @@
-package gregc.gregchess.fabric.chess
+package gregc.gregchess.fabric.renderer
 
 import gregc.gregchess.Pos
 import gregc.gregchess.fabric.FabricRegistry
-import gregc.gregchess.fabric.chess.component.ChessFloorRenderer
-import gregc.gregchess.fabric.chess.player.FabricChessSide
+import gregc.gregchess.fabric.block.Floor
+import gregc.gregchess.fabric.player.FabricChessSide
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
-import gregc.gregchess.piece.Piece
-import gregc.gregchess.registry.*
-import gregc.gregchess.results.GameResults
 import gregc.gregchess.variant.ChessVariant
-import net.minecraft.item.Item
-import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
-import net.minecraft.util.Identifier
 
-val NameRegistered.id get() = Identifier(module.namespace, name)
 
-val Piece.block get() = FabricRegistry.PIECE_BLOCK[this]
-val Piece.item: Item get() = block.asItem()
+fun interface ChessFloorRenderer {
+    fun ChessGame.getFloorMaterial(p: Pos): Floor
+}
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
     val heldPiece = (currentSide as? FabricChessSide)?.held
@@ -44,9 +38,3 @@ fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFl
 
 val ChessVariant.floorRenderer: ChessFloorRenderer
     get() = FabricRegistry.FLOOR_RENDERER[this]
-
-val GameResults.text: Text get() = TranslatableText("end_reason.${endReason.module.namespace}.${endReason.name}", *args.toTypedArray())
-
-fun Pos.toLong() = (file.toLong() shl 32) or rank.toLong()
-
-fun Pos.Companion.fromLong(v: Long) = Pos((v shr 32).toInt(), v.toInt())

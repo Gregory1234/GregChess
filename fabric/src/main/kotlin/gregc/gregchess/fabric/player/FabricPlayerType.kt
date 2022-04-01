@@ -1,4 +1,4 @@
-package gregc.gregchess.fabric.chess.player
+package gregc.gregchess.fabric.player
 
 import gregc.gregchess.RegisterAll
 import gregc.gregchess.fabric.GameProfileSerializer

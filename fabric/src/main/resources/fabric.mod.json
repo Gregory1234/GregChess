@@ -19,7 +19,7 @@
     "client": [
       {
         "adapter": "kotlin",
-        "value": "gregc.gregchess.fabric.GregChessModClient"
+        "value": "gregc.gregchess.fabric.client.GregChessModClient"
       }
     ],
     "chess": [

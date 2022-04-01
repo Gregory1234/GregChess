@@ -1,13 +1,14 @@
-package gregc.gregchess.fabric.chess
+package gregc.gregchess.fabric.game
 
 import gregc.gregchess.Pos
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.fabric.GregChess
-import gregc.gregchess.fabric.chess.component.*
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
 import gregc.gregchess.fabric.nbt.*
+import gregc.gregchess.fabric.renderer.FabricRenderer
+import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.game.Component
 import gregc.gregchess.piece.Piece

@@ -1,9 +1,12 @@
-package gregc.gregchess.fabric.chess.component
+package gregc.gregchess.fabric.renderer
 
 import gregc.gregchess.Pos
-import gregc.gregchess.fabric.chess.*
-import gregc.gregchess.fabric.chess.player.PiecePlayerActionEvent
+import gregc.gregchess.fabric.block.ChessControllerBlockEntity
+import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
+import gregc.gregchess.fabric.game.FabricComponentType
 import gregc.gregchess.fabric.moveBlock
+import gregc.gregchess.fabric.piece.*
+import gregc.gregchess.fabric.player.PiecePlayerActionEvent
 import gregc.gregchess.game.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceMoveEvent
@@ -143,10 +146,6 @@ data class FabricRenderer(
 }
 
 val ComponentHolder.server get() = renderer?.world?.server
-
-fun interface ChessFloorRenderer {
-    fun ChessGame.getFloorMaterial(p: Pos): Floor
-}
 
 val ChessGame.renderer get() = require(FabricComponentType.RENDERER)
 val ComponentHolder.renderer get() = get(FabricComponentType.RENDERER)

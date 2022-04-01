@@ -1,7 +1,6 @@
-package gregc.gregchess.fabric
+package gregc.gregchess.fabric.client
 
-import gregc.gregchess.fabric.chess.ChessControllerBlockScreen
-import gregc.gregchess.fabric.chess.PromotionMenu
+import gregc.gregchess.fabric.GregChessMod
 import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.gui.screen.ingame.HandledScreens
 

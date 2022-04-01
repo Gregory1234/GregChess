@@ -1,6 +1,7 @@
-package gregc.gregchess.fabric.chess.component
+package gregc.gregchess.fabric.game
 
 import gregc.gregchess.RegisterAll
+import gregc.gregchess.fabric.renderer.FabricRenderer
 import gregc.gregchess.game.ComponentType
 
 @RegisterAll(ComponentType::class)

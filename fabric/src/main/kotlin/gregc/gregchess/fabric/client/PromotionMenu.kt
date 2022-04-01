@@ -1,6 +1,7 @@
-package gregc.gregchess.fabric.chess
+package gregc.gregchess.fabric.client
 
 import gregc.gregchess.fabric.*
+import gregc.gregchess.fabric.piece.item
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.piece.PieceRegistryView
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
