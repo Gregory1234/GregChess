@@ -1,7 +1,9 @@
 package gregc.gregchess.bukkit.game
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.BukkitRegistering
+import gregc.gregchess.bukkit.GregChessPlugin
+import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.properties.AddPropertiesEvent
 import gregc.gregchess.bukkit.properties.PropertyType

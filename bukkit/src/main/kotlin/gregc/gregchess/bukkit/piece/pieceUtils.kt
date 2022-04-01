@@ -1,6 +1,8 @@
 package gregc.gregchess.bukkit.piece
 
-import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.configName
+import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.game.ChessGame
 import gregc.gregchess.piece.*

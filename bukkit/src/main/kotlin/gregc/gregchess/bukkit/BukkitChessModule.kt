@@ -1,11 +1,13 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
+import gregc.gregchess.bukkit.move.defaultLocalMoveFormatter
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.renderer.*
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.game.Component
 import gregc.gregchess.game.ComponentType
+import gregc.gregchess.move.MoveFormatter
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.variant.ChessVariant

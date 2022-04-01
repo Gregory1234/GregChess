@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.player
 
-import gregc.gregchess.*
+import gregc.gregchess.Color
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.game.*
@@ -8,8 +8,10 @@ import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.results.message
 import gregc.gregchess.bukkit.results.name
 import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.byColor
 import gregc.gregchess.game.PGN
 import gregc.gregchess.move.Move
+import gregc.gregchess.move.MoveFormatter
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.results.*
