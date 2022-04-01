@@ -5,6 +5,7 @@ import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.game.*
 import gregc.gregchess.bukkit.player.BukkitPlayerType
+import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.renderer.*
 import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkitutils.toDuration

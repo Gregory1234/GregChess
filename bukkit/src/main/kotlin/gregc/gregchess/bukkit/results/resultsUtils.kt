@@ -1,6 +1,8 @@
 package gregc.gregchess.bukkit.results
 
-import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.configName
+import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name

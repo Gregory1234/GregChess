@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.Pos
-import gregc.gregchess.bukkit.BukkitRegistry
+import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.player.BukkitChessSide
 import gregc.gregchess.game.ChessGame

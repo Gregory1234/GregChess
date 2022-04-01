@@ -6,6 +6,8 @@ import gregc.gregchess.fabric.game.FabricComponentType
 import gregc.gregchess.fabric.piece.shortPieceBlocks
 import gregc.gregchess.fabric.piece.tallPieceBlocks
 import gregc.gregchess.fabric.player.FabricPlayerType
+import gregc.gregchess.fabric.registry.FabricRegistry
+import gregc.gregchess.fabric.registry.set
 import gregc.gregchess.fabric.renderer.simpleFloorRenderer
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.results.DrawEndReason

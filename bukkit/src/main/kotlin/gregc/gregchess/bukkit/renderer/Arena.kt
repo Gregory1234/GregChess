@@ -5,6 +5,8 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.game.*
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.registry.BukkitRegistry
+import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.game.*
 import gregc.gregchess.results.*
 import org.bukkit.*

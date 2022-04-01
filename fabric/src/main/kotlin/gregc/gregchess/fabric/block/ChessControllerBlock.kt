@@ -2,7 +2,8 @@ package gregc.gregchess.fabric.block
 
 import gregc.gregchess.Pos
 import gregc.gregchess.byColor
-import gregc.gregchess.fabric.*
+import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.client.ChessControllerGuiDescription
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
 import gregc.gregchess.fabric.game.ChessGameManager

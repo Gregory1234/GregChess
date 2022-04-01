@@ -1,13 +1,20 @@
 package gregc.gregchess.bukkit.game
 
-import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.message
+import gregc.gregchess.bukkit.registry.BukkitRegistry
+import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.game.Component
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 
+class SettingsParserContext(val variant: ChessVariant, val section: ConfigurationSection, val presetName: String)
+
+typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
 class GameSettings(
     val name: String,

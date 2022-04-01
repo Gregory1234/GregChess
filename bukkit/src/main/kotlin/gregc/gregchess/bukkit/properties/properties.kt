@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit.properties
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.BukkitRegistry
+import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.game.ChessEvent

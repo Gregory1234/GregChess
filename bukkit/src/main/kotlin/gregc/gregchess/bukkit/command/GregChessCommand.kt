@@ -4,6 +4,7 @@ import gregc.gregchess.Pos
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.registry.toKey
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.registry.FiniteRegistryView
 import org.bukkit.command.CommandSender

@@ -1,25 +1,9 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.*
-import gregc.gregchess.fabric.piece.PieceBlock
-import gregc.gregchess.fabric.renderer.ChessFloorRenderer
+import gregc.gregchess.ChessModule
+import gregc.gregchess.fabric.registry.FabricRegistry
 import gregc.gregchess.fabric.renderer.simpleFloorRenderer
-import gregc.gregchess.piece.*
-import gregc.gregchess.registry.*
-import gregc.gregchess.variant.ChessVariant
-
-object FabricRegistry {
-    @JvmField
-    val PIECE_BLOCK = ConnectedBiRegistry<Piece, PieceBlock>("piece_block", PieceRegistryView)
-    @JvmField
-    val FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
-}
-
-operator fun <T> ConnectedBiRegistry<Piece, T>.set(key: PieceType, v: ByColor<T>) {
-    Color.forEach {
-        set(key.of(it), v[it])
-    }
-}
+import gregc.gregchess.registry.Registry
 
 abstract class FabricChessModule(name: String, namespace: String) : ChessModule(name, namespace) {
     companion object {
