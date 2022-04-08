@@ -21,7 +21,6 @@ import kotlinx.serialization.Transient
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 
 enum class PlayerDirection {
     JOIN, LEAVE
@@ -70,7 +69,6 @@ class GameController(val presetName: String) : Component {
         }.runTaskTimer(GregChessPlugin.plugin, 0, 2)
     }
 
-    @OptIn(ExperimentalTime::class)
     private fun onStop() {
         val results = game.results!!
         with(game.board) {

@@ -13,7 +13,6 @@ import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.Plugin
 import java.util.*
 import kotlin.coroutines.*
-import kotlin.time.ExperimentalTime
 
 
 class RequestManager(private val plugin: Plugin, private val coroutineScope: CoroutineScope) : Listener {
@@ -67,7 +66,6 @@ class RequestType internal constructor(
         })
     }
 
-    @OptIn(ExperimentalTime::class)
     private fun call(request: Request, simple: Boolean) {
         if ((simple || config.getBoolean("Request.SelfAccept", true)) && request.senderUUID == request.receiverUUID) {
             request.cont.resume(RequestResponse.ACCEPT)

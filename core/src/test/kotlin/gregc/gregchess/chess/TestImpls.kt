@@ -12,7 +12,7 @@ import io.mockk.clearMocks
 import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import java.time.*
@@ -46,7 +46,7 @@ object TestVariant : ChessVariant()
 object TestChessEnvironment : ChessEnvironment {
     override val pgnSite: String get() = "GregChess test"
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val coroutineDispatcher: CoroutineDispatcher get() = TestCoroutineDispatcher()
+    override val coroutineDispatcher: CoroutineDispatcher get() = UnconfinedTestDispatcher()
     override val clock: Clock get() = Clock.fixed(Instant.EPOCH, ZoneId.systemDefault())
 }
 

@@ -13,7 +13,6 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 
 @Serializable
 class Stockfish(override val name: String = Config.engineName) : ChessEngine {
@@ -53,14 +52,12 @@ class Stockfish(override val name: String = Config.engineName) : ChessEngine {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun sendCommand(command: String) = withContext(Dispatchers.IO) {
         writeRaw("isready\n")
         withTimeout(moveTime / 2 + 3.seconds) { readLineRaw() }
         writeRaw("$command\n")
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun readLine() = withContext(Dispatchers.IO) {
         withTimeout(moveTime / 2 + 3.seconds) { readLineRaw() }
     }
