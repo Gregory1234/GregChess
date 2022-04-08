@@ -119,6 +119,6 @@ class ChessControllerGuiDescription(
 
 }
 
-class ChessControllerBlockScreen(gui: ChessControllerGuiDescription?, player: PlayerEntity?, title: Text?) :
+class ChessControllerScreen(gui: ChessControllerGuiDescription?, player: PlayerEntity?, title: Text?) :
     CottonInventoryScreen<ChessControllerGuiDescription?>(gui, player, title)
 

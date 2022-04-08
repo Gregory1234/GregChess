@@ -267,15 +267,12 @@ class ChessControllerBlock(settings: Settings?) : BlockWithEntity(settings) {
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
 
     override fun onUse(
-        state: BlockState,
-        world: World?,
-        pos: BlockPos?,
-        player: PlayerEntity,
-        hand: Hand?,
-        hit: BlockHitResult?
-    ): ActionResult {
+        state: BlockState, world: World, pos: BlockPos?, player: PlayerEntity, hand: Hand?, hit: BlockHitResult?
+    ): ActionResult = if (world.isClient) {
+        ActionResult.SUCCESS
+    } else {
         player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
-        return ActionResult.SUCCESS
+        ActionResult.CONSUME
     }
 
     @Suppress("DEPRECATION")
