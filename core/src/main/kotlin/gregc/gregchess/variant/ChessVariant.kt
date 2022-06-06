@@ -122,26 +122,22 @@ open class ChessVariant : NameRegistered {
 
     open val optionalComponents: Set<ComponentType<*>> get() = emptySet()
 
-    open val pgnMoveFormatter: MoveFormatter = MoveFormatter { move ->
-        buildString {
-            operator fun Any?.unaryPlus() { if (this != null) append(this) }
+    open val pgnMoveFormatter: MoveFormatter = simpleMoveFormatter { move ->
+        val main = move.pieceTracker.getOriginalOrNull("main")
 
-            val main = move.pieceTracker.getOriginalOrNull("main")
-
-            if (main?.piece?.type != PieceType.PAWN && move.castlesTrait == null) {
-                +main?.piece?.char?.uppercase()
-                +move.targetTrait?.uniquenessCoordinate
-            }
-            if (move.captureTrait?.captureSuccess == true) {
-                if (main?.piece?.type == PieceType.PAWN)
-                    +(main as? BoardPiece)?.pos?.fileStr
-                +"x"
-            }
-            +move.targetTrait?.target
-            +move.castlesTrait?.side?.castles
-            +move.promotionTrait?.promotion?.let { "="+it.char.uppercase() }
-            +move.checkTrait?.checkType?.char
+        if (main?.piece?.type != PieceType.PAWN && move.castlesTrait == null) {
+            +main?.piece?.char?.uppercase()
+            +move.targetTrait?.uniquenessCoordinate
         }
+        if (move.captureTrait?.captureSuccess == true) {
+            if (main?.piece?.type == PieceType.PAWN)
+                +(main as? BoardPiece)?.pos?.fileStr
+            +"x"
+        }
+        +move.targetTrait?.target
+        +move.castlesTrait?.side?.castles
+        +move.promotionTrait?.promotion?.let { "="+it.char.uppercase() }
+        +move.checkTrait?.checkType?.char
     }
 
     protected fun allMoves(color: Color, board: ChessboardView) = board.piecesOf(color).flatMap { it.getMoves(board) }
