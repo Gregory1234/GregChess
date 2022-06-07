@@ -132,8 +132,14 @@ object GregChessPlugin : Listener {
 
                         if (settings != null) {
                             val res = duelRequest.call(RequestData(sender.uniqueId, opponent.uniqueId, settings.name))
-                            if (res == RequestResponse.ACCEPT) { // TODO: recheck that neither the sender nor the opponent are in other games or spectating
-                                ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), opponent.toChessPlayer())).start()
+                            if (res == RequestResponse.ACCEPT) {
+                                if (sender.isInChessGame) {
+                                    sender.sendMessage(YOU_IN_GAME)
+                                } else {
+                                    sender.currentSpectatedChessGame?.spectators?.minusAssign(sender)
+                                    opponent.currentSpectatedChessGame?.spectators?.minusAssign(opponent)
+                                    ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), opponent.toChessPlayer())).start()
+                                }
                             }
                         }
                     }
@@ -144,8 +150,10 @@ object GregChessPlugin : Listener {
                 executeSuspend {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     val settings = sender.openSettingsMenu()
-                    if (settings != null)
+                    if (settings != null) {
+                        sender.currentSpectatedChessGame?.spectators?.minusAssign(sender)
                         ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), Stockfish().toPlayer())).start()
+                    }
                 }
             }
             playerSubcommand("resign") {
@@ -305,6 +313,7 @@ object GregChessPlugin : Listener {
                 argument(playerArgument("spectated")) { spectated ->
                     validate(PLAYER_NOT_IN_GAME) { spectated().isInChessGame }
                     execute {
+                        sender.currentSpectatedChessGame?.spectators?.minusAssign(sender)
                         spectated().currentChessGame?.spectators?.plusAssign(sender)
                     }
                 }
@@ -445,9 +454,10 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("rejoin") {
                 validate(WRONG_ARGUMENT) { config.getBoolean("Rejoin.AllowRejoining") }
-                validate(YOU_IN_GAME) { !sender.isInChessGame && !sender.isSpectatingChessGame }
+                validate(YOU_IN_GAME) { !sender.isInChessGame }
                 validate(NO_GAME_TO_REJOIN) { sender.activeChessGames.isNotEmpty() }
                 execute {
+                    sender.currentSpectatedChessGame?.spectators?.minusAssign(sender)
                     sender.rejoinGame()
                 }
             }
