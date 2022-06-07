@@ -9,8 +9,6 @@ import gregc.gregchess.game.ComponentType
 @RegisterAll(ComponentType::class)
 object BukkitComponentType {
     @JvmField
-    val EVENT_RELAY = ComponentType(BukkitEventRelay::class)
-    @JvmField
     val ADAPTER = ComponentType(BukkitGregChessAdapter::class)
     @JvmField
     val RENDERER = ComponentType(BukkitRenderer::class)

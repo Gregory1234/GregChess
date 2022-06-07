@@ -243,6 +243,11 @@ class ChessGame private constructor(
 
     operator fun get(color: Color): ChessSide<*> = sides[color]
 
+    @Suppress("UNCHECKED_CAST")
+    fun <P : Any> getByValueAny(playerValue: P): ChessSide<P>? = sides.toList().firstOrNull { it.player.value == playerValue } as ChessSide<P>?
+
+    inline operator fun <P : Any, reified S : ChessSide<P>> get(playerValue: P): S? = getByValueAny(playerValue) as? S
+
     @Transient
     private val pieceHolders = mutableMapOf<PlacedPieceType<*, *>, PieceHolder<*>>()
 

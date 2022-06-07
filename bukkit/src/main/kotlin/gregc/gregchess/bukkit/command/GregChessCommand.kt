@@ -31,17 +31,17 @@ internal fun CommandBuilder<CommandSender>.playerSubcommand(name: String, builde
 }
 
 internal fun CommandBuilder<Player>.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSide {
-    validate(OPPONENT_NOT_HUMAN) { sender.chess?.opponent is BukkitChessSide }
-    return { sender.chess!!.opponent as BukkitChessSide }
+    validate(OPPONENT_NOT_HUMAN) { sender.currentChessSide?.opponent is BukkitChessSide }
+    return { sender.currentChessSide!!.opponent as BukkitChessSide }
 }
 
 internal fun CommandBuilder<Player>.requireGame(): ExecutionContext<Player>.() -> BukkitChessSide {
-    validate(YOU_NOT_IN_GAME) { sender.currentGame != null }
-    return { sender.chess!! }
+    validate(YOU_NOT_IN_GAME) { sender.currentChessGame != null }
+    return { sender.currentChessSide!! }
 }
 
 internal fun CommandBuilder<*>.requireNoGame() {
-    validate(YOU_IN_GAME) { sender !is Player || (sender as Player).currentGame == null }
+    validate(YOU_IN_GAME) { sender !is Player || (sender as Player).currentChessGame == null }
 }
 
 internal fun posArgument(name: String) = SimpleArgument(name) { try { Pos.parseFromString(it) } catch (e : IllegalArgumentException) { null } }

@@ -77,7 +77,6 @@ object GregChessPlugin : Listener {
     private val LOADED_FEN = message("LoadedFEN")
     private val CONFIG_RELOADED = message("ConfigReloaded")
     private val STATS_OP_DONE = message("StatsOpDone")
-    private val ADMIN_TOGGLED = message("AdminToggled")
 
     private val requestManager = RequestManager(plugin, coroutineScope)
 
@@ -121,7 +120,7 @@ object GregChessPlugin : Listener {
                     }
                 }
                 argument(playerArgument("opponent")) { opponentArg ->
-                    validate(OPPONENT_IN_GAME) { !opponentArg().isInGame }
+                    validate(OPPONENT_IN_GAME) { !opponentArg().isInChessGame }
 
                     executeSuspend {
                         val opponent = opponentArg()
@@ -133,8 +132,8 @@ object GregChessPlugin : Listener {
 
                         if (settings != null) {
                             val res = duelRequest.call(RequestData(sender.uniqueId, opponent.uniqueId, settings.name))
-                            if (res == RequestResponse.ACCEPT) {
-                                ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.gregchess, opponent.gregchess)).start()
+                            if (res == RequestResponse.ACCEPT) { // TODO: recheck that neither the sender nor the opponent are in other games or spectating
+                                ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), opponent.toChessPlayer())).start()
                             }
                         }
                     }
@@ -146,7 +145,7 @@ object GregChessPlugin : Listener {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     val settings = sender.openSettingsMenu()
                     if (settings != null)
-                        ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.gregchess, Stockfish().toPlayer())).start()
+                        ChessGame(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), Stockfish().toPlayer())).start()
                 }
             }
             playerSubcommand("resign") {
@@ -156,7 +155,7 @@ object GregChessPlugin : Listener {
                 }
             }
             playerSubcommand("leave") {
-                validate(YOU_NOT_IN_GAME) { sender.isInGame || sender.isSpectating }
+                validate(YOU_NOT_IN_GAME) { sender.isInChessGame || sender.isSpectatingChessGame }
                 execute {
                     sender.leaveGame()
                 }
@@ -255,7 +254,7 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("time") {
                 val pl = requireGame()
-                validate(CLOCK_NOT_FOUND) { sender.currentGame?.clock != null }
+                validate(CLOCK_NOT_FOUND) { sender.currentChessGame?.clock != null }
                 argument(enumArgument<Color>("side")) { side ->
                     literal("set") {
                         argument(durationArgument("time")) { time ->
@@ -278,7 +277,7 @@ object GregChessPlugin : Listener {
             playerSubcommand("uci") {
                 val pl = requireGame()
                 validate(ENGINE_NOT_FOUND) {
-                    sender.currentGame?.sides?.toList()?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
+                    sender.currentChessGame?.sides?.toList()?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
                 }
                 literal("set") {
                     argument(stringArgument("option")) { option ->
@@ -304,9 +303,9 @@ object GregChessPlugin : Listener {
             playerSubcommand("spectate") {
                 requireNoGame()
                 argument(playerArgument("spectated")) { spectated ->
-                    validate(PLAYER_NOT_IN_GAME) { spectated().isInGame }
+                    validate(PLAYER_NOT_IN_GAME) { spectated().isInChessGame }
                     execute {
-                        sender.spectatedGame = spectated().currentGame!!
+                        spectated().currentChessGame?.spectators?.plusAssign(sender)
                     }
                 }
             }
@@ -321,7 +320,7 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("undo") {
                 val pl = requireGame()
-                validate(NOTHING_TO_TAKEBACK) { sender.currentGame?.board?.lastMove != null }
+                validate(NOTHING_TO_TAKEBACK) { sender.currentChessGame?.board?.lastMove != null }
                 val op = requireHumanOpponent()
                 executeSuspend {
                     takebackRequest.invalidSender(sender) {
@@ -356,7 +355,7 @@ object GregChessPlugin : Listener {
                     }
                 }
                 execute {
-                    GregChess.logger.info(json.encodeToString(sender.currentGame.cNotNull(YOU_NOT_IN_GAME)))
+                    GregChess.logger.info(json.encodeToString(sender.currentChessGame.cNotNull(YOU_NOT_IN_GAME)))
                 }
             }
             literal("info") {
@@ -370,7 +369,7 @@ object GregChessPlugin : Listener {
                     }
                     execute {
                         cRequire(sender.hasPermission("gregchess.chess.info.ingame"), NO_PERMISSION)
-                        sender.spigot().sendMessage((sender as? Player)?.currentGame.cNotNull(YOU_NOT_IN_GAME).getInfo())
+                        sender.spigot().sendMessage((sender as? Player)?.currentChessGame.cNotNull(YOU_NOT_IN_GAME).getInfo())
                     }
                     argument(uuidArgument("game")) { game ->
                         requirePermission("gregchess.chess.info.remote")
@@ -394,12 +393,6 @@ object GregChessPlugin : Listener {
                                 pl().game.board[pos()].cNotNull(PIECE_NOT_FOUND).getInfo(pl().game))
                         }
                     }
-                }
-            }
-            playerSubcommand("admin") {
-                execute {
-                    sender.isAdmin = !sender.isAdmin
-                    sender.sendMessage(ADMIN_TOGGLED)
                 }
             }
             subcommand("stats") {
@@ -452,8 +445,8 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("rejoin") {
                 validate(WRONG_ARGUMENT) { config.getBoolean("Rejoin.AllowRejoining") }
-                validate(YOU_IN_GAME) { !sender.isInGame && !sender.isSpectating }
-                validate(NO_GAME_TO_REJOIN) { sender.lastLeftGame != null }
+                validate(YOU_IN_GAME) { !sender.isInChessGame && !sender.isSpectatingChessGame }
+                validate(NO_GAME_TO_REJOIN) { sender.activeChessGames.isNotEmpty() }
                 execute {
                     sender.rejoinGame()
                 }
@@ -466,20 +459,9 @@ object GregChessPlugin : Listener {
         coroutineScope.cancel()
     }
 
-    @EventHandler
-    fun onTurnEnd(e: TurnEndEvent) {
-        if (e.player is BukkitChessSide) {
-            drawRequest.quietRemove(e.player.uuid)
-            takebackRequest.quietRemove(e.player.uuid)
-        }
-    }
-
-    @EventHandler
-    fun onGameEnd(e: GameEndEvent) {
-        e.game.sides.forEachRealOffline {
-            drawRequest.quietRemove(it.uniqueId)
-            takebackRequest.quietRemove(it.uniqueId)
-        }
+    fun clearRequests(p: BukkitChessSide) {
+        drawRequest.quietRemove(p.uuid)
+        takebackRequest.quietRemove(p.uuid)
     }
 
     @EventHandler

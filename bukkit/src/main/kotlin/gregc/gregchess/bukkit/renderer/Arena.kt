@@ -4,7 +4,8 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.game.*
 import gregc.gregchess.bukkit.piece.item
-import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.player.BukkitChessSide
+import gregc.gregchess.bukkit.player.currentChessSide
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.game.*
@@ -184,14 +185,10 @@ class SimpleArena internal constructor(
         addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 10, false, false, false))
         teleport(spawnLocation)
         inventory.clear()
-        inventory.setItem(0, chess?.held?.piece?.item)
-        if (isAdmin)
-            gameMode = GameMode.CREATIVE
-        else {
-            gameMode = GameMode.SURVIVAL
-            allowFlight = true
-            isFlying = true
-        }
+        inventory.setItem(0, currentChessSide?.held?.piece?.item)
+        gameMode = GameMode.SURVIVAL
+        allowFlight = true
+        isFlying = true
     }
 
     @ChessEventHandler

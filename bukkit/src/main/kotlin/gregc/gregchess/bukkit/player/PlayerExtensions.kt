@@ -9,6 +9,7 @@ import gregc.gregchess.bukkit.results.message
 import gregc.gregchess.bukkit.results.name
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.byColor
+import gregc.gregchess.game.ChessGame
 import gregc.gregchess.game.PGN
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveFormatter
@@ -18,7 +19,16 @@ import gregc.gregchess.results.*
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 
-val OfflinePlayer.gregchess: ChessPlayer get() = BukkitPlayerType.BUKKIT.of(uniqueId)
+fun OfflinePlayer.toChessPlayer(): ChessPlayer = BukkitPlayerType.BUKKIT.of(uniqueId)
+
+var Player.currentChessGame: ChessGame?
+    get() = ChessGameManager.currentGameOf(uniqueId)
+    set(game) { ChessGameManager.setCurrentGame(uniqueId, game?.uuid) }
+val Player.isInChessGame: Boolean get() = currentChessGame != null
+val Player.currentChessSide: BukkitChessSide? get() = ChessGameManager.currentSideOf(uniqueId)
+val Player.activeChessGames: Set<ChessGame> get() = ChessGameManager.activeGamesOf(uniqueId)
+val Player.currentSpectatedChessGame: ChessGame? get() = ChessGameManager.currentSpectatedGameOf(uniqueId)
+val Player.isSpectatingChessGame: Boolean get() = currentSpectatedChessGame != null
 
 private val SPECTATOR_WINNER = byColor { title("Spectator.${it.configName}Won") }
 private val SPECTATOR_DRAW = title("Spectator.ItWasADraw")
@@ -83,7 +93,7 @@ private val allowRejoining get() = config.getBoolean("Rejoin.AllowRejoining")
 private val REJOIN_REMINDER = message("RejoinReminder")
 
 fun Player.sendRejoinReminder() {
-    if (allowRejoining && config.getBoolean("Rejoin.SendReminder") && lastLeftGame != null) {
+    if (allowRejoining && config.getBoolean("Rejoin.SendReminder") && activeChessGames.isNotEmpty()) {
         spigot().sendMessage(textComponent(REJOIN_REMINDER.get()) {
             onClickCommand("/chess rejoin")
         })
@@ -92,24 +102,23 @@ fun Player.sendRejoinReminder() {
 
 fun Player.leaveGame() {
     // TODO: add a time limit for rejoining
-    val g = chess
-    spectatedGame = null
-    g?.game?.let { game ->
-        lastLeftGame = game
+    currentSpectatedChessGame?.spectators?.minusAssign(this)
+    currentChessGame?.let { game ->
         if (allowRejoining) {
             game.callEvent(PlayerEvent(this, PlayerDirection.LEAVE))
         } else {
-            game.stop(g.color.lostBy(EndReason.WALKOVER), byColor { it == g.color })
+            val color = game[uniqueId]!!.color
+            game.stop(color.lostBy(EndReason.WALKOVER), byColor { it == color })
         }
     }
-    currentGame = null
+    currentChessGame = null
     sendRejoinReminder()
 }
 
 fun Player.rejoinGame() {
-    lastLeftGame?.let { game ->
-        currentGame = game
+    activeChessGames.firstOrNull()?.let { game ->
+        currentChessGame = game
         game.callEvent(PlayerEvent(this, PlayerDirection.JOIN))
-        chess!!.start()
+        currentChessSide!!.start()
     }
 }

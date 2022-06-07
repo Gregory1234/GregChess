@@ -61,7 +61,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     private fun hookComponents() {
         for (c in listOf(ComponentType.CHESSBOARD, ComponentType.CLOCK, BukkitComponentType.GAME_CONTROLLER,
             BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.RENDERER,
-            BukkitComponentType.EVENT_RELAY, BukkitComponentType.ADAPTER)) {
+            BukkitComponentType.ADAPTER)) {
             BukkitRegistry.HOOKED_COMPONENTS += c
         }
     }

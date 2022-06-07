@@ -51,10 +51,9 @@ class GameController(val presetName: String) : Component {
     private var lastPrintedMove: Move? = null
 
     private fun onStart() {
+        ChessGameManager += game
         game.sides.forEachReal {
             game.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
-            it.games += game
-            it.currentGame = game
         }
     }
 
@@ -96,8 +95,7 @@ class GameController(val presetName: String) : Component {
                     delay((if (quick[color]) 0 else 3).seconds)
                 game.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
                 player.sendPGN(pgn)
-                player.games -= game
-                player.currentGame = null
+                player.currentChessGame = null
             }
         }
         if (game.sides.white.player != game.sides.black.player) {
@@ -112,7 +110,10 @@ class GameController(val presetName: String) : Component {
         if (!results.endReason.quick)
             game.coroutineScope.launch {
                 delay((if (quick.white && quick.black) 0 else 3).seconds)
+                ChessGameManager -= game
             }
+        else
+            ChessGameManager -= game
     }
 
     private fun onPanic() {
@@ -121,9 +122,8 @@ class GameController(val presetName: String) : Component {
         game.sides.forEachUniqueBukkit { player, color ->
             player.showGameResults(color, results)
             player.sendPGN(pgn)
-            player.games -= game
-            player.currentGame = null
         }
+        ChessGameManager -= game
     }
 
     @ChessEventHandler
@@ -154,6 +154,7 @@ class GameController(val presetName: String) : Component {
                     lastPrintedMove = normalMoves.last()
                 }
             }
+            (game.currentSide as? BukkitChessSide)?.let(GregChessPlugin::clearRequests)
         }
     }
 

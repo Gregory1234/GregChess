@@ -55,7 +55,6 @@ Message:
   SkippedTurn: "&eSkipped a turn!"
   BoardOpDone: "&eCompleted the chessboard operation!"
   StatsOpDone: "&eCompleted the stats operation!"
-  AdminToggled: "&eAdmin mode toggled!"
   StatsOf: "Stats of %s"
   RejoinReminder: "&eClick to rejoin the game!"
   Stats:

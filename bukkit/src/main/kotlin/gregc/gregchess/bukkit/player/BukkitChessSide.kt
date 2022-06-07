@@ -124,7 +124,7 @@ class BukkitChessSide(val uuid: UUID, color: Color, game: ChessGame) : ChessSide
             bukkit?.sendMessage(IN_CHECK_MSG)
     }
 
-    override fun start() {
+    override fun start() { // TODO: remove this
         if (hasTurn || !silent) {
             sendTitleList(buildList {
                 this += YOU_ARE_PLAYING_AS_TITLE[color] to false

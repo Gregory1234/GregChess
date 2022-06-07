@@ -11,7 +11,7 @@ data class SpectatorEvent(val player: Player, val dir: PlayerDirection) : ChessE
 class SpectatorNotFoundException(player: Player) : Exception(player.name)
 
 @Serializable
-class SpectatorManager : Component {
+class SpectatorManager : Component { // TODO: consider reworking the spectator system
 
     override val type get() = BukkitComponentType.SPECTATOR_MANAGER
 
@@ -28,6 +28,7 @@ class SpectatorManager : Component {
     val spectators get() = spectatorList.toList()
 
     operator fun plusAssign(p: Player) {
+        ChessGameManager.setCurrentSpectatedGame(p.uniqueId, game.uuid)
         spectatorList += p
         game.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
@@ -35,6 +36,7 @@ class SpectatorManager : Component {
     operator fun minusAssign(p: Player) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
+        ChessGameManager.setCurrentSpectatedGame(p.uniqueId, null)
         spectatorList -= p
         game.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
