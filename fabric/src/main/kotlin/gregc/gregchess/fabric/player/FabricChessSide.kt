@@ -44,7 +44,7 @@ class FabricChessSide(val gameProfile: GameProfile, color: Color, game: ChessGam
             }
         }
 
-    override fun start() {
+    fun sendStartMessage() {
         if (hasTurn || player != opponent.player)
             getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }

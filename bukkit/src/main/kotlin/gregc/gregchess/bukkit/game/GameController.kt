@@ -162,6 +162,12 @@ class GameController(val presetName: String) : Component {
     fun addProperties(e: AddPropertiesEvent) {
         e.game(PRESET) { presetName }
     }
+
+    @ChessEventHandler
+    fun playerEvent(e: PlayerEvent) = when(e.dir) {
+        PlayerDirection.JOIN -> e.player.currentChessSide!!.sendStartMessage()
+        PlayerDirection.LEAVE -> {}
+    }
 }
 
 val ChessGame.gameController get() = require(BukkitComponentType.GAME_CONTROLLER)

@@ -118,11 +118,9 @@ class ChessGameTests {
         }
 
         @Test
-        fun `should start sides and start turn`() {
+        fun `should start turn`() {
             val g = mkGame().start()
             verifyAll {
-                g.sides.white.start()
-                g.sides.black.start()
                 g.sides.white.startTurn()
             }
         }

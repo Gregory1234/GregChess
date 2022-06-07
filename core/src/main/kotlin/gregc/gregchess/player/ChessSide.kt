@@ -45,7 +45,6 @@ abstract class ChessSide<P : Any>(private val playerType: ChessPlayerType<P>, pr
     val king
         get() = game.board.kingOf(color)
 
-    open fun start() {}
     open fun stop() {}
     open fun clear() {}
     open fun startTurn() {}

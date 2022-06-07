@@ -21,8 +21,6 @@ import java.util.concurrent.locks.ReentrantLock
 
 
 class TestChessSide(name: String, color: Color, game: ChessGame) : ChessSide<String>(GregChess.TEST_PLAYER, name, color, game) {
-    override fun start() {}
-
     override fun startTurn() {}
 
     override fun stop() {}

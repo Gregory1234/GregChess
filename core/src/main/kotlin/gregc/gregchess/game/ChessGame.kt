@@ -157,7 +157,6 @@ class ChessGame private constructor(
         requireState(State.INITIAL)
         callEvent(GameBaseEvent.START)
         callEvent(AddPieceHoldersEvent(pieceHolders))
-        sides.forEach(ChessSide<*>::start)
         state = State.RUNNING
         startTime = Instant.now(environment.clock)
         callEvent(GameBaseEvent.RUNNING)

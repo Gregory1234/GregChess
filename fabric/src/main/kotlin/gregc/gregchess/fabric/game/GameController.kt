@@ -1,7 +1,6 @@
 package gregc.gregchess.fabric.game
 
-import gregc.gregchess.fabric.player.forEachUniqueEntity
-import gregc.gregchess.fabric.player.showGameResults
+import gregc.gregchess.fabric.player.*
 import gregc.gregchess.fabric.renderer.server
 import gregc.gregchess.game.*
 import kotlinx.serialization.Serializable
@@ -24,6 +23,7 @@ class GameController : Component {
         when (e) {
             GameBaseEvent.START -> {
                 ChessGameManager += game
+                game.sides.forEachUnique(FabricChessSide::sendStartMessage)
             }
             GameBaseEvent.STOP -> {
                 sides.forEachUniqueEntity(game.server) { player, color ->

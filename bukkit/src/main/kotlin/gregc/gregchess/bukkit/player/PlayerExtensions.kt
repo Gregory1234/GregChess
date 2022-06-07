@@ -119,6 +119,5 @@ fun Player.rejoinGame() {
     activeChessGames.firstOrNull()?.let { game ->
         currentChessGame = game
         game.callEvent(PlayerEvent(this, PlayerDirection.JOIN))
-        currentChessSide!!.start()
     }
 }
