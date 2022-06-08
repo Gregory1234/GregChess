@@ -260,6 +260,7 @@ fun interface ChessControllerInventory : SidedInventory {
 
 }
 
+@Suppress("OVERRIDE_DEPRECATION")
 class ChessControllerBlock(settings: Settings?) : BlockWithEntity(settings) {
     override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity =
         ChessControllerBlockEntity(pos, state)

@@ -44,7 +44,6 @@ interface Component : ChessListener {
 
 }
 
-@OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component>("Component", ComponentType.Serializer) {
 
     @Suppress("UNCHECKED_CAST")
