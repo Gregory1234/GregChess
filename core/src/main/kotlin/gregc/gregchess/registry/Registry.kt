@@ -3,7 +3,7 @@ package gregc.gregchess.registry
 import gregc.gregchess.ChessFlag
 import gregc.gregchess.ChessModule
 import gregc.gregchess.board.ChessVariantOption
-import gregc.gregchess.game.ComponentType
+import gregc.gregchess.match.ComponentType
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.PlacedPieceType

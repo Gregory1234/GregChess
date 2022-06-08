@@ -2,11 +2,11 @@ package gregc.gregchess.bukkit.properties
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.game.*
+import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.player.forEachReal
 import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.Bukkit
@@ -35,22 +35,22 @@ class ScoreboardManager : Component {
     override val type get() = BukkitComponentType.SCOREBOARD_MANAGER
 
     @Transient
-    private lateinit var game: ChessGame
+    private lateinit var match: ChessMatch
 
-    override fun init(game: ChessGame) {
-        this.game = game
+    override fun init(match: ChessMatch) {
+        this.match = match
     }
 
     @Transient
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     @Transient
-    private val gameProperties = mutableMapOf<PropertyType, GameProperty>()
+    private val matchProperties = mutableMapOf<PropertyType, MatchProperty>()
     @Transient
     private val playerProperties = mutableMapOf<PropertyType, PlayerProperty>()
 
     @Transient
-    private val gamePropertyTeams = mutableMapOf<PropertyType, Team>()
+    private val matchPropertyTeams = mutableMapOf<PropertyType, Team>()
     @Transient
     private val playerPropertyTeams = mutableMapOf<PropertyType, ByColor<Team>>()
 
@@ -69,16 +69,16 @@ class ScoreboardManager : Component {
     }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) {
-        if (e == GameBaseEvent.UPDATE)
+    fun handleEvents(e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.UPDATE)
             update()
     }
 
     @ChessEventHandler
-    fun onBaseEvent(e: GameBaseEvent) {
-        if (e == GameBaseEvent.START || e == GameBaseEvent.SYNC) start()
-        else if (e == GameBaseEvent.STOP) update()
-        else if (e == GameBaseEvent.CLEAR || e == GameBaseEvent.PANIC) stop()
+    fun onBaseEvent(e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.START || e == ChessBaseEvent.SYNC) start()
+        else if (e == ChessBaseEvent.STOP) update()
+        else if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) stop()
     }
 
     @ChessEventHandler
@@ -91,16 +91,16 @@ class ScoreboardManager : Component {
     }
 
     private fun start() {
-        val e = AddPropertiesEvent(playerProperties, gameProperties)
-        e.player(PLAYER) { playerPrefix + game[it].name }
-        game.callEvent(e)
+        val e = AddPropertiesEvent(playerProperties, matchProperties)
+        e.player(PLAYER) { playerPrefix + match[it].name }
+        match.callEvent(e)
 
-        game.sides.forEachReal(::giveScoreboard)
+        match.sides.forEachReal(::giveScoreboard)
         objective.displaySlot = DisplaySlot.SIDEBAR
-        val l = gameProperties.size + 1 + playerProperties.size * 2 + 1
+        val l = matchProperties.size + 1 + playerProperties.size * 2 + 1
         var i = l
-        for (t in gameProperties.keys) {
-            gamePropertyTeams[t] = newTeam().apply {
+        for (t in matchProperties.keys) {
+            matchPropertyTeams[t] = newTeam().apply {
                 addEntry(generalFormat(t.localName))
             }
             objective.getScore(generalFormat(t.localName)).score = i--
@@ -133,8 +133,8 @@ class ScoreboardManager : Component {
     }
 
     private fun update() = with(MultiExceptionContext()) {
-        for ((t, v) in gamePropertyTeams)
-            v.suffix = exec("ERROR", { PropertyException(t, null, it) }) { gameProperties[t]!!().chatColor() }
+        for ((t, v) in matchPropertyTeams)
+            v.suffix = exec("ERROR", { PropertyException(t, null, it) }) { matchProperties[t]!!().chatColor() }
 
         for ((tp, v) in playerPropertyTeams) {
             for ((s, t) in v.toIndexedList())

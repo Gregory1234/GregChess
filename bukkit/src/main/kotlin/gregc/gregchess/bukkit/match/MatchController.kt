@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkit.game
+package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.BukkitRegistering
@@ -9,9 +9,9 @@ import gregc.gregchess.bukkit.properties.AddPropertiesEvent
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.move.Move
-import gregc.gregchess.results.GameResults
+import gregc.gregchess.results.MatchResults
 import gregc.gregchess.stats.VoidPlayerStatsSink
 import gregc.gregchess.stats.addStats
 import kotlinx.coroutines.delay
@@ -29,7 +29,7 @@ enum class PlayerDirection {
 class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
 
 @Serializable
-class GameController(val presetName: String) : Component {
+class MatchController(val presetName: String) : Component {
 
     companion object : BukkitRegistering {
         @JvmField
@@ -37,13 +37,13 @@ class GameController(val presetName: String) : Component {
         val PRESET = PropertyType()
     }
 
-    override val type get() = BukkitComponentType.GAME_CONTROLLER
+    override val type get() = BukkitComponentType.MATCH_CONTROLLER
 
     @Transient
-    private lateinit var game: ChessGame
+    private lateinit var match: ChessMatch
 
-    override fun init(game: ChessGame) {
-        this.game = game
+    override fun init(match: ChessMatch) {
+        this.match = match
     }
 
     internal var quick: ByColor<Boolean> = byColor(false)
@@ -51,17 +51,17 @@ class GameController(val presetName: String) : Component {
     private var lastPrintedMove: Move? = null
 
     private fun onStart() {
-        ChessGameManager += game
-        game.sides.forEachReal {
-            game.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
+        ChessMatchManager += match
+        match.sides.forEachReal {
+            match.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
         }
     }
 
     private fun onRunning() {
         object : BukkitRunnable() {
             override fun run() {
-                if (game.running)
-                    game.update()
+                if (match.running)
+                    match.update()
                 else
                     cancel()
             }
@@ -69,8 +69,8 @@ class GameController(val presetName: String) : Component {
     }
 
     private fun onStop() {
-        val results = game.results!!
-        with(game.board) {
+        val results = match.results!!
+        with(match.board) {
             val normalMoves = moveHistory.filter { !it.isPhantomMove }
             if (lastPrintedMove != normalMoves.lastOrNull()) {
                 val wLast: Move?
@@ -82,25 +82,25 @@ class GameController(val presetName: String) : Component {
                     wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
                     bLast = normalMoves.lastOrNull()
                 }
-                game.sides.forEachReal { p ->
-                    p.sendLastMoves(game.board.fullmoveCounter + 1, wLast, bLast, game.variant.localMoveFormatter)
+                match.sides.forEachReal { p ->
+                    p.sendLastMoves(match.board.fullmoveCounter + 1, wLast, bLast, match.variant.localMoveFormatter)
                 }
             }
         }
-        val pgn = PGN.generate(game)
-        game.sides.forEachUniqueBukkit { player, color ->
-            game.coroutineScope.launch {
-                player.showGameResults(color, results)
+        val pgn = PGN.generate(match)
+        match.sides.forEachUniqueBukkit { player, color ->
+            match.coroutineScope.launch {
+                player.showMatchResults(color, results)
                 if (!results.endReason.quick)
                     delay((if (quick[color]) 0 else 3).seconds)
-                game.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
+                match.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
                 player.sendPGN(pgn)
-                player.currentChessGame = null
+                player.currentChessMatch = null
             }
         }
-        if (game.sides.white.player != game.sides.black.player) {
-            game.addStats(byColor {
-                val player = game.sides[it]
+        if (match.sides.white.player != match.sides.black.player) {
+            match.addStats(byColor {
+                val player = match.sides[it]
                 if (player is BukkitChessSide)
                     BukkitPlayerStats.of(player.uuid)[it, presetName]
                 else
@@ -108,59 +108,59 @@ class GameController(val presetName: String) : Component {
             })
         }
         if (!results.endReason.quick)
-            game.coroutineScope.launch {
+            match.coroutineScope.launch {
                 delay((if (quick.white && quick.black) 0 else 3).seconds)
-                ChessGameManager -= game
+                ChessMatchManager -= match
             }
         else
-            ChessGameManager -= game
+            ChessMatchManager -= match
     }
 
     private fun onPanic() {
-        val results = game.results!!
-        val pgn = PGN.generate(game)
-        game.sides.forEachUniqueBukkit { player, color ->
-            player.showGameResults(color, results)
+        val results = match.results!!
+        val pgn = PGN.generate(match)
+        match.sides.forEachUniqueBukkit { player, color ->
+            player.showMatchResults(color, results)
             player.sendPGN(pgn)
         }
-        ChessGameManager -= game
+        ChessMatchManager -= match
     }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) = when (e) {
-        GameBaseEvent.START -> onStart()
-        GameBaseEvent.RUNNING -> onRunning()
-        GameBaseEvent.STOP -> onStop()
-        GameBaseEvent.PANIC -> onPanic()
-        GameBaseEvent.SYNC -> if (game.state == ChessGame.State.RUNNING) {
+    fun handleEvents(e: ChessBaseEvent) = when (e) {
+        ChessBaseEvent.START -> onStart()
+        ChessBaseEvent.RUNNING -> onRunning()
+        ChessBaseEvent.STOP -> onStop()
+        ChessBaseEvent.PANIC -> onPanic()
+        ChessBaseEvent.SYNC -> if (match.state == ChessMatch.State.RUNNING) {
             onStart()
             onRunning()
         } else Unit
-        GameBaseEvent.UPDATE -> Unit
-        GameBaseEvent.CLEAR -> Unit
+        ChessBaseEvent.UPDATE -> Unit
+        ChessBaseEvent.CLEAR -> Unit
     }
 
     @ChessEventHandler
     fun handleTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
-            if (game.currentTurn == Color.BLACK) {
-                with(game.board) {
+            if (match.currentTurn == Color.BLACK) {
+                with(match.board) {
                     val normalMoves = moveHistory.filter { !it.isPhantomMove }
                     val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
                     val bLast = normalMoves.last()
-                    game.sides.forEachReal { p ->
-                        p.sendLastMoves(game.board.fullmoveCounter, wLast, bLast, game.variant.localMoveFormatter)
+                    match.sides.forEachReal { p ->
+                        p.sendLastMoves(match.board.fullmoveCounter, wLast, bLast, match.variant.localMoveFormatter)
                     }
                     lastPrintedMove = normalMoves.last()
                 }
             }
-            (game.currentSide as? BukkitChessSide)?.let(GregChessPlugin::clearRequests)
+            (match.currentSide as? BukkitChessSide)?.let(GregChessPlugin::clearRequests)
         }
     }
 
     @ChessEventHandler
     fun addProperties(e: AddPropertiesEvent) {
-        e.game(PRESET) { presetName }
+        e.match(PRESET) { presetName }
     }
 
     @ChessEventHandler
@@ -170,12 +170,12 @@ class GameController(val presetName: String) : Component {
     }
 }
 
-val ChessGame.gameController get() = require(BukkitComponentType.GAME_CONTROLLER)
-val ComponentHolder.gameController get() = get(BukkitComponentType.GAME_CONTROLLER)
+val ChessMatch.matchController get() = require(BukkitComponentType.MATCH_CONTROLLER)
+val ComponentHolder.matchController get() = get(BukkitComponentType.MATCH_CONTROLLER)
 
-fun ChessGame.stop(results: GameResults, quick: ByColor<Boolean>) {
-    gameController.quick = if ((quick.white || quick.black) && sides.white.player == sides.black.player) byColor(true) else quick
+fun ChessMatch.stop(results: MatchResults, quick: ByColor<Boolean>) {
+    matchController.quick = if ((quick.white || quick.black) && sides.white.player == sides.black.player) byColor(true) else quick
     stop(results)
 }
 
-fun ChessGame.quickStop(results: GameResults) = stop(results, byColor(true))
+fun ChessMatch.quickStop(results: MatchResults) = stop(results, byColor(true))

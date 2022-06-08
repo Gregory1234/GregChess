@@ -1,7 +1,7 @@
 package gregc.gregchess.board
 
 import gregc.gregchess.*
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.piece.*
@@ -114,10 +114,10 @@ class Chessboard private constructor (
     override val type get() = ComponentType.CHESSBOARD
 
     @Transient
-    private lateinit var game: ChessGame
+    private lateinit var match: ChessMatch
 
-    override fun init(game: ChessGame) {
-        this.game = game
+    override fun init(match: ChessMatch) {
+        this.match = match
     }
 
     val fullmoveCounter get() = fullmoveCounter_
@@ -147,13 +147,13 @@ class Chessboard private constructor (
     @ChessEventHandler
     fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
-            if (game.currentTurn == Color.BLACK) {
+            if (match.currentTurn == Color.BLACK) {
                 fullmoveCounter_++
             }
             for (s in squares.values)
                 for (f in s.flags)
                     f.value.replaceAll { it + 1 }
-            addBoardHash(getFEN().copy(currentTurn = !game.currentTurn))
+            addBoardHash(getFEN().copy(currentTurn = !match.currentTurn))
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
@@ -177,9 +177,9 @@ class Chessboard private constructor (
     fun getVariantOptionStrings(): List<String> = variantOptions.mapNotNull { (o, v) -> (o as ChessVariantOption<Any>).pgnNameFragment(v) }
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) {
-        if (e == GameBaseEvent.SYNC || e == GameBaseEvent.START) {
-            game.callEvent(AddVariantOptionsEvent(variantOptions))
+    fun handleEvents(e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.SYNC || e == ChessBaseEvent.START) {
+            match.callEvent(AddVariantOptionsEvent(variantOptions))
             updateMoves()
             pieces.forEach(::sendSpawned)
             capturedPieces.forEach(CapturedPieceHolder()::sendSpawned)
@@ -196,24 +196,24 @@ class Chessboard private constructor (
 
     fun updateMoves() {
         for ((_, square) in squares) {
-            square.bakedMoves = square.piece?.let { p -> game.variant.getPieceMoves(p, this) }
+            square.bakedMoves = square.piece?.let { p -> match.variant.getPieceMoves(p, this) }
         }
         for ((_, square) in squares) {
-            square.bakedLegalMoves = square.bakedMoves?.filter { game.variant.isLegal(it, this) }
+            square.bakedLegalMoves = square.bakedMoves?.filter { match.variant.isLegal(it, this) }
         }
     }
 
     fun setFromFEN(fen: FEN) {
         capturedPieces.asReversed().forEach(CapturedPieceHolder()::clear)
         squares.values.forEach { it.empty(this) }
-        fen.forEachSquare(game.variant) { p -> this += p }
+        fen.forEachSquare(match.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
 
         fullmoveCounter_ = fen.fullmoveCounter
 
-        if (fen.currentTurn != game.currentTurn)
-            game.nextTurn()
+        if (fen.currentTurn != match.currentTurn)
+            match.nextTurn()
 
 
         if (fen.enPassantSquare != null) {
@@ -225,7 +225,7 @@ class Chessboard private constructor (
         boardHashes_.clear()
         addBoardHash(fen)
         pieces.forEach(::sendSpawned)
-        game.callEvent(SetFenEvent(fen))
+        match.callEvent(SetFenEvent(fen))
     }
 
     fun getFEN(): FEN {
@@ -238,7 +238,7 @@ class Chessboard private constructor (
 
         return FEN(
             boardState,
-            game.currentTurn,
+            match.currentTurn,
             byColor(::castling),
             squares.entries.firstOrNull { (_, s) -> s.flags.any { it.key == ChessFlag.EN_PASSANT && it.flagActive } }?.key,
             halfmoveClock,
@@ -247,13 +247,13 @@ class Chessboard private constructor (
     }
 
     fun checkForRepetition() {
-        if ((boardHashes_[getFEN().copy(currentTurn = !game.currentTurn).hashed()] ?: 0) >= 3)
-            game.stop(drawBy(EndReason.REPETITION))
+        if ((boardHashes_[getFEN().copy(currentTurn = !match.currentTurn).hashed()] ?: 0) >= 3)
+            match.stop(drawBy(EndReason.REPETITION))
     }
 
     fun checkForFiftyMoveRule() {
         if (halfmoveClock >= 100)
-            game.stop(drawBy(EndReason.FIFTY_MOVES))
+            match.stop(drawBy(EndReason.FIFTY_MOVES))
     }
 
     private fun addBoardHash(fen: FEN): Int {
@@ -268,13 +268,13 @@ class Chessboard private constructor (
                 val hash = getFEN().hashed()
                 boardHashes_[hash] = (boardHashes_[hash] ?: 1) - 1
                 if (boardHashes_[hash] == 0) boardHashes_ -= hash
-                game.undoMove(it)
-                if (game.currentTurn == Color.WHITE)
+                match.undoMove(it)
+                if (match.currentTurn == Color.WHITE)
                     fullmoveCounter_--
                 moveHistory_.removeLast()
-                game.previousTurn()
+                match.previousTurn()
             } else {
-                game.undoMove(it)
+                match.undoMove(it)
                 moveHistory_.removeLast()
             }
         }
@@ -295,7 +295,7 @@ class Chessboard private constructor (
             this@Chessboard -= p
         }
 
-        override fun callPieceMoveEvent(e: PieceMoveEvent) = game.callEvent(e)
+        override fun callPieceMoveEvent(e: PieceMoveEvent) = match.callEvent(e)
 
         override val pieces get() = capturedPieces
     }
@@ -306,7 +306,7 @@ class Chessboard private constructor (
         e[PlacedPieceType.CAPTURED] = CapturedPieceHolder()
     }
 
-    override fun callPieceMoveEvent(e: PieceMoveEvent) = game.callEvent(e)
+    override fun callPieceMoveEvent(e: PieceMoveEvent) = match.callEvent(e)
 
     // TODO: add a way of creating this without a Chessboard instance
     private class FakeBoardPieceHolder(val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>)
@@ -338,9 +338,9 @@ class Chessboard private constructor (
 
     fun createSimpleMoveEnvironment(): MoveEnvironment {
         val holders = mutableMapOf<PlacedPieceType<*, *>, PieceHolder<*>>()
-        game.callEvent(CreateFakePieceHolderEvent(holders))
+        match.callEvent(CreateFakePieceHolderEvent(holders))
         val board = holders[PlacedPieceType.BOARD] as FakeBoardPieceHolder
-        return SimpleMoveEnvironment(game.variant, holders, board)
+        return SimpleMoveEnvironment(match.variant, holders, board)
     }
 
     private class SimpleMoveEnvironment(override val variant: ChessVariant, val holders: MutableMap<PlacedPieceType<*, *>, PieceHolder<*>>, val board: FakeBoardPieceHolder) : MoveEnvironment {

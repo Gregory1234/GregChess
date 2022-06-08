@@ -2,7 +2,7 @@ package gregc.gregchess.fabric
 
 import com.mojang.authlib.GameProfile
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
-import gregc.gregchess.game.ChessEnvironment
+import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.registry.RegistryKey
 import gregc.gregchess.registry.StringKeySerializer
 import kotlinx.serialization.ExperimentalSerializationApi

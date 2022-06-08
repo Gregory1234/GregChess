@@ -3,11 +3,11 @@ package gregc.gregchess.bukkit.renderer
 import gregc.gregchess.*
 import gregc.gregchess.Color
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.game.BukkitComponentType
+import gregc.gregchess.bukkit.match.BukkitComponentType
 import gregc.gregchess.bukkit.piece.getSound
 import gregc.gregchess.bukkit.piece.structure
 import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.piece.*
 import gregc.gregchess.variant.AtomicChess
 import kotlinx.serialization.Serializable
@@ -38,11 +38,11 @@ data class BukkitRenderer(
     override val type get() = BukkitComponentType.RENDERER
 
     @Transient
-    private lateinit var game: ChessGame
+    private lateinit var match: ChessMatch
 
-    override fun init(game: ChessGame) {
-        arena.game = game
-        this.game = game
+    override fun init(match: ChessMatch) {
+        arena.match = match
+        this.match = match
     }
 
     override fun handleEvent(e: ChessEvent) {
@@ -141,12 +141,12 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun onBaseEvent(e: GameBaseEvent) {
-        if (e == GameBaseEvent.RUNNING || e == GameBaseEvent.SYNC) {
+    fun onBaseEvent(e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.RUNNING || e == ChessBaseEvent.SYNC) {
             redrawFloor()
         }
-        else if (e == GameBaseEvent.CLEAR || e == GameBaseEvent.PANIC) {
-            game.board.pieces.forEach {
+        else if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) {
+            match.board.pieces.forEach {
                 it.clearRender()
             }
             capturedPieces.keys.forEach {
@@ -165,8 +165,8 @@ data class BukkitRenderer(
     private fun redrawFloor() {
         for (file in 0..7) {
             for (rank in 0..7) {
-                with (game.variant.floorRenderer) {
-                    Pos(file, rank).fillFloor(game.getFloorMaterial(Pos(file, rank)))
+                with (match.variant.floorRenderer) {
+                    Pos(file, rank).fillFloor(match.getFloorMaterial(Pos(file, rank)))
                 }
             }
         }
@@ -209,7 +209,7 @@ data class BukkitRenderer(
     }
 }
 
-val ChessGame.arena get() = renderer.arena
+val ChessMatch.arena get() = renderer.arena
 val ComponentHolder.arena get() = renderer?.arena
-val ChessGame.renderer get() = require(BukkitComponentType.RENDERER)
+val ChessMatch.renderer get() = require(BukkitComponentType.RENDERER)
 val ComponentHolder.renderer get() = get(BukkitComponentType.RENDERER)

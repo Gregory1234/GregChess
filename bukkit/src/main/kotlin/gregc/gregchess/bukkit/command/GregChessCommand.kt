@@ -35,13 +35,13 @@ internal fun CommandBuilder<Player>.requireHumanOpponent(): ExecutionContext<Pla
     return { sender.currentChessSide!!.opponent as BukkitChessSide }
 }
 
-internal fun CommandBuilder<Player>.requireGame(): ExecutionContext<Player>.() -> BukkitChessSide {
-    validate(YOU_NOT_IN_GAME) { sender.currentChessGame != null }
+internal fun CommandBuilder<Player>.requireMatch(): ExecutionContext<Player>.() -> BukkitChessSide {
+    validate(YOU_NOT_IN_MATCH) { sender.currentChessMatch != null }
     return { sender.currentChessSide!! }
 }
 
-internal fun CommandBuilder<*>.requireNoGame() {
-    validate(YOU_IN_GAME) { sender !is Player || (sender as Player).currentChessGame == null }
+internal fun CommandBuilder<*>.requireNoMatch() {
+    validate(YOU_IN_MATCH) { sender !is Player || (sender as Player).currentChessMatch == null }
 }
 
 internal fun posArgument(name: String) = SimpleArgument(name) { try { Pos.parseFromString(it) } catch (e : IllegalArgumentException) { null } }

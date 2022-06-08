@@ -8,8 +8,8 @@ import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.chess.GregChess
 import gregc.gregchess.chess.TestChessEnvironment
-import gregc.gregchess.game.ChessGame
-import gregc.gregchess.game.Component
+import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.Component
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
@@ -19,16 +19,16 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     private val playerA = GregChess.TEST_PLAYER.of("A")
     private val playerB = GregChess.TEST_PLAYER.of("B")
 
-    protected fun mkGame(fen: FEN) =
-        ChessGame(TestChessEnvironment, variant, listOf(Chessboard(variant, fen)) + extraComponents, byColor(playerA, playerB)).start()
+    protected fun mkMatch(fen: FEN) =
+        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, fen)) + extraComponents, byColor(playerA, playerB)).start()
 
     protected fun Chessboard.getMove(from: Pos, to: Pos) = get(from)?.getLegalMoves(this)?.singleOrNull { it.display == to }
 
     protected val Move.name get() = variant.pgnMoveFormatter.format(this)
 
-    protected fun Assert<ChessGame>.pieceAt(pos: Pos) = prop("board[$pos]") { it.board[pos] }.isNotNull()
+    protected fun Assert<ChessMatch>.pieceAt(pos: Pos) = prop("board[$pos]") { it.board[pos] }.isNotNull()
 
-    protected fun Assert<BoardPiece>.legalMoves(game: ChessGame) = prop("legalMoves") { it.getLegalMoves(game.board) }
+    protected fun Assert<BoardPiece>.legalMoves(match: ChessMatch) = prop("legalMoves") { it.getLegalMoves(match.board) }
 
     protected fun Assert<List<Move>>.getTo(display: Pos) = prop(display.toString()) { it.singleOrNull { m -> m.display == display } }
 
@@ -90,9 +90,9 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     protected fun <T : MoveTrait> Assert<Move>.trait(type: MoveTraitType<T>) =
         prop("traits[$type]") { it.traits.singleOrNull { t -> t.type == type } }.isNotNull() as Assert<T>
 
-    protected fun Assert<Move>.resolveName(game: ChessGame, promotion: Piece? = null) = transform {
+    protected fun Assert<Move>.resolveName(match: ChessMatch, promotion: Piece? = null) = transform {
         it.promotionTrait?.promotion = promotion
-        game.resolveName(it)
+        match.resolveName(it)
         it
     }
 

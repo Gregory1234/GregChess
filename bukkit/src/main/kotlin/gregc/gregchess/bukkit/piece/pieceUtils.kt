@@ -4,7 +4,7 @@ import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.configName
 import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
@@ -31,18 +31,18 @@ val Piece.item: ItemStack
         meta { name = localName }
     }
 
-fun BoardPiece.getInfo(game: ChessGame) = textComponent {
+fun BoardPiece.getInfo(match: ChessMatch) = textComponent {
     text("Type: $color $type\n")
     text("Position: $pos\n")
     text(if (hasMoved) "Has moved\n" else "Has not moved\n")
-    text("Game: ${game.uuid}\n") {
-        onClickCopy(game.uuid)
+    text("Match: ${match.uuid}\n") {
+        onClickCopy(match.uuid)
     }
-    val moves = getMoves(game.board)
-    text("All moves: ${moves.joinToString { game.variant.localMoveFormatter.format(it) }}")
-    moves.groupBy { m -> game.variant.getLegality(m, game.board) }.forEach { (l, m) ->
+    val moves = getMoves(match.board)
+    text("All moves: ${moves.joinToString { match.variant.localMoveFormatter.format(it) }}")
+    moves.groupBy { m -> match.variant.getLegality(m, match.board) }.forEach { (l, m) ->
         if (l == ChessVariant.MoveLegality.LEGAL)
-            game.resolveName(*m.toTypedArray())
-        text("\n${l.prettyName}: ${m.joinToString { game.variant.localMoveFormatter.format(it) }}")
+            match.resolveName(*m.toTypedArray())
+        text("\n${l.prettyName}: ${m.joinToString { match.variant.localMoveFormatter.format(it) }}")
     }
 }

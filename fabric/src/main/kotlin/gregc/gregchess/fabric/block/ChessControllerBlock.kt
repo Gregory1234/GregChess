@@ -6,12 +6,12 @@ import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.client.ChessControllerGuiDescription
 import gregc.gregchess.fabric.coroutines.FabricChessEnvironment
-import gregc.gregchess.fabric.game.ChessGameManager
+import gregc.gregchess.fabric.match.ChessMatchManager
 import gregc.gregchess.fabric.piece.PieceBlock
 import gregc.gregchess.fabric.piece.item
 import gregc.gregchess.fabric.player.gregchess
 import gregc.gregchess.fabric.renderer.FabricRenderer
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.results.drawBy
 import gregc.gregchess.variant.ChessVariant
@@ -45,20 +45,20 @@ import kotlin.math.min
 
 class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChessMod.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder, ChessControllerInventory {
-    var currentGameUUID: UUID? by BlockEntityDirtyDelegate(null)
-    val currentGame: ChessGame? get() = currentGameUUID?.takeIf { world?.isClient == false }?.let { ChessGameManager[it] }
+    var currentMatchUUID: UUID? by BlockEntityDirtyDelegate(null)
+    val currentMatch: ChessMatch? get() = currentMatchUUID?.takeIf { world?.isClient == false }?.let { ChessMatchManager[it] }
     var chessboardStartPos: BlockPos? by BlockEntityDirtyDelegate(null)
     private val selfRef = BlockReference(ChessControllerBlockEntity::class, { this.pos }, { world })
 
     override fun writeNbt(nbt: NbtCompound) {
         nbt.putLongOrNull("ChessboardStart", chessboardStartPos?.asLong())
-        nbt.putUuidOrNull("GameUUID", currentGame?.uuid)
+        nbt.putUuidOrNull("MatchUUID", currentMatch?.uuid)
         Inventories.writeNbt(nbt, items)
     }
 
     override fun readNbt(nbt: NbtCompound) {
         chessboardStartPos = nbt.getLongOrNull("ChessboardStart")?.let(BlockPos::fromLong)
-        currentGameUUID = nbt.getUuidOrNull("GameUUID")
+        currentMatchUUID = nbt.getUuidOrNull("MatchUUID")
         Inventories.readNbt(nbt, items)
     }
 
@@ -139,15 +139,15 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
             block.reset()
         }
         chessboardStartPos = null
-        currentGame?.stop(drawBy(GregChess.CHESSBOARD_BROKEN))
-        currentGameUUID = null
+        currentMatch?.stop(drawBy(GregChess.CHESSBOARD_BROKEN))
+        currentMatchUUID = null
     }
 
-    fun startGame(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
-        if (currentGame != null) return
-        currentGameUUID = ChessGame(
+    fun startMatch(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
+        if (currentMatch != null) return
+        currentMatchUUID = ChessMatch(
             FabricChessEnvironment, ChessVariant.Normal,
-            ChessGameManager.settings(ChessVariant.Normal, getBoardState(), FabricRenderer(this)),
+            ChessMatchManager.settings(ChessVariant.Normal, getBoardState(), FabricRenderer(this)),
             byColor(whitePlayer.gregchess, blackPlayer.gregchess)
         ).start().uuid
     }

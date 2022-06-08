@@ -1,7 +1,7 @@
 package gregc.gregchess.player
 
 import gregc.gregchess.Color
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
@@ -43,7 +43,7 @@ class ChessPlayer internal constructor(val type: ChessPlayerType<*>, val value: 
     @Suppress("UNCHECKED_CAST")
     private val unsafeType get() = type as ChessPlayerType<Any>
     val name: String get() = unsafeType.nameOf(value)
-    fun initSide(c: Color, g: ChessGame): ChessSide<*> = unsafeType.initSide(value, c, g)
+    fun initSide(c: Color, g: ChessMatch): ChessSide<*> = unsafeType.initSide(value, c, g)
 
     override fun equals(other: Any?): Boolean =
         this === other || other is ChessPlayer && type == other.type && value == other.value

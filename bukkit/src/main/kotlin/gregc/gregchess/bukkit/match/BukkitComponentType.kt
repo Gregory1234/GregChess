@@ -1,10 +1,10 @@
-package gregc.gregchess.bukkit.game
+package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.RegisterAll
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
 import gregc.gregchess.bukkit.properties.ScoreboardManager
 import gregc.gregchess.bukkit.renderer.BukkitRenderer
-import gregc.gregchess.game.ComponentType
+import gregc.gregchess.match.ComponentType
 
 @RegisterAll(ComponentType::class)
 object BukkitComponentType {
@@ -13,7 +13,7 @@ object BukkitComponentType {
     @JvmField
     val RENDERER = ComponentType(BukkitRenderer::class)
     @JvmField
-    val GAME_CONTROLLER = ComponentType(GameController::class)
+    val MATCH_CONTROLLER = ComponentType(MatchController::class)
     @JvmField
     val SCOREBOARD_MANAGER = ComponentType(ScoreboardManager::class)
     @JvmField

@@ -2,13 +2,13 @@ package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.game.*
+import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.player.BukkitChessSide
 import gregc.gregchess.bukkit.player.currentChessSide
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.results.*
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
@@ -45,7 +45,7 @@ interface ArenaManager<out A : Arena> {
 
 abstract class Arena(val name: String) : ChessListener {
 
-    var game: ChessGame? = null
+    var match: ChessMatch? = null
 
     abstract val boardStart: Location
     abstract val tileSize: Int
@@ -92,7 +92,7 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
 
     override fun unloadArenas() {
         arenas.forEach {
-            it.game?.stop(drawBy(ARENA_REMOVED))
+            it.match?.stop(drawBy(ARENA_REMOVED))
         }
         arenas.clear()
     }
@@ -111,13 +111,13 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
             }.orEmpty()
         arenas.forEach {
             if (it !in newArenas)
-                it.game?.stop(drawBy(ARENA_REMOVED))
+                it.match?.stop(drawBy(ARENA_REMOVED))
         }
         arenas.clear()
         arenas.addAll(newArenas)
     }
 
-    override fun nextArenaOrNull(): SimpleArena? = arenas.toList().firstOrNull { it.game == null }
+    override fun nextArenaOrNull(): SimpleArena? = arenas.toList().firstOrNull { it.match == null }
 
     internal val returnWorld: World
         get() = config.getString("ReturnWorld")
@@ -144,10 +144,10 @@ class SimpleArena internal constructor(
     private val spawnLocation: Location get() = spawn.toLocation(world)
 
     @ChessEventHandler
-    fun onBaseEvent(e: GameBaseEvent) {
-        if (e == GameBaseEvent.CLEAR || e == GameBaseEvent.PANIC) game = null
-        if (e == GameBaseEvent.PANIC)
-            for (p in game?.sides?.toList().orEmpty())
+    fun onBaseEvent(e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) match = null
+        if (e == ChessBaseEvent.PANIC)
+            for (p in match?.sides?.toList().orEmpty())
                 if (p is BukkitChessSide)
                     p.bukkit?.leave()
     }

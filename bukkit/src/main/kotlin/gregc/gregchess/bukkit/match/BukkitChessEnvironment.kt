@@ -1,10 +1,10 @@
-package gregc.gregchess.bukkit.game
+package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
-import gregc.gregchess.game.ChessEnvironment
+import gregc.gregchess.match.ChessEnvironment
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
 import java.time.Clock

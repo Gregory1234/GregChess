@@ -43,19 +43,19 @@ class ChessControllerGuiDescription(
         root.setSize(300, 300)
         root.insets = Insets.ROOT_PANEL
 
-        val startGameButton = WButton(TranslatableText("gui.gregchess.start_game"))
-        startGameButton.onClick = Runnable {
-            ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("start_game")) {
+        val startMatchButton = WButton(TranslatableText("gui.gregchess.start_match"))
+        startMatchButton.onClick = Runnable {
+            ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("start_match")) {
                 it.writeUuid(playerInventory?.player?.uuid)
             }
         }
-        root.add(startGameButton, 0, 5, 5, 1)
+        root.add(startMatchButton, 0, 5, 5, 1)
 
-        val abortGameButton = WButton(TranslatableText("gui.gregchess.abort_game"))
-        abortGameButton.onClick = Runnable {
-            ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("abort_game")) {}
+        val abortMatchButton = WButton(TranslatableText("gui.gregchess.abort_match"))
+        abortMatchButton.onClick = Runnable {
+            ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("abort_match")) {}
         }
-        root.add(abortGameButton, 0, 7, 5, 1)
+        root.add(abortMatchButton, 0, 7, 5, 1)
 
         val detectBoardButton = WButton(TranslatableText("gui.gregchess.detect_board"))
         detectBoardButton.onClick = Runnable {
@@ -95,21 +95,21 @@ class ChessControllerGuiDescription(
             }
         }
 
-        ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("start_game")) {
+        ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("start_match")) {
             context.run { world, pos ->
                 val entity = world.getBlockEntity(pos)
-                if (entity is ChessControllerBlockEntity && entity.chessboardStartPos != null && entity.currentGame == null) {
+                if (entity is ChessControllerBlockEntity && entity.chessboardStartPos != null && entity.currentMatch == null) {
                     val player = world.getPlayerByUuid(it.readUuid()) as ServerPlayerEntity
-                    entity.startGame(player, player)
+                    entity.startMatch(player, player)
                 }
             }
         }
 
-        ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("abort_game")) {
+        ScreenNetworking.of(this, NetworkSide.SERVER).receive(ident("abort_match")) {
             context.run { world, pos ->
                 val entity = world.getBlockEntity(pos)
                 if (entity is ChessControllerBlockEntity && entity.chessboardStartPos != null) {
-                    entity.currentGame?.stop(drawBy(GregChess.ABORTED))
+                    entity.currentMatch?.stop(drawBy(GregChess.ABORTED))
                 }
             }
         }

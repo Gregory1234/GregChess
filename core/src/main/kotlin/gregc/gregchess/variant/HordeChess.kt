@@ -3,7 +3,7 @@ package gregc.gregchess.variant
 import gregc.gregchess.Color
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.FEN
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceType
@@ -29,22 +29,22 @@ object HordeChess : ChessVariant() {
     override fun isInCheck(king: BoardPiece, board: ChessboardView) =
         king.color == Color.BLACK && Normal.isInCheck(king, board)
 
-    override fun checkForGameEnd(game: ChessGame) = with(game.board) {
+    override fun checkForMatchEnd(match: ChessMatch) = with(match.board) {
         if (piecesOf(Color.WHITE).isEmpty())
-            game.stop(blackWonBy(EndReason.ALL_PIECES_LOST))
+            match.stop(blackWonBy(EndReason.ALL_PIECES_LOST))
 
-        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, this) } }) {
+        if (piecesOf(!match.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
             if (isInCheck(this, Color.BLACK))
-                game.stop(whiteWonBy(EndReason.CHECKMATE))
+                match.stop(whiteWonBy(EndReason.CHECKMATE))
             else
-                game.stop(drawBy(EndReason.STALEMATE))
+                match.stop(drawBy(EndReason.STALEMATE))
         }
 
         checkForRepetition()
         checkForFiftyMoveRule()
     }
 
-    override fun timeout(game: ChessGame, color: Color) = game.stop(color.lostBy(EndReason.TIMEOUT))
+    override fun timeout(match: ChessMatch, color: Color) = match.stop(color.lostBy(EndReason.TIMEOUT))
 
     override fun genFEN(chess960: Boolean): FEN {
         val base = Normal.genFEN(chess960)

@@ -3,12 +3,12 @@ package gregc.gregchess.bukkit.properties
 import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.game.BukkitComponentType
+import gregc.gregchess.bukkit.match.BukkitComponentType
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.clock.TimeControl
 import gregc.gregchess.clock.clock
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.variant.ThreeChecks
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -30,24 +30,24 @@ class BukkitGregChessAdapter : Component {
     override val type get() = BukkitComponentType.ADAPTER
 
     @Transient
-    private lateinit var game: ChessGame
+    private lateinit var match: ChessMatch
 
-    override fun init(game: ChessGame) {
-        this.game = game
+    override fun init(match: ChessMatch) {
+        this.match = match
     }
 
     private val timeFormat: String get() = config.getPathString("TimeFormat")
 
     @ChessEventHandler
     fun addProperties(e: AddPropertiesEvent) {
-        game.clock?.apply {
+        match.clock?.apply {
             if (timeControl.type == TimeControl.Type.FIXED) {
-                e.game(TIME_REMAINING_SIMPLE) { timeRemaining[game.currentTurn].format(timeFormat) }
+                e.match(TIME_REMAINING_SIMPLE) { timeRemaining[match.currentTurn].format(timeFormat) }
             } else {
                 e.player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) }
             }
         }
-        game[ThreeChecks.CHECK_COUNTER]?.apply {
+        match[ThreeChecks.CHECK_COUNTER]?.apply {
             e.player(CHECK_COUNTER) { this[it].toString() }
         }
     }

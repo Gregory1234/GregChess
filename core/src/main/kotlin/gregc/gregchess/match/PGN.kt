@@ -1,4 +1,4 @@
-package gregc.gregchess.game
+package gregc.gregchess.match
 
 import gregc.gregchess.Color
 import gregc.gregchess.clock.clock
@@ -50,47 +50,47 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
     operator fun get(name: String) = tags.firstOrNull { it.name == name }?.value
 
     companion object {
-        fun generate(game: ChessGame): PGN {
+        fun generate(match: ChessMatch): PGN {
             val tags = mutableListOf<TagPair>()
-            tags += TagPair("Event", "Casual game") // TODO: add events
-            tags += TagPair("Site", game.environment.pgnSite)
-            val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(game.zonedStartTime)
+            tags += TagPair("Event", "Casual match") // TODO: add events
+            tags += TagPair("Site", match.environment.pgnSite)
+            val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(match.zonedStartTime)
             tags += TagPair("Date", date)
             tags += TagPair("Round", "1") // TODO: add rematches
-            tags += TagPair("White", game[Color.WHITE].name)
-            tags += TagPair("Black", game[Color.BLACK].name)
+            tags += TagPair("White", match[Color.WHITE].name)
+            tags += TagPair("Black", match[Color.BLACK].name)
 
-            val result = game.results?.score?.pgn
+            val result = match.results?.score?.pgn
 
             tags += TagPair("Result", result ?: "*")
-            tags += TagPair("PlyCount", game.board.moveHistory.count { !it.isPhantomMove }.toString())
-            val timeControl = game.clock?.timeControl?.getPGN() ?: "-"
+            tags += TagPair("PlyCount", match.board.moveHistory.count { !it.isPhantomMove }.toString())
+            val timeControl = match.clock?.timeControl?.getPGN() ?: "-"
             tags += TagPair("TimeControl", timeControl)
-            val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(game.zonedStartTime)
+            val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(match.zonedStartTime)
             tags += TagPair("Time", time)
-            tags += TagPair("Termination", game.results?.endReason?.pgn ?: "unterminated")
+            tags += TagPair("Termination", match.results?.endReason?.pgn ?: "unterminated")
             tags += TagPair("Mode", "ICS")
 
-            if (!game.board.initialFEN.isInitial() || game.board.chess960) {
+            if (!match.board.initialFEN.isInitial() || match.board.chess960) {
                 tags += TagPair("SetUp", "1")
-                tags += TagPair("FEN", game.board.initialFEN.toString())
+                tags += TagPair("FEN", match.board.initialFEN.toString())
             }
             val variant = buildList {
-                if (game.variant != ChessVariant.Normal)
-                    add(game.variant.name.snakeToPascal())
-                if (game.board.chess960)
+                if (match.variant != ChessVariant.Normal)
+                    add(match.variant.name.snakeToPascal())
+                if (match.board.chess960)
                     add("Chess960")
-                addAll(game.board.getVariantOptionStrings())
+                addAll(match.board.getVariantOptionStrings())
             }.joinToString(" ")
 
             if (variant.isNotBlank())
                 tags += TagPair("Variant", variant)
 
-            game.callEvent(GenerateEvent(tags))
+            match.callEvent(GenerateEvent(tags))
 
             val tree = MoveTree(
-                game.board.initialFEN.currentTurn, game.board.initialFEN.fullmoveCounter,
-                game.board.moveHistory.filter { !it.isPhantomMove }.map { game.variant.pgnMoveFormatter.format(it) }, result
+                match.board.initialFEN.currentTurn, match.board.initialFEN.fullmoveCounter,
+                match.board.moveHistory.filter { !it.isPhantomMove }.map { match.variant.pgnMoveFormatter.format(it) }, result
             )
 
             return PGN(tags, tree)

@@ -4,7 +4,7 @@ import gregc.gregchess.Pos
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.player.BukkitChessSide
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.variant.ChessVariant
@@ -12,7 +12,7 @@ import org.bukkit.Material
 
 
 fun interface ChessFloorRenderer {
-    fun ChessGame.getFloorMaterial(p: Pos): Material
+    fun ChessMatch.getFloorMaterial(p: Pos): Material
 }
 
 private fun getFloor(name: String): Material = Material.valueOf(config.getString("Chess.Floor.$name")!!)

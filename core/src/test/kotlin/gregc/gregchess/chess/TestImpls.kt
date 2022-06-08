@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.player.ChessPlayerType
 import gregc.gregchess.player.ChessSide
 import gregc.gregchess.registry.Registry
@@ -20,7 +20,7 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
 
-class TestChessSide(name: String, color: Color, game: ChessGame) : ChessSide<String>(GregChess.TEST_PLAYER, name, color, game) {
+class TestChessSide(name: String, color: Color, match: ChessMatch) : ChessSide<String>(GregChess.TEST_PLAYER, name, color, match) {
     override fun startTurn() {}
 
     override fun stop() {}
@@ -33,7 +33,7 @@ object TestComponent : Component {
 
     override val type = GregChess.TEST_COMPONENT
 
-    override fun init(game: ChessGame) {}
+    override fun init(match: ChessMatch) {}
 
     override fun handleEvent(e: ChessEvent) {}
 

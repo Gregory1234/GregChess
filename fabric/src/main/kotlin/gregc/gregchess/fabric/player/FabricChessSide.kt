@@ -7,8 +7,8 @@ import gregc.gregchess.fabric.client.PromotionMenuFactory
 import gregc.gregchess.fabric.piece.block
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.fabric.renderer.server
-import gregc.gregchess.game.ChessEvent
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.player.ChessSide
@@ -24,7 +24,7 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent
     }
 }
 
-class FabricChessSide(val gameProfile: GameProfile, color: Color, game: ChessGame) : ChessSide<GameProfile>(FabricPlayerType.FABRIC, gameProfile, color, game) {
+class FabricChessSide(val gameProfile: GameProfile, color: Color, match: ChessMatch) : ChessSide<GameProfile>(FabricPlayerType.FABRIC, gameProfile, color, match) {
 
     val uuid get() = gameProfile.id
 
@@ -35,39 +35,39 @@ class FabricChessSide(val gameProfile: GameProfile, color: Color, game: ChessGam
             val oldHeld = field
             field = v
             oldHeld?.let {
-                game.board.checkExists(it)
-                game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
+                match.board.checkExists(it)
+                match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
             }
             v?.let {
-                game.board.checkExists(it)
-                game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
+                match.board.checkExists(it)
+                match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
             }
         }
 
     fun sendStartMessage() {
         if (hasTurn || player != opponent.player)
-            getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
+            getServerPlayer(match.server)?.sendMessage(TranslatableText("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }
 
     override fun startTurn() {
-        val inCheck = game.variant.isInCheck(game.board, color)
+        val inCheck = match.variant.isInCheck(match.board, color)
         if (inCheck) {
-            getServerPlayer(game.server)?.sendMessage(TranslatableText("chess.gregchess.in_check"),false)
+            getServerPlayer(match.server)?.sendMessage(TranslatableText("chess.gregchess.in_check"),false)
         }
     }
 
     fun pickUp(pos: Pos) {
-        if (!game.running) return
-        val piece = game.board[pos] ?: return
+        if (!match.running) return
+        val piece = match.board[pos] ?: return
         if (piece.color != color) return
         held = piece
     }
 
     fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, server: MinecraftServer?): Boolean {
-        if (!game.running) return false
+        if (!match.running) return false
         val piece = held ?: return false
         if (!piece.piece.block.canActuallyPlaceAt(floor.world, floor.pos.up())) return false
-        val moves = piece.getLegalMoves(game.board)
+        val moves = piece.getLegalMoves(match.board)
         if (pos != piece.pos && pos !in moves.map { it.display }) return false
         held = null
         if (pos == piece.pos) return true
@@ -77,12 +77,12 @@ class FabricChessSide(val gameProfile: GameProfile, color: Color, game: ChessGam
         move.promotionTrait?.apply {
             if (availablePromotions.isEmpty()) return false
         }
-        game.coroutineScope.launch {
+        match.coroutineScope.launch {
             move.promotionTrait?.apply {
                 promotion = suspendCoroutine { getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, availablePromotions, floor.world!!, floor.pos, it)) } ?: availablePromotions.first()
             }
-            game.renderer.preferBlock(floor)
-            game.finishMove(move)
+            match.renderer.preferBlock(floor)
+            match.finishMove(move)
         }
         return true
     }

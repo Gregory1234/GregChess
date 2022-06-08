@@ -1,4 +1,4 @@
-package gregc.gregchess.game
+package gregc.gregchess.match
 
 import kotlinx.coroutines.CoroutineDispatcher
 import java.time.Clock

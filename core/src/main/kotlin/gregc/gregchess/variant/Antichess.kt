@@ -2,7 +2,7 @@ package gregc.gregchess.variant
 
 import gregc.gregchess.*
 import gregc.gregchess.board.ChessboardView
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
 import gregc.gregchess.move.trait.captureTrait
 import gregc.gregchess.move.trait.castlesTrait
@@ -43,16 +43,16 @@ object Antichess : ChessVariant(), Registering {
 
     override fun isInCheck(board: ChessboardView, color: Color) = false
 
-    override fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(!game.currentTurn).isEmpty())
-            game.stop(game.currentTurn.lostBy(EndReason.ALL_PIECES_LOST))
+    override fun checkForMatchEnd(match: ChessMatch) = with(match.board) {
+        if (piecesOf(!match.currentTurn).isEmpty())
+            match.stop(match.currentTurn.lostBy(EndReason.ALL_PIECES_LOST))
 
-        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, this) } })
-            game.stop(game.currentTurn.lostBy(STALEMATE_VICTORY))
+        if (piecesOf(!match.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } })
+            match.stop(match.currentTurn.lostBy(STALEMATE_VICTORY))
 
         checkForRepetition()
         checkForFiftyMoveRule()
     }
 
-    override fun timeout(game: ChessGame, color: Color) = game.stop(color.wonBy(EndReason.TIMEOUT))
+    override fun timeout(match: ChessMatch, color: Color) = match.stop(color.wonBy(EndReason.TIMEOUT))
 }

@@ -1,8 +1,8 @@
 package gregc.gregchess.move
 
 import gregc.gregchess.Color
-import gregc.gregchess.game.ChessEvent
-import gregc.gregchess.game.ComponentHolder
+import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.match.ComponentHolder
 import gregc.gregchess.piece.*
 import gregc.gregchess.variant.ChessVariant
 

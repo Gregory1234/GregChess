@@ -4,8 +4,8 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.game.ChessEvent
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.player.ChessSide
@@ -41,7 +41,7 @@ inline fun ByColor<ChessSide<*>>.forEachUniqueBukkit(block: (Player, Color) -> U
     }
 }
 
-class BukkitChessSide(val uuid: UUID, color: Color, game: ChessGame) : ChessSide<UUID>(BukkitPlayerType.BUKKIT, uuid, color, game) {
+class BukkitChessSide(val uuid: UUID, color: Color, match: ChessMatch) : ChessSide<UUID>(BukkitPlayerType.BUKKIT, uuid, color, match) {
 
     val bukkitOffline: OfflinePlayer get() = Bukkit.getOfflinePlayer(uuid)
 
@@ -54,12 +54,12 @@ class BukkitChessSide(val uuid: UUID, color: Color, game: ChessGame) : ChessSide
             val oldHeld = field
             field = v
             oldHeld?.let {
-                game.board.checkExists(it)
-                game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
+                match.board.checkExists(it)
+                match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
             }
             v?.let {
-                game.board.checkExists(it)
-                game.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
+                match.board.checkExists(it)
+                match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
             }
         }
 
@@ -75,28 +75,28 @@ class BukkitChessSide(val uuid: UUID, color: Color, game: ChessGame) : ChessSide
     override fun toString() = "BukkitChessSide(name=$name)"
 
     fun pickUp(pos: Pos) {
-        if (!game.running) return
-        val piece = game.board[pos] ?: return
+        if (!match.running) return
+        val piece = match.board[pos] ?: return
         if (piece.color != color) return
         held = piece
         bukkit?.inventory?.setItem(0, piece.piece.item)
     }
 
     fun makeMove(pos: Pos) {
-        if (!game.running) return
+        if (!match.running) return
         val piece = held ?: return
-        val moves = piece.getLegalMoves(game.board)
+        val moves = piece.getLegalMoves(match.board)
         if (pos != piece.pos && pos !in moves.map { it.display }) return
         held = null
         bukkit?.inventory?.setItem(0, null)
         if (pos == piece.pos) return
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
-        game.coroutineScope.launch {
+        match.coroutineScope.launch {
             move.promotionTrait?.apply {
                 promotion = bukkit?.openPawnPromotionMenu(promotions) ?: promotions.first()
             }
-            game.finishMove(move)
+            match.finishMove(move)
         }
     }
 
@@ -113,7 +113,7 @@ class BukkitChessSide(val uuid: UUID, color: Color, game: ChessGame) : ChessSide
             firstTurn = false
             return
         }
-        val inCheck = game.variant.isInCheck(game.board, color)
+        val inCheck = match.variant.isInCheck(match.board, color)
         sendTitleList(buildList {
             if (inCheck)
                 this += IN_CHECK_TITLE to true

@@ -99,12 +99,12 @@ permissions:
     default: op
     children:
       gregchess.chess.info.remote: true
-      gregchess.chess.info.ingame: true
+      gregchess.chess.info.inmatch: true
   gregchess.chess.info.remote:
     description: Can use /chess info with uuids
     default: op
-  gregchess.chess.info.ingame:
-    description: Can use /chess info in-game
+  gregchess.chess.info.inmatch:
+    description: Can use /chess info inside a chess match
     default: op
   gregchess.chess.stats.*:
     description: Can fully use /chess stats

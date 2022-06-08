@@ -3,7 +3,7 @@
 package gregc.gregchess.clock
 
 import gregc.gregchess.*
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import kotlinx.serialization.*
 import java.time.Instant
 import kotlin.time.Duration
@@ -54,11 +54,11 @@ class ChessClock private constructor(
     override val type get() = ComponentType.CLOCK
 
     @Transient
-    private lateinit var game: ChessGame
+    private lateinit var match: ChessMatch
 
-    override fun init(game: ChessGame) {
-        this.game = game
-        lastTime = Instant.now(game.environment.clock)
+    override fun init(match: ChessMatch) {
+        this.match = match
+        lastTime = Instant.now(match.environment.clock)
     }
 
     val timeRemaining: ByColor<Duration> get() = byColor { timeRemaining_[it] }
@@ -70,24 +70,24 @@ class ChessClock private constructor(
     @Transient private var stopped = false
 
     @ChessEventHandler
-    fun handleEvents(e: GameBaseEvent) {
-        if (e == GameBaseEvent.START && timeControl.type == TimeControl.Type.FIXED) started = true
-        else if (e == GameBaseEvent.SYNC) when (game.state) {
-            ChessGame.State.INITIAL -> {
+    fun handleEvents(e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.START && timeControl.type == TimeControl.Type.FIXED) started = true
+        else if (e == ChessBaseEvent.SYNC) when (match.state) {
+            ChessMatch.State.INITIAL -> {
                 started = false
                 stopped = false
             }
-            ChessGame.State.RUNNING -> {
+            ChessMatch.State.RUNNING -> {
                 started = timeControl.type == TimeControl.Type.FIXED
                 stopped = false
             }
-            ChessGame.State.STOPPED, ChessGame.State.ERROR -> {
+            ChessMatch.State.STOPPED, ChessMatch.State.ERROR -> {
                 started = true
                 stopped = true
             }
         }
-        else if (e == GameBaseEvent.STOP || e == GameBaseEvent.PANIC) stopped = true
-        else if (e == GameBaseEvent.UPDATE) updateTimer()
+        else if (e == ChessBaseEvent.STOP || e == ChessBaseEvent.PANIC) stopped = true
+        else if (e == ChessBaseEvent.UPDATE) updateTimer()
     }
 
     fun addTimer(s: Color, d: Duration) {
@@ -103,18 +103,18 @@ class ChessClock private constructor(
             return
         if (stopped)
             return
-        val now = Instant.now(game.environment.clock)
+        val now = Instant.now(match.environment.clock)
         val dt = Duration.between(lastTime, now)
         lastTime = now
         currentTurnLength_ += dt
         if (timeControl.type != TimeControl.Type.SIMPLE) {
-            timeRemaining_[game.currentTurn] -= dt
+            timeRemaining_[match.currentTurn] -= dt
         } else {
-            timeRemaining_[game.currentTurn] -= maxOf(minOf(dt, currentTurnLength_ - timeControl.increment), Duration.ZERO)
+            timeRemaining_[match.currentTurn] -= maxOf(minOf(dt, currentTurnLength_ - timeControl.increment), Duration.ZERO)
         }
         for ((s, t) in timeRemaining_.toIndexedList())
             if (t.isNegative())
-                game.variant.timeout(game, s)
+                match.variant.timeout(match, s)
     }
 
     @ChessEventHandler
@@ -124,7 +124,7 @@ class ChessClock private constructor(
         val increment = if (started) timeControl.increment else Duration.ZERO
         if (!started)
             started = true
-        val turn = game.currentTurn
+        val turn = match.currentTurn
         when (timeControl.type) {
             TimeControl.Type.FIXED -> {
                 timeRemaining_[turn] = timeControl.initialTime

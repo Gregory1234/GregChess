@@ -3,8 +3,8 @@ package gregc.gregchess.variant
 import gregc.gregchess.*
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.FEN
-import gregc.gregchess.game.ChessGame
-import gregc.gregchess.game.ComponentType
+import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.ComponentType
 import gregc.gregchess.move.*
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
@@ -64,12 +64,12 @@ open class ChessVariant : NameRegistered {
         return king != null && isInCheck(king, board)
     }
 
-    open fun checkForGameEnd(game: ChessGame) = with(game.board) {
-        if (piecesOf(!game.currentTurn).all { it.getMoves(this).none { m -> game.variant.isLegal(m, this) } }) {
-            if (isInCheck(this, !game.currentTurn))
-                game.stop(game.currentTurn.wonBy(EndReason.CHECKMATE))
+    open fun checkForMatchEnd(match: ChessMatch) = with(match.board) {
+        if (piecesOf(!match.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
+            if (isInCheck(this, !match.currentTurn))
+                match.stop(match.currentTurn.wonBy(EndReason.CHECKMATE))
             else
-                game.stop(drawBy(EndReason.STALEMATE))
+                match.stop(drawBy(EndReason.STALEMATE))
         }
 
         checkForRepetition()
@@ -78,20 +78,20 @@ open class ChessVariant : NameRegistered {
         val whitePieces = piecesOf(Color.WHITE)
         val blackPieces = piecesOf(Color.BLACK)
         if (whitePieces.size == 1 && blackPieces.size == 1)
-            game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
+            match.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
 
         val minorPieces = listOf(PieceType.KNIGHT, PieceType.BISHOP)
         if (whitePieces.size == 2 && whitePieces.any { it.type in minorPieces } && blackPieces.size == 1)
-            game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
+            match.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
         if (blackPieces.size == 2 && blackPieces.any { it.type in minorPieces } && whitePieces.size == 1)
-            game.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
+            match.stop(drawBy(EndReason.INSUFFICIENT_MATERIAL))
     }
 
-    open fun timeout(game: ChessGame, color: Color) {
-        if (game.board.piecesOf(!color).size == 1)
-            game.stop(drawBy(EndReason.DRAW_TIMEOUT))
+    open fun timeout(match: ChessMatch, color: Color) {
+        if (match.board.piecesOf(!color).size == 1)
+            match.stop(drawBy(EndReason.DRAW_TIMEOUT))
         else
-            game.stop(color.lostBy(EndReason.TIMEOUT))
+            match.stop(color.lostBy(EndReason.TIMEOUT))
     }
 
     open fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> = when(piece.type) {

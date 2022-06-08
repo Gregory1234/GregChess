@@ -2,7 +2,7 @@ package gregc.gregchess.player
 
 import gregc.gregchess.AutoRegisterType
 import gregc.gregchess.Color
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 class ChessPlayerType<P: Any>(
     val serializer: KSerializer<P>,
     val nameOf: (P) -> String,
-    val initSide: (P, Color, ChessGame) -> ChessSide<P>
+    val initSide: (P, Color, ChessMatch) -> ChessSide<P>
 ) : NameRegistered {
     object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", Registry.PLAYER_TYPE)
 
@@ -27,23 +27,23 @@ class ChessPlayerType<P: Any>(
 }
 
 // TODO: add an interface for human players
-abstract class ChessSide<P : Any>(private val playerType: ChessPlayerType<P>, private val playerValue: P, val color: Color, val game: ChessGame) {
+abstract class ChessSide<P : Any>(private val playerType: ChessPlayerType<P>, private val playerValue: P, val color: Color, val match: ChessMatch) {
 
     val player: ChessPlayer get() = playerType.of(playerValue)
 
     val name: String get() = playerType.nameOf(playerValue)
 
     val opponent
-        get() = game[!color]
+        get() = match[!color]
 
     val hasTurn
-        get() = game.currentTurn == color
+        get() = match.currentTurn == color
 
     val pieces
-        get() = game.board.piecesOf(color)
+        get() = match.board.piecesOf(color)
 
     val king
-        get() = game.board.kingOf(color)
+        get() = match.board.kingOf(color)
 
     open fun stop() {}
     open fun clear() {}

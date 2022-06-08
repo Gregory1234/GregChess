@@ -1,7 +1,7 @@
 package gregc.gregchess.piece
 
 import gregc.gregchess.Color
-import gregc.gregchess.game.ChessEvent
+import gregc.gregchess.match.ChessEvent
 
 interface PieceHolderView<P : PlacedPiece> {
     val pieces: Collection<P>

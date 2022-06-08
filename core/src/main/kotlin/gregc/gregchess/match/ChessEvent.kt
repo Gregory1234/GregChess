@@ -1,4 +1,4 @@
-package gregc.gregchess.game
+package gregc.gregchess.match
 
 import kotlin.reflect.full.isSupertypeOf
 import kotlin.reflect.full.starProjectedType
@@ -26,7 +26,7 @@ enum class TurnEvent(val ending: Boolean) : ChessEvent {
     START(false), END(true), UNDO(true)
 }
 
-enum class GameBaseEvent : ChessEvent {
+enum class ChessBaseEvent : ChessEvent {
     START,
     SYNC,
     RUNNING,

@@ -3,7 +3,7 @@ package gregc.gregchess.variant
 import gregc.gregchess.*
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.boardView
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.trait.MoveTrait
@@ -24,10 +24,10 @@ object ThreeChecks : ChessVariant(), Registering {
         override val type get() = CHECK_COUNTER
 
         @Transient
-        private lateinit var game: ChessGame
+        private lateinit var match: ChessMatch
 
-        override fun init(game: ChessGame) {
-            this.game = game
+        override fun init(match: ChessMatch) {
+            this.match = match
         }
 
         val check: ByColor<Int> get() = byColor { checks_[it] }
@@ -40,10 +40,10 @@ object ThreeChecks : ChessVariant(), Registering {
             checks_[color]--
         }
 
-        fun checkForGameEnd() {
+        fun checkForMatchEnd() {
             for ((s, c) in checks_.toIndexedList())
                 if (c >= limit)
-                    game.stop(s.lostBy(CHECK_LIMIT, limit.toString()))
+                    match.stop(s.lostBy(CHECK_LIMIT, limit.toString()))
         }
 
         operator fun get(s: Color) = checks_[s]
@@ -90,10 +90,10 @@ object ThreeChecks : ChessVariant(), Registering {
             it.copy(traits = it.traits + CheckCounterTrait())
         }
 
-    override fun checkForGameEnd(game: ChessGame) {
-        game.require(CHECK_COUNTER).checkForGameEnd()
+    override fun checkForMatchEnd(match: ChessMatch) {
+        match.require(CHECK_COUNTER).checkForMatchEnd()
 
-        Normal.checkForGameEnd(game)
+        Normal.checkForMatchEnd(match)
     }
 
     override val requiredComponents = setOf(CHECK_COUNTER)

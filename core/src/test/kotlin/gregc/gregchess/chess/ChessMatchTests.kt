@@ -5,7 +5,7 @@ import assertk.assertions.*
 import gregc.gregchess.board.AddVariantOptionsEvent
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.byColor
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.piece.AddPieceHoldersEvent
 import gregc.gregchess.piece.PieceMoveEvent
 import gregc.gregchess.results.EndReason
@@ -16,13 +16,13 @@ import kotlinx.coroutines.isActive
 import org.junit.jupiter.api.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ChessGameTests {
+class ChessMatchTests {
 
     private val playerA = GregChess.TEST_PLAYER.of("A")
     private val playerB = GregChess.TEST_PLAYER.of("B")
 
-    private fun mkGame(variant: ChessVariant = ChessVariant.Normal, extra: Collection<Component> = emptyList()) =
-        ChessGame(TestChessEnvironment, variant, listOf(Chessboard(variant)) + extra, byColor(playerA, playerB))
+    private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, extra: Collection<Component> = emptyList()) =
+        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant)) + extra, byColor(playerA, playerB))
 
     @BeforeAll
     fun setup() {
@@ -34,7 +34,7 @@ class ChessGameTests {
         @Test
         fun `should pass components through`() {
             val cd = spyk(TestComponent)
-            val g = mkGame(extra = listOf(cd))
+            val g = mkMatch(extra = listOf(cd))
             val c = g.require(GregChess.TEST_COMPONENT)
             assertThat(c).isEqualTo(cd)
         }
@@ -42,7 +42,7 @@ class ChessGameTests {
         @Test
         fun `should only initialize components`() {
             val cd = spyk(TestComponent)
-            val g = mkGame(extra = listOf(cd))
+            val g = mkMatch(extra = listOf(cd))
             val c = g.require(GregChess.TEST_COMPONENT)
             excludeRecords {
                 c.type
@@ -54,7 +54,7 @@ class ChessGameTests {
 
         @Test
         fun `should only construct sides`() {
-            val g = mkGame()
+            val g = mkMatch()
             val mocks = g.sides.toList()
             verify {
                 mocks wasNot Called
@@ -62,10 +62,10 @@ class ChessGameTests {
         }
 
         @Test
-        fun `should not make game run`() {
-            val game = mkGame()
+        fun `should not make match run`() {
+            val match = mkMatch()
 
-            assertThat(game::running).isFalse()
+            assertThat(match::running).isFalse()
         }
     }
 
@@ -73,34 +73,34 @@ class ChessGameTests {
     inner class Starting {
         @Test
         fun `should enable running`() {
-            val game = mkGame().start()
+            val match = mkMatch().start()
 
-            assertThat(game::running).isTrue()
+            assertThat(match::running).isTrue()
         }
 
         @Test
         fun `should throw when already running`() {
-            val game = mkGame().start()
+            val match = mkMatch().start()
 
             assertThrows<IllegalStateException> {
-                game.start()
+                match.start()
             }
         }
 
         @Test
         fun `should throw when stopped`() {
-            val game = mkGame().start()
+            val match = mkMatch().start()
 
-            game.stop(drawBy(EndReason.DRAW_AGREEMENT))
+            match.stop(drawBy(EndReason.DRAW_AGREEMENT))
 
             assertThrows<IllegalStateException> {
-                game.start()
+                match.start()
             }
         }
 
         @Test
         fun `should start components`() {
-            val g = mkGame(extra = listOf(spyk(TestComponent)))
+            val g = mkMatch(extra = listOf(spyk(TestComponent)))
             val c = g.require(GregChess.TEST_COMPONENT)
             clearRecords(c)
             g.start()
@@ -111,15 +111,15 @@ class ChessGameTests {
                 c.handleEvent(match { it is AddPieceHoldersEvent })
             }
             verifySequence {
-                c.handleEvent(GameBaseEvent.START)
-                c.handleEvent(GameBaseEvent.RUNNING)
+                c.handleEvent(ChessBaseEvent.START)
+                c.handleEvent(ChessBaseEvent.RUNNING)
                 c.handleEvent(TurnEvent.START)
             }
         }
 
         @Test
         fun `should start turn`() {
-            val g = mkGame().start()
+            val g = mkMatch().start()
             verifyAll {
                 g.sides.white.startTurn()
             }
@@ -132,25 +132,25 @@ class ChessGameTests {
 
         @Test
         fun `should disable running`() {
-            val game = mkGame().start()
+            val match = mkMatch().start()
 
-            game.stop(results)
+            match.stop(results)
 
-            assertThat(game::running).isFalse()
+            assertThat(match::running).isFalse()
         }
 
         @Test
         fun `should cancel coroutine scope`() {
-            val game = mkGame().start()
+            val match = mkMatch().start()
 
-            game.stop(results)
+            match.stop(results)
 
-            assertThat(game.coroutineScope::isActive).isFalse()
+            assertThat(match.coroutineScope::isActive).isFalse()
         }
 
         @Test
         fun `should stop and clear sides`() {
-            val g = mkGame().start()
+            val g = mkMatch().start()
 
             clearRecords(g.sides.white)
             clearRecords(g.sides.black)
@@ -167,7 +167,7 @@ class ChessGameTests {
 
         @Test
         fun `should stop and clear components`() {
-            val g = mkGame(extra = listOf(spyk(TestComponent))).start()
+            val g = mkMatch(extra = listOf(spyk(TestComponent))).start()
             val c = g.require(GregChess.TEST_COMPONENT)
             clearRecords(c)
             g.stop(results)
@@ -175,37 +175,37 @@ class ChessGameTests {
                 c.type
             }
             verifySequence {
-                c.handleEvent(GameBaseEvent.STOP)
-                c.handleEvent(GameBaseEvent.CLEAR)
+                c.handleEvent(ChessBaseEvent.STOP)
+                c.handleEvent(ChessBaseEvent.CLEAR)
             }
         }
 
         @Test
         fun `should preserve results`() {
-            val game = mkGame().start()
+            val match = mkMatch().start()
 
-            game.stop(results)
+            match.stop(results)
 
-            assertThat(game::results).isNotNull().isSameAs(results)
+            assertThat(match::results).isNotNull().isSameAs(results)
         }
 
         @Test
         fun `should throw when not started`() {
-            val game = mkGame()
+            val match = mkMatch()
 
             assertThrows<IllegalStateException> {
-                game.stop(results)
+                match.stop(results)
             }
         }
 
         @Test
         fun `should throw when already stopped`() {
-            val game = mkGame().start()
+            val match = mkMatch().start()
 
-            game.stop(results)
+            match.stop(results)
 
             assertThrows<IllegalStateException> {
-                game.stop(results)
+                match.stop(results)
             }
         }
     }

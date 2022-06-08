@@ -2,7 +2,7 @@ package gregc.gregchess.fabric
 
 import gregc.gregchess.GregChessCore
 import gregc.gregchess.Register
-import gregc.gregchess.fabric.game.FabricComponentType
+import gregc.gregchess.fabric.match.FabricComponentType
 import gregc.gregchess.fabric.piece.shortPieceBlocks
 import gregc.gregchess.fabric.piece.tallPieceBlocks
 import gregc.gregchess.fabric.player.FabricPlayerType

@@ -1,7 +1,7 @@
-package gregc.gregchess.bukkit.game
+package gregc.gregchess.bukkit.match
 
-import gregc.gregchess.bukkit.player.showGameResults
-import gregc.gregchess.game.*
+import gregc.gregchess.bukkit.player.showMatchResults
+import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.entity.Player
@@ -16,10 +16,10 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
     override val type get() = BukkitComponentType.SPECTATOR_MANAGER
 
     @Transient
-    private lateinit var game: ChessGame
+    private lateinit var match: ChessMatch
 
-    override fun init(game: ChessGame) {
-        this.game = game
+    override fun init(match: ChessMatch) {
+        this.match = match
     }
 
     @Transient
@@ -28,28 +28,28 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
     val spectators get() = spectatorList.toList()
 
     operator fun plusAssign(p: Player) {
-        ChessGameManager.setCurrentSpectatedGame(p.uniqueId, game.uuid)
+        ChessMatchManager.setCurrentSpectatedMatch(p.uniqueId, match.uuid) // TODO: this shouldn't be called here probably
         spectatorList += p
-        game.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
+        match.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
     operator fun minusAssign(p: Player) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
-        ChessGameManager.setCurrentSpectatedGame(p.uniqueId, null)
+        ChessMatchManager.setCurrentSpectatedMatch(p.uniqueId, null)
         spectatorList -= p
-        game.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
+        match.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
 
     @ChessEventHandler
-    fun onStop(e: GameBaseEvent) {
-        if (e == GameBaseEvent.STOP) stop()
-        else if (e == GameBaseEvent.CLEAR) clear()
+    fun onStop(e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.STOP) stop()
+        else if (e == ChessBaseEvent.CLEAR) clear()
     }
 
     private fun stop() {
         for (it in spectators) {
-            it.showGameResults(game.results!!)
+            it.showMatchResults(match.results!!)
         }
     }
 
@@ -57,10 +57,10 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
         val s = spectators
         spectatorList.clear()
         for (it in s) {
-            game.callEvent(SpectatorEvent(it, PlayerDirection.LEAVE))
+            match.callEvent(SpectatorEvent(it, PlayerDirection.LEAVE))
         }
     }
 }
 
-val ChessGame.spectators get() = require(BukkitComponentType.SPECTATOR_MANAGER)
+val ChessMatch.spectators get() = require(BukkitComponentType.SPECTATOR_MANAGER)
 val ComponentHolder.spectators get() = get(BukkitComponentType.SPECTATOR_MANAGER)

@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.GregChessCore
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
-import gregc.gregchess.bukkit.game.*
+import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.player.BukkitPlayerType
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.renderer.*
@@ -11,7 +11,7 @@ import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.clock.TimeControl
-import gregc.gregchess.game.ComponentType
+import gregc.gregchess.match.ComponentType
 import gregc.gregchess.variant.KingOfTheHill
 import gregc.gregchess.variant.ThreeChecks
 import kotlin.time.Duration
@@ -54,12 +54,12 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             }
         }
         BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.RENDERER] = { BukkitRenderer() }
-        BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.GAME_CONTROLLER] = { GameController(presetName) }
+        BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.MATCH_CONTROLLER] = { MatchController(presetName) }
         BukkitRegistry.SETTINGS_PARSER[ThreeChecks.CHECK_COUNTER] = { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3)) }
     }
 
     private fun hookComponents() {
-        for (c in listOf(ComponentType.CHESSBOARD, ComponentType.CLOCK, BukkitComponentType.GAME_CONTROLLER,
+        for (c in listOf(ComponentType.CHESSBOARD, ComponentType.CLOCK, BukkitComponentType.MATCH_CONTROLLER,
             BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.RENDERER,
             BukkitComponentType.ADAPTER)) {
             BukkitRegistry.HOOKED_COMPONENTS += c
@@ -70,7 +70,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         GregChessCore.registerAll(this)
         BukkitGregChessCore.autoRegister(this).apply {
             registerAll<Arena>()
-            registerAll<ChessGameManager>()
+            registerAll<ChessMatchManager>()
             registerAll<BukkitComponentType>()
             registerAll<BukkitPlayerType>()
             registerAll<ArenaManagers>()

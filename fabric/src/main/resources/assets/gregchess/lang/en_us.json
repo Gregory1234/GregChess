@@ -16,8 +16,8 @@
   "block.gregchess.white_rook": "White Rook",
   "block.gregchess.black_rook": "Black Rook",
   "gui.gregchess.detect_board": "Detect Board",
-  "gui.gregchess.start_game": "Start Game",
-  "gui.gregchess.abort_game": "Abort Game",
+  "gui.gregchess.start_match": "Start Match",
+  "gui.gregchess.abort_match": "Abort Match",
   "gui.gregchess.no_chessboard": "No Chessboard Detected",
   "gui.gregchess.has_chessboard": "Chessboard Detected",
   "gui.gregchess.promotion_menu": "Pawn Promotion",
@@ -25,9 +25,9 @@
   "chess.gregchess.you_are_playing_as.white": "You are playing with the white pieces.",
   "chess.gregchess.you_are_playing_as.black": "You are playing with the black pieces.",
   "chess.gregchess.in_check": "You are in check!",
-  "chess.gregchess.you_won_by": "The game has finished! You won by %s.",
-  "chess.gregchess.you_lost_by": "The game has finished! You lost by %s.",
-  "chess.gregchess.draw_by": "The game has finished! It was a draw by %s.",
+  "chess.gregchess.you_won_by": "The match has finished! You won by %s.",
+  "chess.gregchess.you_lost_by": "The match has finished! You lost by %s.",
+  "chess.gregchess.draw_by": "The match has finished! It was a draw by %s.",
   "end_reason.gregchess.checkmate": "checkmate",
   "end_reason.gregchess.resignation": "resignation",
   "end_reason.gregchess.walkover": "walkover",
@@ -44,5 +44,5 @@
   "end_reason.gregchess.king_of_the_hill": "king of the hill",
   "end_reason.gregchess.atomic": "explosion",
   "end_reason.gregchess.chessboard_broken": "the chessboard was broken",
-  "end_reason.gregchess.aborted": "game aborted"
+  "end_reason.gregchess.aborted": "match aborted"
 }

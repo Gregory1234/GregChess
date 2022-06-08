@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.bukkit.game.BukkitChessEnvironment
-import gregc.gregchess.game.ChessEnvironment
+import gregc.gregchess.bukkit.match.BukkitChessEnvironment
+import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.registry.RegistryKey
 import gregc.gregchess.registry.StringKeySerializer
 import kotlinx.serialization.KSerializer

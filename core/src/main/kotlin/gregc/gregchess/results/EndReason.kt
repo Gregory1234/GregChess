@@ -4,11 +4,11 @@ import gregc.gregchess.*
 import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
 
-typealias DetEndReason = EndReason<GameScore.Victory>
-typealias DrawEndReason = EndReason<GameScore.Draw>
+typealias DetEndReason = EndReason<MatchScore.Victory>
+typealias DrawEndReason = EndReason<MatchScore.Draw>
 
 @Serializable(with = EndReason.Serializer::class)
-class EndReason<@Suppress("UNUSED") R : GameScore>(val type: Type) : NameRegistered {
+class EndReason<@Suppress("UNUSED") R : MatchScore>(val type: Type) : NameRegistered {
 
     object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", Registry.END_REASON)
 

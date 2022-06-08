@@ -3,11 +3,11 @@ package gregc.gregchess.fabric.renderer
 import gregc.gregchess.Pos
 import gregc.gregchess.fabric.block.ChessControllerBlockEntity
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
-import gregc.gregchess.fabric.game.FabricComponentType
+import gregc.gregchess.fabric.match.FabricComponentType
 import gregc.gregchess.fabric.moveBlock
 import gregc.gregchess.fabric.piece.*
 import gregc.gregchess.fabric.player.PiecePlayerActionEvent
-import gregc.gregchess.game.*
+import gregc.gregchess.match.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceMoveEvent
 import kotlinx.serialization.*
@@ -25,10 +25,10 @@ data class FabricRenderer(
     override val type get() = FabricComponentType.RENDERER
 
     @Transient
-    private lateinit var game: ChessGame
+    private lateinit var match: ChessMatch
 
-    override fun init(game: ChessGame) {
-        this.game = game
+    override fun init(match: ChessMatch) {
+        this.match = match
     }
 
     private val controller: ChessControllerBlockEntity
@@ -50,8 +50,8 @@ data class FabricRenderer(
         for (file in 0..7) {
             for (rank in 0..7) {
                 tileBlocks[Pos(file, rank)]?.forEach {
-                    with(game.variant.floorRenderer) {
-                        it.updateFloor(game.getFloorMaterial(Pos(file, rank)))
+                    with(match.variant.floorRenderer) {
+                        it.updateFloor(match.getFloorMaterial(Pos(file, rank)))
                     }
                 }
             }
@@ -59,14 +59,14 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
-    fun onBaseEvent(e: GameBaseEvent) {
-        if (e == GameBaseEvent.STOP || e == GameBaseEvent.PANIC) {
+    fun onBaseEvent(e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.STOP || e == ChessBaseEvent.PANIC) {
             tileBlocks.forEach { (_,l) ->
                 l.forEach {
                     it.updateFloor()
                 }
             }
-            (world.getBlockEntity(controllerPos) as? ChessControllerBlockEntity)?.currentGameUUID = null
+            (world.getBlockEntity(controllerPos) as? ChessControllerBlockEntity)?.currentMatchUUID = null
         }
     }
 
@@ -147,5 +147,5 @@ data class FabricRenderer(
 
 val ComponentHolder.server get() = renderer?.world?.server
 
-val ChessGame.renderer get() = require(FabricComponentType.RENDERER)
+val ChessMatch.renderer get() = require(FabricComponentType.RENDERER)
 val ComponentHolder.renderer get() = get(FabricComponentType.RENDERER)

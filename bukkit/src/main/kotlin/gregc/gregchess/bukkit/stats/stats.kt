@@ -2,7 +2,7 @@ package gregc.gregchess.bukkit.stats
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.game.SettingsManager
+import gregc.gregchess.bukkit.match.SettingsManager
 import gregc.gregchess.bukkit.registry.*
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.registry.*

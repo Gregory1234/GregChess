@@ -1,4 +1,4 @@
-package gregc.gregchess.bukkit.game
+package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.Color
 import gregc.gregchess.Register
@@ -7,7 +7,7 @@ import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.registerEvents
 import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.bukkit.renderer.renderer
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.results.*
 import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
@@ -23,41 +23,41 @@ import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.*
 import java.util.*
 
-object ChessGameManager : Listener {
+object ChessMatchManager : Listener {
     @JvmField
     @Register(data = ["quick"])
     val PLUGIN_DISABLED = DrawEndReason(EndReason.Type.EMERGENCY)
 
-    private val games = mutableMapOf<UUID, ChessGame>()
-    private val playerCurrentGames = mutableMapOf<UUID, UUID>()
-    private val playerSpectatedGames = mutableMapOf<UUID, UUID>()
+    private val matches = mutableMapOf<UUID, ChessMatch>()
+    private val playerCurrentMatches = mutableMapOf<UUID, UUID>()
+    private val playerSpectatedMatches = mutableMapOf<UUID, UUID>()
     private val playerSides = mutableMapOf<UUID, Map<UUID, Color?>>()
 
-    operator fun get(uuid: UUID): ChessGame? = games[uuid]
+    operator fun get(uuid: UUID): ChessMatch? = matches[uuid]
 
-    internal fun currentGameOf(uuid: UUID): ChessGame? = playerCurrentGames[uuid]?.let(::get)
-    internal fun currentSpectatedGameOf(uuid: UUID): ChessGame? = playerSpectatedGames[uuid]?.let(::get)
+    internal fun currentMatchOf(uuid: UUID): ChessMatch? = playerCurrentMatches[uuid]?.let(::get)
+    internal fun currentSpectatedMatchOf(uuid: UUID): ChessMatch? = playerSpectatedMatches[uuid]?.let(::get)
 
     internal fun currentSideOf(uuid: UUID): BukkitChessSide? {
-        val currentGame = currentGameOf(uuid) ?: return null
-        return currentGame[playerSides[uuid]!![currentGame.uuid] ?: currentGame.currentTurn] as? BukkitChessSide
+        val currentMatch = currentMatchOf(uuid) ?: return null
+        return currentMatch[playerSides[uuid]!![currentMatch.uuid] ?: currentMatch.currentTurn] as? BukkitChessSide
     }
 
-    internal fun activeGamesOf(uuid: UUID): Set<ChessGame> = playerSides[uuid]?.keys?.mapNotNull(::get)?.toSet().orEmpty()
+    internal fun activeMatchesOf(uuid: UUID): Set<ChessMatch> = playerSides[uuid]?.keys?.mapNotNull(::get)?.toSet().orEmpty()
 
-    internal fun setCurrentGame(uuid: UUID, gameUUID: UUID?) {
-        if (gameUUID == null) {
-            playerCurrentGames.remove(uuid)
+    internal fun setCurrentMatch(uuid: UUID, matchUUID: UUID?) {
+        if (matchUUID == null) {
+            playerCurrentMatches.remove(uuid)
         } else {
-            playerCurrentGames[uuid] = gameUUID
+            playerCurrentMatches[uuid] = matchUUID
         }
     }
 
-    internal fun setCurrentSpectatedGame(uuid: UUID, gameUUID: UUID?) {
-        if (gameUUID == null) {
-            playerSpectatedGames.remove(uuid)
+    internal fun setCurrentSpectatedMatch(uuid: UUID, matchUUID: UUID?) {
+        if (matchUUID == null) {
+            playerSpectatedMatches.remove(uuid)
         } else {
-            playerSpectatedGames[uuid] = gameUUID
+            playerSpectatedMatches[uuid] = matchUUID
         }
     }
 
@@ -66,7 +66,7 @@ object ChessGameManager : Listener {
     }
 
     fun stop() {
-        for (g in games.values)
+        for (g in matches.values)
             g.quickStop(drawBy(PLUGIN_DISABLED))
     }
 
@@ -76,19 +76,19 @@ object ChessGameManager : Listener {
     }
 
     @EventHandler
-    fun onPlayerLeave(e: PlayerQuitEvent) = e.player.leaveGame()
+    fun onPlayerLeave(e: PlayerQuitEvent) = e.player.leaveMatch()
 
     @EventHandler
     fun onPlayerDeath(e: EntityDeathEvent) {
         val ent = e.entity as? Player ?: return
-        val game = ent.currentChessGame ?: return
-        game.callEvent(ResetPlayerEvent(ent))
+        val match = ent.currentChessMatch ?: return
+        match.callEvent(ResetPlayerEvent(ent))
     }
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.entity as? Player ?: return
-        ent.currentChessGame ?: return
+        ent.currentChessMatch ?: return
         e.isCancelled = true
     }
 
@@ -98,7 +98,7 @@ object ChessGameManager : Listener {
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
-            val pos = player.game.renderer.getPos(block.location)
+            val pos = player.match.renderer.getPos(block.location)
             if (e.action == Action.LEFT_CLICK_BLOCK && player.held == null) {
                 player.pickUp(pos)
             } else if (e.action == Action.RIGHT_CLICK_BLOCK && player.held != null) {
@@ -109,41 +109,41 @@ object ChessGameManager : Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (e.player.isInChessGame) {
+        if (e.player.isInChessMatch) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.whoClicked.let { it is Player && it.isInChessGame }) {
+        if (e.whoClicked.let { it is Player && it.isInChessMatch }) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        if (e.whoClicked.let { it is Player && it.isInChessGame }) {
+        if (e.whoClicked.let { it is Player && it.isInChessMatch }) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (e.player.isInChessGame)
+        if (e.player.isInChessMatch)
             e.isCancelled = true
     }
 
-    internal operator fun plusAssign(g: ChessGame) {
-        games[g.uuid] = g
+    internal operator fun plusAssign(g: ChessMatch) {
+        matches[g.uuid] = g
         val white = g.playerData.white.value as? UUID
         val black = g.playerData.black.value as? UUID
 
         if (white != null) {
-            playerCurrentGames[white] = g.uuid
+            playerCurrentMatches[white] = g.uuid
         }
         if (black != null && black != white) {
-            playerCurrentGames[black] = g.uuid
+            playerCurrentMatches[black] = g.uuid
         }
 
         if (white != null && white == black) {
@@ -158,22 +158,22 @@ object ChessGameManager : Listener {
         }
     }
 
-    internal operator fun minusAssign(g: ChessGame) {
+    internal operator fun minusAssign(g: ChessMatch) {
         g.sides.forEachUnique(GregChessPlugin::clearRequests)
-        games.remove(g.uuid, g)
+        matches.remove(g.uuid, g)
         val white = g.playerData.white.value as? UUID
         val black = g.playerData.black.value as? UUID
 
         if (white != null) {
-            if (playerCurrentGames[white] == g.uuid)
-                playerCurrentGames.remove(white)
+            if (playerCurrentMatches[white] == g.uuid)
+                playerCurrentMatches.remove(white)
             playerSides[white] = playerSides[white]!! - g.uuid
             if (playerSides[white]!!.isEmpty())
                 playerSides.remove(white)
         }
         if (black != null && black != white) {
-            if (playerCurrentGames[black] == g.uuid)
-                playerCurrentGames.remove(black)
+            if (playerCurrentMatches[black] == g.uuid)
+                playerCurrentMatches.remove(black)
             playerSides[black] = playerSides[black]!! - g.uuid
             if (playerSides[black]!!.isEmpty())
                 playerSides.remove(black)

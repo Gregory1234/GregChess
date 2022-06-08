@@ -1,4 +1,4 @@
-package gregc.gregchess.fabric.game
+package gregc.gregchess.fabric.match
 
 import gregc.gregchess.Pos
 import gregc.gregchess.board.Chessboard
@@ -9,8 +9,8 @@ import gregc.gregchess.fabric.mixin.WorldSavePathCreator
 import gregc.gregchess.fabric.nbt.*
 import gregc.gregchess.fabric.renderer.FabricRenderer
 import gregc.gregchess.fabric.renderer.renderer
-import gregc.gregchess.game.ChessGame
-import gregc.gregchess.game.Component
+import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.Component
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.variant.ChessVariant
 import net.minecraft.nbt.NbtCompound
@@ -19,25 +19,25 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.world.ServerWorld
 import java.util.*
 
-object ChessGameManager {
+object ChessMatchManager {
 
     private val gregchessPath = WorldSavePathCreator.create("gregchess")
 
-    private val loadedGames = mutableMapOf<UUID, ChessGame>()
+    private val loadedMatches = mutableMapOf<UUID, ChessMatch>()
 
     internal lateinit var server: MinecraftServer
 
-    private fun gameFile(uuid: UUID) = server.getSavePath(gregchessPath).resolve("$uuid.dat").toFile()
+    private fun matchFile(uuid: UUID) = server.getSavePath(gregchessPath).resolve("$uuid.dat").toFile()
 
-    operator fun get(uuid: UUID): ChessGame? = loadedGames.getOrPut(uuid) {
-        GregChess.logger.info("loading game $uuid")
-        val f = gameFile(uuid)
+    operator fun get(uuid: UUID): ChessMatch? = loadedMatches.getOrPut(uuid) {
+        GregChess.logger.info("loading match $uuid")
+        val f = matchFile(uuid)
         if (f.exists()) {
             val nbt = Nbt(defaultModule(server))
             try {
-                nbt.decodeFromNbtElement<ChessGame>(NbtIo.readCompressed(f)).also {
+                nbt.decodeFromNbtElement<ChessMatch>(NbtIo.readCompressed(f)).also {
                     it.sync()
-                    GregChess.logger.info("loaded game $it")
+                    GregChess.logger.info("loaded match $it")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -46,25 +46,25 @@ object ChessGameManager {
         } else return null
     }
 
-    operator fun plusAssign(game: ChessGame) {
-        GregChess.logger.info("added game $game")
-        loadedGames[game.uuid] = game
+    operator fun plusAssign(match: ChessMatch) {
+        GregChess.logger.info("added match $match")
+        loadedMatches[match.uuid] = match
     }
 
-    operator fun minusAssign(game: ChessGame) {
-        GregChess.logger.info("removed game $game")
-        loadedGames.remove(game.uuid, game)
-        val file = gameFile(game.uuid)
+    operator fun minusAssign(match: ChessMatch) {
+        GregChess.logger.info("removed match $match")
+        loadedMatches.remove(match.uuid, match)
+        val file = matchFile(match.uuid)
         if (file.exists()) {
             file.delete()
         }
     }
 
-    fun clear() = loadedGames.clear()
+    fun clear() = loadedMatches.clear()
 
     fun settings(v: ChessVariant, boardState: Map<Pos, Piece>, r: FabricRenderer): Collection<Component> = buildList {
         this += Chessboard(v, FEN.fromPieces(boardState))
-        this += GameController()
+        this += MatchController()
         this += r
     }
 
@@ -72,11 +72,11 @@ object ChessGameManager {
     fun save() {
         val nbt = Nbt(defaultModule(server))
         try {
-            for ((u, g) in loadedGames) {
-                val f = gameFile(u)
+            for ((u, g) in loadedMatches) {
+                val f = matchFile(u)
                 f.parentFile.mkdirs()
                 NbtIo.writeCompressed(nbt.encodeToNbtElement(g) as NbtCompound, f)
-                GregChess.logger.info("saved game $g")
+                GregChess.logger.info("saved match $g")
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -84,9 +84,9 @@ object ChessGameManager {
     }
 
     fun sync(world: ServerWorld) {
-        for (game in loadedGames.values) {
-            if (game.renderer.world == world) {
-                game.sync()
+        for (match in loadedMatches.values) {
+            if (match.renderer.world == world) {
+                match.sync()
             }
         }
     }

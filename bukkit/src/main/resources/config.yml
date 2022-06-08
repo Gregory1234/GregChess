@@ -10,7 +10,7 @@ Request:
       Cancel: "&eYou cancelled the duel with %s."
       Accept: "&aYou accepted the duel request."
     Received:
-      Request: "&e%1$s challenges you to a chess game: %2$s."
+      Request: "&e%1$s challenges you to a chess match: %2$s."
       Cancel: "&eDuel with %s has been cancelled."
       Accept: "&aYour duel request has been accepted."
     Error:
@@ -56,7 +56,7 @@ Message:
   BoardOpDone: "&eCompleted the chessboard operation!"
   StatsOpDone: "&eCompleted the stats operation!"
   StatsOf: "Stats of %s"
-  RejoinReminder: "&eClick to rejoin the game!"
+  RejoinReminder: "&eClick to rejoin the match!"
   Stats:
     Wins: "&aWins: %s"
     Losses: "&cLosses: %s"
@@ -65,10 +65,10 @@ Message:
   YouArePlayingAs:
     White: "&eYou are playing with the white pieces"
     Black: "&eYou are playing with the black pieces"
-  GameFinished:
-    WhiteWon: "The game has finished! White won by %s."
-    BlackWon: "The game has finished! Black won by %s."
-    ItWasADraw: "The game has finished! It was a draw by %s."
+  MatchFinished:
+    WhiteWon: "The match has finished! White won by %s."
+    BlackWon: "The match has finished! Black won by %s."
+    ItWasADraw: "The match has finished! It was a draw by %s."
   Error:
     NotPlayer: "&cYou are not a player!"
     WrongArgumentsNumber: "&cWrong number of arguments!"
@@ -77,24 +77,22 @@ Message:
     NoPermission: "&cYou do not have permission to do this!"
     PlayerNotFound: "&cPlayer doesn't exist!"
     NoArenas: "&cThere are no free arenas!"
-    GameNotFound: "&cGame not found!"
-    EngineNotFound: "&cThere are no engines in this game!"
-    BoardNotFound: "&cYour game has no chessboard!"
-    ClockNotFound: "&cYour game has no clock!"
-    RendererNotFound: "&cYour game has no compatible renderer!"
+    MatchNotFound: "&cMatch not found!"
+    EngineNotFound: "&cThere are no engines in this chess match!"
+    ClockNotFound: "&cYour chess match has no clock!"
     PieceNotFound: "&cPiece was not found!"
     NothingToTakeback: "&cThere are no moves to takeback!"
     WrongDurationFormat: "&cWrong duration format!"
     TeleportFailed: "&cTeleport failed!"
-    NoGameToRejoin: "&cNo game to rejoin!"
+    NoMatchToRejoin: "&cNo chess match to rejoin!"
     NotHuman:
       Opponent: "&cYour opponent is not a human!"
-    InGame:
-      You: "&cYou are already in a game!"
-      Opponent: "&cYour opponent is in a game already!"
-    NotInGame:
-      You: "&cYou are not in a game!"
-      Player: "&cThe player isn't in a game!"
+    InMatch:
+      You: "&cYou are already in a chess match!"
+      Opponent: "&cYour opponent is in a chess match already!"
+    NotInMatch:
+      You: "&cYou are not in a chess match!"
+      Player: "&cThe player isn't in a chess match!"
 Title:
   YourTurn: "&eIt is your turn"
   InCheck: "&cYou are in check!"
@@ -251,7 +249,7 @@ Chess:
     AllPiecesLost: "all pieces lost"
 
 Scoreboard:
-  Title: "GregChess game"
+  Title: "GregChess match"
   Preset: "Preset"
   Player: "player"
   PlayerPrefix: "&b"

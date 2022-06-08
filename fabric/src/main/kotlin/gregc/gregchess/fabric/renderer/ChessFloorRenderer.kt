@@ -4,14 +4,14 @@ import gregc.gregchess.Pos
 import gregc.gregchess.fabric.block.Floor
 import gregc.gregchess.fabric.player.FabricChessSide
 import gregc.gregchess.fabric.registry.FabricRegistry
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.variant.ChessVariant
 
 
 fun interface ChessFloorRenderer {
-    fun ChessGame.getFloorMaterial(p: Pos): Floor
+    fun ChessMatch.getFloorMaterial(p: Pos): Floor
 }
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->

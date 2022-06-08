@@ -1,6 +1,6 @@
 package gregc.gregchess.fabric.coroutines
 
-import gregc.gregchess.game.ChessEnvironment
+import gregc.gregchess.match.ChessEnvironment
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.Serializable
 import java.time.Clock

@@ -1,7 +1,7 @@
 package gregc.gregchess
 
 import gregc.gregchess.board.ChessVariantOption
-import gregc.gregchess.game.ComponentType
+import gregc.gregchess.match.ComponentType
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.PlacedPieceType

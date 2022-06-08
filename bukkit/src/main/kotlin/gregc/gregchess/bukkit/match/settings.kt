@@ -1,11 +1,11 @@
-package gregc.gregchess.bukkit.game
+package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.game.Component
+import gregc.gregchess.match.Component
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
@@ -16,7 +16,7 @@ class SettingsParserContext(val variant: ChessVariant, val section: Configuratio
 
 typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
-class GameSettings(
+class MatchSettings(
     val name: String,
     val variant: ChessVariant,
     val components: Collection<Component>
@@ -26,7 +26,7 @@ object SettingsManager {
 
     inline fun <T, R> chooseOrParse(opts: Map<T, R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
 
-    fun getSettings(): List<GameSettings> =
+    fun getSettings(): List<MatchSettings> =
         config.getConfigurationSection("Settings.Presets")?.getKeys(false).orEmpty().map { name ->
             val section = config.getConfigurationSection("Settings.Presets.$name")!!
             val variant = section.getFromRegistry(Registry.VARIANT, "Variant") ?: ChessVariant.Normal
@@ -37,7 +37,7 @@ object SettingsManager {
                 val f = BukkitRegistry.SETTINGS_PARSER[req]
                 context.f()
             }
-            GameSettings(name, variant, components)
+            MatchSettings(name, variant, components)
         }
 
 }

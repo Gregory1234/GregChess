@@ -2,7 +2,7 @@ package gregc.gregchess.fabric
 
 import gregc.gregchess.fabric.block.*
 import gregc.gregchess.fabric.client.*
-import gregc.gregchess.fabric.game.ChessGameManager
+import gregc.gregchess.fabric.match.ChessMatchManager
 import gregc.gregchess.fabric.piece.item
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.white
@@ -84,16 +84,16 @@ object GregChessMod : ModInitializer {
         Registry.register(Registry.SCREEN_HANDLER, ident("chess_workbench"), CHESS_WORKBENCH_SCREEN_HANDLER_TYPE)
 
         ServerLifecycleEvents.SERVER_STARTING.register {
-            ChessGameManager.server = it
+            ChessMatchManager.server = it
         }
 
         ServerLifecycleEvents.SERVER_STOPPING.register {
-            ChessGameManager.save()
-            ChessGameManager.clear()
+            ChessMatchManager.save()
+            ChessMatchManager.clear()
         }
 
         ServerWorldEvents.LOAD.register { _, world ->
-            ChessGameManager.sync(world)
+            ChessMatchManager.sync(world)
         }
 
     }

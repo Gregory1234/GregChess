@@ -1,4 +1,4 @@
-package gregc.gregchess.game
+package gregc.gregchess.match
 
 import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
@@ -40,7 +40,7 @@ interface Component : ChessListener {
 
     val type: ComponentType<out @SelfType Component>
 
-    fun init(game: ChessGame) {}
+    fun init(match: ChessMatch) {}
 
 }
 

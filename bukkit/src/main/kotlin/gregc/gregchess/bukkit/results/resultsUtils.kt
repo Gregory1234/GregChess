@@ -12,14 +12,14 @@ import gregc.gregchess.snakeToPascal
 val EndReason<*>.quick
     get() = this in BukkitRegistry.QUICK_END_REASONS
 
-val GameResults.name
+val MatchResults.name
     get() = endReason.module.config
         .getPathString("Chess.EndReason.${endReason.name.snakeToPascal()}", *args.toTypedArray())
 
-val GameResults.message
+val MatchResults.message
     get() = score.let {
         when (it) {
-            is GameScore.Draw -> config.getPathString("Message.GameFinished.ItWasADraw", name)
-            is GameScore.Victory -> config.getPathString("Message.GameFinished." + it.winner.configName + "Won", name)
+            is MatchScore.Draw -> config.getPathString("Message.MatchFinished.ItWasADraw", name)
+            is MatchScore.Victory -> config.getPathString("Message.MatchFinished." + it.winner.configName + "Won", name)
         }
     }

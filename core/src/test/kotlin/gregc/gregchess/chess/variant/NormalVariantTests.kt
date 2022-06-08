@@ -25,15 +25,15 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
 
             @Test
             fun `can move 1 square forward`() {
-                val game = mkGame(fen {
+                val match = mkMatch(fen {
                     set(Pos(0, 0), white(PieceType.KING))
                     set(Pos(0, 2), black(PieceType.KING))
                     set(Pos(3, 4), white(PieceType.PAWN))
                     set(Pos(5, 4), black(PieceType.PAWN))
                 })
                 fun check(origin: Pos, target: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).onlyGetTo(target)
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
+                    assertThat(match).pieceAt(origin).legalMoves(match).onlyGetTo(target)
+                    assertThat(match).pieceAt(origin).legalMoves(match).getTo(target).isNotNull().resolveName(match).all {
                         isNormalMove()
                         needsEmptyExactly(target)
                         passesThroughExactly(target)
@@ -51,15 +51,15 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
 
             @Test
             fun `can move 2 squares forward when has not moved`() {
-                val game = mkGame(fen {
+                val match = mkMatch(fen {
                     set(Pos(0, 0), white(PieceType.KING))
                     set(Pos(0, 2), black(PieceType.KING))
                     set(Pos(3, 4), white(PieceType.PAWN))
                     set(Pos(5, 4), black(PieceType.PAWN))
                 })
                 fun check(origin: Pos, mid: Pos, target: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).onlyGetTo(mid, target)
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
+                    assertThat(match).pieceAt(origin).legalMoves(match).onlyGetTo(mid, target)
+                    assertThat(match).pieceAt(origin).legalMoves(match).getTo(target).isNotNull().resolveName(match).all {
                         isNormalMove()
                         needsEmptyExactly(mid, target)
                         passesThroughExactly(mid, target)
@@ -72,15 +72,15 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     }
                 }
 
-                game.board.setNotMoved(Pos(3, 4))
-                game.board.setNotMoved(Pos(5, 4))
+                match.board.setNotMoved(Pos(3, 4))
+                match.board.setNotMoved(Pos(5, 4))
                 check(Pos(3, 4), Pos(3, 5), Pos(3, 6))
                 check(Pos(5, 4), Pos(5, 3), Pos(5, 2))
             }
 
             @Test
             fun `can promote on the last rank`() {
-                val game = mkGame(fen {
+                val match = mkMatch(fen {
                     set(Pos(0, 0), white(PieceType.KING))
                     set(Pos(0, 2), black(PieceType.KING))
                     set(Pos(3, 6), white(PieceType.PAWN))
@@ -89,7 +89,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                 val promotions = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
 
                 fun check(origin: Pos, target: Pos, color: Color) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game, Piece(
+                    assertThat(match).pieceAt(origin).legalMoves(match).getTo(target).isNotNull().resolveName(match, Piece(
                         PieceType.BISHOP, color)
                     ).all {
                         isNormalMove()
@@ -110,7 +110,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
 
             @Test
             fun `can capture enemy diagonally`() {
-                val game = mkGame(fen {
+                val match = mkMatch(fen {
                     set(Pos(0, 0), white(PieceType.KING))
                     set(Pos(0, 2), black(PieceType.KING))
                     set(Pos(2, 5), black(PieceType.ROOK))
@@ -121,7 +121,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     set(Pos(5, 4), black(PieceType.PAWN))
                 })
                 fun check(origin: Pos, target: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
+                    assertThat(match).pieceAt(origin).legalMoves(match).getTo(target).isNotNull().resolveName(match).all {
                         isNormalMove()
                         needsEmptyExactly()
                         passesThroughExactly(target)
@@ -142,7 +142,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
 
             @Test
             fun `can capture enemy en passant`() {
-                val game = mkGame(fen {
+                val match = mkMatch(fen {
                     set(Pos(0, 0), white(PieceType.KING))
                     set(Pos(0, 2), black(PieceType.KING))
                     set(Pos(3, 4), white(PieceType.PAWN))
@@ -151,7 +151,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     set(Pos(4, 4), white(PieceType.PAWN))
                 })
                 fun check(origin: Pos, target: Pos, capture: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
+                    assertThat(match).pieceAt(origin).legalMoves(match).getTo(target).isNotNull().resolveName(match).all {
                         isNormalMove()
                         needsEmptyExactly()
                         passesThroughExactly(target)
@@ -165,11 +165,11 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     }
                 }
 
-                game.board.addEnPassantFlag(Pos(2, 5))
-                assertThat(game).pieceAt(Pos(3, 4)).legalMoves(game).onlyGetTo(Pos(3, 5), Pos(2, 5))
+                match.board.addEnPassantFlag(Pos(2, 5))
+                assertThat(match).pieceAt(Pos(3, 4)).legalMoves(match).onlyGetTo(Pos(3, 5), Pos(2, 5))
                 check(Pos(3, 4), Pos(2, 5), Pos(2, 4))
-                game.board.addEnPassantFlag(Pos(4, 3))
-                assertThat(game).pieceAt(Pos(5, 4)).legalMoves(game).onlyGetTo(Pos(5, 3), Pos(4, 3))
+                match.board.addEnPassantFlag(Pos(4, 3))
+                assertThat(match).pieceAt(Pos(5, 4)).legalMoves(match).onlyGetTo(Pos(5, 3), Pos(4, 3))
                 check(Pos(5, 4), Pos(4, 3), Pos(4, 4))
             }
 
@@ -178,13 +178,13 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
         inner class King {
             @Test
             fun `can move to neighbouring squares`() {
-                val game = mkGame(fen {
+                val match = mkMatch(fen {
                     set(Pos(2, 2), white(PieceType.KING))
                     set(Pos(5, 5), black(PieceType.KING))
                     set(Pos(0, 6), black(PieceType.PAWN))
                 })
                 fun check(origin: Pos, target: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
+                    assertThat(match).pieceAt(origin).legalMoves(match).getTo(target).isNotNull().resolveName(match).all {
                         isNormalMove()
                         needsEmptyExactly()
                         passesThroughExactly(target)
@@ -197,8 +197,8 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     }
                 }
 
-                assertThat(game).pieceAt(Pos(2, 2)).legalMoves(game).onlyGetTo(*Pos(2, 2).neighbours().toTypedArray())
-                assertThat(game).pieceAt(Pos(5, 5)).legalMoves(game).onlyGetTo(*Pos(5, 5).neighbours().toTypedArray())
+                assertThat(match).pieceAt(Pos(2, 2)).legalMoves(match).onlyGetTo(*Pos(2, 2).neighbours().toTypedArray())
+                assertThat(match).pieceAt(Pos(5, 5)).legalMoves(match).onlyGetTo(*Pos(5, 5).neighbours().toTypedArray())
                 check(Pos(2, 2), Pos(3, 3))
                 check(Pos(5, 5), Pos(6, 6))
                 check(Pos(2, 2), Pos(3, 2))
@@ -207,7 +207,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
 
             @Test
             fun `can castle`() {
-                val game = mkGame(fen {
+                val match = mkMatch(fen {
                     set(Pos(4, 0), white(PieceType.KING))
                     set(Pos(4, 7), black(PieceType.KING))
                     set(Pos(0, 0), white(PieceType.ROOK))
@@ -221,7 +221,7 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     castlingRights = byColor(listOf(0, 7))
                 })
                 fun check(origin: Pos, mid: Pos, target: Pos, rookPos: Pos, side: BoardSide, vararg extraEmpty: Pos) {
-                    assertThat(game).pieceAt(origin).legalMoves(game).getTo(target).isNotNull().resolveName(game).all {
+                    assertThat(match).pieceAt(origin).legalMoves(match).getTo(target).isNotNull().resolveName(match).all {
                         isNormalMove()
                         needsEmptyExactly(mid, target, *extraEmpty)
                         passesThroughExactly(origin, mid, target)
@@ -233,8 +233,8 @@ class NormalVariantTests : VariantTests(ChessVariant.Normal) {
                     }
                 }
 
-                assertThat(game).pieceAt(Pos(4, 0)).legalMoves(game).onlyGetTo(Pos(2, 0), Pos(3, 0), Pos(5, 0), Pos(6, 0))
-                assertThat(game).pieceAt(Pos(4, 7)).legalMoves(game).onlyGetTo(Pos(2, 7), Pos(3, 7), Pos(5, 7), Pos(6, 7))
+                assertThat(match).pieceAt(Pos(4, 0)).legalMoves(match).onlyGetTo(Pos(2, 0), Pos(3, 0), Pos(5, 0), Pos(6, 0))
+                assertThat(match).pieceAt(Pos(4, 7)).legalMoves(match).onlyGetTo(Pos(2, 7), Pos(3, 7), Pos(5, 7), Pos(6, 7))
                 check(Pos(4, 0), Pos(5, 0), Pos(6, 0), Pos(7, 0), BoardSide.KINGSIDE)
                 check(Pos(4, 7), Pos(5, 7), Pos(6, 7), Pos(7, 7), BoardSide.KINGSIDE)
                 check(Pos(4, 0), Pos(3, 0), Pos(2, 0), Pos(0, 0), BoardSide.QUEENSIDE, Pos(1, 0))

@@ -55,9 +55,9 @@ sealed class PieceBlock(val piece: Piece, settings: Settings?) : Block(settings)
         if (!exists(world, pos, state)) return ActionResult.PASS
 
         val floor = getFloor(world, pos, state) ?: return ActionResult.PASS
-        val game = floor.chessControllerBlock.entity?.currentGame ?: return ActionResult.PASS
+        val match = floor.chessControllerBlock.entity?.currentMatch ?: return ActionResult.PASS
 
-        val cp = game.currentSide as? FabricChessSide ?: return ActionResult.PASS
+        val cp = match.currentSide as? FabricChessSide ?: return ActionResult.PASS
 
         if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
             cp.pickUp(floor.boardPos!!)
@@ -70,7 +70,7 @@ sealed class PieceBlock(val piece: Piece, settings: Settings?) : Block(settings)
 
     fun exists(world: World, pos: BlockPos, state: BlockState): Boolean {
         val floor = getFloor(world, pos, state) ?: return false
-        return floor.chessControllerBlock.entity?.currentGame?.board?.get(floor.boardPos!!)?.piece == piece
+        return floor.chessControllerBlock.entity?.currentMatch?.board?.get(floor.boardPos!!)?.piece == piece
     }
 
     override fun getPistonBehavior(state: BlockState?): PistonBehavior = PistonBehavior.BLOCK
@@ -83,7 +83,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
     override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         if (!world.isClient()) {
             val floor = getFloor(world, pos, state) ?: return
-            floor.chessControllerBlock.entity?.currentGame?.finishMove(phantomSpawn(BoardPiece(floor.boardPos!!, piece, false)))
+            floor.chessControllerBlock.entity?.currentMatch?.finishMove(phantomSpawn(BoardPiece(floor.boardPos!!, piece, false)))
         }
     }
 
@@ -142,7 +142,7 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
         world.setBlockState(pos.up(), defaultState.with(HALF, DoubleBlockHalf.UPPER), NOTIFY_ALL)
         if (!world.isClient()) {
             val floor = getFloor(world, pos, state) ?: return
-            floor.chessControllerBlock.entity?.currentGame?.finishMove(phantomSpawn(BoardPiece(floor.boardPos!!, piece, false)))
+            floor.chessControllerBlock.entity?.currentMatch?.finishMove(phantomSpawn(BoardPiece(floor.boardPos!!, piece, false)))
         }
     }
 
@@ -197,10 +197,10 @@ class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, sett
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!moved && state[HALF] == DoubleBlockHalf.LOWER) {
             val floor = getFloor(world, pos, state)
-            val currentGame = floor?.chessControllerBlock?.entity?.currentGame
-            if (floor != null && currentGame != null) {
-                val piece = currentGame.board[floor.boardPos!!]
-                currentGame.finishMove(phantomClear(piece!!))
+            val currentMatch = floor?.chessControllerBlock?.entity?.currentMatch
+            if (floor != null && currentMatch != null) {
+                val piece = currentMatch.board[floor.boardPos!!]
+                currentMatch.finishMove(phantomClear(piece!!))
             }
         }
         super.onStateReplaced(state, world, pos, newState, moved)

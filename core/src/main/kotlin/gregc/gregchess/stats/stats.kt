@@ -1,10 +1,10 @@
 package gregc.gregchess.stats
 
 import gregc.gregchess.*
-import gregc.gregchess.game.ChessEvent
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.registry.*
-import gregc.gregchess.results.GameScore
+import gregc.gregchess.results.MatchScore
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -12,14 +12,14 @@ import kotlin.time.Duration
 
 class AddStatsEvent(val stats: ByColor<PlayerStatsSink>) : ChessEvent
 
-fun ChessGame.addStats(stats: ByColor<PlayerStatsSink>) {
+fun ChessMatch.addStats(stats: ByColor<PlayerStatsSink>) {
     when(results?.score) {
-        GameScore.Draw -> stats.forEach { it.add(ChessStat.DRAWS, 1) }
-        GameScore.Victory(Color.WHITE) -> {
+        MatchScore.Draw -> stats.forEach { it.add(ChessStat.DRAWS, 1) }
+        MatchScore.Victory(Color.WHITE) -> {
             stats.white.add(ChessStat.WINS, 1)
             stats.black.add(ChessStat.LOSSES, 1)
         }
-        GameScore.Victory(Color.BLACK) -> {
+        MatchScore.Victory(Color.BLACK) -> {
             stats.white.add(ChessStat.LOSSES, 1)
             stats.black.add(ChessStat.WINS, 1)
         }

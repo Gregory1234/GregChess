@@ -24,13 +24,13 @@ internal val PLAYER_NOT_FOUND = err("PlayerNotFound")
 @JvmField
 internal val WRONG_DURATION_FORMAT = err("WrongDurationFormat")
 @JvmField
-internal val YOU_IN_GAME = err("InGame.You")
+internal val YOU_IN_MATCH = err("InMatch.You")
 @JvmField
-internal val OPPONENT_IN_GAME = err("InGame.Opponent")
+internal val OPPONENT_IN_MATCH = err("InMatch.Opponent")
 @JvmField
-internal val YOU_NOT_IN_GAME = err("NotInGame.You")
+internal val YOU_NOT_IN_MATCH = err("NotInMatch.You")
 @JvmField
-internal val PLAYER_NOT_IN_GAME = err("NotInGame.Player")
+internal val PLAYER_NOT_IN_MATCH = err("NotInMatch.Player")
 @JvmField
 internal val OPPONENT_NOT_HUMAN = err("NotHuman.Opponent")
 

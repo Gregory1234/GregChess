@@ -1,6 +1,6 @@
 @file:UseSerializers(InstantSerializer::class)
 
-package gregc.gregchess.game
+package gregc.gregchess.match
 
 import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
@@ -21,22 +21,22 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Serializable
-class ChessGame private constructor(
+class ChessMatch private constructor(
     @Contextual val environment: ChessEnvironment,
     val variant: ChessVariant,
     val components: List<Component>, // TODO: serialize as a map instead
     @SerialName("players") val playerData: ByColor<ChessPlayer>,
     @Contextual val uuid: UUID,
     @SerialName("state") private var state_: State,
-    @SerialName("startTime") private var startTime_: Instant?, // TODO: add a way to track true game length and true length of each turn
+    @SerialName("startTime") private var startTime_: Instant?, // TODO: add a way to track true match length and true length of each turn
     @SerialName("endTime") private var endTime_: Instant?,
-    @SerialName("results") private var results_: GameResults?,
+    @SerialName("results") private var results_: MatchResults?,
     var currentTurn: Color
 ) : ComponentHolder {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>)
             : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null, components.filterIsInstance<Chessboard>().firstOrNull()?.initialFEN?.currentTurn ?: Color.WHITE)
 
-    override fun toString() = "ChessGame(uuid=$uuid)"
+    override fun toString() = "ChessMatch(uuid=$uuid)"
 
     init {
         require((state >= State.RUNNING) == (startTime != null)) { "Start time bad" }
@@ -57,7 +57,7 @@ class ChessGame private constructor(
         CoroutineScope(
             environment.coroutineDispatcher +
             SupervisorJob() +
-            CoroutineName("Game $uuid") +
+            CoroutineName("Match $uuid") +
             CoroutineExceptionHandler { _, e ->
                 e.printStackTrace()
             }
@@ -73,7 +73,7 @@ class ChessGame private constructor(
 
     @Transient
     @Suppress("UNCHECKED_CAST")
-    val sides: ByColor<ChessSide<*>> = byColor { playerData[it].initSide(it, this@ChessGame) }
+    val sides: ByColor<ChessSide<*>> = byColor { playerData[it].initSide(it, this@ChessMatch) }
 
     private fun requireState(s: State) = check(state == s) { "Expected state $s, got state $state!" }
 
@@ -133,7 +133,7 @@ class ChessGame private constructor(
 
     fun nextTurn() {
         requireState(State.RUNNING)
-        variant.checkForGameEnd(this)
+        variant.checkForMatchEnd(this)
         if (running) {
             callEvent(TurnEvent.END)
             currentTurn++
@@ -149,23 +149,23 @@ class ChessGame private constructor(
     }
 
     fun sync() = apply {
-        callEvent(GameBaseEvent.SYNC)
+        callEvent(ChessBaseEvent.SYNC)
         callEvent(AddPieceHoldersEvent(pieceHolders))
     }
 
     fun start() = apply {
         requireState(State.INITIAL)
-        callEvent(GameBaseEvent.START)
+        callEvent(ChessBaseEvent.START)
         callEvent(AddPieceHoldersEvent(pieceHolders))
         state = State.RUNNING
         startTime = Instant.now(environment.clock)
-        callEvent(GameBaseEvent.RUNNING)
+        callEvent(ChessBaseEvent.RUNNING)
         startTurn()
     }
 
     fun update() = try {
         requireState(State.RUNNING)
-        callEvent(GameBaseEvent.UPDATE)
+        callEvent(ChessBaseEvent.UPDATE)
     } catch (e: Exception) {
         panic(e)
     }
@@ -182,7 +182,7 @@ class ChessGame private constructor(
         currentSide.startTurn()
     }
 
-    var results: GameResults?
+    var results: MatchResults?
         get() = results_
         private set(v) {
             check(state >= State.STOPPED) { "Results set when not stopped: $state" }
@@ -200,17 +200,17 @@ class ChessGame private constructor(
         }
     }
 
-    fun stop(results: GameResults) {
+    fun stop(results: MatchResults) {
         requireState(State.RUNNING)
         state = State.STOPPED
         this.results = results
         endTime = Instant.now(environment.clock)
         sides.forEach(ChessSide<*>::stop)
-        callEvent(GameBaseEvent.STOP)
+        callEvent(ChessBaseEvent.STOP)
         joinAllAndThen {
             coroutineScope.cancel()
             sides.forEach(ChessSide<*>::clear)
-            callEvent(GameBaseEvent.CLEAR)
+            callEvent(ChessBaseEvent.CLEAR)
         }
     }
 
@@ -227,7 +227,7 @@ class ChessGame private constructor(
             sides.forEach(ChessSide<*>::clear)
         }
         try {
-            callEvent(GameBaseEvent.PANIC)
+            callEvent(ChessBaseEvent.PANIC)
         } catch (ex: Exception) {
             e.addSuppressed(ex)
         }
@@ -250,32 +250,32 @@ class ChessGame private constructor(
     @Transient
     private val pieceHolders = mutableMapOf<PlacedPieceType<*, *>, PieceHolder<*>>()
 
-    private inner class GameMoveEnvironment : MoveEnvironment {
+    private inner class MatchMoveEnvironment : MoveEnvironment {
         @Suppress("UNCHECKED_CAST")
         override fun <P : PlacedPiece, H : PieceHolder<P>> get(p: PlacedPieceType<P, H>): H = pieceHolders[p] as H
 
         override val pieces get() = pieceHolders.flatMap { it.value.pieces }
 
-        override fun updateMoves() = this@ChessGame.board.updateMoves()
-        override fun callEvent(e: ChessEvent) = this@ChessGame.callEvent(e)
-        override fun <T : Component> get(type: ComponentType<T>): T? = this@ChessGame[type]
+        override fun updateMoves() = this@ChessMatch.board.updateMoves()
+        override fun callEvent(e: ChessEvent) = this@ChessMatch.callEvent(e)
+        override fun <T : Component> get(type: ComponentType<T>): T? = this@ChessMatch[type]
 
-        override val variant: ChessVariant get() = this@ChessGame.variant
+        override val variant: ChessVariant get() = this@ChessMatch.variant
     }
 
     fun finishMove(move: Move) {
         requireState(State.RUNNING)
-        move.execute(GameMoveEnvironment())
+        move.execute(MatchMoveEnvironment())
         board.lastMove = move
         if (!move.isPhantomMove)
             nextTurn()
         else
-            variant.checkForGameEnd(this)
+            variant.checkForMatchEnd(this)
     }
 
     fun undoMove(move: Move) {
         requireState(State.RUNNING)
-        move.undo(GameMoveEnvironment())
+        move.undo(MatchMoveEnvironment())
     }
 
     fun resolveName(vararg move: Move) = with(MultiExceptionContext()) {

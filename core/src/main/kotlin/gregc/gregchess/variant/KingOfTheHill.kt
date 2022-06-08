@@ -1,7 +1,7 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.*
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.results.*
 
 object KingOfTheHill : ChessVariant(), Registering {
@@ -13,11 +13,11 @@ object KingOfTheHill : ChessVariant(), Registering {
     @Register
     val KING_OF_THE_HILL = DetEndReason(EndReason.Type.NORMAL)
 
-    override fun checkForGameEnd(game: ChessGame) {
-        val king = game.tryOrStopNull(game.board.kingOf(game.currentTurn))
+    override fun checkForMatchEnd(match: ChessMatch) {
+        val king = match.tryOrStopNull(match.board.kingOf(match.currentTurn))
         if (king.pos in SPECIAL_SQUARES)
-            game.stop(game.currentTurn.wonBy(KING_OF_THE_HILL))
+            match.stop(match.currentTurn.wonBy(KING_OF_THE_HILL))
 
-        Normal.checkForGameEnd(game)
+        Normal.checkForMatchEnd(match)
     }
 }

@@ -3,8 +3,8 @@ package gregc.gregchess.variant
 import gregc.gregchess.*
 import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.boardView
-import gregc.gregchess.game.ChessEvent
-import gregc.gregchess.game.ChessGame
+import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
@@ -115,9 +115,9 @@ object AtomicChess : ChessVariant(), Registering {
     override fun isInCheck(king: BoardPiece, board: ChessboardView): Boolean =
         checkingMoves(!king.color, king.pos, board).isNotEmpty()
 
-    override fun checkForGameEnd(game: ChessGame) {
-        if (game.board.kingOf(!game.currentTurn) == null)
-            game.stop(game.currentTurn.wonBy(ATOMIC))
-        Normal.checkForGameEnd(game)
+    override fun checkForMatchEnd(match: ChessMatch) {
+        if (match.board.kingOf(!match.currentTurn) == null)
+            match.stop(match.currentTurn.wonBy(ATOMIC))
+        Normal.checkForMatchEnd(match)
     }
 }
