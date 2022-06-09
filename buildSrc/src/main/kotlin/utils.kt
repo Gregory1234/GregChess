@@ -11,7 +11,6 @@ import org.gradle.kotlin.dsl.named
 fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("tokens" to mapOf(*args))
 
 val defaultKotlinArgs = listOf(
-    "-opt-in=kotlin.RequiresOptIn",
     "-Xjvm-default=all",
     "-Xlambdas=indy",
     "-progressive"

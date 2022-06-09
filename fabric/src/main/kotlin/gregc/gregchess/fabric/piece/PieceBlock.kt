@@ -27,6 +27,7 @@ import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.*
 
+@Suppress("OVERRIDE_DEPRECATION")
 sealed class PieceBlock(val piece: Piece, settings: Settings?) : Block(settings) {
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
 
@@ -76,6 +77,7 @@ sealed class PieceBlock(val piece: Piece, settings: Settings?) : Block(settings)
     override fun getPistonBehavior(state: BlockState?): PistonBehavior = PistonBehavior.BLOCK
 }
 
+@Suppress("OVERRIDE_DEPRECATION")
 class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
 
     override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean = true
@@ -96,6 +98,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
         world.getBlockEntity(pos.down()) as? ChessboardFloorBlockEntity
 }
 
+@Suppress("OVERRIDE_DEPRECATION")
 class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
 
     companion object {

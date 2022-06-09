@@ -13,6 +13,7 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
+@Suppress("OVERRIDE_DEPRECATION")
 class ChessWorkbenchBlock(settings: Settings?) : Block(settings) {
 
     override fun createScreenHandlerFactory(state: BlockState?, world: World?, pos: BlockPos?) =

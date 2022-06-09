@@ -8,13 +8,12 @@ import gregc.gregchess.fabric.piece.PieceBlock
 import gregc.gregchess.fabric.renderer.ChessFloorRenderer
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.*
-import gregc.gregchess.variant.ChessVariant
 
 object FabricRegistry {
     @JvmField
-    val PIECE_BLOCK = ConnectedBiRegistry<Piece, PieceBlock>("piece_block", PieceRegistryView)
+    val PIECE_BLOCK = ConnectedBiRegistry<_, PieceBlock>("piece_block", PieceRegistryView)
     @JvmField
-    val FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
+    val FLOOR_RENDERER = ConnectedRegistry<_, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
 }
 
 operator fun <T> ConnectedBiRegistry<Piece, T>.set(key: PieceType, v: ByColor<T>) {

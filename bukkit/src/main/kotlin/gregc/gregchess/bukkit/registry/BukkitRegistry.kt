@@ -9,11 +9,9 @@ import gregc.gregchess.bukkit.renderer.ArenaManager
 import gregc.gregchess.bukkit.renderer.ChessFloorRenderer
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.match.Component
-import gregc.gregchess.match.ComponentType
 import gregc.gregchess.move.MoveFormatter
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.EndReason
-import gregc.gregchess.variant.ChessVariant
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
 import java.util.*
@@ -23,11 +21,11 @@ object BukkitRegistry {
     @JvmField
     val PROPERTY_TYPE = NameRegistry<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER = ConnectedRegistry<ComponentType<*>, SettingsParser<out Component>>("settings_parser", Registry.COMPONENT_TYPE)
+    val SETTINGS_PARSER = ConnectedRegistry<_, SettingsParser<out Component>>("settings_parser", Registry.COMPONENT_TYPE)
     @JvmField
-    val LOCAL_MOVE_FORMATTER = ConnectedRegistry<ChessVariant, MoveFormatter>("local_move_formatter", Registry.VARIANT)
+    val LOCAL_MOVE_FORMATTER = ConnectedRegistry<_, MoveFormatter>("local_move_formatter", Registry.VARIANT)
     @JvmField
-    val FLOOR_RENDERER = ConnectedRegistry<ChessVariant, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
+    val FLOOR_RENDERER = ConnectedRegistry<_, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
     @JvmField
     val QUICK_END_REASONS = ConnectedSetRegistry("quick_end_reasons", Registry.END_REASON)
     @JvmField

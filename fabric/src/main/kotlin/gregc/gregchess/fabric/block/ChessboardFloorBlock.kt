@@ -95,6 +95,7 @@ enum class Floor : StringIdentifiable {
     override fun asString(): String = name.lowercase()
 }
 
+@Suppress("OVERRIDE_DEPRECATION")
 class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
     companion object {
         @JvmField

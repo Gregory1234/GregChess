@@ -26,7 +26,6 @@ interface NbtCompositeEncoder : CompositeEncoder {
     fun encodeNbtElementElement(descriptor: SerialDescriptor, index: Int, value: NbtElement)
 }
 
-@OptIn(ExperimentalSerializationApi::class)
 class NbtElementEncoder(
     override val serializersModule: SerializersModule,
     private val consumer: (NbtElement?) -> Unit
