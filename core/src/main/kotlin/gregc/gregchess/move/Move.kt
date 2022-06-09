@@ -1,9 +1,11 @@
 package gregc.gregchess.move
 
 import gregc.gregchess.Pos
-import gregc.gregchess.move.trait.*
+import gregc.gregchess.move.trait.MoveTrait
+import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PlacedPiece
 import gregc.gregchess.piece.boardPiece
+import gregc.gregchess.registry.Registry
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,6 +15,10 @@ data class Move(
     val neededEmpty: Set<Pos> = emptySet(), val passedThrough: Set<Pos> = emptySet(),
     val isPhantomMove: Boolean = false, val traits: List<MoveTrait> = emptyList()
 ) {
+
+    class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>, cause: Throwable? = null) :
+        Exception(traits.toList().map { Registry.MOVE_TRAIT_TYPE[it.type] }.toString(), cause)
+
     val origin: Pos get() = pieceTracker.getOriginal("main").boardPiece().pos
     val main: PlacedPiece get() = pieceTracker["main"]
 

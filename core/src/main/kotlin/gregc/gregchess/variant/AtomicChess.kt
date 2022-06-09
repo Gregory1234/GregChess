@@ -30,7 +30,7 @@ object AtomicChess : ChessVariant(), Registering {
         }
 
         override fun execute(env: MoveEnvironment, move: Move) {
-            val captureTrait = move.captureTrait ?: throw TraitPreconditionException(this, "No capture trait")
+            val captureTrait = move.captureTrait!!
             if (!captureTrait.captureSuccess) return
             val explosions = mutableListOf<Pair<BoardPiece, CapturedPiece>>()
             val piece = move.main.boardPiece()
@@ -43,7 +43,7 @@ object AtomicChess : ChessVariant(), Registering {
             env.callEvent(ExplosionEvent(piece.pos))
         }
 
-        override fun undo(env: MoveEnvironment, move: Move) = tryPiece {
+        override fun undo(env: MoveEnvironment, move: Move) {
             move.pieceTracker.traceMoveBack(
                 env,
                 *((0 until explodedNumber).map { move.pieceTracker["exploded$it"] } + move.pieceTracker["main"]).toTypedArray())
