@@ -32,10 +32,14 @@ class ChessMatch private constructor(
     @SerialName("startTime") private var startTime_: Instant?, // TODO: add a way to track true match length and true length of each turn
     @SerialName("endTime") private var endTime_: Instant?,
     @SerialName("results") private var results_: MatchResults?,
+    val extraInfo: ExtraInfo,
     var currentTurn: Color
 ) {
-    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>)
-            : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null, components.filterIsInstance<Chessboard>().firstOrNull()?.initialFEN?.currentTurn ?: Color.WHITE)
+    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>, extraInfo: ExtraInfo = ExtraInfo())
+            : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null, extraInfo, components.filterIsInstance<Chessboard>().firstOrNull()?.initialFEN?.currentTurn ?: Color.WHITE)
+
+    @Serializable
+    data class ExtraInfo(val round: Int = 1, val eventName: String = "Casual match")
 
     override fun toString() = "ChessMatch(uuid=$uuid)"
 
