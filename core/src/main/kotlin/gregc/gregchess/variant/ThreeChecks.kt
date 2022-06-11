@@ -1,24 +1,34 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.*
-import gregc.gregchess.board.ChessboardView
-import gregc.gregchess.board.boardView
 import gregc.gregchess.match.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
+import gregc.gregchess.move.connector.*
 import gregc.gregchess.move.trait.MoveTrait
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.BoardPiece
+import gregc.gregchess.piece.PlacedPieceType
 import gregc.gregchess.results.*
 import kotlinx.serialization.*
 
 object ThreeChecks : ChessVariant(), Registering {
 
+    interface CheckCounterConnector : MoveConnector {
+        val limit: Int
+
+        val checks: ByColor<Int> get() = byColor(::get)
+        operator fun get(color: Color): Int
+        fun registerCheck(color: Color)
+        fun removeCheck(color: Color)
+        override val holders: Map<PlacedPieceType<*>, PieceHolder<*>> get() = emptyMap()
+    }
+
     @Serializable
     class CheckCounter private constructor(
-        val limit: Int,
-        @SerialName("checks") internal val checks_: MutableByColor<Int>
-    ) : Component {
+        override val limit: Int,
+        @SerialName("checks") private val checks_: MutableByColor<Int>
+    ) : Component, CheckCounterConnector {
         constructor(limit: Int) : this(limit, mutableByColor(0))
 
         override val type get() = CHECK_COUNTER
@@ -30,13 +40,11 @@ object ThreeChecks : ChessVariant(), Registering {
             this.match = match
         }
 
-        val check: ByColor<Int> get() = byColor { checks_[it] }
-
-        fun registerCheck(color: Color) {
+        override fun registerCheck(color: Color) {
             checks_[color]++
         }
 
-        fun removeCheck(color: Color) {
+        override fun removeCheck(color: Color) {
             checks_[color]--
         }
 
@@ -46,7 +54,29 @@ object ThreeChecks : ChessVariant(), Registering {
                     match.stop(s.lostBy(CHECK_LIMIT, limit.toString()))
         }
 
-        operator fun get(s: Color) = checks_[s]
+        override fun get(color: Color) = checks_[color]
+
+        @ChessEventHandler
+        fun addMoveConnectors(e: AddMoveConnectorsEvent) {
+            e[CHECK_COUNTER_CONNECTOR] = this
+        }
+
+        private class FakeCheckCounterConnector(override val limit: Int, private val checks_: MutableByColor<Int>): CheckCounterConnector {
+            override fun registerCheck(color: Color) {
+                checks_[color]++
+            }
+
+            override fun removeCheck(color: Color) {
+                checks_[color]--
+            }
+
+            override fun get(color: Color) = checks_[color]
+        }
+
+        @ChessEventHandler
+        fun addFakeMoveConnectors(e: AddFakeMoveConnectorsEvent) {
+            e[CHECK_COUNTER_CONNECTOR] = FakeCheckCounterConnector(limit, checks_)
+        }
     }
 
     @Serializable
@@ -60,15 +90,15 @@ object ThreeChecks : ChessVariant(), Registering {
 
         override fun execute(env: MoveEnvironment, move: Move) {
             env.updateMoves()
-            if (env.variant.isInCheck(env.boardView, !move.main.color)) {
-                env.require(CHECK_COUNTER).registerCheck(!move.main.color)
+            if (env.variant.isInCheck(env.board, !move.main.color)) {
+                env[CHECK_COUNTER_CONNECTOR].registerCheck(!move.main.color)
                 checkRegistered = true
             }
         }
 
         override fun undo(env: MoveEnvironment, move: Move) {
             if (checkRegistered) {
-                env.require(CHECK_COUNTER).removeCheck(!move.main.color)
+                env[CHECK_COUNTER_CONNECTOR].removeCheck(!move.main.color)
             }
         }
     }
@@ -80,6 +110,9 @@ object ThreeChecks : ChessVariant(), Registering {
     @JvmField
     @Register("check_counter")
     val CHECK_COUNTER_TRAIT = MoveTraitType(CheckCounterTrait.serializer())
+
+    @JvmField
+    val CHECK_COUNTER_CONNECTOR = MoveConnectorType(CheckCounterConnector::class)
 
     @JvmField
     @Register

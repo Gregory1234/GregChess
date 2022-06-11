@@ -6,8 +6,8 @@ import gregc.gregchess.board.AddVariantOptionsEvent
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.byColor
 import gregc.gregchess.match.*
-import gregc.gregchess.piece.AddPieceHoldersEvent
-import gregc.gregchess.piece.PieceMoveEvent
+import gregc.gregchess.move.connector.AddMoveConnectorsEvent
+import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
 import gregc.gregchess.variant.ChessVariant
@@ -108,7 +108,7 @@ class ChessMatchTests {
                 c.type
                 c.handleEvent(match { it is PieceMoveEvent })
                 c.handleEvent(match { it is AddVariantOptionsEvent })
-                c.handleEvent(match { it is AddPieceHoldersEvent })
+                c.handleEvent(match { it is AddMoveConnectorsEvent })
             }
             verifySequence {
                 c.handleEvent(ChessBaseEvent.START)

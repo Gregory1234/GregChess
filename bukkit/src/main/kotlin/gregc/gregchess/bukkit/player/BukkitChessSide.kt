@@ -6,6 +6,7 @@ import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.match.ChessEvent
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.player.ChessSide

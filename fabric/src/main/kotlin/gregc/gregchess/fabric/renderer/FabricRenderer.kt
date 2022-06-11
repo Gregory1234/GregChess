@@ -8,8 +8,8 @@ import gregc.gregchess.fabric.moveBlock
 import gregc.gregchess.fabric.piece.*
 import gregc.gregchess.fabric.player.PiecePlayerActionEvent
 import gregc.gregchess.match.*
+import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.BoardPiece
-import gregc.gregchess.piece.PieceMoveEvent
 import kotlinx.serialization.*
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.util.math.BlockPos
@@ -145,7 +145,6 @@ data class FabricRenderer(
     }
 }
 
-val ComponentHolder.server get() = renderer?.world?.server
+val ChessMatch.server get() = renderer.world.server
 
 val ChessMatch.renderer get() = require(FabricComponentType.RENDERER)
-val ComponentHolder.renderer get() = get(FabricComponentType.RENDERER)

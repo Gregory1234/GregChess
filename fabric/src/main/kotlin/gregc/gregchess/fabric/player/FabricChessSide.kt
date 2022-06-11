@@ -9,6 +9,7 @@ import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.fabric.renderer.server
 import gregc.gregchess.match.ChessEvent
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.player.ChessSide

@@ -6,6 +6,7 @@ import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
+import gregc.gregchess.move.connector.*
 import gregc.gregchess.piece.*
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.player.ChessSide
@@ -32,7 +33,7 @@ class ChessMatch private constructor(
     @SerialName("endTime") private var endTime_: Instant?,
     @SerialName("results") private var results_: MatchResults?,
     var currentTurn: Color
-) : ComponentHolder {
+) {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>)
             : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null, components.filterIsInstance<Chessboard>().firstOrNull()?.initialFEN?.currentTurn ?: Color.WHITE)
 
@@ -67,9 +68,9 @@ class ChessMatch private constructor(
     val board get() = require(ComponentType.CHESSBOARD)
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Component> get(type: ComponentType<T>): T? = components.firstOrNull { it.type == type } as T?
+    operator fun <T : Component> get(type: ComponentType<T>): T? = components.firstOrNull { it.type == type } as T?
 
-    override fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
+    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
 
     @Transient
     @Suppress("UNCHECKED_CAST")
@@ -150,13 +151,13 @@ class ChessMatch private constructor(
 
     fun sync() = apply {
         callEvent(ChessBaseEvent.SYNC)
-        callEvent(AddPieceHoldersEvent(pieceHolders))
+        callEvent(AddMoveConnectorsEvent(connectors))
     }
 
     fun start() = apply {
         requireState(State.INITIAL)
         callEvent(ChessBaseEvent.START)
-        callEvent(AddPieceHoldersEvent(pieceHolders))
+        callEvent(AddMoveConnectorsEvent(connectors))
         state = State.RUNNING
         startTime = Instant.now(environment.clock)
         callEvent(ChessBaseEvent.RUNNING)
@@ -248,19 +249,31 @@ class ChessMatch private constructor(
     inline operator fun <P : Any, reified S : ChessSide<P>> get(playerValue: P): S? = getByValueAny(playerValue) as? S
 
     @Transient
-    private val pieceHolders = mutableMapOf<PlacedPieceType<*, *>, PieceHolder<*>>()
+    private val connectors = mutableMapOf<MoveConnectorType<*>, MoveConnector>()
 
     private inner class MatchMoveEnvironment : MoveEnvironment {
-        @Suppress("UNCHECKED_CAST")
-        override fun <P : PlacedPiece, H : PieceHolder<P>> get(p: PlacedPieceType<P, H>): H = pieceHolders[p] as H
-
-        override val pieces get() = pieceHolders.flatMap { it.value.pieces }
-
-        override fun updateMoves() = this@ChessMatch.board.updateMoves()
+        override fun updateMoves() = this@ChessMatch.board.updateMoves() // TODO: make this into an event?
         override fun callEvent(e: ChessEvent) = this@ChessMatch.callEvent(e)
-        override fun <T : Component> get(type: ComponentType<T>): T? = this@ChessMatch[type]
-
         override val variant: ChessVariant get() = this@ChessMatch.variant
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : MoveConnector> get(type: MoveConnectorType<T>): T = connectors[type] as T
+        override val holders: Map<PlacedPieceType<*>, PieceHolder<*>> get() = buildMap {
+            for (c in connectors.values)
+                for ((t,h) in c.holders)
+                    put(t,h)
+        }
+    }
+
+    private class FakeMoveEnvironment(override val variant: ChessVariant, val connectors: Map<MoveConnectorType<*>, MoveConnector>) : MoveEnvironment {
+        override fun updateMoves() = board.updateMoves(variant)
+        override fun callEvent(e: ChessEvent) {}
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : MoveConnector> get(type: MoveConnectorType<T>): T = connectors[type] as T
+        override val holders: Map<PlacedPieceType<*>, PieceHolder<*>> get() = buildMap {
+            for (c in connectors.values)
+                for ((t,h) in c.holders)
+                    put(t,h)
+        }
     }
 
     fun finishMove(move: Move) {
@@ -279,7 +292,9 @@ class ChessMatch private constructor(
     }
 
     fun resolveName(vararg move: Move) = with(MultiExceptionContext()) {
-        val env = board.createSimpleMoveEnvironment()
+        val connectors = mutableMapOf<MoveConnectorType<*>, MoveConnector>()
+        callEvent(AddFakeMoveConnectorsEvent(connectors))
+        val env = FakeMoveEnvironment(variant, connectors)
         for (m in move) {
             exec {
                 m.execute(env)

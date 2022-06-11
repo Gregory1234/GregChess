@@ -1,6 +1,7 @@
 package gregc.gregchess.move
 
-import gregc.gregchess.piece.*
+import gregc.gregchess.move.connector.createMultiMoveEvent
+import gregc.gregchess.piece.PlacedPiece
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -50,19 +51,15 @@ class PieceTracker private constructor(
         it[it.size-2]
     }
 
-    fun traceMoveBack(holder: PieceHolder<PlacedPiece>, pieceEventCaller: PieceEventCaller, vararg pieces: PlacedPiece) {
+    fun traceMoveBack(env: MoveEnvironment, vararg pieces: PlacedPiece) {
         val revMoves = pieces.map { Pair(it, traceBack(it)) }.toTypedArray()
-        holder.multiMove(pieceEventCaller, *revMoves)
+        env.callEvent(createMultiMoveEvent(env.holders, *revMoves))
         addMovesBack(*revMoves)
     }
 
-    fun <T> traceMoveBack(holder: T, vararg pieces: PlacedPiece) where T : PieceHolder<PlacedPiece>, T : PieceEventCaller = traceMoveBack(holder, holder, *pieces)
-
-    fun traceMove(holder: PieceHolder<PlacedPiece>, pieceEventCaller: PieceEventCaller, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
-        holder.multiMove(pieceEventCaller, *moves)
+    fun traceMove(env: MoveEnvironment, vararg moves: Pair<PlacedPiece, PlacedPiece>) {
+        env.callEvent(createMultiMoveEvent(env.holders, *moves))
         addMoves(*moves)
     }
-
-    fun <T> traceMove(holder: T, vararg moves: Pair<PlacedPiece, PlacedPiece>) where T : PieceHolder<PlacedPiece>, T : PieceEventCaller = traceMove(holder, holder, *moves)
 
 }

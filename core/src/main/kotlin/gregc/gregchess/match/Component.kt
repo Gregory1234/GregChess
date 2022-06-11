@@ -55,8 +55,3 @@ object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component
 }
 
 class ComponentNotFoundException(type: ComponentType<*>) : Exception(type.toString())
-
-interface ComponentHolder {
-    operator fun <T : Component> get(type: ComponentType<T>): T?
-    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
-}

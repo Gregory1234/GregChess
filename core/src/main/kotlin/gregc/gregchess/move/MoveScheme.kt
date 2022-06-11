@@ -2,7 +2,7 @@ package gregc.gregchess.move
 
 import gregc.gregchess.*
 import gregc.gregchess.board.ChessVariantOption
-import gregc.gregchess.board.ChessboardView
+import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
 import kotlin.math.abs

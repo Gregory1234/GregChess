@@ -3,7 +3,7 @@ package gregc.gregchess.board
 import gregc.gregchess.*
 import gregc.gregchess.match.*
 import gregc.gregchess.move.Move
-import gregc.gregchess.move.MoveEnvironment
+import gregc.gregchess.move.connector.*
 import gregc.gregchess.piece.*
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
@@ -38,11 +38,24 @@ class AddVariantOptionsEvent(private val options: MutableMap<ChessVariantOption<
     operator fun <T : Any> set(option: ChessVariantOption<T>, value: T) = options.put(option, value)
 }
 
-class CreateFakePieceHolderEvent(private val holders: MutableMap<PlacedPieceType<*, *>, PieceHolder<*>>) : ChessEvent {
-    operator fun <P : PlacedPiece, H : PieceHolder<P>> set(option: PlacedPieceType<P, H>, value: PieceHolder<P>) = holders.put(option, value)
-}
+@Serializable
+private class BoardCounters(var halfmoveClock: Int, var fullmoveCounter: Int)
 
-private class SquareChessboard(val initialFEN: FEN, private val variantOptions: Map<ChessVariantOption<*>, Any>, private val squares: Map<Pos, Square>) : BoardPieceHolder {
+private class SquareChessboard(val initialFEN: FEN, private val variantOptions: Map<ChessVariantOption<*>, Any>, private val squares: Map<Pos, Square>, private val capturedPieces_: MutableList<CapturedPiece>, private val counters: BoardCounters) : ChessboardConnector {
+
+    override var halfmoveClock: Int by counters::halfmoveClock
+
+    override val captured: PieceHolder<CapturedPiece> = object : PieceHolder<CapturedPiece> {
+        override val pieces: List<CapturedPiece> get() = capturedPieces_.toList()
+        override fun canExist(p: CapturedPiece): Boolean = true
+        override fun create(p: CapturedPiece) {
+            capturedPieces_.add(p)
+        }
+        override fun exists(p: CapturedPiece): Boolean = p in capturedPieces_
+        override fun destroy(p: CapturedPiece) {
+            capturedPieces_.removeAt(capturedPieces_.indexOfLast { it == p })
+        }
+    }
 
     override val pieces get() = squares.values.mapNotNull { it.piece }
 
@@ -50,6 +63,8 @@ private class SquareChessboard(val initialFEN: FEN, private val variantOptions: 
 
     override fun getFlags(pos: Pos): Map<ChessFlag, Int> =
         squares[pos]?.flags?.filterValues { it.isNotEmpty() }?.mapValues { it.value.last() }.orEmpty()
+
+    override fun get(pos: Pos, flag: ChessFlag): Int? = squares[pos]?.flags?.get(flag)?.last()
 
     override fun getMoves(pos: Pos) = squares[pos]?.bakedMoves.orEmpty()
     override fun getLegalMoves(pos: Pos) = squares[pos]?.bakedLegalMoves.orEmpty()
@@ -86,10 +101,19 @@ private class SquareChessboard(val initialFEN: FEN, private val variantOptions: 
         squares[p.pos]?.piece = null
     }
 
-    override fun addFlag(pos: Pos, flag: ChessFlag, age: Int) {
+    override fun set(pos: Pos, flag: ChessFlag, age: Int) {
         squares[pos]?.flags?.let {
             it[flag] = it[flag] ?: mutableListOf()
             it[flag]!! += age
+        }
+    }
+
+    override fun updateMoves(variant: ChessVariant) {
+        for ((_, square) in squares) {
+            square.bakedMoves = square.piece?.let { p -> variant.getPieceMoves(p, this) }
+        }
+        for ((_, square) in squares) {
+            square.bakedLegalMoves = square.bakedMoves?.filter { variant.isLegal(it, this) }
         }
     }
 }
@@ -99,14 +123,13 @@ class Chessboard private constructor (
     val initialFEN: FEN,
     private val simpleCastling: Boolean,
     private val squares: Map<Pos, Square>,
-    var halfmoveClock: Int = initialFEN.halfmoveClock,
-    @SerialName("fullmoveCounter") private var fullmoveCounter_: Int = initialFEN.fullmoveCounter,
+    private val counters: BoardCounters = BoardCounters(initialFEN.halfmoveClock, initialFEN.fullmoveCounter),
     @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
     @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf(),
-    @Transient private val internalBoard: SquareChessboard = SquareChessboard(initialFEN, variantOptions, squares) // https://github.com/Kotlin/kotlinx.serialization/issues/241
-) : Component, BoardPieceHolder by internalBoard, PieceEventCaller {
+    @Transient private val internalBoard: SquareChessboard = SquareChessboard(initialFEN, variantOptions, squares, capturedPieces_, counters) // https://github.com/Kotlin/kotlinx.serialization/issues/241
+) : Component, ChessboardConnector by internalBoard {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)
@@ -120,7 +143,8 @@ class Chessboard private constructor (
         this.match = match
     }
 
-    val fullmoveCounter get() = fullmoveCounter_
+    var fullmoveCounter by counters::fullmoveCounter
+        private set
     val boardHashes get() = boardHashes_.toMap()
     val capturedPieces get() = capturedPieces_.toList()
     val moveHistory get() = moveHistory_.toList()
@@ -148,7 +172,7 @@ class Chessboard private constructor (
     fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (match.currentTurn == Color.BLACK) {
-                fullmoveCounter_++
+                fullmoveCounter++
             }
             for (s in squares.values)
                 for (f in s.flags)
@@ -182,7 +206,7 @@ class Chessboard private constructor (
             match.callEvent(AddVariantOptionsEvent(variantOptions))
             updateMoves()
             pieces.forEach(::sendSpawned)
-            capturedPieces.forEach(CapturedPieceHolder()::sendSpawned)
+            capturedPieces.forEach(::sendSpawned)
         }
     }
 
@@ -194,30 +218,23 @@ class Chessboard private constructor (
         capturedPieces_.removeAt(capturedPieces_.lastIndexOf(captured))
     }
 
-    fun updateMoves() {
-        for ((_, square) in squares) {
-            square.bakedMoves = square.piece?.let { p -> match.variant.getPieceMoves(p, this) }
-        }
-        for ((_, square) in squares) {
-            square.bakedLegalMoves = square.bakedMoves?.filter { match.variant.isLegal(it, this) }
-        }
-    }
+    fun updateMoves() = updateMoves(match.variant)
 
     fun setFromFEN(fen: FEN) {
-        capturedPieces.asReversed().forEach(CapturedPieceHolder()::clear)
+        capturedPieces.asReversed().forEach(::clear)
         squares.values.forEach { it.empty(this) }
         fen.forEachSquare(match.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
 
-        fullmoveCounter_ = fen.fullmoveCounter
+        fullmoveCounter = fen.fullmoveCounter
 
         if (fen.currentTurn != match.currentTurn)
             match.nextTurn()
 
 
         if (fen.enPassantSquare != null) {
-            addFlag(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1)
+            set(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1)
         }
 
         updateMoves()
@@ -242,7 +259,7 @@ class Chessboard private constructor (
             byColor(::castling),
             squares.entries.firstOrNull { (_, s) -> s.flags.any { it.key == ChessFlag.EN_PASSANT && it.flagActive } }?.key,
             halfmoveClock,
-            fullmoveCounter_
+            fullmoveCounter
         )
     }
 
@@ -270,7 +287,7 @@ class Chessboard private constructor (
                 if (boardHashes_[hash] == 0) boardHashes_ -= hash
                 match.undoMove(it)
                 if (match.currentTurn == Color.WHITE)
-                    fullmoveCounter_--
+                    fullmoveCounter--
                 moveHistory_.removeLast()
                 match.previousTurn()
             } else {
@@ -280,87 +297,38 @@ class Chessboard private constructor (
         }
     }
 
-    private inner class CapturedPieceHolder: PieceHolder<CapturedPiece>, PieceEventCaller {
-
-        override fun exists(p: CapturedPiece) = this@Chessboard.capturedPieces.any { it == p }
-
-        override fun canExist(p: CapturedPiece) = true
-
-        override fun create(p: CapturedPiece) {
-            this@Chessboard += p
-        }
-
-        override fun destroy(p: CapturedPiece) {
-            checkExists(p)
-            this@Chessboard -= p
-        }
-
-        override fun callPieceMoveEvent(e: PieceMoveEvent) = match.callEvent(e)
-
-        override val pieces get() = capturedPieces
-    }
-
-    @ChessEventHandler
-    fun addPieceHolders(e: AddPieceHoldersEvent) {
-        e[PlacedPieceType.BOARD] = this
-        e[PlacedPieceType.CAPTURED] = CapturedPieceHolder()
-    }
-
-    override fun callPieceMoveEvent(e: PieceMoveEvent) = match.callEvent(e)
-
     // TODO: add a way of creating this without a Chessboard instance
-    private class FakeBoardPieceHolder(val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>)
-        : BoardPieceHolder by SquareChessboard(initialFEN, variantOptions, squares)
+    private class FakeChessboardConnector(val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters)
+        : ChessboardConnector by SquareChessboard(initialFEN, variantOptions, squares, capturedPieces, counters)
 
-    private class FakeCapturedPieceHolder(val capturedPieces : MutableList<CapturedPiece>) :
-        PieceHolder<CapturedPiece> {
-        override fun exists(p: CapturedPiece) = capturedPieces.any { it == p }
-
-        override fun canExist(p: CapturedPiece) = true
-
-        override fun create(p: CapturedPiece) {
-            capturedPieces += p
-        }
-
-        override fun destroy(p: CapturedPiece) {
-            checkExists(p)
-            capturedPieces.removeAt(capturedPieces.lastIndexOf(p))
-        }
-
-        override val pieces get() = capturedPieces
+    @ChessEventHandler
+    fun addFakeMoveConnectors(e: AddFakeMoveConnectorsEvent) {
+        e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
+            initialFEN, variantOptions,
+            squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),
+            BoardCounters(halfmoveClock, fullmoveCounter)
+        )
     }
 
     @ChessEventHandler
-    fun createFakePieceHolder(e: CreateFakePieceHolderEvent) {
-        e[PlacedPieceType.BOARD] = FakeBoardPieceHolder(initialFEN, variantOptions, squares.mapValues { it.value.copy() })
-        e[PlacedPieceType.CAPTURED] = FakeCapturedPieceHolder(capturedPieces_.toMutableList())
+    fun addMoveConnectors(e: AddMoveConnectorsEvent) {
+        e[MoveConnectorType.CHESSBOARD] = this
     }
 
-    fun createSimpleMoveEnvironment(): MoveEnvironment {
-        val holders = mutableMapOf<PlacedPieceType<*, *>, PieceHolder<*>>()
-        match.callEvent(CreateFakePieceHolderEvent(holders))
-        val board = holders[PlacedPieceType.BOARD] as FakeBoardPieceHolder
-        return SimpleMoveEnvironment(match.variant, holders, board)
+    internal fun clear(boardPiece: BoardPiece) {
+        match.callEvent(createClearEvent(boardPiece))
     }
 
-    private class SimpleMoveEnvironment(override val variant: ChessVariant, val holders: MutableMap<PlacedPieceType<*, *>, PieceHolder<*>>, val board: FakeBoardPieceHolder) : MoveEnvironment {
-        override fun updateMoves() {
-            for ((_, square) in board.squares) {
-                square.bakedMoves = square.piece?.let { p -> variant.getPieceMoves(p, board) }
-            }
-            for ((_, square) in board.squares) {
-                square.bakedLegalMoves = square.bakedMoves?.filter { variant.isLegal(it, board) }
-            }
-        }
+    internal fun clear(captured: CapturedPiece) {
+        match.callEvent(this.captured.createClearEvent(captured))
+    }
 
-        override fun callEvent(e: ChessEvent) {}
+    internal fun sendSpawned(boardPiece: BoardPiece) {
+        match.callEvent(createSpawnedEvent(boardPiece))
+    }
 
-        override val pieces get() = holders.flatMap { it.value.pieces }
-
-        override fun <T : Component> get(type: ComponentType<T>): T? = null
-
-        @Suppress("UNCHECKED_CAST")
-        override fun <P : PlacedPiece, H : PieceHolder<P>> get(p: PlacedPieceType<P, H>): H = holders[p]!! as H
+    internal fun sendSpawned(captured: CapturedPiece) {
+        match.callEvent(this.captured.createSpawnedEvent(captured))
     }
 
     companion object {
@@ -380,5 +348,3 @@ class Chessboard private constructor (
 
     }
 }
-
-val ComponentHolder.board get() = get(ComponentType.CHESSBOARD)

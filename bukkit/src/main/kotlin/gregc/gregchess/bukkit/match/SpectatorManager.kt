@@ -63,4 +63,3 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
 }
 
 val ChessMatch.spectators get() = require(BukkitComponentType.SPECTATOR_MANAGER)
-val ComponentHolder.spectators get() = get(BukkitComponentType.SPECTATOR_MANAGER)

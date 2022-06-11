@@ -1,10 +1,10 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.Color
-import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.FEN
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
+import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.results.*

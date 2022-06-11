@@ -1,11 +1,11 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.*
-import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.board.FEN
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.match.ComponentType
 import gregc.gregchess.move.*
+import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.*

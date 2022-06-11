@@ -8,6 +8,7 @@ import gregc.gregchess.bukkit.piece.getSound
 import gregc.gregchess.bukkit.piece.structure
 import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
 import gregc.gregchess.match.*
+import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.*
 import gregc.gregchess.variant.AtomicChess
 import kotlinx.serialization.Serializable
@@ -210,6 +211,4 @@ data class BukkitRenderer(
 }
 
 val ChessMatch.arena get() = renderer.arena
-val ComponentHolder.arena get() = renderer?.arena
 val ChessMatch.renderer get() = require(BukkitComponentType.RENDERER)
-val ComponentHolder.renderer get() = get(BukkitComponentType.RENDERER)

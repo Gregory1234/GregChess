@@ -73,7 +73,7 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
         @JvmField
         val PLAYER_TYPE = NameRegistry<ChessPlayerType<*>>("player_type")
         @JvmField
-        val PLACED_PIECE_TYPE = NameRegistry<PlacedPieceType<*, *>>("placed_piece_type")
+        val PLACED_PIECE_TYPE = NameRegistry<PlacedPieceType<*>>("placed_piece_type")
         @JvmField
         val VARIANT_OPTION = NameRegistry<ChessVariantOption<*>>("variant_option")
         @JvmField

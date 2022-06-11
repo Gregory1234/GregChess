@@ -40,7 +40,7 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
     }
 
     protected fun Chessboard.addEnPassantFlag(pos: Pos) {
-        addFlag(pos, ChessFlag.EN_PASSANT, 1)
+        set(pos, ChessFlag.EN_PASSANT, 1)
         updateMoves()
     }
 

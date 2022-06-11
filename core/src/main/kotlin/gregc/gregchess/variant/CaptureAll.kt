@@ -1,9 +1,9 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.Color
-import gregc.gregchess.board.ChessboardView
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
+import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.results.*
 

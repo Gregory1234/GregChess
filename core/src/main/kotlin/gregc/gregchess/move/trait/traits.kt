@@ -1,10 +1,9 @@
 package gregc.gregchess.move.trait
 
 import gregc.gregchess.*
-import gregc.gregchess.board.board
-import gregc.gregchess.board.boardView
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
+import gregc.gregchess.move.connector.*
 import gregc.gregchess.piece.*
 import kotlinx.serialization.Serializable
 
@@ -17,17 +16,16 @@ class DefaultHalfmoveClockTrait : MoveTrait {
     private var halfmoveClock: Int = 0
 
     override fun execute(env: MoveEnvironment, move: Move) {
-        val board = env.board ?: return
-        halfmoveClock = board.halfmoveClock
+        halfmoveClock = env.board.halfmoveClock
         if (move.main.type == PieceType.PAWN || move.captureTrait?.captureSuccess != true) {
-            board.halfmoveClock = 0
+            env.board.halfmoveClock = 0
         } else {
-            board.halfmoveClock++
+            env.board.halfmoveClock++
         }
     }
 
     override fun undo(env: MoveEnvironment, move: Move) {
-        env.board?.halfmoveClock = halfmoveClock
+        env.board.halfmoveClock = halfmoveClock
     }
 }
 
@@ -85,7 +83,7 @@ class FlagTrait(val flags: Map<Pos, Map<ChessFlag, Int>>) : MoveTrait {
     override fun execute(env: MoveEnvironment, move: Move) {
         for ((p, f) in flags)
             for ((t, a) in f)
-                env.board?.addFlag(p, t, a)
+                env.board[p, t] = a
     }
 }
 
@@ -106,9 +104,9 @@ class CheckTrait : MoveTrait {
 
     private fun checkForChecks(color: Color, env: MoveEnvironment): CheckType? {
         env.updateMoves()
-        val pieces = env.boardView.piecesOf(!color)
-        val inCheck = env.variant.isInCheck(env.boardView, !color)
-        val noMoves = pieces.all { it.getMoves(env.boardView).none { m -> env.variant.isLegal(m, env.boardView) } }
+        val pieces = env.board.piecesOf(!color)
+        val inCheck = env.variant.isInCheck(env.board, !color)
+        val noMoves = pieces.all { it.getMoves(env.board).none { m -> env.variant.isLegal(m, env.board) } }
         return when {
             inCheck && noMoves -> CheckType.CHECKMATE
             inCheck -> CheckType.CHECK
@@ -134,7 +132,7 @@ class CaptureTrait(val capture: Pos, val hasToCapture: Boolean = false, val by: 
         private set
 
     override fun execute(env: MoveEnvironment, move: Move) {
-        env.boardView[capture]?.let {
+        env.board[capture]?.let {
             move.pieceTracker.giveName("capture", it)
             move.pieceTracker.traceMove(env, move.toCapture.capture(by ?: move.main.color))
             captureSuccess = true
@@ -159,9 +157,9 @@ class TargetTrait(val target: Pos) : MoveTrait {
     override val shouldComeBefore get() = setOf(MoveTraitType.CAPTURE)
 
     private fun getUniquenessCoordinate(piece: BoardPiece, target: Pos, env: MoveEnvironment): UniquenessCoordinate {
-        val pieces = env.boardView.pieces.filter { it.color == piece.color && it.type == piece.type }
+        val pieces = env.board.pieces.filter { it.color == piece.color && it.type == piece.type }
         val consideredPieces = pieces.filter { p ->
-            p.getLegalMoves(env.boardView).any { it.targetTrait?.target == target }
+            p.getLegalMoves(env.board).any { it.targetTrait?.target == target }
         }
         return when {
             consideredPieces.size == 1 -> UniquenessCoordinate()
@@ -190,11 +188,11 @@ class SpawnTrait(val piece: BoardPiece) : MoveTrait {
     override val shouldComeBefore get() = setOf(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
 
     override fun execute(env: MoveEnvironment, move: Move) {
-        env.spawn(piece)
+        env.callEvent(env.board.createSpawnEvent(piece))
     }
 
     override fun undo(env: MoveEnvironment, move: Move) {
-        env.clear(piece)
+        env.callEvent(env.board.createClearEvent(piece))
     }
 
 }
@@ -208,11 +206,11 @@ class ClearTrait(val piece: BoardPiece) : MoveTrait {
     override val shouldComeAfter get() = setOf(MoveTraitType.TARGET)
 
     override fun execute(env: MoveEnvironment, move: Move) {
-        env.clear(piece)
+        env.callEvent(env.board.createClearEvent(piece))
     }
 
     override fun undo(env: MoveEnvironment, move: Move) {
-        env.spawn(piece)
+        env.callEvent(env.board.createSpawnEvent(piece))
     }
 
 }

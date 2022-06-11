@@ -142,4 +142,4 @@ class ChessClock private constructor(
     }
 }
 
-val ComponentHolder.clock get() = get(ComponentType.CLOCK)
+val ChessMatch.clock get() = get(ComponentType.CLOCK)

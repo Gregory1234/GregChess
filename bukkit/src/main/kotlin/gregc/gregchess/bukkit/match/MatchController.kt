@@ -171,7 +171,6 @@ class MatchController(val presetName: String) : Component {
 }
 
 val ChessMatch.matchController get() = require(BukkitComponentType.MATCH_CONTROLLER)
-val ComponentHolder.matchController get() = get(BukkitComponentType.MATCH_CONTROLLER)
 
 fun ChessMatch.stop(results: MatchResults, quick: ByColor<Boolean>) {
     matchController.quick = if ((quick.white || quick.black) && sides.white.player == sides.black.player) byColor(true) else quick

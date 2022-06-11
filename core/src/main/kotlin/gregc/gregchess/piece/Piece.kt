@@ -2,7 +2,6 @@ package gregc.gregchess.piece
 
 import gregc.gregchess.ChessModule
 import gregc.gregchess.Color
-import gregc.gregchess.match.ChessEvent
 import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
 
@@ -51,8 +50,3 @@ fun PieceType.of(color: Color) = Piece(this, color)
 
 fun white(type: PieceType) = type.of(Color.WHITE)
 fun black(type: PieceType) = type.of(Color.BLACK)
-
-class PieceMoveEvent(val moves: List<Pair<PlacedPiece?, PlacedPiece?>>) : ChessEvent
-
-class PieceDoesNotExistException(val piece: PlacedPiece) : Exception(piece.toString())
-class PieceAlreadyOccupiesSquareException(val piece: PlacedPiece) : Exception(piece.toString())
