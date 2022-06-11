@@ -249,6 +249,7 @@ Chess:
     AllPiecesLost: "all pieces lost"
 
 Scoreboard:
+  Layout: simple
   Title: "GregChess match"
   Preset: "Preset"
   Player: "player"

@@ -5,6 +5,7 @@ import gregc.gregchess.bukkit.BukkitChessModule
 import gregc.gregchess.bukkit.GregChess
 import gregc.gregchess.bukkit.match.SettingsParser
 import gregc.gregchess.bukkit.properties.PropertyType
+import gregc.gregchess.bukkit.properties.ScoreboardLayout
 import gregc.gregchess.bukkit.renderer.ArenaManager
 import gregc.gregchess.bukkit.renderer.ChessFloorRenderer
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
@@ -14,6 +15,7 @@ import gregc.gregchess.registry.*
 import gregc.gregchess.results.EndReason
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin
+import org.bukkit.scoreboard.Scoreboard
 import java.util.*
 
 
@@ -36,6 +38,8 @@ object BukkitRegistry {
     val CHESS_STATS_PROVIDER = NameRegistry<(UUID) -> BukkitPlayerStats>("chess_stats_provider")
     @JvmField
     val ARENA_MANAGER = NameRegistry<ArenaManager<*>>("arena_manager")
+    @JvmField
+    val SCOREBOARD_LAYOUT_PROVIDER = NameRegistry<(Scoreboard) -> ScoreboardLayout>("scoreboard_layout_provider")
 }
 
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e ->

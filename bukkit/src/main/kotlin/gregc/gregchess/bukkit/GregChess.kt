@@ -5,6 +5,7 @@ import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.player.BukkitPlayerType
+import gregc.gregchess.bukkit.properties.SimpleScoreboardLayout
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.renderer.*
 import gregc.gregchess.bukkit.stats.YamlChessStats
@@ -79,5 +80,6 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         registerSettings()
         BukkitRegistry.FLOOR_RENDERER[KingOfTheHill] = simpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
         BukkitRegistry.CHESS_STATS_PROVIDER["yaml"] = ::YamlChessStats
+        BukkitRegistry.SCOREBOARD_LAYOUT_PROVIDER["simple"] = ::SimpleScoreboardLayout
     }
 }
