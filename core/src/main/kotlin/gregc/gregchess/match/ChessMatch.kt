@@ -1,4 +1,4 @@
-@file:UseSerializers(InstantSerializer::class)
+@file:UseSerializers(InstantSerializer::class, DurationSerializer::class)
 
 package gregc.gregchess.match
 
@@ -20,6 +20,7 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.time.Duration
 
 @Serializable
 class ChessMatch private constructor(
@@ -29,14 +30,15 @@ class ChessMatch private constructor(
     @SerialName("players") val playerData: ByColor<ChessPlayer>,
     @Contextual val uuid: UUID,
     @SerialName("state") private var state_: State,
-    @SerialName("startTime") private var startTime_: Instant?, // TODO: add a way to track true match length and true length of each turn
+    @SerialName("startTime") private var startTime_: Instant?,
     @SerialName("endTime") private var endTime_: Instant?,
+    @SerialName("duration") private var durationCounted: Duration,
     @SerialName("results") private var results_: MatchResults?,
     val extraInfo: ExtraInfo,
     var currentTurn: Color
 ) {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>, extraInfo: ExtraInfo = ExtraInfo())
-            : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, null, extraInfo, components.filterIsInstance<Chessboard>().firstOrNull()?.initialFEN?.currentTurn ?: Color.WHITE)
+            : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, Duration.ZERO, null, extraInfo, components.filterIsInstance<Chessboard>().firstOrNull()?.initialFEN?.currentTurn ?: Color.WHITE)
 
     @Serializable
     data class ExtraInfo(val round: Int = 1, val eventName: String = "Casual match")
@@ -121,6 +123,17 @@ class ChessMatch private constructor(
             endTime_ = v
         }
 
+    @Transient
+    private var durationTimeStart: Instant = environment.clock.instant()
+
+    val duration: Duration get() = durationCounted + Duration.between(durationTimeStart, environment.clock.instant())
+
+    private fun updateDuration() {
+        val now = environment.clock.instant()
+        durationCounted += Duration.between(durationTimeStart, now)
+        durationTimeStart = now
+    }
+
     val zonedEndTime: ZonedDateTime? get() = endTime?.zoned()
 
     enum class State {
@@ -161,6 +174,7 @@ class ChessMatch private constructor(
     fun start() = apply {
         requireState(State.INITIAL)
         callEvent(ChessBaseEvent.START)
+        durationTimeStart = environment.clock.instant()
         callEvent(AddMoveConnectorsEvent(connectors))
         state = State.RUNNING
         startTime = Instant.now(environment.clock)
@@ -170,6 +184,7 @@ class ChessMatch private constructor(
 
     fun update() = try {
         requireState(State.RUNNING)
+        updateDuration()
         callEvent(ChessBaseEvent.UPDATE)
     } catch (e: Exception) {
         panic(e)

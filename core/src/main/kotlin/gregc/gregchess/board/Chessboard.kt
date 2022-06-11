@@ -143,8 +143,9 @@ class Chessboard private constructor (
         this.match = match
     }
 
-    var fullmoveCounter by counters::fullmoveCounter
-        private set
+    var fullmoveCounter
+        get() = counters.fullmoveCounter
+        set(v) { counters.fullmoveCounter = v }
     val boardHashes get() = boardHashes_.toMap()
     val capturedPieces get() = capturedPieces_.toList()
     val moveHistory get() = moveHistory_.toList()
