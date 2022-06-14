@@ -6,7 +6,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
@@ -19,7 +19,7 @@ class ChessWorkbenchBlock(settings: Settings?) : Block(settings) {
     override fun createScreenHandlerFactory(state: BlockState?, world: World?, pos: BlockPos?) =
         SimpleNamedScreenHandlerFactory({ syncId, playerInventory, _ ->
             ChessWorkbenchGuiDescription(syncId, playerInventory, ScreenHandlerContext.create(world, pos))
-        }, TranslatableText("gui.gregchess.chess_workbench_menu"))
+        }, Text.translatable("gui.gregchess.chess_workbench_menu"))
 
 
     override fun onUse(

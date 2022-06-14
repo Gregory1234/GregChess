@@ -10,7 +10,7 @@ plugins {
 
 loom {
     runConfigs.forEach {
-        it.runDir = "fabric/" + it.runDir
+        it.runDir = it.runDir
         it.vmArgs += listOf("-Dkotlinx.coroutines.debug=on", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
     }
     runtimeOnlyLog4j.set(true)

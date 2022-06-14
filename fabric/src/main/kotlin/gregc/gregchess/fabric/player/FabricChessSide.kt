@@ -16,7 +16,7 @@ import gregc.gregchess.player.ChessSide
 import kotlinx.coroutines.launch
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.Text
 import kotlin.coroutines.suspendCoroutine
 
 class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent {
@@ -47,13 +47,13 @@ class FabricChessSide(val gameProfile: GameProfile, color: Color, match: ChessMa
 
     fun sendStartMessage() {
         if (hasTurn || player != opponent.player)
-            getServerPlayer(match.server)?.sendMessage(TranslatableText("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
+            getServerPlayer(match.server)?.sendMessage(Text.translatable("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }
 
     override fun startTurn() {
         val inCheck = match.variant.isInCheck(match.board, color)
         if (inCheck) {
-            getServerPlayer(match.server)?.sendMessage(TranslatableText("chess.gregchess.in_check"),false)
+            getServerPlayer(match.server)?.sendMessage(Text.translatable("chess.gregchess.in_check"),false)
         }
     }
 

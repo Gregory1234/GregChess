@@ -19,7 +19,6 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.screen.*
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import kotlin.coroutines.Continuation
@@ -98,7 +97,7 @@ class PromotionMenuFactory(
     private val world: World, private val pos: BlockPos,
     private val promotionContinuation: Continuation<Piece?>
 ) : NamedScreenHandlerFactory {
-    override fun getDisplayName(): Text = TranslatableText("gui.gregchess.promotion_menu")
+    override fun getDisplayName(): Text = Text.translatable("gui.gregchess.promotion_menu")
 
     override fun createMenu(syncId: Int, inv: PlayerInventory?, player: PlayerEntity?): ScreenHandler {
         return PromotionMenuGuiDescription(syncId, inv, ScreenHandlerContext.create(world, pos), promotionContinuation).apply {

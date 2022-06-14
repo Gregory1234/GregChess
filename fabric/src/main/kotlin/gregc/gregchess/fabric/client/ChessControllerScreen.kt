@@ -19,7 +19,6 @@ import net.minecraft.item.Items
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 
 class ChessControllerGuiDescription(
     syncId: Int, playerInventory: PlayerInventory?, context: ScreenHandlerContext = ScreenHandlerContext.EMPTY
@@ -43,7 +42,7 @@ class ChessControllerGuiDescription(
         root.setSize(300, 300)
         root.insets = Insets.ROOT_PANEL
 
-        val startMatchButton = WButton(TranslatableText("gui.gregchess.start_match"))
+        val startMatchButton = WButton(Text.translatable("gui.gregchess.start_match"))
         startMatchButton.onClick = Runnable {
             ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("start_match")) {
                 it.writeUuid(playerInventory?.player?.uuid)
@@ -51,13 +50,13 @@ class ChessControllerGuiDescription(
         }
         root.add(startMatchButton, 0, 5, 5, 1)
 
-        val abortMatchButton = WButton(TranslatableText("gui.gregchess.abort_match"))
+        val abortMatchButton = WButton(Text.translatable("gui.gregchess.abort_match"))
         abortMatchButton.onClick = Runnable {
             ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("abort_match")) {}
         }
         root.add(abortMatchButton, 0, 7, 5, 1)
 
-        val detectBoardButton = WButton(TranslatableText("gui.gregchess.detect_board"))
+        val detectBoardButton = WButton(Text.translatable("gui.gregchess.detect_board"))
         detectBoardButton.onClick = Runnable {
             ScreenNetworking.of(this, NetworkSide.CLIENT).send(ident("detect_board")) {}
         }

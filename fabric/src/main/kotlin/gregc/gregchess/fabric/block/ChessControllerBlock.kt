@@ -30,7 +30,6 @@ import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.screen.*
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.collection.DefaultedList
@@ -62,7 +61,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         Inventories.readNbt(nbt, items)
     }
 
-    override fun getDisplayName(): Text = TranslatableText(cachedState.block.translationKey)
+    override fun getDisplayName(): Text = Text.translatable(cachedState.block.translationKey)
 
     override fun createMenu(syncId: Int, inventory: PlayerInventory?, player: PlayerEntity?): ScreenHandler =
         ChessControllerGuiDescription(syncId, inventory, ScreenHandlerContext.create(world, pos))
