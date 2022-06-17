@@ -1,7 +1,7 @@
 # GregChess
 A Bukkit plugin and a WIP Fabricmc mod adding chess to minecraft written in Kotlin.
 
-Works in Minecraft `1.18.2`.
+Works in Minecraft `1.19`.
 
 ## Build
 To build the bukkit jar use gradle task `:createSpigotJar`.
