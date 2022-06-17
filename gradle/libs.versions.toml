@@ -12,10 +12,10 @@ spigot-api = "1.19-R0.1-SNAPSHOT"
 
 fabric-minecraft = "1.19"
 fabric-yarn = "1.19+build.4"
-fabric-loader = "0.14.7"
+fabric-loader = "0.14.8"
 fabric-api = "0.56.0+1.19"
 fabric-kotlin = "1.8.0+kotlin.1.7.0"
-fabric-libgui = "6.0.0-beta.5+1.19-pre1"
+fabric-libgui = "6.0.0+1.19"
 
 [libraries]
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm", version.ref = "kotlinx-serialization" }
