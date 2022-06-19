@@ -128,8 +128,7 @@ class Chessboard private constructor (
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
     @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf(),
-    @Transient private val internalBoard: SquareChessboard = SquareChessboard(initialFEN, variantOptions, squares, capturedPieces_, counters) // https://github.com/Kotlin/kotlinx.serialization/issues/241
-) : Component, ChessboardConnector by internalBoard {
+) : Component, ChessboardConnector by SquareChessboard(initialFEN, variantOptions, squares, capturedPieces_, counters) {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
             this(variant, fen ?: variant.genFEN(chess960), simpleCastling)

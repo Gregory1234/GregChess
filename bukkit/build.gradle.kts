@@ -55,7 +55,7 @@ tasks {
             include("**/*.yml")
             replace(
                 "version" to version,
-                "minecraft-version" to libs.versions.spigot.api.get().substringBefore("-").substringBeforeLast("."),
+                "minecraft-version" to libs.versions.spigot.api.get().substringBefore("-").split(".").take(2).joinToString("."),
                 "libraries" to spigotLib.resolvedConfiguration.firstLevelModuleDependencies.toList()
                     .joinToString("\n") { "  - ${it.moduleGroup}:${it.moduleName}:${it.moduleVersion}" }
             )
