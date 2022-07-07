@@ -23,6 +23,7 @@ class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
 
         internal val AUTO_REGISTER = AutoRegisterType(ComponentType::class) { m, n, _ ->
             Registry.COMPONENT_TYPE[m, n] = this
+            (cl.objectInstance as? Registering)?.registerAll(m)
             (cl.companionObjectInstance as? Registering)?.registerAll(m)
         }
 

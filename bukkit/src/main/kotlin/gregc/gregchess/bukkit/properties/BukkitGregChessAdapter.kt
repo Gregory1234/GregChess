@@ -13,18 +13,16 @@ import gregc.gregchess.variant.ThreeChecks
 import kotlinx.serialization.Serializable
 
 @Serializable
-class BukkitGregChessAdapter : Component {
-    companion object : BukkitRegistering {
-        @JvmField
-        @Register
-        val TIME_REMAINING = PropertyType()
-        @JvmField
-        @Register
-        val TIME_REMAINING_SIMPLE = PropertyType()
-        @JvmField
-        @Register
-        val CHECK_COUNTER = PropertyType()
-    }
+object BukkitGregChessAdapter : Component, BukkitRegistering {
+    @JvmField
+    @Register
+    val TIME_REMAINING = PropertyType()
+    @JvmField
+    @Register
+    val TIME_REMAINING_SIMPLE = PropertyType()
+    @JvmField
+    @Register
+    val CHECK_COUNTER = PropertyType()
 
     override val type get() = BukkitComponentType.ADAPTER
 

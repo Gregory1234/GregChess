@@ -35,7 +35,7 @@ abstract class BukkitChessModule(val plugin: Plugin) : ChessModule(plugin.name, 
 
     final override fun postLoad() {
         BukkitRegistry.BUKKIT_PLUGIN[this] = plugin
-        BukkitRegistry.SETTINGS_PARSER[this].completeWith { type -> { type.cl.constructors.first { it.parameters.isEmpty() }.call() } }
+        BukkitRegistry.SETTINGS_PARSER[this].completeWith { type -> { type.cl.objectInstance ?: type.cl.constructors.first { it.parameters.isEmpty() }.call() } }
         BukkitRegistry.LOCAL_MOVE_FORMATTER[this].completeWith { defaultLocalMoveFormatter }
         BukkitRegistry.FLOOR_RENDERER[this].completeWith { simpleFloorRenderer() }
     }

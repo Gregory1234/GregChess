@@ -6,7 +6,7 @@ import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 
 @Serializable
-class MatchController : Component {
+object MatchController : Component {
 
     override val type get() = FabricComponentType.MATCH_CONTROLLER
 
