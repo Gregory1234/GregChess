@@ -39,11 +39,12 @@ class AddVariantOptionsEvent(private val options: MutableMap<ChessVariantOption<
 }
 
 @Serializable
-private class BoardCounters(var halfmoveClock: Int, var fullmoveCounter: Int)
+private class BoardCounters(var halfmoveClock: Int, var fullmoveCounter: Int, var currentTurn: Color)
 
 private class SquareChessboard(val initialFEN: FEN, private val variantOptions: Map<ChessVariantOption<*>, Any>, private val squares: Map<Pos, Square>, private val capturedPieces_: MutableList<CapturedPiece>, private val counters: BoardCounters) : ChessboardConnector {
 
     override var halfmoveClock: Int by counters::halfmoveClock
+    override val currentTurn: Color get() = counters.currentTurn
 
     override val captured: PieceHolder<CapturedPiece> = object : PieceHolder<CapturedPiece> {
         override val pieces: List<CapturedPiece> get() = capturedPieces_.toList()
@@ -123,7 +124,7 @@ class Chessboard private constructor (
     val initialFEN: FEN,
     private val simpleCastling: Boolean,
     private val squares: Map<Pos, Square>,
-    private val counters: BoardCounters = BoardCounters(initialFEN.halfmoveClock, initialFEN.fullmoveCounter),
+    private val counters: BoardCounters = BoardCounters(initialFEN.halfmoveClock, initialFEN.fullmoveCounter, initialFEN.currentTurn),
     @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
@@ -145,6 +146,9 @@ class Chessboard private constructor (
     var fullmoveCounter
         get() = counters.fullmoveCounter
         set(v) { counters.fullmoveCounter = v }
+    override var currentTurn: Color
+        get() = counters.currentTurn
+        internal set(v) { counters.currentTurn = v }
     val boardHashes get() = boardHashes_.toMap()
     val capturedPieces get() = capturedPieces_.toList()
     val moveHistory get() = moveHistory_.toList()
@@ -171,13 +175,13 @@ class Chessboard private constructor (
     @ChessEventHandler
     fun endTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
-            if (match.currentTurn == Color.BLACK) {
+            if (currentTurn == Color.BLACK) {
                 fullmoveCounter++
             }
             for (s in squares.values)
                 for (f in s.flags)
                     f.value.replaceAll { it + 1 }
-            addBoardHash(getFEN().copy(currentTurn = !match.currentTurn))
+            addBoardHash(getFEN().copy(currentTurn = !currentTurn))
         }
         if (e == TurnEvent.UNDO) {
             for (s in squares.values) {
@@ -229,9 +233,7 @@ class Chessboard private constructor (
 
         fullmoveCounter = fen.fullmoveCounter
 
-        if (fen.currentTurn != match.currentTurn)
-            match.nextTurn()
-
+        currentTurn = fen.currentTurn
 
         if (fen.enPassantSquare != null) {
             set(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1)
@@ -255,7 +257,7 @@ class Chessboard private constructor (
 
         return FEN(
             boardState,
-            match.currentTurn,
+            currentTurn,
             byColor(::castling),
             squares.entries.firstOrNull { (_, s) -> s.flags.any { it.key == ChessFlag.EN_PASSANT && it.flagActive } }?.key,
             halfmoveClock,
@@ -264,7 +266,7 @@ class Chessboard private constructor (
     }
 
     fun checkForRepetition() {
-        if ((boardHashes_[getFEN().copy(currentTurn = !match.currentTurn).hashed()] ?: 0) >= 3)
+        if ((boardHashes_[getFEN().copy(currentTurn = !currentTurn).hashed()] ?: 0) >= 3)
             match.stop(drawBy(EndReason.REPETITION))
     }
 
@@ -286,7 +288,7 @@ class Chessboard private constructor (
                 boardHashes_[hash] = (boardHashes_[hash] ?: 1) - 1
                 if (boardHashes_[hash] == 0) boardHashes_ -= hash
                 match.undoMove(it)
-                if (match.currentTurn == Color.WHITE)
+                if (currentTurn == Color.WHITE)
                     fullmoveCounter--
                 moveHistory_.removeLast()
                 match.previousTurn()
@@ -306,7 +308,7 @@ class Chessboard private constructor (
         e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
             initialFEN, variantOptions,
             squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),
-            BoardCounters(halfmoveClock, fullmoveCounter)
+            BoardCounters(halfmoveClock, fullmoveCounter, currentTurn)
         )
     }
 

@@ -3,7 +3,6 @@
 package gregc.gregchess.match
 
 import gregc.gregchess.*
-import gregc.gregchess.board.Chessboard
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.connector.*
@@ -34,11 +33,10 @@ class ChessMatch private constructor(
     @SerialName("endTime") private var endTime_: Instant?,
     @SerialName("duration") private var durationCounted: Duration,
     @SerialName("results") private var results_: MatchResults?,
-    val extraInfo: ExtraInfo,
-    var currentTurn: Color
+    val extraInfo: ExtraInfo
 ) {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>, extraInfo: ExtraInfo = ExtraInfo())
-            : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, Duration.ZERO, null, extraInfo, components.filterIsInstance<Chessboard>().firstOrNull()?.initialFEN?.currentTurn ?: Color.WHITE)
+            : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, Duration.ZERO, null, extraInfo)
 
     @Serializable
     data class ExtraInfo(val round: Int = 1, val eventName: String = "Casual match")
@@ -93,9 +91,9 @@ class ChessMatch private constructor(
         rethrow { ChessEventException(e, it) }
     }
 
-    val currentSide: ChessSide<*> get() = sides[currentTurn]
+    val currentSide: ChessSide<*> get() = sides[board.currentTurn]
 
-    val currentOpponent: ChessSide<*> get() = sides[!currentTurn]
+    val currentOpponent: ChessSide<*> get() = sides[!board.currentTurn]
 
     private fun Instant.zoned() = atZone(environment.clock.zone)
 
@@ -154,7 +152,7 @@ class ChessMatch private constructor(
         variant.checkForMatchEnd(this)
         if (running) {
             callEvent(TurnEvent.END)
-            currentTurn++
+            board.currentTurn++
             startTurn()
         }
     }
@@ -162,7 +160,7 @@ class ChessMatch private constructor(
     fun previousTurn() {
         requireState(State.RUNNING)
         callEvent(TurnEvent.UNDO)
-        currentTurn++
+        board.currentTurn++
         startPreviousTurn()
     }
 

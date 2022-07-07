@@ -12,6 +12,7 @@ interface ChessboardView : PieceHolderView<BoardPiece> {
 
     val captured: PieceHolderView<CapturedPiece>
     val halfmoveClock: Int
+    val currentTurn: Color
     val chess960: Boolean // TODO: move this to ChessVariant
     fun getMoves(pos: Pos): List<Move>
     fun getLegalMoves(pos: Pos): List<Move>

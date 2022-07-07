@@ -14,9 +14,9 @@ object KingOfTheHill : ChessVariant(), Registering {
     val KING_OF_THE_HILL = DetEndReason(EndReason.Type.NORMAL)
 
     override fun checkForMatchEnd(match: ChessMatch) {
-        val king = match.tryOrStopNull(match.board.kingOf(match.currentTurn))
+        val king = match.tryOrStopNull(match.board.kingOf(match.board.currentTurn))
         if (king.pos in SPECIAL_SQUARES)
-            match.stop(match.currentTurn.wonBy(KING_OF_THE_HILL))
+            match.stop(match.board.currentTurn.wonBy(KING_OF_THE_HILL))
 
         Normal.checkForMatchEnd(match)
     }

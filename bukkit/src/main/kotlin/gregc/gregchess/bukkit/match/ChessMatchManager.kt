@@ -40,7 +40,7 @@ object ChessMatchManager : Listener {
 
     internal fun currentSideOf(uuid: UUID): BukkitChessSide? {
         val currentMatch = currentMatchOf(uuid) ?: return null
-        return currentMatch[playerSides[uuid]!![currentMatch.uuid] ?: currentMatch.currentTurn] as? BukkitChessSide
+        return currentMatch[playerSides[uuid]!![currentMatch.uuid] ?: currentMatch.board.currentTurn] as? BukkitChessSide
     }
 
     internal fun activeMatchesOf(uuid: UUID): Set<ChessMatch> = playerSides[uuid]?.keys?.mapNotNull(::get)?.toSet().orEmpty()

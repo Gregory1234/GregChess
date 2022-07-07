@@ -33,7 +33,7 @@ object HordeChess : ChessVariant() {
         if (piecesOf(Color.WHITE).isEmpty())
             match.stop(blackWonBy(EndReason.ALL_PIECES_LOST))
 
-        if (piecesOf(!match.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
+        if (piecesOf(!match.board.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
             if (isInCheck(this, Color.BLACK))
                 match.stop(whiteWonBy(EndReason.CHECKMATE))
             else

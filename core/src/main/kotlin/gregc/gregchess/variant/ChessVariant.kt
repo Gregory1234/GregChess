@@ -65,9 +65,9 @@ open class ChessVariant : NameRegistered {
     }
 
     open fun checkForMatchEnd(match: ChessMatch) = with(match.board) {
-        if (piecesOf(!match.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
-            if (isInCheck(this, !match.currentTurn))
-                match.stop(match.currentTurn.wonBy(EndReason.CHECKMATE))
+        if (piecesOf(!match.board.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
+            if (isInCheck(this, !match.board.currentTurn))
+                match.stop(match.board.currentTurn.wonBy(EndReason.CHECKMATE))
             else
                 match.stop(drawBy(EndReason.STALEMATE))
         }

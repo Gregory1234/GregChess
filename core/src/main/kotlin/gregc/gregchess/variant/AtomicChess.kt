@@ -116,8 +116,8 @@ object AtomicChess : ChessVariant(), Registering {
         checkingMoves(!king.color, king.pos, board).isNotEmpty()
 
     override fun checkForMatchEnd(match: ChessMatch) {
-        if (match.board.kingOf(!match.currentTurn) == null)
-            match.stop(match.currentTurn.wonBy(ATOMIC))
+        if (match.board.kingOf(!match.board.currentTurn) == null)
+            match.stop(match.board.currentTurn.wonBy(ATOMIC))
         Normal.checkForMatchEnd(match)
     }
 }

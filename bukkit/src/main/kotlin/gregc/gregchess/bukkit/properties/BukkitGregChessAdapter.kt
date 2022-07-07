@@ -42,7 +42,7 @@ class BukkitGregChessAdapter : Component {
     fun addProperties(e: AddPropertiesEvent) {
         match.clock?.apply {
             if (timeControl.type == TimeControl.Type.FIXED) {
-                e.match(TIME_REMAINING_SIMPLE) { timeRemaining[match.currentTurn].format(timeFormat) }
+                e.match(TIME_REMAINING_SIMPLE) { timeRemaining[match.board.currentTurn].format(timeFormat) }
             } else {
                 e.player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) }
             }

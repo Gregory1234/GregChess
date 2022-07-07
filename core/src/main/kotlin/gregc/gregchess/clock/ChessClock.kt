@@ -108,9 +108,9 @@ class ChessClock private constructor(
         lastTime = now
         currentTurnLength_ += dt
         if (timeControl.type != TimeControl.Type.SIMPLE) {
-            timeRemaining_[match.currentTurn] -= dt
+            timeRemaining_[match.board.currentTurn] -= dt
         } else {
-            timeRemaining_[match.currentTurn] -= maxOf(minOf(dt, currentTurnLength_ - timeControl.increment), Duration.ZERO)
+            timeRemaining_[match.board.currentTurn] -= maxOf(minOf(dt, currentTurnLength_ - timeControl.increment), Duration.ZERO)
         }
         for ((s, t) in timeRemaining_.toIndexedList())
             if (t.isNegative())
@@ -124,7 +124,7 @@ class ChessClock private constructor(
         val increment = if (started) timeControl.increment else Duration.ZERO
         if (!started)
             started = true
-        val turn = match.currentTurn
+        val turn = match.board.currentTurn
         when (timeControl.type) {
             TimeControl.Type.FIXED -> {
                 timeRemaining_[turn] = timeControl.initialTime

@@ -25,7 +25,7 @@ fun ChessMatch.addStats(stats: ByColor<PlayerStatsSink>) {
         }
         else -> {}
     }
-    stats.white.add(ChessStat.MOVES_PLAYED, board.fullmoveCounter - 1, if (currentTurn == Color.BLACK) 1 else 0)
+    stats.white.add(ChessStat.MOVES_PLAYED, board.fullmoveCounter - 1, if (board.currentTurn == Color.BLACK) 1 else 0)
     stats.black.add(ChessStat.MOVES_PLAYED, board.fullmoveCounter - 1)
     stats.forEach { it.add(ChessStat.TIME_PLAYED, duration) }
     callEvent(AddStatsEvent(stats))

@@ -37,7 +37,7 @@ abstract class ChessSide<P : Any>(private val playerType: ChessPlayerType<P>, pr
         get() = match[!color]
 
     val hasTurn
-        get() = match.currentTurn == color
+        get() = match.board.currentTurn == color
 
     val pieces
         get() = match.board.piecesOf(color)

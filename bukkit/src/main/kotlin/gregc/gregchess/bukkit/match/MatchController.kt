@@ -143,7 +143,7 @@ class MatchController(val presetName: String) : Component {
     @ChessEventHandler
     fun handleTurn(e: TurnEvent) {
         if (e == TurnEvent.END) {
-            if (match.currentTurn == Color.BLACK) {
+            if (match.board.currentTurn == Color.BLACK) {
                 with(match.board) {
                     val normalMoves = moveHistory.filter { !it.isPhantomMove }
                     val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
