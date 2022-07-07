@@ -53,11 +53,7 @@ class ChessClock private constructor(
 
     override val type get() = ComponentType.CLOCK
 
-    @Transient
-    private lateinit var match: ChessMatch
-
     override fun init(match: ChessMatch) {
-        this.match = match
         lastTime = Instant.now(match.environment.clock)
     }
 
@@ -70,7 +66,7 @@ class ChessClock private constructor(
     @Transient private var stopped = false
 
     @ChessEventHandler
-    fun handleEvents(e: ChessBaseEvent) {
+    fun handleEvents(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.START && timeControl.type == TimeControl.Type.FIXED) started = true
         else if (e == ChessBaseEvent.SYNC) when (match.state) {
             ChessMatch.State.INITIAL -> {
@@ -87,7 +83,7 @@ class ChessClock private constructor(
             }
         }
         else if (e == ChessBaseEvent.STOP || e == ChessBaseEvent.PANIC) stopped = true
-        else if (e == ChessBaseEvent.UPDATE) updateTimer()
+        else if (e == ChessBaseEvent.UPDATE) updateTimer(match)
     }
 
     fun addTimer(s: Color, d: Duration) {
@@ -98,7 +94,7 @@ class ChessClock private constructor(
         timeRemaining_[s] = d
     }
 
-    private fun updateTimer() {
+    private fun updateTimer(match: ChessMatch) {
         if (!started)
             return
         if (stopped)
@@ -118,7 +114,7 @@ class ChessClock private constructor(
     }
 
     @ChessEventHandler
-    fun endTurn(e: TurnEvent) {
+    fun endTurn(match: ChessMatch, e: TurnEvent) {
         if (e != TurnEvent.END)
             return
         val increment = if (started) timeControl.increment else Duration.ZERO

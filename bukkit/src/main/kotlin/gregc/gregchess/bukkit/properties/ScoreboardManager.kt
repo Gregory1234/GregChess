@@ -30,33 +30,26 @@ class ScoreboardManager : Component {
     override val type get() = BukkitComponentType.SCOREBOARD_MANAGER
 
     @Transient
-    private lateinit var match: ChessMatch
-
-    override fun init(match: ChessMatch) {
-        this.match = match
-    }
-
-    @Transient
     private val scoreboard = Bukkit.getScoreboardManager()!!.newScoreboard
 
     @Transient
     private val layout: ScoreboardLayout = config.getFromRegistry(BukkitRegistry.SCOREBOARD_LAYOUT_PROVIDER, "Scoreboard.Layout")!!(scoreboard)
 
     @ChessEventHandler
-    fun handleEvents(e: ChessBaseEvent) {
+    fun handleEvents(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.UPDATE)
             update()
     }
 
     @ChessEventHandler
-    fun onBaseEvent(e: ChessBaseEvent) {
-        if (e == ChessBaseEvent.START || e == ChessBaseEvent.SYNC) start()
+    fun onBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.START || e == ChessBaseEvent.SYNC) start(match)
         else if (e == ChessBaseEvent.STOP) update()
         else if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) stop()
     }
 
     @ChessEventHandler
-    fun resetPlayer(e: ResetPlayerEvent) {
+    fun resetPlayer(match: ChessMatch, e: ResetPlayerEvent) {
         giveScoreboard(e.player)
     }
 
@@ -64,7 +57,7 @@ class ScoreboardManager : Component {
         p.scoreboard = scoreboard
     }
 
-    private fun start() {
+    private fun start(match: ChessMatch) {
         val playerProperties = mutableMapOf<PropertyType, PlayerProperty>()
         val matchProperties = mutableMapOf<PropertyType, MatchProperty>()
 
@@ -77,13 +70,13 @@ class ScoreboardManager : Component {
     }
 
     @ChessEventHandler
-    fun playerEvent(p: PlayerEvent) = when(p.dir) {
+    fun playerEvent(match: ChessMatch, p: PlayerEvent) = when(p.dir) {
         PlayerDirection.JOIN -> giveScoreboard(p.player)
         PlayerDirection.LEAVE -> p.player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
     }
 
     @ChessEventHandler
-    fun spectatorEvent(p: SpectatorEvent) = when(p.dir) {
+    fun spectatorEvent(match: ChessMatch, p: SpectatorEvent) = when(p.dir) {
         PlayerDirection.JOIN -> giveScoreboard(p.player)
         PlayerDirection.LEAVE -> p.player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
     }

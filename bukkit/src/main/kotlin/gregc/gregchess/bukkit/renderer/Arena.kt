@@ -158,10 +158,10 @@ class SimpleArena internal constructor(
     private val spawnLocation: Location get() = spawn.toLocation(world)
 
     @ChessEventHandler
-    fun onBaseEvent(e: ChessBaseEvent) {
+    fun onBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) SimpleArenaManager.freeArena(this)
         if (e == ChessBaseEvent.PANIC)
-            for (p in SimpleArenaManager.currentArenaMatch(this)?.sides?.toList().orEmpty())
+            for (p in match.sides.toList())
                 if (p is BukkitChessSide)
                     p.bukkit?.leave()
     }
@@ -176,7 +176,7 @@ class SimpleArena internal constructor(
     }
 
     @ChessEventHandler
-    fun spectatorEvent(e: SpectatorEvent) {
+    fun spectatorEvent(match: ChessMatch, e: SpectatorEvent) {
         when (e.dir) {
             PlayerDirection.JOIN -> {
                 e.player.teleport(spawnLocation)
@@ -206,12 +206,12 @@ class SimpleArena internal constructor(
     }
 
     @ChessEventHandler
-    fun playerEvent(e: PlayerEvent) = when (e.dir) {
+    fun playerEvent(match: ChessMatch, e: PlayerEvent) = when (e.dir) {
         PlayerDirection.JOIN -> e.player.reset()
         PlayerDirection.LEAVE -> e.player.leave()
     }
 
     @ChessEventHandler
-    fun resetPlayer(e: ResetPlayerEvent) = e.player.reset()
+    fun resetPlayer(match: ChessMatch, e: ResetPlayerEvent) = e.player.reset()
 
 }

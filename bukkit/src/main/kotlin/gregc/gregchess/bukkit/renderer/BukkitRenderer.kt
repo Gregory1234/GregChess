@@ -38,20 +38,16 @@ data class BukkitRenderer(
     override val type get() = BukkitComponentType.RENDERER
 
     @Transient
-    private lateinit var match: ChessMatch
-
-    @Transient
     lateinit var arena: Arena
         private set
 
     override fun init(match: ChessMatch) {
         this.arena = ArenaManager.fromConfig().reserveArena(match)
-        this.match = match
     }
 
-    override fun handleEvent(e: ChessEvent) {
-        arena.handleEvent(e)
-        super.handleEvent(e)
+    override fun handleEvent(match: ChessMatch, e: ChessEvent) {
+        arena.handleEvent(match, e)
+        super.handleEvent(match, e)
     }
 
     @Transient private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()
@@ -105,7 +101,7 @@ data class BukkitRenderer(
     private fun BoardPiece.playSound(sound: String) = playPieceSound(pos, sound, type)
 
     @ChessEventHandler
-    fun handleExplosion(e: AtomicChess.ExplosionEvent) {
+    fun handleExplosion(match: ChessMatch, e: AtomicChess.ExplosionEvent) {
         world.createExplosion(e.pos.location, 4.0f, false, false)
     }
 
@@ -145,9 +141,9 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun onBaseEvent(e: ChessBaseEvent) {
+    fun onBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.RUNNING || e == ChessBaseEvent.SYNC) {
-            redrawFloor()
+            redrawFloor(match)
         }
         else if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) {
             match.board.pieces.forEach {
@@ -160,13 +156,13 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun onTurnStart(e: TurnEvent) {
+    fun onTurnStart(match: ChessMatch, e: TurnEvent) {
         if (e == TurnEvent.START || e == TurnEvent.UNDO) {
-            redrawFloor()
+            redrawFloor(match)
         }
     }
 
-    private fun redrawFloor() {
+    private fun redrawFloor(match: ChessMatch) {
         for (file in 0..7) {
             for (rank in 0..7) {
                 with (match.variant.floorRenderer) {
@@ -177,21 +173,21 @@ data class BukkitRenderer(
     }
 
     @ChessEventHandler
-    fun onPiecePlayerAction(e: PiecePlayerActionEvent) = when (e.type) {
+    fun onPiecePlayerAction(match: ChessMatch, e: PiecePlayerActionEvent) = when (e.type) {
         PiecePlayerActionEvent.Type.PICK_UP -> {
             e.piece.clearRender()
             e.piece.playSound("PickUp")
-            redrawFloor()
+            redrawFloor(match)
         }
         PiecePlayerActionEvent.Type.PLACE_DOWN -> {
             e.piece.render()
             e.piece.playSound("Move")
-            redrawFloor()
+            redrawFloor(match)
         }
     }
 
     @ChessEventHandler
-    fun handlePieceEvents(e: PieceMoveEvent) {
+    fun handlePieceEvents(match: ChessMatch, e: PieceMoveEvent) {
         for ((o, _) in e.moves)
             when (o) {
                 is BoardPiece -> o.clearRender()

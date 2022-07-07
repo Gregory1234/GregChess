@@ -11,7 +11,6 @@ import gregc.gregchess.clock.clock
 import gregc.gregchess.match.*
 import gregc.gregchess.variant.ThreeChecks
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 @Serializable
 class BukkitGregChessAdapter : Component {
@@ -29,17 +28,10 @@ class BukkitGregChessAdapter : Component {
 
     override val type get() = BukkitComponentType.ADAPTER
 
-    @Transient
-    private lateinit var match: ChessMatch
-
-    override fun init(match: ChessMatch) {
-        this.match = match
-    }
-
     private val timeFormat: String get() = config.getPathString("TimeFormat")
 
     @ChessEventHandler
-    fun addProperties(e: AddPropertiesEvent) {
+    fun addProperties(match: ChessMatch, e: AddPropertiesEvent) {
         match.clock?.apply {
             if (timeControl.type == TimeControl.Type.FIXED) {
                 e.match(TIME_REMAINING_SIMPLE) { timeRemaining[match.board.currentTurn].format(timeFormat) }

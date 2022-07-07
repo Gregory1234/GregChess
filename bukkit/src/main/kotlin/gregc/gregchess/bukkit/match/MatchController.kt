@@ -39,25 +39,18 @@ class MatchController(val presetName: String) : Component {
 
     override val type get() = BukkitComponentType.MATCH_CONTROLLER
 
-    @Transient
-    private lateinit var match: ChessMatch
-
-    override fun init(match: ChessMatch) {
-        this.match = match
-    }
-
     internal var quick: ByColor<Boolean> = byColor(false)
     @Transient
     private var lastPrintedMove: Move? = null
 
-    private fun onStart() {
+    private fun onStart(match: ChessMatch) {
         ChessMatchManager += match
         match.sides.forEachReal {
             match.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
         }
     }
 
-    private fun onRunning() {
+    private fun onRunning(match: ChessMatch) {
         object : BukkitRunnable() {
             override fun run() {
                 if (match.running)
@@ -68,7 +61,7 @@ class MatchController(val presetName: String) : Component {
         }.runTaskTimer(GregChessPlugin.plugin, 0, 2)
     }
 
-    private fun onStop() {
+    private fun onStop(match: ChessMatch) {
         val results = match.results!!
         with(match.board) {
             val normalMoves = moveHistory.filter { !it.isPhantomMove }
@@ -116,7 +109,7 @@ class MatchController(val presetName: String) : Component {
             ChessMatchManager -= match
     }
 
-    private fun onPanic() {
+    private fun onPanic(match: ChessMatch) {
         val results = match.results!!
         val pgn = PGN.generate(match)
         match.sides.forEachUniqueBukkit { player, color ->
@@ -127,21 +120,21 @@ class MatchController(val presetName: String) : Component {
     }
 
     @ChessEventHandler
-    fun handleEvents(e: ChessBaseEvent) = when (e) {
-        ChessBaseEvent.START -> onStart()
-        ChessBaseEvent.RUNNING -> onRunning()
-        ChessBaseEvent.STOP -> onStop()
-        ChessBaseEvent.PANIC -> onPanic()
+    fun handleEvents(match: ChessMatch, e: ChessBaseEvent) = when (e) {
+        ChessBaseEvent.START -> onStart(match)
+        ChessBaseEvent.RUNNING -> onRunning(match)
+        ChessBaseEvent.STOP -> onStop(match)
+        ChessBaseEvent.PANIC -> onPanic(match)
         ChessBaseEvent.SYNC -> if (match.state == ChessMatch.State.RUNNING) {
-            onStart()
-            onRunning()
+            onStart(match)
+            onRunning(match)
         } else Unit
         ChessBaseEvent.UPDATE -> Unit
         ChessBaseEvent.CLEAR -> Unit
     }
 
     @ChessEventHandler
-    fun handleTurn(e: TurnEvent) {
+    fun handleTurn(match: ChessMatch, e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (match.board.currentTurn == Color.BLACK) {
                 with(match.board) {
@@ -159,12 +152,12 @@ class MatchController(val presetName: String) : Component {
     }
 
     @ChessEventHandler
-    fun addProperties(e: AddPropertiesEvent) {
+    fun addProperties(match: ChessMatch, e: AddPropertiesEvent) {
         e.match(PRESET) { presetName }
     }
 
     @ChessEventHandler
-    fun playerEvent(e: PlayerEvent) = when(e.dir) {
+    fun playerEvent(match: ChessMatch, e: PlayerEvent) = when(e.dir) {
         PlayerDirection.JOIN -> e.player.currentChessSide!!.sendStartMessage()
         PlayerDirection.LEAVE -> {}
     }

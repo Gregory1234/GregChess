@@ -24,8 +24,8 @@ private class Square(
 
     override fun toString() = "Square(piece=$piece, flags=$flags)"
 
-    fun empty(board: Chessboard) {
-        piece?.let(board::clear)
+    fun empty(match: ChessMatch, board: Chessboard) {
+        piece?.let { board.clear(match, it) }
         bakedMoves = null
         bakedLegalMoves = null
         flags.clear()
@@ -136,13 +136,6 @@ class Chessboard private constructor (
 
     override val type get() = ComponentType.CHESSBOARD
 
-    @Transient
-    private lateinit var match: ChessMatch
-
-    override fun init(match: ChessMatch) {
-        this.match = match
-    }
-
     var fullmoveCounter
         get() = counters.fullmoveCounter
         set(v) { counters.fullmoveCounter = v }
@@ -173,7 +166,7 @@ class Chessboard private constructor (
         }
 
     @ChessEventHandler
-    fun endTurn(e: TurnEvent) {
+    fun endTurn(match: ChessMatch, e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (currentTurn == Color.BLACK) {
                 fullmoveCounter++
@@ -193,11 +186,11 @@ class Chessboard private constructor (
             }
         }
         if (e.ending)
-            updateMoves()
+            updateMoves(match.variant)
     }
 
     @ChessEventHandler
-    fun addVariantOptions(e: AddVariantOptionsEvent) {
+    fun addVariantOptions(match: ChessMatch, e: AddVariantOptionsEvent) {
         e[ChessVariantOption.SIMPLE_CASTLING] = simpleCastling
     }
 
@@ -205,12 +198,12 @@ class Chessboard private constructor (
     fun getVariantOptionStrings(): List<String> = variantOptions.mapNotNull { (o, v) -> (o as ChessVariantOption<Any>).pgnNameFragment(v) }
 
     @ChessEventHandler
-    fun handleEvents(e: ChessBaseEvent) {
+    fun handleEvents(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.SYNC || e == ChessBaseEvent.START) {
             match.callEvent(AddVariantOptionsEvent(variantOptions))
-            updateMoves()
-            pieces.forEach(::sendSpawned)
-            capturedPieces.forEach(::sendSpawned)
+            updateMoves(match.variant)
+            pieces.forEach { sendSpawned(match, it) }
+            capturedPieces.forEach { sendSpawned(match, it) }
         }
     }
 
@@ -222,11 +215,9 @@ class Chessboard private constructor (
         capturedPieces_.removeAt(capturedPieces_.lastIndexOf(captured))
     }
 
-    fun updateMoves() = updateMoves(match.variant)
-
-    fun setFromFEN(fen: FEN) {
-        capturedPieces.asReversed().forEach(::clear)
-        squares.values.forEach { it.empty(this) }
+    fun setFromFEN(match: ChessMatch, fen: FEN) {
+        capturedPieces.asReversed().forEach { clear(match, it) }
+        squares.values.forEach { it.empty(match, this) }
         fen.forEachSquare(match.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
@@ -239,11 +230,11 @@ class Chessboard private constructor (
             set(fen.enPassantSquare, ChessFlag.EN_PASSANT, 1)
         }
 
-        updateMoves()
+        updateMoves(match.variant)
 
         boardHashes_.clear()
         addBoardHash(fen)
-        pieces.forEach(::sendSpawned)
+        pieces.forEach { sendSpawned(match, it) }
         match.callEvent(SetFenEvent(fen))
     }
 
@@ -265,12 +256,12 @@ class Chessboard private constructor (
         )
     }
 
-    fun checkForRepetition() {
+    fun checkForRepetition(match: ChessMatch) {
         if ((boardHashes_[getFEN().copy(currentTurn = !currentTurn).hashed()] ?: 0) >= 3)
             match.stop(drawBy(EndReason.REPETITION))
     }
 
-    fun checkForFiftyMoveRule() {
+    fun checkForFiftyMoveRule(match: ChessMatch) {
         if (halfmoveClock >= 100)
             match.stop(drawBy(EndReason.FIFTY_MOVES))
     }
@@ -281,7 +272,7 @@ class Chessboard private constructor (
         return boardHashes_[hash]!!
     }
 
-    fun undoLastMove() {
+    fun undoLastMove(match: ChessMatch) {
         lastMove?.let {
             if (!it.isPhantomMove) {
                 val hash = getFEN().hashed()
@@ -304,7 +295,7 @@ class Chessboard private constructor (
         : ChessboardConnector by SquareChessboard(initialFEN, variantOptions, squares, capturedPieces, counters)
 
     @ChessEventHandler
-    fun addFakeMoveConnectors(e: AddFakeMoveConnectorsEvent) {
+    fun addFakeMoveConnectors(match: ChessMatch, e: AddFakeMoveConnectorsEvent) {
         e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
             initialFEN, variantOptions,
             squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),
@@ -313,23 +304,23 @@ class Chessboard private constructor (
     }
 
     @ChessEventHandler
-    fun addMoveConnectors(e: AddMoveConnectorsEvent) {
+    fun addMoveConnectors(match: ChessMatch, e: AddMoveConnectorsEvent) {
         e[MoveConnectorType.CHESSBOARD] = this
     }
 
-    internal fun clear(boardPiece: BoardPiece) {
+    internal fun clear(match: ChessMatch, boardPiece: BoardPiece) {
         match.callEvent(createClearEvent(boardPiece))
     }
 
-    internal fun clear(captured: CapturedPiece) {
+    internal fun clear(match: ChessMatch, captured: CapturedPiece) {
         match.callEvent(this.captured.createClearEvent(captured))
     }
 
-    internal fun sendSpawned(boardPiece: BoardPiece) {
+    internal fun sendSpawned(match: ChessMatch, boardPiece: BoardPiece) {
         match.callEvent(createSpawnedEvent(boardPiece))
     }
 
-    internal fun sendSpawned(captured: CapturedPiece) {
+    internal fun sendSpawned(match: ChessMatch, captured: CapturedPiece) {
         match.callEvent(this.captured.createSpawnedEvent(captured))
     }
 

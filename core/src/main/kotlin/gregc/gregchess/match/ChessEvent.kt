@@ -2,6 +2,7 @@ package gregc.gregchess.match
 
 import kotlin.reflect.full.isSupertypeOf
 import kotlin.reflect.full.starProjectedType
+import kotlin.reflect.typeOf
 
 interface ChessEvent
 
@@ -11,12 +12,13 @@ interface ChessEvent
 annotation class ChessEventHandler
 
 interface ChessListener {
-    fun handleEvent(e: ChessEvent) {
+    fun handleEvent(match: ChessMatch, e: ChessEvent) {
         for (f in this::class.members) {
-            if (f.annotations.any { it is ChessEventHandler } && f.parameters.size == 2 &&
-                f.parameters[1].type.isSupertypeOf(e::class.starProjectedType)
+            if (f.annotations.any { it is ChessEventHandler } && f.parameters.size == 3 &&
+                f.parameters[1].type.isSupertypeOf(typeOf<ChessMatch>()) &&
+                f.parameters[2].type.isSupertypeOf(e::class.starProjectedType)
             ) {
-                f.call(this, e)
+                f.call(this, match, e)
             }
         }
     }

@@ -16,24 +16,17 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
     override val type get() = BukkitComponentType.SPECTATOR_MANAGER
 
     @Transient
-    private lateinit var match: ChessMatch
-
-    override fun init(match: ChessMatch) {
-        this.match = match
-    }
-
-    @Transient
     private val spectatorList = mutableListOf<Player>()
 
     val spectators get() = spectatorList.toList()
 
-    operator fun plusAssign(p: Player) {
+    internal fun addSpectator(match: ChessMatch, p: Player) {
         ChessMatchManager.setCurrentSpectatedMatch(p.uniqueId, match.uuid) // TODO: this shouldn't be called here probably
         spectatorList += p
         match.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
-    operator fun minusAssign(p: Player) {
+    internal fun removeSpectator(match: ChessMatch, p: Player) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
         ChessMatchManager.setCurrentSpectatedMatch(p.uniqueId, null)
@@ -42,18 +35,18 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
     }
 
     @ChessEventHandler
-    fun onStop(e: ChessBaseEvent) {
-        if (e == ChessBaseEvent.STOP) stop()
-        else if (e == ChessBaseEvent.CLEAR) clear()
+    fun onStop(match: ChessMatch, e: ChessBaseEvent) {
+        if (e == ChessBaseEvent.STOP) stop(match)
+        else if (e == ChessBaseEvent.CLEAR) clear(match)
     }
 
-    private fun stop() {
+    private fun stop(match: ChessMatch) {
         for (it in spectators) {
             it.showMatchResults(match.results!!)
         }
     }
 
-    private fun clear() {
+    private fun clear(match: ChessMatch) {
         val s = spectators
         spectatorList.clear()
         for (it in s) {
@@ -61,5 +54,8 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
         }
     }
 }
+
+operator fun ChessMatch.plusAssign(p: Player) = spectators.addSpectator(this, p)
+operator fun ChessMatch.minusAssign(p: Player) = spectators.removeSpectator(this, p)
 
 val ChessMatch.spectators get() = require(BukkitComponentType.SPECTATOR_MANAGER)

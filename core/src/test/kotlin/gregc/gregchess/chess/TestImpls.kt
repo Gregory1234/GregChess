@@ -35,7 +35,7 @@ object TestComponent : Component {
 
     override fun init(match: ChessMatch) {}
 
-    override fun handleEvent(e: ChessEvent) {}
+    override fun handleEvent(match: ChessMatch, e: ChessEvent) {}
 
 }
 

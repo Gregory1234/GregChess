@@ -10,7 +10,8 @@ import gregc.gregchess.fabric.player.PiecePlayerActionEvent
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.BoardPiece
-import kotlinx.serialization.*
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -23,13 +24,6 @@ data class FabricRenderer(
     constructor(controller: ChessControllerBlockEntity) : this(controller.pos, controller.world!!)
 
     override val type get() = FabricComponentType.RENDERER
-
-    @Transient
-    private lateinit var match: ChessMatch
-
-    override fun init(match: ChessMatch) {
-        this.match = match
-    }
 
     private val controller: ChessControllerBlockEntity
         get() = world.getBlockEntity(controllerPos) as ChessControllerBlockEntity
@@ -46,7 +40,7 @@ data class FabricRenderer(
         preferredBlocks[floor.boardPos!!] = floor
     }
 
-    private fun redrawFloor() {
+    private fun redrawFloor(match: ChessMatch) {
         for (file in 0..7) {
             for (rank in 0..7) {
                 tileBlocks[Pos(file, rank)]?.forEach {
@@ -59,7 +53,7 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
-    fun onBaseEvent(e: ChessBaseEvent) {
+    fun onBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.STOP || e == ChessBaseEvent.PANIC) {
             tileBlocks.forEach { (_,l) ->
                 l.forEach {
@@ -71,9 +65,9 @@ data class FabricRenderer(
     }
 
     @ChessEventHandler
-    fun onTurnStart(e: TurnEvent) {
+    fun onTurnStart(match: ChessMatch, e: TurnEvent) {
         if (e == TurnEvent.START || e == TurnEvent.UNDO) {
-            redrawFloor()
+            redrawFloor(match)
         }
     }
 
@@ -89,7 +83,7 @@ data class FabricRenderer(
 
     @ChessEventHandler
     @Suppress("UNUSED_PARAMETER")
-    fun onPiecePlayerAction(e: PiecePlayerActionEvent) = redrawFloor()
+    fun onPiecePlayerAction(match: ChessMatch, e: PiecePlayerActionEvent) = redrawFloor(match)
 
     private fun choosePlacePos(pos: Pos, block: PieceBlock): BlockPos {
         val preferredBlock = preferredBlocks[pos]
@@ -103,7 +97,7 @@ data class FabricRenderer(
 
     // TODO: add move and capture sounds
     @ChessEventHandler
-    fun handlePieceEvents(e: PieceMoveEvent) {
+    fun handlePieceEvents(match: ChessMatch, e: PieceMoveEvent) {
         val broken = mutableListOf<BoardPiece>()
         val placed = mutableListOf<BoardPiece>()
         try {

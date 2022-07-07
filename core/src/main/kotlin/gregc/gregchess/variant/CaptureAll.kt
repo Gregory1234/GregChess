@@ -21,7 +21,7 @@ object CaptureAll : ChessVariant() {
         if (piecesOf(!match.board.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } })
             match.stop(drawBy(EndReason.STALEMATE))
 
-        checkForRepetition()
-        checkForFiftyMoveRule()
+        checkForRepetition(match)
+        checkForFiftyMoveRule(match)
     }
 }

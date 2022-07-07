@@ -139,8 +139,8 @@ object GregChessPlugin : Listener {
                                 if (sender.isInChessMatch) {
                                     sender.sendMessage(YOU_IN_MATCH)
                                 } else {
-                                    sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
-                                    opponent.currentSpectatedChessMatch?.spectators?.minusAssign(opponent)
+                                    sender.currentSpectatedChessMatch?.minusAssign(sender)
+                                    opponent.currentSpectatedChessMatch?.minusAssign(opponent)
                                     ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), opponent.toChessPlayer())).start()
                                 }
                             }
@@ -154,7 +154,7 @@ object GregChessPlugin : Listener {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     val settings = sender.openSettingsMenu()
                     if (settings != null) {
-                        sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
+                        sender.currentSpectatedChessMatch?.minusAssign(sender)
                         ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), Stockfish().toPlayer())).start()
                     }
                 }
@@ -252,7 +252,7 @@ object GregChessPlugin : Listener {
                 val pl = requireMatch()
                 argument(FENArgument("fen")) { fen ->
                     execute {
-                        pl().match.board.setFromFEN(fen())
+                        pl().match.board.setFromFEN(pl().match, fen())
                         sender.sendMessage(LOADED_FEN)
                     }
                 }
@@ -316,8 +316,8 @@ object GregChessPlugin : Listener {
                 argument(playerArgument("spectated")) { spectated ->
                     validate(PLAYER_NOT_IN_MATCH) { spectated().isInChessMatch }
                     execute {
-                        sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
-                        spectated().currentChessMatch?.spectators?.plusAssign(sender)
+                        sender.currentSpectatedChessMatch?.minusAssign(sender)
+                        spectated().currentChessMatch?.plusAssign(sender)
                     }
                 }
             }
@@ -340,7 +340,7 @@ object GregChessPlugin : Listener {
                     }
                     val res = takebackRequest.call(RequestData(sender.uniqueId, op().uuid, ""), true)
                     if (res == RequestResponse.ACCEPT) {
-                        pl().match.board.undoLastMove()
+                        pl().match.board.undoLastMove(pl().match)
                     }
                 }
             }
@@ -460,7 +460,7 @@ object GregChessPlugin : Listener {
                 validate(YOU_IN_MATCH) { !sender.isInChessMatch }
                 validate(NO_MATCH_TO_REJOIN) { sender.activeChessMatches.isNotEmpty() }
                 execute {
-                    sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
+                    sender.currentSpectatedChessMatch?.minusAssign(sender)
                     sender.rejoinMatch()
                 }
             }

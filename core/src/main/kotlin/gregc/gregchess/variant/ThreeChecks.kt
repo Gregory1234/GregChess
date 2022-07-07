@@ -10,7 +10,8 @@ import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PlacedPieceType
 import gregc.gregchess.results.*
-import kotlinx.serialization.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 object ThreeChecks : ChessVariant(), Registering {
 
@@ -33,13 +34,6 @@ object ThreeChecks : ChessVariant(), Registering {
 
         override val type get() = CHECK_COUNTER
 
-        @Transient
-        private lateinit var match: ChessMatch
-
-        override fun init(match: ChessMatch) {
-            this.match = match
-        }
-
         override fun registerCheck(color: Color) {
             checks_[color]++
         }
@@ -48,7 +42,7 @@ object ThreeChecks : ChessVariant(), Registering {
             checks_[color]--
         }
 
-        fun checkForMatchEnd() {
+        fun checkForMatchEnd(match: ChessMatch) {
             for ((s, c) in checks_.toIndexedList())
                 if (c >= limit)
                     match.stop(s.lostBy(CHECK_LIMIT, limit.toString()))
@@ -57,7 +51,7 @@ object ThreeChecks : ChessVariant(), Registering {
         override fun get(color: Color) = checks_[color]
 
         @ChessEventHandler
-        fun addMoveConnectors(e: AddMoveConnectorsEvent) {
+        fun addMoveConnectors(match: ChessMatch, e: AddMoveConnectorsEvent) {
             e[CHECK_COUNTER_CONNECTOR] = this
         }
 
@@ -74,7 +68,7 @@ object ThreeChecks : ChessVariant(), Registering {
         }
 
         @ChessEventHandler
-        fun addFakeMoveConnectors(e: AddFakeMoveConnectorsEvent) {
+        fun addFakeMoveConnectors(match: ChessMatch, e: AddFakeMoveConnectorsEvent) {
             e[CHECK_COUNTER_CONNECTOR] = FakeCheckCounterConnector(limit, checks_)
         }
     }
@@ -124,7 +118,7 @@ object ThreeChecks : ChessVariant(), Registering {
         }
 
     override fun checkForMatchEnd(match: ChessMatch) {
-        match.require(CHECK_COUNTER).checkForMatchEnd()
+        match.require(CHECK_COUNTER).checkForMatchEnd(match)
 
         Normal.checkForMatchEnd(match)
     }

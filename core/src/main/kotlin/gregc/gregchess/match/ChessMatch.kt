@@ -85,7 +85,7 @@ class ChessMatch private constructor(
     fun callEvent(e: ChessEvent) = with(MultiExceptionContext()) {
         components.forEach {
             exec {
-                it.handleEvent(e)
+                it.handleEvent(this@ChessMatch, e)
             }
         }
         rethrow { ChessEventException(e, it) }
@@ -269,7 +269,7 @@ class ChessMatch private constructor(
     private val connectors = mutableMapOf<MoveConnectorType<*>, MoveConnector>()
 
     private inner class MatchMoveEnvironment : MoveEnvironment {
-        override fun updateMoves() = this@ChessMatch.board.updateMoves() // TODO: make this into an event?
+        override fun updateMoves() = this@ChessMatch.board.updateMoves(variant) // TODO: make this into an event?
         override fun callEvent(e: ChessEvent) = this@ChessMatch.callEvent(e)
         override val variant: ChessVariant get() = this@ChessMatch.variant
         @Suppress("UNCHECKED_CAST")
