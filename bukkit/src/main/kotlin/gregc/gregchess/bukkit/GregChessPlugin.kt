@@ -5,7 +5,8 @@ import gregc.gregchess.bukkit.command.*
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.piece.getInfo
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.renderer.*
+import gregc.gregchess.bukkit.renderer.ArenaManager
+import gregc.gregchess.bukkit.renderer.renderer
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.bukkit.stats.openStatsMenu
 import gregc.gregchess.bukkitutils.*
@@ -124,13 +125,15 @@ object GregChessPlugin : Listener {
 
                     executeSuspend {
                         val opponent = opponentArg()
-                        val settings = try {
-                            sender.openSettingsMenu()
-                        } catch (e: NoFreeArenasException) {
+                        if (!ArenaManager.fromConfig().hasFreeArenas()) {
                             throw CommandException(NO_ARENAS)
                         }
+                        val settings = sender.openSettingsMenu()
 
                         if (settings != null) {
+                            if (!ArenaManager.fromConfig().hasFreeArenas()) {
+                                throw CommandException(NO_ARENAS)
+                            }
                             val res = duelRequest.call(RequestData(sender.uniqueId, opponent.uniqueId, settings.name))
                             if (res == RequestResponse.ACCEPT) {
                                 if (sender.isInChessMatch) {

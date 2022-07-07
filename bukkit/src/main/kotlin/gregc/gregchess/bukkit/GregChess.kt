@@ -70,7 +70,6 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     override fun load() {
         GregChessCore.registerAll(this)
         BukkitGregChessCore.autoRegister(this).apply {
-            registerAll<Arena>()
             registerAll<ChessMatchManager>()
             registerAll<BukkitComponentType>()
             registerAll<BukkitPlayerType>()

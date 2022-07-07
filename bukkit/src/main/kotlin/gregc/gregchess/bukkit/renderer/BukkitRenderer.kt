@@ -19,7 +19,6 @@ import kotlin.math.floor
 // TODO: add a way to use a custom renderer?
 @Serializable
 data class BukkitRenderer(
-    @Transient val arena: Arena = ArenaManager.fromConfig().nextArena(), // TODO: what if the config gets reloaded while in the menu
     val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
 ) : Component {
     companion object {
@@ -41,8 +40,12 @@ data class BukkitRenderer(
     @Transient
     private lateinit var match: ChessMatch
 
+    @Transient
+    lateinit var arena: Arena
+        private set
+
     override fun init(match: ChessMatch) {
-        arena.match = match
+        this.arena = ArenaManager.fromConfig().reserveArena(match)
         this.match = match
     }
 

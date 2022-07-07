@@ -38,27 +38,30 @@ interface ArenaManager<out A : Arena> {
 
     fun reloadArenas()
 
-    fun nextArenaOrNull(): A?
+    fun hasFreeArenas(): Boolean
 
-    fun nextArena(): A = nextArenaOrNull() ?: throw NoFreeArenasException()
-}
+    fun reserveArenaOrNull(match: ChessMatch): A?
 
-abstract class Arena(val name: String) : ChessListener {
-
-    var match: ChessMatch? = null
-
-    abstract val boardStart: Location
-    abstract val tileSize: Int
-    abstract val capturedStart: ByColor<Location>
+    fun reserveArena(match: ChessMatch): A = reserveArenaOrNull(match) ?: throw NoFreeArenasException()
 
 }
+
+interface Arena : ChessListener {
+    val name: String
+
+    val boardStart: Location
+    val tileSize: Int
+    val capturedStart: ByColor<Location>
+}
+
+class ArenaMetadata(var match: ChessMatch? = null)
 
 object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
     @JvmField
     @Register(data = ["quick"])
     val ARENA_REMOVED = DrawEndReason(EndReason.Type.EMERGENCY)
 
-    private val arenas = mutableListOf<SimpleArena>()
+    private val arenas = mutableMapOf<SimpleArena, ArenaMetadata>()
 
     private fun ConfigurationSection.getLoc(path: String, def: Loc): Loc = getConfigurationSection(path)?.let {
         Loc(getInt("x", def.x), getInt("y", def.y), getInt("z", def.z))
@@ -75,7 +78,7 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
 
         val tileSize = getInt("TileSize", 3)
 
-        val thisArena = arenas.firstOrNull {
+        val thisArena = arenas.keys.firstOrNull {
             it.name == name && it.offset == start && it.boardStart.world == world && it.tileSize == tileSize
         }
 
@@ -91,8 +94,8 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
     }
 
     override fun unloadArenas() {
-        arenas.forEach {
-            it.match?.stop(drawBy(ARENA_REMOVED))
+        arenas.forEach { (_, meta) ->
+            meta.match?.stop(drawBy(ARENA_REMOVED))
         }
         arenas.clear()
     }
@@ -108,31 +111,42 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
                     GregChess.logger.warn("Arena $name has a wrong format")
                     null
                 }
-            }.orEmpty()
-        arenas.forEach {
-            if (it !in newArenas)
-                it.match?.stop(drawBy(ARENA_REMOVED))
+            }.orEmpty().associateWith { arenas[it] ?: ArenaMetadata() }
+        arenas.forEach { (arena, meta) ->
+            if (arena !in newArenas) {
+                meta.match?.stop(drawBy(ARENA_REMOVED))
+            }
         }
         arenas.clear()
-        arenas.addAll(newArenas)
+        arenas.putAll(newArenas)
     }
 
-    override fun nextArenaOrNull(): SimpleArena? = arenas.toList().firstOrNull { it.match == null }
+    override fun hasFreeArenas(): Boolean = arenas.toList().any { (_, meta) -> meta.match == null }
+
+    override fun reserveArenaOrNull(match: ChessMatch): SimpleArena? = arenas.toList()
+        .firstOrNull { (_, meta) -> meta.match == null }
+        ?.also { (_, meta) -> meta.match = match }?.first
 
     internal val returnWorld: World
         get() = config.getString("ReturnWorld")
             ?.let { requireNotNull(Bukkit.getWorld(it)) { "Return world not found: $it" } }
             ?: Bukkit.getWorlds().first()
+
+    internal fun freeArena(arena: SimpleArena) {
+        arenas[arena]?.match = null
+    }
+
+    internal fun currentArenaMatch(arena: SimpleArena) = arenas[arena]?.match
 }
 
 class ResetPlayerEvent(val player: Player) : ChessEvent
 
 class SimpleArena internal constructor(
-    name: String,
+    override val name: String,
     private val world: World,
     override val tileSize: Int,
     internal val offset: Loc
-) : Arena(name) {
+) : Arena {
     private val boardStartLoc: Loc = offset + Loc(8, 0, 8)
     override val boardStart: Location get() = boardStartLoc.toLocation(world)
     private val capturedStartLoc = byColor(
@@ -145,9 +159,9 @@ class SimpleArena internal constructor(
 
     @ChessEventHandler
     fun onBaseEvent(e: ChessBaseEvent) {
-        if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) match = null
+        if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) SimpleArenaManager.freeArena(this)
         if (e == ChessBaseEvent.PANIC)
-            for (p in match?.sides?.toList().orEmpty())
+            for (p in SimpleArenaManager.currentArenaMatch(this)?.sides?.toList().orEmpty())
                 if (p is BukkitChessSide)
                     p.bukkit?.leave()
     }
