@@ -41,7 +41,7 @@ class AddVariantOptionsEvent(private val options: MutableMap<ChessVariantOption<
 @Serializable
 private class BoardCounters(var halfmoveClock: Int, var fullmoveCounter: Int, var currentTurn: Color)
 
-private class SquareChessboard(val initialFEN: FEN, private val variantOptions: Map<ChessVariantOption<*>, Any>, private val squares: Map<Pos, Square>, private val capturedPieces_: MutableList<CapturedPiece>, private val counters: BoardCounters) : ChessboardConnector {
+private class SquareChessboard(override val initialFEN: FEN, private val variantOptions: Map<ChessVariantOption<*>, Any>, private val squares: Map<Pos, Square>, private val capturedPieces_: MutableList<CapturedPiece>, private val counters: BoardCounters) : ChessboardConnector {
 
     override var halfmoveClock: Int by counters::halfmoveClock
     override val currentTurn: Color get() = counters.currentTurn
@@ -73,25 +73,6 @@ private class SquareChessboard(val initialFEN: FEN, private val variantOptions: 
     @Suppress("UNCHECKED_CAST")
     override operator fun <T : Any> get(option: ChessVariantOption<T>): T = variantOptions[option] as T
 
-    override val chess960: Boolean
-        get() {
-            if (initialFEN.chess960)
-                return true
-            val whiteKing = kingOf(Color.WHITE)
-            val blackKing = kingOf(Color.BLACK)
-            val whiteRooks = piecesOf(Color.WHITE, PieceType.ROOK).filter { !it.hasMoved }
-            val blackRooks = piecesOf(Color.BLACK, PieceType.ROOK).filter { !it.hasMoved }
-            if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != Pos(4, 0))
-                return true
-            if (blackKing != null && !blackKing.hasMoved && blackKing.pos != Pos(4, 7))
-                return true
-            if (whiteRooks.any { it.pos.rank == 0 && it.pos.file !in listOf(0, 7) })
-                return true
-            if (blackRooks.any { it.pos.rank == 7 && it.pos.file !in listOf(0, 7) })
-                return true
-            return false
-        }
-
     override fun create(p: BoardPiece) {
         checkCanExist(p)
         squares[p.pos]?.piece = p
@@ -121,14 +102,14 @@ private class SquareChessboard(val initialFEN: FEN, private val variantOptions: 
 
 @Serializable
 class Chessboard private constructor (
-    val initialFEN: FEN,
+    override val initialFEN: FEN,
     private val simpleCastling: Boolean,
     private val squares: Map<Pos, Square>,
     private val counters: BoardCounters = BoardCounters(initialFEN.halfmoveClock, initialFEN.fullmoveCounter, initialFEN.currentTurn),
     @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf(),
-    @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf(),
+    @Transient private val variantOptions: MutableMap<ChessVariantOption<*>, Any> = mutableMapOf(), // TODO: consider removing this
 ) : Component, ChessboardConnector by SquareChessboard(initialFEN, variantOptions, squares, capturedPieces_, counters) {
     private constructor(variant: ChessVariant, fen: FEN, simpleCastling: Boolean) : this(fen, simpleCastling, fen.toSquares(variant))
     constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false, simpleCastling: Boolean = false) :
@@ -291,7 +272,7 @@ class Chessboard private constructor (
     }
 
     // TODO: add a way of creating this without a Chessboard instance
-    private class FakeChessboardConnector(val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters)
+    private class FakeChessboardConnector(override val initialFEN: FEN, val variantOptions: Map<ChessVariantOption<*>, Any>, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters)
         : ChessboardConnector by SquareChessboard(initialFEN, variantOptions, squares, capturedPieces, counters)
 
     @ChessEventHandler

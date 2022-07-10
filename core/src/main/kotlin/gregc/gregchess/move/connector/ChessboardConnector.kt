@@ -2,6 +2,7 @@ package gregc.gregchess.move.connector
 
 import gregc.gregchess.*
 import gregc.gregchess.board.ChessVariantOption
+import gregc.gregchess.board.FEN
 import gregc.gregchess.move.Move
 import gregc.gregchess.piece.*
 import gregc.gregchess.variant.ChessVariant
@@ -13,7 +14,7 @@ interface ChessboardView : PieceHolderView<BoardPiece> {
     val captured: PieceHolderView<CapturedPiece>
     val halfmoveClock: Int
     val currentTurn: Color
-    val chess960: Boolean // TODO: move this to ChessVariant
+    val initialFEN: FEN
     fun getMoves(pos: Pos): List<Move>
     fun getLegalMoves(pos: Pos): List<Move>
     operator fun <T : Any> get(option: ChessVariantOption<T>): T

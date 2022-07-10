@@ -2,9 +2,6 @@ package gregc.gregchess.match
 
 import gregc.gregchess.Color
 import gregc.gregchess.clock.clock
-import gregc.gregchess.registry.name
-import gregc.gregchess.snakeToPascal
-import gregc.gregchess.variant.ChessVariant
 import java.time.format.DateTimeFormatter
 
 class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {
@@ -71,20 +68,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             tags += TagPair("Termination", match.results?.endReason?.pgn ?: "unterminated")
             tags += TagPair("Mode", "ICS")
 
-            if (!match.board.initialFEN.isInitial() || match.board.chess960) {
-                tags += TagPair("SetUp", "1")
-                tags += TagPair("FEN", match.board.initialFEN.toString())
-            }
-            val variant = buildList {
-                if (match.variant != ChessVariant.Normal)
-                    add(match.variant.name.snakeToPascal())
-                if (match.board.chess960)
-                    add("Chess960")
-                addAll(match.board.getVariantOptionStrings())
-            }.joinToString(" ")
-
-            if (variant.isNotBlank())
-                tags += TagPair("Variant", variant)
+            match.variant.addPGNTags(match, GenerateEvent(tags))
 
             match.callEvent(GenerateEvent(tags))
 

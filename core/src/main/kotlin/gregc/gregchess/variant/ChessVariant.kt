@@ -2,8 +2,7 @@ package gregc.gregchess.variant
 
 import gregc.gregchess.*
 import gregc.gregchess.board.FEN
-import gregc.gregchess.match.ChessMatch
-import gregc.gregchess.match.ComponentType
+import gregc.gregchess.match.*
 import gregc.gregchess.move.*
 import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.move.trait.*
@@ -95,7 +94,7 @@ open class ChessVariant : NameRegistered {
     }
 
     open fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> = when(piece.type) {
-        PieceType.KING -> kingMovement(piece, board)
+        PieceType.KING -> kingMovement(piece, board, Normal.isChess960(board))
         PieceType.QUEEN -> rays(piece, rotationsOf(1, 1) + rotationsOf(1, 0))
         PieceType.ROOK -> rays(piece, rotationsOf(1, 0))
         PieceType.BISHOP -> rays(piece, rotationsOf(1, 1))
@@ -114,6 +113,24 @@ open class ChessVariant : NameRegistered {
     }
 
     open fun genFEN(chess960: Boolean): FEN = if (!chess960) FEN() else FEN.generateChess960()
+
+    open fun addPGNTags(match: ChessMatch, tags: PGN.GenerateEvent) {
+        val isChess960 = Normal.isChess960(match.board)
+        if (!match.board.initialFEN.isInitial() || isChess960) {
+            tags["SetUp"] = "1"
+            tags["FEN"] = match.board.initialFEN.toString()
+        }
+        val variant = buildList {
+            if (match.variant != Normal)
+                add(match.variant.name.snakeToPascal())
+            if (isChess960)
+                add("Chess960")
+            addAll(match.board.getVariantOptionStrings())
+        }.joinToString(" ")
+
+        if (variant.isNotBlank())
+            tags["Variant"] = variant
+    }
 
     open val pieceTypes: Collection<PieceType>
         get() = PieceType.run { listOf(KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN) }
@@ -148,6 +165,24 @@ open class ChessVariant : NameRegistered {
                 startBlocking.none { it in pin.neededEmpty }
 
     object Normal : ChessVariant() {
+
+        fun isChess960(board: ChessboardView): Boolean {
+            if (board.initialFEN.chess960)
+                return true
+            val whiteKing = board.kingOf(Color.WHITE)
+            val blackKing = board.kingOf(Color.BLACK)
+            val whiteRooks = board.piecesOf(Color.WHITE, PieceType.ROOK).filter { !it.hasMoved }
+            val blackRooks = board.piecesOf(Color.BLACK, PieceType.ROOK).filter { !it.hasMoved }
+            if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != Pos(4, 0))
+                return true
+            if (blackKing != null && !blackKing.hasMoved && blackKing.pos != Pos(4, 7))
+                return true
+            if (whiteRooks.any { it.pos.rank == 0 && it.pos.file !in listOf(0, 7) })
+                return true
+            if (blackRooks.any { it.pos.rank == 7 && it.pos.file !in listOf(0, 7) })
+                return true
+            return false
+        }
 
         @JvmField
         val PROMOTIONS = with(PieceType) { listOf(QUEEN, ROOK, BISHOP, KNIGHT) }
