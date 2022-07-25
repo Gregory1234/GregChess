@@ -16,9 +16,17 @@ class SettingsParserContext(val variant: ChessVariant, val section: Configuratio
 
 typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
+typealias VariantOptionsParser = SettingsParserContext.() -> Long
+
+val defaultVariantOptionsParser: VariantOptionsParser = {
+    val simpleCastling = section.getBoolean("SimpleCastling", false)
+    if (simpleCastling) 1L else 0L
+}
+
 class MatchSettings(
     val name: String,
     val variant: ChessVariant,
+    val variantOptions: Long,
     val components: Collection<Component>
 )
 
@@ -30,14 +38,19 @@ object SettingsManager {
         config.getConfigurationSection("Settings.Presets")?.getKeys(false).orEmpty().map { name ->
             val section = config.getConfigurationSection("Settings.Presets.$name")!!
             val variant = section.getFromRegistry(Registry.VARIANT, "Variant") ?: ChessVariant.Normal
+
+            val context = SettingsParserContext(variant, section, name)
+
+            val variantOptionsParser = BukkitRegistry.VARIANT_OPTIONS_PARSER[variant]
+            val variantOptions = context.variantOptionsParser()
+
             val requestedComponents = variant.requiredComponents + variant.optionalComponents +
                     BukkitRegistry.HOOKED_COMPONENTS.elements
-            val context = SettingsParserContext(variant, section, name)
             val components = requestedComponents.mapNotNull { req ->
                 val f = BukkitRegistry.SETTINGS_PARSER[req]
                 context.f()
             }
-            MatchSettings(name, variant, components)
+            MatchSettings(name, variant, variantOptions, components)
         }
 
 }

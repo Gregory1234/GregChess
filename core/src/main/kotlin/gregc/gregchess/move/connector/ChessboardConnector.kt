@@ -1,7 +1,6 @@
 package gregc.gregchess.move.connector
 
 import gregc.gregchess.*
-import gregc.gregchess.board.ChessVariantOption
 import gregc.gregchess.board.FEN
 import gregc.gregchess.move.Move
 import gregc.gregchess.piece.*
@@ -17,7 +16,6 @@ interface ChessboardView : PieceHolderView<BoardPiece> {
     val initialFEN: FEN
     fun getMoves(pos: Pos): List<Move>
     fun getLegalMoves(pos: Pos): List<Move>
-    operator fun <T : Any> get(option: ChessVariantOption<T>): T
 
     fun getFlags(pos: Pos): Map<ChessFlag, Int>
     operator fun get(pos: Pos, flag: ChessFlag): Int?
@@ -38,6 +36,6 @@ interface ChessboardConnector : PieceHolder<BoardPiece>, ChessboardView, MoveCon
     override fun exists(p: BoardPiece): Boolean = super.exists(p)
     override fun canExist(p: BoardPiece): Boolean = super.canExist(p)
 
-    fun updateMoves(variant: ChessVariant)
+    fun updateMoves(variant: ChessVariant, variantOptions: Long)
 }
 

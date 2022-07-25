@@ -93,8 +93,8 @@ open class ChessVariant : NameRegistered {
             match.stop(color.lostBy(EndReason.TIMEOUT))
     }
 
-    open fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> = when(piece.type) {
-        PieceType.KING -> kingMovement(piece, board, Normal.isChess960(board))
+    open fun getPieceMoves(piece: BoardPiece, board: ChessboardView, variantOptions: Long): List<Move> = when(piece.type) {
+        PieceType.KING -> kingMovement(piece, board, Normal.isChess960(board), variantOptions == 1L)
         PieceType.QUEEN -> rays(piece, rotationsOf(1, 1) + rotationsOf(1, 0))
         PieceType.ROOK -> rays(piece, rotationsOf(1, 0))
         PieceType.BISHOP -> rays(piece, rotationsOf(1, 1))
@@ -125,7 +125,8 @@ open class ChessVariant : NameRegistered {
                 add(match.variant.name.snakeToPascal())
             if (isChess960)
                 add("Chess960")
-            addAll(match.board.getVariantOptionStrings())
+            if (match.variantOptions == 1L)
+                add("SimpleCastling")
         }.joinToString(" ")
 
         if (variant.isNotBlank())

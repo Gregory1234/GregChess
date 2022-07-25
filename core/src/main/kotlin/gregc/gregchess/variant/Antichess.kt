@@ -18,10 +18,10 @@ object Antichess : ChessVariant(), Registering {
     @JvmField
     val PROMOTIONS = Normal.PROMOTIONS + PieceType.KING
 
-    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> = when (piece.type) {
+    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView, variantOptions: Long): List<Move> = when (piece.type) {
         PieceType.PAWN -> pawnMovement(piece).promotions(PROMOTIONS)
-        PieceType.KING -> Normal.getPieceMoves(piece, board).filter { it.castlesTrait == null }
-        else -> Normal.getPieceMoves(piece, board)
+        PieceType.KING -> Normal.getPieceMoves(piece, board, variantOptions).filter { it.castlesTrait == null }
+        else -> Normal.getPieceMoves(piece, board, variantOptions)
     }
 
     override fun getLegality(move: Move, board: ChessboardView): MoveLegality {

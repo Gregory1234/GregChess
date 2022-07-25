@@ -1,6 +1,5 @@
 package gregc.gregchess
 
-import gregc.gregchess.board.ChessVariantOption
 import gregc.gregchess.match.ComponentType
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PieceType
@@ -19,7 +18,6 @@ object GregChessCore {
         ChessVariants.registerCore(module)
         MoveTraitType.registerCore(module)
         PlacedPieceType.registerCore(module)
-        ChessVariantOption.registerCore(module)
         ChessStat.registerCore(module)
     }
 
@@ -27,7 +25,7 @@ object GregChessCore {
     val AUTO_REGISTER = listOf(
         PieceType.AUTO_REGISTER, EndReason.AUTO_REGISTER, ChessFlag.AUTO_REGISTER, ComponentType.AUTO_REGISTER,
         ChessVariants.AUTO_REGISTER, MoveTraitType.AUTO_REGISTER, ChessStat.AUTO_REGISTER,
-        ChessPlayerType.AUTO_REGISTER, PlacedPieceType.AUTO_REGISTER, ChessVariantOption.AUTO_REGISTER,
+        ChessPlayerType.AUTO_REGISTER, PlacedPieceType.AUTO_REGISTER,
     )
 
     fun autoRegister(module: ChessModule) = AutoRegister(module, AUTO_REGISTER)

@@ -2,7 +2,6 @@ package gregc.gregchess.registry
 
 import gregc.gregchess.ChessFlag
 import gregc.gregchess.ChessModule
-import gregc.gregchess.board.ChessVariantOption
 import gregc.gregchess.match.ComponentType
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PieceType
@@ -74,8 +73,6 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
         val PLAYER_TYPE = NameRegistry<ChessPlayerType<*>>("player_type")
         @JvmField
         val PLACED_PIECE_TYPE = NameRegistry<PlacedPieceType<*>>("placed_piece_type")
-        @JvmField
-        val VARIANT_OPTION = NameRegistry<ChessVariantOption<*>>("variant_option")
         @JvmField
         val STAT = NameRegistry<ChessStat<*>>("stat")
     }

@@ -30,19 +30,18 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
 
     private fun registerSettings() {
         BukkitRegistry.SETTINGS_PARSER[ComponentType.CHESSBOARD] = {
-            val simpleCastling = section.getBoolean("SimpleCastling", false)
             when(val name = section.getString("Board")) {
-                null -> Chessboard(variant, simpleCastling = simpleCastling)
-                "normal" -> Chessboard(variant, simpleCastling = simpleCastling)
-                "chess960" -> Chessboard(variant, chess960 = true, simpleCastling = simpleCastling)
+                null -> Chessboard(variant)
+                "normal" -> Chessboard(variant)
+                "chess960" -> Chessboard(variant, chess960 = true)
                 else -> if (name.startsWith("fen ")) try {
-                    Chessboard(variant, FEN.parseFromString(name.drop(4)), simpleCastling = simpleCastling)
+                    Chessboard(variant, FEN.parseFromString(name.drop(4)))
                 } catch (e: FEN.FENFormatException) {
                     logger.warn("Chessboard configuration ${e.fen} is in a wrong format, defaulted to normal: ${e.cause?.message}!")
-                    Chessboard(variant, simpleCastling = simpleCastling)
+                    Chessboard(variant)
                 } else {
                     logger.warn("Invalid chessboard configuration $name, defaulted to normal!")
-                    Chessboard(variant, simpleCastling = simpleCastling)
+                    Chessboard(variant)
                 }
             }
         }

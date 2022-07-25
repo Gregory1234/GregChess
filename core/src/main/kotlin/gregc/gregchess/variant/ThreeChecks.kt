@@ -112,8 +112,8 @@ object ThreeChecks : ChessVariant(), Registering {
     @Register
     val CHECK_COUNTER = ComponentType(CheckCounter::class)
 
-    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> =
-        Normal.getPieceMoves(piece, board).map {
+    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView, variantOptions: Long): List<Move> =
+        Normal.getPieceMoves(piece, board, variantOptions).map {
             it.copy(traits = it.traits + CheckCounterTrait())
         }
 

@@ -141,7 +141,7 @@ object GregChessPlugin : Listener {
                                 } else {
                                     sender.currentSpectatedChessMatch?.minusAssign(sender)
                                     opponent.currentSpectatedChessMatch?.minusAssign(opponent)
-                                    ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), opponent.toChessPlayer())).start()
+                                    ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), opponent.toChessPlayer()), settings.variantOptions).start()
                                 }
                             }
                         }
@@ -155,7 +155,7 @@ object GregChessPlugin : Listener {
                     val settings = sender.openSettingsMenu()
                     if (settings != null) {
                         sender.currentSpectatedChessMatch?.minusAssign(sender)
-                        ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), Stockfish().toPlayer())).start()
+                        ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), Stockfish().toPlayer()), settings.variantOptions).start()
                     }
                 }
             }

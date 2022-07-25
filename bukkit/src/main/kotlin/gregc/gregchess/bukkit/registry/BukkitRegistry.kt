@@ -4,6 +4,7 @@ import gregc.gregchess.AutoRegisterType
 import gregc.gregchess.bukkit.BukkitChessModule
 import gregc.gregchess.bukkit.GregChess
 import gregc.gregchess.bukkit.match.SettingsParser
+import gregc.gregchess.bukkit.match.VariantOptionsParser
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.properties.ScoreboardLayout
 import gregc.gregchess.bukkit.renderer.ArenaManager
@@ -40,6 +41,8 @@ object BukkitRegistry {
     val ARENA_MANAGER = NameRegistry<ArenaManager<*>>("arena_manager")
     @JvmField
     val SCOREBOARD_LAYOUT_PROVIDER = NameRegistry<(Scoreboard) -> ScoreboardLayout>("scoreboard_layout_provider")
+    @JvmField
+    val VARIANT_OPTIONS_PARSER = ConnectedRegistry<_, VariantOptionsParser>("variant_oprions_parser", Registry.VARIANT)
 }
 
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e ->

@@ -72,8 +72,8 @@ object AtomicChess : ChessVariant(), Registering {
     private fun checkingMoves(by: Color, pos: Pos, board: ChessboardView) =
         if (nextToKing(by, pos, board)) emptyList() else Normal.checkingMoves(by, pos, board)
 
-    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> =
-        Normal.getPieceMoves(piece, board).map {
+    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView, variantOptions: Long): List<Move> =
+        Normal.getPieceMoves(piece, board, variantOptions).map {
             if (it.captureTrait != null) it.copy(traits = it.traits + ExplosionTrait()) else it
         }
 

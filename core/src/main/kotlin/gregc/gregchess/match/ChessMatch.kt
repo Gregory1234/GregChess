@@ -33,10 +33,11 @@ class ChessMatch private constructor(
     @SerialName("endTime") private var endTime_: Instant?,
     @SerialName("duration") private var durationCounted: Duration,
     @SerialName("results") private var results_: MatchResults?,
-    val extraInfo: ExtraInfo
+    val extraInfo: ExtraInfo,
+    val variantOptions: Long
 ) {
-    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>, extraInfo: ExtraInfo = ExtraInfo())
-            : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, Duration.ZERO, null, extraInfo)
+    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>, variantOptions: Long, extraInfo: ExtraInfo = ExtraInfo())
+            : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, Duration.ZERO, null, extraInfo, variantOptions)
 
     @Serializable
     data class ExtraInfo(val round: Int = 1, val eventName: String = "Casual match")
@@ -269,9 +270,10 @@ class ChessMatch private constructor(
     private val connectors = mutableMapOf<MoveConnectorType<*>, MoveConnector>()
 
     private inner class MatchMoveEnvironment : MoveEnvironment {
-        override fun updateMoves() = this@ChessMatch.board.updateMoves(variant) // TODO: make this into an event?
+        override fun updateMoves() = this@ChessMatch.board.updateMoves(variant, variantOptions)
         override fun callEvent(e: ChessEvent) = this@ChessMatch.callEvent(e)
         override val variant: ChessVariant get() = this@ChessMatch.variant
+        override val variantOptions: Long get() = this@ChessMatch.variantOptions
         @Suppress("UNCHECKED_CAST")
         override fun <T : MoveConnector> get(type: MoveConnectorType<T>): T = connectors[type] as T
         override val holders: Map<PlacedPieceType<*>, PieceHolder<*>> get() = buildMap {
@@ -281,8 +283,8 @@ class ChessMatch private constructor(
         }
     }
 
-    private class FakeMoveEnvironment(override val variant: ChessVariant, val connectors: Map<MoveConnectorType<*>, MoveConnector>) : MoveEnvironment {
-        override fun updateMoves() = board.updateMoves(variant)
+    private class FakeMoveEnvironment(override val variant: ChessVariant, override val variantOptions: Long, val connectors: Map<MoveConnectorType<*>, MoveConnector>) : MoveEnvironment {
+        override fun updateMoves() = board.updateMoves(variant, variantOptions)
         override fun callEvent(e: ChessEvent) {}
         @Suppress("UNCHECKED_CAST")
         override fun <T : MoveConnector> get(type: MoveConnectorType<T>): T = connectors[type] as T
@@ -311,7 +313,7 @@ class ChessMatch private constructor(
     fun resolveName(vararg move: Move) = with(MultiExceptionContext()) {
         val connectors = mutableMapOf<MoveConnectorType<*>, MoveConnector>()
         callEvent(AddFakeMoveConnectorsEvent(connectors))
-        val env = FakeMoveEnvironment(variant, connectors)
+        val env = FakeMoveEnvironment(variant, variantOptions, connectors)
         for (m in move) {
             exec {
                 m.execute(env)

@@ -15,12 +15,12 @@ import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
 import gregc.gregchess.variant.ChessVariant
 
-open class VariantTests(val variant: ChessVariant, val extraComponents: Collection<Component> = emptyList()) {
+open class VariantTests(val variant: ChessVariant, val variantOptions: Long, val extraComponents: Collection<Component> = emptyList()) {
     private val playerA = GregChess.TEST_PLAYER.of("A")
     private val playerB = GregChess.TEST_PLAYER.of("B")
 
     protected fun mkMatch(fen: FEN) =
-        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, fen)) + extraComponents, byColor(playerA, playerB)).start()
+        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, fen)) + extraComponents, byColor(playerA, playerB), 0).start()
 
     protected fun Chessboard.getMove(from: Pos, to: Pos) = get(from)?.getLegalMoves(this)?.singleOrNull { it.display == to }
 
@@ -36,12 +36,12 @@ open class VariantTests(val variant: ChessVariant, val extraComponents: Collecti
 
     protected fun Chessboard.setNotMoved(pos: Pos) {
         get(pos)?.copy(hasMoved = false)?.let(::plusAssign)
-        updateMoves(variant)
+        updateMoves(variant, variantOptions)
     }
 
     protected fun Chessboard.addEnPassantFlag(pos: Pos) {
         set(pos, ChessFlag.EN_PASSANT, 1)
-        updateMoves(variant)
+        updateMoves(variant, variantOptions)
     }
 
     protected fun Assert<Move>.hasTraitsExactly(vararg types: MoveTraitType<*>) =

@@ -10,6 +10,7 @@ interface MoveEnvironment {
     fun updateMoves()
     fun callEvent(e: ChessEvent)
     val variant: ChessVariant
+    val variantOptions: Long
     operator fun <T: MoveConnector> get(type: MoveConnectorType<T>): T
     val holders: Map<PlacedPieceType<*>, PieceHolder<*>>
 }

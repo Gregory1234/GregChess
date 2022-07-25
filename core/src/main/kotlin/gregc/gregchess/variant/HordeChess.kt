@@ -16,9 +16,9 @@ object HordeChess : ChessVariant() {
         Color.BLACK -> piece.pos.rank >= 6
     }
 
-    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView): List<Move> = when (piece.type) {
+    override fun getPieceMoves(piece: BoardPiece, board: ChessboardView, variantOptions: Long): List<Move> = when (piece.type) {
         PieceType.PAWN -> pawnMovement(piece){ pawnCanDouble(it) }.promotions(Normal.PROMOTIONS)
-        else -> Normal.getPieceMoves(piece, board)
+        else -> Normal.getPieceMoves(piece, board, variantOptions)
     }
 
     override fun getLegality(move: Move, board: ChessboardView): MoveLegality = when(move.main.color) {

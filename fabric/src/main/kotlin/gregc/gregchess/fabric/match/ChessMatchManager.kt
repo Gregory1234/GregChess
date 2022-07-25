@@ -64,7 +64,7 @@ object ChessMatchManager {
 
     fun settings(v: ChessVariant, boardState: Map<Pos, Piece>, r: FabricRenderer): Collection<Component> = buildList {
         this += Chessboard(v, FEN.fromPieces(boardState))
-        this += MatchController()
+        this += MatchController
         this += r
     }
 

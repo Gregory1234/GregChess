@@ -1,7 +1,6 @@
 package gregc.gregchess.move
 
 import gregc.gregchess.*
-import gregc.gregchess.board.ChessVariantOption
 import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
@@ -32,7 +31,7 @@ fun rays(piece: BoardPiece, dirs: Collection<Dir>) =
         }
     }
 
-fun kingMovement(piece: BoardPiece, board: ChessboardView, chess960: Boolean): List<Move> {
+fun kingMovement(piece: BoardPiece, board: ChessboardView, chess960: Boolean, simpleCastling: Boolean): List<Move> {
 
     fun Collection<Int>.toPosSet(rank: Int) = map { Pos(it, rank) }.toSet()
 
@@ -82,7 +81,7 @@ fun kingMovement(piece: BoardPiece, board: ChessboardView, chess960: Boolean): L
                 if (rook.pos.rank == piece.pos.rank && !rook.hasMoved) {
                     val side = if (rook.pos.file < piece.pos.file) BoardSide.QUEENSIDE else BoardSide.KINGSIDE
                     add(
-                        if (board[ChessVariantOption.SIMPLE_CASTLING]) simplifiedCastles(piece, rook, side)
+                        if (simpleCastling) simplifiedCastles(piece, rook, side)
                         else normalCastles(piece, rook, side, chess960)
                     )
                 }

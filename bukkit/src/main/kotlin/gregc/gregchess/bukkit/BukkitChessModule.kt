@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
+import gregc.gregchess.bukkit.match.defaultVariantOptionsParser
 import gregc.gregchess.bukkit.move.defaultLocalMoveFormatter
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.registry.BUKKIT_AUTO_REGISTER
@@ -38,6 +39,7 @@ abstract class BukkitChessModule(val plugin: Plugin) : ChessModule(plugin.name, 
         BukkitRegistry.SETTINGS_PARSER[this].completeWith { type -> { type.cl.objectInstance ?: type.cl.constructors.first { it.parameters.isEmpty() }.call() } }
         BukkitRegistry.LOCAL_MOVE_FORMATTER[this].completeWith { defaultLocalMoveFormatter }
         BukkitRegistry.FLOOR_RENDERER[this].completeWith { simpleFloorRenderer() }
+        BukkitRegistry.VARIANT_OPTIONS_PARSER[this].completeWith { defaultVariantOptionsParser }
     }
 
     final override fun finish() {

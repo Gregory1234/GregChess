@@ -2,7 +2,6 @@ package gregc.gregchess.chess
 
 import assertk.assertThat
 import assertk.assertions.*
-import gregc.gregchess.board.AddVariantOptionsEvent
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.byColor
 import gregc.gregchess.match.*
@@ -22,7 +21,7 @@ class ChessMatchTests {
     private val playerB = GregChess.TEST_PLAYER.of("B")
 
     private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, extra: Collection<Component> = emptyList()) =
-        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant)) + extra, byColor(playerA, playerB))
+        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant)) + extra, byColor(playerA, playerB), 0)
 
     @BeforeAll
     fun setup() {
@@ -107,7 +106,6 @@ class ChessMatchTests {
             excludeRecords {
                 c.type
                 c.handleEvent(g, match { it is PieceMoveEvent })
-                c.handleEvent(g, match { it is AddVariantOptionsEvent })
                 c.handleEvent(g, match { it is AddMoveConnectorsEvent })
             }
             verifySequence {

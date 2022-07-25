@@ -12,7 +12,7 @@ import gregc.gregchess.variant.ChessVariant
 import org.junit.jupiter.api.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class NormalVariantTests : VariantTests(ChessVariant.Normal) {
+class NormalVariantTests : VariantTests(ChessVariant.Normal, 0) {
     @BeforeAll
     fun setup() {
         setupRegistry()
