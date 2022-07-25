@@ -12,8 +12,7 @@ data class FEN(
     val castlingRights: ByColor<List<Int>> = byColor(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: Int = 0,
-    val fullmoveCounter: Int = 1,
-    val chess960: Boolean = false
+    val fullmoveCounter: Int = 1
 ) {
 
     class FENFormatException(val fen: String, cause: Throwable? = null) : IllegalArgumentException(fen, cause)
@@ -52,6 +51,8 @@ data class FEN(
         append(" ")
         append(currentTurn.char)
         append(" ")
+        val chess960 = isChess960ForCastleRights()
+        if ((castlingRights.white + castlingRights.black).isEmpty()) append("-")
         append(castlingRightsToString(chess960, 'A', castlingRights.white))
         append(castlingRightsToString(chess960, 'a', castlingRights.black))
         append(" ")
@@ -67,10 +68,13 @@ data class FEN(
         append(" ")
         append(currentTurn.char)
         append(" ")
+        val chess960 = isChess960ForCastleRights()
         append(castlingRightsToString(chess960, 'A', castlingRights.white))
         append(castlingRightsToString(chess960, 'a', castlingRights.black))
         append(enPassantSquare ?: "-")
     }
+
+    fun isChess960ForCastleRights(): Boolean = (castlingRights.white+castlingRights.black).any { it != 0 && it != 7 }
 
     fun isInitial() = this == FEN()
 
@@ -88,26 +92,6 @@ data class FEN(
                 in 'a'..'h' -> c - 'a'
                 else -> throw IllegalArgumentException("'$s' is not a valid castling ability character")
             }
-        }
-
-        private fun detectChess960(board: String, castling: String): Boolean {
-            if (castling.any { it !in "KQkq" })
-                return true
-            val whiteRow = board.split("/").last()
-            val blackRow = board.split("/").first()
-            if ("KQ".any { it in castling } && whiteRow.takeWhile { it != 'K' }
-                    .sumOf { if (it.isDigit()) it.digitToInt() else 1 } != 4) return true
-            if ("kq".any { it in castling } && blackRow.takeWhile { it != 'k' }
-                    .sumOf { if (it.isDigit()) it.digitToInt() else 1 } != 4) return true
-            for (c in castling) {
-                when (c) {
-                    'K' -> if (!whiteRow.endsWith('R')) return true
-                    'Q' -> if (!whiteRow.startsWith('R')) return true
-                    'k' -> if (!blackRow.endsWith('r')) return true
-                    'q' -> if (!blackRow.startsWith('r')) return true
-                }
-            }
-            return false
         }
 
         private operator fun <E> List<E>.component6(): E = this[5]
@@ -131,8 +115,7 @@ data class FEN(
                 ),
                 if (enPassant == "-") null else Pos.parseFromString(enPassant),
                 halfmove.toInt(),
-                fullmove.toInt(),
-                detectChess960(board, castling)
+                fullmove.toInt()
             )
         } catch (e : IllegalArgumentException) {
             throw FENFormatException(fen, e)
@@ -154,8 +137,7 @@ data class FEN(
             val pawns = PieceType.PAWN.char.toString().repeat(8)
             return FEN(
                 "$row/$pawns/8/8/8/8/${pawns.uppercase()}/${row.uppercase()}",
-                castlingRights = byColor(listOf(r1, r2)),
-                chess960 = true
+                castlingRights = byColor(listOf(r1, r2))
             )
         }
 

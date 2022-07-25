@@ -62,8 +62,8 @@ object ChessMatchManager {
 
     fun clear() = loadedMatches.clear()
 
-    fun settings(v: ChessVariant, boardState: Map<Pos, Piece>, r: FabricRenderer): Collection<Component> = buildList {
-        this += Chessboard(v, FEN.fromPieces(boardState))
+    fun settings(v: ChessVariant, variantOptions: Long, boardState: Map<Pos, Piece>, r: FabricRenderer): Collection<Component> = buildList {
+        this += Chessboard(v, variantOptions, FEN.fromPieces(boardState))
         this += MatchController
         this += r
     }

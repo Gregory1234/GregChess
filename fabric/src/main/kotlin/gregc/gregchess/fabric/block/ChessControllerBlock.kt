@@ -146,7 +146,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         if (currentMatch != null) return
         currentMatchUUID = ChessMatch(
             FabricChessEnvironment, ChessVariant.Normal,
-            ChessMatchManager.settings(ChessVariant.Normal, getBoardState(), FabricRenderer(this)),
+            ChessMatchManager.settings(ChessVariant.Normal, 0, getBoardState(), FabricRenderer(this)),
             byColor(whitePlayer.gregchess, blackPlayer.gregchess), 0
         ).start().uuid
     }

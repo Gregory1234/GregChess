@@ -20,8 +20,8 @@ class ChessMatchTests {
     private val playerA = GregChess.TEST_PLAYER.of("A")
     private val playerB = GregChess.TEST_PLAYER.of("B")
 
-    private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, extra: Collection<Component> = emptyList()) =
-        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant)) + extra, byColor(playerA, playerB), 0)
+    private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, variantOptions: Long = 0, extra: Collection<Component> = emptyList()) =
+        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, variantOptions)) + extra, byColor(playerA, playerB), variantOptions)
 
     @BeforeAll
     fun setup() {

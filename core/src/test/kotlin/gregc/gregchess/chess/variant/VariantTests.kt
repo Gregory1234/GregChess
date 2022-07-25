@@ -20,7 +20,7 @@ open class VariantTests(val variant: ChessVariant, val variantOptions: Long, val
     private val playerB = GregChess.TEST_PLAYER.of("B")
 
     protected fun mkMatch(fen: FEN) =
-        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, fen)) + extraComponents, byColor(playerA, playerB), 0).start()
+        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, variantOptions, fen)) + extraComponents, byColor(playerA, playerB), 0).start()
 
     protected fun Chessboard.getMove(from: Pos, to: Pos) = get(from)?.getLegalMoves(this)?.singleOrNull { it.display == to }
 

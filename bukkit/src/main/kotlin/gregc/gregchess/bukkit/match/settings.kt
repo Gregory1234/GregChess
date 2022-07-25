@@ -12,15 +12,16 @@ import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 
-class SettingsParserContext(val variant: ChessVariant, val section: ConfigurationSection, val presetName: String)
+class SettingsParserContext(val variant: ChessVariant, val variantOptions: Long, val section: ConfigurationSection, val presetName: String)
 
 typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
-typealias VariantOptionsParser = SettingsParserContext.() -> Long
+typealias VariantOptionsParser = ConfigurationSection.() -> Long
 
 val defaultVariantOptionsParser: VariantOptionsParser = {
-    val simpleCastling = section.getBoolean("SimpleCastling", false)
-    if (simpleCastling) 1L else 0L
+    val simpleCastling = getBoolean("SimpleCastling", false)
+    val chess960 = getBoolean("Chess960", false)
+    if (chess960 && simpleCastling) 2L else if (chess960) 1L else 0L
 }
 
 class MatchSettings(
@@ -39,11 +40,10 @@ object SettingsManager {
             val section = config.getConfigurationSection("Settings.Presets.$name")!!
             val variant = section.getFromRegistry(Registry.VARIANT, "Variant") ?: ChessVariant.Normal
 
-            val context = SettingsParserContext(variant, section, name)
-
             val variantOptionsParser = BukkitRegistry.VARIANT_OPTIONS_PARSER[variant]
-            val variantOptions = context.variantOptionsParser()
+            val variantOptions = section.variantOptionsParser()
 
+            val context = SettingsParserContext(variant, variantOptions, section, name)
             val requestedComponents = variant.requiredComponents + variant.optionalComponents +
                     BukkitRegistry.HOOKED_COMPONENTS.elements
             val components = requestedComponents.mapNotNull { req ->

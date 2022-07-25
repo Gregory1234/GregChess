@@ -31,17 +31,17 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     private fun registerSettings() {
         BukkitRegistry.SETTINGS_PARSER[ComponentType.CHESSBOARD] = {
             when(val name = section.getString("Board")) {
-                null -> Chessboard(variant)
-                "normal" -> Chessboard(variant)
-                "chess960" -> Chessboard(variant, chess960 = true)
+                null -> Chessboard(variant, variantOptions)
+                "normal" -> Chessboard(variant, variantOptions)
                 else -> if (name.startsWith("fen ")) try {
-                    Chessboard(variant, FEN.parseFromString(name.drop(4)))
+                    val fen = FEN.parseFromString(name.drop(4))
+                    Chessboard(variant, variantOptions, fen)
                 } catch (e: FEN.FENFormatException) {
                     logger.warn("Chessboard configuration ${e.fen} is in a wrong format, defaulted to normal: ${e.cause?.message}!")
-                    Chessboard(variant)
+                    Chessboard(variant, variantOptions)
                 } else {
                     logger.warn("Invalid chessboard configuration $name, defaulted to normal!")
-                    Chessboard(variant)
+                    Chessboard(variant, variantOptions)
                 }
             }
         }

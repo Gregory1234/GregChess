@@ -46,8 +46,8 @@ object HordeChess : ChessVariant() {
 
     override fun timeout(match: ChessMatch, color: Color) = match.stop(color.lostBy(EndReason.TIMEOUT))
 
-    override fun genFEN(chess960: Boolean): FEN {
-        val base = Normal.genFEN(chess960)
+    override fun genFEN(variantOptions: Long): FEN {
+        val base = Normal.genFEN(variantOptions)
         val replacement = "///1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP".split("/")
         val state = base.boardState.split("/").mapIndexed { i, r -> replacement[i].ifEmpty { r } }.joinToString("/")
         return base.copy(boardState = state, castlingRights = base.castlingRights.copy(black = emptyList()))

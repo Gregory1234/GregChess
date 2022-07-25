@@ -31,7 +31,11 @@ fun rays(piece: BoardPiece, dirs: Collection<Dir>) =
         }
     }
 
-fun kingMovement(piece: BoardPiece, board: ChessboardView, chess960: Boolean, simpleCastling: Boolean): List<Move> {
+enum class CastlingStyle(val chess960: Boolean, val simpleCastling: Boolean) {
+    NORMAL(false, false), CHESS960(true, false), SIMPLE(true, true)
+}
+
+fun kingMovement(piece: BoardPiece, board: ChessboardView, style: CastlingStyle): List<Move> {
 
     fun Collection<Int>.toPosSet(rank: Int) = map { Pos(it, rank) }.toSet()
 
@@ -81,8 +85,8 @@ fun kingMovement(piece: BoardPiece, board: ChessboardView, chess960: Boolean, si
                 if (rook.pos.rank == piece.pos.rank && !rook.hasMoved) {
                     val side = if (rook.pos.file < piece.pos.file) BoardSide.QUEENSIDE else BoardSide.KINGSIDE
                     add(
-                        if (simpleCastling) simplifiedCastles(piece, rook, side)
-                        else normalCastles(piece, rook, side, chess960)
+                        if (style.simpleCastling) simplifiedCastles(piece, rook, side)
+                        else normalCastles(piece, rook, side, style.chess960)
                     )
                 }
             }

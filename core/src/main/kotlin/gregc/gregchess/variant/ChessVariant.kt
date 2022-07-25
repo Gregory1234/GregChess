@@ -94,7 +94,7 @@ open class ChessVariant : NameRegistered {
     }
 
     open fun getPieceMoves(piece: BoardPiece, board: ChessboardView, variantOptions: Long): List<Move> = when(piece.type) {
-        PieceType.KING -> kingMovement(piece, board, Normal.isChess960(board), variantOptions == 1L)
+        PieceType.KING -> kingMovement(piece, board, Normal.variantOptionsToCastlingStyle(variantOptions))
         PieceType.QUEEN -> rays(piece, rotationsOf(1, 1) + rotationsOf(1, 0))
         PieceType.ROOK -> rays(piece, rotationsOf(1, 0))
         PieceType.BISHOP -> rays(piece, rotationsOf(1, 1))
@@ -112,20 +112,21 @@ open class ChessVariant : NameRegistered {
         else -> false
     }
 
-    open fun genFEN(chess960: Boolean): FEN = if (!chess960) FEN() else FEN.generateChess960()
+    open fun genFEN(variantOptions: Long): FEN =
+        if (!Normal.variantOptionsToCastlingStyle(variantOptions).chess960) FEN() else FEN.generateChess960()
 
     open fun addPGNTags(match: ChessMatch, tags: PGN.GenerateEvent) {
-        val isChess960 = Normal.isChess960(match.board)
-        if (!match.board.initialFEN.isInitial() || isChess960) {
+        val castlingStyle = Normal.variantOptionsToCastlingStyle(match.variantOptions)
+        if (!match.board.initialFEN.isInitial() || castlingStyle.chess960) {
             tags["SetUp"] = "1"
             tags["FEN"] = match.board.initialFEN.toString()
         }
         val variant = buildList {
             if (match.variant != Normal)
                 add(match.variant.name.snakeToPascal())
-            if (isChess960)
+            if (castlingStyle.chess960)
                 add("Chess960")
-            if (match.variantOptions == 1L)
+            if (castlingStyle.simpleCastling)
                 add("SimpleCastling")
         }.joinToString(" ")
 
@@ -167,24 +168,6 @@ open class ChessVariant : NameRegistered {
 
     object Normal : ChessVariant() {
 
-        fun isChess960(board: ChessboardView): Boolean {
-            if (board.initialFEN.chess960)
-                return true
-            val whiteKing = board.kingOf(Color.WHITE)
-            val blackKing = board.kingOf(Color.BLACK)
-            val whiteRooks = board.piecesOf(Color.WHITE, PieceType.ROOK).filter { !it.hasMoved }
-            val blackRooks = board.piecesOf(Color.BLACK, PieceType.ROOK).filter { !it.hasMoved }
-            if (whiteKing != null && !whiteKing.hasMoved && whiteKing.pos != Pos(4, 0))
-                return true
-            if (blackKing != null && !blackKing.hasMoved && blackKing.pos != Pos(4, 7))
-                return true
-            if (whiteRooks.any { it.pos.rank == 0 && it.pos.file !in listOf(0, 7) })
-                return true
-            if (blackRooks.any { it.pos.rank == 7 && it.pos.file !in listOf(0, 7) })
-                return true
-            return false
-        }
-
         @JvmField
         val PROMOTIONS = with(PieceType) { listOf(QUEEN, ROOK, BISHOP, KNIGHT) }
 
@@ -217,6 +200,13 @@ open class ChessVariant : NameRegistered {
             }
 
             return true
+        }
+
+        fun variantOptionsToCastlingStyle(variantOptions: Long): CastlingStyle = when(variantOptions) {
+            0L -> CastlingStyle.NORMAL
+            1L -> CastlingStyle.CHESS960
+            2L -> CastlingStyle.SIMPLE
+            else -> throw IllegalArgumentException(variantOptions.toString())
         }
 
     }

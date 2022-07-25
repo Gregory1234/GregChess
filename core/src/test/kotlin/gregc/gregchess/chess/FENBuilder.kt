@@ -11,7 +11,6 @@ class FENBuilder {
     var enPassantSquare: Pos? = null
     var halfmoveClock: Int = 0
     var fullmoveCounter: Int = 1
-    var chess960: Boolean = false
 
     val boardState get() = FEN.boardStateFromPieces(pieces)
 
@@ -19,7 +18,7 @@ class FENBuilder {
         pieces[pos] = piece
     }
 
-    fun build(): FEN = FEN(boardState, currentTurn, castlingRights, enPassantSquare, halfmoveClock, fullmoveCounter, chess960)
+    fun build(): FEN = FEN(boardState, currentTurn, castlingRights, enPassantSquare, halfmoveClock, fullmoveCounter)
 }
 
 fun fen(builder: FENBuilder.() -> Unit) = FENBuilder().apply(builder).build()

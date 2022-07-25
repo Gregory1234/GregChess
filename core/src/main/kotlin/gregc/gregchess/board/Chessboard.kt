@@ -103,8 +103,8 @@ class Chessboard private constructor (
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf()
 ) : Component, ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces_, counters) {
     private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toSquares(variant))
-    constructor(variant: ChessVariant, fen: FEN? = null, chess960: Boolean = false) :
-            this(variant, fen ?: variant.genFEN(chess960))
+    constructor(variant: ChessVariant, variantOptions: Long, fen: FEN? = null) :
+            this(variant, fen ?: variant.genFEN(variantOptions))
 
     override val type get() = ComponentType.CHESSBOARD
 
