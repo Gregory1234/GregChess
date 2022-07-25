@@ -253,7 +253,6 @@ class Chessboard private constructor (
         }
     }
 
-    // TODO: add a way of creating this without a Chessboard instance
     private class FakeChessboardConnector(override val initialFEN: FEN, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters)
         : ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters)
 
@@ -301,6 +300,12 @@ class Chessboard private constructor (
                     }
             }
         }
+
+        private fun createFakeConnector(variant: ChessVariant, fen: FEN): ChessboardConnector =
+            FakeChessboardConnector(fen, fen.toSquares(variant), mutableListOf(), BoardCounters(fen.halfmoveClock, fen.fullmoveCounter, fen.currentTurn))
+
+        fun createFakeConnector(variant: ChessVariant, variantOptions: Long, fen: FEN? = null): ChessboardConnector =
+            createFakeConnector(variant, fen ?: variant.genFEN(variantOptions))
 
     }
 }
