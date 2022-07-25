@@ -1,6 +1,7 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.*
+import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.match.*
 import gregc.gregchess.move.*
@@ -63,7 +64,7 @@ open class ChessVariant : NameRegistered {
         return king != null && isInCheck(king, board)
     }
 
-    open fun checkForMatchEnd(match: ChessMatch) = with(match.board) {
+    open fun checkForMatchEnd(match: ChessMatch) = with(match.board) { // TODO: return EndReason instead of stopping directly
         if (piecesOf(!match.board.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
             if (isInCheck(this, !match.board.currentTurn))
                 match.stop(match.board.currentTurn.wonBy(EndReason.CHECKMATE))
@@ -132,6 +133,18 @@ open class ChessVariant : NameRegistered {
 
         if (variant.isNotBlank())
             tags["Variant"] = variant
+    }
+
+    open fun validateFEN(fen: FEN, variantOptions: Long) {
+        val castlingStyle = Normal.variantOptionsToCastlingStyle(variantOptions)
+        if (!castlingStyle.chess960)
+            check(!fen.isChess960ForCastleRights())
+        val pieces = fen.toPieces(this)
+        check(pieces.count { it.value.type == PieceType.KING && it.value.color == Color.WHITE } == 1)
+        check(pieces.count { it.value.type == PieceType.KING && it.value.color == Color.BLACK } == 1)
+        val fakeBoard = Chessboard.createFakeConnector(this, variantOptions, fen)
+        fakeBoard.updateMoves(this, variantOptions)
+        check(!isInCheck(fakeBoard, !fen.currentTurn))
     }
 
     open val pieceTypes: Collection<PieceType>

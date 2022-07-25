@@ -104,7 +104,7 @@ class Chessboard private constructor (
 ) : Component, ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces_, counters) {
     private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toSquares(variant))
     constructor(variant: ChessVariant, variantOptions: Long, fen: FEN? = null) :
-            this(variant, fen ?: variant.genFEN(variantOptions))
+            this(variant, (fen ?: variant.genFEN(variantOptions)).also { variant.validateFEN(it, variantOptions) })
 
     override val type get() = ComponentType.CHESSBOARD
 
@@ -179,6 +179,7 @@ class Chessboard private constructor (
     }
 
     fun setFromFEN(match: ChessMatch, fen: FEN) {
+        match.variant.validateFEN(fen, match.variantOptions)
         capturedPieces.asReversed().forEach { clear(match, it) }
         squares.values.forEach { it.empty(match, this) }
         fen.forEachSquare(match.variant) { p -> this += p }

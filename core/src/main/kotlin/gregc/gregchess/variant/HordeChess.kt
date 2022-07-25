@@ -1,6 +1,7 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.Color
+import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
@@ -51,5 +52,16 @@ object HordeChess : ChessVariant() {
         val replacement = "///1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP".split("/")
         val state = base.boardState.split("/").mapIndexed { i, r -> replacement[i].ifEmpty { r } }.joinToString("/")
         return base.copy(boardState = state, castlingRights = base.castlingRights.copy(black = emptyList()))
+    }
+
+    override fun validateFEN(fen: FEN, variantOptions: Long) {
+        val castlingStyle = Normal.variantOptionsToCastlingStyle(variantOptions)
+        if (!castlingStyle.chess960)
+            check(!fen.isChess960ForCastleRights())
+        val pieces = fen.toPieces(this)
+        check(pieces.count { it.value.type == PieceType.KING && it.value.color == Color.BLACK } == 1)
+        val fakeBoard = Chessboard.createFakeConnector(this, variantOptions, fen)
+        fakeBoard.updateMoves(this, variantOptions)
+        check(!isInCheck(fakeBoard, !fen.currentTurn))
     }
 }

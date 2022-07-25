@@ -1,6 +1,7 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.*
+import gregc.gregchess.board.FEN
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
 import gregc.gregchess.move.connector.ChessboardView
@@ -55,4 +56,7 @@ object Antichess : ChessVariant(), Registering {
     }
 
     override fun timeout(match: ChessMatch, color: Color) = match.stop(color.wonBy(EndReason.TIMEOUT))
+
+    override fun validateFEN(fen: FEN, variantOptions: Long) {
+    }
 }

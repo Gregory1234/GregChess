@@ -1,6 +1,7 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.Color
+import gregc.gregchess.board.FEN
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.connector.ChessboardView
@@ -23,5 +24,11 @@ object CaptureAll : ChessVariant() {
 
         checkForRepetition(match)
         checkForFiftyMoveRule(match)
+    }
+
+    override fun validateFEN(fen: FEN, variantOptions: Long) {
+        val castlingStyle = Normal.variantOptionsToCastlingStyle(variantOptions)
+        if (!castlingStyle.chess960)
+            check(!fen.isChess960ForCastleRights())
     }
 }
