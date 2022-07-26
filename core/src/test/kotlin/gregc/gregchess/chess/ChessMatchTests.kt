@@ -47,7 +47,7 @@ class ChessMatchTests {
                 c.type
             }
             verifySequence {
-                c.init(g)
+                c.init(g, any())
             }
         }
 
@@ -105,13 +105,13 @@ class ChessMatchTests {
             g.start()
             excludeRecords {
                 c.type
-                c.handleEvent(g, match { it is PieceMoveEvent })
-                c.handleEvent(g, match { it is AddMoveConnectorsEvent })
+                c.handleEvent(match { it is PieceMoveEvent })
+                c.handleEvent(match { it is AddMoveConnectorsEvent })
             }
             verifySequence {
-                c.handleEvent(g, ChessBaseEvent.START)
-                c.handleEvent(g, ChessBaseEvent.RUNNING)
-                c.handleEvent(g, TurnEvent.START)
+                c.handleEvent(ChessBaseEvent.START)
+                c.handleEvent(ChessBaseEvent.RUNNING)
+                c.handleEvent(TurnEvent.START)
             }
         }
 
@@ -173,8 +173,8 @@ class ChessMatchTests {
                 c.type
             }
             verifySequence {
-                c.handleEvent(g, ChessBaseEvent.STOP)
-                c.handleEvent(g, ChessBaseEvent.CLEAR)
+                c.handleEvent(ChessBaseEvent.STOP)
+                c.handleEvent(ChessBaseEvent.CLEAR)
             }
         }
 

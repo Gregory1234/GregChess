@@ -1,8 +1,7 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.*
-import gregc.gregchess.match.ChessEvent
-import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.*
 import gregc.gregchess.move.*
 import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.move.connector.board
@@ -13,7 +12,12 @@ import kotlinx.serialization.Serializable
 
 object AtomicChess : ChessVariant(), Registering {
 
-    class ExplosionEvent(val pos: Pos) : ChessEvent
+    @JvmField
+    val EXPLOSION_EVENT = ChessEventType<ExplosionEvent>()
+
+    class ExplosionEvent(val pos: Pos) : ChessEvent {
+        override val type get() = EXPLOSION_EVENT
+    }
 
     @Serializable
     class ExplosionTrait : MoveTrait {

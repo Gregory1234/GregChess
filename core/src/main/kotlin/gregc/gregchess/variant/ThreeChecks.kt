@@ -32,6 +32,15 @@ object ThreeChecks : ChessVariant(), Registering {
     ) : Component, CheckCounterConnector {
         constructor(limit: Int) : this(limit, mutableByColor(0))
 
+        override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+            eventManager.registerEvent(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
+                e[CHECK_COUNTER_CONNECTOR] = this
+            }
+            eventManager.registerEvent(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
+                e[CHECK_COUNTER_CONNECTOR] = FakeCheckCounterConnector(limit, checks_)
+            }
+        }
+
         override val type get() = CHECK_COUNTER
 
         override fun registerCheck(color: Color) {
@@ -50,11 +59,6 @@ object ThreeChecks : ChessVariant(), Registering {
 
         override fun get(color: Color) = checks_[color]
 
-        @ChessEventHandler
-        fun addMoveConnectors(match: ChessMatch, e: AddMoveConnectorsEvent) {
-            e[CHECK_COUNTER_CONNECTOR] = this
-        }
-
         private class FakeCheckCounterConnector(override val limit: Int, private val checks_: MutableByColor<Int>): CheckCounterConnector {
             override fun registerCheck(color: Color) {
                 checks_[color]++
@@ -65,11 +69,6 @@ object ThreeChecks : ChessVariant(), Registering {
             }
 
             override fun get(color: Color) = checks_[color]
-        }
-
-        @ChessEventHandler
-        fun addFakeMoveConnectors(match: ChessMatch, e: AddFakeMoveConnectorsEvent) {
-            e[CHECK_COUNTER_CONNECTOR] = FakeCheckCounterConnector(limit, checks_)
         }
     }
 

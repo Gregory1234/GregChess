@@ -2,6 +2,7 @@ package gregc.gregchess.move.connector
 
 import gregc.gregchess.Color
 import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.match.ChessEventType
 import gregc.gregchess.piece.*
 
 interface PieceHolderView<P : PlacedPiece> {
@@ -20,6 +21,8 @@ interface PieceHolder<P : PlacedPiece> : PieceHolderView<P> {
 
 class PieceMoveEvent(val moves: List<Pair<PlacedPiece?, PlacedPiece?>>) : ChessEvent {
     constructor(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) : this(moves.filterNotNull())
+
+    override val type get() = ChessEventType.PIECE_MOVE
 }
 
 class PieceDoesNotExistException(val piece: PlacedPiece) : IllegalStateException(piece.toString())

@@ -7,7 +7,6 @@ import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.player.forEachReal
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
-import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
@@ -35,22 +34,29 @@ class ScoreboardManager : Component {
     @Transient
     private val layout: ScoreboardLayout = config.getFromRegistry(BukkitRegistry.SCOREBOARD_LAYOUT_PROVIDER, "Scoreboard.Layout")!!(scoreboard)
 
-    @ChessEventHandler
-    fun handleEvents(match: ChessMatch, e: ChessBaseEvent) {
-        if (e == ChessBaseEvent.UPDATE)
-            update()
-    }
-
-    @ChessEventHandler
-    fun onBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
-        if (e == ChessBaseEvent.START || e == ChessBaseEvent.SYNC) start(match)
-        else if (e == ChessBaseEvent.STOP) update()
-        else if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) stop()
-    }
-
-    @ChessEventHandler
-    fun resetPlayer(match: ChessMatch, e: ResetPlayerEvent) {
-        giveScoreboard(e.player)
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEvent(ChessEventType.BASE) {
+            when (it) {
+                ChessBaseEvent.UPDATE -> update()
+                ChessBaseEvent.START, ChessBaseEvent.SYNC -> start(match)
+                ChessBaseEvent.STOP -> update()
+                ChessBaseEvent.CLEAR, ChessBaseEvent.PANIC -> stop()
+                else -> {}
+            }
+        }
+        eventManager.registerEventR(BukkitChessEventType.RESET_PLAYER) { giveScoreboard(player) }
+        eventManager.registerEventR(BukkitChessEventType.PLAYER) {
+            when(dir) {
+                PlayerDirection.JOIN -> giveScoreboard(player)
+                PlayerDirection.LEAVE -> player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
+            }
+        }
+        eventManager.registerEventR(BukkitChessEventType.SPECTATOR) {
+            when(dir) {
+                PlayerDirection.JOIN -> giveScoreboard(player)
+                PlayerDirection.LEAVE -> player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
+            }
+        }
     }
 
     private fun giveScoreboard(p: Player) {
@@ -67,18 +73,6 @@ class ScoreboardManager : Component {
 
         match.sides.forEachReal(::giveScoreboard)
         layout.init(playerProperties, matchProperties)
-    }
-
-    @ChessEventHandler
-    fun playerEvent(match: ChessMatch, p: PlayerEvent) = when(p.dir) {
-        PlayerDirection.JOIN -> giveScoreboard(p.player)
-        PlayerDirection.LEAVE -> p.player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
-    }
-
-    @ChessEventHandler
-    fun spectatorEvent(match: ChessMatch, p: SpectatorEvent) = when(p.dir) {
-        PlayerDirection.JOIN -> giveScoreboard(p.player)
-        PlayerDirection.LEAVE -> p.player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
     }
 
     private fun update() = layout.update()

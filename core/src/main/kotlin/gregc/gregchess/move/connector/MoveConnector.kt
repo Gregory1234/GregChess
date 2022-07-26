@@ -2,6 +2,7 @@ package gregc.gregchess.move.connector
 
 import gregc.gregchess.RegisterAll
 import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.match.ChessEventType
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.piece.PlacedPieceType
 import kotlin.reflect.KClass
@@ -25,10 +26,14 @@ class AddMoveConnectorsEvent(private val connectors: MutableMap<MoveConnectorTyp
     operator fun <T: MoveConnector> set(type: MoveConnectorType<T>, connector: T) {
         connectors[type] = connector
     }
+
+    override val type get() = ChessEventType.ADD_MOVE_CONNECTORS
 }
 
 class AddFakeMoveConnectorsEvent(private val connectors: MutableMap<MoveConnectorType<*>, MoveConnector>): ChessEvent {
     operator fun <T: MoveConnector> set(type: MoveConnectorType<T>, connector: T) {
         connectors[type] = connector
     }
+
+    override val type get() = ChessEventType.ADD_FAKE_MOVE_CONNECTORS
 }

@@ -3,10 +3,10 @@ package gregc.gregchess.fabric.renderer
 import gregc.gregchess.Pos
 import gregc.gregchess.fabric.block.ChessControllerBlockEntity
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
+import gregc.gregchess.fabric.match.FabricChessEventType
 import gregc.gregchess.fabric.match.FabricComponentType
 import gregc.gregchess.fabric.moveBlock
 import gregc.gregchess.fabric.piece.*
-import gregc.gregchess.fabric.player.PiecePlayerActionEvent
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.BoardPiece
@@ -52,8 +52,14 @@ data class FabricRenderer(
         }
     }
 
-    @ChessEventHandler
-    fun onBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEvent(ChessEventType.BASE, ::handleBaseEvent)
+        eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
+        eventManager.registerEvent(FabricChessEventType.PIECE_PLAYER_ACTION) { redrawFloor(match) }
+        eventManager.registerEvent(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
+    }
+
+    private fun handleBaseEvent(e: ChessBaseEvent) {
         if (e == ChessBaseEvent.STOP || e == ChessBaseEvent.PANIC) {
             tileBlocks.forEach { (_,l) ->
                 l.forEach {
@@ -64,8 +70,7 @@ data class FabricRenderer(
         }
     }
 
-    @ChessEventHandler
-    fun onTurnStart(match: ChessMatch, e: TurnEvent) {
+    private fun handleTurnEvent(match: ChessMatch, e: TurnEvent) {
         if (e == TurnEvent.START || e == TurnEvent.UNDO) {
             redrawFloor(match)
         }
@@ -81,10 +86,6 @@ data class FabricRenderer(
         }
     }
 
-    @ChessEventHandler
-    @Suppress("UNUSED_PARAMETER")
-    fun onPiecePlayerAction(match: ChessMatch, e: PiecePlayerActionEvent) = redrawFloor(match)
-
     private fun choosePlacePos(pos: Pos, block: PieceBlock): BlockPos {
         val preferredBlock = preferredBlocks[pos]
         return if (preferredBlock != null && block.canActuallyPlaceAt(preferredBlock.world, preferredBlock.pos.up()))
@@ -96,8 +97,7 @@ data class FabricRenderer(
     }
 
     // TODO: add move and capture sounds
-    @ChessEventHandler
-    fun handlePieceEvents(match: ChessMatch, e: PieceMoveEvent) {
+    private fun handlePieceMoveEvent(e: PieceMoveEvent) {
         val broken = mutableListOf<BoardPiece>()
         val placed = mutableListOf<BoardPiece>()
         try {

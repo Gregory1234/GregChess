@@ -6,7 +6,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.entity.Player
 
-data class SpectatorEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
+data class SpectatorEvent(val player: Player, val dir: PlayerDirection) : ChessEvent {
+    override val type get() = BukkitChessEventType.SPECTATOR
+}
 
 class SpectatorNotFoundException(player: Player) : Exception(player.name)
 
@@ -34,10 +36,11 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
         match.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
 
-    @ChessEventHandler
-    fun onStop(match: ChessMatch, e: ChessBaseEvent) {
-        if (e == ChessBaseEvent.STOP) stop(match)
-        else if (e == ChessBaseEvent.CLEAR) clear(match)
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEvent(ChessEventType.BASE) {
+            if (it == ChessBaseEvent.STOP) stop(match)
+            else if (it == ChessBaseEvent.CLEAR) clear(match)
+        }
     }
 
     private fun stop(match: ChessMatch) {

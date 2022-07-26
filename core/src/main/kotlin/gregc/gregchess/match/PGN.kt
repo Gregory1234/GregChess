@@ -10,6 +10,8 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             require(tags.none { it.name == name }) { "Tag already used: $name" }
             tags += TagPair(name, value)
         }
+
+        override val type get() = ChessEventType.GENERATE_PGN
     }
 
     internal class TagPair(val name: String, val value: String) {

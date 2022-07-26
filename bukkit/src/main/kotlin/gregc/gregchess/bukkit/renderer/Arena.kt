@@ -2,7 +2,8 @@ package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.match.*
+import gregc.gregchess.bukkit.match.BukkitChessEventType
+import gregc.gregchess.bukkit.match.PlayerDirection
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.player.BukkitChessSide
 import gregc.gregchess.bukkit.player.currentChessSide
@@ -46,9 +47,10 @@ interface ArenaManager<out A : Arena> {
 
 }
 
-interface Arena : ChessListener {
+interface Arena {
     val name: String
 
+    fun registerEvents(match: ChessMatch, eventManager: ChessEventManager)
     val boardStart: Location
     val tileSize: Int
     val capturedStart: ByColor<Location>
@@ -139,7 +141,9 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
     internal fun currentArenaMatch(arena: SimpleArena) = arenas[arena]?.match
 }
 
-class ResetPlayerEvent(val player: Player) : ChessEvent
+class ResetPlayerEvent(val player: Player) : ChessEvent {
+    override val type get() = BukkitChessEventType.RESET_PLAYER
+}
 
 class SimpleArena internal constructor(
     override val name: String,
@@ -157,13 +161,35 @@ class SimpleArena internal constructor(
     private val spawn: Loc = offset + Loc(4, 0, 4)
     private val spawnLocation: Location get() = spawn.toLocation(world)
 
-    @ChessEventHandler
-    fun onBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
-        if (e == ChessBaseEvent.CLEAR || e == ChessBaseEvent.PANIC) SimpleArenaManager.freeArena(this)
-        if (e == ChessBaseEvent.PANIC)
-            for (p in match.sides.toList())
-                if (p is BukkitChessSide)
-                    p.bukkit?.leave()
+    override fun registerEvents(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEvent(ChessEventType.BASE) {
+            if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC) SimpleArenaManager.freeArena(this)
+            if (it == ChessBaseEvent.PANIC)
+                for (p in match.sides.toList())
+                    if (p is BukkitChessSide)
+                        p.bukkit?.leave()
+        }
+        eventManager.registerEventR(BukkitChessEventType.SPECTATOR) {
+            when (dir) {
+                PlayerDirection.JOIN -> {
+                    player.teleport(spawnLocation)
+                    player.inventory.clear()
+                    player.gameMode = GameMode.SPECTATOR
+                    player.allowFlight = true
+                    player.isFlying = true
+                }
+                PlayerDirection.LEAVE -> {
+                    player.leave()
+                }
+            }
+        }
+        eventManager.registerEventR(BukkitChessEventType.PLAYER) {
+            when (dir) {
+                PlayerDirection.JOIN -> player.reset()
+                PlayerDirection.LEAVE -> player.leave()
+            }
+        }
+        eventManager.registerEventR(BukkitChessEventType.RESET_PLAYER) { player.reset() }
     }
 
     private fun Player.leave() {
@@ -173,22 +199,6 @@ class SimpleArena internal constructor(
         gameMode = GameMode.SURVIVAL
         allowFlight = false
         isFlying = false
-    }
-
-    @ChessEventHandler
-    fun spectatorEvent(match: ChessMatch, e: SpectatorEvent) {
-        when (e.dir) {
-            PlayerDirection.JOIN -> {
-                e.player.teleport(spawnLocation)
-                e.player.inventory.clear()
-                e.player.gameMode = GameMode.SPECTATOR
-                e.player.allowFlight = true
-                e.player.isFlying = true
-            }
-            PlayerDirection.LEAVE -> {
-                e.player.leave()
-            }
-        }
     }
 
     private fun Player.reset() {
@@ -204,14 +214,5 @@ class SimpleArena internal constructor(
         allowFlight = true
         isFlying = true
     }
-
-    @ChessEventHandler
-    fun playerEvent(match: ChessMatch, e: PlayerEvent) = when (e.dir) {
-        PlayerDirection.JOIN -> e.player.reset()
-        PlayerDirection.LEAVE -> e.player.leave()
-    }
-
-    @ChessEventHandler
-    fun resetPlayer(match: ChessMatch, e: ResetPlayerEvent) = e.player.reset()
 
 }

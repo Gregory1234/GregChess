@@ -2,6 +2,7 @@ package gregc.gregchess.bukkit.player
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.match.ChessEvent
@@ -16,10 +17,11 @@ import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import java.util.*
 
-class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent {
+class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEvent {
     enum class Type {
         PICK_UP, PLACE_DOWN
     }
+    override val type get() = BukkitChessEventType.PIECE_PLAYER_ACTION
 }
 
 inline fun ByColor<ChessSide<*>>.forEachRealOffline(block: (OfflinePlayer) -> Unit) {

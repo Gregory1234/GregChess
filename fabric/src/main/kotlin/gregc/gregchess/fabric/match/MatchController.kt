@@ -10,8 +10,11 @@ object MatchController : Component {
 
     override val type get() = FabricComponentType.MATCH_CONTROLLER
 
-    @ChessEventHandler
-    fun handleEvents(match: ChessMatch, e: ChessBaseEvent) = with(match) {
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEvent(ChessEventType.BASE) { handleBaseEvent(match, it) }
+    }
+
+    private fun handleBaseEvent(match: ChessMatch, e: ChessBaseEvent) = with(match) {
         when (e) {
             ChessBaseEvent.START -> {
                 ChessMatchManager += match

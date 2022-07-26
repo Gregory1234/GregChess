@@ -26,7 +26,9 @@ enum class PlayerDirection {
     JOIN, LEAVE
 }
 
-class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent
+class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent {
+    override val type get() = BukkitChessEventType.PLAYER
+}
 
 @Serializable
 class MatchController(val presetName: String) : Component {
@@ -119,47 +121,46 @@ class MatchController(val presetName: String) : Component {
         ChessMatchManager -= match
     }
 
-    @ChessEventHandler
-    fun handleEvents(match: ChessMatch, e: ChessBaseEvent) = when (e) {
-        ChessBaseEvent.START -> onStart(match)
-        ChessBaseEvent.RUNNING -> onRunning(match)
-        ChessBaseEvent.STOP -> onStop(match)
-        ChessBaseEvent.PANIC -> onPanic(match)
-        ChessBaseEvent.SYNC -> if (match.state == ChessMatch.State.RUNNING) {
-            onStart(match)
-            onRunning(match)
-        } else Unit
-        ChessBaseEvent.UPDATE -> Unit
-        ChessBaseEvent.CLEAR -> Unit
-    }
-
-    @ChessEventHandler
-    fun handleTurn(match: ChessMatch, e: TurnEvent) {
-        if (e == TurnEvent.END) {
-            if (match.board.currentTurn == Color.BLACK) {
-                with(match.board) {
-                    val normalMoves = moveHistory.filter { !it.isPhantomMove }
-                    val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
-                    val bLast = normalMoves.last()
-                    match.sides.forEachReal { p ->
-                        p.sendLastMoves(match.board.fullmoveCounter, wLast, bLast, match.variant.localMoveFormatter)
-                    }
-                    lastPrintedMove = normalMoves.last()
-                }
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEvent(ChessEventType.BASE) {
+            when (it) {
+                ChessBaseEvent.START -> onStart(match)
+                ChessBaseEvent.RUNNING -> onRunning(match)
+                ChessBaseEvent.STOP -> onStop(match)
+                ChessBaseEvent.PANIC -> onPanic(match)
+                ChessBaseEvent.SYNC -> if (match.state == ChessMatch.State.RUNNING) {
+                    onStart(match)
+                    onRunning(match)
+                } else Unit
+                ChessBaseEvent.UPDATE -> Unit
+                ChessBaseEvent.CLEAR -> Unit
             }
-            (match.currentSide as? BukkitChessSide)?.let(GregChessPlugin::clearRequests)
+        }
+        eventManager.registerEventE(TurnEvent.END) { handleTurnEnd(match) }
+        eventManager.registerEventR(BukkitChessEventType.ADD_PROPERTIES) {
+            match(PRESET) { presetName }
+        }
+        eventManager.registerEventR(BukkitChessEventType.PLAYER) {
+            when(dir) {
+                PlayerDirection.JOIN -> player.currentChessSide!!.sendStartMessage()
+                PlayerDirection.LEAVE -> {}
+            }
         }
     }
 
-    @ChessEventHandler
-    fun addProperties(match: ChessMatch, e: AddPropertiesEvent) {
-        e.match(PRESET) { presetName }
-    }
-
-    @ChessEventHandler
-    fun playerEvent(match: ChessMatch, e: PlayerEvent) = when(e.dir) {
-        PlayerDirection.JOIN -> e.player.currentChessSide!!.sendStartMessage()
-        PlayerDirection.LEAVE -> {}
+    private fun handleTurnEnd(match: ChessMatch) {
+        if (match.board.currentTurn == Color.BLACK) {
+            with(match.board) {
+                val normalMoves = moveHistory.filter { !it.isPhantomMove }
+                val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
+                val bLast = normalMoves.last()
+                match.sides.forEachReal { p ->
+                    p.sendLastMoves(match.board.fullmoveCounter, wLast, bLast, match.variant.localMoveFormatter)
+                }
+                lastPrintedMove = normalMoves.last()
+            }
+        }
+        (match.currentSide as? BukkitChessSide)?.let(GregChessPlugin::clearRequests)
     }
 }
 

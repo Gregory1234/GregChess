@@ -3,6 +3,7 @@ package gregc.gregchess.bukkit.renderer
 import gregc.gregchess.*
 import gregc.gregchess.Color
 import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.match.BukkitComponentType
 import gregc.gregchess.bukkit.piece.getSound
 import gregc.gregchess.bukkit.piece.structure
@@ -41,13 +42,16 @@ data class BukkitRenderer(
     lateinit var arena: Arena
         private set
 
-    override fun init(match: ChessMatch) {
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
         this.arena = ArenaManager.fromConfig().reserveArena(match)
-    }
-
-    override fun handleEvent(match: ChessMatch, e: ChessEvent) {
-        arena.handleEvent(match, e)
-        super.handleEvent(match, e)
+        arena.registerEvents(match, eventManager)
+        eventManager.registerEventR(AtomicChess.EXPLOSION_EVENT) {
+            world.createExplosion(pos.location, 4.0f, false, false)
+        }
+        eventManager.registerEvent(ChessEventType.BASE) { handleBaseEvent(match, it) }
+        eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
+        eventManager.registerEventR(BukkitChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match) }
+        eventManager.registerEvent(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
     }
 
     @Transient private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()
@@ -100,11 +104,6 @@ data class BukkitRenderer(
 
     private fun BoardPiece.playSound(sound: String) = playPieceSound(pos, sound, type)
 
-    @ChessEventHandler
-    fun handleExplosion(match: ChessMatch, e: AtomicChess.ExplosionEvent) {
-        world.createExplosion(e.pos.location, 4.0f, false, false)
-    }
-
     private fun Pos.fillFloor(material: Material) {
         val (x, y, z) = loc
         val mi = -lowHalfTile
@@ -140,8 +139,7 @@ data class BukkitRenderer(
         rows[row]--
     }
 
-    @ChessEventHandler
-    fun onBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
+    private fun handleBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.RUNNING || e == ChessBaseEvent.SYNC) {
             redrawFloor(match)
         }
@@ -155,8 +153,7 @@ data class BukkitRenderer(
         }
     }
 
-    @ChessEventHandler
-    fun onTurnStart(match: ChessMatch, e: TurnEvent) {
+    private fun handleTurnEvent(match: ChessMatch, e: TurnEvent) {
         if (e == TurnEvent.START || e == TurnEvent.UNDO) {
             redrawFloor(match)
         }
@@ -172,28 +169,26 @@ data class BukkitRenderer(
         }
     }
 
-    @ChessEventHandler
-    fun onPiecePlayerAction(match: ChessMatch, e: PiecePlayerActionEvent) = when (e.type) {
+    private fun PiecePlayerActionEvent.handlePiecePlayerActionEvent(match: ChessMatch) = when (action) {
         PiecePlayerActionEvent.Type.PICK_UP -> {
-            e.piece.clearRender()
-            e.piece.playSound("PickUp")
+            piece.clearRender()
+            piece.playSound("PickUp")
             redrawFloor(match)
         }
         PiecePlayerActionEvent.Type.PLACE_DOWN -> {
-            e.piece.render()
-            e.piece.playSound("Move")
+            piece.render()
+            piece.playSound("Move")
             redrawFloor(match)
         }
     }
 
-    @ChessEventHandler
-    fun handlePieceEvents(match: ChessMatch, e: PieceMoveEvent) {
-        for ((o, _) in e.moves)
+    private fun handlePieceMoveEvent(e: PieceMoveEvent) = with(e) {
+        for ((o, _) in moves)
             when (o) {
                 is BoardPiece -> o.clearRender()
                 is CapturedPiece -> removeCapturedPiece(o)
             }
-        for ((o, t) in e.moves)
+        for ((o, t) in moves)
             when (t) {
                 is BoardPiece -> {
                     t.render()

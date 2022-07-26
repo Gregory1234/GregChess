@@ -12,7 +12,9 @@ import kotlinx.serialization.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-class SetFenEvent(val FEN: FEN) : ChessEvent
+class SetFenEvent(val FEN: FEN) : ChessEvent {
+    override val type get() = ChessEventType.SET_FEN
+}
 
 @Serializable
 private class Square(
@@ -137,8 +139,22 @@ class Chessboard private constructor (
                 moveHistory_.clear()
         }
 
-    @ChessEventHandler
-    fun endTurn(match: ChessMatch, e: TurnEvent) {
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
+        eventManager.registerEvent(ChessEventType.BASE) { handleBaseEvent(match, it) }
+        eventManager.registerEvent(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
+            e[MoveConnectorType.CHESSBOARD] = this
+        }
+        eventManager.registerEvent(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
+            e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
+                initialFEN,
+                squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),
+                BoardCounters(halfmoveClock, fullmoveCounter, currentTurn)
+            )
+        }
+    }
+
+    private fun handleTurnEvent(match: ChessMatch, e: TurnEvent) {
         if (e == TurnEvent.END) {
             if (currentTurn == Color.BLACK) {
                 fullmoveCounter++
@@ -161,8 +177,7 @@ class Chessboard private constructor (
             updateMoves(match.variant, match.variantOptions)
     }
 
-    @ChessEventHandler
-    fun handleEvents(match: ChessMatch, e: ChessBaseEvent) {
+    private fun handleBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.SYNC || e == ChessBaseEvent.START) {
             updateMoves(match.variant, match.variantOptions)
             pieces.forEach { sendSpawned(match, it) }
@@ -256,20 +271,6 @@ class Chessboard private constructor (
 
     private class FakeChessboardConnector(override val initialFEN: FEN, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters)
         : ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters)
-
-    @ChessEventHandler
-    fun addFakeMoveConnectors(match: ChessMatch, e: AddFakeMoveConnectorsEvent) {
-        e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
-            initialFEN,
-            squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),
-            BoardCounters(halfmoveClock, fullmoveCounter, currentTurn)
-        )
-    }
-
-    @ChessEventHandler
-    fun addMoveConnectors(match: ChessMatch, e: AddMoveConnectorsEvent) {
-        e[MoveConnectorType.CHESSBOARD] = this
-    }
 
     internal fun clear(match: ChessMatch, boardPiece: BoardPiece) {
         match.callEvent(createClearEvent(boardPiece))

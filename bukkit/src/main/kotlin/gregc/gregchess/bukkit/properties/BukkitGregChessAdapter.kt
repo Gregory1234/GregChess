@@ -3,6 +3,7 @@ package gregc.gregchess.bukkit.properties
 import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.match.BukkitComponentType
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
@@ -28,17 +29,18 @@ object BukkitGregChessAdapter : Component, BukkitRegistering {
 
     private val timeFormat: String get() = config.getPathString("TimeFormat")
 
-    @ChessEventHandler
-    fun addProperties(match: ChessMatch, e: AddPropertiesEvent) {
-        match.clock?.apply {
-            if (timeControl.type == TimeControl.Type.FIXED) {
-                e.match(TIME_REMAINING_SIMPLE) { timeRemaining[match.board.currentTurn].format(timeFormat) }
-            } else {
-                e.player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) }
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEventR(BukkitChessEventType.ADD_PROPERTIES) {
+            match.clock?.apply {
+                if (timeControl.type == TimeControl.Type.FIXED) {
+                    match(TIME_REMAINING_SIMPLE) { timeRemaining[match.board.currentTurn].format(timeFormat) }
+                } else {
+                    player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) }
+                }
             }
-        }
-        match[ThreeChecks.CHECK_COUNTER]?.apply {
-            e.player(CHECK_COUNTER) { this[it].toString() }
+            match[ThreeChecks.CHECK_COUNTER]?.apply {
+                player(CHECK_COUNTER) { this[it].toString() }
+            }
         }
     }
 }

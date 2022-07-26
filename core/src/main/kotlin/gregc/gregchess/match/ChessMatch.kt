@@ -44,6 +44,11 @@ class ChessMatch private constructor(
 
     override fun toString() = "ChessMatch(uuid=$uuid)"
 
+    @Transient
+    private val eventManager = ChessEventManager()
+
+    fun callEvent(e: ChessEvent) = eventManager.callEvent(e)
+
     init {
         require((state >= State.RUNNING) == (startTime != null)) { "Start time bad" }
         require((state >= State.STOPPED) == (endTime != null)) { "End time bad" }
@@ -53,7 +58,7 @@ class ChessMatch private constructor(
             for (t in variant.requiredComponents) {
                 components.firstOrNull { it.type == t } ?: throw ComponentNotFoundException(t)
             }
-            components.forEach { it.init(this) }
+            components.forEach { it.init(this, eventManager) }
         } catch (e: Exception) {
             panic(e)
         }
@@ -82,15 +87,6 @@ class ChessMatch private constructor(
     val sides: ByColor<ChessSide<*>> = byColor { playerData[it].initSide(it, this@ChessMatch) }
 
     private fun requireState(s: State) = check(state == s) { "Expected state $s, got state $state!" }
-
-    fun callEvent(e: ChessEvent) = with(MultiExceptionContext()) {
-        components.forEach {
-            exec {
-                it.handleEvent(this@ChessMatch, e)
-            }
-        }
-        rethrow { ChessEventException(e, it) }
-    }
 
     val currentSide: ChessSide<*> get() = sides[board.currentTurn]
 

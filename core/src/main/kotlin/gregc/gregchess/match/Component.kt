@@ -37,11 +37,11 @@ class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
 }
 
 @Serializable(with = ComponentSerializer::class)
-interface Component : ChessListener {
+interface Component {
 
     val type: ComponentType<out @SelfType Component>
 
-    fun init(match: ChessMatch) {}
+    fun init(match: ChessMatch, eventManager: ChessEventManager) {}
 
 }
 

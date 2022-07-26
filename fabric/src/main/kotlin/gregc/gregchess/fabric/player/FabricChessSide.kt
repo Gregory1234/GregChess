@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile
 import gregc.gregchess.*
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.client.PromotionMenuFactory
+import gregc.gregchess.fabric.match.FabricChessEventType
 import gregc.gregchess.fabric.piece.block
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.fabric.renderer.server
@@ -19,10 +20,11 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import kotlin.coroutines.suspendCoroutine
 
-class PiecePlayerActionEvent(val piece: BoardPiece, val type: Type) : ChessEvent {
+class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEvent {
     enum class Type {
         PICK_UP, PLACE_DOWN
     }
+    override val type get() = FabricChessEventType.PIECE_PLAYER_ACTION
 }
 
 class FabricChessSide(val gameProfile: GameProfile, color: Color, match: ChessMatch) : ChessSide<GameProfile>(FabricPlayerType.FABRIC, gameProfile, color, match) {

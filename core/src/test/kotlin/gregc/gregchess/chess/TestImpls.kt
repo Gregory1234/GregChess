@@ -33,9 +33,11 @@ object TestComponent : Component {
 
     override val type = GregChess.TEST_COMPONENT
 
-    override fun init(match: ChessMatch) {}
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEventAny(::handleEvent)
+    }
 
-    override fun handleEvent(match: ChessMatch, e: ChessEvent) {}
+    fun handleEvent(e: ChessEvent) {}
 
 }
 
