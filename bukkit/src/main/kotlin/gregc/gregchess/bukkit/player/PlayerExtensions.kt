@@ -102,7 +102,7 @@ fun Player.sendRejoinReminder() {
 
 fun Player.leaveMatch() {
     // TODO: add a time limit for rejoining
-    currentSpectatedChessMatch?.minusAssign(this)
+    currentSpectatedChessMatch?.spectators?.minusAssign(this)
     currentChessMatch?.let { match ->
         if (allowRejoining) {
             match.callEvent(PlayerEvent(this, PlayerDirection.LEAVE))

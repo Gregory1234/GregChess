@@ -4,8 +4,7 @@ import assertk.Assert
 import assertk.all
 import assertk.assertions.*
 import gregc.gregchess.*
-import gregc.gregchess.board.Chessboard
-import gregc.gregchess.board.FEN
+import gregc.gregchess.board.*
 import gregc.gregchess.chess.GregChess
 import gregc.gregchess.chess.TestChessEnvironment
 import gregc.gregchess.match.ChessMatch
@@ -34,12 +33,12 @@ open class VariantTests(val variant: ChessVariant, val variantOptions: Long, val
 
     protected fun Assert<List<Move>>.onlyGetTo(vararg displays: Pos) = transform { it.map { m -> m.display } }.containsExactlyInAnyOrder(*displays)
 
-    protected fun Chessboard.setNotMoved(pos: Pos) {
-        get(pos)?.copy(hasMoved = false)?.let(::plusAssign)
+    protected fun ChessboardFacade.setNotMoved(pos: Pos) {
+        get(pos)?.copy(hasMoved = false)?.let(component::plusAssign)
         updateMoves(variant, variantOptions)
     }
 
-    protected fun Chessboard.addEnPassantFlag(pos: Pos) {
+    protected fun ChessboardFacade.addEnPassantFlag(pos: Pos) {
         set(pos, ChessFlag.EN_PASSANT, 1)
         updateMoves(variant, variantOptions)
     }

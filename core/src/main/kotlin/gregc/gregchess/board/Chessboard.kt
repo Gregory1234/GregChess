@@ -311,3 +311,26 @@ class Chessboard private constructor (
 
     }
 }
+
+class ChessboardFacade(match: ChessMatch, component: Chessboard) : ComponentFacade<Chessboard>(match, component), ChessboardConnector by component {
+    override var currentTurn
+        get() = component.currentTurn
+        set(v) { component.currentTurn = v }
+    var fullmoveCounter
+        get() = component.fullmoveCounter
+        set(v) { component.fullmoveCounter = v }
+    val boardHashes get() = component.boardHashes
+    val capturedPieces get() = component.capturedPieces
+    val moveHistory get() = component.moveHistory
+    val lastNormalMove get() = component.lastNormalMove
+    var lastMove
+        get() = component.lastMove
+        set(v) { component.lastMove = v }
+    operator fun plusAssign(captured: CapturedPiece) = component.plusAssign(captured)
+    operator fun minusAssign(captured: CapturedPiece) = component.minusAssign(captured)
+    fun setFromFEN(fen: FEN) = component.setFromFEN(match, fen)
+    fun getFEN() = component.getFEN()
+    fun checkForRepetition() = component.checkForRepetition(match)
+    fun checkForFiftyMoveRule() = component.checkForFiftyMoveRule(match)
+    fun undoLastMove() = component.undoLastMove(match)
+}

@@ -72,8 +72,8 @@ open class ChessVariant : NameRegistered {
                 match.stop(drawBy(EndReason.STALEMATE))
         }
 
-        checkForRepetition(match)
-        checkForFiftyMoveRule(match)
+        checkForRepetition()
+        checkForFiftyMoveRule()
 
         val whitePieces = piecesOf(Color.WHITE)
         val blackPieces = piecesOf(Color.BLACK)

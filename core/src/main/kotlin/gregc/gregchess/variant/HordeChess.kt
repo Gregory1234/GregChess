@@ -41,8 +41,8 @@ object HordeChess : ChessVariant() {
                 match.stop(drawBy(EndReason.STALEMATE))
         }
 
-        checkForRepetition(match)
-        checkForFiftyMoveRule(match)
+        checkForRepetition()
+        checkForFiftyMoveRule()
     }
 
     override fun timeout(match: ChessMatch, color: Color) = match.stop(color.lostBy(EndReason.TIMEOUT))

@@ -22,8 +22,8 @@ object CaptureAll : ChessVariant() {
         if (piecesOf(!match.board.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } })
             match.stop(drawBy(EndReason.STALEMATE))
 
-        checkForRepetition(match)
-        checkForFiftyMoveRule(match)
+        checkForRepetition()
+        checkForFiftyMoveRule()
     }
 
     override fun validateFEN(fen: FEN, variantOptions: Long) {

@@ -22,13 +22,13 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
 
     val spectators get() = spectatorList.toList()
 
-    internal fun addSpectator(match: ChessMatch, p: Player) {
+    fun addSpectator(match: ChessMatch, p: Player) {
         ChessMatchManager.setCurrentSpectatedMatch(p.uniqueId, match.uuid) // TODO: this shouldn't be called here probably
         spectatorList += p
         match.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
-    internal fun removeSpectator(match: ChessMatch, p: Player) {
+    fun removeSpectator(match: ChessMatch, p: Player) {
         if (p !in spectatorList)
             throw SpectatorNotFoundException(p)
         ChessMatchManager.setCurrentSpectatedMatch(p.uniqueId, null)
@@ -58,7 +58,10 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
     }
 }
 
-operator fun ChessMatch.plusAssign(p: Player) = spectators.addSpectator(this, p)
-operator fun ChessMatch.minusAssign(p: Player) = spectators.removeSpectator(this, p)
+class SpectatorManagerFacade(match: ChessMatch, component: SpectatorManager) : ComponentFacade<SpectatorManager>(match, component) {
+    val spectators get() = component.spectators
+    operator fun plusAssign(p: Player) = component.addSpectator(match, p)
+    operator fun minusAssign(p: Player) = component.removeSpectator(match, p)
+}
 
-val ChessMatch.spectators get() = require(BukkitComponentType.SPECTATOR_MANAGER)
+val ChessMatch.spectators get() = makeCachedFacade(::SpectatorManagerFacade, require(BukkitComponentType.SPECTATOR_MANAGER))

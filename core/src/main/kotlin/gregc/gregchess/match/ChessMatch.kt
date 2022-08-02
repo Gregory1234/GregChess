@@ -3,6 +3,7 @@
 package gregc.gregchess.match
 
 import gregc.gregchess.*
+import gregc.gregchess.board.ChessboardFacade
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.connector.*
@@ -75,7 +76,13 @@ class ChessMatch private constructor(
         )
     }
 
-    val board get() = require(ComponentType.CHESSBOARD)
+    @Transient
+    private val facadeCache = mutableMapOf<Component, ComponentFacade<*>>()
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Component, F : ComponentFacade<T>> makeCachedFacade(mk: (ChessMatch, T) -> F, component: T): F = facadeCache.getOrPut(component) { mk(this, component) } as F
+
+    val board get() = makeCachedFacade(::ChessboardFacade, require(ComponentType.CHESSBOARD))
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Component> get(type: ComponentType<T>): T? = components.firstOrNull { it.type == type } as T?
