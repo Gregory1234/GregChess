@@ -3,7 +3,7 @@ package gregc.gregchess.fabric.block
 import gregc.gregchess.Pos
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.piece.PieceBlock
-import gregc.gregchess.fabric.player.FabricChessSide
+import gregc.gregchess.fabric.player.FabricChessSideFacade
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -128,10 +128,10 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
         val floorEntity = (world?.getBlockEntity(pos) as? ChessboardFloorBlockEntity) ?: return ActionResult.PASS
         val match = floorEntity.chessControllerBlock.entity?.currentMatch ?: return ActionResult.PASS
 
-        val cp = match.currentSide as? FabricChessSide ?: return ActionResult.PASS
+        val cp = match.currentSide as? FabricChessSideFacade ?: return ActionResult.PASS
 
         if (cp.held != null) {
-            return if (cp.makeMove(floorEntity.boardPos!!, floorEntity, world.server)) ActionResult.SUCCESS else ActionResult.PASS
+            return if (cp.makeMove(floorEntity.boardPos!!, floorEntity)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
     }

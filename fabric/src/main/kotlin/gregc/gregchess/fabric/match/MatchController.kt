@@ -18,10 +18,10 @@ object MatchController : Component {
         when (e) {
             ChessBaseEvent.START -> {
                 ChessMatchManager += match
-                match.sides.forEachUnique(FabricChessSide::sendStartMessage)
+                match.sideFacades.forEachUnique(FabricChessSideFacade::sendStartMessage)
             }
             ChessBaseEvent.STOP -> {
-                sides.forEachUniqueEntity(match.server) { player, color ->
+                sideFacades.forEachUniqueEntity { player, color ->
                     player.showMatchResults(color, results!!)
                 }
                 ChessMatchManager -= match

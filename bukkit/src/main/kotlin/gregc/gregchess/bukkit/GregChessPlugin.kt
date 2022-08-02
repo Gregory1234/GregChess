@@ -21,7 +21,7 @@ import gregc.gregchess.move.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceRegistryView
 import gregc.gregchess.player.EngineChessSide
-import gregc.gregchess.player.toPlayer
+import gregc.gregchess.player.toChessSide
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.*
 import gregc.gregchess.stats.ChessStat
@@ -141,7 +141,7 @@ object GregChessPlugin : Listener {
                                 } else {
                                     sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
                                     opponent.currentSpectatedChessMatch?.spectators?.minusAssign(opponent)
-                                    ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), opponent.toChessPlayer()), settings.variantOptions).start()
+                                    ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessSide(Color.WHITE), opponent.toChessSide(Color.BLACK)), settings.variantOptions).start()
                                 }
                             }
                         }
@@ -155,7 +155,7 @@ object GregChessPlugin : Listener {
                     val settings = sender.openSettingsMenu()
                     if (settings != null) {
                         sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
-                        ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessPlayer(), Stockfish().toPlayer()), settings.variantOptions).start()
+                        ChessMatch(BukkitChessEnvironment, settings.variant, settings.components, byColor(sender.toChessSide(Color.WHITE), Stockfish().toChessSide(Color.BLACK)), settings.variantOptions).start()
                     }
                 }
             }
@@ -336,7 +336,7 @@ object GregChessPlugin : Listener {
                 val op = requireHumanOpponent()
                 executeSuspend {
                     takebackRequest.invalidSender(sender) {
-                        (pl().match.currentOpponent as? BukkitChessSide)?.uuid != sender.uniqueId
+                        (pl().match.currentOpponent as? BukkitChessSideFacade)?.uuid != sender.uniqueId
                     }
                     val res = takebackRequest.call(RequestData(sender.uniqueId, op().uuid, ""), true)
                     if (res == RequestResponse.ACCEPT) {
@@ -472,7 +472,7 @@ object GregChessPlugin : Listener {
         coroutineScope.cancel()
     }
 
-    fun clearRequests(p: BukkitChessSide) {
+    fun clearRequests(p: BukkitChessSideFacade) {
         drawRequest.quietRemove(p.uuid)
         takebackRequest.quietRemove(p.uuid)
     }

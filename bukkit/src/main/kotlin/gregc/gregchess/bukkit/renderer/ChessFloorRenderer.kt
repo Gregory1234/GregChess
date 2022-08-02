@@ -1,9 +1,9 @@
 package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.Pos
-import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.player.BukkitChessSide
+import gregc.gregchess.bukkit.player.BukkitChessSideFacade
+import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
@@ -18,7 +18,7 @@ fun interface ChessFloorRenderer {
 private fun getFloor(name: String): Material = Material.valueOf(config.getString("Chess.Floor.$name")!!)
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
-    val heldPiece = (currentSide as? BukkitChessSide)?.held
+    val heldPiece = (currentSide as? BukkitChessSideFacade)?.held
     fun Move.getFloorMaterial(): Material {
         if (castlesTrait != null || promotionTrait != null)
             return getFloor("Special")

@@ -30,12 +30,12 @@ internal fun CommandBuilder<CommandSender>.playerSubcommand(name: String, builde
     }
 }
 
-internal fun CommandBuilder<Player>.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSide {
-    validate(OPPONENT_NOT_HUMAN) { sender.currentChessSide?.opponent is BukkitChessSide }
-    return { sender.currentChessSide!!.opponent as BukkitChessSide }
+internal fun CommandBuilder<Player>.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSideFacade {
+    validate(OPPONENT_NOT_HUMAN) { sender.currentChessSide?.opponent is BukkitChessSideFacade }
+    return { sender.currentChessSide!!.opponent as BukkitChessSideFacade }
 }
 
-internal fun CommandBuilder<Player>.requireMatch(): ExecutionContext<Player>.() -> BukkitChessSide {
+internal fun CommandBuilder<Player>.requireMatch(): ExecutionContext<Player>.() -> BukkitChessSideFacade {
     validate(YOU_NOT_IN_MATCH) { sender.currentChessMatch != null }
     return { sender.currentChessSide!! }
 }

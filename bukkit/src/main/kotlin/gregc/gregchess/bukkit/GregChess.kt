@@ -4,7 +4,7 @@ import gregc.gregchess.GregChessCore
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.match.*
-import gregc.gregchess.bukkit.player.BukkitPlayerType
+import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.SimpleScoreboardLayout
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.renderer.*
@@ -71,7 +71,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         BukkitGregChessCore.autoRegister(this).apply {
             registerAll<ChessMatchManager>()
             registerAll<BukkitComponentType>()
-            registerAll<BukkitPlayerType>()
+            registerAll<BukkitChessSideType>()
             registerAll<ArenaManagers>()
         }
         hookComponents()

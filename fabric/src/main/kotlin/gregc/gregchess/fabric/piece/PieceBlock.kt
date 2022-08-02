@@ -1,8 +1,7 @@
 package gregc.gregchess.fabric.piece
 
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
-import gregc.gregchess.fabric.player.FabricChessSide
-import gregc.gregchess.fabric.player.gregchess
+import gregc.gregchess.fabric.player.FabricChessSideFacade
 import gregc.gregchess.move.phantomClear
 import gregc.gregchess.move.phantomSpawn
 import gregc.gregchess.piece.BoardPiece
@@ -58,13 +57,13 @@ sealed class PieceBlock(val piece: Piece, settings: Settings?) : Block(settings)
         val floor = getFloor(world, pos, state) ?: return ActionResult.PASS
         val match = floor.chessControllerBlock.entity?.currentMatch ?: return ActionResult.PASS
 
-        val cp = match.currentSide as? FabricChessSide ?: return ActionResult.PASS
+        val cp = match.currentSide as? FabricChessSideFacade ?: return ActionResult.PASS
 
-        if (cp.player == player.gregchess && cp.held == null && cp.color == piece.color) {
+        if (cp.uuid == player.uuid && cp.held == null && cp.color == piece.color) {
             cp.pickUp(floor.boardPos!!)
             return ActionResult.SUCCESS
         } else if (cp.held?.piece == piece && cp.held?.pos == floor.boardPos) {
-            return if (cp.makeMove(floor.boardPos!!, floor, world.server)) ActionResult.SUCCESS else ActionResult.PASS
+            return if (cp.makeMove(floor.boardPos!!, floor)) ActionResult.SUCCESS else ActionResult.PASS
         }
         return ActionResult.PASS
     }

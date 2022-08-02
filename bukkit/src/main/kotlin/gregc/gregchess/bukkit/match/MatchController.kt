@@ -5,7 +5,6 @@ import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.properties.AddPropertiesEvent
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
@@ -47,7 +46,7 @@ class MatchController(val presetName: String) : Component {
 
     private fun onStart(match: ChessMatch) {
         ChessMatchManager += match
-        match.sides.forEachReal {
+        match.sideFacades.forEachReal {
             match.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
         }
     }
@@ -77,13 +76,13 @@ class MatchController(val presetName: String) : Component {
                     wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
                     bLast = normalMoves.lastOrNull()
                 }
-                match.sides.forEachReal { p ->
+                match.sideFacades.forEachReal { p ->
                     p.sendLastMoves(match.board.fullmoveCounter + 1, wLast, bLast, match.variant.localMoveFormatter)
                 }
             }
         }
         val pgn = PGN.generate(match)
-        match.sides.forEachUniqueBukkit { player, color ->
+        match.sideFacades.forEachUniqueBukkit { player, color ->
             match.coroutineScope.launch {
                 player.showMatchResults(color, results)
                 if (!results.endReason.quick)
@@ -93,7 +92,7 @@ class MatchController(val presetName: String) : Component {
                 player.currentChessMatch = null
             }
         }
-        if (match.sides.white.player != match.sides.black.player) {
+        if (!match.sideFacades.isSamePlayer()) {
             match.addStats(byColor {
                 val player = match.sides[it]
                 if (player is BukkitChessSide)
@@ -114,7 +113,7 @@ class MatchController(val presetName: String) : Component {
     private fun onPanic(match: ChessMatch) {
         val results = match.results!!
         val pgn = PGN.generate(match)
-        match.sides.forEachUniqueBukkit { player, color ->
+        match.sideFacades.forEachUniqueBukkit { player, color ->
             player.showMatchResults(color, results)
             player.sendPGN(pgn)
         }
@@ -154,20 +153,20 @@ class MatchController(val presetName: String) : Component {
                 val normalMoves = moveHistory.filter { !it.isPhantomMove }
                 val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
                 val bLast = normalMoves.last()
-                match.sides.forEachReal { p ->
+                match.sideFacades.forEachReal { p ->
                     p.sendLastMoves(match.board.fullmoveCounter, wLast, bLast, match.variant.localMoveFormatter)
                 }
                 lastPrintedMove = normalMoves.last()
             }
         }
-        (match.currentSide as? BukkitChessSide)?.let(GregChessPlugin::clearRequests)
+        (match.currentSide as? BukkitChessSideFacade)?.let(GregChessPlugin::clearRequests)
     }
 }
 
 val ChessMatch.matchController get() = require(BukkitComponentType.MATCH_CONTROLLER)
 
 fun ChessMatch.stop(results: MatchResults, quick: ByColor<Boolean>) {
-    matchController.quick = if ((quick.white || quick.black) && sides.white.player == sides.black.player) byColor(true) else quick
+    matchController.quick = if ((quick.white || quick.black) && sideFacades.isSamePlayer()) byColor(true) else quick
     stop(results)
 }
 

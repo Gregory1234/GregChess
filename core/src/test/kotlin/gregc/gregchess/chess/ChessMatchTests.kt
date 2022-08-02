@@ -2,11 +2,13 @@ package gregc.gregchess.chess
 
 import assertk.assertThat
 import assertk.assertions.*
+import gregc.gregchess.ByColor
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.byColor
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.AddMoveConnectorsEvent
 import gregc.gregchess.move.connector.PieceMoveEvent
+import gregc.gregchess.player.ChessSide
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
 import gregc.gregchess.variant.ChessVariant
@@ -17,11 +19,8 @@ import org.junit.jupiter.api.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ChessMatchTests {
 
-    private val playerA = GregChess.TEST_PLAYER.of("A")
-    private val playerB = GregChess.TEST_PLAYER.of("B")
-
-    private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, variantOptions: Long = 0, extra: Collection<Component> = emptyList()) =
-        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, variantOptions)) + extra, byColor(playerA, playerB), variantOptions)
+    private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, variantOptions: Long = 0, extra: Collection<Component> = emptyList(), sides: ByColor<ChessSide> = byColor { TestChessSide(it.name, it) }) =
+        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, variantOptions)) + extra, sides, variantOptions)
 
     @BeforeAll
     fun setup() {
@@ -52,11 +51,23 @@ class ChessMatchTests {
         }
 
         @Test
-        fun `should only construct sides`() {
-            val g = mkMatch()
-            val mocks = g.sides.toList()
-            verify {
-                mocks wasNot Called
+        fun `should only initialize sides`() {
+            val g = mkMatch(sides = byColor { spyk(TestChessSide(it.name, it)) })
+            val w = g.sides.white as TestChessSide
+            val b = g.sides.black as TestChessSide
+            excludeRecords {
+                w.type
+                w.name
+                w.color
+                b.type
+                b.name
+                b.color
+            }
+            verifyAll {
+                w.init(g, any())
+                b.init(g, any())
+                w.createFacade(g)
+                b.createFacade(g)
             }
         }
 
@@ -116,10 +127,31 @@ class ChessMatchTests {
         }
 
         @Test
-        fun `should start turn`() {
-            val g = mkMatch().start()
-            verifyAll {
-                g.sides.white.startTurn()
+        fun `should start sides`() {
+            val g = mkMatch(sides = byColor { spyk(TestChessSide(it.name, it)) })
+            val w = g.sides.white as TestChessSide
+            val b = g.sides.black as TestChessSide
+            clearRecords(w, b)
+            g.start()
+            excludeRecords {
+                w.type
+                w.name
+                w.color
+                w.handleEvent(match { it is PieceMoveEvent })
+                w.handleEvent(match { it is AddMoveConnectorsEvent })
+                b.type
+                b.name
+                b.color
+                b.handleEvent(match { it is PieceMoveEvent })
+                b.handleEvent(match { it is AddMoveConnectorsEvent })
+            }
+            verifySequence {
+                w.handleEvent(ChessBaseEvent.START)
+                b.handleEvent(ChessBaseEvent.START)
+                w.handleEvent(ChessBaseEvent.RUNNING)
+                b.handleEvent(ChessBaseEvent.RUNNING)
+                w.handleEvent(TurnEvent.START)
+                b.handleEvent(TurnEvent.START)
             }
         }
     }
@@ -148,18 +180,24 @@ class ChessMatchTests {
 
         @Test
         fun `should stop and clear sides`() {
-            val g = mkMatch().start()
-
-            clearRecords(g.sides.white)
-            clearRecords(g.sides.black)
-
+            val g = mkMatch(sides = byColor { spyk(TestChessSide(it.name, it)) }).start()
+            val w = g.sides.white as TestChessSide
+            val b = g.sides.black as TestChessSide
+            clearRecords(w, b)
             g.stop(results)
-
-            verifyAll {
-                g.sides.white.stop()
-                g.sides.black.stop()
-                g.sides.white.clear()
-                g.sides.black.clear()
+            excludeRecords {
+                w.type
+                w.name
+                w.color
+                b.type
+                b.name
+                b.color
+            }
+            verifySequence {
+                w.handleEvent(ChessBaseEvent.STOP)
+                b.handleEvent(ChessBaseEvent.STOP)
+                w.handleEvent(ChessBaseEvent.CLEAR)
+                b.handleEvent(ChessBaseEvent.CLEAR)
             }
         }
 

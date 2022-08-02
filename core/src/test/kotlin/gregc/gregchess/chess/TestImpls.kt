@@ -2,31 +2,34 @@ package gregc.gregchess.chess
 
 import gregc.gregchess.*
 import gregc.gregchess.match.*
-import gregc.gregchess.player.ChessPlayerType
-import gregc.gregchess.player.ChessSide
+import gregc.gregchess.player.*
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.DetEndReason
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.variant.ChessVariant
 import io.mockk.clearMocks
-import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import java.time.*
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
+@Serializable
+class TestChessSide(override val name: String, override val color: Color) : ChessSide {
+    override val type get() = GregChess.TEST_SIDE
 
-class TestChessSide(name: String, color: Color, match: ChessMatch) : ChessSide<String>(GregChess.TEST_PLAYER, name, color, match) {
-    override fun startTurn() {}
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEventAny(::handleEvent)
+    }
 
-    override fun stop() {}
+    fun handleEvent(e: ChessEvent) {}
 
-    override fun clear() {}
+    override fun createFacade(match: ChessMatch) = TestChessSideFacade(match, this)
 }
+
+class TestChessSideFacade(match: ChessMatch, side: TestChessSide) : ChessSideFacade<TestChessSide>(match, side)
 
 @Serializable
 object TestComponent : Component {
@@ -50,7 +53,7 @@ object TestChessEnvironment : ChessEnvironment {
     override val clock: Clock get() = Clock.fixed(Instant.EPOCH, ZoneId.systemDefault())
 }
 
-fun clearRecords(m: Any) = clearMocks(m, answers = false)
+fun clearRecords(m: Any, vararg ms: Any) = clearMocks(m, *ms, answers = false)
 
 inline fun <T> measureTime(block: () -> T): T {
     val start = System.nanoTime()
@@ -79,7 +82,7 @@ object GregChess : ChessModule("GregChess", "gregchess") {
 
     @JvmField
     @Register("test")
-    val TEST_PLAYER = ChessPlayerType(String.serializer(), { it }) { n, c, g -> spyk(TestChessSide(n, c, g)) }
+    val TEST_SIDE = ChessSideType(TestChessSide.serializer())
 
     override fun postLoad() {
     }

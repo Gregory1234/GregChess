@@ -38,9 +38,9 @@ object ChessMatchManager : Listener {
     internal fun currentMatchOf(uuid: UUID): ChessMatch? = playerCurrentMatches[uuid]?.let(::get)
     internal fun currentSpectatedMatchOf(uuid: UUID): ChessMatch? = playerSpectatedMatches[uuid]?.let(::get)
 
-    internal fun currentSideOf(uuid: UUID): BukkitChessSide? {
+    internal fun currentSideOf(uuid: UUID): BukkitChessSideFacade? {
         val currentMatch = currentMatchOf(uuid) ?: return null
-        return currentMatch[playerSides[uuid]!![currentMatch.uuid] ?: currentMatch.board.currentTurn] as? BukkitChessSide
+        return currentMatch[playerSides[uuid]!![currentMatch.uuid] ?: currentMatch.board.currentTurn] as? BukkitChessSideFacade
     }
 
     internal fun activeMatchesOf(uuid: UUID): Set<ChessMatch> = playerSides[uuid]?.keys?.mapNotNull(::get)?.toSet().orEmpty()
@@ -136,8 +136,8 @@ object ChessMatchManager : Listener {
 
     internal operator fun plusAssign(g: ChessMatch) {
         matches[g.uuid] = g
-        val white = g.playerData.white.value as? UUID
-        val black = g.playerData.black.value as? UUID
+        val white = (g.sides.white as? BukkitChessSide)?.uuid
+        val black = (g.sides.black as? BukkitChessSide)?.uuid
 
         if (white != null) {
             playerCurrentMatches[white] = g.uuid
@@ -159,10 +159,10 @@ object ChessMatchManager : Listener {
     }
 
     internal operator fun minusAssign(g: ChessMatch) {
-        g.sides.forEachUnique(GregChessPlugin::clearRequests)
+        g.sideFacades.forEachUnique(GregChessPlugin::clearRequests)
         matches.remove(g.uuid, g)
-        val white = g.playerData.white.value as? UUID
-        val black = g.playerData.black.value as? UUID
+        val white = (g.sides.white as? BukkitChessSide)?.uuid
+        val black = (g.sides.black as? BukkitChessSide)?.uuid
 
         if (white != null) {
             if (playerCurrentMatches[white] == g.uuid)

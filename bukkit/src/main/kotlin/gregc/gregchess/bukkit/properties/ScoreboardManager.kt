@@ -71,7 +71,7 @@ class ScoreboardManager : Component {
         e.player(PLAYER) { playerPrefix + match[it].name }
         match.callEvent(e)
 
-        match.sides.forEachReal(::giveScoreboard)
+        match.sideFacades.forEachReal(::giveScoreboard)
         layout.init(playerProperties, matchProperties)
     }
 

@@ -8,7 +8,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 
-val PlayerEntity.gregchess get() = FabricPlayerType.FABRIC.of(gameProfile)
+fun PlayerEntity.toChessSide(color: Color) = FabricChessSide(gameProfile, color)
 
 fun ServerPlayerEntity.showMatchResults(color: Color, results: MatchResults) {
     val wonlostdraw = when(results.score) {

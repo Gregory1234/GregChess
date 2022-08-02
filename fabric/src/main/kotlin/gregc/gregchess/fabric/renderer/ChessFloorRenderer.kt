@@ -2,7 +2,7 @@ package gregc.gregchess.fabric.renderer
 
 import gregc.gregchess.Pos
 import gregc.gregchess.fabric.block.Floor
-import gregc.gregchess.fabric.player.FabricChessSide
+import gregc.gregchess.fabric.player.FabricChessSideFacade
 import gregc.gregchess.fabric.registry.FabricRegistry
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
@@ -15,7 +15,7 @@ fun interface ChessFloorRenderer {
 }
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
-    val heldPiece = (currentSide as? FabricChessSide)?.held
+    val heldPiece = (currentSide as? FabricChessSideFacade)?.held
     fun Move.getFloor(): Floor {
         if (castlesTrait != null || promotionTrait != null)
             return Floor.SPECIAL

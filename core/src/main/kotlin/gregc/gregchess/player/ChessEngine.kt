@@ -2,37 +2,47 @@ package gregc.gregchess.player
 
 import gregc.gregchess.*
 import gregc.gregchess.board.FEN
-import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.*
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.of
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
 import kotlinx.coroutines.launch
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 
 interface ChessEngine {
     val name: String
-    val type: ChessPlayerType<out @SelfType ChessEngine>
+    val type: ChessSideType<out EngineChessSide<out @SelfType ChessEngine>>
     fun stop()
     suspend fun setOption(name: String, value: String)
     suspend fun sendCommand(command: String)
     suspend fun getMove(fen: FEN): String
 }
 
-fun ChessEngine.toPlayer() = ChessPlayer(type, this)
+fun ChessEngine.toChessSide(color: Color) = EngineChessSide(this, color)
 
-fun <T : ChessEngine> enginePlayerType(serializer: KSerializer<T>) : ChessPlayerType<T> = ChessPlayerType(serializer, { it.name }, ::EngineChessSide)
-
-@Suppress("UNCHECKED_CAST")
-class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, match: ChessMatch)
-    : ChessSide<T>(engine.type as ChessPlayerType<T>, engine, color, match) {
+@Serializable
+class EngineChessSide<T : ChessEngine>(val engine: T, override val color: Color) : ChessSide {
 
     override fun toString() = "EngineChessSide(engine=$engine, color=$color)"
 
-    override fun clear() = engine.stop()
+    override val name: String get() = engine.name
 
-    override fun startTurn() {
+    @Suppress("UNCHECKED_CAST")
+    override val type: ChessSideType<EngineChessSide<T>> get() = engine.type as ChessSideType<EngineChessSide<T>>
+
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEvent(ChessEventType.BASE) {
+            if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC)
+                engine.stop()
+        }
+        eventManager.registerEventE(TurnEvent.START) {
+            startTurn(match)
+        }
+    }
+
+    private fun startTurn(match: ChessMatch) {
         match.coroutineScope.launch {
             try {
                 val str = engine.getMove(match.board.getFEN())
@@ -48,6 +58,12 @@ class EngineChessSide<T : ChessEngine>(val engine: T, color: Color, match: Chess
             }
         }
     }
+
+    override fun createFacade(match: ChessMatch) = EngineChessSideFacade(match, this)
+}
+
+class EngineChessSideFacade<T : ChessEngine>(match: ChessMatch, side: EngineChessSide<T>) : ChessSideFacade<EngineChessSide<T>>(match, side) {
+    val engine: T get() = side.engine
 }
 
 class NoEngineMoveException(fen: FEN) : Exception(fen.toString())

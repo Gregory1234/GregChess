@@ -14,18 +14,17 @@ import gregc.gregchess.match.PGN
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveFormatter
 import gregc.gregchess.piece.Piece
-import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.results.*
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 
-fun OfflinePlayer.toChessPlayer(): ChessPlayer = BukkitPlayerType.BUKKIT.of(uniqueId)
+fun OfflinePlayer.toChessSide(color: Color) = BukkitChessSide(uniqueId, color)
 
 var Player.currentChessMatch: ChessMatch?
     get() = ChessMatchManager.currentMatchOf(uniqueId)
     set(match) { ChessMatchManager.setCurrentMatch(uniqueId, match?.uuid) }
 val Player.isInChessMatch: Boolean get() = currentChessMatch != null
-val Player.currentChessSide: BukkitChessSide? get() = ChessMatchManager.currentSideOf(uniqueId)
+val Player.currentChessSide: BukkitChessSideFacade? get() = ChessMatchManager.currentSideOf(uniqueId)
 val Player.activeChessMatches: Set<ChessMatch> get() = ChessMatchManager.activeMatchesOf(uniqueId)
 val Player.currentSpectatedChessMatch: ChessMatch? get() = ChessMatchManager.currentSpectatedMatchOf(uniqueId)
 val Player.isSpectatingChessMatch: Boolean get() = currentSpectatedChessMatch != null

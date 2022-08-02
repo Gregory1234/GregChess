@@ -6,7 +6,7 @@ import gregc.gregchess.match.ComponentType
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.PlacedPieceType
-import gregc.gregchess.player.ChessPlayerType
+import gregc.gregchess.player.ChessSideType
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.stats.ChessStat
 import gregc.gregchess.variant.ChessVariant
@@ -70,7 +70,7 @@ abstract class Registry<K, T, B : RegistryBlock<K, T>>(val name: String) : Finit
         @JvmField
         val MOVE_TRAIT_TYPE = NameRegistry<MoveTraitType<*>>("move_trait_type")
         @JvmField
-        val PLAYER_TYPE = NameRegistry<ChessPlayerType<*>>("player_type")
+        val SIDE_TYPE = NameRegistry<ChessSideType<*>>("side_type")
         @JvmField
         val PLACED_PIECE_TYPE = NameRegistry<PlacedPieceType<*>>("placed_piece_type")
         @JvmField

@@ -2,19 +2,21 @@ package gregc.gregchess.fabric.player
 
 import com.mojang.authlib.GameProfile
 import gregc.gregchess.*
+import gregc.gregchess.fabric.GameProfileSerializer
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.client.PromotionMenuFactory
 import gregc.gregchess.fabric.match.FabricChessEventType
 import gregc.gregchess.fabric.piece.block
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.fabric.renderer.server
-import gregc.gregchess.match.ChessEvent
-import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.player.ChessSide
+import gregc.gregchess.player.ChessSideFacade
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -27,52 +29,69 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEve
     override val type get() = FabricChessEventType.PIECE_PLAYER_ACTION
 }
 
-class FabricChessSide(val gameProfile: GameProfile, color: Color, match: ChessMatch) : ChessSide<GameProfile>(FabricPlayerType.FABRIC, gameProfile, color, match) {
+@Serializable
+class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gameProfile: GameProfile, override val color: Color) : ChessSide {
 
     val uuid get() = gameProfile.id
 
+    override val name: String get() = gameProfile.name
+
+    override val type get() = FabricPlayerType.FABRIC
+
     fun getServerPlayer(server: MinecraftServer?) = server?.playerManager?.getPlayer(uuid)
 
-    var held: BoardPiece? = null
-        private set(v) {
-            val oldHeld = field
-            field = v
-            oldHeld?.let {
-                match.board.checkExists(it)
-                match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
-            }
-            v?.let {
-                match.board.checkExists(it)
-                match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
-            }
-        }
+    private var _held: BoardPiece? = null
 
-    fun sendStartMessage() {
-        if (hasTurn || player != opponent.player)
+    val held: BoardPiece? get() = _held
+
+    private fun setHeld(match: ChessMatch, newHeld: BoardPiece?) {
+        val oldHeld = _held
+        _held = newHeld
+        oldHeld?.let {
+            match.board.checkExists(it)
+            match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
+        }
+        newHeld?.let {
+            match.board.checkExists(it)
+            match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
+        }
+    }
+
+    fun sendStartMessage(match: ChessMatch) {
+        if (match[color].hasTurn || !match.sideFacades.isSamePlayer())
             getServerPlayer(match.server)?.sendMessage(Text.translatable("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }
 
-    override fun startTurn() {
+    override fun createFacade(match: ChessMatch) = FabricChessSideFacade(match, this)
+
+    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+        eventManager.registerEventE(TurnEvent.START) {
+            startTurn(match)
+        }
+    }
+
+    private fun startTurn(match: ChessMatch) {
         val inCheck = match.variant.isInCheck(match.board, color)
         if (inCheck) {
             getServerPlayer(match.server)?.sendMessage(Text.translatable("chess.gregchess.in_check"),false)
         }
     }
 
-    fun pickUp(pos: Pos) {
+    fun pickUp(match: ChessMatch, pos: Pos) {
         if (!match.running) return
         val piece = match.board[pos] ?: return
         if (piece.color != color) return
-        held = piece
+        setHeld(match, piece)
     }
 
-    fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity, server: MinecraftServer?): Boolean {
+    fun makeMove(match: ChessMatch, pos: Pos, floor: ChessboardFloorBlockEntity): Boolean {
+        val server = match.server
         if (!match.running) return false
         val piece = held ?: return false
         if (!piece.piece.block.canActuallyPlaceAt(floor.world, floor.pos.up())) return false
         val moves = piece.getLegalMoves(match.board)
         if (pos != piece.pos && pos !in moves.map { it.display }) return false
-        held = null
+        setHeld(match, null)
         if (pos == piece.pos) return true
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
@@ -91,24 +110,45 @@ class FabricChessSide(val gameProfile: GameProfile, color: Color, match: ChessMa
     }
 }
 
-inline fun ByColor<ChessSide<*>>.forEachReal(block: (GameProfile) -> Unit) {
+class FabricChessSideFacade(match: ChessMatch, side: FabricChessSide) : ChessSideFacade<FabricChessSide>(match, side) {
+    val gameProfile get() = side.gameProfile
+    val uuid get() = side.uuid
+
+    val serverPlayer get() = side.getServerPlayer(match.server)
+
+    val held get() = side.held
+
+    fun sendStartMessage() = side.sendStartMessage(match)
+
+    fun pickUp(pos: Pos) = side.pickUp(match, pos)
+
+    fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity) = side.makeMove(match, pos, floor)
+}
+
+inline fun ByColor<ChessSideFacade<*>>.forEachReal(block: (GameProfile) -> Unit) {
     toList().filterIsInstance<FabricChessSide>().map { it.gameProfile }.distinct().forEach(block)
 }
 
-inline fun ByColor<ChessSide<*>>.forEachRealEntity(server: MinecraftServer?, block: (ServerPlayerEntity) -> Unit) = forEachReal {
-    server?.playerManager?.getPlayer(it.id)?.let(block)
+inline fun ByColor<ChessSideFacade<*>>.forEachRealEntity(block: (ServerPlayerEntity) -> Unit) = forEachReal {
+    white.match.server?.playerManager?.getPlayer(it.id)?.let(block)
 }
 
-inline fun ByColor<ChessSide<*>>.forEachUnique(block: (FabricChessSide) -> Unit) {
-    val players = toList().filterIsInstance<FabricChessSide>()
-    if (players.size == 2 && players.all { it.player == players[0].player })
+inline fun ByColor<ChessSideFacade<*>>.forEachUnique(block: (FabricChessSideFacade) -> Unit) {
+    val players = toList().filterIsInstance<FabricChessSideFacade>()
+    if (players.size == 2 && isSamePlayer())
         players.filter { it.hasTurn }.forEach(block)
     else
         players.forEach(block)
 }
 
-inline fun ByColor<ChessSide<*>>.forEachUniqueEntity(server: MinecraftServer?, block: (ServerPlayerEntity, Color) -> Unit) = forEachUnique {
-    it.getServerPlayer(server)?.let { player ->
+inline fun ByColor<ChessSideFacade<*>>.forEachUniqueEntity(block: (ServerPlayerEntity, Color) -> Unit) = forEachUnique {
+    it.serverPlayer?.let { player ->
         block(player, it.color)
     }
+}
+
+fun ByColor<ChessSideFacade<*>>.isSamePlayer(): Boolean {
+    val w = white
+    val b = black
+    return w is FabricChessSideFacade && b is FabricChessSideFacade && w.uuid == b.uuid
 }

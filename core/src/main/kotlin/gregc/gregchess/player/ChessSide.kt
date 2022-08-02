@@ -1,52 +1,56 @@
 package gregc.gregchess.player
 
-import gregc.gregchess.AutoRegisterType
-import gregc.gregchess.Color
-import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.*
+import gregc.gregchess.match.*
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
 
-@Serializable(with = ChessPlayerType.Serializer::class)
-class ChessPlayerType<P: Any>(
-    val serializer: KSerializer<P>,
-    val nameOf: (P) -> String,
-    val initSide: (P, Color, ChessMatch) -> ChessSide<P>
-) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessPlayerType<*>>("ChessPlayerType", Registry.PLAYER_TYPE)
+@Serializable(with = ChessSideType.Serializer::class)
+class ChessSideType<T: ChessSide>(val serializer: KSerializer<T>) : NameRegistered {
+    object Serializer : NameRegisteredSerializer<ChessSideType<*>>("ChessSideType", Registry.SIDE_TYPE)
 
-    override val key get() = Registry.PLAYER_TYPE[this]
+    override val key get() = Registry.SIDE_TYPE[this]
 
-    override fun toString(): String = Registry.PLAYER_TYPE.simpleElementToString(this)
-
-    fun of(data: P) = ChessPlayer(this, data)
+    override fun toString(): String = Registry.SIDE_TYPE.simpleElementToString(this)
 
     companion object {
-        internal val AUTO_REGISTER = AutoRegisterType(ChessPlayerType::class) { m, n, _ -> Registry.PLAYER_TYPE[m, n] = this }
+        internal val AUTO_REGISTER = AutoRegisterType(ChessSideType::class) { m, n, _ -> Registry.SIDE_TYPE[m, n] = this }
     }
 }
 
 // TODO: add an interface for human players
-abstract class ChessSide<P : Any>(private val playerType: ChessPlayerType<P>, private val playerValue: P, val color: Color, val match: ChessMatch) {
+@Serializable(with = ChessSideSerializer::class)
+interface ChessSide {
+    val name: String
+    val color: Color
 
-    val player: ChessPlayer get() = playerType.of(playerValue)
+    val type: ChessSideType<out @SelfType ChessSide>
 
-    val name: String get() = playerType.nameOf(playerValue)
+    fun init(match: ChessMatch, eventManager: ChessEventManager) {}
 
-    val opponent
-        get() = match[!color]
+    fun createFacade(match: ChessMatch): ChessSideFacade<*>
+}
 
-    val hasTurn
-        get() = match.board.currentTurn == color
+object ChessSideSerializer : KeyRegisteredSerializer<ChessSideType<*>, ChessSide>("ChessSide", ChessSideType.Serializer) {
 
-    val pieces
-        get() = match.board.piecesOf(color)
+    @Suppress("UNCHECKED_CAST")
+    override fun ChessSideType<*>.valueSerializer(module: SerializersModule): KSerializer<ChessSide> = serializer as KSerializer<ChessSide>
 
-    val king
-        get() = match.board.kingOf(color)
+    override val ChessSide.key: ChessSideType<*> get() = type
 
-    open fun stop() {}
-    open fun clear() {}
-    open fun startTurn() {}
+}
 
+abstract class ChessSideFacade<T : ChessSide>(final override val match: ChessMatch, val side: T) : AnyFacade {
+    @Suppress("UNCHECKED_CAST")
+    val type: ChessSideType<T> get() = side.type as ChessSideType<T>
+
+    val name get() = side.name
+    val color get() = side.color
+
+    val hasTurn get() = match.board.currentTurn == color
+    val opponent get() = match.sideFacades[!color]
+
+    final override fun callEvent(event: ChessEvent) = super.callEvent(event)
 }
