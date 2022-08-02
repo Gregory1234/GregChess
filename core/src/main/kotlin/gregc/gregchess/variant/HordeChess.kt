@@ -61,7 +61,7 @@ object HordeChess : ChessVariant() {
         val pieces = fen.toPieces(this)
         check(pieces.count { it.value.type == PieceType.KING && it.value.color == Color.BLACK } == 1)
         val fakeBoard = Chessboard.createFakeConnector(this, variantOptions, fen)
-        fakeBoard.updateMoves(this, variantOptions)
+        fakeBoard.updateMoves()
         check(!isInCheck(fakeBoard, !fen.currentTurn))
     }
 }

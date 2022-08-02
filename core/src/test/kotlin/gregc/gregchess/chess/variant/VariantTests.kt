@@ -35,12 +35,12 @@ open class VariantTests(val variant: ChessVariant, val variantOptions: Long, val
 
     protected fun ChessboardFacade.setNotMoved(pos: Pos) {
         get(pos)?.copy(hasMoved = false)?.let(component::plusAssign)
-        updateMoves(variant, variantOptions)
+        updateMoves()
     }
 
     protected fun ChessboardFacade.addEnPassantFlag(pos: Pos) {
         set(pos, ChessFlag.EN_PASSANT, 1)
-        updateMoves(variant, variantOptions)
+        updateMoves()
     }
 
     protected fun Assert<Move>.hasTraitsExactly(vararg types: MoveTraitType<*>) =

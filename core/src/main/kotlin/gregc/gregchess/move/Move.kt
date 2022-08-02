@@ -1,6 +1,7 @@
 package gregc.gregchess.move
 
 import gregc.gregchess.Pos
+import gregc.gregchess.move.connector.board
 import gregc.gregchess.move.trait.MoveTrait
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PlacedPiece
@@ -46,20 +47,20 @@ data class Move(
                     } catch(e: Throwable) {
                         for(t in completedTraits.asReversed())
                             t.undo(env, this)
-                        env.updateMoves()
+                        env.board.updateMoves()
                         throw TraitsCouldNotExecuteException(remainingTraits, e)
                     }
                 }
             }
             if (remainingTraits.isEmpty()) {
-                env.updateMoves()
+                env.board.updateMoves()
                 return
             }
         }
 
         for(t in completedTraits.asReversed())
             t.undo(env, this)
-        env.updateMoves()
+        env.board.updateMoves()
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 
@@ -84,19 +85,19 @@ data class Move(
                     } catch(e: Throwable) {
                         for(t in completedTraits.asReversed())
                             t.execute(env, this)
-                        env.updateMoves()
+                        env.board.updateMoves()
                         throw TraitsCouldNotExecuteException(remainingTraits, e)
                     }
                 }
             }
             if (remainingTraits.isEmpty()) {
-                env.updateMoves()
+                env.board.updateMoves()
                 return
             }
         }
         for(t in completedTraits.asReversed())
             t.execute(env, this)
-        env.updateMoves()
+        env.board.updateMoves()
         throw TraitsCouldNotExecuteException(remainingTraits)
     }
 }

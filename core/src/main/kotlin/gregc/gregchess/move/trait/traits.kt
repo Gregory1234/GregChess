@@ -103,7 +103,7 @@ class CheckTrait : MoveTrait {
         private set
 
     private fun checkForChecks(color: Color, env: MoveEnvironment): CheckType? {
-        env.updateMoves()
+        env.board.updateMoves()
         val pieces = env.board.piecesOf(!color)
         val inCheck = env.variant.isInCheck(env.board, !color)
         val noMoves = pieces.all { it.getMoves(env.board).none { m -> env.variant.isLegal(m, env.board) } }

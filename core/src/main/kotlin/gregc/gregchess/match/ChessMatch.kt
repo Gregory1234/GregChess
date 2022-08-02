@@ -272,7 +272,6 @@ class ChessMatch private constructor(
     private val connectors = mutableMapOf<MoveConnectorType<*>, MoveConnector>()
 
     private inner class MatchMoveEnvironment : MoveEnvironment {
-        override fun updateMoves() = this@ChessMatch.board.updateMoves(variant, variantOptions)
         override fun callEvent(event: ChessEvent) = this@ChessMatch.callEvent(event)
         override val variant: ChessVariant get() = this@ChessMatch.variant
         override val variantOptions: Long get() = this@ChessMatch.variantOptions
@@ -286,7 +285,6 @@ class ChessMatch private constructor(
     }
 
     private class FakeMoveEnvironment(override val variant: ChessVariant, override val variantOptions: Long, val connectors: Map<MoveConnectorType<*>, MoveConnector>) : MoveEnvironment {
-        override fun updateMoves() = board.updateMoves(variant, variantOptions)
         override fun callEvent(event: ChessEvent) {}
         @Suppress("UNCHECKED_CAST")
         override fun <T : MoveConnector> get(type: MoveConnectorType<T>): T = connectors[type] as T

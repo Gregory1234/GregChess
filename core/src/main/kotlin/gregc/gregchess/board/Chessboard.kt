@@ -84,15 +84,6 @@ private class SquareChessboard(override val initialFEN: FEN, private val squares
             it[flag]!! += age
         }
     }
-
-    override fun updateMoves(variant: ChessVariant, variantOptions: Long) {
-        for ((_, square) in squares) {
-            square.bakedMoves = square.piece?.let { p -> variant.getPieceMoves(p, this, variantOptions) }
-        }
-        for ((_, square) in squares) {
-            square.bakedLegalMoves = square.bakedMoves?.filter { variant.isLegal(it, this) }
-        }
-    }
 }
 
 @Serializable
@@ -149,7 +140,8 @@ class Chessboard private constructor (
             e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
                 initialFEN,
                 squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),
-                BoardCounters(halfmoveClock, fullmoveCounter, currentTurn)
+                BoardCounters(halfmoveClock, fullmoveCounter, currentTurn),
+                match.variant, match.variantOptions
             )
         }
     }
@@ -271,12 +263,17 @@ class Chessboard private constructor (
         }
     }
 
-    private class FakeChessboardConnector(override val initialFEN: FEN, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters)
-        : ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters), ChessboardFacadeConnector {
+    private class FakeChessboardConnector(
+        override val initialFEN: FEN, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters,
+        val variant: ChessVariant, val variantOptions: Long
+    ) : ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters), ChessboardFacadeConnector {
         override fun callEvent(event: ChessEvent) { }
+        override fun updateMoves() = updateMoves(squares, variant, variantOptions)
     }
 
     fun getFacade(match: ChessMatch) = match.makeCachedFacade(::ChessboardFacade, this)
+
+    fun updateMoves(variant: ChessVariant, variantOptions: Long) = updateMoves(squares, variant, variantOptions)
 
     companion object {
 
@@ -293,12 +290,17 @@ class Chessboard private constructor (
             }
         }
 
-        private fun createFakeConnector(variant: ChessVariant, fen: FEN): ChessboardConnector =
-            FakeChessboardConnector(fen, fen.toSquares(variant), mutableListOf(), BoardCounters(fen.halfmoveClock, fen.fullmoveCounter, fen.currentTurn))
+        fun createFakeConnector(variant: ChessVariant, variantOptions: Long, fen: FEN = variant.genFEN(variantOptions)): ChessboardFacadeConnector =
+            FakeChessboardConnector(fen, fen.toSquares(variant), mutableListOf(), BoardCounters(fen.halfmoveClock, fen.fullmoveCounter, fen.currentTurn), variant, variantOptions)
 
-        fun createFakeConnector(variant: ChessVariant, variantOptions: Long, fen: FEN? = null): ChessboardConnector =
-            createFakeConnector(variant, fen ?: variant.genFEN(variantOptions))
-
+        private fun ChessboardView.updateMoves(squares: Map<Pos, Square>, variant: ChessVariant, variantOptions: Long) {
+            for ((_, square) in squares) {
+                square.bakedMoves = square.piece?.let { p -> variant.getPieceMoves(p, this, variantOptions) }
+            }
+            for ((_, square) in squares) {
+                square.bakedLegalMoves = square.bakedMoves?.filter { variant.isLegal(it, this) }
+            }
+        }
     }
 }
 
@@ -323,6 +325,7 @@ class ChessboardFacade(match: ChessMatch, component: Chessboard) : ComponentFaca
     fun checkForRepetition() = component.checkForRepetition(match)
     fun checkForFiftyMoveRule() = component.checkForFiftyMoveRule(match)
     fun undoLastMove() = component.undoLastMove(match)
+    override fun updateMoves() = component.updateMoves(match.variant, match.variantOptions)
 
     internal fun callSpawnedEvent(p: CapturedPiece) = callEvent(captured.createSpawnedEvent(p))
     internal fun callSpawnEvent(p: CapturedPiece) = callEvent(captured.createSpawnEvent(p))

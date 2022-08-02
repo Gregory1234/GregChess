@@ -82,7 +82,7 @@ object ThreeChecks : ChessVariant(), Registering {
             private set
 
         override fun execute(env: MoveEnvironment, move: Move) {
-            env.updateMoves()
+            env.board.updateMoves()
             if (env.variant.isInCheck(env.board, !move.main.color)) {
                 env[CHECK_COUNTER_CONNECTOR].registerCheck(!move.main.color)
                 checkRegistered = true
