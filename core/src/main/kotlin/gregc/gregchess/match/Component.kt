@@ -56,8 +56,3 @@ object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component
 }
 
 class ComponentNotFoundException(type: ComponentType<*>) : Exception(type.toString())
-
-abstract class ComponentFacade<T : Component>(val match: ChessMatch, val component: T) {
-    @Suppress("UNCHECKED_CAST")
-    val type: ComponentType<T> get() = component.type as ComponentType<T>
-}

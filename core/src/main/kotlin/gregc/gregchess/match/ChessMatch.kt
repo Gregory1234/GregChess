@@ -3,7 +3,6 @@
 package gregc.gregchess.match
 
 import gregc.gregchess.*
-import gregc.gregchess.board.ChessboardFacade
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.connector.*
@@ -36,7 +35,7 @@ class ChessMatch private constructor(
     @SerialName("results") private var results_: MatchResults?,
     val extraInfo: ExtraInfo,
     val variantOptions: Long
-) {
+) : ChessEventCaller {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, playerInfo: ByColor<ChessPlayer>, variantOptions: Long, extraInfo: ExtraInfo = ExtraInfo())
             : this(environment, variant, components.toList(), playerInfo, UUID.randomUUID(), State.INITIAL, null, null, Duration.ZERO, null, extraInfo, variantOptions)
 
@@ -48,7 +47,7 @@ class ChessMatch private constructor(
     @Transient
     private val eventManager = ChessEventManager()
 
-    fun callEvent(e: ChessEvent) = eventManager.callEvent(e)
+    override fun callEvent(event: ChessEvent) = eventManager.callEvent(event)
 
     init {
         require((state >= State.RUNNING) == (startTime != null)) { "Start time bad" }
@@ -82,7 +81,7 @@ class ChessMatch private constructor(
     @Suppress("UNCHECKED_CAST")
     fun <T : Component, F : ComponentFacade<T>> makeCachedFacade(mk: (ChessMatch, T) -> F, component: T): F = facadeCache.getOrPut(component) { mk(this, component) } as F
 
-    val board get() = makeCachedFacade(::ChessboardFacade, require(ComponentType.CHESSBOARD))
+    val board get() = require(ComponentType.CHESSBOARD).getFacade(this)
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Component> get(type: ComponentType<T>): T? = components.firstOrNull { it.type == type } as T?
@@ -274,7 +273,7 @@ class ChessMatch private constructor(
 
     private inner class MatchMoveEnvironment : MoveEnvironment {
         override fun updateMoves() = this@ChessMatch.board.updateMoves(variant, variantOptions)
-        override fun callEvent(e: ChessEvent) = this@ChessMatch.callEvent(e)
+        override fun callEvent(event: ChessEvent) = this@ChessMatch.callEvent(event)
         override val variant: ChessVariant get() = this@ChessMatch.variant
         override val variantOptions: Long get() = this@ChessMatch.variantOptions
         @Suppress("UNCHECKED_CAST")
@@ -288,7 +287,7 @@ class ChessMatch private constructor(
 
     private class FakeMoveEnvironment(override val variant: ChessVariant, override val variantOptions: Long, val connectors: Map<MoveConnectorType<*>, MoveConnector>) : MoveEnvironment {
         override fun updateMoves() = board.updateMoves(variant, variantOptions)
-        override fun callEvent(e: ChessEvent) {}
+        override fun callEvent(event: ChessEvent) {}
         @Suppress("UNCHECKED_CAST")
         override fun <T : MoveConnector> get(type: MoveConnectorType<T>): T = connectors[type] as T
         override val holders: Map<PlacedPieceType<*>, PieceHolder<*>> get() = buildMap {

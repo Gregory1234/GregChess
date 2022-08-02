@@ -188,11 +188,11 @@ class SpawnTrait(val piece: BoardPiece) : MoveTrait {
     override val shouldComeBefore get() = setOf(MoveTraitType.TARGET, MoveTraitType.CAPTURE)
 
     override fun execute(env: MoveEnvironment, move: Move) {
-        env.callEvent(env.board.createSpawnEvent(piece))
+        env.board.callSpawnEvent(piece)
     }
 
     override fun undo(env: MoveEnvironment, move: Move) {
-        env.callEvent(env.board.createClearEvent(piece))
+        env.board.callClearEvent(piece)
     }
 
 }
@@ -206,11 +206,11 @@ class ClearTrait(val piece: BoardPiece) : MoveTrait {
     override val shouldComeAfter get() = setOf(MoveTraitType.TARGET)
 
     override fun execute(env: MoveEnvironment, move: Move) {
-        env.callEvent(env.board.createClearEvent(piece))
+        env.board.callClearEvent(piece)
     }
 
     override fun undo(env: MoveEnvironment, move: Move) {
-        env.callEvent(env.board.createSpawnEvent(piece))
+        env.board.callSpawnEvent(piece)
     }
 
 }

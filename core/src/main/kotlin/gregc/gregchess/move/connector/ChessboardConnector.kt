@@ -2,6 +2,7 @@ package gregc.gregchess.move.connector
 
 import gregc.gregchess.*
 import gregc.gregchess.board.FEN
+import gregc.gregchess.match.ChessEventCaller
 import gregc.gregchess.move.Move
 import gregc.gregchess.piece.*
 import gregc.gregchess.variant.ChessVariant
@@ -36,6 +37,7 @@ interface ChessboardConnector : PieceHolder<BoardPiece>, ChessboardView, MoveCon
     override fun exists(p: BoardPiece): Boolean = super.exists(p)
     override fun canExist(p: BoardPiece): Boolean = super.canExist(p)
 
-    fun updateMoves(variant: ChessVariant, variantOptions: Long)
+    fun updateMoves(variant: ChessVariant, variantOptions: Long) // TODO: move to ChessboardFacadeConnector but without arguments
 }
 
+interface ChessboardFacadeConnector : ChessboardConnector, ChessEventCaller

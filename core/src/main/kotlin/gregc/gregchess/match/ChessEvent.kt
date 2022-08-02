@@ -31,11 +31,11 @@ class ChessEventType<T> {
     }
 }
 
-class ChessEventManager() {
+class ChessEventManager : ChessEventCaller {
     private val anyHandlers = mutableListOf<(ChessEvent) -> Unit>()
     private val handlers = mutableMapOf<ChessEventType<*>, MutableList<(ChessEvent) -> Unit>>()
 
-    fun callEvent(event: ChessEvent) = with(MultiExceptionContext()) {
+    override fun callEvent(event: ChessEvent) = with(MultiExceptionContext()) {
         (handlers[event.type].orEmpty() + anyHandlers).forEach {
             exec {
                 it.invoke(event)
@@ -77,3 +77,7 @@ enum class ChessBaseEvent : ChessEvent {
 }
 
 class ChessEventException(val event: ChessEvent, cause: Throwable? = null) : RuntimeException(event.toString(), cause)
+
+interface ChessEventCaller {
+    fun callEvent(event: ChessEvent)
+}

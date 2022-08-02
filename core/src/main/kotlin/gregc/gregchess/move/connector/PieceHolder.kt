@@ -1,8 +1,7 @@
 package gregc.gregchess.move.connector
 
 import gregc.gregchess.Color
-import gregc.gregchess.match.ChessEvent
-import gregc.gregchess.match.ChessEventType
+import gregc.gregchess.match.*
 import gregc.gregchess.piece.*
 
 interface PieceHolderView<P : PlacedPiece> {
@@ -51,6 +50,10 @@ fun <P : PlacedPiece> PieceHolder<P>.createClearEvent(p: P): PieceMoveEvent {
     return PieceMoveEvent(p to null)
 }
 
+fun <P : PlacedPiece, T> T.callSpawnedEvent(p: P) where T : PieceHolder<P>, T : ChessEventCaller = callEvent(createSpawnedEvent(p))
+fun <P : PlacedPiece, T> T.callSpawnEvent(p: P) where T : PieceHolder<P>, T : ChessEventCaller = callEvent(createSpawnEvent(p))
+fun <P : PlacedPiece, T> T.callClearEvent(p: P) where T : PieceHolder<P>, T : ChessEventCaller = callEvent(createClearEvent(p))
+
 fun createMultiMoveEvent(holders: Map<PlacedPieceType<*>, PieceHolder<*>>, vararg moves: Pair<PlacedPiece?, PlacedPiece?>?): PieceMoveEvent {
     @Suppress("UNCHECKED_CAST")
     fun PlacedPiece.withHolder(f: PieceHolder<PlacedPiece>.(PlacedPiece) -> Unit) = (holders[placedPieceType]!! as PieceHolder<PlacedPiece>).f(this)
@@ -81,3 +84,6 @@ fun createMultiMoveEvent(holders: Map<PlacedPieceType<*>, PieceHolder<*>>, varar
         throw e
     }
 }
+
+fun MoveConnector.createMultiMoveEvent(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) = createMultiMoveEvent(holders, *moves)
+fun <T> T.callMultiMoveEvent(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) where T : MoveConnector, T : ChessEventCaller = callEvent(createMultiMoveEvent(*moves))

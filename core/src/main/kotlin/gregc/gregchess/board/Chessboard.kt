@@ -26,8 +26,8 @@ private class Square(
 
     override fun toString() = "Square(piece=$piece, flags=$flags)"
 
-    fun empty(match: ChessMatch, board: Chessboard) {
-        piece?.let { board.clear(match, it) }
+    fun empty(board: ChessboardFacade) {
+        piece?.let(board::callClearEvent)
         bakedMoves = null
         bakedLegalMoves = null
         flags.clear()
@@ -143,7 +143,7 @@ class Chessboard private constructor (
         eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
         eventManager.registerEvent(ChessEventType.BASE) { handleBaseEvent(match, it) }
         eventManager.registerEvent(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
-            e[MoveConnectorType.CHESSBOARD] = this
+            e[MoveConnectorType.CHESSBOARD] = getFacade(match)
         }
         eventManager.registerEvent(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
             e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
@@ -179,9 +179,10 @@ class Chessboard private constructor (
 
     private fun handleBaseEvent(match: ChessMatch, e: ChessBaseEvent) {
         if (e == ChessBaseEvent.SYNC || e == ChessBaseEvent.START) {
+            val facade = getFacade(match)
             updateMoves(match.variant, match.variantOptions)
-            pieces.forEach { sendSpawned(match, it) }
-            capturedPieces.forEach { sendSpawned(match, it) }
+            pieces.forEach(facade::callSpawnedEvent)
+            capturedPieces.forEach(facade::callSpawnedEvent)
         }
     }
 
@@ -194,9 +195,10 @@ class Chessboard private constructor (
     }
 
     fun setFromFEN(match: ChessMatch, fen: FEN) {
+        val facade = getFacade(match)
         match.variant.validateFEN(fen, match.variantOptions)
-        capturedPieces.asReversed().forEach { clear(match, it) }
-        squares.values.forEach { it.empty(match, this) }
+        capturedPieces.asReversed().forEach(facade::callClearEvent)
+        squares.values.forEach { it.empty(facade) }
         fen.forEachSquare(match.variant) { p -> this += p }
 
         halfmoveClock = fen.halfmoveClock
@@ -213,7 +215,7 @@ class Chessboard private constructor (
 
         boardHashes_.clear()
         addBoardHash(fen)
-        pieces.forEach { sendSpawned(match, it) }
+        pieces.forEach(facade::callSpawnedEvent)
         match.callEvent(SetFenEvent(fen))
     }
 
@@ -270,23 +272,11 @@ class Chessboard private constructor (
     }
 
     private class FakeChessboardConnector(override val initialFEN: FEN, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters)
-        : ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters)
-
-    internal fun clear(match: ChessMatch, boardPiece: BoardPiece) {
-        match.callEvent(createClearEvent(boardPiece))
+        : ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters), ChessboardFacadeConnector {
+        override fun callEvent(event: ChessEvent) { }
     }
 
-    internal fun clear(match: ChessMatch, captured: CapturedPiece) {
-        match.callEvent(this.captured.createClearEvent(captured))
-    }
-
-    internal fun sendSpawned(match: ChessMatch, boardPiece: BoardPiece) {
-        match.callEvent(createSpawnedEvent(boardPiece))
-    }
-
-    internal fun sendSpawned(match: ChessMatch, captured: CapturedPiece) {
-        match.callEvent(this.captured.createSpawnedEvent(captured))
-    }
+    fun getFacade(match: ChessMatch) = match.makeCachedFacade(::ChessboardFacade, this)
 
     companion object {
 
@@ -312,7 +302,7 @@ class Chessboard private constructor (
     }
 }
 
-class ChessboardFacade(match: ChessMatch, component: Chessboard) : ComponentFacade<Chessboard>(match, component), ChessboardConnector by component {
+class ChessboardFacade(match: ChessMatch, component: Chessboard) : ComponentFacade<Chessboard>(match, component), ChessboardConnector by component, ChessboardFacadeConnector {
     override var currentTurn
         get() = component.currentTurn
         set(v) { component.currentTurn = v }
@@ -333,4 +323,8 @@ class ChessboardFacade(match: ChessMatch, component: Chessboard) : ComponentFaca
     fun checkForRepetition() = component.checkForRepetition(match)
     fun checkForFiftyMoveRule() = component.checkForFiftyMoveRule(match)
     fun undoLastMove() = component.undoLastMove(match)
+
+    internal fun callSpawnedEvent(p: CapturedPiece) = callEvent(captured.createSpawnedEvent(p))
+    internal fun callSpawnEvent(p: CapturedPiece) = callEvent(captured.createSpawnEvent(p))
+    internal fun callClearEvent(p: CapturedPiece) = callEvent(captured.createClearEvent(p))
 }

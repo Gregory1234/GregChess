@@ -16,7 +16,7 @@ class MoveConnectorType<T : MoveConnector>(val cl: KClass<T>) {
     @RegisterAll(MoveConnectorType::class)
     companion object {
         @JvmField
-        val CHESSBOARD = MoveConnectorType(ChessboardConnector::class)
+        val CHESSBOARD = MoveConnectorType(ChessboardFacadeConnector::class)
     }
 }
 
