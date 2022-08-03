@@ -91,10 +91,10 @@ class Chessboard private constructor (
     override val initialFEN: FEN,
     private val squares: Map<Pos, Square>,
     private val counters: BoardCounters = BoardCounters(initialFEN.halfmoveClock, initialFEN.fullmoveCounter, initialFEN.currentTurn),
-    @SerialName("boardHashes") private val boardHashes_: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
-    @SerialName("capturedPieces") private val capturedPieces_: MutableList<CapturedPiece> = mutableListOf(),
+    private val boardHashes: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
+    private val capturedPieces: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf()
-) : Component, ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces_, counters) {
+) : Component, ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters) {
     private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toSquares(variant))
     constructor(variant: ChessVariant, variantOptions: Long, fen: FEN? = null) :
             this(variant, (fen ?: variant.genFEN(variantOptions)).also { variant.validateFEN(it, variantOptions) })
@@ -107,8 +107,6 @@ class Chessboard private constructor (
     override var currentTurn: Color
         get() = counters.currentTurn
         internal set(v) { counters.currentTurn = v }
-    val boardHashes get() = boardHashes_.toMap()
-    val capturedPieces get() = capturedPieces_.toList()
     val moveHistory get() = moveHistory_.toList()
 
     private val boardState
@@ -179,11 +177,11 @@ class Chessboard private constructor (
     }
 
     operator fun plusAssign(captured: CapturedPiece) {
-        capturedPieces_ += captured
+        capturedPieces += captured
     }
 
     operator fun minusAssign(captured: CapturedPiece) {
-        capturedPieces_.removeAt(capturedPieces_.lastIndexOf(captured))
+        capturedPieces.removeAt(capturedPieces.lastIndexOf(captured))
     }
 
     fun setFromFEN(match: ChessMatch, fen: FEN) {
@@ -205,7 +203,7 @@ class Chessboard private constructor (
 
         updateMoves(match.variant, match.variantOptions)
 
-        boardHashes_.clear()
+        boardHashes.clear()
         addBoardHash(fen)
         pieces.forEach(facade::callSpawnedEvent)
         match.callEvent(SetFenEvent(fen))
@@ -230,7 +228,7 @@ class Chessboard private constructor (
     }
 
     fun checkForRepetition(match: ChessMatch) {
-        if ((boardHashes_[getFEN().copy(currentTurn = !currentTurn).hashed()] ?: 0) >= 3)
+        if ((boardHashes[getFEN().copy(currentTurn = !currentTurn).hashed()] ?: 0) >= 3)
             match.stop(drawBy(EndReason.REPETITION))
     }
 
@@ -241,16 +239,16 @@ class Chessboard private constructor (
 
     private fun addBoardHash(fen: FEN): Int {
         val hash = fen.hashed()
-        boardHashes_[hash] = (boardHashes_[hash] ?: 0) + 1
-        return boardHashes_[hash]!!
+        boardHashes[hash] = (boardHashes[hash] ?: 0) + 1
+        return boardHashes[hash]!!
     }
 
     fun undoLastMove(match: ChessMatch) {
         lastMove?.let {
             if (!it.isPhantomMove) {
                 val hash = getFEN().hashed()
-                boardHashes_[hash] = (boardHashes_[hash] ?: 1) - 1
-                if (boardHashes_[hash] == 0) boardHashes_ -= hash
+                boardHashes[hash] = (boardHashes[hash] ?: 1) - 1
+                if (boardHashes[hash] == 0) boardHashes -= hash
                 match.undoMove(it)
                 if (currentTurn == Color.WHITE)
                     fullmoveCounter--
@@ -305,14 +303,10 @@ class Chessboard private constructor (
 }
 
 class ChessboardFacade(match: ChessMatch, component: Chessboard) : ComponentFacade<Chessboard>(match, component), ChessboardConnector by component, ChessboardFacadeConnector {
-    override var currentTurn
-        get() = component.currentTurn
-        set(v) { component.currentTurn = v }
+    override val currentTurn get() = component.currentTurn
     var fullmoveCounter
         get() = component.fullmoveCounter
         set(v) { component.fullmoveCounter = v }
-    val boardHashes get() = component.boardHashes
-    val capturedPieces get() = component.capturedPieces
     val moveHistory get() = component.moveHistory
     val lastNormalMove get() = component.lastNormalMove
     var lastMove

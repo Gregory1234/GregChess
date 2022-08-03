@@ -154,7 +154,7 @@ class ChessMatch private constructor(
         variant.checkForMatchEnd(this)
         if (running) {
             callEvent(TurnEvent.END)
-            board.currentTurn++
+            board.component.currentTurn++
             startTurn()
         }
     }
@@ -162,7 +162,7 @@ class ChessMatch private constructor(
     fun previousTurn() {
         requireState(State.RUNNING)
         callEvent(TurnEvent.UNDO)
-        board.currentTurn++
+        board.component.currentTurn++
         startPreviousTurn()
     }
 
