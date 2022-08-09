@@ -1,0 +1,164 @@
+{
+  "chess.pawn.pick_up": {
+    "sounds": [
+      {
+        "name": "block.stone.hit",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.pawn.pick_up"
+  },
+  "chess.pawn.move": {
+    "sounds": [
+      {
+        "name": "block.stone.step",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.pawn.move"
+  },
+  "chess.pawn.capture": {
+    "sounds": [
+      {
+        "name": "block.stone.break",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.pawn.capture"
+  },
+  "chess.knight.pick_up": {
+    "sounds": [
+      {
+        "name": "entity.horse.jump",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.knight.pick_up"
+  },
+  "chess.knight.move": {
+    "sounds": [
+      {
+        "name": "entity.horse.step",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.knight.move"
+  },
+  "chess.knight.capture": {
+    "sounds": [
+      {
+        "name": "entity.horse.death",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.knight.capture"
+  },
+  "chess.bishop.pick_up": {
+    "sounds": [
+      {
+        "name": "entity.spider.ambient",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.bishop.pick_up"
+  },
+  "chess.bishop.move": {
+    "sounds": [
+      {
+        "name": "entity.spider.step",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.bishop.move"
+  },
+  "chess.bishop.capture": {
+    "sounds": [
+      {
+        "name": "entity.spider.death",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.bishop.capture"
+  },
+  "chess.rook.pick_up": {
+    "sounds": [
+      {
+        "name": "entity.iron_golem.step",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.rook.pick_up"
+  },
+  "chess.rook.move": {
+    "sounds": [
+      {
+        "name": "entity.iron_golem.step",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.rook.move"
+  },
+  "chess.rook.capture": {
+    "sounds": [
+      {
+        "name": "entity.iron_golem.death",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.rook.capture"
+  },
+  "chess.queen.pick_up": {
+    "sounds": [
+      {
+        "name": "entity.witch.celebrate",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.queen.pick_up"
+  },
+  "chess.queen.move": {
+    "sounds": [
+      {
+        "name": "block.glass.step",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.queen.move"
+  },
+  "chess.queen.capture": {
+    "sounds": [
+      {
+        "name": "entity.witch.death",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.queen.capture"
+  },
+  "chess.king.pick_up": {
+    "sounds": [
+      {
+        "name": "block.metal.hit",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.king.pick_up"
+  },
+  "chess.king.move": {
+    "sounds": [
+      {
+        "name": "block.metal.step",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.king.move"
+  },
+  "chess.king.capture": {
+    "sounds": [
+      {
+        "name": "entity.ender_dragon.death",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.gregchess.chess.king.capture"
+  }
+}

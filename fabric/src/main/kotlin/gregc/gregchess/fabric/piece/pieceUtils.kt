@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric.piece
 
+import gregc.gregchess.ByColor
 import gregc.gregchess.byColor
 import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.id
@@ -10,6 +11,8 @@ import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
+import net.minecraft.sound.SoundEvent
+import net.minecraft.util.Identifier
 import net.minecraft.util.Rarity
 import net.minecraft.util.registry.Registry
 
@@ -21,12 +24,24 @@ private fun PieceBlock.registerMinecraft(p: Piece, itemSettings: FabricItemSetti
     Registry.register(Registry.ITEM, p.id, BlockItem(this, itemSettings))
 }
 
-fun PieceType.shortPieceBlocks() = byColor {
-    ShortPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-        .registerMinecraft(of(it), FabricItemSettings().group(GregChessMod.CHESS_GROUP))
+private fun PieceType.registerSound(name: String): SoundEvent = SoundEvent(Identifier.of(id.namespace, "chess." + id.path + ".$name")).apply {
+    Registry.register(Registry.SOUND_EVENT, this.id, this)
 }
 
-fun PieceType.tallPieceBlocks(rarity: Rarity) = byColor {
-    TallPieceBlock(of(it), AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
-        .registerMinecraft(of(it), FabricItemSettings().group(GregChessMod.CHESS_GROUP).rarity(rarity))
+private fun PieceType.registerSounds() = ChessPieceSounds(registerSound("move"), registerSound("capture"), registerSound("pick_up"))
+
+fun PieceType.shortPieceBlocks(): ByColor<PieceBlock> {
+    val sounds = registerSounds()
+    return byColor {
+        ShortPieceBlock(of(it), sounds, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
+            .registerMinecraft(of(it), FabricItemSettings().group(GregChessMod.CHESS_GROUP))
+    }
+}
+
+fun PieceType.tallPieceBlocks(rarity: Rarity): ByColor<PieceBlock> {
+    val sounds = registerSounds()
+    return byColor {
+        TallPieceBlock(of(it), sounds, AbstractBlock.Settings.copy(Blocks.OAK_PLANKS))
+            .registerMinecraft(of(it), FabricItemSettings().group(GregChessMod.CHESS_GROUP).rarity(rarity))
+    }
 }

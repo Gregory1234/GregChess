@@ -14,6 +14,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.sound.SoundEvent
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.Properties
@@ -26,8 +27,10 @@ import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.*
 
+class ChessPieceSounds(val move: SoundEvent, val capture: SoundEvent, val pickUp: SoundEvent)
+
 @Suppress("OVERRIDE_DEPRECATION")
-sealed class PieceBlock(val piece: Piece, settings: Settings?) : Block(settings) {
+sealed class PieceBlock(val piece: Piece, val pieceSounds: ChessPieceSounds, settings: Settings?) : Block(settings) {
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
 
     override fun getOutlineShape(
@@ -77,7 +80,7 @@ sealed class PieceBlock(val piece: Piece, settings: Settings?) : Block(settings)
 }
 
 @Suppress("OVERRIDE_DEPRECATION")
-class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
+class ShortPieceBlock(piece: Piece, pieceSounds: ChessPieceSounds, settings: Settings?) : PieceBlock(piece, pieceSounds, settings) {
 
     override fun canActuallyPlaceAt(world: World?, pos: BlockPos?): Boolean = true
 
@@ -98,7 +101,7 @@ class ShortPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, set
 }
 
 @Suppress("OVERRIDE_DEPRECATION")
-class TallPieceBlock(piece: Piece, settings: Settings?) : PieceBlock(piece, settings) {
+class TallPieceBlock(piece: Piece, pieceSounds: ChessPieceSounds, settings: Settings?) : PieceBlock(piece, pieceSounds, settings) {
 
     companion object {
         @JvmField

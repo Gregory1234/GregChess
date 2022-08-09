@@ -7,12 +7,15 @@ import gregc.gregchess.fabric.match.FabricChessEventType
 import gregc.gregchess.fabric.match.FabricComponentType
 import gregc.gregchess.fabric.moveBlock
 import gregc.gregchess.fabric.piece.*
+import gregc.gregchess.fabric.player.PiecePlayerActionEvent
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.BoardPiece
+import gregc.gregchess.piece.CapturedPiece
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.minecraft.block.enums.DoubleBlockHalf
+import net.minecraft.sound.SoundCategory
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
@@ -55,7 +58,7 @@ data class FabricRenderer(
     override fun init(match: ChessMatch, eventManager: ChessEventManager) {
         eventManager.registerEvent(ChessEventType.BASE, ::handleBaseEvent)
         eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
-        eventManager.registerEvent(FabricChessEventType.PIECE_PLAYER_ACTION) { redrawFloor(match) }
+        eventManager.registerEvent(FabricChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match, it) }
         eventManager.registerEvent(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
     }
 
@@ -96,7 +99,15 @@ data class FabricRenderer(
             }.pos
     }
 
-    // TODO: add move and capture sounds
+    private fun handlePiecePlayerActionEvent(match: ChessMatch, e: PiecePlayerActionEvent) {
+        redrawFloor(match)
+        val pieceBlock = tileBlocks[e.piece.pos]?.map { it.directPiece }?.firstOrNull { it.block is PieceBlock }
+        world.playSound(null, pieceBlock?.pos, when(e.action) {
+            PiecePlayerActionEvent.Type.PICK_UP -> e.piece.piece.block.pieceSounds.pickUp
+            PiecePlayerActionEvent.Type.PLACE_DOWN -> e.piece.piece.block.pieceSounds.move
+        }, SoundCategory.BLOCKS, 1f, 1f)
+    }
+
     private fun handlePieceMoveEvent(e: PieceMoveEvent) {
         val broken = mutableListOf<BoardPiece>()
         val placed = mutableListOf<BoardPiece>()
@@ -107,7 +118,13 @@ data class FabricRenderer(
                         if (t == null) continue
                         val pieceBlock = tileBlocks[o.pos]?.map { it.directPiece }?.firstOrNull { it.block is PieceBlock }
                         if (pieceBlock != null) {
-                            pieceBlock.pos?.let { world.moveBlock(it, !controller.addPiece(o.piece)) }
+                            val pos = pieceBlock.pos
+                            if (pos != null) {
+                                world.moveBlock(listOfNotNull(pos, if (pieceBlock.block is TallPieceBlock) pos.up() else null), !controller.addPiece(o.piece))
+                                if (t is CapturedPiece) {
+                                    world.playSound(null, pos, o.piece.block.pieceSounds.capture, SoundCategory.BLOCKS, 1f, 1f)
+                                }
+                            }
                             broken += o
                         }
                     }
@@ -120,7 +137,11 @@ data class FabricRenderer(
                         if ((pieceBlock?.block as? PieceBlock)?.piece != t.piece) {
                             check(pieceBlock == null) { "There is a piece block on ${t.pos} already" }
                             check(controller.removePiece(t.piece)) { "Not enough pieces in the controller" }
-                            t.place(choosePlacePos(t.pos, t.piece.block))
+                            val newPos = choosePlacePos(t.pos, t.piece.block)
+                            t.place(newPos)
+                            if (o is BoardPiece) {
+                                world.playSound(null, newPos, o.piece.block.pieceSounds.move, SoundCategory.BLOCKS, 1f, 1f)
+                            }
                             placed += t
                         }
                     }
@@ -128,7 +149,7 @@ data class FabricRenderer(
         } catch (e: Throwable) {
             for (t in placed.asReversed()) {
                 val pieceBlock = tileBlocks[t.pos]?.map { it.directPiece }?.firstOrNull { it.block is PieceBlock }
-                pieceBlock?.pos?.let { world.moveBlock(it, !controller.addPiece(t.piece)) }
+                pieceBlock?.pos?.let { world.moveBlock(listOfNotNull(it, if (pieceBlock.block is TallPieceBlock) it.up() else null), !controller.addPiece(t.piece)) }
             }
             for (o in broken.asReversed()) {
                 check(controller.removePiece(o.piece)) { "Not enough pieces in the controller" }
