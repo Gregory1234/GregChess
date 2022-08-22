@@ -16,7 +16,6 @@ import kotlinx.serialization.*
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 import kotlin.time.Duration
 
 @Serializable
@@ -25,22 +24,21 @@ class ChessMatch private constructor(
     val variant: ChessVariant,
     val components: List<Component>, // TODO: serialize as a map instead
     val sides: ByColor<ChessSide>,
-    @Contextual val uuid: UUID,
     @SerialName("state") private var state_: State,
     @SerialName("startTime") private var startTime_: Instant?,
     @SerialName("endTime") private var endTime_: Instant?,
     @SerialName("duration") private var durationCounted: Duration,
     @SerialName("results") private var results_: MatchResults?,
-    val extraInfo: ExtraInfo,
+    val extraInfo: ExtraInfo, // TODO: move to ChessEnvironment
     val variantOptions: Long
 ) : ChessEventCaller {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, sides: ByColor<ChessSide>, variantOptions: Long, extraInfo: ExtraInfo = ExtraInfo())
-            : this(environment, variant, components.toList(), sides, UUID.randomUUID(), State.INITIAL, null, null, Duration.ZERO, null, extraInfo, variantOptions)
+            : this(environment, variant, components.toList(), sides, State.INITIAL, null, null, Duration.ZERO, null, extraInfo, variantOptions)
 
     @Serializable
     data class ExtraInfo(val round: Int = 1, val eventName: String = "Casual match")
 
-    override fun toString() = "ChessMatch(uuid=$uuid)"
+    override fun toString() = "ChessMatch(${environment.matchToString()})"
 
     @Transient
     private val eventManager = ChessEventManager()
@@ -68,7 +66,7 @@ class ChessMatch private constructor(
         CoroutineScope(
             environment.coroutineDispatcher +
             SupervisorJob() +
-            CoroutineName("Match $uuid") +
+            CoroutineName("Match ${environment.matchCoroutineName()}") +
             CoroutineExceptionHandler { _, e ->
                 e.printStackTrace()
             }

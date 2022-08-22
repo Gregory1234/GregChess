@@ -4,6 +4,7 @@ import gregc.gregchess.Pos
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.coroutines.uuid
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
 import gregc.gregchess.fabric.nbt.*

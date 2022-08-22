@@ -17,7 +17,7 @@ import gregc.gregchess.variant.ChessVariant
 open class VariantTests(val variant: ChessVariant, val variantOptions: Long, val extraComponents: Collection<Component> = emptyList()) {
 
     protected fun mkMatch(fen: FEN) =
-        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, variantOptions, fen)) + extraComponents, byColor { TestChessSide(it.name, it) }, 0).start()
+        ChessMatch(TestChessEnvironment(), variant, listOf(Chessboard(variant, variantOptions, fen)) + extraComponents, byColor { TestChessSide(it.name, it) }, 0).start()
 
     protected fun Chessboard.getMove(from: Pos, to: Pos) = get(from)?.getLegalMoves(this)?.singleOrNull { it.display == to }
 

@@ -2,6 +2,7 @@ package gregc.gregchess.bukkit.piece
 
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.configName
+import gregc.gregchess.bukkit.match.uuid
 import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.match.ChessMatch

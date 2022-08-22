@@ -1,11 +1,9 @@
 package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.match.*
@@ -30,13 +28,7 @@ class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent {
 }
 
 @Serializable
-class MatchController(val presetName: String) : Component {
-
-    companion object : BukkitRegistering {
-        @JvmField
-        @Register
-        val PRESET = PropertyType()
-    }
+class MatchController : Component {
 
     override val type get() = BukkitComponentType.MATCH_CONTROLLER
 
@@ -96,7 +88,7 @@ class MatchController(val presetName: String) : Component {
             match.addStats(byColor {
                 val player = match.sides[it]
                 if (player is BukkitChessSide)
-                    BukkitPlayerStats.of(player.uuid)[it, presetName]
+                    BukkitPlayerStats.of(player.uuid)[it, match.presetName]
                 else
                     VoidPlayerStatsSink
             })
@@ -136,9 +128,6 @@ class MatchController(val presetName: String) : Component {
             }
         }
         eventManager.registerEventE(TurnEvent.END) { handleTurnEnd(match) }
-        eventManager.registerEventR(BukkitChessEventType.ADD_PROPERTIES) {
-            match(PRESET) { presetName }
-        }
         eventManager.registerEventR(BukkitChessEventType.PLAYER) {
             when(dir) {
                 PlayerDirection.JOIN -> player.currentChessSide!!.sendStartMessage()

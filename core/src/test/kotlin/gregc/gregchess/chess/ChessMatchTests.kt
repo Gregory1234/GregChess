@@ -20,7 +20,7 @@ import org.junit.jupiter.api.*
 class ChessMatchTests {
 
     private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, variantOptions: Long = 0, extra: Collection<Component> = emptyList(), sides: ByColor<ChessSide> = byColor { TestChessSide(it.name, it) }) =
-        ChessMatch(TestChessEnvironment, variant, listOf(Chessboard(variant, variantOptions)) + extra, sides, variantOptions)
+        ChessMatch(TestChessEnvironment(), variant, listOf(Chessboard(variant, variantOptions)) + extra, sides, variantOptions)
 
     @BeforeAll
     fun setup() {

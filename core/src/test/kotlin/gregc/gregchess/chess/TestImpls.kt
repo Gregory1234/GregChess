@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.serialization.Serializable
 import java.time.*
+import java.util.*
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
@@ -46,11 +47,13 @@ object TestComponent : Component {
 
 object TestVariant : ChessVariant()
 
-object TestChessEnvironment : ChessEnvironment {
+class TestChessEnvironment(val uuid: UUID = UUID.randomUUID()) : ChessEnvironment {
     override val pgnSite: String get() = "GregChess test"
     @OptIn(ExperimentalCoroutinesApi::class)
     override val coroutineDispatcher: CoroutineDispatcher get() = UnconfinedTestDispatcher()
     override val clock: Clock get() = Clock.fixed(Instant.EPOCH, ZoneId.systemDefault())
+    override fun matchCoroutineName(): String = uuid.toString()
+    override fun matchToString(): String = "uuid=$uuid"
 }
 
 fun clearRecords(m: Any, vararg ms: Any) = clearMocks(m, *ms, answers = false)

@@ -5,14 +5,26 @@ import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import gregc.gregchess.match.ChessEnvironment
+import gregc.gregchess.match.ChessMatch
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.Clock
 import java.time.ZoneId
+import java.util.*
 
 @Serializable
-object BukkitChessEnvironment : ChessEnvironment {
+class BukkitChessEnvironment(val presetName: String, @Contextual val uuid: UUID = UUID.randomUUID()) : ChessEnvironment {
+    companion object {
+        private val bukkitDispatcher = BukkitDispatcher(GregChessPlugin.plugin, BukkitContext.SYNC)
+    }
     override val pgnSite: String get() = "GregChess Bukkit plugin"
-    override val coroutineDispatcher: CoroutineDispatcher = BukkitDispatcher(GregChessPlugin.plugin, BukkitContext.SYNC)
+    override val coroutineDispatcher: CoroutineDispatcher get() = bukkitDispatcher
     override val clock: Clock get() = config.getString("TimeZone")?.let { Clock.system(ZoneId.of(it)) } ?: Clock.systemDefaultZone()
+    override fun matchCoroutineName(): String = uuid.toString()
+    override fun matchToString(): String = "uuid=$uuid"
 }
+
+val ChessMatch.bukkitEnvironment get() = environment as BukkitChessEnvironment
+val ChessMatch.uuid get() = bukkitEnvironment.uuid
+val ChessMatch.presetName get() = bukkitEnvironment.presetName

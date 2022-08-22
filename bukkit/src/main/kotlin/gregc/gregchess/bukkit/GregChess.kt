@@ -54,7 +54,6 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             }
         }
         BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.RENDERER] = { BukkitRenderer() }
-        BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.MATCH_CONTROLLER] = { MatchController(presetName) }
         BukkitRegistry.SETTINGS_PARSER[ThreeChecks.CHECK_COUNTER] = { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3)) }
     }
 

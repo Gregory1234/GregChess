@@ -3,8 +3,7 @@ package gregc.gregchess.bukkit.properties
 import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.match.BukkitChessEventType
-import gregc.gregchess.bukkit.match.BukkitComponentType
+import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.clock.TimeControl
@@ -24,6 +23,9 @@ object BukkitGregChessAdapter : Component, BukkitRegistering {
     @JvmField
     @Register
     val CHECK_COUNTER = PropertyType()
+    @JvmField
+    @Register
+    val PRESET = PropertyType()
 
     override val type get() = BukkitComponentType.ADAPTER
 
@@ -41,6 +43,7 @@ object BukkitGregChessAdapter : Component, BukkitRegistering {
             match[ThreeChecks.CHECK_COUNTER]?.apply {
                 player(CHECK_COUNTER) { this[it].toString() }
             }
+            match(PRESET) { match.presetName }
         }
     }
 }

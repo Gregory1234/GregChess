@@ -1,18 +1,21 @@
 package gregc.gregchess.bukkit.match
 
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.match.Component
+import gregc.gregchess.player.ChessSide
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 
-class SettingsParserContext(val variant: ChessVariant, val variantOptions: Long, val section: ConfigurationSection, val presetName: String)
+class SettingsParserContext(val variant: ChessVariant, val variantOptions: Long, val section: ConfigurationSection)
 
 typealias SettingsParser<T> = SettingsParserContext.() -> T?
 
@@ -25,11 +28,14 @@ val defaultVariantOptionsParser: VariantOptionsParser = {
 }
 
 class MatchSettings(
+    val environment: BukkitChessEnvironment,
     val name: String,
     val variant: ChessVariant,
     val variantOptions: Long,
-    val components: Collection<Component>
-)
+    val components: List<Component>
+) {
+    fun createMatch(sides: ByColor<(Color) -> ChessSide>, extraInfo: ChessMatch.ExtraInfo = ChessMatch.ExtraInfo()) = ChessMatch(environment, variant, components, byColor { sides[it](it) }, variantOptions, extraInfo)
+}
 
 object SettingsManager {
 
@@ -43,14 +49,17 @@ object SettingsManager {
             val variantOptionsParser = BukkitRegistry.VARIANT_OPTIONS_PARSER[variant]
             val variantOptions = section.variantOptionsParser()
 
-            val context = SettingsParserContext(variant, variantOptions, section, name)
+            val context = SettingsParserContext(variant, variantOptions, section)
             val requestedComponents = variant.requiredComponents + variant.optionalComponents +
                     BukkitRegistry.HOOKED_COMPONENTS.elements
             val components = requestedComponents.mapNotNull { req ->
                 val f = BukkitRegistry.SETTINGS_PARSER[req]
                 context.f()
             }
-            MatchSettings(name, variant, variantOptions, components)
+
+            val environment = BukkitChessEnvironment(name)
+
+            MatchSettings(environment, name, variant, variantOptions, components)
         }
 
 }
