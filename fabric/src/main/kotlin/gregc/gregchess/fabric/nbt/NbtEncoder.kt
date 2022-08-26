@@ -59,7 +59,7 @@ class NbtElementEncoder(
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
         encodeString(enumDescriptor.getElementName(index))
 
-    override fun encodeInline(inlineDescriptor: SerialDescriptor): Encoder = this
+    override fun encodeInline(descriptor: SerialDescriptor): Encoder = this
     override fun encodeNull() = consumer(null)
 
     override fun encodeByteArray(value: ByteArray) = consumer(NbtByteArray(value))

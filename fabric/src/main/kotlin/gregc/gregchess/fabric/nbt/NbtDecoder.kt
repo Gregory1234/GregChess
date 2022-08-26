@@ -71,7 +71,7 @@ class NbtElementDecoder(override val serializersModule: SerializersModule, priva
     override fun decodeString(): String = nbtAsOr<NbtString, String>(nbtElement, { it }, { it.asString() })
 
 
-    override fun decodeInline(inlineDescriptor: SerialDescriptor): Decoder = this
+    override fun decodeInline(descriptor: SerialDescriptor): Decoder = this
     override fun decodeNull() = null
 
     override fun decodeByteArray(): ByteArray = (nbtElement as NbtByteArray).byteArray
