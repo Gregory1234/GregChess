@@ -1,6 +1,7 @@
 package gregc.gregchess.fabric.block
 
-import gregc.gregchess.*
+import gregc.gregchess.Pos
+import gregc.gregchess.byColor
 import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.GregChessMod
 import gregc.gregchess.fabric.client.ChessControllerGuiDescription
@@ -12,6 +13,7 @@ import gregc.gregchess.fabric.player.toChessSide
 import gregc.gregchess.fabric.renderer.FabricRenderer
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.Piece
+import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.results.drawBy
 import gregc.gregchess.variant.ChessVariant
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
@@ -146,7 +148,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         currentMatchUUID = ChessMatch(
             FabricChessEnvironment, ChessVariant.Normal,
             ChessMatchManager.settings(ChessVariant.Normal, 0, getBoardState(), FabricRenderer(this)),
-            byColor(whitePlayer.toChessSide(Color.WHITE), blackPlayer.toChessSide(Color.BLACK)), 0
+            byColor(ChessPlayer(whitePlayer::toChessSide), ChessPlayer(blackPlayer::toChessSide)), 0
         ).start().uuid
     }
 

@@ -34,9 +34,9 @@ object ConsoleBukkitCommandSender : BukkitCommandSender {
     override fun sendMessage(msg: TextComponent) = Bukkit.getConsoleSender().spigot().sendMessage(msg)
 }
 
-interface BukkitPlayerProvider {
-    fun getPlayer(name: String): BukkitPlayer?
-    fun getOnlinePlayer(name: String): BukkitPlayer?
-    fun getPlayer(uuid: UUID): BukkitPlayer?
-    fun getOnlinePlayer(uuid: UUID): BukkitPlayer?
+interface BukkitPlayerProvider<out Offline : BukkitPlayer, out Online : BukkitPlayer> {
+    fun getPlayer(name: String): Offline?
+    fun getOnlinePlayer(name: String): Online?
+    fun getPlayer(uuid: UUID): Offline?
+    fun getOnlinePlayer(uuid: UUID): Online?
 }

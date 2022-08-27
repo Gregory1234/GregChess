@@ -23,19 +23,19 @@ internal fun <S : BukkitCommandSender> CommandBuilder<S>.subcommand(name: String
     }
 }
 
-internal fun CommandBuilder<BukkitCommandSender>.playerSubcommand(name: String, builder: CommandBuilder<BukkitPlayer>.() -> Unit) {
-    literal(BukkitPlayer::class, name) {
+internal fun CommandBuilder<BukkitCommandSender>.playerSubcommand(name: String, builder: CommandBuilder<GregChessBukkitPlayer>.() -> Unit) {
+    literal(GregChessBukkitPlayer::class, name) {
         requirePermission("gregchess.chess.$name")
         builder()
     }
 }
 
-internal fun CommandBuilder<BukkitPlayer>.requireHumanOpponent(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
+internal fun CommandBuilder<out BukkitPlayer>.requireHumanOpponent(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
     validate(OPPONENT_NOT_HUMAN) { sender.currentChessSide?.opponent is BukkitChessSideFacade }
     return { sender.currentChessSide!!.opponent as BukkitChessSideFacade }
 }
 
-internal fun CommandBuilder<BukkitPlayer>.requireMatch(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
+internal fun CommandBuilder<out BukkitPlayer>.requireMatch(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
     validate(YOU_NOT_IN_MATCH) { sender.currentChessMatch != null }
     return { sender.currentChessSide!! }
 }

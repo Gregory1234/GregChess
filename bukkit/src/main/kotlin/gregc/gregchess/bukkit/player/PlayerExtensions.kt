@@ -18,8 +18,6 @@ import gregc.gregchess.piece.Piece
 import gregc.gregchess.results.*
 import org.bukkit.entity.Player
 
-fun BukkitPlayer.toChessSide(color: Color) = BukkitChessSide(uuid, color)
-
 var BukkitPlayer.currentChessMatch: ChessMatch?
     get() = ChessMatchManager.currentMatchOf(uuid)
     set(match) { ChessMatchManager.setCurrentMatch(uuid, match?.uuid) }

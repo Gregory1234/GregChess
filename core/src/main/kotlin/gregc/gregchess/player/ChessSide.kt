@@ -7,6 +7,10 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 
+fun interface ChessPlayer<out S : ChessSide> {
+    fun createChessSide(color: Color): S
+}
+
 @Serializable(with = ChessSideType.Serializer::class)
 class ChessSideType<T: ChessSide>(val serializer: KSerializer<T>) : NameRegistered {
     object Serializer : NameRegisteredSerializer<ChessSideType<*>>("ChessSideType", Registry.SIDE_TYPE)
