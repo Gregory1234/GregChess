@@ -1,12 +1,11 @@
 package gregc.gregchess.bukkitutils.player
 
-import gregc.gregchess.bukkitutils.Message
-import gregc.gregchess.bukkitutils.sendTitleFull
+import gregc.gregchess.bukkitutils.*
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
-import java.util.UUID
+import java.util.*
 
 interface BukkitCommandSender {
     fun sendMessage(msg: String)
@@ -27,6 +26,7 @@ interface BukkitPlayer : BukkitCommandSender {
     override fun sendMessage(msg: TextComponent) = onNull(entity) { spigot().sendMessage(msg) }
     override fun hasPermission(name: String): Boolean = entity?.hasPermission(name) ?: false
     fun sendTitle(title: String?, subtitle: String?) = onNull(entity) { sendTitleFull(title, subtitle) }
+    fun openMenu(menu: Menu<*>) = onNull(entity) { openMenu(menu) }
 }
 
 object ConsoleBukkitCommandSender : BukkitCommandSender {

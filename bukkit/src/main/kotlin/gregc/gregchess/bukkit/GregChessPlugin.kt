@@ -13,7 +13,7 @@ import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
-import gregc.gregchess.bukkitutils.player.DefaultBukkitPlayer
+import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.bukkitutils.requests.*
 import gregc.gregchess.byColor
 import gregc.gregchess.clock.clock
@@ -31,8 +31,6 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.bukkit.command.CommandSender
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -135,7 +133,7 @@ object GregChessPlugin : Listener {
                             if (!ArenaManager.fromConfig().hasFreeArenas()) {
                                 throw CommandException(NO_ARENAS)
                             }
-                            val res = duelRequest.call(RequestData(DefaultBukkitPlayer(sender), DefaultBukkitPlayer(opponent), settings.name))
+                            val res = duelRequest.call(RequestData(sender, opponent, settings.name))
                             if (res == RequestResponse.ACCEPT) {
                                 if (sender.isInChessMatch) {
                                     sender.sendMessage(YOU_IN_MATCH)
@@ -177,7 +175,7 @@ object GregChessPlugin : Listener {
                 val op = requireHumanOpponent()
                 executeSuspend {
                     drawRequest.invalidSender(sender) { !pl().hasTurn }
-                    val res = drawRequest.call(RequestData(DefaultBukkitPlayer(sender), DefaultBukkitPlayer(op().bukkitOffline), ""), true)
+                    val res = drawRequest.call(RequestData(sender, op().player, ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().match.stop(drawBy(EndReason.DRAW_AGREEMENT))
                     }
@@ -187,7 +185,7 @@ object GregChessPlugin : Listener {
                 val pl = requireMatch()
                 execute {
                     val g = pl().match
-                    val piece = g.board[g.renderer.getPos(sender.location)]
+                    val piece = g.board[g.renderer.getPos(sender.entity!!.location)]
                     if (piece != null) {
                         g.finishMove(phantomCapture(piece, pl().color))
                         sender.sendMessage(BOARD_OP_DONE)
@@ -213,7 +211,7 @@ object GregChessPlugin : Listener {
                 argument(registryArgument("piece", PieceRegistryView)) { piece ->
                     execute {
                         val g = pl().match
-                        g.finishMove(phantomSpawn(BoardPiece(g.renderer.getPos(sender.location), piece(), false)))
+                        g.finishMove(phantomSpawn(BoardPiece(g.renderer.getPos(sender.entity!!.location), piece(), false)))
                         sender.sendMessage(BOARD_OP_DONE)
                     }
                     argument(posArgument("pos")) { pos ->
@@ -337,9 +335,9 @@ object GregChessPlugin : Listener {
                 val op = requireHumanOpponent()
                 executeSuspend {
                     takebackRequest.invalidSender(sender) {
-                        (pl().match.currentOpponent as? BukkitChessSideFacade)?.uuid != sender.uniqueId
+                        (pl().match.currentOpponent as? BukkitChessSideFacade)?.uuid != sender.uuid
                     }
-                    val res = takebackRequest.call(RequestData(DefaultBukkitPlayer(sender), DefaultBukkitPlayer(op().bukkitOffline), ""), true)
+                    val res = takebackRequest.call(RequestData(sender, op().player, ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().match.board.undoLastMove()
                     }
@@ -378,31 +376,31 @@ object GregChessPlugin : Listener {
                 }
                 literal("match") {
                     execute {
-                        cRequire(sender is Player, NOT_PLAYER)
+                        cRequire(sender is BukkitPlayer, NOT_PLAYER)
                     }
                     execute {
                         cRequire(sender.hasPermission("gregchess.chess.info.inmatch"), NO_PERMISSION)
-                        sender.spigot().sendMessage((sender as? Player)?.currentChessMatch.cNotNull(YOU_NOT_IN_MATCH).getInfo())
+                        sender.sendMessage((sender as? BukkitPlayer)?.currentChessMatch.cNotNull(YOU_NOT_IN_MATCH).getInfo())
                     }
                     argument(uuidArgument("match")) { match ->
                         requirePermission("gregchess.chess.info.remote")
                         execute {
-                            sender.spigot().sendMessage(ChessMatchManager[match()].cNotNull(MATCH_NOT_FOUND).getInfo())
+                            sender.sendMessage(ChessMatchManager[match()].cNotNull(MATCH_NOT_FOUND).getInfo())
                         }
                     }
                 }
-                literal(Player::class, "piece") {
+                literal(BukkitPlayer::class, "piece") {
                     requirePermission("gregchess.chess.info.inmatch")
                     val pl = requireMatch()
                     execute {
-                        sender.spigot().sendMessage(
-                            pl().match.board[pl().match.renderer.getPos(sender.location)]
+                        sender.sendMessage(
+                            pl().match.board[pl().match.renderer.getPos(sender.entity!!.location)]
                                 .cNotNull(PIECE_NOT_FOUND).getInfo(pl().match)
                         )
                     }
                     argument(posArgument("pos")) { pos ->
                         execute {
-                            sender.spigot().sendMessage(
+                            sender.sendMessage(
                                 pl().match.board[pos()].cNotNull(PIECE_NOT_FOUND).getInfo(pl().match))
                         }
                     }
@@ -416,8 +414,8 @@ object GregChessPlugin : Listener {
                 }
                 executeSuspend {
                     cRequire(sender.hasPermission("gregchess.chess.stats.self"), NO_PERMISSION)
-                    val pl = sender.cCast<CommandSender, Player>(NOT_PLAYER)
-                    pl.openStatsMenu(pl.name, BukkitPlayerStats.of(pl.uniqueId))
+                    val pl = sender.cCast<_, BukkitPlayer>(NOT_PLAYER)
+                    pl.openStatsMenu(pl.name, BukkitPlayerStats.of(pl.uuid))
                 }
                 literal("set") {
                     requirePermission("gregchess.chess.stats.set")
@@ -427,7 +425,7 @@ object GregChessPlugin : Listener {
                                 argument(registryArgument("stat", Registry.STAT) { it.serializer == Int.serializer() }) { stat ->
                                     argument(intArgument("value")) { v ->
                                         execute {
-                                            val stats = BukkitPlayerStats.of(player().uniqueId)
+                                            val stats = BukkitPlayerStats.of(player().uuid)
                                             @Suppress("UNCHECKED_CAST")
                                             stats[color(), setting()].add(stat() as ChessStat<Int>, v())
                                             sender.sendMessage(STATS_OP_DONE)
@@ -443,16 +441,16 @@ object GregChessPlugin : Listener {
                     argument(offlinePlayerArgument("player")) { player ->
                         argument(stringArgument("setting")) { setting ->
                             execute {
-                                BukkitPlayerStats.of(player().uniqueId).clear(setting())
+                                BukkitPlayerStats.of(player().uuid).clear(setting())
                                 sender.sendMessage(STATS_OP_DONE)
                             }
                         }
                     }
                 }
-                argument(Player::class, offlinePlayerArgument("player")) { player ->
+                argument(BukkitPlayer::class, offlinePlayerArgument("player")) { player ->
                     requirePermission("gregchess.chess.stats.read")
                     executeSuspend {
-                        sender.openStatsMenu(player().name!!, BukkitPlayerStats.of(player().uniqueId))
+                        sender.openStatsMenu(player().name, BukkitPlayerStats.of(player().uuid))
                     }
                 }
             }

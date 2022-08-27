@@ -2,12 +2,10 @@ package gregc.gregchess.bukkitutils.requests
 
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.player.BukkitPlayer
-import gregc.gregchess.bukkitutils.player.DefaultBukkitPlayer
 import kotlinx.coroutines.*
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.configuration.ConfigurationSection
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
@@ -46,10 +44,6 @@ class RequestType internal constructor(
 ) { // TODO: redesign this api
     private val requests = mutableMapOf<UUID, Request>()
     private val section get() = config.getConfigurationSection("Request.$name")!!
-
-    suspend fun invalidSender(s: Player) = invalidSender(DefaultBukkitPlayer(s))
-
-    suspend inline fun invalidSender(s: Player, block: () -> Boolean) = invalidSender(DefaultBukkitPlayer(s), block)
 
     suspend fun invalidSender(s: BukkitPlayer) {
         s.sendMessage(section.getPathString("CannotSend"))
@@ -135,7 +129,6 @@ class RequestType internal constructor(
     }
 
     fun accept(p: BukkitPlayer, uuid: UUID) = accept(p.uuid, uuid)
-    fun accept(p: OfflinePlayer, uuid: UUID) = accept(p.uniqueId, uuid)
 
     private fun cancel(request: Request) {
         request.sender.sendMessage(section.getPathString("Sent.Cancel", request.receiver.name))
@@ -153,7 +146,6 @@ class RequestType internal constructor(
     }
 
     fun cancel(p: BukkitPlayer, uuid: UUID) = cancel(p.uuid, uuid)
-    fun cancel(p: OfflinePlayer, uuid: UUID) = cancel(p.uniqueId, uuid)
 
     private fun expire(request: Request) {
         request.sender.sendMessage(section.getPathString("Expired", request.receiver.name))

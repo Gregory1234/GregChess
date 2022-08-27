@@ -5,12 +5,12 @@ import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.match.Component
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
-import org.bukkit.entity.Player
 
 class SettingsParserContext(val variant: ChessVariant, val variantOptions: Long, val section: ConfigurationSection, val presetName: String)
 
@@ -57,7 +57,7 @@ object SettingsManager {
 
 private val CHOOSE_SETTINGS = message("ChooseSettings")
 
-suspend fun Player.openSettingsMenu() =
+suspend fun BukkitPlayer.openSettingsMenu() =
     openMenu(CHOOSE_SETTINGS, SettingsManager.getSettings().mapIndexed { index, s ->
         val item = itemStack(Material.IRON_BLOCK) {
             meta {

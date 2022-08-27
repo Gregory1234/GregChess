@@ -6,9 +6,9 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.registry.toKey
 import gregc.gregchess.bukkitutils.command.*
+import gregc.gregchess.bukkitutils.player.BukkitCommandSender
+import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.registry.FiniteRegistryView
-import org.bukkit.command.CommandSender
-import org.bukkit.entity.Player
 
 internal fun playerArgument(name: String) = playerArgument(name, PLAYER_NOT_FOUND)
 
@@ -16,32 +16,32 @@ internal fun offlinePlayerArgument(name: String) = offlinePlayerArgument(name, P
 
 internal fun CommandBuilder<*>.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
 
-internal fun <S : CommandSender> CommandBuilder<S>.subcommand(name: String, builder: CommandBuilder<S>.() -> Unit) {
+internal fun <S : BukkitCommandSender> CommandBuilder<S>.subcommand(name: String, builder: CommandBuilder<S>.() -> Unit) {
     literal(name) {
         requirePermission("gregchess.chess.$name")
         builder()
     }
 }
 
-internal fun CommandBuilder<CommandSender>.playerSubcommand(name: String, builder: CommandBuilder<Player>.() -> Unit) {
-    literal(Player::class, name) {
+internal fun CommandBuilder<BukkitCommandSender>.playerSubcommand(name: String, builder: CommandBuilder<BukkitPlayer>.() -> Unit) {
+    literal(BukkitPlayer::class, name) {
         requirePermission("gregchess.chess.$name")
         builder()
     }
 }
 
-internal fun CommandBuilder<Player>.requireHumanOpponent(): ExecutionContext<Player>.() -> BukkitChessSideFacade {
+internal fun CommandBuilder<BukkitPlayer>.requireHumanOpponent(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
     validate(OPPONENT_NOT_HUMAN) { sender.currentChessSide?.opponent is BukkitChessSideFacade }
     return { sender.currentChessSide!!.opponent as BukkitChessSideFacade }
 }
 
-internal fun CommandBuilder<Player>.requireMatch(): ExecutionContext<Player>.() -> BukkitChessSideFacade {
+internal fun CommandBuilder<BukkitPlayer>.requireMatch(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
     validate(YOU_NOT_IN_MATCH) { sender.currentChessMatch != null }
     return { sender.currentChessSide!! }
 }
 
 internal fun CommandBuilder<*>.requireNoMatch() {
-    validate(YOU_IN_MATCH) { sender !is Player || (sender as Player).currentChessMatch == null }
+    validate(YOU_IN_MATCH) { sender !is BukkitPlayer || (sender as BukkitPlayer).currentChessMatch == null }
 }
 
 internal fun posArgument(name: String) = SimpleArgument(name) { try { Pos.parseFromString(it) } catch (e : IllegalArgumentException) { null } }

@@ -1,8 +1,11 @@
 package gregc.gregchess.bukkitutils.command
 
 import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.bukkitutils.player.*
 import kotlinx.coroutines.*
 import org.bukkit.command.CommandSender
+import org.bukkit.command.ConsoleCommandSender
+import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import kotlin.reflect.KClass
 
@@ -20,7 +23,7 @@ data class CommandEnvironment(
 )
 
 @CommandDsl
-class CommandBuilder<S : CommandSender>(val senderClass: KClass<S>) {
+class CommandBuilder<S : BukkitCommandSender>(val senderClass: KClass<S>) {
     private val onExecute = mutableListOf<suspend ExecutionContext<S>.() -> Unit>()
     private val onArgument = mutableListOf<Pair<CommandArgumentType<*>, CommandBuilder<out S>>>()
     private val validator = mutableListOf<ExecutionContext<S>.() -> Message?>()
@@ -174,7 +177,7 @@ class CommandBuilder<S : CommandSender>(val senderClass: KClass<S>) {
 class CommandArgument<T>(val index: Int, val type: CommandArgumentType<T>)
 
 @CommandDsl
-class ExecutionContext<out S : CommandSender>(val sender: S, private val arguments: List<Any?>) {
+class ExecutionContext<out S : BukkitCommandSender>(val sender: S, private val arguments: List<Any?>) {
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T> CommandArgument<T>.invoke(): T = arguments[index] as T
@@ -184,8 +187,14 @@ fun CommandBuilder<*>.requirePermission(permission: String, msg: Message) {
     validate(msg) { sender.hasPermission(permission) }
 }
 
-fun CommandEnvironment.addCommand(name: String, command: CommandBuilder<CommandSender>.() -> Unit) {
-    val com = CommandBuilder(CommandSender::class).apply { command() }
+fun CommandEnvironment.addCommand(name: String, command: CommandBuilder<BukkitCommandSender>.() -> Unit) {
+    val com = CommandBuilder(BukkitCommandSender::class).apply { command() }
+    fun fromCommandSender(sender: CommandSender): BukkitCommandSender = when(sender) {
+        is Player -> DefaultBukkitPlayer(sender)
+        is ConsoleCommandSender -> ConsoleBukkitCommandSender
+        else -> throw IllegalArgumentException(sender.toString())
+    }
+
     plugin.getCommand(name)?.setExecutor { sender, _, trueName, args ->
         val commandScope = CoroutineScope(coroutineScope.coroutineContext +
                 SupervisorJob(coroutineScope.coroutineContext.job) +
@@ -199,12 +208,12 @@ fun CommandEnvironment.addCommand(name: String, command: CommandBuilder<CommandS
                     }
                 })
         commandScope.launch {
-            com.executeOn(this@addCommand.copy(coroutineScope = commandScope), sender, args.toList())
+            com.executeOn(this@addCommand.copy(coroutineScope = commandScope), fromCommandSender(sender), args.toList())
         }
         true
     }
     plugin.getCommand(name)?.setTabCompleter { sender, _, _, args ->
         val last by lazy { args.last().lowercase() }
-        com.autocompleteOn(this, sender, args.dropLast(1)).filter { args.isEmpty() || last in it.lowercase() }
+        com.autocompleteOn(this, fromCommandSender(sender), args.dropLast(1)).filter { args.isEmpty() || last in it.lowercase() }
     }
 }

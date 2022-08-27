@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkitutils
 
+import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
@@ -7,9 +8,9 @@ import org.bukkit.inventory.ItemStack
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 
-suspend fun <T> Player.openMenu(name: Message, content: List<ScreenOption<T>>): T? = openMenu(name.get(), content)
+suspend fun <T> BukkitPlayer.openMenu(name: Message, content: List<ScreenOption<T>>): T? = openMenu(name.get(), content)
 
-suspend fun <T> Player.openMenu(name: String, content: List<ScreenOption<T>>): T? = suspendCoroutine {
+suspend fun <T> BukkitPlayer.openMenu(name: String, content: List<ScreenOption<T>>): T? = suspendCoroutine {
     openMenu(Menu(name, it, content, null))
 }
 
