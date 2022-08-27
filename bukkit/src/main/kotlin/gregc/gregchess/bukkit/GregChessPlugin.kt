@@ -13,6 +13,7 @@ import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
+import gregc.gregchess.bukkitutils.player.DefaultBukkitPlayer
 import gregc.gregchess.bukkitutils.requests.*
 import gregc.gregchess.byColor
 import gregc.gregchess.clock.clock
@@ -134,7 +135,7 @@ object GregChessPlugin : Listener {
                             if (!ArenaManager.fromConfig().hasFreeArenas()) {
                                 throw CommandException(NO_ARENAS)
                             }
-                            val res = duelRequest.call(RequestData(sender.uniqueId, opponent.uniqueId, settings.name))
+                            val res = duelRequest.call(RequestData(DefaultBukkitPlayer(sender), DefaultBukkitPlayer(opponent), settings.name))
                             if (res == RequestResponse.ACCEPT) {
                                 if (sender.isInChessMatch) {
                                     sender.sendMessage(YOU_IN_MATCH)
@@ -176,7 +177,7 @@ object GregChessPlugin : Listener {
                 val op = requireHumanOpponent()
                 executeSuspend {
                     drawRequest.invalidSender(sender) { !pl().hasTurn }
-                    val res = drawRequest.call(RequestData(sender.uniqueId, op().uuid, ""), true)
+                    val res = drawRequest.call(RequestData(DefaultBukkitPlayer(sender), DefaultBukkitPlayer(op().bukkitOffline), ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().match.stop(drawBy(EndReason.DRAW_AGREEMENT))
                     }
@@ -338,7 +339,7 @@ object GregChessPlugin : Listener {
                     takebackRequest.invalidSender(sender) {
                         (pl().match.currentOpponent as? BukkitChessSideFacade)?.uuid != sender.uniqueId
                     }
-                    val res = takebackRequest.call(RequestData(sender.uniqueId, op().uuid, ""), true)
+                    val res = takebackRequest.call(RequestData(DefaultBukkitPlayer(sender), DefaultBukkitPlayer(op().bukkitOffline), ""), true)
                     if (res == RequestResponse.ACCEPT) {
                         pl().match.board.undoLastMove()
                     }
