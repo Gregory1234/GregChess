@@ -4,7 +4,8 @@
   "package": "gregc.gregchess.fabric.mixin",
   "compatibilityLevel": "JAVA_@java-min-version@",
   "mixins": [
-    "WorldSavePathCreator"
+    "WorldSavePathCreator",
+    "FabricChessPlayer"
   ],
   "client": [],
   "server": [],

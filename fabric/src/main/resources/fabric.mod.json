@@ -38,5 +38,10 @@
     "fabric-language-kotlin": ">=@fabric-kotlin-version@",
     "minecraft": "@minecraft-version@",
     "java": ">=@java-min-version@"
+  },
+  "custom": {
+    "loom:injected_interfaces": {
+      "net/minecraft/class_1657": ["gregc/gregchess/fabric/FabricChessPlayerHelper"]
+    }
   }
 }
