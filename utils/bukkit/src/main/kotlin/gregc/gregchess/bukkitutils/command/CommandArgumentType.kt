@@ -1,7 +1,8 @@
 package gregc.gregchess.bukkitutils.command
 
-import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.bukkitutils.player.DefaultBukkitPlayer
+import gregc.gregchess.bukkitutils.Message
+import gregc.gregchess.bukkitutils.player.BukkitPlayerProvider
+import gregc.gregchess.bukkitutils.toDurationOrNull
 import org.bukkit.Bukkit
 import java.util.*
 import kotlin.math.min
@@ -73,8 +74,10 @@ fun <T : Any> enumArgument(values: Collection<T>, name: String) = SimpleArgument
 
 inline fun <reified E : Enum<E>> enumArgument(name: String) = enumArgument(E::class.java.enumConstants.toList(), name)
 
-fun playerArgument(name: String, msg: Message) = SimpleArgument(name, defaults = { Bukkit.getOnlinePlayers().map { it.name }.toSet() }, failMessage = msg) { Bukkit.getPlayer(it)?.let(::DefaultBukkitPlayer) }
+fun playerArgument(name: String, msg: Message, playerProvider: BukkitPlayerProvider) =
+    SimpleArgument(name, defaults = { Bukkit.getOnlinePlayers().map { it.name }.toSet() }, failMessage = msg) { playerProvider.getOnlinePlayer(it) }
 
-fun offlinePlayerArgument(name: String, msg: Message) = SimpleArgument(name, defaults = { Bukkit.getOnlinePlayers().map { it.name }.toSet() }, failMessage = msg) { getOfflinePlayerByName(it)?.let(::DefaultBukkitPlayer) }
+fun offlinePlayerArgument(name: String, msg: Message, playerProvider: BukkitPlayerProvider) =
+    SimpleArgument(name, defaults = { Bukkit.getOnlinePlayers().map { it.name }.toSet() }, failMessage = msg) { playerProvider.getPlayer(it) }
 
 fun durationArgument(name: String, msg: Message) = SimpleArgument(name, failMessage = msg) { it.toDurationOrNull() }

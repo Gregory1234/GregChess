@@ -2,11 +2,9 @@ package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.player.showMatchResults
 import gregc.gregchess.bukkitutils.player.BukkitPlayer
-import gregc.gregchess.bukkitutils.player.DefaultBukkitPlayer
 import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.bukkit.entity.Player
 
 data class SpectatorEvent(val player: BukkitPlayer, val dir: PlayerDirection) : ChessEvent {
     override val type get() = BukkitChessEventType.SPECTATOR
@@ -62,8 +60,6 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
 
 class SpectatorManagerFacade(match: ChessMatch, component: SpectatorManager) : ComponentFacade<SpectatorManager>(match, component) {
     val spectators get() = component.spectators
-    operator fun plusAssign(p: Player) = component.addSpectator(match, DefaultBukkitPlayer(p))
-    operator fun minusAssign(p: Player) = component.removeSpectator(match, DefaultBukkitPlayer(p))
     operator fun plusAssign(p: BukkitPlayer) = component.addSpectator(match, p)
     operator fun minusAssign(p: BukkitPlayer) = component.removeSpectator(match, p)
 }

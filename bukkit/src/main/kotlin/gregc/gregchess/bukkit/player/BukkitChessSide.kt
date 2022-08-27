@@ -6,7 +6,6 @@ import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkitutils.Message
 import gregc.gregchess.bukkitutils.player.BukkitPlayer
-import gregc.gregchess.bukkitutils.player.DefaultBukkitPlayer
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
@@ -15,7 +14,6 @@ import gregc.gregchess.player.ChessSide
 import gregc.gregchess.player.ChessSideFacade
 import kotlinx.coroutines.launch
 import kotlinx.serialization.*
-import org.bukkit.Bukkit
 import java.util.*
 
 class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEvent {
@@ -56,7 +54,7 @@ operator fun ChessMatch.get(uuid: UUID): BukkitChessSideFacade? {
 class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : ChessSide {
 
     @Transient
-    val player = DefaultBukkitPlayer(Bukkit.getOfflinePlayer(uuid))
+    val player = GregChessBukkitPlayerProvider.getPlayer(uuid)
 
     private fun isSilent(match: ChessMatch): Boolean = match.sideFacades.isSamePlayer()
 

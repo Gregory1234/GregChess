@@ -3,7 +3,6 @@ package gregc.gregchess.bukkitutils.player
 import gregc.gregchess.bukkitutils.*
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
-import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -35,8 +34,9 @@ object ConsoleBukkitCommandSender : BukkitCommandSender {
     override fun sendMessage(msg: TextComponent) = Bukkit.getConsoleSender().spigot().sendMessage(msg)
 }
 
-data class DefaultBukkitPlayer(val bukkit: OfflinePlayer) : BukkitPlayer {
-    override val entity: Player? get() = bukkit.player
-    override val name: String get() = bukkit.name ?: ""
-    override val uuid: UUID get() = bukkit.uniqueId
+interface BukkitPlayerProvider {
+    fun getPlayer(name: String): BukkitPlayer?
+    fun getOnlinePlayer(name: String): BukkitPlayer?
+    fun getPlayer(uuid: UUID): BukkitPlayer?
+    fun getOnlinePlayer(uuid: UUID): BukkitPlayer?
 }

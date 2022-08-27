@@ -9,7 +9,6 @@ import gregc.gregchess.bukkit.results.message
 import gregc.gregchess.bukkit.results.name
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.player.BukkitPlayer
-import gregc.gregchess.bukkitutils.player.DefaultBukkitPlayer
 import gregc.gregchess.byColor
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.match.PGN
@@ -122,7 +121,7 @@ fun BukkitPlayer.rejoinMatch() {
     }
 }
 
-val org.bukkit.event.player.PlayerEvent.gregchessPlayer get() = DefaultBukkitPlayer(player)
-val org.bukkit.event.block.BlockBreakEvent.gregchessPlayer get() = DefaultBukkitPlayer(player)
-val org.bukkit.event.entity.EntityEvent.gregchessPlayer get() = (entity as? Player)?.let(::DefaultBukkitPlayer)
-val org.bukkit.event.inventory.InventoryInteractEvent.gregchessPlayer get() = (whoClicked as? Player)?.let(::DefaultBukkitPlayer)
+val org.bukkit.event.player.PlayerEvent.gregchessPlayer get() = GregChessBukkitPlayerProvider.getOnlinePlayer(player.uniqueId)!!
+val org.bukkit.event.block.BlockBreakEvent.gregchessPlayer get() = GregChessBukkitPlayerProvider.getOnlinePlayer(player.uniqueId)!!
+val org.bukkit.event.entity.EntityEvent.gregchessPlayer get() = (entity as? Player)?.uniqueId?.let(GregChessBukkitPlayerProvider::getOnlinePlayer)
+val org.bukkit.event.inventory.InventoryInteractEvent.gregchessPlayer get() = (whoClicked as? Player)?.uniqueId?.let(GregChessBukkitPlayerProvider::getOnlinePlayer)

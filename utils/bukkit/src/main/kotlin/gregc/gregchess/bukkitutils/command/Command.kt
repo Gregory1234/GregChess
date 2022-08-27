@@ -15,6 +15,7 @@ private annotation class CommandDsl
 
 data class CommandEnvironment(
     val plugin: JavaPlugin,
+    val playerProvider: BukkitPlayerProvider,
     val coroutineScope: CoroutineScope,
     val wrongArgumentsNumberMessage: Message,
     val wrongArgumentMessage: Message,
@@ -190,7 +191,7 @@ fun CommandBuilder<*>.requirePermission(permission: String, msg: Message) {
 fun CommandEnvironment.addCommand(name: String, command: CommandBuilder<BukkitCommandSender>.() -> Unit) {
     val com = CommandBuilder(BukkitCommandSender::class).apply { command() }
     fun fromCommandSender(sender: CommandSender): BukkitCommandSender = when(sender) {
-        is Player -> DefaultBukkitPlayer(sender)
+        is Player -> playerProvider.getOnlinePlayer(sender.uniqueId)!!
         is ConsoleCommandSender -> ConsoleBukkitCommandSender
         else -> throw IllegalArgumentException(sender.toString())
     }

@@ -10,9 +10,9 @@ import gregc.gregchess.bukkitutils.player.BukkitCommandSender
 import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.registry.FiniteRegistryView
 
-internal fun playerArgument(name: String) = playerArgument(name, PLAYER_NOT_FOUND)
+internal fun playerArgument(name: String) = playerArgument(name, PLAYER_NOT_FOUND, GregChessBukkitPlayerProvider)
 
-internal fun offlinePlayerArgument(name: String) = offlinePlayerArgument(name, PLAYER_NOT_FOUND)
+internal fun offlinePlayerArgument(name: String) = offlinePlayerArgument(name, PLAYER_NOT_FOUND, GregChessBukkitPlayerProvider)
 
 internal fun CommandBuilder<*>.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
 
