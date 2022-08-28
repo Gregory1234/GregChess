@@ -333,7 +333,7 @@ object GregChessPlugin : Listener {
                 val op = requireHumanOpponent()
                 executeSuspend {
                     takebackRequest.invalidSender(sender) {
-                        (pl().match.currentOpponent as? BukkitChessSideFacade)?.uuid != sender.uuid
+                        (pl().match.currentOpponent as? BukkitChessSideFacade)?.player != sender
                     }
                     val res = takebackRequest.call(RequestData(sender, op().player, ""), true)
                     if (res == RequestResponse.ACCEPT) {
@@ -470,8 +470,8 @@ object GregChessPlugin : Listener {
     }
 
     fun clearRequests(p: BukkitChessSideFacade) {
-        drawRequest.quietRemove(p.uuid)
-        takebackRequest.quietRemove(p.uuid)
+        drawRequest.quietRemove(p.player)
+        takebackRequest.quietRemove(p.player)
     }
 
     @EventHandler

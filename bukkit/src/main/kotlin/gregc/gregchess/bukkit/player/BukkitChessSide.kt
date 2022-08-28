@@ -12,7 +12,8 @@ import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.player.ChessSide
 import gregc.gregchess.player.ChessSideFacade
 import kotlinx.coroutines.launch
-import kotlinx.serialization.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.util.*
 
 class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEvent {
@@ -50,10 +51,7 @@ operator fun ChessMatch.get(uuid: UUID): BukkitChessSideFacade? {
 }
 
 @Serializable
-class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : ChessSide {
-
-    @Transient
-    val player = BukkitPlayerProvider.getPlayer(uuid)
+class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : ChessSide {
 
     private fun isSilent(match: ChessMatch): Boolean = match.sideFacades.isSamePlayer()
 
@@ -75,6 +73,7 @@ class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : C
         }
     }
 
+    val uuid: UUID get() = player.uuid
     override val name: String get() = player.name
 
     override val type get() = BukkitChessSideType.BUKKIT
