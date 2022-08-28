@@ -5,7 +5,6 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkitutils.Message
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
@@ -54,7 +53,7 @@ operator fun ChessMatch.get(uuid: UUID): BukkitChessSideFacade? {
 class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : ChessSide {
 
     @Transient
-    val player = GregChessBukkitPlayerProvider.getPlayer(uuid)
+    val player = BukkitPlayerProvider.getPlayer(uuid)
 
     private fun isSilent(match: ChessMatch): Boolean = match.sideFacades.isSamePlayer()
 

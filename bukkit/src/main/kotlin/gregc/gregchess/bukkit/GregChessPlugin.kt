@@ -13,7 +13,6 @@ import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.bukkitutils.requests.*
 import gregc.gregchess.byColor
 import gregc.gregchess.clock.clock
@@ -97,7 +96,7 @@ object GregChessPlugin : Listener {
 
         val json = Json { serializersModule = defaultModule() }
 
-        CommandEnvironment(plugin, GregChessBukkitPlayerProvider, coroutineScope, WRONG_ARGUMENTS_NUMBER, WRONG_ARGUMENT, INTERNAL_ERROR, NOT_PLAYER).addCommand("chess") {
+        CommandEnvironment(plugin, BukkitPlayerProvider, coroutineScope, WRONG_ARGUMENTS_NUMBER, WRONG_ARGUMENT, INTERNAL_ERROR, NOT_PLAYER).addCommand("chess") {
             playerSubcommand("duel") {
                 requireNoMatch()
                 literal("accept") {

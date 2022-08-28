@@ -7,12 +7,11 @@ import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.registry.toKey
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.player.BukkitCommandSender
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.registry.FiniteRegistryView
 
-internal fun playerArgument(name: String) = playerArgument(name, PLAYER_NOT_FOUND, GregChessBukkitPlayerProvider)
+internal fun playerArgument(name: String) = playerArgument(name, PLAYER_NOT_FOUND, BukkitPlayerProvider)
 
-internal fun offlinePlayerArgument(name: String) = offlinePlayerArgument(name, PLAYER_NOT_FOUND, GregChessBukkitPlayerProvider)
+internal fun offlinePlayerArgument(name: String) = offlinePlayerArgument(name, PLAYER_NOT_FOUND, BukkitPlayerProvider)
 
 internal fun CommandBuilder<*>.requirePermission(permission: String) = requirePermission(permission, NO_PERMISSION)
 
@@ -23,19 +22,19 @@ internal fun <S : BukkitCommandSender> CommandBuilder<S>.subcommand(name: String
     }
 }
 
-internal fun CommandBuilder<BukkitCommandSender>.playerSubcommand(name: String, builder: CommandBuilder<GregChessBukkitPlayer>.() -> Unit) {
-    literal(GregChessBukkitPlayer::class, name) {
+internal fun CommandBuilder<BukkitCommandSender>.playerSubcommand(name: String, builder: CommandBuilder<BukkitPlayer>.() -> Unit) {
+    literal(BukkitPlayer::class, name) {
         requirePermission("gregchess.chess.$name")
         builder()
     }
 }
 
-internal fun CommandBuilder<out BukkitPlayer>.requireHumanOpponent(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
+internal fun CommandBuilder<BukkitPlayer>.requireHumanOpponent(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
     validate(OPPONENT_NOT_HUMAN) { sender.currentChessSide?.opponent is BukkitChessSideFacade }
     return { sender.currentChessSide!!.opponent as BukkitChessSideFacade }
 }
 
-internal fun CommandBuilder<out BukkitPlayer>.requireMatch(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
+internal fun CommandBuilder<BukkitPlayer>.requireMatch(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
     validate(YOU_NOT_IN_MATCH) { sender.currentChessMatch != null }
     return { sender.currentChessSide!! }
 }

@@ -15,7 +15,7 @@ private annotation class CommandDsl
 
 data class CommandEnvironment(
     val plugin: JavaPlugin,
-    val playerProvider: BukkitPlayerProvider<*, *>,
+    val playerProvider: BukkitHumanProvider<*, *>,
     val coroutineScope: CoroutineScope,
     val wrongArgumentsNumberMessage: Message,
     val wrongArgumentMessage: Message,

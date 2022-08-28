@@ -5,11 +5,9 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.match.PlayerDirection
 import gregc.gregchess.bukkit.piece.item
-import gregc.gregchess.bukkit.player.BukkitChessSide
-import gregc.gregchess.bukkit.player.currentChessSide
+import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.match.*
 import gregc.gregchess.results.*
 import org.bukkit.*

@@ -17,7 +17,7 @@ private inline fun <T : Any> onNull(value: T?, callback: T.() -> Unit) {
     value?.callback()
 }
 
-interface BukkitPlayer : BukkitCommandSender {
+interface BukkitHuman : BukkitCommandSender {
     val uuid: UUID
     val name: String
     val entity: Player?
@@ -34,7 +34,7 @@ object ConsoleBukkitCommandSender : BukkitCommandSender {
     override fun sendMessage(msg: TextComponent) = Bukkit.getConsoleSender().spigot().sendMessage(msg)
 }
 
-interface BukkitPlayerProvider<out Offline : BukkitPlayer, out Online : BukkitPlayer> {
+interface BukkitHumanProvider<out Offline : BukkitHuman, out Online : BukkitHuman> {
     fun getPlayer(name: String): Offline?
     fun getOnlinePlayer(name: String): Online?
     fun getPlayer(uuid: UUID): Offline?

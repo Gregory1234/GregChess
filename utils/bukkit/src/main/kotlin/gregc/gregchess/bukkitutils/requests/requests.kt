@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkitutils.requests
 
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
+import gregc.gregchess.bukkitutils.player.BukkitHuman
 import kotlinx.coroutines.*
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
@@ -45,17 +45,17 @@ class RequestType internal constructor(
     private val requests = mutableMapOf<UUID, Request>()
     private val section get() = config.getConfigurationSection("Request.$name")!!
 
-    suspend fun invalidSender(s: BukkitPlayer) {
+    suspend fun invalidSender(s: BukkitHuman) {
         s.sendMessage(section.getPathString("CannotSend"))
         return suspendCoroutine { }
     }
 
-    suspend inline fun invalidSender(s: BukkitPlayer, block: () -> Boolean) {
+    suspend inline fun invalidSender(s: BukkitHuman, block: () -> Boolean) {
         if (block())
             invalidSender(s)
     }
 
-    private fun BukkitPlayer.sendCommandMessage(msg: String, action: String, command: String) {
+    private fun BukkitHuman.sendCommandMessage(msg: String, action: String, command: String) {
         sendMessage(textComponent {
             text(msg.chatColor())
             text(" ")
@@ -128,7 +128,7 @@ class RequestType internal constructor(
             accept(request)
     }
 
-    fun accept(p: BukkitPlayer, uuid: UUID) = accept(p.uuid, uuid)
+    fun accept(p: BukkitHuman, uuid: UUID) = accept(p.uuid, uuid)
 
     private fun cancel(request: Request) {
         request.sender.sendMessage(section.getPathString("Sent.Cancel", request.receiver.name))
@@ -145,7 +145,7 @@ class RequestType internal constructor(
             cancel(request)
     }
 
-    fun cancel(p: BukkitPlayer, uuid: UUID) = cancel(p.uuid, uuid)
+    fun cancel(p: BukkitHuman, uuid: UUID) = cancel(p.uuid, uuid)
 
     private fun expire(request: Request) {
         request.sender.sendMessage(section.getPathString("Expired", request.receiver.name))
@@ -163,7 +163,7 @@ class RequestType internal constructor(
         }
     }
 
-    fun quietRemove(p: BukkitPlayer) = quietRemove(p.uuid)
+    fun quietRemove(p: BukkitHuman) = quietRemove(p.uuid)
     fun quietRemove(p: OfflinePlayer) = quietRemove(p.uniqueId)
 }
 
@@ -171,8 +171,8 @@ enum class RequestResponse {
     ACCEPT, CANCEL, EXPIRED, QUIT
 }
 
-data class RequestData(val sender: BukkitPlayer, val receiver: BukkitPlayer, val value: String)
+data class RequestData(val sender: BukkitHuman, val receiver: BukkitHuman, val value: String)
 
-class Request(val sender: BukkitPlayer, val receiver: BukkitPlayer, val value: String, val cont: Continuation<RequestResponse>) {
+class Request(val sender: BukkitHuman, val receiver: BukkitHuman, val value: String, val cont: Continuation<RequestResponse>) {
     val uuid: UUID = UUID.randomUUID()
 }

@@ -2,10 +2,10 @@ package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.message
+import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.match.Component
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.variant.ChessVariant

@@ -8,7 +8,6 @@ import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.match.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.results.MatchResults

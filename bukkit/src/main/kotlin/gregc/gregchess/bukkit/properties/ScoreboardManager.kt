@@ -4,11 +4,11 @@ import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.match.*
+import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.player.forEachReal
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.getPathString
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

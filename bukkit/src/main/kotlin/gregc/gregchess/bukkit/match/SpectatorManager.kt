@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit.match
 
+import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.player.showMatchResults
-import gregc.gregchess.bukkitutils.player.BukkitPlayer
 import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
