@@ -12,7 +12,7 @@ sealed interface NbtFormat : SerialFormat {
 
 @OptIn(ExperimentalSerializationApi::class)
 class Nbt(
-    override val serializersModule: SerializersModule = EmptySerializersModule
+    override val serializersModule: SerializersModule = EmptySerializersModule()
 ) : NbtFormat {
 
     override fun <T> encodeToNbtElement(serializer: SerializationStrategy<T>, value: T): NbtElement? {

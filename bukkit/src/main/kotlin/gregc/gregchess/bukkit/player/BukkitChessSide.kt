@@ -4,7 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.piece.item
-import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.bukkitutils.Message
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
@@ -12,10 +12,8 @@ import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.player.ChessSide
 import gregc.gregchess.player.ChessSideFacade
 import kotlinx.coroutines.launch
-import kotlinx.serialization.*
-import org.bukkit.Bukkit
-import org.bukkit.OfflinePlayer
-import org.bukkit.entity.Player
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.util.*
 
 class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEvent {
@@ -25,11 +23,9 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEve
     override val type get() = BukkitChessEventType.PIECE_PLAYER_ACTION
 }
 
-inline fun ByColor<ChessSideFacade<*>>.forEachRealOffline(block: (OfflinePlayer) -> Unit) {
-    toList().filterIsInstance<BukkitChessSideFacade>().map { it.bukkitOffline }.distinct().forEach(block)
+inline fun ByColor<ChessSideFacade<*>>.forEachReal(block: (BukkitPlayer) -> Unit) {
+    toList().filterIsInstance<BukkitChessSideFacade>().map { it.player }.distinct().forEach(block)
 }
-
-inline fun ByColor<ChessSideFacade<*>>.forEachReal(block: (Player) -> Unit) = forEachRealOffline { it.player?.let(block) }
 
 fun ByColor<ChessSideFacade<*>>.isSamePlayer(): Boolean {
     val w = white
@@ -45,12 +41,6 @@ inline fun ByColor<ChessSideFacade<*>>.forEachUnique(block: (BukkitChessSideFaca
         players.forEach(block)
 }
 
-inline fun ByColor<ChessSideFacade<*>>.forEachUniqueBukkit(block: (Player, Color) -> Unit) = forEachUnique {
-    it.bukkit?.let { player ->
-        block(player, it.color)
-    }
-}
-
 operator fun ChessMatch.get(uuid: UUID): BukkitChessSideFacade? {
     var ret: BukkitChessSideFacade? = null
     sideFacades.forEachUnique {
@@ -61,11 +51,7 @@ operator fun ChessMatch.get(uuid: UUID): BukkitChessSideFacade? {
 }
 
 @Serializable
-class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : ChessSide {
-
-    val bukkitOffline: OfflinePlayer get() = Bukkit.getOfflinePlayer(uuid)
-
-    val bukkit: Player? get() = Bukkit.getPlayer(uuid)
+class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : ChessSide {
 
     private fun isSilent(match: ChessMatch): Boolean = match.sideFacades.isSamePlayer()
 
@@ -87,7 +73,8 @@ class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : C
         }
     }
 
-    override val name: String get() = bukkitOffline.name ?: ""
+    val uuid: UUID get() = player.uuid
+    override val name: String get() = player.name
 
     override val type get() = BukkitChessSideType.BUKKIT
 
@@ -115,7 +102,7 @@ class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : C
         val piece = match.board[pos] ?: return
         if (piece.color != color) return
         setHeld(match, piece)
-        bukkit?.inventory?.setItem(0, piece.piece.item)
+        player.entity?.inventory?.setItem(0, piece.piece.item)
     }
 
     fun makeMove(match: ChessMatch, pos: Pos) {
@@ -124,13 +111,13 @@ class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : C
         val moves = piece.getLegalMoves(match.board)
         if (pos != piece.pos && pos !in moves.map { it.display }) return
         setHeld(match, null)
-        bukkit?.inventory?.setItem(0, null)
+        player.entity?.inventory?.setItem(0, null)
         if (pos == piece.pos) return
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()
         match.coroutineScope.launch {
             move.promotionTrait?.apply {
-                promotion = bukkit?.openPawnPromotionMenu(promotions) ?: promotions.first()
+                promotion = player.openPawnPromotionMenu(promotions)
             }
             match.finishMove(move)
         }
@@ -142,7 +129,7 @@ class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : C
     private fun sendTitleList(titles: List<Pair<Message, Boolean>>) {
         val title = titles.firstOrNull { it.second }
         val subtitle = titles.firstOrNull { it != title }
-        bukkit?.sendTitleFull(title?.first?.get() ?: "", subtitle?.first?.get() ?: "")
+        player.sendTitle(title?.first?.get() ?: "", subtitle?.first?.get() ?: "")
     }
 
     private fun startTurn(match: ChessMatch) {
@@ -158,7 +145,7 @@ class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : C
                 this += YOUR_TURN to true
         })
         if (inCheck)
-            bukkit?.sendMessage(IN_CHECK_MSG)
+            player.sendMessage(IN_CHECK_MSG)
     }
 
     fun sendStartMessage(match: ChessMatch) {
@@ -169,15 +156,14 @@ class BukkitChessSide(@Contextual val uuid: UUID, override val color: Color) : C
                 if (facade.hasTurn)
                     this += YOUR_TURN to true
             })
-            bukkit?.sendMessage(YOU_ARE_PLAYING_AS_MSG[color])
+            player.sendMessage(YOU_ARE_PLAYING_AS_MSG[color])
         }
     }
 }
 
 class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : ChessSideFacade<BukkitChessSide>(match, side) {
     val uuid: UUID get() = side.uuid
-    val bukkitOffline: OfflinePlayer get() = side.bukkitOffline
-    val bukkit: Player? get() = side.bukkit
+    val player: BukkitPlayer get() = side.player
 
     val held: BoardPiece? get() = side.held
 

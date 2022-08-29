@@ -5,15 +5,13 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.match.PlayerDirection
 import gregc.gregchess.bukkit.piece.item
-import gregc.gregchess.bukkit.player.BukkitChessSide
-import gregc.gregchess.bukkit.player.currentChessSide
+import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.match.*
 import gregc.gregchess.results.*
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
-import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
@@ -141,7 +139,7 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
     internal fun currentArenaMatch(arena: SimpleArena) = arenas[arena]?.match
 }
 
-class ResetPlayerEvent(val player: Player) : ChessEvent {
+class ResetPlayerEvent(val player: BukkitPlayer) : ChessEvent {
     override val type get() = BukkitChessEventType.RESET_PLAYER
 }
 
@@ -167,20 +165,12 @@ class SimpleArena internal constructor(
             if (it == ChessBaseEvent.PANIC)
                 for (p in match.sides.toList())
                     if (p is BukkitChessSide)
-                        p.bukkit?.leave()
+                        p.player.leave()
         }
         eventManager.registerEventR(BukkitChessEventType.SPECTATOR) {
             when (dir) {
-                PlayerDirection.JOIN -> {
-                    player.teleport(spawnLocation)
-                    player.inventory.clear()
-                    player.gameMode = GameMode.SPECTATOR
-                    player.allowFlight = true
-                    player.isFlying = true
-                }
-                PlayerDirection.LEAVE -> {
-                    player.leave()
-                }
+                PlayerDirection.JOIN -> player.resetSpectator()
+                PlayerDirection.LEAVE -> player.leave()
             }
         }
         eventManager.registerEventR(BukkitChessEventType.PLAYER) {
@@ -192,27 +182,41 @@ class SimpleArena internal constructor(
         eventManager.registerEventR(BukkitChessEventType.RESET_PLAYER) { player.reset() }
     }
 
-    private fun Player.leave() {
-        for (e in activePotionEffects)
-            removePotionEffect(e.type)
-        teleport(SimpleArenaManager.returnWorld.spawnLocation)
-        gameMode = GameMode.SURVIVAL
-        allowFlight = false
-        isFlying = false
+    private fun BukkitPlayer.leave() {
+        entity?.run {
+            for (e in activePotionEffects)
+                removePotionEffect(e.type)
+            teleport(SimpleArenaManager.returnWorld.spawnLocation)
+            gameMode = GameMode.SURVIVAL
+            allowFlight = false
+            isFlying = false
+        }
     }
 
-    private fun Player.reset() {
-        health = 20.0
-        foodLevel = 20
-        for (e in activePotionEffects)
-            removePotionEffect(e.type)
-        addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 10, false, false, false))
-        teleport(spawnLocation)
-        inventory.clear()
-        inventory.setItem(0, currentChessSide?.held?.piece?.item)
-        gameMode = GameMode.SURVIVAL
-        allowFlight = true
-        isFlying = true
+    private fun BukkitPlayer.resetSpectator() {
+        entity?.run {
+            teleport(spawnLocation)
+            inventory.clear()
+            gameMode = GameMode.SPECTATOR
+            allowFlight = true
+            isFlying = true
+        }
+    }
+
+    private fun BukkitPlayer.reset() {
+        entity?.run {
+            health = 20.0
+            foodLevel = 20
+            for (e in activePotionEffects)
+                removePotionEffect(e.type)
+            addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 10, false, false, false))
+            teleport(spawnLocation)
+            inventory.clear()
+            inventory.setItem(0, currentChessSide?.held?.piece?.item)
+            gameMode = GameMode.SURVIVAL
+            allowFlight = true
+            isFlying = true
+        }
     }
 
 }

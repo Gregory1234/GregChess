@@ -8,6 +8,7 @@ import gregc.gregchess.results.DetEndReason
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.variant.ChessVariant
 import io.mockk.clearMocks
+import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -16,6 +17,11 @@ import java.time.*
 import java.util.*
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
+
+class TestChessPlayer(private val spy: Boolean) : ChessPlayer<TestChessSide> {
+    override fun createChessSide(color: Color): TestChessSide =
+        TestChessSide(color.name, color).let { if (spy) spyk(it) else it }
+}
 
 @Serializable
 class TestChessSide(override val name: String, override val color: Color) : ChessSide {

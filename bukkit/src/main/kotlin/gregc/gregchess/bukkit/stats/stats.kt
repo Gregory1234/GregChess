@@ -3,17 +3,16 @@ package gregc.gregchess.bukkit.stats
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.SettingsManager
+import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.registry.*
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.stats.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
-import org.bukkit.entity.Player
 import java.io.File
 import java.util.*
 import kotlin.time.Duration
@@ -86,8 +85,6 @@ class YamlChessStats(override val uuid: UUID) : BukkitPlayerStats {
             saveFile?.invoke()
         }
     }
-
-    val player: Player? get() = Bukkit.getPlayer(uuid)
 
     override fun get(color: Color, name: String): PlayerStatsSink {
         val config = getConfig(uuid)
@@ -169,7 +166,7 @@ private fun PlayerStatsView.toItemStack(name: String) = itemStack(Material.IRON_
     }
 }
 
-suspend fun Player.openStatsMenu(playerName: String, stats: BukkitPlayerStats) =
+suspend fun BukkitPlayer.openStatsMenu(playerName: String, stats: BukkitPlayerStats) =
     openMenu(config.getPathString("Message.StatsOf", playerName), SettingsManager.getSettings().let { settings ->
         settings.mapIndexed { index, s ->
             val item = stats[s.name].toItemStack(s.name)

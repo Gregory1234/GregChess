@@ -20,7 +20,7 @@ class SimpleScoreboardLayout(private val scoreboard: Scoreboard) : ScoreboardLay
         private fun format(color: Color, s: String) = config.getPathString("Scoreboard.Format.${color.configName}", s)
     }
 
-    private val objective = scoreboard.registerNewObjective("GregChess", "", TITLE.get())
+    private val objective = scoreboard.registerNewObjective("GregChess", Criteria.DUMMY, TITLE.get())
 
     private val playerProperties = mutableMapOf<PropertyType, PlayerProperty>()
     private val matchProperties = mutableMapOf<PropertyType, MatchProperty>()

@@ -11,16 +11,15 @@ import gregc.gregchess.results.drawBy
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-interface ChessEngine {
+interface ChessEngine: ChessPlayer<EngineChessSide<out @SelfType ChessEngine>> {
     val name: String
     val type: ChessSideType<out EngineChessSide<out @SelfType ChessEngine>>
     fun stop()
     suspend fun setOption(name: String, value: String)
     suspend fun sendCommand(command: String)
     suspend fun getMove(fen: FEN): String
+    override fun createChessSide(color: Color) = EngineChessSide(this, color)
 }
-
-fun ChessEngine.toChessSide(color: Color) = EngineChessSide(this, color)
 
 @Serializable
 class EngineChessSide<T : ChessEngine>(val engine: T, override val color: Color) : ChessSide {

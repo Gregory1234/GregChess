@@ -15,7 +15,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import kotlin.time.Duration.Companion.seconds
 
@@ -23,7 +22,7 @@ enum class PlayerDirection {
     JOIN, LEAVE
 }
 
-class PlayerEvent(val player: Player, val dir: PlayerDirection) : ChessEvent {
+class PlayerEvent(val player: BukkitPlayer, val dir: PlayerDirection) : ChessEvent {
     override val type get() = BukkitChessEventType.PLAYER
 }
 
@@ -74,14 +73,16 @@ class MatchController : Component {
             }
         }
         val pgn = PGN.generate(match)
-        match.sideFacades.forEachUniqueBukkit { player, color ->
+        match.sideFacades.forEachUnique { player ->
             match.coroutineScope.launch {
-                player.showMatchResults(color, results)
-                if (!results.endReason.quick)
-                    delay((if (quick[color]) 0 else 3).seconds)
-                match.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
-                player.sendPGN(pgn)
-                player.currentChessMatch = null
+                with(player.player) {
+                    showMatchResults(player.color, results)
+                    if (!results.endReason.quick)
+                        delay((if (quick[player.color]) 0 else 3).seconds)
+                    match.callEvent(PlayerEvent(this, PlayerDirection.LEAVE))
+                    sendPGN(pgn)
+                    currentChessMatch = null
+                }
             }
         }
         if (!match.sideFacades.isSamePlayer()) {
@@ -105,9 +106,9 @@ class MatchController : Component {
     private fun onPanic(match: ChessMatch) {
         val results = match.results!!
         val pgn = PGN.generate(match)
-        match.sideFacades.forEachUniqueBukkit { player, color ->
-            player.showMatchResults(color, results)
-            player.sendPGN(pgn)
+        match.sideFacades.forEachUnique { player ->
+            player.player.showMatchResults(player.color, results)
+            player.player.sendPGN(pgn)
         }
         ChessMatchManager -= match
     }

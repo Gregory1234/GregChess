@@ -4,6 +4,7 @@ import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.match.*
+import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.player.forEachReal
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
@@ -12,7 +13,6 @@ import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.Bukkit
-import org.bukkit.entity.Player
 
 @Serializable
 class ScoreboardManager : Component {
@@ -48,19 +48,19 @@ class ScoreboardManager : Component {
         eventManager.registerEventR(BukkitChessEventType.PLAYER) {
             when(dir) {
                 PlayerDirection.JOIN -> giveScoreboard(player)
-                PlayerDirection.LEAVE -> player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
+                PlayerDirection.LEAVE -> player.entity?.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
             }
         }
         eventManager.registerEventR(BukkitChessEventType.SPECTATOR) {
             when(dir) {
                 PlayerDirection.JOIN -> giveScoreboard(player)
-                PlayerDirection.LEAVE -> player.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
+                PlayerDirection.LEAVE -> player.entity?.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
             }
         }
     }
 
-    private fun giveScoreboard(p: Player) {
-        p.scoreboard = scoreboard
+    private fun giveScoreboard(p: BukkitPlayer) {
+        p.entity?.scoreboard = scoreboard
     }
 
     private fun start(match: ChessMatch) {

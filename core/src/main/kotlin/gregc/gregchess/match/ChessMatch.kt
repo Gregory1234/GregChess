@@ -7,8 +7,7 @@ import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.connector.*
 import gregc.gregchess.piece.PlacedPieceType
-import gregc.gregchess.player.ChessSide
-import gregc.gregchess.player.ChessSideFacade
+import gregc.gregchess.player.*
 import gregc.gregchess.results.*
 import gregc.gregchess.variant.ChessVariant
 import kotlinx.coroutines.*
@@ -32,8 +31,8 @@ class ChessMatch private constructor(
     val extraInfo: ExtraInfo, // TODO: move to ChessEnvironment
     val variantOptions: Long
 ) : ChessEventCaller {
-    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, sides: ByColor<ChessSide>, variantOptions: Long, extraInfo: ExtraInfo = ExtraInfo())
-            : this(environment, variant, components.toList(), sides, State.INITIAL, null, null, Duration.ZERO, null, extraInfo, variantOptions)
+    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, players: ByColor<ChessPlayer<*>>, variantOptions: Long, extraInfo: ExtraInfo = ExtraInfo())
+            : this(environment, variant, components.toList(), byColor { players[it].createChessSide(it) }, State.INITIAL, null, null, Duration.ZERO, null, extraInfo, variantOptions)
 
     @Serializable
     data class ExtraInfo(val round: Int = 1, val eventName: String = "Casual match")

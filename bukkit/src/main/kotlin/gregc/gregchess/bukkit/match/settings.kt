@@ -1,19 +1,19 @@
 package gregc.gregchess.bukkit.match
 
-import gregc.gregchess.*
+import gregc.gregchess.ByColor
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.message
+import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.match.Component
-import gregc.gregchess.player.ChessSide
+import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
-import org.bukkit.entity.Player
 
 class SettingsParserContext(val variant: ChessVariant, val variantOptions: Long, val section: ConfigurationSection)
 
@@ -34,7 +34,7 @@ class MatchSettings(
     val variantOptions: Long,
     val components: List<Component>
 ) {
-    fun createMatch(sides: ByColor<(Color) -> ChessSide>, extraInfo: ChessMatch.ExtraInfo = ChessMatch.ExtraInfo()) = ChessMatch(environment, variant, components, byColor { sides[it](it) }, variantOptions, extraInfo)
+    fun createMatch(players: ByColor<ChessPlayer<*>>, extraInfo: ChessMatch.ExtraInfo = ChessMatch.ExtraInfo()) = ChessMatch(environment, variant, components, players, variantOptions, extraInfo)
 }
 
 object SettingsManager {
@@ -66,7 +66,7 @@ object SettingsManager {
 
 private val CHOOSE_SETTINGS = message("ChooseSettings")
 
-suspend fun Player.openSettingsMenu() =
+suspend fun BukkitPlayer.openSettingsMenu() =
     openMenu(CHOOSE_SETTINGS, SettingsManager.getSettings().mapIndexed { index, s ->
         val item = itemStack(Material.IRON_BLOCK) {
             meta {

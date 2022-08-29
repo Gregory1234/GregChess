@@ -11,7 +11,6 @@ import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.results.*
 import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
@@ -72,29 +71,29 @@ object ChessMatchManager : Listener {
 
     @EventHandler
     fun onPlayerJoin(e: PlayerJoinEvent) {
-        Bukkit.getScheduler().scheduleSyncDelayedTask(GregChessPlugin.plugin, { e.player.sendRejoinReminder() }, 1)
+        Bukkit.getScheduler().scheduleSyncDelayedTask(GregChessPlugin.plugin, { e.gregchessPlayer.sendRejoinReminder() }, 1)
     }
 
     @EventHandler
-    fun onPlayerLeave(e: PlayerQuitEvent) = e.player.leaveMatch()
+    fun onPlayerLeave(e: PlayerQuitEvent) = e.gregchessPlayer.leaveMatch()
 
     @EventHandler
     fun onPlayerDeath(e: EntityDeathEvent) {
-        val ent = e.entity as? Player ?: return
+        val ent = e.gregchessPlayer ?: return
         val match = ent.currentChessMatch ?: return
         match.callEvent(ResetPlayerEvent(ent))
     }
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
-        val ent = e.entity as? Player ?: return
+        val ent = e.gregchessPlayer ?: return
         ent.currentChessMatch ?: return
         e.isCancelled = true
     }
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        val player = e.player.currentChessSide ?: return
+        val player = e.gregchessPlayer.currentChessSide ?: return
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
@@ -109,28 +108,28 @@ object ChessMatchManager : Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (e.player.isInChessMatch) {
+        if (e.gregchessPlayer.isInChessMatch) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.whoClicked.let { it is Player && it.isInChessMatch }) {
+        if (e.gregchessPlayer?.isInChessMatch == true) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        if (e.whoClicked.let { it is Player && it.isInChessMatch }) {
+        if (e.gregchessPlayer?.isInChessMatch == true) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (e.player.isInChessMatch)
+        if (e.gregchessPlayer.isInChessMatch)
             e.isCancelled = true
     }
 
