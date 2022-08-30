@@ -2,9 +2,11 @@ package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.GregChessPlugin
+import gregc.gregchess.bukkit.move.formatLastMoves
 import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.results.quick
+import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.match.*
 import gregc.gregchess.move.Move
@@ -68,7 +70,7 @@ class MatchController : Component {
                     bLast = normalMoves.lastOrNull()
                 }
                 match.sideFacades.forEachReal { p ->
-                    p.sendLastMoves(match.board.fullmoveCounter + 1, wLast, bLast, match.variant.localMoveFormatter)
+                    p.sendMessage(match.variant.localMoveFormatter.formatLastMoves(match.board.fullmoveCounter + 1, wLast, bLast))
                 }
             }
         }
@@ -76,11 +78,11 @@ class MatchController : Component {
         match.sideFacades.forEachUnique { player ->
             match.coroutineScope.launch {
                 with(player.player) {
-                    showMatchResults(player.color, results)
+                    sendMatchResults(player.color, results)
                     if (!results.endReason.quick)
                         delay((if (quick[player.color]) 0 else 3).seconds)
                     match.callEvent(PlayerEvent(this, PlayerDirection.LEAVE))
-                    sendPGN(pgn)
+                    sendMessage(pgn.copyMessage())
                     currentChessMatch = null
                 }
             }
@@ -107,8 +109,8 @@ class MatchController : Component {
         val results = match.results!!
         val pgn = PGN.generate(match)
         match.sideFacades.forEachUnique { player ->
-            player.player.showMatchResults(player.color, results)
-            player.player.sendPGN(pgn)
+            player.player.sendMatchResults(player.color, results)
+            player.player.sendMessage(pgn.copyMessage())
         }
         ChessMatchManager -= match
     }
@@ -144,7 +146,7 @@ class MatchController : Component {
                 val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
                 val bLast = normalMoves.last()
                 match.sideFacades.forEachReal { p ->
-                    p.sendLastMoves(match.board.fullmoveCounter, wLast, bLast, match.variant.localMoveFormatter)
+                    p.sendMessage(match.variant.localMoveFormatter.formatLastMoves(match.board.fullmoveCounter, wLast, bLast))
                 }
                 lastPrintedMove = normalMoves.last()
             }

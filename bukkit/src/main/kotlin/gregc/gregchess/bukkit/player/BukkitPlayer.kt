@@ -48,3 +48,8 @@ object BukkitPlayerProvider : BukkitHumanProvider<BukkitPlayer, BukkitPlayer> {
     override fun getPlayer(uuid: UUID): BukkitPlayer = Bukkit.getOfflinePlayer(uuid).let(BukkitPlayer.Companion::get)
     override fun getPlayer(name: String): BukkitPlayer? = getOfflinePlayerByName(name)?.let(BukkitPlayer.Companion::get)
 }
+
+val org.bukkit.event.player.PlayerEvent.gregchessPlayer get() = BukkitPlayerProvider.getOnlinePlayer(player.uniqueId)!!
+val org.bukkit.event.block.BlockBreakEvent.gregchessPlayer get() = BukkitPlayerProvider.getOnlinePlayer(player.uniqueId)!!
+val org.bukkit.event.entity.EntityEvent.gregchessPlayer get() = (entity as? Player)?.uniqueId?.let(BukkitPlayerProvider::getOnlinePlayer)
+val org.bukkit.event.inventory.InventoryInteractEvent.gregchessPlayer get() = (whoClicked as? Player)?.uniqueId?.let(BukkitPlayerProvider::getOnlinePlayer)

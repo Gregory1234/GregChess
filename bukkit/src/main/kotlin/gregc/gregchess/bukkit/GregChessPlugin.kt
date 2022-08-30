@@ -257,7 +257,7 @@ object GregChessPlugin : Listener {
             playerSubcommand("save") {
                 val pl = requireMatch()
                 execute {
-                    sender.sendFEN(pl().match.board.getFEN())
+                    sender.sendMessage(pl().match.board.getFEN().copyMessage())
                 }
             }
             playerSubcommand("time") {

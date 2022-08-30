@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.player.BukkitPlayer
-import gregc.gregchess.bukkit.player.showMatchResults
+import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -45,7 +45,7 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
 
     private fun stop(match: ChessMatch) {
         for (it in spectators) {
-            it.showMatchResults(match.results!!)
+            it.sendMatchResults(match.results!!)
         }
     }
 

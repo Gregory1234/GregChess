@@ -5,8 +5,7 @@ import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.piece.localChar
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.getPathString
-import gregc.gregchess.move.MoveFormatter
-import gregc.gregchess.move.simpleMoveFormatter
+import gregc.gregchess.move.*
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceType
@@ -39,3 +38,11 @@ val defaultLocalMoveFormatter: MoveFormatter
 
 val ChessVariant.localMoveFormatter: MoveFormatter
     get() = BukkitRegistry.LOCAL_MOVE_FORMATTER[this]
+
+fun MoveFormatter.formatLastMoves(num: Int, wLast: Move?, bLast: Move?) = buildString {
+    append(num - 1)
+    append(". ")
+    wLast?.let { append(format(it)) }
+    append("  | ")
+    bLast?.let { append(format(it)) }
+}

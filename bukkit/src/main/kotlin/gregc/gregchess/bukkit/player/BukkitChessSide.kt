@@ -4,11 +4,12 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.piece.item
-import gregc.gregchess.bukkitutils.Message
+import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
+import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.ChessSide
 import gregc.gregchess.player.ChessSideFacade
 import kotlinx.coroutines.launch
@@ -93,7 +94,14 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         private val IN_CHECK_TITLE = title("InCheck")
         private val YOU_ARE_PLAYING_AS_TITLE = byColor { title("YouArePlayingAs.${it.configName}") }
         private val YOUR_TURN = title("YourTurn")
+
+        private val PAWN_PROMOTION = message("PawnPromotion")
     }
+
+    private suspend fun openPawnPromotionMenu(promotions: Collection<Piece>) =
+        player.openMenu(PAWN_PROMOTION, promotions.mapIndexed { i, p ->
+            ScreenOption(p.item, p, i.toInvPos())
+        }) ?: promotions.first()
 
     override fun toString() = "BukkitChessSide(uuid=$uuid, name=$name, color=$color)"
 
@@ -117,7 +125,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         val move = chosenMoves.first()
         match.coroutineScope.launch {
             move.promotionTrait?.apply {
-                promotion = player.openPawnPromotionMenu(promotions)
+                promotion = openPawnPromotionMenu(promotions)
             }
             match.finishMove(move)
         }
