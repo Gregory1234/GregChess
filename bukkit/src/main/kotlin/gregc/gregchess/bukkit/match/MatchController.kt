@@ -2,21 +2,17 @@ package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.GregChessPlugin
-import gregc.gregchess.bukkit.move.formatLastMoves
-import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.match.*
-import gregc.gregchess.move.Move
 import gregc.gregchess.results.MatchResults
 import gregc.gregchess.stats.VoidPlayerStatsSink
 import gregc.gregchess.stats.addStats
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import org.bukkit.scheduler.BukkitRunnable
 import kotlin.time.Duration.Companion.seconds
 
@@ -34,8 +30,6 @@ class MatchController : Component {
     override val type get() = BukkitComponentType.MATCH_CONTROLLER
 
     internal var quick: ByColor<Boolean> = byColor(false)
-    @Transient
-    private var lastPrintedMove: Move? = null
 
     private fun onStart(match: ChessMatch) {
         ChessMatchManager += match
@@ -57,22 +51,8 @@ class MatchController : Component {
 
     private fun onStop(match: ChessMatch) {
         val results = match.results!!
-        with(match.board) {
-            val normalMoves = moveHistory.filter { !it.isPhantomMove }
-            if (lastPrintedMove != normalMoves.lastOrNull()) {
-                val wLast: Move?
-                val bLast: Move?
-                if (normalMoves.lastOrNull()?.main?.color == Color.WHITE) {
-                    wLast = normalMoves.lastOrNull()
-                    bLast = null
-                } else {
-                    wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
-                    bLast = normalMoves.lastOrNull()
-                }
-                match.sideFacades.forEachReal { p ->
-                    p.sendMessage(match.variant.localMoveFormatter.formatLastMoves(match.board.fullmoveCounter + 1, wLast, bLast))
-                }
-            }
+        match.sideFacades.forEachUnique { p ->
+            p.sendLastMoves(Color.WHITE)
         }
         val pgn = PGN.generate(match)
         match.sideFacades.forEachUnique { player ->
@@ -140,16 +120,8 @@ class MatchController : Component {
     }
 
     private fun handleTurnEnd(match: ChessMatch) {
-        if (match.board.currentTurn == Color.BLACK) {
-            with(match.board) {
-                val normalMoves = moveHistory.filter { !it.isPhantomMove }
-                val wLast = if (normalMoves.size <= 1) null else normalMoves[normalMoves.size - 2]
-                val bLast = normalMoves.last()
-                match.sideFacades.forEachReal { p ->
-                    p.sendMessage(match.variant.localMoveFormatter.formatLastMoves(match.board.fullmoveCounter, wLast, bLast))
-                }
-                lastPrintedMove = normalMoves.last()
-            }
+        match.sideFacades.forEachUnique { p ->
+            p.sendLastMoves(Color.BLACK)
         }
         (match.currentSide as? BukkitChessSideFacade)?.let(GregChessPlugin::clearRequests)
     }

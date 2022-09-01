@@ -3,6 +3,8 @@ package gregc.gregchess.bukkit.player
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.BukkitChessEventType
+import gregc.gregchess.bukkit.move.formatLastMoves
+import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.match.*
@@ -167,6 +169,16 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             player.sendMessage(YOU_ARE_PLAYING_AS_MSG[color])
         }
     }
+
+    fun sendLastMoves(match: ChessMatch, checkLastMoveColor: Color? = null) {
+        val normalMoves = match.board.moveHistory.filter { !it.isPhantomMove }
+        val lastMoveColor = if (normalMoves.size % 2 == 0) !match.board.initialFEN.currentTurn else match.board.initialFEN.currentTurn
+        if (checkLastMoveColor != lastMoveColor && checkLastMoveColor != null) return
+        val wLastIndex = if (lastMoveColor == Color.WHITE) normalMoves.size - 1 else normalMoves.size - 2
+        val wLast = if (wLastIndex < 0) null else normalMoves[wLastIndex]
+        val bLast = if (lastMoveColor == Color.BLACK) normalMoves.lastOrNull() else null
+        player.sendMessage(match.variant.localMoveFormatter.formatLastMoves(match.board.fullmoveCounter + if (lastMoveColor == Color.WHITE) 1 else 0, wLast, bLast))
+    }
 }
 
 class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : ChessSideFacade<BukkitChessSide>(match, side) {
@@ -178,4 +190,5 @@ class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : ChessSid
     fun pickUp(pos: Pos) = side.pickUp(match, pos)
     fun makeMove(pos: Pos) = side.makeMove(match, pos)
     fun sendStartMessage() = side.sendStartMessage(match)
+    fun sendLastMoves(checkLastMoveColor: Color? = null) = side.sendLastMoves(match, checkLastMoveColor)
 }
