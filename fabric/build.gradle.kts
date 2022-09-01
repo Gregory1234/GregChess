@@ -24,11 +24,26 @@ val shaded: Configuration by configurations.creating
 
 configurations.implementation.get().extendsFrom(shaded)
 
+val fabricModules = setOf( // TODO: remove duplication
+    "fabric-item-groups-v0",
+    "fabric-lifecycle-events-v1",
+    "fabric-item-api-v1",
+    "fabric-transitive-access-wideners-v1",
+    "fabric-registry-sync-v0",
+    // transitive
+    "fabric-api-base",
+    "fabric-networking-api-v1",
+    "fabric-rendering-v1",
+    "fabric-resource-loader-v0",
+)
+
 dependencies {
     minecraft(libs.fabric.minecraft)
     mappings(variantOf(libs.fabric.yarn) { classifier("v2") })
     modApi(libs.fabric.loader)
-    modImplementation(libs.fabric.api)
+    fabricModules.forEach {
+        modImplementation(fabricApi.module(it, libs.versions.fabric.api.get()))
+    }
     modImplementation(libs.fabric.kotlin)
     modApi(libs.fabric.libgui)
     include(libs.fabric.libgui)

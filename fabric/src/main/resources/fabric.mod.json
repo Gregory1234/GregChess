@@ -34,7 +34,11 @@
   ],
   "depends": {
     "fabricloader": ">=@loader-version@",
-    "fabric": "*",
+    "fabric-item-groups-v0": "*",
+    "fabric-lifecycle-events-v1": "*",
+    "fabric-item-api-v1": "*",
+    "fabric-transitive-access-wideners-v1": "*",
+    "fabric-registry-sync-v0": "*",
     "fabric-language-kotlin": ">=@fabric-kotlin-version@",
     "minecraft": "@minecraft-version@",
     "java": ">=@java-min-version@"
