@@ -31,8 +31,16 @@ class ChessEventType<T> {
     }
 }
 
+class ChessEventOrderConstraint(
+    val runBeforeAll: Boolean = false,
+    val runAfterAll: Boolean = false,
+    val runBefore: Set<ChessEventOwner> = emptySet(),
+    val runAfter: Set<ChessEventOwner> = emptySet()
+)
+
 class ChessEventHandler<in T : ChessEvent>(
     val owner: ChessEventOwner,
+    val constraints: ChessEventOrderConstraint,
     val callback: (T) -> Unit
 )
 
@@ -41,11 +49,28 @@ class ChessEventManager : ChessEventCaller {
     private val handlers = mutableMapOf<ChessEventType<*>, MutableList<ChessEventHandler<ChessEvent>>>()
 
     override fun callEvent(event: ChessEvent) = with(MultiExceptionContext()) {
-        (handlers[event.type].orEmpty() + anyHandlers).forEach {
-            exec {
-                it.callback(event)
+        val handlersToOrder = (handlers[event.type].orEmpty() + anyHandlers).toMutableList()
+
+        repeat(256) {
+            handlersToOrder.removeIf { h ->
+                if (handlersToOrder.any { o -> h.constraints.runBefore.any { o.owner.isOf(it) } })
+                    false
+                else if (handlersToOrder.any { o -> o.constraints.runAfter.any { h.owner.isOf(it) } })
+                    false
+                else if (!h.constraints.runBeforeAll && handlersToOrder.any { h.constraints.runBeforeAll })
+                    false
+                else if (h.constraints.runAfterAll && handlersToOrder.any { !h.constraints.runAfterAll })
+                    false
+                else {
+                    exec {
+                        h.callback(event)
+                    }
+                    true
+                }
             }
         }
+        if (handlersToOrder.isNotEmpty())
+            throw ChessEventException(event)
         rethrow { ChessEventException(event, it) }
     }
 
@@ -61,30 +86,52 @@ class ChessEventManager : ChessEventCaller {
     fun registry(owner: ChessEventOwner) = ChessEventRegistry(owner, this)
 }
 
-interface ChessEventOwner
+interface ChessEventOwner {
+    fun isOf(parent: ChessEventOwner): Boolean = this == parent
+}
 
 class ChessEventSubOwner(val owner: ChessEventOwner, val subOwner: Any) : ChessEventOwner {
     override fun toString(): String = "$owner -> $subOwner"
+    override fun equals(other: Any?): Boolean = other is ChessEventSubOwner && other.owner == owner && other.subOwner == subOwner
+    override fun hashCode(): Int {
+        var result = owner.hashCode()
+        result = 31 * result + subOwner.hashCode()
+        return result
+    }
+    override fun isOf(parent: ChessEventOwner): Boolean = super.isOf(parent) || owner.isOf(parent)
 }
 class ChessEventComponentOwner(val type: ComponentType<*>) : ChessEventOwner {
     override fun toString(): String = type.toString()
+    override fun equals(other: Any?): Boolean = other is ChessEventComponentOwner && other.type == type
+    override fun hashCode(): Int = type.hashCode()
 }
 class ChessEventSideOwner(val type: ChessSideType<*>, val color: Color) : ChessEventOwner {
     override fun toString(): String = "$type ($color)"
+    override fun equals(other: Any?): Boolean = other is ChessEventSideOwner && other.type == type && other.color == color
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + color.hashCode()
+        return result
+    }
 }
 
 class ChessEventRegistry(private val owner: ChessEventOwner, private val manager: ChessEventManager) {
-    fun registerAny(handler: (ChessEvent) -> Unit) {
-        manager.registerEventAny(ChessEventHandler(owner, handler))
+    fun registerAny(constraints: ChessEventOrderConstraint, handler: (ChessEvent) -> Unit) {
+        manager.registerEventAny(ChessEventHandler(owner, constraints, handler))
     }
 
-    fun <T: ChessEvent> register(eventType: ChessEventType<T>, handler: (T) -> Unit) {
-        manager.registerEvent(eventType, ChessEventHandler(owner, handler))
+    fun <T: ChessEvent> register(eventType: ChessEventType<T>, constraints: ChessEventOrderConstraint, handler: (T) -> Unit) {
+        manager.registerEvent(eventType, ChessEventHandler(owner, constraints, handler))
     }
 
-    fun <T: ChessEvent> registerR(eventType: ChessEventType<T>, handler: T.() -> Unit) = register(eventType, handler)
+    fun <T: ChessEvent> registerR(eventType: ChessEventType<T>, constraints: ChessEventOrderConstraint, handler: T.() -> Unit) = register(eventType, constraints, handler)
 
-    fun <T: ChessEvent> registerE(event: T, handler: () -> Unit) = register(event.type) { if (it == event) handler() }
+    fun <T: ChessEvent> registerE(event: T, constraints: ChessEventOrderConstraint, handler: () -> Unit) = register(event.type, constraints) { if (it == event) handler() }
+
+    fun registerAny(handler: (ChessEvent) -> Unit) = registerAny(ChessEventOrderConstraint(), handler)
+    fun <T: ChessEvent> register(eventType: ChessEventType<T>, handler: (T) -> Unit) = register(eventType, ChessEventOrderConstraint(), handler)
+    fun <T: ChessEvent> registerR(eventType: ChessEventType<T>, handler: T.() -> Unit) = registerR(eventType, ChessEventOrderConstraint(), handler)
+    fun <T: ChessEvent> registerE(event: T, handler: () -> Unit) = registerE(event, ChessEventOrderConstraint(), handler)
 
     fun subRegistry(subOwner: Any) = ChessEventRegistry(ChessEventSubOwner(owner, subOwner), manager)
 }
