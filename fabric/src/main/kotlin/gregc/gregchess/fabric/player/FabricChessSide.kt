@@ -64,8 +64,8 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
 
     override fun createFacade(match: ChessMatch) = FabricChessSideFacade(match, this)
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEventE(TurnEvent.START) {
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.registerE(TurnEvent.START) {
             startTurn(match)
         }
     }

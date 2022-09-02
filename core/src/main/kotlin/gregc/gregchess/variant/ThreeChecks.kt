@@ -32,11 +32,11 @@ object ThreeChecks : ChessVariant(), Registering {
     ) : Component, CheckCounterConnector {
         constructor(limit: Int) : this(limit, mutableByColor(0))
 
-        override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-            eventManager.registerEvent(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
+        override fun init(match: ChessMatch, events: ChessEventRegistry) {
+            events.register(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
                 e[CHECK_COUNTER_CONNECTOR] = this
             }
-            eventManager.registerEvent(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
+            events.register(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
                 e[CHECK_COUNTER_CONNECTOR] = FakeCheckCounterConnector(limit, checks_)
             }
         }

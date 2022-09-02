@@ -1,7 +1,6 @@
 package gregc.gregchess.fabric.match
 
 import gregc.gregchess.fabric.player.*
-import gregc.gregchess.fabric.renderer.server
 import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 
@@ -10,8 +9,8 @@ object MatchController : Component {
 
     override val type get() = FabricComponentType.MATCH_CONTROLLER
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEvent(ChessEventType.BASE) { handleBaseEvent(match, it) }
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
     }
 
     private fun handleBaseEvent(match: ChessMatch, e: ChessBaseEvent) = with(match) {

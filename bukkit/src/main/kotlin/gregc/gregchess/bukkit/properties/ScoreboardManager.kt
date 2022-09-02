@@ -34,8 +34,8 @@ class ScoreboardManager : Component {
     @Transient
     private val layout: ScoreboardLayout = config.getFromRegistry(BukkitRegistry.SCOREBOARD_LAYOUT_PROVIDER, "Scoreboard.Layout")!!(scoreboard)
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEvent(ChessEventType.BASE) {
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.register(ChessEventType.BASE) {
             when (it) {
                 ChessBaseEvent.UPDATE -> update()
                 ChessBaseEvent.START, ChessBaseEvent.SYNC -> start(match)
@@ -44,14 +44,14 @@ class ScoreboardManager : Component {
                 else -> {}
             }
         }
-        eventManager.registerEventR(BukkitChessEventType.RESET_PLAYER) { giveScoreboard(player) }
-        eventManager.registerEventR(BukkitChessEventType.PLAYER) {
+        events.registerR(BukkitChessEventType.RESET_PLAYER) { giveScoreboard(player) }
+        events.registerR(BukkitChessEventType.PLAYER) {
             when(dir) {
                 PlayerDirection.JOIN -> giveScoreboard(player)
                 PlayerDirection.LEAVE -> player.entity?.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
             }
         }
-        eventManager.registerEventR(BukkitChessEventType.SPECTATOR) {
+        events.registerR(BukkitChessEventType.SPECTATOR) {
             when(dir) {
                 PlayerDirection.JOIN -> giveScoreboard(player)
                 PlayerDirection.LEAVE -> player.entity?.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard

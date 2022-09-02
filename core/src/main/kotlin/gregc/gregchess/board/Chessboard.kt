@@ -128,13 +128,13 @@ class Chessboard private constructor (
                 moveHistory_.clear()
         }
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
-        eventManager.registerEvent(ChessEventType.BASE) { handleBaseEvent(match, it) }
-        eventManager.registerEvent(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }
+        events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
+        events.register(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
             e[MoveConnectorType.CHESSBOARD] = getFacade(match)
         }
-        eventManager.registerEvent(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
+        events.register(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
             e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
                 initialFEN,
                 squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),

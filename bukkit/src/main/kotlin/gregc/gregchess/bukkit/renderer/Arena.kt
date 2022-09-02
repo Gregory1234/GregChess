@@ -48,7 +48,7 @@ interface ArenaManager<out A : Arena> {
 interface Arena {
     val name: String
 
-    fun registerEvents(match: ChessMatch, eventManager: ChessEventManager)
+    fun registerEvents(match: ChessMatch, events: ChessEventRegistry)
     val boardStart: Location
     val tileSize: Int
     val capturedStart: ByColor<Location>
@@ -159,27 +159,27 @@ class SimpleArena internal constructor(
     private val spawn: Loc = offset + Loc(4, 0, 4)
     private val spawnLocation: Location get() = spawn.toLocation(world)
 
-    override fun registerEvents(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEvent(ChessEventType.BASE) {
+    override fun registerEvents(match: ChessMatch, events: ChessEventRegistry) {
+        events.register(ChessEventType.BASE) {
             if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC) SimpleArenaManager.freeArena(this)
             if (it == ChessBaseEvent.PANIC)
                 for (p in match.sides.toList())
                     if (p is BukkitChessSide)
                         p.player.leave()
         }
-        eventManager.registerEventR(BukkitChessEventType.SPECTATOR) {
+        events.registerR(BukkitChessEventType.SPECTATOR) {
             when (dir) {
                 PlayerDirection.JOIN -> player.resetSpectator()
                 PlayerDirection.LEAVE -> player.leave()
             }
         }
-        eventManager.registerEventR(BukkitChessEventType.PLAYER) {
+        events.registerR(BukkitChessEventType.PLAYER) {
             when (dir) {
                 PlayerDirection.JOIN -> player.reset()
                 PlayerDirection.LEAVE -> player.leave()
             }
         }
-        eventManager.registerEventR(BukkitChessEventType.RESET_PLAYER) { player.reset() }
+        events.registerR(BukkitChessEventType.RESET_PLAYER) { player.reset() }
     }
 
     private fun BukkitPlayer.leave() {

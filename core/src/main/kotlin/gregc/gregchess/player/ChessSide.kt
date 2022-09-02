@@ -32,7 +32,7 @@ interface ChessSide {
 
     val type: ChessSideType<out @SelfType ChessSide>
 
-    fun init(match: ChessMatch, eventManager: ChessEventManager) {}
+    fun init(match: ChessMatch, events: ChessEventRegistry) {}
 
     fun createFacade(match: ChessMatch): ChessSideFacade<*>
 }

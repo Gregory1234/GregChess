@@ -42,16 +42,16 @@ data class BukkitRenderer(
     lateinit var arena: Arena
         private set
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
         this.arena = ArenaManager.fromConfig().reserveArena(match)
-        arena.registerEvents(match, eventManager)
-        eventManager.registerEventR(AtomicChess.EXPLOSION_EVENT) {
+        arena.registerEvents(match, events.subRegistry("arena"))
+        events.registerR(AtomicChess.EXPLOSION_EVENT) {
             world.createExplosion(pos.location, 4.0f, false, false)
         }
-        eventManager.registerEvent(ChessEventType.BASE) { handleBaseEvent(match, it) }
-        eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
-        eventManager.registerEventR(BukkitChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match) }
-        eventManager.registerEvent(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
+        events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
+        events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }
+        events.registerR(BukkitChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match) }
+        events.register(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
     }
 
     @Transient private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()

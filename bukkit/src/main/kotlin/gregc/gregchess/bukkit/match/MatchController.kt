@@ -95,8 +95,8 @@ class MatchController : Component {
         ChessMatchManager -= match
     }
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEvent(ChessEventType.BASE) {
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.register(ChessEventType.BASE) {
             when (it) {
                 ChessBaseEvent.START -> onStart(match)
                 ChessBaseEvent.RUNNING -> onRunning(match)
@@ -110,8 +110,8 @@ class MatchController : Component {
                 ChessBaseEvent.CLEAR -> Unit
             }
         }
-        eventManager.registerEventE(TurnEvent.END) { handleTurnEnd(match) }
-        eventManager.registerEventR(BukkitChessEventType.PLAYER) {
+        events.registerE(TurnEvent.END) { handleTurnEnd(match) }
+        events.registerR(BukkitChessEventType.PLAYER) {
             when(dir) {
                 PlayerDirection.JOIN -> player.currentChessSide!!.sendStartMessage()
                 PlayerDirection.LEAVE -> {}

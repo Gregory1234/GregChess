@@ -1,9 +1,9 @@
 package gregc.gregchess.match
 
-import gregc.gregchess.MultiExceptionContext
-import gregc.gregchess.SelfType
+import gregc.gregchess.*
 import gregc.gregchess.board.SetFenEvent
 import gregc.gregchess.move.connector.*
+import gregc.gregchess.player.ChessSideType
 import gregc.gregchess.stats.AddStatsEvent
 
 interface ChessEvent {
@@ -31,31 +31,62 @@ class ChessEventType<T> {
     }
 }
 
+class ChessEventHandler<in T : ChessEvent>(
+    val owner: ChessEventOwner,
+    val callback: (T) -> Unit
+)
+
 class ChessEventManager : ChessEventCaller {
-    private val anyHandlers = mutableListOf<(ChessEvent) -> Unit>()
-    private val handlers = mutableMapOf<ChessEventType<*>, MutableList<(ChessEvent) -> Unit>>()
+    private val anyHandlers = mutableListOf<ChessEventHandler<ChessEvent>>()
+    private val handlers = mutableMapOf<ChessEventType<*>, MutableList<ChessEventHandler<ChessEvent>>>()
 
     override fun callEvent(event: ChessEvent) = with(MultiExceptionContext()) {
         (handlers[event.type].orEmpty() + anyHandlers).forEach {
             exec {
-                it.invoke(event)
+                it.callback(event)
             }
         }
         rethrow { ChessEventException(event, it) }
     }
 
-    fun registerEventAny(handler: (ChessEvent) -> Unit) {
+    fun registerEventAny(handler: ChessEventHandler<ChessEvent>) {
         anyHandlers += handler
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T: ChessEvent> registerEvent(eventType: ChessEventType<T>, handler: (T) -> Unit) {
-        handlers.getOrPut(eventType, ::mutableListOf) += (handler as (ChessEvent) -> Unit)
+    fun <T: ChessEvent> registerEvent(eventType: ChessEventType<T>, handler: ChessEventHandler<T>) {
+        handlers.getOrPut(eventType, ::mutableListOf) += handler as ChessEventHandler<ChessEvent>
     }
 
-    fun <T: ChessEvent> registerEventR(eventType: ChessEventType<T>, handler: T.() -> Unit) = registerEvent(eventType, handler)
+    fun registry(owner: ChessEventOwner) = ChessEventRegistry(owner, this)
+}
 
-    fun <T: ChessEvent> registerEventE(event: T, handler: () -> Unit) = registerEvent(event.type) { if (it == event) handler() }
+interface ChessEventOwner
+
+class ChessEventSubOwner(val owner: ChessEventOwner, val subOwner: Any) : ChessEventOwner {
+    override fun toString(): String = "$owner -> $subOwner"
+}
+class ChessEventComponentOwner(val type: ComponentType<*>) : ChessEventOwner {
+    override fun toString(): String = type.toString()
+}
+class ChessEventSideOwner(val type: ChessSideType<*>, val color: Color) : ChessEventOwner {
+    override fun toString(): String = "$type ($color)"
+}
+
+class ChessEventRegistry(private val owner: ChessEventOwner, private val manager: ChessEventManager) {
+    fun registerAny(handler: (ChessEvent) -> Unit) {
+        manager.registerEventAny(ChessEventHandler(owner, handler))
+    }
+
+    fun <T: ChessEvent> register(eventType: ChessEventType<T>, handler: (T) -> Unit) {
+        manager.registerEvent(eventType, ChessEventHandler(owner, handler))
+    }
+
+    fun <T: ChessEvent> registerR(eventType: ChessEventType<T>, handler: T.() -> Unit) = register(eventType, handler)
+
+    fun <T: ChessEvent> registerE(event: T, handler: () -> Unit) = register(event.type) { if (it == event) handler() }
+
+    fun subRegistry(subOwner: Any) = ChessEventRegistry(ChessEventSubOwner(owner, subOwner), manager)
 }
 
 enum class TurnEvent(val ending: Boolean) : ChessEvent {

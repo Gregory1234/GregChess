@@ -54,8 +54,8 @@ class ChessMatch private constructor(
             for (t in variant.requiredComponents) {
                 components.firstOrNull { it.type == t } ?: throw ComponentNotFoundException(t)
             }
-            components.forEach { it.init(this, eventManager) }
-            sides.forEach { it.init(this, eventManager) }
+            components.forEach { it.init(this, eventManager.registry(ChessEventComponentOwner(it.type))) }
+            sides.forEach { it.init(this, eventManager.registry(ChessEventSideOwner(it.type, it.color))) }
         } catch (e: Exception) {
             panic(e)
         }

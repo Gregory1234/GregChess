@@ -53,10 +53,10 @@ class ChessClock private constructor(
 
     override val type get() = ComponentType.CLOCK
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
         lastTime = Instant.now(match.environment.clock)
-        eventManager.registerEvent(ChessEventType.BASE) { handleBaseEvent(match, it) }
-        eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
+        events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
+        events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }
     }
 
     val timeRemaining: ByColor<Duration> get() = byColor { timeRemaining_[it] }

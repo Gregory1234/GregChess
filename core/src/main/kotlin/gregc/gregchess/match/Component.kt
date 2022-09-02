@@ -41,7 +41,7 @@ interface Component {
 
     val type: ComponentType<out @SelfType Component>
 
-    fun init(match: ChessMatch, eventManager: ChessEventManager) {}
+    fun init(match: ChessMatch, events: ChessEventRegistry) {}
 
 }
 

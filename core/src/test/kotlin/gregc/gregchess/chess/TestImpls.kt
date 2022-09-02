@@ -27,8 +27,8 @@ class TestChessPlayer(private val spy: Boolean) : ChessPlayer<TestChessSide> {
 class TestChessSide(override val name: String, override val color: Color) : ChessSide {
     override val type get() = GregChess.TEST_SIDE
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEventAny(::handleEvent)
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.registerAny(::handleEvent)
     }
 
     fun handleEvent(e: ChessEvent) {}
@@ -43,8 +43,8 @@ object TestComponent : Component {
 
     override val type = GregChess.TEST_COMPONENT
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEventAny(::handleEvent)
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.registerAny(::handleEvent)
     }
 
     fun handleEvent(e: ChessEvent) {}

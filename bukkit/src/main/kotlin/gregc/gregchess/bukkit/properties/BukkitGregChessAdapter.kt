@@ -31,8 +31,8 @@ object BukkitGregChessAdapter : Component, BukkitRegistering {
 
     private val timeFormat: String get() = config.getPathString("TimeFormat")
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEventR(BukkitChessEventType.ADD_PROPERTIES) {
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.registerR(BukkitChessEventType.ADD_PROPERTIES) {
             match.clock?.apply {
                 if (timeControl.type == TimeControl.Type.FIXED) {
                     match(TIME_REMAINING_SIMPLE) { timeRemaining[match.board.currentTurn].format(timeFormat) }

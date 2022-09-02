@@ -55,11 +55,11 @@ data class FabricRenderer(
         }
     }
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEvent(ChessEventType.BASE, ::handleBaseEvent)
-        eventManager.registerEvent(ChessEventType.TURN) { handleTurnEvent(match, it) }
-        eventManager.registerEvent(FabricChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match, it) }
-        eventManager.registerEvent(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.register(ChessEventType.BASE, ::handleBaseEvent)
+        events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }
+        events.register(FabricChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match, it) }
+        events.register(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
     }
 
     private fun handleBaseEvent(e: ChessBaseEvent) {

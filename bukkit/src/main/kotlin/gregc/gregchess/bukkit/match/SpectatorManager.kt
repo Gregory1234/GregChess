@@ -36,8 +36,8 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
         match.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEvent(ChessEventType.BASE) {
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.register(ChessEventType.BASE) {
             if (it == ChessBaseEvent.STOP) stop(match)
             else if (it == ChessBaseEvent.CLEAR) clear(match)
         }

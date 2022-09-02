@@ -83,8 +83,8 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     override fun createFacade(match: ChessMatch) = BukkitChessSideFacade(match, this)
 
-    override fun init(match: ChessMatch, eventManager: ChessEventManager) {
-        eventManager.registerEventE(TurnEvent.START) {
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.registerE(TurnEvent.START) {
             startTurn(match)
         }
     }
