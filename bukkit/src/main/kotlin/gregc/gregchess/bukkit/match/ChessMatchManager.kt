@@ -66,7 +66,7 @@ object ChessMatchManager : Listener {
 
     fun stop() {
         for (g in matches.values)
-            g.quickStop(drawBy(PLUGIN_DISABLED))
+            g.stop(drawBy(PLUGIN_DISABLED))
     }
 
     @EventHandler

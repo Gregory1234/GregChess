@@ -91,14 +91,3 @@ object MatchController : Component {
 }
 
 val ChessMatch.matchController get() = require(BukkitComponentType.MATCH_CONTROLLER)
-
-fun ChessMatch.stop(results: MatchResults, quick: ByColor<Boolean>) {
-    sideFacades.forEach {
-        if (it is BukkitChessSideFacade) {
-            it.side.quick = quick[it.color]
-        }
-    }
-    stop(results)
-}
-
-fun ChessMatch.quickStop(results: MatchResults) = stop(results, byColor(true))

@@ -40,6 +40,9 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
     override val name: String get() = bukkit.name ?: ""
     override val uuid: UUID get() = bukkit.uniqueId
     override fun createChessSide(color: Color): BukkitChessSide = BukkitChessSide(this, color)
+
+    var quickLeave: Boolean = false
+        internal set
 }
 
 object BukkitPlayerProvider : BukkitHumanProvider<BukkitPlayer, BukkitPlayer> {

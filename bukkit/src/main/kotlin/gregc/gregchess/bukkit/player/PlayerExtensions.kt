@@ -4,7 +4,6 @@ import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkitutils.textComponent
-import gregc.gregchess.byColor
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.lostBy
@@ -38,7 +37,9 @@ fun BukkitPlayer.leaveMatch() {
             match.callEvent(PlayerEvent(this, PlayerDirection.LEAVE))
         } else {
             val color = match[uuid]!!.color
-            match.stop(color.lostBy(EndReason.WALKOVER), byColor { it == color })
+            quickLeave = true
+            match.stop(color.lostBy(EndReason.WALKOVER))
+            quickLeave = false
         }
     }
     currentChessMatch = null

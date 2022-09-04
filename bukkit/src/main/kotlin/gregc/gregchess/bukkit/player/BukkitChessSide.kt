@@ -67,8 +67,6 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     val held: BoardPiece? get() = _held
 
-    internal var quick: Boolean = false
-
     private fun setHeld(match: ChessMatch, newHeld: BoardPiece?) {
         val oldHeld = _held
         _held = newHeld
@@ -104,7 +102,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         match.coroutineScope.launch {
             player.sendMatchResults(color, results)
             if (!results.endReason.quick)
-                delay((if (quick) 0 else 3).seconds)
+                delay((if (player.quickLeave) 0 else 3).seconds)
             match.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
             player.sendMessage(pgn.copyMessage())
             player.currentChessMatch = null
