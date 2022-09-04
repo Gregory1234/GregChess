@@ -1,20 +1,17 @@
 package gregc.gregchess.bukkit.match
 
-import gregc.gregchess.*
+import gregc.gregchess.ByColor
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
+import gregc.gregchess.byColor
 import gregc.gregchess.match.*
 import gregc.gregchess.results.MatchResults
 import gregc.gregchess.stats.VoidPlayerStatsSink
 import gregc.gregchess.stats.addStats
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.bukkit.scheduler.BukkitRunnable
-import kotlin.time.Duration.Companion.seconds
 
 enum class PlayerDirection {
     JOIN, LEAVE
@@ -25,17 +22,12 @@ class PlayerEvent(val player: BukkitPlayer, val dir: PlayerDirection) : ChessEve
 }
 
 @Serializable
-class MatchController : Component {
+object MatchController : Component {
 
     override val type get() = BukkitComponentType.MATCH_CONTROLLER
 
-    internal var quick: ByColor<Boolean> = byColor(false)
-
     private fun onStart(match: ChessMatch) {
         ChessMatchManager += match
-        match.sideFacades.forEachReal {
-            match.callEvent(PlayerEvent(it, PlayerDirection.JOIN))
-        }
     }
 
     private fun onRunning(match: ChessMatch) {
@@ -50,23 +42,6 @@ class MatchController : Component {
     }
 
     private fun onStop(match: ChessMatch) {
-        val results = match.results!!
-        match.sideFacades.forEachUnique { p ->
-            p.sendLastMoves(Color.WHITE)
-        }
-        val pgn = PGN.generate(match)
-        match.sideFacades.forEachUnique { player ->
-            match.coroutineScope.launch {
-                with(player.player) {
-                    sendMatchResults(player.color, results)
-                    if (!results.endReason.quick)
-                        delay((if (quick[player.color]) 0 else 3).seconds)
-                    match.callEvent(PlayerEvent(this, PlayerDirection.LEAVE))
-                    sendMessage(pgn.copyMessage())
-                    currentChessMatch = null
-                }
-            }
-        }
         if (!match.sideFacades.isSamePlayer()) {
             match.addStats(byColor {
                 val player = match.sides[it]
@@ -76,13 +51,10 @@ class MatchController : Component {
                     VoidPlayerStatsSink
             })
         }
-        if (!results.endReason.quick)
-            match.coroutineScope.launch {
-                delay((if (quick.white && quick.black) 0 else 3).seconds)
-                ChessMatchManager -= match
-            }
-        else
-            ChessMatchManager -= match
+    }
+
+    private fun onClear(match: ChessMatch) {
+        ChessMatchManager -= match
     }
 
     private fun onPanic(match: ChessMatch) {
@@ -96,41 +68,36 @@ class MatchController : Component {
     }
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
-        events.register(ChessEventType.BASE) {
+        events.register(ChessEventType.BASE, ChessEventOrderConstraint(runBeforeAll = true)) {
             when (it) {
                 ChessBaseEvent.START -> onStart(match)
                 ChessBaseEvent.RUNNING -> onRunning(match)
-                ChessBaseEvent.STOP -> onStop(match)
-                ChessBaseEvent.PANIC -> onPanic(match)
-                ChessBaseEvent.SYNC -> if (match.state == ChessMatch.State.RUNNING) {
+                ChessBaseEvent.SYNC -> if (match.running) {
                     onStart(match)
                     onRunning(match)
-                } else Unit
-                ChessBaseEvent.UPDATE -> Unit
-                ChessBaseEvent.CLEAR -> Unit
+                }
+                else -> {}
             }
         }
-        events.registerE(TurnEvent.END) { handleTurnEnd(match) }
-        events.registerR(BukkitChessEventType.PLAYER) {
-            when(dir) {
-                PlayerDirection.JOIN -> player.currentChessSide!!.sendStartMessage()
-                PlayerDirection.LEAVE -> {}
+        events.register(ChessEventType.BASE, ChessEventOrderConstraint(runAfterAll = true)) {
+            when (it) {
+                ChessBaseEvent.STOP -> onStop(match)
+                ChessBaseEvent.CLEAR -> onClear(match)
+                ChessBaseEvent.PANIC -> onPanic(match)
+                else -> {}
             }
         }
-    }
-
-    private fun handleTurnEnd(match: ChessMatch) {
-        match.sideFacades.forEachUnique { p ->
-            p.sendLastMoves(Color.BLACK)
-        }
-        (match.currentSide as? BukkitChessSideFacade)?.let(GregChessPlugin::clearRequests)
     }
 }
 
 val ChessMatch.matchController get() = require(BukkitComponentType.MATCH_CONTROLLER)
 
 fun ChessMatch.stop(results: MatchResults, quick: ByColor<Boolean>) {
-    matchController.quick = if ((quick.white || quick.black) && sideFacades.isSamePlayer()) byColor(true) else quick
+    sideFacades.forEach {
+        if (it is BukkitChessSideFacade) {
+            it.side.quick = quick[it.color]
+        }
+    }
     stop(results)
 }
 

@@ -2,10 +2,12 @@ package gregc.gregchess.bukkit.player
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.match.BukkitChessEventType
+import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.move.formatLastMoves
 import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkit.piece.item
+import gregc.gregchess.bukkit.results.quick
+import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.checkExists
@@ -14,10 +16,12 @@ import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.ChessSide
 import gregc.gregchess.player.ChessSideFacade
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEvent {
     enum class Type {
@@ -63,6 +67,8 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     val held: BoardPiece? get() = _held
 
+    internal var quick: Boolean = false
+
     private fun setHeld(match: ChessMatch, newHeld: BoardPiece?) {
         val oldHeld = _held
         _held = newHeld
@@ -83,9 +89,68 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     override fun createFacade(match: ChessMatch) = BukkitChessSideFacade(match, this)
 
+    private inline fun oncePerPlayer(match: ChessMatch, callback: () -> Unit) {
+        if (!match.sideFacades.isSamePlayer() || color == match.board.currentTurn) {
+            callback()
+        }
+    }
+
+    private fun onStart(match: ChessMatch) = oncePerPlayer(match) { match.callEvent(PlayerEvent(player, PlayerDirection.JOIN)) }
+
+    private fun onStop(match: ChessMatch) = oncePerPlayer(match) {
+        val results = match.results!!
+        sendLastMoves(match, Color.WHITE)
+        val pgn = PGN.generate(match)
+        match.coroutineScope.launch {
+            player.sendMatchResults(color, results)
+            if (!results.endReason.quick)
+                delay((if (quick) 0 else 3).seconds)
+            match.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
+            player.sendMessage(pgn.copyMessage())
+            player.currentChessMatch = null
+        }
+    }
+
+    private fun onPanic(match: ChessMatch) = oncePerPlayer(match) {
+        val results = match.results!!
+        val pgn = PGN.generate(match)
+        player.sendMatchResults(color, results)
+        player.sendMessage(pgn.copyMessage())
+    }
+
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
-        events.registerE(TurnEvent.START) {
-            startTurn(match)
+        events.register(ChessEventType.BASE, ChessEventOrderConstraint(
+            runBeforeAll = true,
+            runAfter = setOf(ChessEventComponentOwner(BukkitComponentType.MATCH_CONTROLLER))
+        )) {
+            when(it) {
+                ChessBaseEvent.START -> onStart(match)
+                ChessBaseEvent.SYNC -> if (match.running) onStart(match)
+                else -> {}
+            }
+        }
+        events.register(ChessEventType.BASE, ChessEventOrderConstraint(
+            runAfterAll = true,
+            runBefore = setOf(ChessEventComponentOwner(BukkitComponentType.MATCH_CONTROLLER))
+        )) {
+            when(it) {
+                ChessBaseEvent.STOP -> onStop(match)
+                ChessBaseEvent.PANIC -> onPanic(match)
+                else -> {}
+            }
+        }
+        events.register(ChessEventType.TURN) {
+            when(it) {
+                TurnEvent.START -> startTurn(match)
+                TurnEvent.END -> endTurn(match)
+                else -> {}
+            }
+        }
+        events.register(BukkitChessEventType.PLAYER) {
+            when(it.dir) {
+                PlayerDirection.JOIN -> if (it.player == player) sendStartMessage(match)
+                PlayerDirection.LEAVE -> {}
+            }
         }
     }
 
@@ -158,7 +223,13 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             player.sendMessage(IN_CHECK_MSG)
     }
 
-    fun sendStartMessage(match: ChessMatch) {
+    private fun endTurn(match: ChessMatch) = oncePerPlayer(match) {
+        sendLastMoves(match, Color.BLACK)
+        if (color == match.board.currentTurn)
+            GregChessPlugin.clearRequests(player)
+    }
+
+    private fun sendStartMessage(match: ChessMatch) {
         val facade = match[color] as BukkitChessSideFacade
         if (facade.hasTurn || !isSilent(match)) {
             sendTitleList(buildList {
@@ -170,7 +241,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         }
     }
 
-    fun sendLastMoves(match: ChessMatch, checkLastMoveColor: Color? = null) {
+    private fun sendLastMoves(match: ChessMatch, checkLastMoveColor: Color? = null) {
         val normalMoves = match.board.moveHistory.filter { !it.isPhantomMove }
         val lastMoveColor = if (normalMoves.size % 2 == 0) !match.board.initialFEN.currentTurn else match.board.initialFEN.currentTurn
         if (checkLastMoveColor != lastMoveColor && checkLastMoveColor != null) return
@@ -189,6 +260,4 @@ class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : ChessSid
 
     fun pickUp(pos: Pos) = side.pickUp(match, pos)
     fun makeMove(pos: Pos) = side.makeMove(match, pos)
-    fun sendStartMessage() = side.sendStartMessage(match)
-    fun sendLastMoves(checkLastMoveColor: Color? = null) = side.sendLastMoves(match, checkLastMoveColor)
 }

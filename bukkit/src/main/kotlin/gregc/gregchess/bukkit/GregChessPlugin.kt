@@ -469,9 +469,9 @@ object GregChessPlugin : Listener {
         coroutineScope.cancel()
     }
 
-    fun clearRequests(p: BukkitChessSideFacade) {
-        drawRequest.quietRemove(p.player)
-        takebackRequest.quietRemove(p.player)
+    fun clearRequests(p: BukkitPlayer) {
+        drawRequest.quietRemove(p)
+        takebackRequest.quietRemove(p)
     }
 
     @EventHandler

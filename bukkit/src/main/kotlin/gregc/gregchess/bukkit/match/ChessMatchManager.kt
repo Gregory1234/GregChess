@@ -158,7 +158,7 @@ object ChessMatchManager : Listener {
     }
 
     internal operator fun minusAssign(g: ChessMatch) {
-        g.sideFacades.forEachUnique(GregChessPlugin::clearRequests)
+        g.sideFacades.forEachReal(GregChessPlugin::clearRequests)
         matches.remove(g.uuid, g)
         val white = (g.sides.white as? BukkitChessSide)?.uuid
         val black = (g.sides.black as? BukkitChessSide)?.uuid
