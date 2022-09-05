@@ -104,6 +104,9 @@ tasks {
     launchMinecraftServer {
         dependsOn(shadedJar)
         serverArgument.add("-add-plugin=${shadedJar.get().archiveFile.get().asFile.absolutePath}")
+        System.getProperty("config")?.let { config ->
+            serverArgument.add("--config=$config.properties")
+        }
     }
 }
 
