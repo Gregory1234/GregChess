@@ -2,8 +2,7 @@ package gregc.gregchess.bukkit.player
 
 import gregc.gregchess.Color
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.match.PlayerDirection
-import gregc.gregchess.bukkit.match.PlayerEvent
+import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkitutils.getOfflinePlayerByName
 import gregc.gregchess.bukkitutils.player.BukkitHuman
@@ -110,9 +109,26 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
     fun joinMatch(match: ChessMatch = checkNotNull(activeMatches.firstOrNull())) {
         require(match in activeMatches)
         check(!isInMatch)
-        check(!isSpectatingChessMatch)
+        check(!isSpectatingMatch)
         currentMatch = match
         match.callEvent(PlayerEvent(this, PlayerDirection.JOIN))
+    }
+
+    var spectatedMatch: ChessMatch? = null
+        private set
+    val isSpectatingMatch: Boolean get() = spectatedMatch != null
+
+    fun spectateMatch(match: ChessMatch) {
+        check(!isInMatch)
+        check(!isSpectatingMatch)
+        spectatedMatch = match
+        match.spectators += this
+    }
+
+    fun leaveSpectatedMatch() {
+        val match = checkNotNull(spectatedMatch)
+        spectatedMatch = null
+        match.spectators -= this
     }
 }
 

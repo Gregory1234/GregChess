@@ -10,10 +10,8 @@ data class SpectatorEvent(val player: BukkitPlayer, val dir: PlayerDirection) : 
     override val type get() = BukkitChessEventType.SPECTATOR
 }
 
-class SpectatorNotFoundException(player: BukkitPlayer) : Exception(player.name)
-
 @Serializable
-class SpectatorManager : Component { // TODO: consider reworking the spectator system
+class SpectatorManager : Component {
 
     override val type get() = BukkitComponentType.SPECTATOR_MANAGER
 
@@ -22,16 +20,16 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
 
     val spectators get() = spectatorList.toList()
 
-    fun addSpectator(match: ChessMatch, p: BukkitPlayer) {
-        ChessMatchManager.setCurrentSpectatedMatch(p.uuid, match.uuid) // TODO: this shouldn't be called here probably
+    internal fun addSpectator(match: ChessMatch, p: BukkitPlayer) {
+        require(p.spectatedMatch == match)
+        require(p !in spectatorList)
         spectatorList += p
         match.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
-    fun removeSpectator(match: ChessMatch, p: BukkitPlayer) {
-        if (p !in spectatorList)
-            throw SpectatorNotFoundException(p)
-        ChessMatchManager.setCurrentSpectatedMatch(p.uuid, null)
+    internal fun removeSpectator(match: ChessMatch, p: BukkitPlayer) {
+        require(p.spectatedMatch == null)
+        require(p in spectatorList)
         spectatorList -= p
         match.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
@@ -60,8 +58,8 @@ class SpectatorManager : Component { // TODO: consider reworking the spectator s
 
 class SpectatorManagerFacade(match: ChessMatch, component: SpectatorManager) : ComponentFacade<SpectatorManager>(match, component) {
     val spectators get() = component.spectators
-    operator fun plusAssign(p: BukkitPlayer) = component.addSpectator(match, p)
-    operator fun minusAssign(p: BukkitPlayer) = component.removeSpectator(match, p)
+    internal operator fun plusAssign(p: BukkitPlayer) = component.addSpectator(match, p)
+    internal operator fun minusAssign(p: BukkitPlayer) = component.removeSpectator(match, p)
 }
 
 val ChessMatch.spectators get() = makeCachedFacade(::SpectatorManagerFacade, require(BukkitComponentType.SPECTATOR_MANAGER))

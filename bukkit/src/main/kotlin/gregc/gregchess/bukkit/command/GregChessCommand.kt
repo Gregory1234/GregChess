@@ -40,7 +40,7 @@ internal fun CommandBuilder<BukkitPlayer>.requireMatch(): ExecutionContext<Bukki
 }
 
 internal fun CommandBuilder<*>.requireNoMatch() {
-    validate(YOU_IN_MATCH) { sender !is BukkitPlayer || ((sender as BukkitPlayer).currentMatch == null && (sender as BukkitPlayer).currentSpectatedChessMatch == null) }
+    validate(YOU_IN_MATCH) { sender !is BukkitPlayer || ((sender as BukkitPlayer).currentMatch == null && (sender as BukkitPlayer).spectatedMatch == null) }
 }
 
 internal fun posArgument(name: String) = SimpleArgument(name) { try { Pos.parseFromString(it) } catch (e : IllegalArgumentException) { null } }

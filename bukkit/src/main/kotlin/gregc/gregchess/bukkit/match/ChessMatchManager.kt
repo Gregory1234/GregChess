@@ -28,19 +28,8 @@ object ChessMatchManager : Listener {
     val PLUGIN_DISABLED = DrawEndReason(EndReason.Type.EMERGENCY)
 
     private val matches = mutableMapOf<UUID, ChessMatch>()
-    private val playerSpectatedMatches = mutableMapOf<UUID, UUID>()
 
     operator fun get(uuid: UUID): ChessMatch? = matches[uuid]
-
-    internal fun currentSpectatedMatchOf(uuid: UUID): ChessMatch? = playerSpectatedMatches[uuid]?.let(::get)
-
-    internal fun setCurrentSpectatedMatch(uuid: UUID, matchUUID: UUID?) {
-        if (matchUUID == null) {
-            playerSpectatedMatches.remove(uuid)
-        } else {
-            playerSpectatedMatches[uuid] = matchUUID
-        }
-    }
 
     fun start() {
         registerEvents()

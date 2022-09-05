@@ -133,9 +133,9 @@ object GregChessPlugin : Listener {
                             }
                             val res = duelRequest.call(RequestData(sender, opponent, settings.name))
                             if (res == RequestResponse.ACCEPT) {
-                                if (sender.isInMatch || sender.isSpectatingChessMatch) {
+                                if (sender.isInMatch || sender.isSpectatingMatch) {
                                     sender.sendMessage(YOU_IN_MATCH)
-                                } else if (opponent.isInMatch || opponent.isSpectatingChessMatch) {
+                                } else if (opponent.isInMatch || opponent.isSpectatingMatch) {
                                     sender.sendMessage(OPPONENT_IN_MATCH)
                                 } else {
                                     settings.createMatch(byColor(sender, opponent)).start()
@@ -151,7 +151,7 @@ object GregChessPlugin : Listener {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     val settings = sender.openSettingsMenu()
                     if (settings != null) {
-                        if (sender.isInMatch || sender.isSpectatingChessMatch) {
+                        if (sender.isInMatch || sender.isSpectatingMatch) {
                             sender.sendMessage(YOU_IN_MATCH)
                         } else {
                             settings.createMatch(byColor(sender, Stockfish())).start()
@@ -166,12 +166,12 @@ object GregChessPlugin : Listener {
                 }
             }
             playerSubcommand("leave") {
-                validate(YOU_NOT_IN_MATCH) { sender.isInMatch || sender.isSpectatingChessMatch }
+                validate(YOU_NOT_IN_MATCH) { sender.isInMatch || sender.isSpectatingMatch }
                 execute {
                     if (sender.isInMatch) {
                         sender.leaveMatch()
                     } else {
-                        sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
+                        sender.leaveSpectatedMatch()
                     }
                 }
             }
@@ -320,7 +320,7 @@ object GregChessPlugin : Listener {
                 argument(playerArgument("spectated")) { spectated ->
                     validate(PLAYER_NOT_IN_MATCH) { spectated().isInMatch }
                     execute {
-                        spectated().currentMatch?.spectators?.plusAssign(sender)
+                        sender.spectateMatch(spectated().currentMatch.cNotNull(PLAYER_NOT_IN_MATCH))
                     }
                 }
             }
