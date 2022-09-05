@@ -20,24 +20,28 @@ class SpectatorManager : Component {
 
     val spectators get() = spectatorList.toList()
 
-    internal fun addSpectator(match: ChessMatch, p: BukkitPlayer) {
+    private fun addSpectator(match: ChessMatch, p: BukkitPlayer) {
         require(p.spectatedMatch == match)
         require(p !in spectatorList)
         spectatorList += p
-        match.callEvent(SpectatorEvent(p, PlayerDirection.JOIN))
     }
 
-    internal fun removeSpectator(match: ChessMatch, p: BukkitPlayer) {
+    private fun removeSpectator(p: BukkitPlayer) {
         require(p.spectatedMatch == null)
         require(p in spectatorList)
         spectatorList -= p
-        match.callEvent(SpectatorEvent(p, PlayerDirection.LEAVE))
     }
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
         events.register(ChessEventType.BASE) {
             if (it == ChessBaseEvent.STOP) stop(match)
             else if (it == ChessBaseEvent.CLEAR) clear(match)
+        }
+        events.register(BukkitChessEventType.SPECTATOR) {
+            when (it.dir) {
+                PlayerDirection.JOIN -> addSpectator(match, it.player)
+                PlayerDirection.LEAVE -> removeSpectator(it.player)
+            }
         }
     }
 
@@ -49,17 +53,11 @@ class SpectatorManager : Component {
 
     private fun clear(match: ChessMatch) {
         val s = spectators
-        spectatorList.clear()
         for (it in s) {
-            match.callEvent(SpectatorEvent(it, PlayerDirection.LEAVE))
+            it.leaveSpectatedMatch(match)
         }
+        check(spectatorList.isEmpty())
     }
 }
 
-class SpectatorManagerFacade(match: ChessMatch, component: SpectatorManager) : ComponentFacade<SpectatorManager>(match, component) {
-    val spectators get() = component.spectators
-    internal operator fun plusAssign(p: BukkitPlayer) = component.addSpectator(match, p)
-    internal operator fun minusAssign(p: BukkitPlayer) = component.removeSpectator(match, p)
-}
-
-val ChessMatch.spectators get() = makeCachedFacade(::SpectatorManagerFacade, require(BukkitComponentType.SPECTATOR_MANAGER))
+val ChessMatch.spectators get() = require(BukkitComponentType.SPECTATOR_MANAGER)

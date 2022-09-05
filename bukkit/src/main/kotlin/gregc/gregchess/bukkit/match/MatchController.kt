@@ -75,5 +75,3 @@ object MatchController : Component {
         }
     }
 }
-
-val ChessMatch.matchController get() = require(BukkitComponentType.MATCH_CONTROLLER)

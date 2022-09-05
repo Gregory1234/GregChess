@@ -122,13 +122,13 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         check(!isInMatch)
         check(!isSpectatingMatch)
         spectatedMatch = match
-        match.spectators += this
+        match.callEvent(SpectatorEvent(this, PlayerDirection.JOIN))
     }
 
-    fun leaveSpectatedMatch() {
-        val match = checkNotNull(spectatedMatch)
+    fun leaveSpectatedMatch(match: ChessMatch = checkNotNull(spectatedMatch)) {
+        require(spectatedMatch == match)
         spectatedMatch = null
-        match.spectators -= this
+        match.callEvent(SpectatorEvent(this, PlayerDirection.LEAVE))
     }
 }
 
