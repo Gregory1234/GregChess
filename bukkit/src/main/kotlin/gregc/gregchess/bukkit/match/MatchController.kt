@@ -1,13 +1,10 @@
 package gregc.gregchess.bukkit.match
 
-import gregc.gregchess.ByColor
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.byColor
 import gregc.gregchess.match.*
-import gregc.gregchess.results.MatchResults
 import gregc.gregchess.stats.VoidPlayerStatsSink
 import gregc.gregchess.stats.addStats
 import kotlinx.serialization.Serializable
@@ -57,16 +54,6 @@ object MatchController : Component {
         ChessMatchManager -= match
     }
 
-    private fun onPanic(match: ChessMatch) {
-        val results = match.results!!
-        val pgn = PGN.generate(match)
-        match.sideFacades.forEachUnique { player ->
-            player.player.sendMatchResults(player.color, results)
-            player.player.sendMessage(pgn.copyMessage())
-        }
-        ChessMatchManager -= match
-    }
-
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
         events.register(ChessEventType.BASE, ChessEventOrderConstraint(runBeforeAll = true)) {
             when (it) {
@@ -82,8 +69,7 @@ object MatchController : Component {
         events.register(ChessEventType.BASE, ChessEventOrderConstraint(runAfterAll = true)) {
             when (it) {
                 ChessBaseEvent.STOP -> onStop(match)
-                ChessBaseEvent.CLEAR -> onClear(match)
-                ChessBaseEvent.PANIC -> onPanic(match)
+                ChessBaseEvent.CLEAR, ChessBaseEvent.PANIC -> onClear(match)
                 else -> {}
             }
         }

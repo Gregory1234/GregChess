@@ -30,17 +30,17 @@ internal fun CommandBuilder<BukkitCommandSender>.playerSubcommand(name: String, 
 }
 
 internal fun CommandBuilder<BukkitPlayer>.requireHumanOpponent(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
-    validate(OPPONENT_NOT_HUMAN) { sender.currentChessSide?.opponent is BukkitChessSideFacade }
-    return { sender.currentChessSide!!.opponent as BukkitChessSideFacade }
+    validate(OPPONENT_NOT_HUMAN) { sender.currentSide?.opponent is BukkitChessSideFacade }
+    return { sender.currentSide!!.opponent as BukkitChessSideFacade }
 }
 
 internal fun CommandBuilder<BukkitPlayer>.requireMatch(): ExecutionContext<BukkitPlayer>.() -> BukkitChessSideFacade {
-    validate(YOU_NOT_IN_MATCH) { sender.currentChessMatch != null }
-    return { sender.currentChessSide!! }
+    validate(YOU_NOT_IN_MATCH) { sender.currentMatch != null }
+    return { sender.currentSide!! }
 }
 
 internal fun CommandBuilder<*>.requireNoMatch() {
-    validate(YOU_IN_MATCH) { sender !is BukkitPlayer || (sender as BukkitPlayer).currentChessMatch == null }
+    validate(YOU_IN_MATCH) { sender !is BukkitPlayer || ((sender as BukkitPlayer).currentMatch == null && (sender as BukkitPlayer).currentSpectatedChessMatch == null) }
 }
 
 internal fun posArgument(name: String) = SimpleArgument(name) { try { Pos.parseFromString(it) } catch (e : IllegalArgumentException) { null } }

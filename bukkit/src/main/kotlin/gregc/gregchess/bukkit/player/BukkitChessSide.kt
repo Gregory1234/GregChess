@@ -93,9 +93,15 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         }
     }
 
-    private fun onStart(match: ChessMatch) = oncePerPlayer(match) { match.callEvent(PlayerEvent(player, PlayerDirection.JOIN)) }
+    private fun onStart(match: ChessMatch) = oncePerPlayer(match) {
+        player.registerMatch(match)
+        player.joinMatch(match)
+    }
 
     private fun onStop(match: ChessMatch) = oncePerPlayer(match) {
+        if (player.currentMatch != match) {
+            return
+        }
         val results = match.results!!
         sendLastMoves(match, Color.WHITE)
         val pgn = PGN.generate(match)
@@ -103,17 +109,24 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             player.sendMatchResults(color, results)
             if (!results.endReason.quick)
                 delay((if (player.quickLeave) 0 else 3).seconds)
-            match.callEvent(PlayerEvent(player, PlayerDirection.LEAVE))
+            player.leaveMatchDirect(match)
             player.sendMessage(pgn.copyMessage())
-            player.currentChessMatch = null
         }
     }
 
     private fun onPanic(match: ChessMatch) = oncePerPlayer(match) {
-        val results = match.results!!
-        val pgn = PGN.generate(match)
-        player.sendMatchResults(color, results)
-        player.sendMessage(pgn.copyMessage())
+        if (player.currentMatch == match) {
+            val results = match.results!!
+            val pgn = PGN.generate(match)
+            player.sendMatchResults(color, results)
+            player.leaveMatchDirect(match)
+            player.sendMessage(pgn.copyMessage())
+        }
+        player.unregisterMatch(match)
+    }
+
+    private fun onClear(match: ChessMatch) = oncePerPlayer(match) {
+        player.unregisterMatch(match)
     }
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
@@ -134,6 +147,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             when(it) {
                 ChessBaseEvent.STOP -> onStop(match)
                 ChessBaseEvent.PANIC -> onPanic(match)
+                ChessBaseEvent.CLEAR -> onClear(match)
                 else -> {}
             }
         }
@@ -145,9 +159,17 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             }
         }
         events.register(BukkitChessEventType.PLAYER) {
-            when(it.dir) {
-                PlayerDirection.JOIN -> if (it.player == player) sendStartMessage(match)
-                PlayerDirection.LEAVE -> {}
+            if (it.player == player) {
+                when (it.dir) {
+                    PlayerDirection.JOIN -> {
+                        require(player.currentMatch == match)
+                        sendStartMessage(match)
+                    }
+                    PlayerDirection.LEAVE -> {
+                        require(player.currentMatch == null)
+                        GregChessPlugin.clearRequests(player)
+                    }
+                }
             }
         }
     }
@@ -172,6 +194,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     fun pickUp(match: ChessMatch, pos: Pos) {
         if (!match.running) return
+        if (player.currentMatch != match) return
         val piece = match.board[pos] ?: return
         if (piece.color != color) return
         setHeld(match, piece)
@@ -180,6 +203,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     fun makeMove(match: ChessMatch, pos: Pos) {
         if (!match.running) return
+        if (player.currentMatch != match) return
         val piece = held ?: return
         val moves = piece.getLegalMoves(match.board)
         if (pos != piece.pos && pos !in moves.map { it.display }) return
@@ -210,6 +234,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             firstTurn = false
             return
         }
+        if (player.currentMatch != match) return
         val inCheck = match.variant.isInCheck(match.board, color)
         sendTitleList(buildList {
             if (inCheck)
@@ -222,6 +247,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     }
 
     private fun endTurn(match: ChessMatch) = oncePerPlayer(match) {
+        if (player.currentMatch != match) return
         sendLastMoves(match, Color.BLACK)
         if (color == match.board.currentTurn)
             GregChessPlugin.clearRequests(player)

@@ -118,7 +118,7 @@ object GregChessPlugin : Listener {
                     }
                 }
                 argument(playerArgument("opponent")) { opponentArg ->
-                    validate(OPPONENT_IN_MATCH) { !opponentArg().isInChessMatch }
+                    validate(OPPONENT_IN_MATCH) { !opponentArg().isInMatch }
 
                     executeSuspend {
                         val opponent = opponentArg()
@@ -133,11 +133,11 @@ object GregChessPlugin : Listener {
                             }
                             val res = duelRequest.call(RequestData(sender, opponent, settings.name))
                             if (res == RequestResponse.ACCEPT) {
-                                if (sender.isInChessMatch) {
+                                if (sender.isInMatch || sender.isSpectatingChessMatch) {
                                     sender.sendMessage(YOU_IN_MATCH)
+                                } else if (opponent.isInMatch || opponent.isSpectatingChessMatch) {
+                                    sender.sendMessage(OPPONENT_IN_MATCH)
                                 } else {
-                                    sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
-                                    opponent.currentSpectatedChessMatch?.spectators?.minusAssign(opponent)
                                     settings.createMatch(byColor(sender, opponent)).start()
                                 }
                             }
@@ -151,8 +151,11 @@ object GregChessPlugin : Listener {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     val settings = sender.openSettingsMenu()
                     if (settings != null) {
-                        sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
-                        settings.createMatch(byColor(sender, Stockfish())).start()
+                        if (sender.isInMatch || sender.isSpectatingChessMatch) {
+                            sender.sendMessage(YOU_IN_MATCH)
+                        } else {
+                            settings.createMatch(byColor(sender, Stockfish())).start()
+                        }
                     }
                 }
             }
@@ -163,9 +166,13 @@ object GregChessPlugin : Listener {
                 }
             }
             playerSubcommand("leave") {
-                validate(YOU_NOT_IN_MATCH) { sender.isInChessMatch || sender.isSpectatingChessMatch }
+                validate(YOU_NOT_IN_MATCH) { sender.isInMatch || sender.isSpectatingChessMatch }
                 execute {
-                    sender.leaveMatch()
+                    if (sender.isInMatch) {
+                        sender.leaveMatch()
+                    } else {
+                        sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
+                    }
                 }
             }
             playerSubcommand("draw") {
@@ -262,7 +269,7 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("time") {
                 val pl = requireMatch()
-                validate(CLOCK_NOT_FOUND) { sender.currentChessMatch?.clock != null }
+                validate(CLOCK_NOT_FOUND) { sender.currentMatch?.clock != null }
                 argument(enumArgument<Color>("side")) { side ->
                     literal("set") {
                         argument(durationArgument("time")) { time ->
@@ -285,7 +292,7 @@ object GregChessPlugin : Listener {
             playerSubcommand("uci") {
                 val pl = requireMatch()
                 validate(ENGINE_NOT_FOUND) {
-                    sender.currentChessMatch?.sides?.toList()?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
+                    sender.currentMatch?.sides?.toList()?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
                 }
                 literal("set") {
                     argument(stringArgument("option")) { option ->
@@ -309,12 +316,11 @@ object GregChessPlugin : Listener {
                 }
             }
             playerSubcommand("spectate") {
-                requireNoMatch()
+                requireNoMatch() // TODO: allow for switching spectated players
                 argument(playerArgument("spectated")) { spectated ->
-                    validate(PLAYER_NOT_IN_MATCH) { spectated().isInChessMatch }
+                    validate(PLAYER_NOT_IN_MATCH) { spectated().isInMatch }
                     execute {
-                        sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
-                        spectated().currentChessMatch?.spectators?.plusAssign(sender)
+                        spectated().currentMatch?.spectators?.plusAssign(sender)
                     }
                 }
             }
@@ -329,7 +335,7 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("undo") {
                 val pl = requireMatch()
-                validate(NOTHING_TO_TAKEBACK) { sender.currentChessMatch?.board?.lastMove != null }
+                validate(NOTHING_TO_TAKEBACK) { sender.currentMatch?.board?.lastMove != null }
                 val op = requireHumanOpponent()
                 executeSuspend {
                     takebackRequest.invalidSender(sender) {
@@ -364,7 +370,7 @@ object GregChessPlugin : Listener {
                     }
                 }
                 execute {
-                    GregChess.logger.info(json.encodeToString(sender.currentChessMatch.cNotNull(YOU_NOT_IN_MATCH)))
+                    GregChess.logger.info(json.encodeToString(sender.currentMatch.cNotNull(YOU_NOT_IN_MATCH)))
                 }
             }
             literal("info") {
@@ -378,7 +384,7 @@ object GregChessPlugin : Listener {
                     }
                     execute {
                         cRequire(sender.hasPermission("gregchess.chess.info.inmatch"), NO_PERMISSION)
-                        sender.sendMessage((sender as? BukkitPlayer)?.currentChessMatch.cNotNull(YOU_NOT_IN_MATCH).getInfo())
+                        sender.sendMessage((sender as? BukkitPlayer)?.currentMatch.cNotNull(YOU_NOT_IN_MATCH).getInfo())
                     }
                     argument(uuidArgument("match")) { match ->
                         requirePermission("gregchess.chess.info.remote")
@@ -454,11 +460,10 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("rejoin") {
                 validate(WRONG_ARGUMENT) { config.getBoolean("Rejoin.AllowRejoining") }
-                validate(YOU_IN_MATCH) { !sender.isInChessMatch }
-                validate(NO_MATCH_TO_REJOIN) { sender.activeChessMatches.isNotEmpty() }
+                requireNoMatch()
+                validate(NO_MATCH_TO_REJOIN) { sender.activeMatches.isNotEmpty() }
                 execute {
-                    sender.currentSpectatedChessMatch?.spectators?.minusAssign(sender)
-                    sender.rejoinMatch()
+                    sender.joinMatch()
                 }
             }
         }

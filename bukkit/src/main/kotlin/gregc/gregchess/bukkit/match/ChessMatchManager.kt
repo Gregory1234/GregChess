@@ -1,9 +1,8 @@
 package gregc.gregchess.bukkit.match
 
-import gregc.gregchess.Color
 import gregc.gregchess.Register
 import gregc.gregchess.bukkit.GregChessPlugin
-import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.player.gregchessPlayer
 import gregc.gregchess.bukkit.registerEvents
 import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.bukkit.renderer.renderer
@@ -21,6 +20,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.player.*
 import java.util.*
+import kotlin.collections.set
 
 object ChessMatchManager : Listener {
     @JvmField
@@ -28,29 +28,11 @@ object ChessMatchManager : Listener {
     val PLUGIN_DISABLED = DrawEndReason(EndReason.Type.EMERGENCY)
 
     private val matches = mutableMapOf<UUID, ChessMatch>()
-    private val playerCurrentMatches = mutableMapOf<UUID, UUID>()
     private val playerSpectatedMatches = mutableMapOf<UUID, UUID>()
-    private val playerSides = mutableMapOf<UUID, Map<UUID, Color?>>()
 
     operator fun get(uuid: UUID): ChessMatch? = matches[uuid]
 
-    internal fun currentMatchOf(uuid: UUID): ChessMatch? = playerCurrentMatches[uuid]?.let(::get)
     internal fun currentSpectatedMatchOf(uuid: UUID): ChessMatch? = playerSpectatedMatches[uuid]?.let(::get)
-
-    internal fun currentSideOf(uuid: UUID): BukkitChessSideFacade? {
-        val currentMatch = currentMatchOf(uuid) ?: return null
-        return currentMatch[playerSides[uuid]!![currentMatch.uuid] ?: currentMatch.board.currentTurn] as? BukkitChessSideFacade
-    }
-
-    internal fun activeMatchesOf(uuid: UUID): Set<ChessMatch> = playerSides[uuid]?.keys?.mapNotNull(::get)?.toSet().orEmpty()
-
-    internal fun setCurrentMatch(uuid: UUID, matchUUID: UUID?) {
-        if (matchUUID == null) {
-            playerCurrentMatches.remove(uuid)
-        } else {
-            playerCurrentMatches[uuid] = matchUUID
-        }
-    }
 
     internal fun setCurrentSpectatedMatch(uuid: UUID, matchUUID: UUID?) {
         if (matchUUID == null) {
@@ -80,20 +62,20 @@ object ChessMatchManager : Listener {
     @EventHandler
     fun onPlayerDeath(e: EntityDeathEvent) {
         val ent = e.gregchessPlayer ?: return
-        val match = ent.currentChessMatch ?: return
+        val match = ent.currentMatch ?: return
         match.callEvent(ResetPlayerEvent(ent))
     }
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.gregchessPlayer ?: return
-        ent.currentChessMatch ?: return
+        ent.currentMatch ?: return
         e.isCancelled = true
     }
 
     @EventHandler
     fun onBlockClick(e: PlayerInteractEvent) {
-        val player = e.gregchessPlayer.currentChessSide ?: return
+        val player = e.gregchessPlayer.currentSide ?: return
         e.isCancelled = true
         if (player.hasTurn && e.blockFace != BlockFace.DOWN) {
             val block = e.clickedBlock ?: return
@@ -108,75 +90,38 @@ object ChessMatchManager : Listener {
 
     @EventHandler
     fun onBlockBreak(e: BlockBreakEvent) {
-        if (e.gregchessPlayer.isInChessMatch) {
+        if (e.gregchessPlayer.isInMatch) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryDrag(e: InventoryDragEvent) {
-        if (e.gregchessPlayer?.isInChessMatch == true) {
+        if (e.gregchessPlayer?.isInMatch == true) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onInventoryClick(e: InventoryClickEvent) {
-        if (e.gregchessPlayer?.isInChessMatch == true) {
+        if (e.gregchessPlayer?.isInMatch == true) {
             e.isCancelled = true
         }
     }
 
     @EventHandler
     fun onItemDrop(e: PlayerDropItemEvent) {
-        if (e.gregchessPlayer.isInChessMatch)
+        if (e.gregchessPlayer.isInMatch)
             e.isCancelled = true
     }
 
-    internal operator fun plusAssign(g: ChessMatch) {
-        matches[g.uuid] = g
-        val white = (g.sides.white as? BukkitChessSide)?.uuid
-        val black = (g.sides.black as? BukkitChessSide)?.uuid
-
-        if (white != null) {
-            playerCurrentMatches[white] = g.uuid
-        }
-        if (black != null && black != white) {
-            playerCurrentMatches[black] = g.uuid
-        }
-
-        if (white != null && white == black) {
-            playerSides[white] = playerSides[white].orEmpty() + Pair(g.uuid, null)
-        } else if (white != null && black != null) {
-            playerSides[white] = playerSides[white].orEmpty() + Pair(g.uuid, Color.WHITE)
-            playerSides[black] = playerSides[black].orEmpty() + Pair(g.uuid, Color.BLACK)
-        } else if (white != null) {
-            playerSides[white] = playerSides[white].orEmpty() + Pair(g.uuid, Color.WHITE)
-        } else if (black != null) {
-            playerSides[black] = playerSides[black].orEmpty() + Pair(g.uuid, Color.BLACK)
-        }
+    internal operator fun plusAssign(match: ChessMatch) {
+        require(match.uuid !in matches)
+        matches[match.uuid] = match
     }
 
     internal operator fun minusAssign(g: ChessMatch) {
-        g.sideFacades.forEachReal(GregChessPlugin::clearRequests)
         matches.remove(g.uuid, g)
-        val white = (g.sides.white as? BukkitChessSide)?.uuid
-        val black = (g.sides.black as? BukkitChessSide)?.uuid
-
-        if (white != null) {
-            if (playerCurrentMatches[white] == g.uuid)
-                playerCurrentMatches.remove(white)
-            playerSides[white] = playerSides[white]!! - g.uuid
-            if (playerSides[white]!!.isEmpty())
-                playerSides.remove(white)
-        }
-        if (black != null && black != white) {
-            if (playerCurrentMatches[black] == g.uuid)
-                playerCurrentMatches.remove(black)
-            playerSides[black] = playerSides[black]!! - g.uuid
-            if (playerSides[black]!!.isEmpty())
-                playerSides.remove(black)
-        }
     }
 
 }

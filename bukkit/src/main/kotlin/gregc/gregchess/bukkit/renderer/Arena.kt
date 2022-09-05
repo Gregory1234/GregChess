@@ -5,7 +5,7 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.match.PlayerDirection
 import gregc.gregchess.bukkit.piece.item
-import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.match.*
@@ -162,10 +162,6 @@ class SimpleArena internal constructor(
     override fun registerEvents(match: ChessMatch, events: ChessEventRegistry) {
         events.register(ChessEventType.BASE) {
             if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC) SimpleArenaManager.freeArena(this)
-            if (it == ChessBaseEvent.PANIC)
-                for (p in match.sides.toList())
-                    if (p is BukkitChessSide)
-                        p.player.leave()
         }
         events.registerR(BukkitChessEventType.SPECTATOR) {
             when (dir) {
@@ -212,7 +208,7 @@ class SimpleArena internal constructor(
             addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 10, false, false, false))
             teleport(spawnLocation)
             inventory.clear()
-            inventory.setItem(0, currentChessSide?.held?.piece?.item)
+            inventory.setItem(0, currentSide?.held?.piece?.item)
             gameMode = GameMode.SURVIVAL
             allowFlight = true
             isFlying = true
