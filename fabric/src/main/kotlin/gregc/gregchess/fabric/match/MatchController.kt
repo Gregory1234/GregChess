@@ -1,6 +1,5 @@
 package gregc.gregchess.fabric.match
 
-import gregc.gregchess.fabric.player.*
 import gregc.gregchess.match.*
 import kotlinx.serialization.Serializable
 
@@ -9,23 +8,25 @@ object MatchController : Component {
 
     override val type get() = FabricComponentType.MATCH_CONTROLLER
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
-        events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
+    private fun onStart(match: ChessMatch) {
+        ChessMatchManager += match
     }
 
-    private fun handleBaseEvent(match: ChessMatch, e: ChessBaseEvent) = with(match) {
-        when (e) {
-            ChessBaseEvent.START -> {
-                ChessMatchManager += match
-                match.sideFacades.forEachUnique(FabricChessSideFacade::sendStartMessage)
+    private fun onClear(match: ChessMatch) {
+        ChessMatchManager -= match
+    }
+
+    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        events.register(ChessEventType.BASE, ChessEventOrderConstraint(runBeforeAll = true)) {
+            when (it) {
+                ChessBaseEvent.START -> onStart(match)
+                else -> {}
             }
-            ChessBaseEvent.STOP -> {
-                sideFacades.forEachUniqueEntity { player, color ->
-                    player.showMatchResults(color, results!!)
-                }
-                ChessMatchManager -= match
-            }
-            else -> {
+        }
+        events.register(ChessEventType.BASE, ChessEventOrderConstraint(runAfterAll = true)) {
+            when (it) {
+                ChessBaseEvent.CLEAR, ChessBaseEvent.PANIC -> onClear(match)
+                else -> {}
             }
         }
     }

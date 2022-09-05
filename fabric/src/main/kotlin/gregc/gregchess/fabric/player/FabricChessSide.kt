@@ -6,6 +6,7 @@ import gregc.gregchess.fabric.GameProfileSerializer
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.client.PromotionMenuFactory
 import gregc.gregchess.fabric.match.FabricChessEventType
+import gregc.gregchess.fabric.match.FabricComponentType
 import gregc.gregchess.fabric.piece.block
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.fabric.renderer.server
@@ -57,16 +58,48 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
         }
     }
 
-    fun sendStartMessage(match: ChessMatch) {
+    private fun sendStartMessage(match: ChessMatch) {
         if (match[color].hasTurn || !match.sideFacades.isSamePlayer())
             getServerPlayer(match.server)?.sendMessage(Text.translatable("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }
 
     override fun createFacade(match: ChessMatch) = FabricChessSideFacade(match, this)
 
+    private inline fun oncePerPlayer(match: ChessMatch, callback: () -> Unit) {
+        if (!match.sideFacades.isSamePlayer() || color == match.board.currentTurn) {
+            callback()
+        }
+    }
+
+    private fun onStart(match: ChessMatch) = oncePerPlayer(match) {
+        sendStartMessage(match)
+    }
+
+    private fun onStop(match: ChessMatch) = oncePerPlayer(match) {
+        getServerPlayer(match.server)?.showMatchResults(color, match.results!!)
+    }
+
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
         events.registerE(TurnEvent.START) {
             startTurn(match)
+        }
+        events.register(ChessEventType.BASE, ChessEventOrderConstraint(
+            runBeforeAll = true,
+            runAfter = setOf(ChessEventComponentOwner(FabricComponentType.MATCH_CONTROLLER))
+        )) {
+            when(it) {
+                ChessBaseEvent.START -> onStart(match)
+                else -> {}
+            }
+        }
+        events.register(ChessEventType.BASE, ChessEventOrderConstraint(
+            runAfterAll = true,
+            runBefore = setOf(ChessEventComponentOwner(FabricComponentType.MATCH_CONTROLLER))
+        )) {
+            when(it) {
+                ChessBaseEvent.STOP -> onStop(match)
+                else -> {}
+            }
         }
     }
 
@@ -117,8 +150,6 @@ class FabricChessSideFacade(match: ChessMatch, side: FabricChessSide) : ChessSid
     val serverPlayer get() = side.getServerPlayer(match.server)
 
     val held get() = side.held
-
-    fun sendStartMessage() = side.sendStartMessage(match)
 
     fun pickUp(pos: Pos) = side.pickUp(match, pos)
 
