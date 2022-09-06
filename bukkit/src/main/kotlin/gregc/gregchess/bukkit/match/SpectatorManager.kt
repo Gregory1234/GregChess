@@ -43,6 +43,9 @@ class SpectatorManager : Component {
                 PlayerDirection.LEAVE -> removeSpectator(it.player)
             }
         }
+        events.registerR(BukkitChessEventType.MATCH_INFO) {
+            text("Spectators: ${spectators.joinToString { it.name }}\n")
+        }
     }
 
     private fun stop(match: ChessMatch) {

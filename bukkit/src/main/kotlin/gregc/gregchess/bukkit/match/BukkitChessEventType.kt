@@ -16,4 +16,6 @@ object BukkitChessEventType {
     val PIECE_PLAYER_ACTION = ChessEventType<PiecePlayerActionEvent>()
     @JvmField
     val RESET_PLAYER = ChessEventType<ResetPlayerEvent>()
+    @JvmField
+    val MATCH_INFO = ChessEventType<MatchInfoEvent>()
 }

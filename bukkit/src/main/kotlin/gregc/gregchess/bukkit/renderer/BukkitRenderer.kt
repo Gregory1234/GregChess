@@ -39,8 +39,7 @@ data class BukkitRenderer(
     override val type get() = BukkitComponentType.RENDERER
 
     @Transient
-    lateinit var arena: Arena
-        private set
+    private lateinit var arena: Arena
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
         this.arena = ArenaManager.fromConfig().reserveArena(match)
@@ -204,5 +203,4 @@ data class BukkitRenderer(
     }
 }
 
-val ChessMatch.arena get() = renderer.arena
 val ChessMatch.renderer get() = require(BukkitComponentType.RENDERER)

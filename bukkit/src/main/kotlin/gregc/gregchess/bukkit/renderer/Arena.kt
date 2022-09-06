@@ -46,8 +46,6 @@ interface ArenaManager<out A : Arena> {
 }
 
 interface Arena {
-    val name: String
-
     fun registerEvents(match: ChessMatch, events: ChessEventRegistry)
     val boardStart: Location
     val tileSize: Int
@@ -144,7 +142,7 @@ class ResetPlayerEvent(val player: BukkitPlayer) : ChessEvent {
 }
 
 class SimpleArena internal constructor(
-    override val name: String,
+    val name: String,
     private val world: World,
     override val tileSize: Int,
     internal val offset: Loc
@@ -176,6 +174,9 @@ class SimpleArena internal constructor(
             }
         }
         events.registerR(BukkitChessEventType.RESET_PLAYER) { player.reset() }
+        events.registerR(BukkitChessEventType.MATCH_INFO) {
+            text("Arena: $name\n")
+        }
     }
 
     private fun BukkitPlayer.leave() {
