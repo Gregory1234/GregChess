@@ -11,6 +11,8 @@ import java.util.*
 @Serializable
 class FabricChessEnvironment(@Contextual val uuid: UUID = UUID.randomUUID()) : ChessEnvironment {
     override val pgnSite: String get() = "GregChess Fabric mod"
+    override val pgnEventName: String get() = "Casual game"
+    override val pgnRound: Int get() = 1
     override val coroutineDispatcher: CoroutineDispatcher get() = FabricDispatcher()
     override val clock: Clock get() = Clock.systemDefaultZone()
     override fun matchCoroutineName(): String = uuid.toString()

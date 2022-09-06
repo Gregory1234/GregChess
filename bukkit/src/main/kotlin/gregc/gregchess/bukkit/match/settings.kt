@@ -34,7 +34,7 @@ class MatchSettings(
     val variantOptions: Long,
     val components: List<Component>
 ) {
-    fun createMatch(players: ByColor<ChessPlayer<*>>, extraInfo: ChessMatch.ExtraInfo = ChessMatch.ExtraInfo()) = ChessMatch(environment, variant, components, players, variantOptions, extraInfo)
+    fun createMatch(players: ByColor<ChessPlayer<*>>) = ChessMatch(environment, variant, components, players, variantOptions)
 }
 
 object SettingsManager {

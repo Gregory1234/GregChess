@@ -55,6 +55,8 @@ object TestVariant : ChessVariant()
 
 class TestChessEnvironment(val uuid: UUID = UUID.randomUUID()) : ChessEnvironment {
     override val pgnSite: String get() = "GregChess test"
+    override val pgnEventName: String get() = "Casual game"
+    override val pgnRound: Int get() = 1
     @OptIn(ExperimentalCoroutinesApi::class)
     override val coroutineDispatcher: CoroutineDispatcher get() = UnconfinedTestDispatcher()
     override val clock: Clock get() = Clock.fixed(Instant.EPOCH, ZoneId.systemDefault())

@@ -19,6 +19,8 @@ class BukkitChessEnvironment(val presetName: String, @Contextual val uuid: UUID 
         private val bukkitDispatcher = BukkitDispatcher(GregChessPlugin.plugin, BukkitContext.SYNC)
     }
     override val pgnSite: String get() = "GregChess Bukkit plugin"
+    override val pgnEventName: String get() = "Casual game" // TODO: add events
+    override val pgnRound: Int get() = 1 // TODO: add rematches
     override val coroutineDispatcher: CoroutineDispatcher get() = bukkitDispatcher
     override val clock: Clock get() = config.getString("TimeZone")?.let { Clock.system(ZoneId.of(it)) } ?: Clock.systemDefaultZone()
     override fun matchCoroutineName(): String = uuid.toString()

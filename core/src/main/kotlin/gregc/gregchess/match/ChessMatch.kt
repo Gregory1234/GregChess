@@ -28,14 +28,10 @@ class ChessMatch private constructor(
     @SerialName("endTime") private var endTime_: Instant?,
     @SerialName("duration") private var durationCounted: Duration,
     @SerialName("results") private var results_: MatchResults?,
-    val extraInfo: ExtraInfo, // TODO: move to ChessEnvironment
     val variantOptions: Long
 ) : ChessEventCaller {
-    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, players: ByColor<ChessPlayer<*>>, variantOptions: Long, extraInfo: ExtraInfo = ExtraInfo())
-            : this(environment, variant, components.toList(), byColor { players[it].createChessSide(it) }, State.INITIAL, null, null, Duration.ZERO, null, extraInfo, variantOptions)
-
-    @Serializable
-    data class ExtraInfo(val round: Int = 1, val eventName: String = "Casual match")
+    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, players: ByColor<ChessPlayer<*>>, variantOptions: Long)
+            : this(environment, variant, components.toList(), byColor { players[it].createChessSide(it) }, State.INITIAL, null, null, Duration.ZERO, null, variantOptions)
 
     override fun toString() = "ChessMatch(${environment.matchToString()})"
 
