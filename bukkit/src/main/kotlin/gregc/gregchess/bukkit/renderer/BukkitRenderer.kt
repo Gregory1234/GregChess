@@ -155,7 +155,7 @@ data class BukkitRenderer(
         for (file in 0..7) {
             for (rank in 0..7) {
                 with (match.variant.floorRenderer) {
-                    Pos(file, rank).fillFloor(match.getFloorMaterial(Pos(file, rank)))
+                    Pos(file, rank).fillFloor(match.getFloorMaterial(Pos(file, rank)).material)
                 }
             }
         }

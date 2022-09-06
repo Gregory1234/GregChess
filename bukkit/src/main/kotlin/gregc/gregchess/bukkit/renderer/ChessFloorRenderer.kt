@@ -10,32 +10,54 @@ import gregc.gregchess.move.trait.*
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 
+class Floor(val name: String) {
+    companion object {
+        @JvmField
+        val LIGHT = Floor("Light")
+        @JvmField
+        val DARK = Floor("Dark")
+        @JvmField
+        val MOVE = Floor("Move")
+        @JvmField
+        val CAPTURE = Floor("Capture")
+        @JvmField
+        val SPECIAL = Floor("Special")
+        @JvmField
+        val NOTHING = Floor("Nothing")
+        @JvmField
+        val OTHER = Floor("Other")
+        @JvmField
+        val LAST_START = Floor("LastStart")
+        @JvmField
+        val LAST_END = Floor("LastEnd")
+    }
 
-fun interface ChessFloorRenderer {
-    fun ChessMatch.getFloorMaterial(p: Pos): Material
+    val material: Material get() = Material.valueOf(config.getString("Chess.Floor.$name")!!)
 }
 
-private fun getFloor(name: String): Material = Material.valueOf(config.getString("Chess.Floor.$name")!!)
+fun interface ChessFloorRenderer {
+    fun ChessMatch.getFloorMaterial(p: Pos): Floor
+}
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
     val heldPiece = (currentSide as? BukkitChessSideFacade)?.held
-    fun Move.getFloorMaterial(): Material {
+    fun Move.getFloorMaterial(): Floor {
         if (castlesTrait != null || promotionTrait != null)
-            return getFloor("Special")
+            return Floor.SPECIAL
         captureTrait?.let {
             if (board[it.capture]?.piece != null)
-                return getFloor("Capture")
+                return Floor.CAPTURE
         }
-        return getFloor("Move")
+        return Floor.MOVE
     }
     when(p) {
-        heldPiece?.pos -> getFloor("Nothing")
+        heldPiece?.pos -> Floor.NOTHING
         in heldPiece?.getLegalMoves(board).orEmpty().map { it.display } ->
             heldPiece?.getLegalMoves(board).orEmpty().first { it.display == p }.getFloorMaterial()
-        board.lastNormalMove?.origin -> getFloor("LastStart")
-        board.lastNormalMove?.display -> getFloor("LastEnd")
-        in specialSquares -> getFloor("Other")
-        else -> if ((p.file + p.rank) % 2 == 0) getFloor("Dark") else getFloor("Light")
+        board.lastNormalMove?.origin -> Floor.LAST_START
+        board.lastNormalMove?.display -> Floor.LAST_END
+        in specialSquares -> Floor.OTHER
+        else -> if ((p.file + p.rank) % 2 == 0) Floor.DARK else Floor.LIGHT
     }
 }
 
