@@ -30,19 +30,25 @@ val fabricModules = setOf( // TODO: remove duplication
     "fabric-item-api-v1",
     "fabric-transitive-access-wideners-v1",
     "fabric-registry-sync-v0",
-    // transitive
-    "fabric-api-base",
-    "fabric-networking-api-v1",
-    "fabric-rendering-v1",
-    "fabric-resource-loader-v0",
 )
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "net.fabricmc.fabric-api") {
+            val newVersion = fabricApi
+                .module(requested.name, libs.versions.fabric.api.get())
+                .version!!
+            useVersion(newVersion)
+        }
+    }
+}
 
 dependencies {
     minecraft(libs.fabric.minecraft)
     mappings(variantOf(libs.fabric.yarn) { classifier("v2") })
     modApi(libs.fabric.loader)
     fabricModules.forEach {
-        modImplementation(fabricApi.module(it, libs.versions.fabric.api.get()))
+        modImplementation("net.fabricmc.fabric-api", it)
     }
     modImplementation(libs.fabric.kotlin)
     modApi(libs.fabric.libgui)
