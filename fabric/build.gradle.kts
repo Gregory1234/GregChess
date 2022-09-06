@@ -24,7 +24,7 @@ val shaded: Configuration by configurations.creating
 
 configurations.implementation.get().extendsFrom(shaded)
 
-val fabricModules = setOf( // TODO: remove duplication
+val fabricModules = setOf(
     "fabric-item-groups-v0",
     "fabric-lifecycle-events-v1",
     "fabric-item-api-v1",
@@ -77,6 +77,7 @@ tasks {
             replace(
                 "version" to version,
                 "loader-version" to libs.versions.fabric.loader.get(),
+                "fabric-api-modules" to fabricModules.joinToString(separator = "\": \"*\", \""),
                 "fabric-kotlin-version" to libs.versions.fabric.kotlin.get(),
                 "minecraft-version" to libs.versions.fabric.minecraft.get().dropLastWhile { it != '.' } + "x",
                 "java-min-version" to jvmVersion
