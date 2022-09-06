@@ -100,6 +100,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     private fun onStop(match: ChessMatch) = oncePerPlayer(match) {
         if (player.currentMatch != match) {
+            player.unregisterMatch(match)
             return
         }
         val results = match.results!!
@@ -122,11 +123,13 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             player.leaveMatchDirect(match)
             player.sendMessage(pgn.copyMessage())
         }
-        player.unregisterMatch(match)
+        if (match in player.activeMatches)
+            player.unregisterMatch(match)
     }
 
     private fun onClear(match: ChessMatch) = oncePerPlayer(match) {
-        player.unregisterMatch(match)
+        if (match in player.activeMatches)
+            player.unregisterMatch(match)
     }
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {

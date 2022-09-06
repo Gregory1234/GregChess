@@ -265,6 +265,7 @@ Scoreboard:
 Rejoin:
   AllowRejoining: true
   SendReminder: true
+  Duration: 1m
 
 TimeFormat: "mm:ss.S"
 StatsProvider: yaml

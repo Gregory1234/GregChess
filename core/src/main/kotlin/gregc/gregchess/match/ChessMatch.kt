@@ -202,7 +202,7 @@ class ChessMatch private constructor(
         }
 
     private fun joinAllAndThen(callback: () -> Unit) = coroutineScope.launch {
-        coroutineScope.coroutineContext.job.children.filter { it != coroutineContext.job }.toList().joinAll()
+        coroutineScope.coroutineContext.job.children.filter { it != coroutineContext.job && it.isActive }.toList().joinAll()
     }.invokeOnCompletion {
         callback()
         if (it != null) {

@@ -4,14 +4,14 @@ import gregc.gregchess.Color
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.message
-import gregc.gregchess.bukkitutils.getOfflinePlayerByName
+import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.player.BukkitHuman
 import gregc.gregchess.bukkitutils.player.BukkitHumanProvider
-import gregc.gregchess.bukkitutils.textComponent
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.lostBy
+import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder
@@ -19,6 +19,7 @@ import kotlinx.serialization.encoding.Encoder
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
+import java.time.Instant
 import java.util.*
 
 @Serializable(BukkitPlayer.Serializer::class)
@@ -29,6 +30,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         fun get(player: OfflinePlayer) = players.getOrPut(player.uniqueId) { BukkitPlayer(player) }
 
         private val allowRejoining get() = config.getBoolean("Rejoin.AllowRejoining")
+        private val rejoinDuration get() = config.getString("Rejoin.Duration")?.toDurationOrNull()
         private val REJOIN_REMINDER = message("RejoinReminder")
     }
     @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
@@ -43,6 +45,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         override fun deserialize(decoder: Decoder): BukkitPlayer =
             get(decoder.decodeSerializableValue(decoder.serializersModule.getContextual(UUID::class)!!))
     }
+    private class MatchInfo(val color: Color?, var leaveTime: Instant? = null, var resignJob: Job? = null)
 
     override fun toString(): String = "BukkitPlayer(bukkit=$bukkit)"
 
@@ -59,11 +62,10 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
     val isInMatch: Boolean get() = currentMatch != null
     val currentSide: BukkitChessSideFacade?
         get() = currentMatch?.let {
-            check(it in activeMatchSides)
-            it[activeMatchSides[it] ?: it.board.currentTurn] as BukkitChessSideFacade
+            it[checkNotNull(activeMatchInfo[it]).color ?: it.board.currentTurn] as BukkitChessSideFacade
         }
-    private val activeMatchSides = mutableMapOf<ChessMatch, Color?>()
-    val activeMatches get() = activeMatchSides.keys
+    private val activeMatchInfo = mutableMapOf<ChessMatch, MatchInfo>()
+    val activeMatches get() = activeMatchInfo.keys
 
     fun sendRejoinReminder() {
         if (allowRejoining && config.getBoolean("Rejoin.SendReminder") && activeMatches.isNotEmpty()) {
@@ -77,13 +79,14 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         require(match !in activeMatches)
         val side = requireNotNull(match[uuid])
         val opponent = side.opponent as? BukkitChessSideFacade
-        activeMatchSides[match] = if (opponent?.player == this) null else side.color
+        activeMatchInfo[match] = MatchInfo(if (opponent?.player == this) null else side.color)
     }
 
     internal fun unregisterMatch(match: ChessMatch) {
-        require(match in activeMatches)
+        val info = checkNotNull(activeMatchInfo[match])
         check(currentMatch != match)
-        activeMatchSides.remove(match)
+        info.resignJob?.cancel()
+        activeMatchInfo.remove(match, info)
     }
 
     internal fun leaveMatchDirect(match: ChessMatch = checkNotNull(currentMatch)) {
@@ -93,9 +96,21 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
     }
 
     fun leaveMatch() {
-        // TODO: add a time limit for rejoining
         val match = checkNotNull(currentMatch)
         if (allowRejoining) {
+            val info = checkNotNull(activeMatchInfo[match])
+            info.leaveTime = match.environment.clock.instant()
+            rejoinDuration?.let { duration ->
+                info.resignJob = match.coroutineScope.launch {
+                    delay(duration)
+                }.also {
+                    it.invokeOnCompletion { e ->
+                        if (e == null) {
+                            match.stop((info.color ?: match.board.currentTurn).lostBy(EndReason.WALKOVER))
+                        }
+                    }
+                }
+            }
             leaveMatchDirect()
             sendRejoinReminder()
         } else {
@@ -106,10 +121,15 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         }
     }
 
-    fun joinMatch(match: ChessMatch = checkNotNull(activeMatches.firstOrNull())) {
-        require(match in activeMatches)
+    private val matchToRejoin get() = activeMatchInfo.toList().maxByOrNull { it.second.leaveTime ?: Instant.MIN }?.first
+
+    fun joinMatch(match: ChessMatch = checkNotNull(matchToRejoin)) {
+        val info = checkNotNull(activeMatchInfo[match])
         check(!isInMatch)
         check(!isSpectatingMatch)
+        info.leaveTime = null
+        info.resignJob?.cancel()
+        info.resignJob = null
         currentMatch = match
         match.callEvent(PlayerEvent(this, PlayerDirection.JOIN))
     }
