@@ -17,7 +17,7 @@ class DefaultHalfmoveClockTrait : MoveTrait {
 
     override fun execute(env: MoveEnvironment, move: Move) {
         halfmoveClock = env.board.halfmoveClock
-        if (move.main.type == PieceType.PAWN || move.captureTrait?.captureSuccess != true) {
+        if (move.main.type == PieceType.PAWN || move.captureTrait?.captureSuccess == true) {
             env.board.halfmoveClock = 0
         } else {
             env.board.halfmoveClock++
