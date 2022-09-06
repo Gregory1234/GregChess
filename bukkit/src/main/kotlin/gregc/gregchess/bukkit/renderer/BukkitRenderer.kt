@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
-import gregc.gregchess.Color
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.BukkitChessEventType
 import gregc.gregchess.bukkit.match.BukkitComponentType
@@ -14,7 +13,8 @@ import gregc.gregchess.piece.*
 import gregc.gregchess.variant.AtomicChess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.bukkit.*
+import org.bukkit.Location
+import org.bukkit.Material
 import kotlin.math.floor
 
 // TODO: add a way to use a custom renderer?
@@ -22,20 +22,6 @@ import kotlin.math.floor
 data class BukkitRenderer(
     val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
 ) : Component {
-    companion object {
-
-        private class FillVolume(val world: World, val mat: Material, val start: Loc, val stop: Loc) {
-            constructor(world: World, mat: Material, loc: Loc) : this(world, mat, loc, loc)
-        }
-
-        private fun fill(vol: FillVolume) {
-            for (i in vol.start.x..vol.stop.x)
-                for (j in (vol.start.y..vol.stop.y).reversed())
-                    for (k in vol.start.z..vol.stop.z)
-                        vol.world.getBlockAt(i, j, k).type = vol.mat
-        }
-    }
-
     override val type get() = BukkitComponentType.RENDERER
 
     @Transient
@@ -81,16 +67,23 @@ data class BukkitRenderer(
 
     private val world get() = arena.boardStart.world!!
 
+    private fun fill(mat: Material, start: Loc, stop: Loc = start) {
+        for (i in start.x..stop.x)
+            for (j in (start.y..stop.y).reversed())
+                for (k in start.z..stop.z)
+                    world.getBlockAt(i, j, k).type = mat
+    }
+
     private fun Piece.render(loc: Loc) {
         for ((i, m) in structure.withIndex())
-            fill(FillVolume(world, m, loc.copy(y = loc.y + i)))
+            fill(m, loc.copy(y = loc.y + i))
     }
 
     private fun BoardPiece.render() = piece.render(pos.loc)
 
     private fun clearPiece(loc: Loc) {
         for (i in 0..10) {
-            fill(FillVolume(world, Material.AIR, loc.copy(y = loc.y + i)))
+            fill(Material.AIR, loc.copy(y = loc.y + i))
         }
     }
 
@@ -107,7 +100,7 @@ data class BukkitRenderer(
         val (x, y, z) = loc
         val mi = -lowHalfTile
         val ma = highHalfTile
-        fill(FillVolume(world, material, Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma)))
+        fill(material, Loc(x + mi, y - 1, z + mi), Loc(x + ma, y - 1, z + ma))
     }
 
     private fun addCapturedPiece(piece: CapturedPiece) {
