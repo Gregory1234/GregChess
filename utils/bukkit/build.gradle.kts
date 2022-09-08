@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization")
     id("org.jetbrains.dokka")
     `maven-publish`
 }
@@ -12,6 +13,7 @@ repositories {
 dependencies {
     api(libs.spigot.api)
     api(libs.kotlinx.coroutines.core)
+    api(libs.kotlinx.serialization.core)
 }
 
 val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())

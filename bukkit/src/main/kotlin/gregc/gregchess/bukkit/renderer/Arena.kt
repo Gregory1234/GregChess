@@ -8,10 +8,12 @@ import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
+import gregc.gregchess.bukkitutils.serialization.BukkitConfig
+import gregc.gregchess.bukkitutils.serialization.decodeFromPath
 import gregc.gregchess.match.*
 import gregc.gregchess.results.*
+import kotlinx.serialization.*
 import org.bukkit.*
-import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
@@ -52,7 +54,7 @@ interface Arena {
     val capturedStart: ByColor<Location>
 }
 
-class ArenaMetadata(var match: ChessMatch? = null)
+class ArenaMetadata(val name: String, var match: ChessMatch? = null)
 
 object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
     @JvmField
@@ -60,36 +62,6 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
     val ARENA_REMOVED = DrawEndReason(EndReason.Type.EMERGENCY)
 
     private val arenas = mutableMapOf<SimpleArena, ArenaMetadata>()
-
-    private fun ConfigurationSection.getLoc(path: String, def: Loc): Loc = getConfigurationSection(path)?.let {
-        Loc(getInt("x", def.x), getInt("y", def.y), getInt("z", def.z))
-    } ?: def
-
-    private fun ConfigurationSection.parseArena(name: String): SimpleArena? {
-        GregChess.logger.info("Loading arena $name")
-        val start = getLoc("Start", Loc(0, 101, 0))
-
-        val world = Bukkit.getWorld(getString("World") ?: Bukkit.getWorlds().first().name) ?: run {
-            GregChess.logger.warn("World not found: ${getString("World")}!")
-            return null
-        }
-
-        val tileSize = getInt("TileSize", 3)
-
-        val thisArena = arenas.keys.firstOrNull {
-            it.name == name && it.offset == start && it.boardStart.world == world && it.tileSize == tileSize
-        }
-
-        return if (thisArena != null) {
-            GregChess.logger.info("Arena $name did not change")
-
-            thisArena
-        } else {
-            GregChess.logger.info("Loaded arena $name")
-
-            SimpleArena(name, world, tileSize, start)
-        }
-    }
 
     override fun unloadArenas() {
         arenas.forEach { (_, meta) ->
@@ -99,17 +71,24 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
     }
 
     override fun reloadArenas() {
+        val configFormat = BukkitConfig(config, defaultModule())
         val newArenas = config.getConfigurationSection("ChessArenas")
             ?.getKeys(false)
             ?.mapNotNull { name ->
-                val section = config.getConfigurationSection("ChessArenas.$name")
-                if (section != null)
-                    section.parseArena(name)
-                else {
+                try {
+                    val newArena = configFormat.decodeFromPath<SimpleArena>("ChessArenas.$name")
+                    val equivalent = arenas.toList().firstOrNull { (arena, meta) -> meta.name == name && arena.equivalent(newArena) }
+                    if (equivalent != null) {
+                        GregChess.logger.info("Arena $name did not change")
+                    } else {
+                        GregChess.logger.info("Loaded arena $name")
+                    }
+                    equivalent ?: (newArena to ArenaMetadata(name))
+                } catch (e: IllegalArgumentException) {
                     GregChess.logger.warn("Arena $name has a wrong format")
                     null
                 }
-            }.orEmpty().associateWith { arenas[it] ?: ArenaMetadata() }
+            }.orEmpty().toMap()
         arenas.forEach { (arena, meta) ->
             if (arena !in newArenas) {
                 meta.match?.stop(drawBy(ARENA_REMOVED))
@@ -134,28 +113,34 @@ object SimpleArenaManager : ArenaManager<SimpleArena>, BukkitRegistering {
         arenas[arena]?.match = null
     }
 
-    internal fun currentArenaMatch(arena: SimpleArena) = arenas[arena]?.match
+    internal fun currentArenaName(arena: SimpleArena) = requireNotNull(arenas[arena]).name
 }
 
 class ResetPlayerEvent(val player: BukkitPlayer) : ChessEvent {
     override val type get() = BukkitChessEventType.RESET_PLAYER
 }
 
+@Serializable
 class SimpleArena internal constructor(
-    val name: String,
-    private val world: World,
-    override val tileSize: Int,
-    internal val offset: Loc
+    @Contextual private val world: World = Bukkit.getWorlds().first(),
+    override val tileSize: Int = 3,
+    private val offset: Loc = Loc(0, 101, 0)
 ) : Arena {
+    val name: String get() = SimpleArenaManager.currentArenaName(this)
+    @Transient
     private val boardStartLoc: Loc = offset + Loc(8, 0, 8)
     override val boardStart: Location get() = boardStartLoc.toLocation(world)
+    @Transient
     private val capturedStartLoc = byColor(
         boardStartLoc + Loc(8 * tileSize - 1, 0, -3),
         boardStartLoc + Loc(0, 0, 8 * tileSize + 2)
     )
     override val capturedStart: ByColor<Location> get() = byColor { capturedStartLoc[it].toLocation(world) }
+    @Transient
     private val spawn: Loc = offset + Loc(4, 0, 4)
     private val spawnLocation: Location get() = spawn.toLocation(world)
+
+    fun equivalent(other: SimpleArena) = world == other.world && tileSize == other.tileSize && offset == other.offset
 
     override fun registerEvents(match: ChessMatch, events: ChessEventRegistry) {
         events.register(ChessEventType.BASE) {

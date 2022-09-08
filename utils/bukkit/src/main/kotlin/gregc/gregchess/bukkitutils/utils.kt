@@ -5,6 +5,8 @@ import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 
+internal fun String.upperFirst() = replaceFirstChar { it.uppercase() }
+
 class Message(val config: ConfigurationSection, val path: String) {
     fun get() = config.getPathString(path)
 }

@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.bukkit.match.BukkitChessEnvironment
+import gregc.gregchess.bukkitutils.serialization.addBukkitSerializers
 import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.registry.RegistryKey
 import gregc.gregchess.registry.StringKeySerializer
@@ -33,4 +34,5 @@ internal fun defaultModule() = SerializersModule {
             else -> throw UnsupportedOperationException()
         }
     }
+    addBukkitSerializers()
 }

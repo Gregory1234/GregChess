@@ -8,7 +8,7 @@ import java.time.Instant
 import kotlin.time.Duration
 
 object DurationSerializer : KSerializer<Duration> {
-    override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Duration", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("GregChessDuration", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: Duration) = encoder.encodeString(value.toIsoString())
 

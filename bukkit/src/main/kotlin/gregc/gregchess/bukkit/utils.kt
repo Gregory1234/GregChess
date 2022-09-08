@@ -1,10 +1,13 @@
 package gregc.gregchess.bukkit
 
+import gregc.gregchess.bukkitutils.serialization.BukkitConfigLowercase
+import kotlinx.serialization.Serializable
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.event.Listener
 
-internal data class Loc(val x: Int, val y: Int, val z: Int) {
+@Serializable
+internal data class Loc(@BukkitConfigLowercase val x: Int, @BukkitConfigLowercase val y: Int, @BukkitConfigLowercase val z: Int) {
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
 }
 

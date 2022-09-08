@@ -10,7 +10,6 @@ sealed interface NbtFormat : SerialFormat {
     fun <T> decodeFromNbtElement(deserializer: DeserializationStrategy<T>, nbt: NbtElement?): T
 }
 
-@OptIn(ExperimentalSerializationApi::class)
 class Nbt(
     override val serializersModule: SerializersModule = EmptySerializersModule()
 ) : NbtFormat {

@@ -6,16 +6,15 @@ import gregc.gregchess.bukkit.match.SettingsManager
 import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.registry.*
 import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.bukkitutils.serialization.BukkitConfig
 import gregc.gregchess.registry.*
 import gregc.gregchess.stats.*
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.nullable
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
 import java.io.File
 import java.util.*
-import kotlin.time.Duration
 
 interface BukkitPlayerStats {
     val uuid: UUID
@@ -33,28 +32,6 @@ interface BukkitPlayerStats {
 
 class YamlChessStats(override val uuid: UUID) : BukkitPlayerStats {
     private inner class YamlPlayerStats(val config: ConfigurationSection, val saveFile: (() -> Unit)? = null) : PlayerStatsView, PlayerStatsSink {
-        // TODO: implement a proper serial format
-        private fun <T : Any> serialize(
-            serializer: KSerializer<T>, config: ConfigurationSection, path: String, value: T
-        ) = when(serializer) {
-            Int.serializer(), Long.serializer(), Short.serializer(), Byte.serializer(), String.serializer() -> config.set(path, value)
-            DurationSerializer -> config.set(path, (value as Duration).toIsoString())
-            else -> throw UnsupportedOperationException(serializer.descriptor.toString())
-        }
-
-        // TODO: handle no value properly
-        @Suppress("UNCHECKED_CAST")
-        private fun <T : Any> deserialize(
-            serializer: KSerializer<T>, config: ConfigurationSection, path: String
-        ): T = when(serializer) {
-            Int.serializer() -> config.getInt(path) as T
-            Long.serializer() -> config.getLong(path) as T
-            Short.serializer() -> config.getInt(path).toShort() as T
-            Byte.serializer() -> config.getInt(path).toByte() as T
-            String.serializer() -> config.getString(path) as T
-            DurationSerializer -> (config.getString(path)?.let(Duration::parseIsoString) ?: Duration.ZERO) as T
-            else -> throw UnsupportedOperationException(serializer.descriptor.toString())
-        }
 
         private fun pathOf(stat: ChessStat<*>): String =
             "${stat.module.namespace.snakeToPascal()}.${stat.name.snakeToPascal()}"
@@ -63,14 +40,15 @@ class YamlChessStats(override val uuid: UUID) : BukkitPlayerStats {
             if (values.isEmpty())
                 return
             val path = pathOf(stat)
-            val oldValue = deserialize(stat.serializer, config, path)
-            val newValue = stat.aggregate(listOf(oldValue, *values))
-            serialize(stat.serializer, config, path, newValue)
+            val bukkitConfig = BukkitConfig(config, defaultModule())
+            val oldValue = bukkitConfig.decodeFromPath(stat.serializer.nullable, path)
+            val newValue = stat.aggregate(listOfNotNull(oldValue, *values))
+            bukkitConfig.encodeOnPath(stat.serializer, path, newValue)
             commit()
         }
 
         override fun <T : Any> get(stat: ChessStat<T>): T {
-            return deserialize(stat.serializer, config, pathOf(stat))
+            return stat.aggregate(listOfNotNull(BukkitConfig(config, defaultModule()).decodeFromPath(stat.serializer.nullable, pathOf(stat))))
         }
 
         override val stored: Set<ChessStat<*>>
