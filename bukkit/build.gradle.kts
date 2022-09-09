@@ -101,12 +101,19 @@ tasks {
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
     }
-    launchMinecraftServer {
+    register<LaunchMinecraftServerTask>("runPaperServer") {
         dependsOn(shadedJar)
+        group = "minecraft"
         serverArgument.add("-add-plugin=${shadedJar.get().archiveFile.get().asFile.absolutePath}")
         System.getProperty("config")?.let { config ->
             serverArgument.add("--config=$config.properties")
         }
+    }
+    register<Copy>("finalJar") {
+        group = "gregchess"
+        from(shadedJar)
+        into(File(rootProject.buildDir, "libs"))
+        rename { "${rootProject.name}-$version-bukkit.jar" }
     }
 }
 

@@ -3,13 +3,17 @@ A Bukkit plugin and a WIP Fabricmc mod adding chess to minecraft written in Kotl
 
 Works in Minecraft `1.19.2`.
 
-## Build
-To build the bukkit jar use gradle task `:createSpigotJar`.
+## Gradle tasks
+### Build
+- Bukkit plugin jar: `:gregchess-bukkit:finalJar`
+- Fabric mod jar: `:gregchess-fabric:finalJar`
 
-To build the fabric jar use gradle task `:createFabricJar`.
+(All jars are moved to `build/libs`)
 
-The jars are moved to the root project directory.
+### Run
+- Paper server with the plugin: `:gregchess-bukkit:runPaperServer`
+- Fabric client with the mod: `:gregchess-fabric:runClient`
+- Fabric server with the mod: `:gregchess-fabric:runServer`
 
-To run a fabric client with the mod use gradle task `:runFabricClient`.
-
-To run a paper server with the bukkit plugin use gradle task `:runPaperServer`.
+### Documentation
+- Dokka html: `:dokkaHtmlMultiModule`

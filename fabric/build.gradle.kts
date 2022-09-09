@@ -100,7 +100,7 @@ tasks {
         archiveClassifier.set("shaded-dev")
         destinationDirectory.set(jar.get().destinationDirectory)
     }
-    register<RemapJarTask>("remapShadedJar") {
+    val remapShadedJar by registering(RemapJarTask::class) {
         dependsOn(shadedJar)
         group = "fabric"
         inputFile.set(shadedJar.get().archiveFile)
@@ -117,6 +117,12 @@ tasks {
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
             }
         }
+    }
+    register<Copy>("finalJar") {
+        group = "gregchess"
+        from(remapShadedJar)
+        into(File(rootProject.buildDir, "libs"))
+        rename { "${rootProject.name}-$version-fabric.jar" }
     }
 }
 
