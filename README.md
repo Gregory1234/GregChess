@@ -11,7 +11,7 @@ Works in Minecraft `1.19.2`.
 (All jars are moved to `build/libs`)
 
 ### Run
-- Paper server with the plugin: `:gregchess-bukkit:runPaperServer`
+- Paper server with the plugin: `:gregchess-bukkit:launchMinecraftServer`
 - Fabric client with the mod: `:gregchess-fabric:runClient`
 - Fabric server with the mod: `:gregchess-fabric:runServer`
 

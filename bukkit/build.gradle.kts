@@ -101,7 +101,7 @@ tasks {
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
     }
-    register<LaunchMinecraftServerTask>("runPaperServer") {
+    launchMinecraftServer {
         dependsOn(shadedJar)
         group = "minecraft"
         serverArgument.add("-add-plugin=${shadedJar.get().archiveFile.get().asFile.absolutePath}")
