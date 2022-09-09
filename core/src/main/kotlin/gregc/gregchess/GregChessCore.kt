@@ -1,6 +1,6 @@
 package gregc.gregchess
 
-import gregc.gregchess.match.ComponentType
+import gregc.gregchess.component.ComponentType
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.PlacedPieceType

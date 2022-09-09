@@ -3,12 +3,13 @@ package gregc.gregchess.bukkit.registry
 import gregc.gregchess.AutoRegisterType
 import gregc.gregchess.bukkit.BukkitChessModule
 import gregc.gregchess.bukkit.GregChess
+import gregc.gregchess.bukkit.component.ComponentAlternative
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.properties.ScoreboardLayout
 import gregc.gregchess.bukkit.renderer.ChessFloorRenderer
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
-import gregc.gregchess.match.Component
+import gregc.gregchess.component.Component
 import gregc.gregchess.move.MoveFormatter
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.EndReason

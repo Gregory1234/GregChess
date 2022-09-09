@@ -1,6 +1,9 @@
-package gregc.gregchess.fabric.match
+package gregc.gregchess.fabric.component
 
-import gregc.gregchess.match.*
+import gregc.gregchess.component.Component
+import gregc.gregchess.event.*
+import gregc.gregchess.fabric.match.ChessMatchManager
+import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.Serializable
 
 @Serializable

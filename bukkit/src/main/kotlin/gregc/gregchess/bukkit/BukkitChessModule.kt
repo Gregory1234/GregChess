@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.match.ComponentAlternative
+import gregc.gregchess.bukkit.component.ComponentAlternative
 import gregc.gregchess.bukkit.match.defaultVariantOptionsParser
 import gregc.gregchess.bukkit.move.defaultLocalMoveFormatter
 import gregc.gregchess.bukkit.properties.PropertyType

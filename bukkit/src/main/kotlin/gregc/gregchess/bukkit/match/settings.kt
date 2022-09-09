@@ -7,7 +7,8 @@ import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.match.*
+import gregc.gregchess.component.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.name

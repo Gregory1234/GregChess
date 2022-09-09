@@ -2,6 +2,7 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.Color
 import gregc.gregchess.bukkit.command.*
+import gregc.gregchess.bukkit.component.ComponentAlternative
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.piece.getInfo
 import gregc.gregchess.bukkit.player.*

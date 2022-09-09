@@ -1,14 +1,16 @@
 package gregc.gregchess.fabric.renderer
 
 import gregc.gregchess.Pos
+import gregc.gregchess.component.Component
+import gregc.gregchess.event.*
 import gregc.gregchess.fabric.block.ChessControllerBlockEntity
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
-import gregc.gregchess.fabric.match.FabricChessEventType
-import gregc.gregchess.fabric.match.FabricComponentType
+import gregc.gregchess.fabric.component.FabricComponentType
+import gregc.gregchess.fabric.event.FabricChessEventType
 import gregc.gregchess.fabric.moveBlock
 import gregc.gregchess.fabric.piece.*
 import gregc.gregchess.fabric.player.PiecePlayerActionEvent
-import gregc.gregchess.match.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.CapturedPiece

@@ -1,7 +1,7 @@
-package gregc.gregchess.fabric.match
+package gregc.gregchess.fabric.event
 
+import gregc.gregchess.event.ChessEventType
 import gregc.gregchess.fabric.player.PiecePlayerActionEvent
-import gregc.gregchess.match.ChessEventType
 
 object FabricChessEventType {
     @JvmField

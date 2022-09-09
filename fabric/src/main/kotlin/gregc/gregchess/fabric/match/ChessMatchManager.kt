@@ -3,7 +3,9 @@ package gregc.gregchess.fabric.match
 import gregc.gregchess.Pos
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
+import gregc.gregchess.component.Component
 import gregc.gregchess.fabric.GregChess
+import gregc.gregchess.fabric.component.MatchController
 import gregc.gregchess.fabric.coroutines.uuid
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
@@ -11,7 +13,6 @@ import gregc.gregchess.fabric.nbt.*
 import gregc.gregchess.fabric.renderer.FabricRenderer
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.match.ChessMatch
-import gregc.gregchess.match.Component
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.variant.ChessVariant
 import net.minecraft.nbt.NbtCompound

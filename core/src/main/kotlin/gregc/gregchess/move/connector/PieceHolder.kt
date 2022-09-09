@@ -1,6 +1,7 @@
 package gregc.gregchess.move.connector
 
 import gregc.gregchess.Color
+import gregc.gregchess.event.*
 import gregc.gregchess.match.*
 import gregc.gregchess.piece.*
 

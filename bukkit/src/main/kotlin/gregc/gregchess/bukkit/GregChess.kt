@@ -3,7 +3,10 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.GregChessCore
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
-import gregc.gregchess.bukkit.match.*
+import gregc.gregchess.bukkit.component.BukkitComponentType
+import gregc.gregchess.bukkit.component.ComponentAlternative
+import gregc.gregchess.bukkit.match.ChessMatchManager
+import gregc.gregchess.bukkit.match.SettingsManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.SimpleScoreboardLayout
 import gregc.gregchess.bukkit.registry.BukkitRegistry
@@ -13,7 +16,7 @@ import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.clock.TimeControl
-import gregc.gregchess.match.ComponentType
+import gregc.gregchess.component.ComponentType
 import gregc.gregchess.variant.KingOfTheHill
 import gregc.gregchess.variant.ThreeChecks
 import kotlin.time.Duration

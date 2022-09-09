@@ -1,8 +1,10 @@
 package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.Pos
-import gregc.gregchess.bukkit.match.ComponentAlternative
-import gregc.gregchess.match.*
+import gregc.gregchess.bukkit.component.ComponentAlternative
+import gregc.gregchess.component.Component
+import gregc.gregchess.component.ComponentType
+import gregc.gregchess.match.ChessMatch
 import org.bukkit.Location
 
 interface Renderer : Component {

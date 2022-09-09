@@ -2,15 +2,16 @@ package gregc.gregchess.fabric.player
 
 import com.mojang.authlib.GameProfile
 import gregc.gregchess.*
+import gregc.gregchess.event.*
 import gregc.gregchess.fabric.GameProfileSerializer
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.client.PromotionMenuFactory
-import gregc.gregchess.fabric.match.FabricChessEventType
-import gregc.gregchess.fabric.match.FabricComponentType
+import gregc.gregchess.fabric.component.FabricComponentType
+import gregc.gregchess.fabric.event.FabricChessEventType
 import gregc.gregchess.fabric.piece.block
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.fabric.renderer.server
-import gregc.gregchess.match.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece

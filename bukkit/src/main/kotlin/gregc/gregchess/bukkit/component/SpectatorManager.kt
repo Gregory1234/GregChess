@@ -1,14 +1,15 @@
-package gregc.gregchess.bukkit.match
+package gregc.gregchess.bukkit.component
 
+import gregc.gregchess.bukkit.event.BukkitChessEventType
+import gregc.gregchess.bukkit.event.PlayerDirection
 import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.results.sendMatchResults
-import gregc.gregchess.match.*
+import gregc.gregchess.component.Component
+import gregc.gregchess.event.*
+import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
-data class SpectatorEvent(val player: BukkitPlayer, val dir: PlayerDirection) : ChessEvent {
-    override val type get() = BukkitChessEventType.SPECTATOR
-}
 
 @Serializable
 class SpectatorManager : Component {

@@ -1,18 +1,12 @@
-package gregc.gregchess.match
+package gregc.gregchess.component
 
 import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.registry.*
-import kotlinx.serialization.*
-import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
-import kotlin.reflect.full.createType
-
-fun interface ComponentIdentifier<T : Component> {
-    fun matchesOrNull(c: Component): T?
-}
 
 @Serializable(with = ComponentType.Serializer::class)
 class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered, ComponentIdentifier<T> {
@@ -42,24 +36,3 @@ class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered, Componen
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<ComponentType<*>>()
     }
 }
-
-@Serializable(with = ComponentSerializer::class)
-interface Component {
-
-    val type: ComponentType<out @SelfType Component>
-
-    fun init(match: ChessMatch, events: ChessEventRegistry) {}
-
-}
-
-object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component>("Component", ComponentType.Serializer) {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun ComponentType<*>.valueSerializer(module: SerializersModule): KSerializer<Component> =
-        module.serializer(cl.createType()) as KSerializer<Component>
-
-    override val Component.key: ComponentType<*> get() = type
-
-}
-
-class ComponentNotFoundException(type: ComponentIdentifier<*>) : Exception(type.toString())

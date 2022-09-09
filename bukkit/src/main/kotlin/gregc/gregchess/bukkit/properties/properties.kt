@@ -2,10 +2,10 @@ package gregc.gregchess.bukkit.properties
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.match.BukkitChessEventType
+import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.getPathString
-import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.event.ChessEvent
 import gregc.gregchess.registry.*
 
 class AddPropertiesEvent(

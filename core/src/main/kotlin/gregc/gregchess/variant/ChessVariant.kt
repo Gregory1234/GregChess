@@ -3,7 +3,9 @@ package gregc.gregchess.variant
 import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
-import gregc.gregchess.match.*
+import gregc.gregchess.component.ComponentType
+import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.PGN
 import gregc.gregchess.move.*
 import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.move.trait.*

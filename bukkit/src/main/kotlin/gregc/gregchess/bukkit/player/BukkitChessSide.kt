@@ -2,14 +2,19 @@ package gregc.gregchess.bukkit.player
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.match.*
+import gregc.gregchess.bukkit.component.BukkitComponentType
+import gregc.gregchess.bukkit.event.BukkitChessEventType
+import gregc.gregchess.bukkit.event.PlayerDirection
+import gregc.gregchess.bukkit.match.copyMessage
 import gregc.gregchess.bukkit.move.formatLastMoves
 import gregc.gregchess.bukkit.move.localMoveFormatter
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.match.*
+import gregc.gregchess.event.*
+import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.PGN
 import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece

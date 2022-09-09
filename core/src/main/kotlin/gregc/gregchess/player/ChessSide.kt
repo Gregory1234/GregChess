@@ -1,7 +1,10 @@
 package gregc.gregchess.player
 
 import gregc.gregchess.*
-import gregc.gregchess.match.*
+import gregc.gregchess.event.ChessEvent
+import gregc.gregchess.event.ChessEventRegistry
+import gregc.gregchess.match.AnyFacade
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

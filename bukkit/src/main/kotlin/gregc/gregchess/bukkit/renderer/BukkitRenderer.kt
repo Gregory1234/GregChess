@@ -2,13 +2,14 @@ package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.match.BukkitChessEventType
-import gregc.gregchess.bukkit.match.BukkitComponentType
+import gregc.gregchess.bukkit.component.BukkitComponentType
+import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkit.piece.getSound
 import gregc.gregchess.bukkit.piece.structure
 import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
 import gregc.gregchess.bukkitutils.CommandException
-import gregc.gregchess.match.*
+import gregc.gregchess.event.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.*
 import gregc.gregchess.variant.AtomicChess

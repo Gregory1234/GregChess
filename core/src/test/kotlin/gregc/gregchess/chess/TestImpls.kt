@@ -1,7 +1,12 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.*
-import gregc.gregchess.match.*
+import gregc.gregchess.component.Component
+import gregc.gregchess.component.ComponentType
+import gregc.gregchess.event.ChessEvent
+import gregc.gregchess.event.ChessEventRegistry
+import gregc.gregchess.match.ChessEnvironment
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.*
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.DetEndReason
@@ -31,6 +36,7 @@ class TestChessSide(override val name: String, override val color: Color) : Ches
         events.registerAny(::handleEvent)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun handleEvent(e: ChessEvent) {}
 
     override fun createFacade(match: ChessMatch) = TestChessSideFacade(match, this)
@@ -47,6 +53,7 @@ object TestComponent : Component {
         events.registerAny(::handleEvent)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun handleEvent(e: ChessEvent) {}
 
 }

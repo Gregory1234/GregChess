@@ -1,7 +1,9 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.*
-import gregc.gregchess.match.*
+import gregc.gregchess.event.ChessEvent
+import gregc.gregchess.event.ChessEventType
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
 import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.move.connector.board

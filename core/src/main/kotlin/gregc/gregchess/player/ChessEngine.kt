@@ -2,7 +2,8 @@ package gregc.gregchess.player
 
 import gregc.gregchess.*
 import gregc.gregchess.board.FEN
-import gregc.gregchess.match.*
+import gregc.gregchess.event.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.of

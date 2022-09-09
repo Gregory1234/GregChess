@@ -1,7 +1,11 @@
 package gregc.gregchess.variant
 
 import gregc.gregchess.*
-import gregc.gregchess.match.*
+import gregc.gregchess.component.Component
+import gregc.gregchess.component.ComponentType
+import gregc.gregchess.event.ChessEventRegistry
+import gregc.gregchess.event.ChessEventType
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.connector.*

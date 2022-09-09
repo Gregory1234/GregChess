@@ -1,6 +1,8 @@
 package gregc.gregchess.stats
 
 import gregc.gregchess.*
+import gregc.gregchess.event.ChessEvent
+import gregc.gregchess.event.ChessEventType
 import gregc.gregchess.match.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.MatchScore

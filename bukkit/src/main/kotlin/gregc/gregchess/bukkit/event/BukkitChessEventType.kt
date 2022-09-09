@@ -1,9 +1,10 @@
-package gregc.gregchess.bukkit.match
+package gregc.gregchess.bukkit.event
 
+import gregc.gregchess.bukkit.match.MatchInfoEvent
 import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
 import gregc.gregchess.bukkit.properties.AddPropertiesEvent
 import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
-import gregc.gregchess.match.ChessEventType
+import gregc.gregchess.event.ChessEventType
 
 object BukkitChessEventType {
     @JvmField

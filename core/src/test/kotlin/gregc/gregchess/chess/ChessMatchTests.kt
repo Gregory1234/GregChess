@@ -5,6 +5,9 @@ import assertk.assertions.*
 import gregc.gregchess.ByColor
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.byColor
+import gregc.gregchess.component.Component
+import gregc.gregchess.event.ChessBaseEvent
+import gregc.gregchess.event.TurnEvent
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.AddMoveConnectorsEvent
 import gregc.gregchess.move.connector.PieceMoveEvent

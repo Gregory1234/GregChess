@@ -1,8 +1,8 @@
-package gregc.gregchess.fabric.match
+package gregc.gregchess.fabric.component
 
 import gregc.gregchess.RegisterAll
+import gregc.gregchess.component.ComponentType
 import gregc.gregchess.fabric.renderer.FabricRenderer
-import gregc.gregchess.match.ComponentType
 
 @RegisterAll(ComponentType::class)
 object FabricComponentType {

@@ -1,8 +1,8 @@
 package gregc.gregchess.move.connector
 
 import gregc.gregchess.RegisterAll
-import gregc.gregchess.match.ChessEvent
-import gregc.gregchess.match.ChessEventType
+import gregc.gregchess.event.ChessEvent
+import gregc.gregchess.event.ChessEventType
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.piece.PlacedPieceType
 import kotlin.reflect.KClass

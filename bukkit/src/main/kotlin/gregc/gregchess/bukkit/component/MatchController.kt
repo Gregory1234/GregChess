@@ -1,22 +1,19 @@
-package gregc.gregchess.bukkit.match
+package gregc.gregchess.bukkit.component
 
 import gregc.gregchess.bukkit.GregChessPlugin
-import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.match.ChessMatchManager
+import gregc.gregchess.bukkit.match.presetName
+import gregc.gregchess.bukkit.player.BukkitChessSide
+import gregc.gregchess.bukkit.player.isSamePlayer
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.byColor
-import gregc.gregchess.match.*
+import gregc.gregchess.component.Component
+import gregc.gregchess.event.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.stats.VoidPlayerStatsSink
 import gregc.gregchess.stats.addStats
 import kotlinx.serialization.Serializable
 import org.bukkit.scheduler.BukkitRunnable
-
-enum class PlayerDirection {
-    JOIN, LEAVE
-}
-
-class PlayerEvent(val player: BukkitPlayer, val dir: PlayerDirection) : ChessEvent {
-    override val type get() = BukkitChessEventType.PLAYER
-}
 
 @Serializable
 object MatchController : Component {

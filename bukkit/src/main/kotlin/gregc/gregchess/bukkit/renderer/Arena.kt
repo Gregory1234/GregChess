@@ -2,13 +2,14 @@ package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.match.BukkitChessEventType
-import gregc.gregchess.bukkit.match.PlayerDirection
+import gregc.gregchess.bukkit.event.BukkitChessEventType
+import gregc.gregchess.bukkit.event.PlayerDirection
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkitutils.serialization.BukkitConfig
 import gregc.gregchess.bukkitutils.serialization.decodeFromPath
-import gregc.gregchess.match.*
+import gregc.gregchess.event.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.results.*
 import kotlinx.serialization.*
 import org.bukkit.*

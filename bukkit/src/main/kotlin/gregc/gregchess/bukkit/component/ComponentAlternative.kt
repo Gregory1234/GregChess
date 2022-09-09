@@ -1,11 +1,11 @@
-package gregc.gregchess.bukkit.match
+package gregc.gregchess.bukkit.component
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkit.renderer.Renderer
-import gregc.gregchess.match.*
+import gregc.gregchess.component.*
 import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 

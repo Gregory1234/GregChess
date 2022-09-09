@@ -3,6 +3,8 @@
 package gregc.gregchess.match
 
 import gregc.gregchess.*
+import gregc.gregchess.component.*
+import gregc.gregchess.event.*
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.connector.*

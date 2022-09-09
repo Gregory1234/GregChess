@@ -1,9 +1,10 @@
 package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.configName
+import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkitutils.TextComponentBuilder
 import gregc.gregchess.bukkitutils.textComponent
-import gregc.gregchess.match.ChessEvent
+import gregc.gregchess.event.ChessEvent
 import gregc.gregchess.match.ChessMatch
 import net.md_5.bungee.api.chat.TextComponent
 

@@ -7,8 +7,8 @@ import gregc.gregchess.*
 import gregc.gregchess.board.*
 import gregc.gregchess.chess.TestChessEnvironment
 import gregc.gregchess.chess.TestChessPlayer
+import gregc.gregchess.component.Component
 import gregc.gregchess.match.ChessMatch
-import gregc.gregchess.match.Component
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*

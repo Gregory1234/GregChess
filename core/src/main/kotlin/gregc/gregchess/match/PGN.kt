@@ -2,6 +2,8 @@ package gregc.gregchess.match
 
 import gregc.gregchess.Color
 import gregc.gregchess.clock.clock
+import gregc.gregchess.event.ChessEvent
+import gregc.gregchess.event.ChessEventType
 import java.time.format.DateTimeFormatter
 
 class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {

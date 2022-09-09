@@ -2,13 +2,17 @@ package gregc.gregchess.bukkit.properties
 
 import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
+import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.match.*
+import gregc.gregchess.bukkit.event.BukkitChessEventType
+import gregc.gregchess.bukkit.match.presetName
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.clock.TimeControl
 import gregc.gregchess.clock.clock
-import gregc.gregchess.match.*
+import gregc.gregchess.component.Component
+import gregc.gregchess.event.ChessEventRegistry
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.variant.ThreeChecks
 import kotlinx.serialization.Serializable
 
