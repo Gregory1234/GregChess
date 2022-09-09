@@ -131,6 +131,7 @@ class Arena internal constructor(
             for (e in activePotionEffects)
                 removePotionEffect(e.type)
             teleport(ArenaManager.returnWorld.spawnLocation)
+            inventory.clear()
             gameMode = GameMode.SURVIVAL
             allowFlight = false
             isFlying = false

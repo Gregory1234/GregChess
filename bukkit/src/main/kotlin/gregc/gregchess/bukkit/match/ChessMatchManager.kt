@@ -58,7 +58,8 @@ object ChessMatchManager : Listener {
     @EventHandler
     fun onPlayerDamage(e: EntityDamageEvent) {
         val ent = e.gregchessPlayer ?: return
-        ent.currentMatch ?: return
+        val match = ent.currentMatch ?: return
+        match.callEvent(ResetPlayerEvent(ent))
         e.isCancelled = true
     }
 
