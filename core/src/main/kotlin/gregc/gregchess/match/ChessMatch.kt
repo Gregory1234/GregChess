@@ -76,10 +76,9 @@ class ChessMatch private constructor(
 
     val board get() = require(ComponentType.CHESSBOARD).getFacade(this)
 
-    @Suppress("UNCHECKED_CAST")
-    operator fun <T : Component> get(type: ComponentType<T>): T? = components.firstOrNull { it.type == type } as T?
+    operator fun <T : Component> get(type: ComponentIdentifier<T>): T? = components.firstNotNullOfOrNull { type.matchesOrNull(it) }
 
-    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
+    fun <T : Component> require(type: ComponentIdentifier<T>): T = get(type) ?: throw ComponentNotFoundException(type)
 
     private fun requireState(s: State) = check(state == s) { "Expected state $s, got state $state!" }
 

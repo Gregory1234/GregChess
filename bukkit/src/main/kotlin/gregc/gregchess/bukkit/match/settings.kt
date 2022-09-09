@@ -7,10 +7,11 @@ import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
-import gregc.gregchess.match.ChessMatch
-import gregc.gregchess.match.Component
+import gregc.gregchess.match.*
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.registry.Registry
+import gregc.gregchess.registry.name
+import gregc.gregchess.snakeToPascal
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
@@ -35,6 +36,10 @@ class MatchSettings(
     val components: List<Component>
 ) {
     fun createMatch(players: ByColor<ChessPlayer<*>>) = ChessMatch(environment, variant, components, players, variantOptions)
+
+    operator fun <T : Component> get(type: ComponentIdentifier<T>): T? = components.firstNotNullOfOrNull { type.matchesOrNull(it) }
+
+    fun <T : Component> require(type: ComponentIdentifier<T>): T = get(type) ?: throw ComponentNotFoundException(type)
 }
 
 object SettingsManager {
@@ -51,7 +56,7 @@ object SettingsManager {
 
             val context = SettingsParserContext(variant, variantOptions, section)
             val requestedComponents = variant.requiredComponents + variant.optionalComponents +
-                    BukkitRegistry.HOOKED_COMPONENTS.elements
+                    BukkitRegistry.HOOKED_COMPONENTS.elements + BukkitRegistry.COMPONENT_ALTERNATIVE.values.map { it.getSelectedOrNull(section, it.name.snakeToPascal()) ?: it.getSelected() }
             val components = requestedComponents.mapNotNull { req ->
                 val f = BukkitRegistry.SETTINGS_PARSER[req]
                 context.f()

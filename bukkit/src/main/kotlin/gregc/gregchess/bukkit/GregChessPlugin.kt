@@ -65,7 +65,6 @@ object GregChessPlugin : Listener {
     private val PIECE_NOT_FOUND = err("PieceNotFound")
     private val MATCH_NOT_FOUND = err("MatchNotFound")
     private val NOTHING_TO_TAKEBACK = err("NothingToTakeback")
-    private val NO_ARENAS = err("NoArenas")
     private val NO_MATCH_TO_REJOIN = err("NoMatchToRejoin")
 
     private val BOARD_OP_DONE = message("BoardOpDone")
@@ -91,7 +90,7 @@ object GregChessPlugin : Listener {
             if (p is BukkitChessPlugin)
                 p.onInitialize()
         ChessMatchManager.start()
-        ArenaManager.fromConfig().reloadArenas()
+        ArenaManager.reloadArenas()
         requestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
@@ -122,15 +121,9 @@ object GregChessPlugin : Listener {
 
                     executeSuspend {
                         val opponent = opponentArg()
-                        if (!ArenaManager.fromConfig().hasFreeArenas()) {
-                            throw CommandException(NO_ARENAS)
-                        }
                         val settings = sender.openSettingsMenu()
 
                         if (settings != null) {
-                            if (!ArenaManager.fromConfig().hasFreeArenas()) {
-                                throw CommandException(NO_ARENAS)
-                            }
                             val res = duelRequest.call(RequestData(sender, opponent, settings.name))
                             if (res == RequestResponse.ACCEPT) {
                                 if (sender.isInMatch || sender.isSpectatingMatch) {
@@ -138,6 +131,7 @@ object GregChessPlugin : Listener {
                                 } else if (opponent.isInMatch || opponent.isSpectatingMatch) {
                                     sender.sendMessage(OPPONENT_IN_MATCH)
                                 } else {
+                                    settings.require(ComponentAlternative.RENDERER).validate()
                                     settings.createMatch(byColor(sender, opponent)).start()
                                 }
                             }
@@ -154,6 +148,7 @@ object GregChessPlugin : Listener {
                         if (sender.isInMatch || sender.isSpectatingMatch) {
                             sender.sendMessage(YOU_IN_MATCH)
                         } else {
+                            settings.require(ComponentAlternative.RENDERER).validate()
                             settings.createMatch(byColor(sender, Stockfish())).start()
                         }
                     }
@@ -326,10 +321,8 @@ object GregChessPlugin : Listener {
             }
             subcommand("reload") {
                 execute {
-                    val oldManager = ArenaManager.fromConfig()
                     plugin.reloadConfig()
-                    if (ArenaManager.fromConfig() != oldManager) oldManager.unloadArenas()
-                    ArenaManager.fromConfig().reloadArenas()
+                    ArenaManager.reloadArenas()
                     sender.sendMessage(CONFIG_RELOADED)
                 }
             }
@@ -354,7 +347,6 @@ object GregChessPlugin : Listener {
                         execute {
                             val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
                             f.parentFile.mkdirs()
-                            @Suppress("BlockingMethodInNonBlockingContext")
                             f.createNewFile()
                             f.writeText(json.encodeToString(pl().match))
                         }

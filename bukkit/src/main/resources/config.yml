@@ -269,4 +269,5 @@ Rejoin:
 
 TimeFormat: "mm:ss.S"
 StatsProvider: yaml
-ArenaManager: simple
+Component:
+  Renderer: renderer

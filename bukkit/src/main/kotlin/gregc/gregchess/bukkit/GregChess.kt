@@ -7,7 +7,8 @@ import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.SimpleScoreboardLayout
 import gregc.gregchess.bukkit.registry.BukkitRegistry
-import gregc.gregchess.bukkit.renderer.*
+import gregc.gregchess.bukkit.renderer.BukkitRenderer
+import gregc.gregchess.bukkit.renderer.simpleFloorRenderer
 import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.clock.ChessClock
@@ -59,8 +60,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
 
     private fun hookComponents() {
         for (c in listOf(ComponentType.CHESSBOARD, ComponentType.CLOCK, BukkitComponentType.MATCH_CONTROLLER,
-            BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.RENDERER,
-            BukkitComponentType.ADAPTER)) {
+            BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.ADAPTER)) {
             BukkitRegistry.HOOKED_COMPONENTS += c
         }
     }
@@ -71,7 +71,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             registerAll<ChessMatchManager>()
             registerAll<BukkitComponentType>()
             registerAll<BukkitChessSideType>()
-            registerAll<ArenaManagers>()
+            registerAll<ComponentAlternative<*>>()
         }
         hookComponents()
         registerSettings()

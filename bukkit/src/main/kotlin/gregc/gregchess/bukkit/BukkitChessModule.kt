@@ -1,19 +1,21 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
+import gregc.gregchess.bukkit.match.ComponentAlternative
 import gregc.gregchess.bukkit.match.defaultVariantOptionsParser
 import gregc.gregchess.bukkit.move.defaultLocalMoveFormatter
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.registry.BUKKIT_AUTO_REGISTER
 import gregc.gregchess.bukkit.registry.BukkitRegistry
-import gregc.gregchess.bukkit.renderer.ArenaManagers
 import gregc.gregchess.bukkit.renderer.simpleFloorRenderer
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.EndReason
 import org.bukkit.plugin.Plugin
 
 object BukkitGregChessCore {
-    val AUTO_REGISTER = listOf(EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER, ArenaManagers.AUTO_REGISTER) + GregChessCore.AUTO_REGISTER
+    val AUTO_REGISTER = listOf(
+        EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER, ComponentAlternative.AUTO_REGISTER
+    ) + GregChessCore.AUTO_REGISTER
 
     fun autoRegister(module: ChessModule) = AutoRegister(module, AUTO_REGISTER)
 }

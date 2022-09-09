@@ -10,13 +10,20 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.createType
 
+fun interface ComponentIdentifier<T : Component> {
+    fun matchesOrNull(c: Component): T?
+}
+
 @Serializable(with = ComponentType.Serializer::class)
-class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered {
+class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered, ComponentIdentifier<T> {
     object Serializer : NameRegisteredSerializer<ComponentType<*>>("ComponentType", Registry.COMPONENT_TYPE)
 
     override val key get() = Registry.COMPONENT_TYPE[this]
 
     override fun toString(): String = Registry.COMPONENT_TYPE.simpleElementToString(this)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun matchesOrNull(c: Component): T? = if (c.type == this) c as T else null
 
     @RegisterAll(ComponentType::class)
     companion object {
@@ -55,4 +62,4 @@ object ComponentSerializer : KeyRegisteredSerializer<ComponentType<*>, Component
 
 }
 
-class ComponentNotFoundException(type: ComponentType<*>) : Exception(type.toString())
+class ComponentNotFoundException(type: ComponentIdentifier<*>) : Exception(type.toString())

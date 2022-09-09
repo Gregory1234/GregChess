@@ -7,6 +7,7 @@ import gregc.gregchess.bukkit.match.BukkitComponentType
 import gregc.gregchess.bukkit.piece.getSound
 import gregc.gregchess.bukkit.piece.structure
 import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
+import gregc.gregchess.bukkitutils.CommandException
 import gregc.gregchess.match.*
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.*
@@ -17,19 +18,20 @@ import org.bukkit.Location
 import org.bukkit.Material
 import kotlin.math.floor
 
-// TODO: add a way to use a custom renderer?
 @Serializable
-data class BukkitRenderer(
-    val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
-) : Component {
+data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)) : Renderer {
     override val type get() = BukkitComponentType.RENDERER
 
     @Transient
     private lateinit var arena: Arena
 
+    override fun validate() {
+        if (!ArenaManager.hasFreeArenas()) throw CommandException(ArenaManager.NO_ARENAS) // TODO: don't depend on CommandException and on Messages
+    }
+
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
-        this.arena = ArenaManager.fromConfig().reserveArena(match)
-        arena.registerEvents(match, events.subRegistry("arena"))
+        this.arena = ArenaManager.reserveArena(match)
+        arena.registerEvents(events.subRegistry("arena"))
         events.registerR(AtomicChess.EXPLOSION_EVENT) {
             world.createExplosion(pos.location, 4.0f, false, false)
         }
@@ -51,7 +53,7 @@ data class BukkitRenderer(
     private val boardStart get() = arena.boardStart.toLoc()
     private val capturedStart get() = byColor { arena.capturedStart[it].toLoc() }
 
-    fun getPos(location: Location) = getPos(location.toLoc())
+    override fun getPos(location: Location) = getPos(location.toLoc())
 
     private fun getPos(loc: Loc) =
         Pos(file = 7 - (loc.x - boardStart.x).floorDiv(tileSize), rank = (loc.z - boardStart.z).floorDiv(tileSize))
@@ -195,5 +197,3 @@ data class BukkitRenderer(
             }
     }
 }
-
-val ChessMatch.renderer get() = require(BukkitComponentType.RENDERER)
