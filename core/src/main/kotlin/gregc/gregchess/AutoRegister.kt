@@ -21,7 +21,7 @@ class AutoRegister(private val module: ChessModule, private val types: Collectio
             ?: cl.companionObject?.annotations?.filterIsInstance<RegisterAll>()?.firstOrNull()
         for (p in cl.java.nestHost.declaredFields.ifEmpty { cl.java.declaringClass.declaredFields }) {
             val reg = p.annotations.filterIsInstance<Register>().firstOrNull()
-            if (reg != null || regAll != null && regAll.classes.any { it.isSuperclassOf(p.type.kotlin) }) {
+            if (p.canAccess(null) && (reg != null || regAll != null && regAll.classes.any { it.isSuperclassOf(p.type.kotlin) })) {
                 (types.first { it.cl.isSuperclassOf(p.type.kotlin) } as AutoRegisterType<Any>)
                     .register(p.get(null), module, (reg?.name ?: "").ifBlank { p.name.lowercase() }, reg?.data?.toList().orEmpty())
             }
