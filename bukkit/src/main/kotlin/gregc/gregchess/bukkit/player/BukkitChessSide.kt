@@ -93,7 +93,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     override fun createFacade(match: ChessMatch) = BukkitChessSideFacade(match, this)
 
     private inline fun oncePerPlayer(match: ChessMatch, callback: () -> Unit) {
-        if (!match.sideFacades.isSamePlayer() || color == match.board.currentTurn) {
+        if (!match.sideFacades.isSamePlayer() || color == match.currentColor) {
             callback()
         }
     }
@@ -257,7 +257,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     private fun endTurn(match: ChessMatch) = oncePerPlayer(match) {
         if (player.currentMatch != match) return
         sendLastMoves(match, Color.BLACK)
-        if (color == match.board.currentTurn)
+        if (color == match.currentColor)
             GregChessPlugin.clearRequests(player)
     }
 
@@ -275,7 +275,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     private fun sendLastMoves(match: ChessMatch, checkLastMoveColor: Color? = null) {
         val normalMoves = match.board.moveHistory.filter { !it.isPhantomMove }
-        val lastMoveColor = if (normalMoves.size % 2 == 0) !match.board.initialFEN.currentTurn else match.board.initialFEN.currentTurn
+        val lastMoveColor = if (normalMoves.size % 2 == 0) !match.board.initialFEN.currentColor else match.board.initialFEN.currentColor
         if (checkLastMoveColor != lastMoveColor && checkLastMoveColor != null) return
         val wLastIndex = if (lastMoveColor == Color.WHITE) normalMoves.size - 1 else normalMoves.size - 2
         val wLast = if (wLastIndex < 0) null else normalMoves[wLastIndex]

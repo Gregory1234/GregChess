@@ -3,7 +3,6 @@ package gregc.gregchess.bukkit.player
 import gregc.gregchess.Color
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.event.*
-import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.player.BukkitHuman
@@ -63,7 +62,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
     val isInMatch: Boolean get() = currentMatch != null
     val currentSide: BukkitChessSideFacade?
         get() = currentMatch?.let {
-            it[checkNotNull(activeMatchInfo[it]).color ?: it.board.currentTurn] as BukkitChessSideFacade
+            it[checkNotNull(activeMatchInfo[it]).color ?: it.currentColor] as BukkitChessSideFacade
         }
     private val activeMatchInfo = mutableMapOf<ChessMatch, MatchInfo>()
     val activeMatches get() = activeMatchInfo.keys
@@ -107,7 +106,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
                 }.also {
                     it.invokeOnCompletion { e ->
                         if (e == null) {
-                            match.stop((info.color ?: match.board.currentTurn).lostBy(EndReason.WALKOVER))
+                            match.stop((info.color ?: match.currentColor).lostBy(EndReason.WALKOVER))
                         }
                     }
                 }

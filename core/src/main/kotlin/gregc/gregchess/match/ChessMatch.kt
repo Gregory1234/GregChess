@@ -87,9 +87,11 @@ class ChessMatch private constructor(
     @Transient
     val sideFacades = byColor { sides[it].createFacade(this) }
 
-    val currentSide: ChessSideFacade<*> get() = sideFacades[board.currentTurn]
+    val currentColor: Color get() = board.currentColor
 
-    val currentOpponent: ChessSideFacade<*> get() = sideFacades[!board.currentTurn]
+    val currentSide: ChessSideFacade<*> get() = sideFacades[currentColor]
+
+    val currentOpponent: ChessSideFacade<*> get() = sideFacades[!currentColor]
 
     private fun Instant.zoned() = atZone(environment.clock.zone)
 
@@ -148,7 +150,7 @@ class ChessMatch private constructor(
         variant.checkForMatchEnd(this)
         if (running) {
             callEvent(TurnEvent.END)
-            board.component.currentTurn++
+            board.currentColor++
             startTurn()
         }
     }
@@ -156,7 +158,7 @@ class ChessMatch private constructor(
     fun previousTurn() {
         requireState(State.RUNNING)
         callEvent(TurnEvent.UNDO)
-        board.component.currentTurn++
+        board.currentColor++
         startPreviousTurn()
     }
 

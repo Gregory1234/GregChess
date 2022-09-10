@@ -39,7 +39,7 @@ object BukkitGregChessAdapter : Component, BukkitRegistering {
         events.registerR(BukkitChessEventType.ADD_PROPERTIES) {
             match.clock?.apply {
                 if (timeControl.type == TimeControl.Type.FIXED) {
-                    match(TIME_REMAINING_SIMPLE) { timeRemaining[match.board.currentTurn].format(timeFormat) }
+                    match(TIME_REMAINING_SIMPLE) { timeRemaining[match.currentColor].format(timeFormat) }
                 } else {
                     player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) }
                 }

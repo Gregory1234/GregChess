@@ -67,7 +67,7 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
     override fun createFacade(match: ChessMatch) = FabricChessSideFacade(match, this)
 
     private inline fun oncePerPlayer(match: ChessMatch, callback: () -> Unit) {
-        if (!match.sideFacades.isSamePlayer() || color == match.board.currentTurn) {
+        if (!match.sideFacades.isSamePlayer() || color == match.currentColor) {
             callback()
         }
     }

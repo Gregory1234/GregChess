@@ -77,7 +77,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             match.callEvent(GenerateEvent(tags))
 
             val tree = MoveTree(
-                match.board.initialFEN.currentTurn, match.board.initialFEN.fullmoveCounter,
+                match.board.initialFEN.currentColor, match.board.initialFEN.fullmoveCounter,
                 match.board.moveHistory.filter { !it.isPhantomMove }.map { match.variant.pgnMoveFormatter.format(it) }, result
             )
 

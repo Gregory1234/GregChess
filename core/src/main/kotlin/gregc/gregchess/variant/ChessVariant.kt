@@ -67,9 +67,9 @@ open class ChessVariant : NameRegistered {
     }
 
     open fun checkForMatchEnd(match: ChessMatch) = with(match.board) { // TODO: return EndReason instead of stopping directly
-        if (piecesOf(!match.board.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
-            if (isInCheck(this, !match.board.currentTurn))
-                match.stop(match.board.currentTurn.wonBy(EndReason.CHECKMATE))
+        if (piecesOf(!match.currentColor).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
+            if (isInCheck(this, !match.currentColor))
+                match.stop(match.currentColor.wonBy(EndReason.CHECKMATE))
             else
                 match.stop(drawBy(EndReason.STALEMATE))
         }
@@ -146,7 +146,7 @@ open class ChessVariant : NameRegistered {
         check(pieces.count { it.value.type == PieceType.KING && it.value.color == Color.BLACK } == 1)
         val fakeBoard = Chessboard.createFakeConnector(this, variantOptions, fen)
         fakeBoard.updateMoves()
-        check(!isInCheck(fakeBoard, !fen.currentTurn))
+        check(!isInCheck(fakeBoard, !fen.currentColor))
     }
 
     open val pieceTypes: Collection<PieceType>

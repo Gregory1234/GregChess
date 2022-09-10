@@ -45,11 +45,11 @@ object Antichess : ChessVariant(), Registering {
     override fun isInCheck(board: ChessboardView, color: Color) = false
 
     override fun checkForMatchEnd(match: ChessMatch) = with(match.board) {
-        if (piecesOf(!match.board.currentTurn).isEmpty())
-            match.stop(match.board.currentTurn.lostBy(EndReason.ALL_PIECES_LOST))
+        if (piecesOf(!match.currentColor).isEmpty())
+            match.stop(match.currentColor.lostBy(EndReason.ALL_PIECES_LOST))
 
-        if (piecesOf(!match.board.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } })
-            match.stop(match.board.currentTurn.lostBy(STALEMATE_VICTORY))
+        if (piecesOf(!match.currentColor).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } })
+            match.stop(match.currentColor.lostBy(STALEMATE_VICTORY))
 
         checkForRepetition()
         checkForFiftyMoveRule()

@@ -6,7 +6,7 @@ import gregc.gregchess.piece.Piece
 
 class FENBuilder {
     private val pieces = mutableMapOf<Pos, Piece>()
-    var currentTurn: Color = Color.WHITE
+    var currentColor: Color = Color.WHITE
     var castlingRights: ByColor<List<Int>> = byColor(emptyList())
     var enPassantSquare: Pos? = null
     var halfmoveClock: Int = 0
@@ -18,7 +18,7 @@ class FENBuilder {
         pieces[pos] = piece
     }
 
-    fun build(): FEN = FEN(boardState, currentTurn, castlingRights, enPassantSquare, halfmoveClock, fullmoveCounter)
+    fun build(): FEN = FEN(boardState, currentColor, castlingRights, enPassantSquare, halfmoveClock, fullmoveCounter)
 }
 
 fun fen(builder: FENBuilder.() -> Unit) = FENBuilder().apply(builder).build()

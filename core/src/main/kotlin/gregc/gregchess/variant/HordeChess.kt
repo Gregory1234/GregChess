@@ -34,7 +34,7 @@ object HordeChess : ChessVariant() {
         if (piecesOf(Color.WHITE).isEmpty())
             match.stop(blackWonBy(EndReason.ALL_PIECES_LOST))
 
-        if (piecesOf(!match.board.currentTurn).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
+        if (piecesOf(!match.currentColor).all { it.getMoves(this).none { m -> match.variant.isLegal(m, this) } }) {
             if (isInCheck(this, Color.BLACK))
                 match.stop(whiteWonBy(EndReason.CHECKMATE))
             else
@@ -62,6 +62,6 @@ object HordeChess : ChessVariant() {
         check(pieces.count { it.value.type == PieceType.KING && it.value.color == Color.BLACK } == 1)
         val fakeBoard = Chessboard.createFakeConnector(this, variantOptions, fen)
         fakeBoard.updateMoves()
-        check(!isInCheck(fakeBoard, !fen.currentTurn))
+        check(!isInCheck(fakeBoard, !fen.currentColor))
     }
 }

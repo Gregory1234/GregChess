@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FEN(
     val boardState: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
-    val currentTurn: Color = Color.WHITE,
+    val currentColor: Color = Color.WHITE,
     val castlingRights: ByColor<List<Int>> = byColor(listOf(0, 7)),
     val enPassantSquare: Pos? = null,
     val halfmoveClock: Int = 0,
@@ -49,7 +49,7 @@ data class FEN(
     override fun toString() = buildString {
         append(boardState)
         append(" ")
-        append(currentTurn.char)
+        append(currentColor.char)
         append(" ")
         val chess960 = isChess960ForCastleRights()
         if ((castlingRights.white + castlingRights.black).isEmpty()) append("-")
@@ -66,7 +66,7 @@ data class FEN(
     fun toHash() = buildString {
         append(boardState)
         append(" ")
-        append(currentTurn.char)
+        append(currentColor.char)
         append(" ")
         val chess960 = isChess960ForCastleRights()
         append(castlingRightsToString(chess960, 'A', castlingRights.white))

@@ -56,7 +56,7 @@ abstract class ChessSideFacade<T : ChessSide>(final override val match: ChessMat
     val name get() = side.name
     val color get() = side.color
 
-    val hasTurn get() = match.board.currentTurn == color
+    val hasTurn get() = match.currentColor == color
     val opponent get() = match.sideFacades[!color]
 
     final override fun callEvent(event: ChessEvent) = super.callEvent(event)

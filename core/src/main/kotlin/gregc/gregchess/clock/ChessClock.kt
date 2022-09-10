@@ -6,7 +6,7 @@ import gregc.gregchess.*
 import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentType
 import gregc.gregchess.event.*
-import gregc.gregchess.match.*
+import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.*
 import java.time.Instant
 import kotlin.time.Duration
@@ -108,9 +108,9 @@ class ChessClock private constructor(
         lastTime = now
         currentTurnLength_ += dt
         if (timeControl.type != TimeControl.Type.SIMPLE) {
-            timeRemaining_[match.board.currentTurn] -= dt
+            timeRemaining_[match.currentColor] -= dt
         } else {
-            timeRemaining_[match.board.currentTurn] -= maxOf(minOf(dt, currentTurnLength_ - timeControl.increment), Duration.ZERO)
+            timeRemaining_[match.currentColor] -= maxOf(minOf(dt, currentTurnLength_ - timeControl.increment), Duration.ZERO)
         }
         for ((s, t) in timeRemaining_.toIndexedList())
             if (t.isNegative())
@@ -123,7 +123,7 @@ class ChessClock private constructor(
         val increment = if (started) timeControl.increment else Duration.ZERO
         if (!started)
             started = true
-        val turn = match.board.currentTurn
+        val turn = match.currentColor
         when (timeControl.type) {
             TimeControl.Type.FIXED -> {
                 timeRemaining_[turn] = timeControl.initialTime
