@@ -6,6 +6,7 @@ import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkit.event.PlayerDirection
 import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.player.BukkitPlayer
+import gregc.gregchess.bukkitutils.CommandException
 import gregc.gregchess.bukkitutils.serialization.BukkitConfig
 import gregc.gregchess.bukkitutils.serialization.decodeFromPath
 import gregc.gregchess.event.*
@@ -22,7 +23,12 @@ class ArenaMetadata(val name: String, var match: ChessMatch? = null)
 
 object ArenaManager : BukkitRegistering {
 
-    val NO_ARENAS = err("NoArenas")
+    private val NO_ARENAS = err("NoArenas")
+
+    fun validateFreeArenas() {
+        if (!ArenaManager.hasFreeArenas())
+            throw CommandException(NO_ARENAS)
+    }
 
     @JvmField
     @Register(data = ["quick"])

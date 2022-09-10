@@ -7,7 +7,6 @@ import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkit.piece.getSound
 import gregc.gregchess.bukkit.piece.structure
 import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
-import gregc.gregchess.bukkitutils.CommandException
 import gregc.gregchess.event.*
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.PieceMoveEvent
@@ -27,7 +26,7 @@ data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.P
     private lateinit var arena: Arena
 
     override fun validate() {
-        if (!ArenaManager.hasFreeArenas()) throw CommandException(ArenaManager.NO_ARENAS) // TODO: don't depend on CommandException and on Messages
+        ArenaManager.validateFreeArenas()
     }
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
