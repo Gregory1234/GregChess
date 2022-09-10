@@ -36,7 +36,7 @@ class Floor(val name: String) {
 }
 
 fun interface ChessFloorRenderer {
-    fun ChessMatch.getFloorMaterial(p: Pos): Floor
+    fun ChessMatch.getFloor(p: Pos): Floor
 }
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->

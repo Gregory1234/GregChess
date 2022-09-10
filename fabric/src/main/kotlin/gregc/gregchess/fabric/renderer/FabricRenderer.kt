@@ -50,7 +50,7 @@ data class FabricRenderer(
             for (rank in 0..7) {
                 tileBlocks[Pos(file, rank)]?.forEach {
                     with(match.variant.floorRenderer) {
-                        it.updateFloor(match.getFloorMaterial(Pos(file, rank)))
+                        it.updateFloor(match.getFloor(Pos(file, rank)))
                     }
                 }
             }

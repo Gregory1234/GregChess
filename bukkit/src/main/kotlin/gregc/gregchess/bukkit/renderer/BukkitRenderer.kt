@@ -158,7 +158,7 @@ data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.P
         for (file in 0..7) {
             for (rank in 0..7) {
                 with (match.variant.floorRenderer) {
-                    Pos(file, rank).fillFloor(match.getFloorMaterial(Pos(file, rank)).material)
+                    Pos(file, rank).fillFloor(match.getFloor(Pos(file, rank)).material)
                 }
             }
         }
