@@ -41,10 +41,9 @@ private class Square(
 @Serializable
 private class BoardCounters(var halfmoveClock: Int, var fullmoveCounter: Int, var currentColor: Color)
 
-private class SquareChessboard(override val initialFEN: FEN, private val squares: Map<Pos, Square>, private val capturedPieces_: MutableList<CapturedPiece>, private val counters: BoardCounters) : ChessboardConnector {
+private class SquareChessboard(private val squares: Map<Pos, Square>, private val capturedPieces_: MutableList<CapturedPiece>, private val counters: BoardCounters) : ChessboardConnector {
 
     override var halfmoveClock: Int by counters::halfmoveClock
-    override val currentColor: Color get() = counters.currentColor
 
     override val captured: PieceHolder<CapturedPiece> = object : PieceHolder<CapturedPiece> {
         override val pieces: List<CapturedPiece> get() = capturedPieces_.toList()
@@ -90,13 +89,13 @@ private class SquareChessboard(override val initialFEN: FEN, private val squares
 
 @Serializable
 class Chessboard private constructor (
-    override val initialFEN: FEN,
+    val initialFEN: FEN,
     private val squares: Map<Pos, Square>,
     private val counters: BoardCounters = BoardCounters(initialFEN.halfmoveClock, initialFEN.fullmoveCounter, initialFEN.currentColor),
     private val boardHashes: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     private val capturedPieces: MutableList<CapturedPiece> = mutableListOf(),
     @SerialName("moveHistory") private val moveHistory_: MutableList<Move> = mutableListOf()
-) : Component, ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters) {
+) : Component, ChessboardConnector by SquareChessboard(squares, capturedPieces, counters) {
     private constructor(variant: ChessVariant, fen: FEN) : this(fen, fen.toSquares(variant))
     constructor(variant: ChessVariant, variantOptions: Long, fen: FEN? = null) :
             this(variant, (fen ?: variant.genFEN(variantOptions)).also { variant.validateFEN(it, variantOptions) })
@@ -104,7 +103,7 @@ class Chessboard private constructor (
     override val type get() = ComponentType.CHESSBOARD
 
     var fullmoveCounter by counters::fullmoveCounter
-    override var currentColor: Color by counters::currentColor
+    var currentColor: Color by counters::currentColor
     val moveHistory get() = moveHistory_.toList()
 
     private val boardState
@@ -134,7 +133,6 @@ class Chessboard private constructor (
         }
         events.register(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
             e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
-                initialFEN,
                 squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),
                 BoardCounters(halfmoveClock, fullmoveCounter, currentColor),
                 match.variant, match.variantOptions
@@ -260,9 +258,9 @@ class Chessboard private constructor (
     }
 
     private class FakeChessboardConnector(
-        override val initialFEN: FEN, val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters,
+        val squares: Map<Pos, Square>, val capturedPieces: MutableList<CapturedPiece>, val counters: BoardCounters,
         val variant: ChessVariant, val variantOptions: Long
-    ) : ChessboardConnector by SquareChessboard(initialFEN, squares, capturedPieces, counters), ChessboardFacadeConnector {
+    ) : ChessboardConnector by SquareChessboard(squares, capturedPieces, counters), ChessboardFacadeConnector {
         override fun callEvent(event: ChessEvent) { }
         override fun updateMoves() = updateMoves(squares, variant, variantOptions)
     }
@@ -287,7 +285,7 @@ class Chessboard private constructor (
         }
 
         fun createFakeConnector(variant: ChessVariant, variantOptions: Long, fen: FEN = variant.genFEN(variantOptions)): ChessboardFacadeConnector =
-            FakeChessboardConnector(fen, fen.toSquares(variant), mutableListOf(), BoardCounters(fen.halfmoveClock, fen.fullmoveCounter, fen.currentColor), variant, variantOptions)
+            FakeChessboardConnector(fen.toSquares(variant), mutableListOf(), BoardCounters(fen.halfmoveClock, fen.fullmoveCounter, fen.currentColor), variant, variantOptions)
 
         private fun ChessboardView.updateMoves(squares: Map<Pos, Square>, variant: ChessVariant, variantOptions: Long) {
             for ((_, square) in squares) {
@@ -301,7 +299,8 @@ class Chessboard private constructor (
 }
 
 class ChessboardFacade(match: ChessMatch, component: Chessboard) : ComponentFacade<Chessboard>(match, component), ChessboardConnector by component, ChessboardFacadeConnector {
-    override var currentColor by component::currentColor
+    val initialFEN get() = component.initialFEN
+    var currentColor by component::currentColor
         internal set
     var fullmoveCounter by component::fullmoveCounter
     val moveHistory get() = component.moveHistory

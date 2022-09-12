@@ -1,7 +1,6 @@
 package gregc.gregchess.move.connector
 
 import gregc.gregchess.*
-import gregc.gregchess.board.FEN
 import gregc.gregchess.event.ChessEventCaller
 import gregc.gregchess.move.Move
 import gregc.gregchess.piece.*
@@ -12,8 +11,6 @@ interface ChessboardView : PieceHolderView<BoardPiece> {
 
     val captured: PieceHolderView<CapturedPiece>
     val halfmoveClock: Int
-    val currentColor: Color
-    val initialFEN: FEN
     fun getMoves(pos: Pos): List<Move>
     fun getLegalMoves(pos: Pos): List<Move>
 
