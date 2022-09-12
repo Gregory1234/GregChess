@@ -4,18 +4,20 @@ import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.registry.*
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 
 @Serializable(with = ComponentType.Serializer::class)
-class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered, ComponentIdentifier<T> {
+class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerializer<T>) : NameRegistered, ComponentIdentifier<T> {
     object Serializer : NameRegisteredSerializer<ComponentType<*>>("ComponentType", Registry.COMPONENT_TYPE)
 
     override val key get() = Registry.COMPONENT_TYPE[this]
 
     override fun toString(): String = Registry.COMPONENT_TYPE.simpleElementToString(this)
 
+    override val matchedTypes: Set<ComponentType<out T>> get() = setOf(this)
     @Suppress("UNCHECKED_CAST")
     override fun matchesOrNull(c: Component): T? = if (c.type == this) c as T else null
 
@@ -29,9 +31,9 @@ class ComponentType<T : Component>(val cl: KClass<T>) : NameRegistered, Componen
         }
 
         @JvmField
-        val CHESSBOARD = ComponentType(Chessboard::class)
+        val CHESSBOARD = ComponentType(Chessboard::class, Chessboard.serializer())
         @JvmField
-        val CLOCK = ComponentType(ChessClock::class)
+        val CLOCK = ComponentType(ChessClock::class, ChessClock.serializer())
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<ComponentType<*>>()
     }

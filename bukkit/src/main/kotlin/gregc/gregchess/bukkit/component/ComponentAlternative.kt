@@ -38,8 +38,7 @@ class ComponentAlternative<T : Component>(private val default: ComponentType<out
         values += type
     }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun matchesOrNull(c: Component): T? = if (c.type in values) c as T else null
+    override val matchedTypes: Set<ComponentType<out T>> get() = values
 
     @RegisterAll(ComponentAlternative::class)
     companion object {

@@ -164,4 +164,4 @@ data class FabricRenderer(
 
 val ChessMatch.server get() = renderer.world.server
 
-val ChessMatch.renderer get() = require(FabricComponentType.RENDERER)
+val ChessMatch.renderer get() = components.require(FabricComponentType.RENDERER)

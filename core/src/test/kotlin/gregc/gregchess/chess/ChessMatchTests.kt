@@ -8,7 +8,7 @@ import gregc.gregchess.byColor
 import gregc.gregchess.component.Component
 import gregc.gregchess.event.ChessBaseEvent
 import gregc.gregchess.event.TurnEvent
-import gregc.gregchess.match.*
+import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.AddMoveConnectorsEvent
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.player.ChessPlayer
@@ -36,7 +36,7 @@ class ChessMatchTests {
         fun `should pass components through`() {
             val cd = spyk(TestComponent)
             val g = mkMatch(extra = listOf(cd))
-            val c = g.require(GregChess.TEST_COMPONENT)
+            val c = g.components.require(GregChess.TEST_COMPONENT)
             assertThat(c).isEqualTo(cd)
         }
 
@@ -44,7 +44,7 @@ class ChessMatchTests {
         fun `should only initialize components`() {
             val cd = spyk(TestComponent)
             val g = mkMatch(extra = listOf(cd))
-            val c = g.require(GregChess.TEST_COMPONENT)
+            val c = g.components.require(GregChess.TEST_COMPONENT)
             excludeRecords {
                 c.type
             }
@@ -114,7 +114,7 @@ class ChessMatchTests {
         @Test
         fun `should start components`() {
             val g = mkMatch(extra = listOf(spyk(TestComponent)))
-            val c = g.require(GregChess.TEST_COMPONENT)
+            val c = g.components.require(GregChess.TEST_COMPONENT)
             clearRecords(c)
             g.start()
             excludeRecords {
@@ -207,7 +207,7 @@ class ChessMatchTests {
         @Test
         fun `should stop and clear components`() {
             val g = mkMatch(extra = listOf(spyk(TestComponent))).start()
-            val c = g.require(GregChess.TEST_COMPONENT)
+            val c = g.components.require(GregChess.TEST_COMPONENT)
             clearRecords(c)
             g.stop(results)
             excludeRecords {

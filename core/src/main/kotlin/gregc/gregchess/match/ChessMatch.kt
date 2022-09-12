@@ -23,7 +23,7 @@ import kotlin.time.Duration
 class ChessMatch private constructor(
     @Contextual val environment: ChessEnvironment,
     val variant: ChessVariant,
-    val components: List<Component>, // TODO: serialize as a map instead
+    val components: ComponentList,
     val sides: ByColor<ChessSide>,
     @SerialName("state") private var state_: State,
     @SerialName("startTime") private var startTime_: Instant?,
@@ -33,12 +33,15 @@ class ChessMatch private constructor(
     val variantOptions: Long
 ) : ChessEventCaller {
     constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, players: ByColor<ChessPlayer<*>>, variantOptions: Long)
-            : this(environment, variant, components.toList(), byColor { players[it].createChessSide(it) }, State.INITIAL, null, null, Duration.ZERO, null, variantOptions)
+            : this(environment, variant, ComponentList(components), byColor { players[it].createChessSide(it) }, State.INITIAL, null, null, Duration.ZERO, null, variantOptions)
 
     override fun toString() = "ChessMatch(${environment.matchToString()})"
 
     @Transient
     private val eventManager = ChessEventManager()
+
+    @Transient
+    val componentsFacade = ComponentListFacade(this, components)
 
     override fun callEvent(event: ChessEvent) = eventManager.callEvent(event)
 
@@ -48,7 +51,7 @@ class ChessMatch private constructor(
         require((state >= State.STOPPED) == (results != null)) { "Results bad" }
         require(sides.toIndexedList().all { it.second.color == it.first }) { "Sides bad" }
         try {
-            require(ComponentType.CHESSBOARD)
+            components.require(ComponentType.CHESSBOARD)
             for (t in variant.requiredComponents) {
                 components.firstOrNull { it.type == t } ?: throw ComponentNotFoundException(t)
             }
@@ -70,17 +73,7 @@ class ChessMatch private constructor(
         )
     }
 
-    @Transient
-    private val facadeCache = mutableMapOf<Component, ComponentFacade<*>>()
-
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Component, F : ComponentFacade<T>> makeCachedFacade(mk: (ChessMatch, T) -> F, component: T): F = facadeCache.getOrPut(component) { mk(this, component) } as F
-
-    val board get() = require(ComponentType.CHESSBOARD).getFacade(this)
-
-    operator fun <T : Component> get(type: ComponentIdentifier<T>): T? = components.firstNotNullOfOrNull { type.matchesOrNull(it) }
-
-    fun <T : Component> require(type: ComponentIdentifier<T>): T = get(type) ?: throw ComponentNotFoundException(type)
+    val board get() = components.require(ComponentType.CHESSBOARD).getFacade(this)
 
     private fun requireState(s: State) = check(state == s) { "Expected state $s, got state $state!" }
 
@@ -229,8 +222,12 @@ class ChessMatch private constructor(
     private fun panic(e: Exception): Nothing {
         state = State.ERROR
         results = drawBy(EndReason.ERROR, e.toString())
-        joinAllAndThen {
-            coroutineScope.cancel()
+        try {
+            joinAllAndThen {
+                coroutineScope.cancel()
+            }
+        } catch (ex: Exception) {
+            e.addSuppressed(ex)
         }
         try {
             callEvent(ChessBaseEvent.PANIC)

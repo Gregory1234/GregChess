@@ -15,4 +15,4 @@ interface Renderer : Component {
     fun validate()
 }
 
-val ChessMatch.renderer get() = require(ComponentAlternative.RENDERER)
+val ChessMatch.renderer get() = components.require(ComponentAlternative.RENDERER)

@@ -44,7 +44,7 @@ object BukkitGregChessAdapter : Component, BukkitRegistering {
                     player(TIME_REMAINING) { timeRemaining[it].format(timeFormat) }
                 }
             }
-            match[ThreeChecks.CHECK_COUNTER]?.apply {
+            match.components[ThreeChecks.CHECK_COUNTER]?.apply {
                 player(CHECK_COUNTER) { this[it].toString() }
             }
             match(PRESET) { match.presetName }

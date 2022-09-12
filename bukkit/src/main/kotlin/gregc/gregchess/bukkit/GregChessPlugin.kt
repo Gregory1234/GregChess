@@ -132,7 +132,7 @@ object GregChessPlugin : Listener {
                                 } else if (opponent.isInMatch || opponent.isSpectatingMatch) {
                                     sender.sendMessage(OPPONENT_IN_MATCH)
                                 } else {
-                                    settings.require(ComponentAlternative.RENDERER).validate()
+                                    settings.components.require(ComponentAlternative.RENDERER).validate()
                                     settings.createMatch(byColor(sender, opponent)).start()
                                 }
                             }
@@ -149,7 +149,7 @@ object GregChessPlugin : Listener {
                         if (sender.isInMatch || sender.isSpectatingMatch) {
                             sender.sendMessage(YOU_IN_MATCH)
                         } else {
-                            settings.require(ComponentAlternative.RENDERER).validate()
+                            settings.components.require(ComponentAlternative.RENDERER).validate()
                             settings.createMatch(byColor(sender, Stockfish())).start()
                         }
                     }

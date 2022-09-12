@@ -64,4 +64,4 @@ class SpectatorManager : Component {
     }
 }
 
-val ChessMatch.spectators get() = require(BukkitComponentType.SPECTATOR_MANAGER)
+val ChessMatch.spectators get() = components.require(BukkitComponentType.SPECTATOR_MANAGER)

@@ -47,7 +47,7 @@ class TestChessSideFacade(match: ChessMatch, side: TestChessSide) : ChessSideFac
 @Serializable
 object TestComponent : Component {
 
-    override val type = GregChess.TEST_COMPONENT
+    override val type get() = GregChess.TEST_COMPONENT
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
         events.registerAny(::handleEvent)
@@ -92,7 +92,7 @@ object GregChess : ChessModule("GregChess", "gregchess") {
 
     @JvmField
     @Register("test")
-    val TEST_COMPONENT = ComponentType(TestComponent::class)
+    val TEST_COMPONENT = ComponentType(TestComponent::class, TestComponent.serializer())
 
     @JvmField
     @Register("test")

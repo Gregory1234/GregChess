@@ -113,7 +113,7 @@ object ThreeChecks : ChessVariant(), Registering {
 
     @JvmField
     @Register
-    val CHECK_COUNTER = ComponentType(CheckCounter::class)
+    val CHECK_COUNTER = ComponentType(CheckCounter::class, CheckCounter.serializer())
 
     override fun getPieceMoves(piece: BoardPiece, board: ChessboardView, variantOptions: Long): List<Move> =
         Normal.getPieceMoves(piece, board, variantOptions).map {
@@ -121,7 +121,7 @@ object ThreeChecks : ChessVariant(), Registering {
         }
 
     override fun checkForMatchEnd(match: ChessMatch) {
-        match.require(CHECK_COUNTER).checkForMatchEnd(match)
+        match.components.require(CHECK_COUNTER).checkForMatchEnd(match)
 
         Normal.checkForMatchEnd(match)
     }

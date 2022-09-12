@@ -102,8 +102,12 @@ class Chessboard private constructor (
 
     override val type get() = ComponentType.CHESSBOARD
 
-    var fullmoveCounter by counters::fullmoveCounter
-    var currentColor: Color by counters::currentColor
+    var fullmoveCounter
+        get() = counters.fullmoveCounter
+        set(v) { counters.fullmoveCounter = v }
+    var currentColor: Color
+        get() = counters.currentColor
+        set(v) { counters.currentColor = v }
     val moveHistory get() = moveHistory_.toList()
 
     private val boardState
@@ -265,7 +269,7 @@ class Chessboard private constructor (
         override fun updateMoves() = updateMoves(squares, variant, variantOptions)
     }
 
-    fun getFacade(match: ChessMatch) = match.makeCachedFacade(::ChessboardFacade, this)
+    fun getFacade(match: ChessMatch) = match.componentsFacade.makeCachedFacade(::ChessboardFacade, this)
 
     fun updateMoves(variant: ChessVariant, variantOptions: Long) = updateMoves(squares, variant, variantOptions)
 
