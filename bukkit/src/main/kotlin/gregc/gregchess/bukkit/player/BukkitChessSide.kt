@@ -21,6 +21,8 @@ import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.ChessSide
 import gregc.gregchess.player.ChessSideFacade
+import gregc.gregchess.results.EndReason
+import gregc.gregchess.results.drawBy
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -175,7 +177,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
                     }
                     PlayerDirection.LEAVE -> {
                         require(player.currentMatch == null)
-                        GregChessPlugin.clearRequests(player)
+                        clearRequests(match)
                     }
                 }
             }
@@ -191,6 +193,20 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         private val YOUR_TURN = title("YourTurn")
 
         private val PAWN_PROMOTION = message("PawnPromotion")
+
+        private val DRAW_SENT = message("Draw.Sent.Request")
+        private val DRAW_RECEIVED = message("Draw.Received.Request")
+        private val DRAW_SENT_CANCEL = message("Draw.Sent.Cancel")
+        private val DRAW_RECEIVED_CANCEL = message("Draw.Received.Cancel")
+        private val DRAW_SENT_ACCEPT = message("Draw.Sent.Accept")
+        private val DRAW_RECEIVED_ACCEPT = message("Draw.Received.Accept")
+
+        private val UNDO_SENT = message("Takeback.Sent.Request")
+        private val UNDO_RECEIVED = message("Takeback.Received.Request")
+        private val UNDO_SENT_CANCEL = message("Takeback.Sent.Cancel")
+        private val UNDO_RECEIVED_CANCEL = message("Takeback.Received.Cancel")
+        private val UNDO_SENT_ACCEPT = message("Takeback.Sent.Accept")
+        private val UNDO_RECEIVED_ACCEPT = message("Takeback.Received.Accept")
     }
 
     private suspend fun openPawnPromotionMenu(promotions: Collection<Piece>) =
@@ -257,8 +273,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     private fun endTurn(match: ChessMatch) = oncePerPlayer(match) {
         if (player.currentMatch != match) return
         sendLastMoves(match, Color.BLACK)
-        if (color == match.currentColor)
-            GregChessPlugin.clearRequests(player)
+        if (color == match.currentColor) clearRequests(match)
     }
 
     private fun sendStartMessage(match: ChessMatch) {
@@ -282,6 +297,66 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         val bLast = if (lastMoveColor == Color.BLACK) normalMoves.lastOrNull() else null
         player.sendMessage(match.variant.localMoveFormatter.formatLastMoves(match.board.fullmoveCounter + if (lastMoveColor == Color.WHITE) 1 else 0, wLast, bLast))
     }
+
+    var requestsDraw: Boolean = false
+        private set
+    var requestsUndo: Boolean = false
+        private set
+
+    private fun setRequestsDraw(match: ChessMatch, value: Boolean) {
+        requestsDraw = value
+        val opponent = match[!color] as? BukkitChessSideFacade
+        if (opponent?.player == player) {
+            opponent.side.requestsDraw = value
+        }
+    }
+
+    private fun setRequestsUndo(match: ChessMatch, value: Boolean) {
+        requestsUndo = value
+        val opponent = match[!color] as? BukkitChessSideFacade
+        if (opponent?.player == player) {
+            opponent.side.requestsUndo = value
+        }
+    }
+
+    private fun clearRequests(match: ChessMatch) {
+        setRequestsDraw(match, false)
+        setRequestsUndo(match, false)
+    }
+
+    private fun sendMessagePair(match: ChessMatch, msgSelf: Message, msgOpponent: Message) {
+        val opponent = match[!color] as BukkitChessSideFacade
+        if (opponent.player != player) {
+            player.sendMessage(msgSelf)
+            opponent.player.sendMessage(msgOpponent)
+        }
+    }
+
+    fun requestDraw(match: ChessMatch) {
+        setRequestsDraw(match, !requestsDraw)
+        if (!requestsDraw) {
+            sendMessagePair(match, DRAW_SENT_CANCEL, DRAW_RECEIVED_CANCEL)
+        } else if ((match[!color] as BukkitChessSideFacade).requestsDraw) {
+            sendMessagePair(match, DRAW_SENT_ACCEPT, DRAW_RECEIVED_ACCEPT)
+            match.stop(drawBy(EndReason.DRAW_AGREEMENT))
+        } else {
+            sendMessagePair(match, DRAW_SENT, DRAW_RECEIVED)
+        }
+    }
+
+    fun requestUndo(match: ChessMatch) {
+        setRequestsUndo(match, !requestsUndo)
+        if (!requestsUndo) {
+            sendMessagePair(match, UNDO_SENT_CANCEL, UNDO_RECEIVED_CANCEL)
+        } else if ((match[!color] as BukkitChessSideFacade).requestsUndo) {
+            sendMessagePair(match, UNDO_SENT_ACCEPT, UNDO_RECEIVED_ACCEPT)
+            match.board.undoLastMove()
+            setRequestsUndo(match, false)
+            (match[!color] as BukkitChessSideFacade).side.setRequestsUndo(match, false)
+        } else {
+            sendMessagePair(match, UNDO_SENT, UNDO_RECEIVED)
+        }
+    }
 }
 
 class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : ChessSideFacade<BukkitChessSide>(match, side) {
@@ -292,4 +367,10 @@ class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : ChessSid
 
     fun pickUp(pos: Pos) = side.pickUp(match, pos)
     fun makeMove(pos: Pos) = side.makeMove(match, pos)
+
+    val requestsDraw get() = side.requestsDraw
+    val requestsUndo get() = side.requestsUndo
+
+    fun requestDraw() = side.requestDraw(match)
+    fun requestUndo() = side.requestUndo(match)
 }

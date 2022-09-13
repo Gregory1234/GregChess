@@ -68,6 +68,8 @@ object GregChessPlugin : Listener {
     private val NOTHING_TO_TAKEBACK = err("NothingToTakeback")
     private val NO_MATCH_TO_REJOIN = err("NoMatchToRejoin")
     private val NO_ONE_TO_REMATCH = err("NoOneToRematch")
+    private val NOT_YOUR_TURN = err("NotYourTurn")
+    private val YOUR_TURN = err("YourTurn")
 
     private val BOARD_OP_DONE = message("BoardOpDone")
     private val SKIPPED_TURN = message("SkippedTurn")
@@ -78,10 +80,6 @@ object GregChessPlugin : Listener {
     private val STATS_OP_DONE = message("StatsOpDone")
 
     private val requestManager = RequestManager(plugin, coroutineScope)
-
-    private val drawRequest = requestManager.register("Draw", "/chess draw", "/chess draw")
-
-    private val takebackRequest = requestManager.register("Takeback", "/chess undo", "/chess undo")
 
     private val duelRequest = requestManager.register("Duel", "/chess duel accept", "/chess duel cancel")
 
@@ -176,13 +174,12 @@ object GregChessPlugin : Listener {
             }
             playerSubcommand("draw") {
                 val pl = requireMatch()
-                val op = requireHumanOpponent()
+                requireHumanOpponent()
+                validate(NOT_YOUR_TURN) {
+                    sender.currentSide?.hasTurn == true || (sender.currentSide?.opponent as? BukkitChessSideFacade)?.requestsDraw == true
+                }
                 executeSuspend {
-                    drawRequest.invalidSender(sender) { !pl().hasTurn }
-                    val res = drawRequest.call(RequestData(sender, op().player, ""), true)
-                    if (res == RequestResponse.ACCEPT) {
-                        pl().match.stop(drawBy(EndReason.DRAW_AGREEMENT))
-                    }
+                    pl().requestDraw()
                 }
             }
             playerSubcommand("capture") {
@@ -333,15 +330,13 @@ object GregChessPlugin : Listener {
             playerSubcommand("undo") {
                 val pl = requireMatch()
                 validate(NOTHING_TO_TAKEBACK) { sender.currentMatch?.board?.lastMove != null }
-                val op = requireHumanOpponent()
+                requireHumanOpponent()
+                validate(YOUR_TURN) {
+                    (sender.currentMatch?.currentOpponent as? BukkitChessSideFacade)?.player == sender
+                            || (sender.currentSide?.opponent as? BukkitChessSideFacade)?.requestsUndo == true
+                }
                 executeSuspend {
-                    takebackRequest.invalidSender(sender) {
-                        (pl().match.currentOpponent as? BukkitChessSideFacade)?.player != sender
-                    }
-                    val res = takebackRequest.call(RequestData(sender, op().player, ""), true)
-                    if (res == RequestResponse.ACCEPT) {
-                        pl().match.board.undoLastMove()
-                    }
+                    pl().requestUndo()
                 }
             }
             playerSubcommand("serial") {
@@ -509,11 +504,6 @@ object GregChessPlugin : Listener {
     fun onDisable() {
         ChessMatchManager.stop()
         coroutineScope.cancel()
-    }
-
-    fun clearRequests(p: BukkitPlayer) {
-        drawRequest.quietRemove(p)
-        takebackRequest.quietRemove(p)
     }
 
     @EventHandler

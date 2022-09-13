@@ -46,7 +46,12 @@ object ChessMatchManager : Listener {
     }
 
     @EventHandler
-    fun onPlayerLeave(e: PlayerQuitEvent) = e.gregchessPlayer.leaveMatch()
+    fun onPlayerLeave(e: PlayerQuitEvent) {
+        if (e.gregchessPlayer.isInMatch)
+            e.gregchessPlayer.leaveMatch()
+        else if (e.gregchessPlayer.isSpectatingMatch)
+            e.gregchessPlayer.leaveSpectatedMatch()
+    }
 
     @EventHandler
     fun onPlayerDeath(e: EntityDeathEvent) {

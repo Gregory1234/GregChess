@@ -17,28 +17,6 @@ Request:
       NotFound: "&cDuel request not found."
     Expired: "&eDuel request with %s has expired."
     Duration: 5m
-  Draw:
-    Sent:
-      Request: "&eDraw offer sent."
-      Cancel: "&eYou cancelled the draw offer."
-      Accept: "&aYou accepted the draw offer."
-    Received:
-      Request: "&eYour opponent wants a draw."
-      Cancel: "&eThe draw offer has been cancelled."
-      Accept: "&aThe draw offer has been accepted."
-    Error:
-      CannotSend: "&cIt is your opponent's turn!"
-  Takeback:
-    Sent:
-      Request: "&eTakeback request sent."
-      Cancel: "&eYou cancelled the takeback request."
-      Accept: "&aYou accepted the takeback request."
-    Received:
-      Request: "&eYour opponent wants a takeback."
-      Cancel: "&eThe takeback request has been cancelled."
-      Accept: "&aThe takeback request has been accepted."
-    Error:
-      CannotSend: "&cIt is your turn!"
   Rematch:
     Sent:
       Request: "&eRematch offer sent."
@@ -72,6 +50,24 @@ Message:
   StatsOf: "Stats of %s"
   RejoinReminder: "&eClick to rejoin the match!"
   RematchReminder: "&eClick to send a rematch offer!"
+  Draw:
+    Sent:
+      Request: "&eDraw offer sent."
+      Cancel: "&eYou cancelled the draw offer."
+      Accept: "&aYou accepted the draw offer."
+    Received:
+      Request: "&eYour opponent wants a draw."
+      Cancel: "&eThe draw offer has been cancelled."
+      Accept: "&aThe draw offer has been accepted."
+  Takeback:
+    Sent:
+      Request: "&eTakeback request sent."
+      Cancel: "&eYou cancelled the takeback request."
+      Accept: "&aYou accepted the takeback request."
+    Received:
+      Request: "&eYour opponent wants a takeback."
+      Cancel: "&eThe takeback request has been cancelled."
+      Accept: "&aThe takeback request has been accepted."
   Stats:
     Wins: "&aWins: %s"
     Losses: "&cLosses: %s"
@@ -101,6 +97,8 @@ Message:
     TeleportFailed: "&cTeleport failed!"
     NoMatchToRejoin: "&cNo chess match to rejoin!"
     NoOneToRematch: "&cNo one to rematch!"
+    NotYourTurn: "&cIt is your opponent's turn!"
+    YourTurn: "&cIt is your turn!"
     NotHuman:
       Opponent: "&cYour opponent is not a human!"
     InMatch:
