@@ -3,6 +3,7 @@ package gregc.gregchess.bukkit.player
 import gregc.gregchess.Color
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.event.*
+import gregc.gregchess.bukkit.match.presetName
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.player.BukkitHuman
@@ -32,6 +33,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         private val allowRejoining get() = config.getBoolean("Rejoin.AllowRejoining")
         private val rejoinDuration get() = config.getString("Rejoin.Duration")?.toDurationOrNull()
         private val REJOIN_REMINDER = message("RejoinReminder")
+        private val REMATCH_REMINDER = message("RematchReminder")
     }
     @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
     object Serializer : KSerializer<BukkitPlayer> {
@@ -89,8 +91,18 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         activeMatchInfo.remove(match, info)
     }
 
-    internal fun leaveMatchDirect(match: ChessMatch = checkNotNull(currentMatch)) {
+    internal fun leaveMatchDirect(match: ChessMatch = checkNotNull(currentMatch), canRequestRematch: Boolean = false) {
         require(currentMatch == match)
+        if (canRequestRematch) {
+            (currentSide!!.opponent as? BukkitChessSideFacade)?.let {
+                rematchInfo = RematchInfo(it.player, match.environment.pgnRound, match.presetName, !it.color)
+                if (config.getBoolean("Request.Rematch.SendReminder") && !match.sideFacades.isSamePlayer()) {
+                    sendMessage(textComponent(REMATCH_REMINDER.get()) {
+                        onClickCommand("/chess rematch")
+                    })
+                }
+            }
+        }
         currentMatch = null
         match.callEvent(PlayerEvent(this, PlayerDirection.LEAVE))
     }
@@ -150,6 +162,11 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         spectatedMatch = null
         match.callEvent(SpectatorEvent(this, PlayerDirection.LEAVE))
     }
+
+    class RematchInfo(val target: BukkitPlayer, val lastRound: Int, val preset: String, val lastColor: Color)
+
+    var rematchInfo: RematchInfo? = null
+        private set
 }
 
 object BukkitPlayerProvider : BukkitHumanProvider<BukkitPlayer, BukkitPlayer> {

@@ -43,6 +43,7 @@ permissions:
       gregchess.chess.info.*: true
       gregchess.chess.stats.*: true
       gregchess.chess.rejoin: true
+      gregchess.chess.rematch: true
   gregchess.chess.duel:
     description: Can use /chess duel
     default: true
@@ -125,5 +126,8 @@ permissions:
     default: op
   gregchess.chess.rejoin:
     description: Can use /chess rejoin
+    default: true
+  gregchess.chess.rematch:
+    description: Can use /chess rematch
     default: true
 

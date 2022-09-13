@@ -43,25 +43,29 @@ object SettingsManager {
 
     inline fun <T, R> chooseOrParse(opts: Map<T, R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
 
-    fun getSettings(): List<MatchSettings> =
+    fun getSettings(name: String, round: Int = 1): MatchSettings? {
+        val section = config.getConfigurationSection("Settings.Presets.$name") ?: return null
+        val variant = section.getFromRegistry(Registry.VARIANT, "Variant") ?: ChessVariant.Normal
+
+        val variantOptionsParser = BukkitRegistry.VARIANT_OPTIONS_PARSER[variant]
+        val variantOptions = section.variantOptionsParser()
+
+        val context = SettingsParserContext(variant, variantOptions, section)
+        val requestedComponents = variant.requiredComponents + variant.optionalComponents +
+                BukkitRegistry.HOOKED_COMPONENTS.elements + BukkitRegistry.COMPONENT_ALTERNATIVE.values.map { it.getSelectedOrNull(section, it.name.snakeToPascal()) ?: it.getSelected() }
+        val components = requestedComponents.mapNotNull { req ->
+            val f = BukkitRegistry.SETTINGS_PARSER[req]
+            context.f()
+        }
+
+        val environment = BukkitChessEnvironment(name, round)
+
+        return MatchSettings(environment, name, variant, variantOptions, ComponentList(components))
+    }
+
+    fun getSettings(round: Int = 1): List<MatchSettings> =
         config.getConfigurationSection("Settings.Presets")?.getKeys(false).orEmpty().map { name ->
-            val section = config.getConfigurationSection("Settings.Presets.$name")!!
-            val variant = section.getFromRegistry(Registry.VARIANT, "Variant") ?: ChessVariant.Normal
-
-            val variantOptionsParser = BukkitRegistry.VARIANT_OPTIONS_PARSER[variant]
-            val variantOptions = section.variantOptionsParser()
-
-            val context = SettingsParserContext(variant, variantOptions, section)
-            val requestedComponents = variant.requiredComponents + variant.optionalComponents +
-                    BukkitRegistry.HOOKED_COMPONENTS.elements + BukkitRegistry.COMPONENT_ALTERNATIVE.values.map { it.getSelectedOrNull(section, it.name.snakeToPascal()) ?: it.getSelected() }
-            val components = requestedComponents.mapNotNull { req ->
-                val f = BukkitRegistry.SETTINGS_PARSER[req]
-                context.f()
-            }
-
-            val environment = BukkitChessEnvironment(name)
-
-            MatchSettings(environment, name, variant, variantOptions, ComponentList(components))
+            getSettings(name, round)!!
         }
 
 }

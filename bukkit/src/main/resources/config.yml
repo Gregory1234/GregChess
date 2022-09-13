@@ -7,11 +7,11 @@ Request:
   Duel:
     Sent:
       Request: "&eDuel request sent."
-      Cancel: "&eYou cancelled the duel with %s."
+      Cancel: "&eYou cancelled the duel request with %s."
       Accept: "&aYou accepted the duel request."
     Received:
       Request: "&e%1$s challenges you to a chess match: %2$s."
-      Cancel: "&eDuel with %s has been cancelled."
+      Cancel: "&eDuel request with %s has been cancelled."
       Accept: "&aYour duel request has been accepted."
     Error:
       NotFound: "&cDuel request not found."
@@ -39,6 +39,20 @@ Request:
       Accept: "&aThe takeback request has been accepted."
     Error:
       CannotSend: "&cIt is your turn!"
+  Rematch:
+    Sent:
+      Request: "&eRematch offer sent."
+      Cancel: "&eYou cancelled the rematch offer with %s."
+      Accept: "&aYou accepted the rematch offer."
+    Received:
+      Request: "&e%1$s offers you a rematch: %2$s."
+      Cancel: "&eRematch offer with %s has been cancelled."
+      Accept: "&aYour rematch offer has been accepted."
+    Error:
+      NotFound: "&cRematch offer not found."
+    Expired: "&eRematch offer with %s has expired."
+    Duration: 5m
+    SendReminder: true
 Message:
   Teleported: "&eTeleported to %s."
   Teleporting: "&eTeleporting..."
@@ -57,6 +71,7 @@ Message:
   StatsOpDone: "&eCompleted the stats operation!"
   StatsOf: "Stats of %s"
   RejoinReminder: "&eClick to rejoin the match!"
+  RematchReminder: "&eClick to send a rematch offer!"
   Stats:
     Wins: "&aWins: %s"
     Losses: "&cLosses: %s"
@@ -85,6 +100,7 @@ Message:
     WrongDurationFormat: "&cWrong duration format!"
     TeleportFailed: "&cTeleport failed!"
     NoMatchToRejoin: "&cNo chess match to rejoin!"
+    NoOneToRematch: "&cNo one to rematch!"
     NotHuman:
       Opponent: "&cYour opponent is not a human!"
     InMatch:

@@ -67,6 +67,7 @@ object GregChessPlugin : Listener {
     private val MATCH_NOT_FOUND = err("MatchNotFound")
     private val NOTHING_TO_TAKEBACK = err("NothingToTakeback")
     private val NO_MATCH_TO_REJOIN = err("NoMatchToRejoin")
+    private val NO_ONE_TO_REMATCH = err("NoOneToRematch")
 
     private val BOARD_OP_DONE = message("BoardOpDone")
     private val SKIPPED_TURN = message("SkippedTurn")
@@ -83,6 +84,8 @@ object GregChessPlugin : Listener {
     private val takebackRequest = requestManager.register("Takeback", "/chess undo", "/chess undo")
 
     private val duelRequest = requestManager.register("Duel", "/chess duel accept", "/chess duel cancel")
+
+    private val rematchRequest = requestManager.register("Rematch", "/chess rematch accept", "/chess rematch cancel")
 
     fun onEnable() {
         registerEvents()
@@ -457,6 +460,47 @@ object GregChessPlugin : Listener {
                 validate(NO_MATCH_TO_REJOIN) { sender.activeMatches.isNotEmpty() }
                 execute {
                     sender.joinMatch()
+                }
+            }
+            playerSubcommand("rematch") {
+                requireNoMatch()
+                literal("accept") {
+                    argument(uuidArgument("request")) { req ->
+                        execute {
+                            cWrongArgument {
+                                rematchRequest.accept(sender, req())
+                            }
+                        }
+                    }
+                }
+                literal("cancel") {
+                    argument(uuidArgument("request")) { req ->
+                        execute {
+                            cWrongArgument {
+                                rematchRequest.cancel(sender, req())
+                            }
+                        }
+                    }
+                }
+
+                executeSuspend {
+                    val rematchInfo = sender.rematchInfo.cNotNull(NO_ONE_TO_REMATCH)
+                    val opponent = rematchInfo.target
+                    val settings = SettingsManager.getSettings(rematchInfo.preset, rematchInfo.lastRound + 1)
+
+                    if (settings != null) {
+                        val res = rematchRequest.call(RequestData(sender, opponent, settings.name))
+                        if (res == RequestResponse.ACCEPT) {
+                            if (sender.isInMatch || sender.isSpectatingMatch) {
+                                sender.sendMessage(YOU_IN_MATCH)
+                            } else if (opponent.isInMatch || opponent.isSpectatingMatch) {
+                                sender.sendMessage(OPPONENT_IN_MATCH)
+                            } else {
+                                settings.components.require(ComponentAlternative.RENDERER).validate()
+                                settings.createMatch(if (rematchInfo.lastColor == Color.BLACK) byColor(sender, opponent) else byColor(opponent, sender)).start()
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -115,7 +115,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             player.sendMatchResults(color, results)
             if (!results.endReason.quick)
                 delay((if (player.quickLeave) 0 else 3).seconds)
-            player.leaveMatchDirect(match)
+            player.leaveMatchDirect(match, canRequestRematch = true)
             player.sendMessage(pgn.copyMessage())
         }
     }
@@ -125,7 +125,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             val results = match.results!!
             val pgn = PGN.generate(match)
             player.sendMatchResults(color, results)
-            player.leaveMatchDirect(match)
+            player.leaveMatchDirect(match, canRequestRematch = true)
             player.sendMessage(pgn.copyMessage())
         }
         if (match in player.activeMatches)

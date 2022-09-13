@@ -46,7 +46,7 @@ class RequestType internal constructor(
     private val section get() = config.getConfigurationSection("Request.$name")!!
 
     suspend fun invalidSender(s: BukkitHuman) {
-        s.sendMessage(section.getPathString("CannotSend"))
+        s.sendMessage(section.getPathString("Error.CannotSend"))
         return suspendCoroutine { }
     }
 
