@@ -200,6 +200,8 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         private val DRAW_RECEIVED_CANCEL = message("Draw.Received.Cancel")
         private val DRAW_SENT_ACCEPT = message("Draw.Sent.Accept")
         private val DRAW_RECEIVED_ACCEPT = message("Draw.Received.Accept")
+        private val DRAW_ACCEPT = message("Draw.Accept")
+        private val DRAW_CANCEL = message("Draw.Cancel")
 
         private val UNDO_SENT = message("Takeback.Sent.Request")
         private val UNDO_RECEIVED = message("Takeback.Received.Request")
@@ -207,6 +209,9 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         private val UNDO_RECEIVED_CANCEL = message("Takeback.Received.Cancel")
         private val UNDO_SENT_ACCEPT = message("Takeback.Sent.Accept")
         private val UNDO_RECEIVED_ACCEPT = message("Takeback.Received.Accept")
+        private val UNDO_ACCEPT = message("Takeback.Accept")
+        private val UNDO_CANCEL = message("Takeback.Cancel")
+
     }
 
     private suspend fun openPawnPromotionMenu(promotions: Collection<Piece>) =
@@ -332,6 +337,14 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         }
     }
 
+    private fun sendMessagePairWithCommand(match: ChessMatch, msgSelf: Message, buttonSelf: Message, msgOpponent: Message, buttonOpponent: Message, command: String) {
+        val opponent = match[!color] as BukkitChessSideFacade
+        if (opponent.player != player) {
+            player.sendMessage(textComponent(msgSelf.get()) { text(" "); text(buttonSelf.get()) { onClickCommand(command) } })
+            opponent.player.sendMessage(textComponent(msgOpponent.get()) { text(" "); text(buttonOpponent.get()) { onClickCommand(command) } })
+        }
+    }
+
     fun requestDraw(match: ChessMatch) {
         setRequestsDraw(match, !requestsDraw)
         if (!requestsDraw) {
@@ -340,7 +353,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             sendMessagePair(match, DRAW_SENT_ACCEPT, DRAW_RECEIVED_ACCEPT)
             match.stop(drawBy(EndReason.DRAW_AGREEMENT))
         } else {
-            sendMessagePair(match, DRAW_SENT, DRAW_RECEIVED)
+            sendMessagePairWithCommand(match, DRAW_SENT, DRAW_CANCEL, DRAW_RECEIVED, DRAW_ACCEPT, "/chess draw")
         }
     }
 
@@ -354,7 +367,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
             setRequestsUndo(match, false)
             (match[!color] as BukkitChessSideFacade).side.setRequestsUndo(match, false)
         } else {
-            sendMessagePair(match, UNDO_SENT, UNDO_RECEIVED)
+            sendMessagePairWithCommand(match, UNDO_SENT, UNDO_CANCEL, UNDO_RECEIVED, UNDO_ACCEPT, "/chess undo")
         }
     }
 }

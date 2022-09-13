@@ -59,6 +59,8 @@ Message:
       Request: "&eYour opponent wants a draw."
       Cancel: "&eThe draw offer has been cancelled."
       Accept: "&aThe draw offer has been accepted."
+    Accept: "&a[Accept]"
+    Cancel: "&c[Cancel]"
   Takeback:
     Sent:
       Request: "&eTakeback request sent."
@@ -68,6 +70,8 @@ Message:
       Request: "&eYour opponent wants a takeback."
       Cancel: "&eThe takeback request has been cancelled."
       Accept: "&aThe takeback request has been accepted."
+    Accept: "&a[Accept]"
+    Cancel: "&c[Cancel]"
   Stats:
     Wins: "&aWins: %s"
     Losses: "&cLosses: %s"
