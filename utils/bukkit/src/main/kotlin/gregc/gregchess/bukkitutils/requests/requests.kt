@@ -41,7 +41,7 @@ class RequestType internal constructor(
     val name: String,
     private val acceptCommand: String,
     private val cancelCommand: String
-) { // TODO: redesign this api
+) {
     private val requests = mutableMapOf<UUID, Request>()
     private val section get() = config.getConfigurationSection("Request.$name")!!
 
@@ -55,8 +55,8 @@ class RequestType internal constructor(
         })
     }
 
-    private fun call(request: Request, simple: Boolean) {
-        if ((simple || config.getBoolean("Request.SelfAccept", true)) && request.sender.uuid == request.receiver.uuid) {
+    private fun call(request: Request) {
+        if (config.getBoolean("Request.SelfAccept", true) && request.sender.uuid == request.receiver.uuid) {
             request.cont.resume(RequestResponse.ACCEPT)
             return
         }
@@ -64,12 +64,12 @@ class RequestType internal constructor(
         request.sender.sendCommandMessage(
             section.getPathString("Sent.Request"),
             config.getPathString("Request.Cancel"),
-            if (simple) cancelCommand else "$cancelCommand ${request.uuid}"
+            "$cancelCommand ${request.uuid}"
         )
         request.receiver.sendCommandMessage(
             section.getPathString("Received.Request", request.sender.name, request.value),
             config.getPathString("Request.Accept"),
-            if (simple) acceptCommand else "$acceptCommand ${request.uuid}"
+            "$acceptCommand ${request.uuid}"
         )
         val duration = section.getString("Duration")?.toDuration()
         if (duration != null)
@@ -80,27 +80,8 @@ class RequestType internal constructor(
             }
     }
 
-    private operator fun plusAssign(request: Request) = call(request, false)
-
-    suspend fun call(request: RequestData, simple: Boolean = false): RequestResponse = suspendCoroutine {
-        val req = Request(request.sender, request.receiver, request.value, it)
-        if (simple) {
-            simpleCall(req)
-        } else {
-            this += req
-        }
-    }
-
-    private fun simpleCall(request: Request) {
-        requests.values.firstOrNull { it.sender.uuid == request.sender.uuid }?.let {
-            cancel(it)
-            return
-        }
-        requests.values.firstOrNull { it.sender.uuid == request.receiver.uuid && it.receiver.uuid == request.sender.uuid }?.let {
-            accept(it)
-            return
-        }
-        call(request, true)
+    suspend fun call(request: RequestData): RequestResponse = suspendCoroutine {
+        call(Request(request.sender, request.receiver, request.value, it))
     }
 
     private fun accept(request: Request) {
