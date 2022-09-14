@@ -40,7 +40,7 @@ fun interface ChessFloorRenderer {
 }
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
-    val heldPiece = (currentSide as? BukkitChessSideFacade)?.held
+    val heldPiece = (sides.current as? BukkitChessSideFacade)?.held
     fun Move.getFloorMaterial(): Floor {
         if (castlesTrait != null || promotionTrait != null)
             return Floor.SPECIAL

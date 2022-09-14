@@ -14,6 +14,7 @@ import gregc.gregchess.fabric.renderer.FabricRenderer
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.Piece
+import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.variant.ChessVariant
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtIo
@@ -64,7 +65,8 @@ object ChessMatchManager {
 
     fun clear() = loadedMatches.clear()
 
-    fun settings(v: ChessVariant, variantOptions: Long, boardState: Map<Pos, Piece>, r: FabricRenderer): Collection<Component> = buildList {
+    fun settings(v: ChessVariant, variantOptions: Long, boardState: Map<Pos, Piece>, r: FabricRenderer, s: ChessSideManager): Collection<Component> = buildList {
+        this += s
         this += Chessboard(v, variantOptions, FEN.fromPieces(boardState))
         this += MatchController
         this += r

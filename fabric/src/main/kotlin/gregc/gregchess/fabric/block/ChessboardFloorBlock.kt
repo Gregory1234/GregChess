@@ -128,7 +128,7 @@ class ChessboardFloorBlock(settings: Settings?) : BlockWithEntity(settings) {
         val floorEntity = (world?.getBlockEntity(pos) as? ChessboardFloorBlockEntity) ?: return ActionResult.PASS
         val match = floorEntity.chessControllerBlock.entity?.currentMatch ?: return ActionResult.PASS
 
-        val cp = match.currentSide as? FabricChessSideFacade ?: return ActionResult.PASS
+        val cp = match.sides.current as? FabricChessSideFacade ?: return ActionResult.PASS
 
         if (cp.held != null) {
             return if (cp.makeMove(floorEntity.boardPos!!, floorEntity)) ActionResult.SUCCESS else ActionResult.PASS

@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit.component
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.match.ChessMatchManager
 import gregc.gregchess.bukkit.match.presetName
-import gregc.gregchess.bukkit.player.BukkitChessSide
+import gregc.gregchess.bukkit.player.BukkitChessSideFacade
 import gregc.gregchess.bukkit.player.isSamePlayer
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.byColor
@@ -36,10 +36,10 @@ object MatchController : Component {
     }
 
     private fun onStop(match: ChessMatch) {
-        if (!match.sideFacades.isSamePlayer()) {
+        if (!match.sides.isSamePlayer()) {
             match.addStats(byColor {
                 val player = match.sides[it]
-                if (player is BukkitChessSide)
+                if (player is BukkitChessSideFacade)
                     BukkitPlayerStats.of(player.uuid)[it, match.presetName]
                 else
                     VoidPlayerStatsSink

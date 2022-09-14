@@ -9,7 +9,6 @@ import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.move.connector.*
 import gregc.gregchess.piece.PlacedPieceType
-import gregc.gregchess.player.*
 import gregc.gregchess.results.*
 import gregc.gregchess.variant.ChessVariant
 import kotlinx.coroutines.*
@@ -24,7 +23,6 @@ class ChessMatch private constructor(
     @Contextual val environment: ChessEnvironment,
     val variant: ChessVariant,
     val components: ComponentList,
-    val sides: ByColor<ChessSide>,
     @SerialName("state") private var state_: State,
     @SerialName("startTime") private var startTime_: Instant?,
     @SerialName("endTime") private var endTime_: Instant?,
@@ -32,8 +30,8 @@ class ChessMatch private constructor(
     @SerialName("results") private var results_: MatchResults?,
     val variantOptions: Long
 ) : ChessEventCaller {
-    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, players: ByColor<ChessPlayer<*>>, variantOptions: Long)
-            : this(environment, variant, ComponentList(components), byColor { players[it].createChessSide(it) }, State.INITIAL, null, null, Duration.ZERO, null, variantOptions)
+    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, variantOptions: Long)
+            : this(environment, variant, ComponentList(components), State.INITIAL, null, null, Duration.ZERO, null, variantOptions)
 
     override fun toString() = "ChessMatch(${environment.matchToString()})"
 
@@ -49,14 +47,12 @@ class ChessMatch private constructor(
         require((state >= State.RUNNING) == (startTime != null)) { "Start time bad" }
         require((state >= State.STOPPED) == (endTime != null)) { "End time bad" }
         require((state >= State.STOPPED) == (results != null)) { "Results bad" }
-        require(sides.toIndexedList().all { it.second.color == it.first }) { "Sides bad" }
         try {
             components.require(ComponentType.CHESSBOARD)
             for (t in variant.requiredComponents) {
                 components.firstOrNull { it.type == t } ?: throw ComponentNotFoundException(t)
             }
             components.forEach { it.init(this, eventManager.registry(ChessEventComponentOwner(it.type))) }
-            sides.forEach { it.init(this, eventManager.registry(ChessEventSideOwner(it.type, it.color))) }
         } catch (e: Exception) {
             panic(e)
         }
@@ -75,16 +71,11 @@ class ChessMatch private constructor(
 
     val board get() = components.require(ComponentType.CHESSBOARD).getFacade(this)
 
+    val sides get() = components.require(ComponentType.SIDES).getFacade(this)
+
     private fun requireState(s: State) = check(state == s) { "Expected state $s, got state $state!" }
 
-    @Transient
-    val sideFacades = byColor { sides[it].createFacade(this) }
-
     val currentColor: Color get() = board.currentColor
-
-    val currentSide: ChessSideFacade<*> get() = sideFacades[currentColor]
-
-    val currentOpponent: ChessSideFacade<*> get() = sideFacades[!currentColor]
 
     private fun Instant.zoned() = atZone(environment.clock.zone)
 
@@ -242,8 +233,6 @@ class ChessMatch private constructor(
     } catch (e: NullPointerException) {
         panic(e)
     }
-
-    operator fun get(color: Color): ChessSideFacade<*> = sideFacades[color]
 
     @Transient
     private val connectors = mutableMapOf<MoveConnectorType<*>, MoveConnector>()

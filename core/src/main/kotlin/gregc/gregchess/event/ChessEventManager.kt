@@ -15,9 +15,9 @@ class ChessEventManager : ChessEventCaller {
                     false
                 else if (handlersToOrder.any { o -> o.constraints.runAfter.any { h.owner.isOf(it) } })
                     false
-                else if (!h.constraints.runBeforeAll && handlersToOrder.any { h.constraints.runBeforeAll })
+                else if (!h.constraints.runBeforeAll && handlersToOrder.any { it.constraints.runBeforeAll })
                     false
-                else if (h.constraints.runAfterAll && handlersToOrder.any { !h.constraints.runAfterAll })
+                else if (h.constraints.runAfterAll && handlersToOrder.any { !it.constraints.runAfterAll })
                     false
                 else {
                     exec {

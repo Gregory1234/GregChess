@@ -10,6 +10,7 @@ import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.component.ComponentList
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.ChessPlayer
+import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.registry.name
 import gregc.gregchess.snakeToPascal
@@ -36,7 +37,7 @@ class MatchSettings(
     val variantOptions: Long,
     val components: ComponentList
 ) {
-    fun createMatch(players: ByColor<ChessPlayer<*>>) = ChessMatch(environment, variant, components, players, variantOptions)
+    fun createMatch(players: ByColor<ChessPlayer<*>>) = ChessMatch(environment, variant, listOf(ChessSideManager(players.white, players.black)) + components, variantOptions)
 }
 
 object SettingsManager {

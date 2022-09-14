@@ -2,16 +2,14 @@ package gregc.gregchess.chess
 
 import assertk.assertThat
 import assertk.assertions.*
-import gregc.gregchess.ByColor
 import gregc.gregchess.board.Chessboard
-import gregc.gregchess.byColor
 import gregc.gregchess.component.Component
 import gregc.gregchess.event.ChessBaseEvent
 import gregc.gregchess.event.TurnEvent
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.AddMoveConnectorsEvent
 import gregc.gregchess.move.connector.PieceMoveEvent
-import gregc.gregchess.player.ChessPlayer
+import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
 import gregc.gregchess.variant.ChessVariant
@@ -22,8 +20,8 @@ import org.junit.jupiter.api.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ChessMatchTests {
 
-    private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, variantOptions: Long = 0, extra: Collection<Component> = emptyList(), players: ByColor<ChessPlayer<*>> = byColor { TestChessPlayer(false) }) =
-        ChessMatch(TestChessEnvironment(), variant, listOf(Chessboard(variant, variantOptions)) + extra, players, variantOptions)
+    private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, variantOptions: Long = 0, extra: Collection<Component> = emptyList(), playerManager: ChessSideManager = ChessSideManager(TestChessPlayer(false), TestChessPlayer(false))) =
+        ChessMatch(TestChessEnvironment(), variant, listOf(playerManager, Chessboard(variant, variantOptions)) + extra, variantOptions)
 
     @BeforeAll
     fun setup() {
@@ -55,9 +53,9 @@ class ChessMatchTests {
 
         @Test
         fun `should only initialize sides`() {
-            val g = mkMatch(players = byColor { TestChessPlayer(true) })
-            val w = g.sides.white as TestChessSide
-            val b = g.sides.black as TestChessSide
+            val g = mkMatch(playerManager = ChessSideManager(TestChessPlayer(true), TestChessPlayer(true)))
+            val w = g.sides.white.side as TestChessSide
+            val b = g.sides.black.side as TestChessSide
             excludeRecords {
                 w.type
                 w.name
@@ -131,9 +129,9 @@ class ChessMatchTests {
 
         @Test
         fun `should start sides`() {
-            val g = mkMatch(players = byColor { TestChessPlayer(true) })
-            val w = g.sides.white as TestChessSide
-            val b = g.sides.black as TestChessSide
+            val g = mkMatch(playerManager = ChessSideManager(TestChessPlayer(true), TestChessPlayer(true)))
+            val w = g.sides.white.side as TestChessSide
+            val b = g.sides.black.side as TestChessSide
             clearRecords(w, b)
             g.start()
             excludeRecords {
@@ -183,9 +181,9 @@ class ChessMatchTests {
 
         @Test
         fun `should stop and clear sides`() {
-            val g = mkMatch(players = byColor { TestChessPlayer(true) }).start()
-            val w = g.sides.white as TestChessSide
-            val b = g.sides.black as TestChessSide
+            val g = mkMatch(playerManager = ChessSideManager(TestChessPlayer(true), TestChessPlayer(true))).start()
+            val w = g.sides.white.side as TestChessSide
+            val b = g.sides.black.side as TestChessSide
             clearRecords(w, b)
             g.stop(results)
             excludeRecords {

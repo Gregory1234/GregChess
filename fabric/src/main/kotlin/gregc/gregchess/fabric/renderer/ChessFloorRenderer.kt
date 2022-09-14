@@ -15,7 +15,7 @@ fun interface ChessFloorRenderer {
 }
 
 fun simpleFloorRenderer(specialSquares: Collection<Pos> = emptyList()) = ChessFloorRenderer { p ->
-    val heldPiece = (currentSide as? FabricChessSideFacade)?.held
+    val heldPiece = (sides.current as? FabricChessSideFacade)?.held
     fun Move.getFloor(): Floor {
         if (castlesTrait != null || promotionTrait != null)
             return Floor.SPECIAL

@@ -3,6 +3,7 @@ package gregc.gregchess.component
 import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.clock.ChessClock
+import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -34,6 +35,8 @@ class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerialize
         val CHESSBOARD = ComponentType(Chessboard::class, Chessboard.serializer())
         @JvmField
         val CLOCK = ComponentType(ChessClock::class, ChessClock.serializer())
+        @JvmField
+        val SIDES = ComponentType(ChessSideManager::class, ChessSideManager.serializer())
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<ComponentType<*>>()
     }

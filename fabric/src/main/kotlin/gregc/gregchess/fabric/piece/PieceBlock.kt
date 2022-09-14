@@ -60,7 +60,7 @@ sealed class PieceBlock(val piece: Piece, val pieceSounds: ChessPieceSounds, set
         val floor = getFloor(world, pos, state) ?: return ActionResult.PASS
         val match = floor.chessControllerBlock.entity?.currentMatch ?: return ActionResult.PASS
 
-        val cp = match.currentSide as? FabricChessSideFacade ?: return ActionResult.PASS
+        val cp = match.sides.current as? FabricChessSideFacade ?: return ActionResult.PASS
 
         if (cp.uuid == player.uuid && cp.held == null && cp.color == piece.color) {
             cp.pickUp(floor.boardPos!!)

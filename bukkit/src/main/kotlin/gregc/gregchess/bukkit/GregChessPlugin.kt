@@ -332,7 +332,7 @@ object GregChessPlugin : Listener {
                 validate(NOTHING_TO_TAKEBACK) { sender.currentMatch?.board?.lastMove != null }
                 requireHumanOpponent()
                 validate(YOUR_TURN) {
-                    (sender.currentMatch?.currentOpponent as? BukkitChessSideFacade)?.player == sender
+                    (sender.currentMatch?.sides?.opponent as? BukkitChessSideFacade)?.player == sender
                             || (sender.currentSide?.opponent as? BukkitChessSideFacade)?.requestsUndo == true
                 }
                 executeSuspend {

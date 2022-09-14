@@ -58,8 +58,8 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(match.zonedStartTime)
             tags += TagPair("Date", date)
             tags += TagPair("Round", match.environment.pgnRound.toString())
-            tags += TagPair("White", match[Color.WHITE].name)
-            tags += TagPair("Black", match[Color.BLACK].name)
+            tags += TagPair("White", match.sides.white.name)
+            tags += TagPair("Black", match.sides.black.name)
 
             val result = match.results?.score?.pgn
 

@@ -64,7 +64,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
     val isInMatch: Boolean get() = currentMatch != null
     val currentSide: BukkitChessSideFacade?
         get() = currentMatch?.let {
-            it[checkNotNull(activeMatchInfo[it]).color ?: it.currentColor] as BukkitChessSideFacade
+            it.sides[checkNotNull(activeMatchInfo[it]).color ?: it.currentColor] as BukkitChessSideFacade
         }
     private val activeMatchInfo = mutableMapOf<ChessMatch, MatchInfo>()
     val activeMatches get() = activeMatchInfo.keys
@@ -79,7 +79,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
 
     internal fun registerMatch(match: ChessMatch) {
         require(match !in activeMatches)
-        val side = requireNotNull(match[uuid])
+        val side = requireNotNull(match.sides[uuid])
         val opponent = side.opponent as? BukkitChessSideFacade
         activeMatchInfo[match] = MatchInfo(if (opponent?.player == this) null else side.color)
     }
@@ -96,7 +96,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         if (canRequestRematch) {
             (currentSide!!.opponent as? BukkitChessSideFacade)?.let {
                 rematchInfo = RematchInfo(it.player, match.environment.pgnRound, match.presetName, !it.color)
-                if (config.getBoolean("Request.Rematch.SendReminder") && !match.sideFacades.isSamePlayer()) {
+                if (config.getBoolean("Request.Rematch.SendReminder") && !match.sides.isSamePlayer()) {
                     sendMessage(textComponent(REMATCH_REMINDER.get()) {
                         onClickCommand("/chess rematch")
                     })
@@ -126,7 +126,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
             leaveMatchDirect()
             sendRejoinReminder()
         } else {
-            val color = match[uuid]!!.color
+            val color = match.sides[uuid]!!.color
             quickLeave = true
             match.stop(color.lostBy(EndReason.WALKOVER))
             quickLeave = false

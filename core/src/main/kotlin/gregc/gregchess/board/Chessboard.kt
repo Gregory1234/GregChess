@@ -130,7 +130,7 @@ class Chessboard private constructor (
         }
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
-        events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }
+        events.register(ChessEventType.TURN, ChessEventOrderConstraint(runBeforeAll = true)) { handleTurnEvent(match, it) }
         events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
         events.register(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
             e[MoveConnectorType.CHESSBOARD] = getFacade(match)

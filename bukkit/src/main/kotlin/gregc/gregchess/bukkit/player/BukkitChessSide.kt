@@ -19,8 +19,7 @@ import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.Piece
-import gregc.gregchess.player.ChessSide
-import gregc.gregchess.player.ChessSideFacade
+import gregc.gregchess.player.*
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.results.drawBy
 import kotlinx.coroutines.delay
@@ -37,17 +36,17 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEve
     override val type get() = BukkitChessEventType.PIECE_PLAYER_ACTION
 }
 
-inline fun ByColor<ChessSideFacade<*>>.forEachReal(block: (BukkitPlayer) -> Unit) {
+inline fun ChessSideManagerFacade.forEachReal(block: (BukkitPlayer) -> Unit) {
     toList().filterIsInstance<BukkitChessSideFacade>().map { it.player }.distinct().forEach(block)
 }
 
-fun ByColor<ChessSideFacade<*>>.isSamePlayer(): Boolean {
+fun ChessSideManagerFacade.isSamePlayer(): Boolean {
     val w = white
     val b = black
     return w is BukkitChessSideFacade && b is BukkitChessSideFacade && w.uuid == b.uuid
 }
 
-inline fun ByColor<ChessSideFacade<*>>.forEachUnique(block: (BukkitChessSideFacade) -> Unit) {
+inline fun ChessSideManagerFacade.forEachUnique(block: (BukkitChessSideFacade) -> Unit) {
     val players = toList().filterIsInstance<BukkitChessSideFacade>()
     if (isSamePlayer())
         players.filter { it.hasTurn }.forEach(block)
@@ -55,9 +54,9 @@ inline fun ByColor<ChessSideFacade<*>>.forEachUnique(block: (BukkitChessSideFaca
         players.forEach(block)
 }
 
-operator fun ChessMatch.get(uuid: UUID): BukkitChessSideFacade? {
+operator fun ChessSideManagerFacade.get(uuid: UUID): BukkitChessSideFacade? {
     var ret: BukkitChessSideFacade? = null
-    sideFacades.forEachUnique {
+    forEachUnique {
         if (it.uuid == uuid)
             ret = it
     }
@@ -67,7 +66,7 @@ operator fun ChessMatch.get(uuid: UUID): BukkitChessSideFacade? {
 @Serializable
 class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : ChessSide {
 
-    private fun isSilent(match: ChessMatch): Boolean = match.sideFacades.isSamePlayer()
+    private fun isSilent(match: ChessMatch): Boolean = match.sides.isSamePlayer()
 
     @Transient
     private var _held: BoardPiece? = null
@@ -95,7 +94,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     override fun createFacade(match: ChessMatch) = BukkitChessSideFacade(match, this)
 
     private inline fun oncePerPlayer(match: ChessMatch, callback: () -> Unit) {
-        if (!match.sideFacades.isSamePlayer() || color == match.currentColor) {
+        if (!match.sides.isSamePlayer() || color == match.currentColor) {
             callback()
         }
     }
@@ -282,7 +281,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     }
 
     private fun sendStartMessage(match: ChessMatch) {
-        val facade = match[color] as BukkitChessSideFacade
+        val facade = match.sides[color] as BukkitChessSideFacade
         if (facade.hasTurn || !isSilent(match)) {
             sendTitleList(buildList {
                 this += YOU_ARE_PLAYING_AS_TITLE[color] to false
@@ -310,7 +309,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     private fun setRequestsDraw(match: ChessMatch, value: Boolean) {
         requestsDraw = value
-        val opponent = match[!color] as? BukkitChessSideFacade
+        val opponent = match.sides[!color] as? BukkitChessSideFacade
         if (opponent?.player == player) {
             opponent.side.requestsDraw = value
         }
@@ -318,7 +317,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
     private fun setRequestsUndo(match: ChessMatch, value: Boolean) {
         requestsUndo = value
-        val opponent = match[!color] as? BukkitChessSideFacade
+        val opponent = match.sides[!color] as? BukkitChessSideFacade
         if (opponent?.player == player) {
             opponent.side.requestsUndo = value
         }
@@ -330,7 +329,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     }
 
     private fun sendMessagePair(match: ChessMatch, msgSelf: Message, msgOpponent: Message) {
-        val opponent = match[!color] as BukkitChessSideFacade
+        val opponent = match.sides[!color] as BukkitChessSideFacade
         if (opponent.player != player) {
             player.sendMessage(msgSelf)
             opponent.player.sendMessage(msgOpponent)
@@ -338,7 +337,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     }
 
     private fun sendMessagePairWithCommand(match: ChessMatch, msgSelf: Message, buttonSelf: Message, msgOpponent: Message, buttonOpponent: Message, command: String) {
-        val opponent = match[!color] as BukkitChessSideFacade
+        val opponent = match.sides[!color] as BukkitChessSideFacade
         if (opponent.player != player) {
             player.sendMessage(textComponent(msgSelf.get()) { text(" "); text(buttonSelf.get()) { onClickCommand(command) } })
             opponent.player.sendMessage(textComponent(msgOpponent.get()) { text(" "); text(buttonOpponent.get()) { onClickCommand(command) } })
@@ -349,7 +348,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         setRequestsDraw(match, !requestsDraw)
         if (!requestsDraw) {
             sendMessagePair(match, DRAW_SENT_CANCEL, DRAW_RECEIVED_CANCEL)
-        } else if ((match[!color] as BukkitChessSideFacade).requestsDraw) {
+        } else if ((match.sides[!color] as BukkitChessSideFacade).requestsDraw) {
             sendMessagePair(match, DRAW_SENT_ACCEPT, DRAW_RECEIVED_ACCEPT)
             match.stop(drawBy(EndReason.DRAW_AGREEMENT))
         } else {
@@ -361,11 +360,11 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         setRequestsUndo(match, !requestsUndo)
         if (!requestsUndo) {
             sendMessagePair(match, UNDO_SENT_CANCEL, UNDO_RECEIVED_CANCEL)
-        } else if ((match[!color] as BukkitChessSideFacade).requestsUndo) {
+        } else if ((match.sides[!color] as BukkitChessSideFacade).requestsUndo) {
             sendMessagePair(match, UNDO_SENT_ACCEPT, UNDO_RECEIVED_ACCEPT)
             match.board.undoLastMove()
             setRequestsUndo(match, false)
-            (match[!color] as BukkitChessSideFacade).side.setRequestsUndo(match, false)
+            (match.sides[!color] as BukkitChessSideFacade).side.setRequestsUndo(match, false)
         } else {
             sendMessagePairWithCommand(match, UNDO_SENT, UNDO_CANCEL, UNDO_RECEIVED, UNDO_ACCEPT, "/chess undo")
         }

@@ -72,10 +72,10 @@ class ScoreboardManager : Component {
         val matchProperties = mutableMapOf<PropertyType, MatchProperty>()
 
         val e = AddPropertiesEvent(playerProperties, matchProperties)
-        e.player(PLAYER) { playerPrefix + match[it].name }
+        e.player(PLAYER) { playerPrefix + match.sides[it].name }
         match.callEvent(e)
 
-        match.sideFacades.forEachReal(::giveScoreboard)
+        match.sides.forEachReal(::giveScoreboard)
         layout.init(playerProperties, matchProperties)
     }
 

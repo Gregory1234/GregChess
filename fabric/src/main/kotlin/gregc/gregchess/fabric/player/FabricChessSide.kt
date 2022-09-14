@@ -1,7 +1,8 @@
 package gregc.gregchess.fabric.player
 
 import com.mojang.authlib.GameProfile
-import gregc.gregchess.*
+import gregc.gregchess.Color
+import gregc.gregchess.Pos
 import gregc.gregchess.event.*
 import gregc.gregchess.fabric.GameProfileSerializer
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
@@ -15,8 +16,7 @@ import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.checkExists
 import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
-import gregc.gregchess.player.ChessSide
-import gregc.gregchess.player.ChessSideFacade
+import gregc.gregchess.player.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import net.minecraft.server.MinecraftServer
@@ -60,14 +60,14 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
     }
 
     private fun sendStartMessage(match: ChessMatch) {
-        if (match[color].hasTurn || !match.sideFacades.isSamePlayer())
+        if (match.sides[color].hasTurn || !match.sides.isSamePlayer())
             getServerPlayer(match.server)?.sendMessage(Text.translatable("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
     }
 
     override fun createFacade(match: ChessMatch) = FabricChessSideFacade(match, this)
 
     private inline fun oncePerPlayer(match: ChessMatch, callback: () -> Unit) {
-        if (!match.sideFacades.isSamePlayer() || color == match.currentColor) {
+        if (!match.sides.isSamePlayer() || color == match.currentColor) {
             callback()
         }
     }
@@ -157,15 +157,15 @@ class FabricChessSideFacade(match: ChessMatch, side: FabricChessSide) : ChessSid
     fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity) = side.makeMove(match, pos, floor)
 }
 
-inline fun ByColor<ChessSideFacade<*>>.forEachReal(block: (GameProfile) -> Unit) {
+inline fun ChessSideManagerFacade.forEachReal(block: (GameProfile) -> Unit) {
     toList().filterIsInstance<FabricChessSide>().map { it.gameProfile }.distinct().forEach(block)
 }
 
-inline fun ByColor<ChessSideFacade<*>>.forEachRealEntity(block: (ServerPlayerEntity) -> Unit) = forEachReal {
+inline fun ChessSideManagerFacade.forEachRealEntity(block: (ServerPlayerEntity) -> Unit) = forEachReal {
     white.match.server?.playerManager?.getPlayer(it.id)?.let(block)
 }
 
-inline fun ByColor<ChessSideFacade<*>>.forEachUnique(block: (FabricChessSideFacade) -> Unit) {
+inline fun ChessSideManagerFacade.forEachUnique(block: (FabricChessSideFacade) -> Unit) {
     val players = toList().filterIsInstance<FabricChessSideFacade>()
     if (players.size == 2 && isSamePlayer())
         players.filter { it.hasTurn }.forEach(block)
@@ -173,13 +173,13 @@ inline fun ByColor<ChessSideFacade<*>>.forEachUnique(block: (FabricChessSideFaca
         players.forEach(block)
 }
 
-inline fun ByColor<ChessSideFacade<*>>.forEachUniqueEntity(block: (ServerPlayerEntity, Color) -> Unit) = forEachUnique {
+inline fun ChessSideManagerFacade.forEachUniqueEntity(block: (ServerPlayerEntity, Color) -> Unit) = forEachUnique {
     it.serverPlayer?.let { player ->
         block(player, it.color)
     }
 }
 
-fun ByColor<ChessSideFacade<*>>.isSamePlayer(): Boolean {
+fun ChessSideManagerFacade.isSamePlayer(): Boolean {
     val w = white
     val b = black
     return w is FabricChessSideFacade && b is FabricChessSideFacade && w.uuid == b.uuid
