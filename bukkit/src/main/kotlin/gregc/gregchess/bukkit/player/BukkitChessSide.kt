@@ -20,8 +20,6 @@ import gregc.gregchess.move.trait.promotionTrait
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.*
-import gregc.gregchess.results.EndReason
-import gregc.gregchess.results.drawBy
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -64,7 +62,7 @@ operator fun ChessSideManagerFacade.get(uuid: UUID): BukkitChessSideFacade? {
 }
 
 @Serializable
-class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : ChessSide {
+class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : HumanChessSide {
 
     private fun isSilent(match: ChessMatch): Boolean = match.sides.isSamePlayer()
 
@@ -181,6 +179,9 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
                 }
             }
         }
+        events.register(ChessEventType.HUMAN_REQUEST) {
+            onHumanRequest(match, it.request, it.color, it.value)
+        }
     }
 
     companion object {
@@ -193,24 +194,30 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
 
         private val PAWN_PROMOTION = message("PawnPromotion")
 
-        private val DRAW_SENT = message("Draw.Sent.Request")
-        private val DRAW_RECEIVED = message("Draw.Received.Request")
-        private val DRAW_SENT_CANCEL = message("Draw.Sent.Cancel")
-        private val DRAW_RECEIVED_CANCEL = message("Draw.Received.Cancel")
-        private val DRAW_SENT_ACCEPT = message("Draw.Sent.Accept")
-        private val DRAW_RECEIVED_ACCEPT = message("Draw.Received.Accept")
-        private val DRAW_ACCEPT = message("Draw.Accept")
-        private val DRAW_CANCEL = message("Draw.Cancel")
+        private val DRAW_MESSAGES = HumanRequestMessages("Draw", "/chess draw")
+        private val UNDO_MESSAGES = HumanRequestMessages("Takeback", "/chess undo")
 
-        private val UNDO_SENT = message("Takeback.Sent.Request")
-        private val UNDO_RECEIVED = message("Takeback.Received.Request")
-        private val UNDO_SENT_CANCEL = message("Takeback.Sent.Cancel")
-        private val UNDO_RECEIVED_CANCEL = message("Takeback.Received.Cancel")
-        private val UNDO_SENT_ACCEPT = message("Takeback.Sent.Accept")
-        private val UNDO_RECEIVED_ACCEPT = message("Takeback.Received.Accept")
-        private val UNDO_ACCEPT = message("Takeback.Accept")
-        private val UNDO_CANCEL = message("Takeback.Cancel")
+    }
 
+    private class HumanRequestMessages(name: String, val command: String) {
+        private val sentRequest = message("$name.Sent.Request")
+        private val receivedRequest = message("$name.Received.Request")
+        private val sentCancel = message("$name.Sent.Cancel")
+        private val receivedCancel = message("$name.Received.Cancel")
+        private val sentAccept = message("$name.Sent.Accept")
+        private val receivedAccept = message("$name.Received.Accept")
+        private val cancelButton = message("$name.Cancel")
+        private val acceptButton = message("$name.Accept")
+        fun request(color: Color, sender: Color) = if (color == sender) sentRequest else receivedRequest
+        fun cancel(color: Color, sender: Color) = if (color == sender) sentCancel else receivedCancel
+        fun accept(color: Color, sender: Color) = if (color == sender) sentAccept else receivedAccept
+        fun button(color: Color, sender: Color) = if (color == sender) cancelButton else acceptButton
+        fun fullRequest(color: Color, sender: Color) = textComponent(request(color, sender).get()) {
+            text(" ")
+            text(button(color, sender).get()) {
+                onClickCommand(command)
+            }
+        }
     }
 
     private suspend fun openPawnPromotionMenu(promotions: Collection<Piece>) =
@@ -267,7 +274,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         sendTitleList(buildList {
             if (inCheck)
                 this += IN_CHECK_TITLE to true
-            if (!isSilent(match))
+            if (color == match.currentColor && !isSilent(match))
                 this += YOUR_TURN to true
         })
         if (inCheck)
@@ -277,7 +284,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
     private fun endTurn(match: ChessMatch) = oncePerPlayer(match) {
         if (player.currentMatch != match) return
         sendLastMoves(match, Color.BLACK)
-        if (color == match.currentColor) clearRequests(match)
+        clearRequests(match)
     }
 
     private fun sendStartMessage(match: ChessMatch) {
@@ -302,76 +309,56 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Che
         player.sendMessage(match.variant.localMoveFormatter.formatLastMoves(match.board.fullmoveCounter + if (lastMoveColor == Color.WHITE) 1 else 0, wLast, bLast))
     }
 
-    var requestsDraw: Boolean = false
-        private set
-    var requestsUndo: Boolean = false
-        private set
+    private val requested = mutableSetOf<HumanRequest>()
 
-    private fun setRequestsDraw(match: ChessMatch, value: Boolean) {
-        requestsDraw = value
-        val opponent = match.sides[!color] as? BukkitChessSideFacade
-        if (opponent?.player == player) {
-            opponent.side.requestsDraw = value
+    override fun isRequesting(request: HumanRequest): Boolean = request in requested
+
+    override fun toggleRequest(match: ChessMatch, request: HumanRequest) {
+        val opponent = match.sides[!color]
+        check(opponent is HumanChessSideFacade)
+        if (request in requested) {
+            requested -= request
+            if (opponent is BukkitChessSideFacade && opponent.player == player) opponent.side.requested -= request
+            match.callEvent(HumanRequestEvent(request, color, false))
+        } else {
+            requested += request
+            if (opponent is BukkitChessSideFacade && opponent.player == player) opponent.side.requested += request
+            match.callEvent(HumanRequestEvent(request, color, true))
         }
     }
 
-    private fun setRequestsUndo(match: ChessMatch, value: Boolean) {
-        requestsUndo = value
-        val opponent = match.sides[!color] as? BukkitChessSideFacade
-        if (opponent?.player == player) {
-            opponent.side.requestsUndo = value
-        }
+    override fun clearRequest(request: HumanRequest) {
+        check(request in requested)
+        requested -= request
     }
 
     private fun clearRequests(match: ChessMatch) {
-        setRequestsDraw(match, false)
-        setRequestsUndo(match, false)
+        requested.clear()
+        val opponent = match.sides[!color]
+        if (opponent is BukkitChessSideFacade && opponent.player == player) opponent.side.requested.clear()
     }
 
-    private fun sendMessagePair(match: ChessMatch, msgSelf: Message, msgOpponent: Message) {
-        val opponent = match.sides[!color] as BukkitChessSideFacade
-        if (opponent.player != player) {
-            player.sendMessage(msgSelf)
-            opponent.player.sendMessage(msgOpponent)
-        }
-    }
+    private fun onHumanRequest(match: ChessMatch, request: HumanRequest, changeColor: Color, value: Boolean) {
+        if (color == changeColor)
+            check(isRequesting(request) == value)
 
-    private fun sendMessagePairWithCommand(match: ChessMatch, msgSelf: Message, buttonSelf: Message, msgOpponent: Message, buttonOpponent: Message, command: String) {
-        val opponent = match.sides[!color] as BukkitChessSideFacade
-        if (opponent.player != player) {
-            player.sendMessage(textComponent(msgSelf.get()) { text(" "); text(buttonSelf.get()) { onClickCommand(command) } })
-            opponent.player.sendMessage(textComponent(msgOpponent.get()) { text(" "); text(buttonOpponent.get()) { onClickCommand(command) } })
-        }
-    }
-
-    fun requestDraw(match: ChessMatch) {
-        setRequestsDraw(match, !requestsDraw)
-        if (!requestsDraw) {
-            sendMessagePair(match, DRAW_SENT_CANCEL, DRAW_RECEIVED_CANCEL)
-        } else if ((match.sides[!color] as BukkitChessSideFacade).requestsDraw) {
-            sendMessagePair(match, DRAW_SENT_ACCEPT, DRAW_RECEIVED_ACCEPT)
-            match.stop(drawBy(EndReason.DRAW_AGREEMENT))
-        } else {
-            sendMessagePairWithCommand(match, DRAW_SENT, DRAW_CANCEL, DRAW_RECEIVED, DRAW_ACCEPT, "/chess draw")
-        }
-    }
-
-    fun requestUndo(match: ChessMatch) {
-        setRequestsUndo(match, !requestsUndo)
-        if (!requestsUndo) {
-            sendMessagePair(match, UNDO_SENT_CANCEL, UNDO_RECEIVED_CANCEL)
-        } else if ((match.sides[!color] as BukkitChessSideFacade).requestsUndo) {
-            sendMessagePair(match, UNDO_SENT_ACCEPT, UNDO_RECEIVED_ACCEPT)
-            match.board.undoLastMove()
-            setRequestsUndo(match, false)
-            (match.sides[!color] as BukkitChessSideFacade).side.setRequestsUndo(match, false)
-        } else {
-            sendMessagePairWithCommand(match, UNDO_SENT, UNDO_CANCEL, UNDO_RECEIVED, UNDO_ACCEPT, "/chess undo")
+        if (!isSilent(match)) {
+            val messages = when (request) {
+                HumanRequest.DRAW -> DRAW_MESSAGES
+                HumanRequest.UNDO -> UNDO_MESSAGES
+            }
+            if (!value) {
+                player.sendMessage(messages.cancel(color, changeColor))
+            } else if (isRequesting(request) && (match.sides[!color] as HumanChessSideFacade).isRequesting(request)) {
+                player.sendMessage(messages.accept(color, changeColor))
+            } else {
+                player.sendMessage(messages.fullRequest(color, changeColor))
+            }
         }
     }
 }
 
-class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : ChessSideFacade<BukkitChessSide>(match, side) {
+class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : HumanChessSideFacade<BukkitChessSide>(match, side) {
     val uuid: UUID get() = side.uuid
     val player: BukkitPlayer get() = side.player
 
@@ -379,10 +366,4 @@ class BukkitChessSideFacade(match: ChessMatch, side: BukkitChessSide) : ChessSid
 
     fun pickUp(pos: Pos) = side.pickUp(match, pos)
     fun makeMove(pos: Pos) = side.makeMove(match, pos)
-
-    val requestsDraw get() = side.requestsDraw
-    val requestsUndo get() = side.requestsUndo
-
-    fun requestDraw() = side.requestDraw(match)
-    fun requestUndo() = side.requestUndo(match)
 }

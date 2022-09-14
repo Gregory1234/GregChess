@@ -21,7 +21,7 @@ import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceRegistryView
-import gregc.gregchess.player.EngineChessSide
+import gregc.gregchess.player.*
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.*
 import gregc.gregchess.stats.ChessStat
@@ -176,10 +176,11 @@ object GregChessPlugin : Listener {
                 val pl = requireMatch()
                 requireHumanOpponent()
                 validate(NOT_YOUR_TURN) {
-                    sender.currentSide?.hasTurn == true || (sender.currentSide?.opponent as? BukkitChessSideFacade)?.requestsDraw == true
+                    sender.currentSide?.hasTurn == true ||
+                            (sender.currentSide?.opponent as? HumanChessSideFacade)?.isRequesting(HumanRequest.DRAW) == true
                 }
                 executeSuspend {
-                    pl().requestDraw()
+                    pl().toggleRequest(HumanRequest.DRAW)
                 }
             }
             playerSubcommand("capture") {
@@ -333,10 +334,10 @@ object GregChessPlugin : Listener {
                 requireHumanOpponent()
                 validate(YOUR_TURN) {
                     (sender.currentMatch?.sides?.opponent as? BukkitChessSideFacade)?.player == sender
-                            || (sender.currentSide?.opponent as? BukkitChessSideFacade)?.requestsUndo == true
+                            || (sender.currentSide?.opponent as? HumanChessSideFacade)?.isRequesting(HumanRequest.UNDO) == true
                 }
                 executeSuspend {
-                    pl().requestUndo()
+                    pl().toggleRequest(HumanRequest.UNDO)
                 }
             }
             playerSubcommand("serial") {

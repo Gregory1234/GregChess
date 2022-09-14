@@ -27,7 +27,6 @@ class ChessSideType<T: ChessSide>(val serializer: KSerializer<T>) : NameRegister
     }
 }
 
-// TODO: add an interface for human players
 @Serializable(with = ChessSideSerializer::class)
 interface ChessSide {
     val name: String

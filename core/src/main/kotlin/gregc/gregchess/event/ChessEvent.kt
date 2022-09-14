@@ -4,6 +4,7 @@ import gregc.gregchess.SelfType
 import gregc.gregchess.board.SetFenEvent
 import gregc.gregchess.match.PGN
 import gregc.gregchess.move.connector.*
+import gregc.gregchess.player.HumanRequestEvent
 import gregc.gregchess.stats.AddStatsEvent
 
 interface ChessEvent {
@@ -28,10 +29,12 @@ class ChessEventType<T> {
         val ADD_STATS = ChessEventType<AddStatsEvent>()
         @JvmField
         val PIECE_MOVE = ChessEventType<PieceMoveEvent>()
+        @JvmField
+        val HUMAN_REQUEST = ChessEventType<HumanRequestEvent>()
     }
 }
 
-class ChessEventOrderConstraint(
+data class ChessEventOrderConstraint(
     val runBeforeAll: Boolean = false,
     val runAfterAll: Boolean = false,
     val runBefore: Set<ChessEventOwner> = emptySet(),
