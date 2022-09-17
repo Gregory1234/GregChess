@@ -1,10 +1,8 @@
 package gregc.gregchess.fabric.player
 
-import com.mojang.authlib.GameProfile
 import gregc.gregchess.Color
 import gregc.gregchess.Pos
 import gregc.gregchess.event.*
-import gregc.gregchess.fabric.GameProfileSerializer
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.client.PromotionMenuFactory
 import gregc.gregchess.fabric.component.FabricComponentType
@@ -19,10 +17,7 @@ import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.player.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import kotlin.coroutines.suspendCoroutine
 
 class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEvent {
     enum class Type {
@@ -32,15 +27,14 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEve
 }
 
 @Serializable
-class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gameProfile: GameProfile, override val color: Color) : ChessSide {
+class FabricChessSide(val player: FabricPlayer, override val color: Color) : ChessSide {
 
-    val uuid get() = gameProfile.id
-
-    override val name: String get() = gameProfile.name
+    val gameProfile get() = player.gameProfile
+    val uuid get() = player.uuid
+    override val name: String get() = player.name
+    val entity get() = player.entity
 
     override val type get() = FabricPlayerType.FABRIC
-
-    fun getServerPlayer(server: MinecraftServer?) = server?.playerManager?.getPlayer(uuid)
 
     private var _held: BoardPiece? = null
 
@@ -61,7 +55,7 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
 
     private fun sendStartMessage(match: ChessMatch) {
         if (match.sides[color].hasTurn || !match.sides.isSamePlayer())
-            getServerPlayer(match.server)?.sendMessage(Text.translatable("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"),false)
+            player.sendMessage(Text.translatable("chess.gregchess.you_are_playing_as.${color.name.lowercase()}"))
     }
 
     override fun createFacade(match: ChessMatch) = FabricChessSideFacade(match, this)
@@ -77,10 +71,11 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
     }
 
     private fun onStop(match: ChessMatch) = oncePerPlayer(match) {
-        getServerPlayer(match.server)?.showMatchResults(color, match.results!!)
+        player.showMatchResults(color, match.results!!)
     }
 
     override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        require(match.server == player.server)
         events.registerE(TurnEvent.START) {
             startTurn(match)
         }
@@ -107,7 +102,7 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
     private fun startTurn(match: ChessMatch) {
         val inCheck = match.variant.isInCheck(match.board, color)
         if (inCheck) {
-            getServerPlayer(match.server)?.sendMessage(Text.translatable("chess.gregchess.in_check"),false)
+            player.sendMessage(Text.translatable("chess.gregchess.in_check"))
         }
     }
 
@@ -119,7 +114,6 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
     }
 
     fun makeMove(match: ChessMatch, pos: Pos, floor: ChessboardFloorBlockEntity): Boolean {
-        val server = match.server
         if (!match.running) return false
         val piece = held ?: return false
         if (!piece.piece.block.canActuallyPlaceAt(floor.world, floor.pos.up())) return false
@@ -135,7 +129,7 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
         }
         match.coroutineScope.launch {
             move.promotionTrait?.apply {
-                promotion = suspendCoroutine { getServerPlayer(server)?.openHandledScreen(PromotionMenuFactory(promotions, availablePromotions, floor.world!!, floor.pos, it)) } ?: availablePromotions.first()
+                promotion = player.openHandledScreen { PromotionMenuFactory(promotions, availablePromotions, floor.world!!, floor.pos, it) } ?: availablePromotions.first()
             }
             match.renderer.preferBlock(floor)
             match.finishMove(move)
@@ -145,10 +139,11 @@ class FabricChessSide(@Serializable(with = GameProfileSerializer::class) val gam
 }
 
 class FabricChessSideFacade(match: ChessMatch, side: FabricChessSide) : ChessSideFacade<FabricChessSide>(match, side) {
+    val player get() = side.player
     val gameProfile get() = side.gameProfile
     val uuid get() = side.uuid
 
-    val serverPlayer get() = side.getServerPlayer(match.server)
+    val entity get() = side.player
 
     val held get() = side.held
 
@@ -157,12 +152,8 @@ class FabricChessSideFacade(match: ChessMatch, side: FabricChessSide) : ChessSid
     fun makeMove(pos: Pos, floor: ChessboardFloorBlockEntity) = side.makeMove(match, pos, floor)
 }
 
-inline fun ChessSideManagerFacade.forEachReal(block: (GameProfile) -> Unit) {
-    toList().filterIsInstance<FabricChessSide>().map { it.gameProfile }.distinct().forEach(block)
-}
-
-inline fun ChessSideManagerFacade.forEachRealEntity(block: (ServerPlayerEntity) -> Unit) = forEachReal {
-    white.match.server?.playerManager?.getPlayer(it.id)?.let(block)
+inline fun ChessSideManagerFacade.forEachReal(block: (FabricPlayer) -> Unit) {
+    toList().filterIsInstance<FabricChessSide>().map { it.player }.distinct().forEach(block)
 }
 
 inline fun ChessSideManagerFacade.forEachUnique(block: (FabricChessSideFacade) -> Unit) {
@@ -171,12 +162,6 @@ inline fun ChessSideManagerFacade.forEachUnique(block: (FabricChessSideFacade) -
         players.filter { it.hasTurn }.forEach(block)
     else
         players.forEach(block)
-}
-
-inline fun ChessSideManagerFacade.forEachUniqueEntity(block: (ServerPlayerEntity, Color) -> Unit) = forEachUnique {
-    it.serverPlayer?.let { player ->
-        block(player, it.color)
-    }
 }
 
 fun ChessSideManagerFacade.isSamePlayer(): Boolean {

@@ -90,6 +90,16 @@ internal fun defaultModule(server: MinecraftServer): SerializersModule = Seriali
             return server.worlds.first { it.registryKey.value == id }
         }
     })
+    contextual(MinecraftServer::class, object : KSerializer<MinecraftServer> {
+        override val descriptor = buildClassSerialDescriptor("MinecraftServer") {}
+
+        override fun serialize(encoder: Encoder, value: MinecraftServer) = encoder.encodeStructure(descriptor) {}
+
+        override fun deserialize(decoder: Decoder): MinecraftServer = decoder.decodeStructure(descriptor) {
+            require(decodeElementIndex(descriptor) == CompositeDecoder.DECODE_DONE)
+            server
+        }
+    })
     contextual(UUID::class, UUIDAsIntArraySerializer)
     contextual(BlockPos::class, BlockPosAsLongSerializer)
     contextual(ChessEnvironment::class, FabricChessEnvironment.serializer() as KSerializer<ChessEnvironment>)

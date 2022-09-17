@@ -3,6 +3,7 @@ package gregc.gregchess.fabric.client
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.block.ChessControllerBlockEntity
 import gregc.gregchess.fabric.piece.item
+import gregc.gregchess.fabric.player.FabricPlayer
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.drawBy
@@ -99,7 +100,7 @@ class ChessControllerGuiDescription(
                 val entity = world.getBlockEntity(pos)
                 if (entity is ChessControllerBlockEntity && entity.chessboardStartPos != null && entity.currentMatch == null) {
                     val player = world.getPlayerByUuid(it.readUuid()) as ServerPlayerEntity
-                    entity.startMatch(player, player)
+                    entity.startMatch(FabricPlayer(player), FabricPlayer(player))
                 }
             }
         }

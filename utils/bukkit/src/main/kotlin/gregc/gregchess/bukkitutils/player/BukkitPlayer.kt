@@ -25,7 +25,7 @@ interface BukkitHuman : BukkitCommandSender {
     override fun sendMessage(msg: TextComponent) = onNull(entity) { spigot().sendMessage(msg) }
     override fun hasPermission(name: String): Boolean = entity?.hasPermission(name) ?: false
     fun sendTitle(title: String?, subtitle: String?) = onNull(entity) { sendTitleFull(title, subtitle) }
-    fun openMenu(menu: Menu<*>) = onNull(entity) { openMenu(menu) }
+    fun openMenu(menu: Menu<*>) = entity?.openMenu(menu) ?: menu.cancel()
 }
 
 object ConsoleBukkitCommandSender : BukkitCommandSender {

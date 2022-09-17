@@ -12,6 +12,7 @@ import gregc.gregchess.fabric.piece.item
 import gregc.gregchess.fabric.renderer.FabricRenderer
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.Piece
+import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.results.drawBy
 import gregc.gregchess.variant.ChessVariant
@@ -28,7 +29,6 @@ import net.minecraft.network.Packet
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.screen.*
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -142,7 +142,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
         currentMatchUUID = null
     }
 
-    fun startMatch(whitePlayer: ServerPlayerEntity, blackPlayer: ServerPlayerEntity) {
+    fun startMatch(whitePlayer: ChessPlayer<*>, blackPlayer: ChessPlayer<*>) {
         if (currentMatch != null) return
         currentMatchUUID = ChessMatch(
             FabricChessEnvironment(), ChessVariant.Normal,
