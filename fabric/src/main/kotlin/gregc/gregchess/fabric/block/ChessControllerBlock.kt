@@ -16,7 +16,7 @@ import gregc.gregchess.results.drawBy
 import gregc.gregchess.variant.ChessVariant
 import io.github.cottonmc.cotton.gui.PropertyDelegateHolder
 import net.minecraft.block.*
-import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.*
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
@@ -43,7 +43,7 @@ import kotlin.math.min
 class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     BlockEntity(GregChessMod.CHESS_CONTROLLER_ENTITY_TYPE, pos, state), NamedScreenHandlerFactory, PropertyDelegateHolder, ChessControllerInventory {
     var currentMatchUUID: UUID? by BlockEntityDirtyDelegate(null)
-    val currentMatch: ChessMatch? get() = currentMatchUUID?.takeIf { world?.isClient == false }?.let { ChessMatchManager[it] }
+    val currentMatch: ChessMatch? get() = currentMatchUUID?.takeIf { world?.isClient == false }?.let { ChessMatchManager[it] ?: run { currentMatchUUID = null; null } }
     var chessboardStartPos: BlockPos? by BlockEntityDirtyDelegate(null)
     private val selfRef = BlockReference(ChessControllerBlockEntity::class, { this.pos }, { world })
 
@@ -196,6 +196,14 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 
+    internal fun tick(world: World, pos: BlockPos, state: BlockState) {
+        if (world == this.world && !world.isClient) {
+            currentMatch?.let {
+                if (it.running)
+                    it.update()
+            }
+        }
+    }
 }
 
 fun interface ChessControllerInventory : SidedInventory {
@@ -277,5 +285,15 @@ class ChessControllerBlock(settings: Settings?) : BlockWithEntity(settings) {
         val entity = world.getBlockEntity(pos) as? ChessControllerBlockEntity
         entity?.resetBoard()
         super.onStateReplaced(state, world, pos, newState, moved)
+    }
+
+    override fun <T : BlockEntity?> getTicker(
+        world: World?,
+        state: BlockState?,
+        type: BlockEntityType<T>?
+    ): BlockEntityTicker<T>? {
+        return checkType(type, GregChessMod.CHESS_CONTROLLER_ENTITY_TYPE) { world1, pos, state1, be ->
+            be.tick(world1, pos, state1)
+        }
     }
 }
