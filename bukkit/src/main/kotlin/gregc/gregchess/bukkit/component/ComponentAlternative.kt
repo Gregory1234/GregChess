@@ -9,12 +9,20 @@ import gregc.gregchess.component.*
 import gregc.gregchess.registry.*
 import org.bukkit.configuration.ConfigurationSection
 
-class ComponentAlternative<T : Component>(private val default: ComponentType<out T>) : NameRegistered, ComponentIdentifier<T> {
+interface SelectableComponentIdentifier<T : Component> : ComponentIdentifier<T> {
+    fun getGlobalSelected(): ComponentType<out T>
+    fun getLocalSelected(section: ConfigurationSection): ComponentType<out T>
+}
+
+class ComponentAlternative<T : Component>(private val default: ComponentType<out T>) : NameRegistered, SelectableComponentIdentifier<T> {
     override val key get() = BukkitRegistry.COMPONENT_ALTERNATIVE[this]
 
     override fun toString(): String = BukkitRegistry.COMPONENT_ALTERNATIVE.simpleElementToString(this)
 
-    fun getSelectedOrNull(config: ConfigurationSection = module.config, path: String = "Component.${name.snakeToPascal()}"): ComponentType<out T>? {
+    override fun getGlobalSelected() = getSelected()
+    override fun getLocalSelected(section: ConfigurationSection) = getSelectedOrNull(config, name.snakeToPascal()) ?: getSelected()
+
+    private fun getSelectedOrNull(config: ConfigurationSection = module.config, path: String = "Component.${name.snakeToPascal()}"): ComponentType<out T>? {
         @Suppress("UNCHECKED_CAST")
         val ret = config.getFromRegistry(Registry.COMPONENT_TYPE, path) as ComponentType<out T>?
         return when (ret) {
@@ -27,7 +35,7 @@ class ComponentAlternative<T : Component>(private val default: ComponentType<out
         }
     }
 
-    fun getSelected(config: ConfigurationSection = module.config, path: String = "Component.${name.snakeToPascal()}"): ComponentType<out T> =
+    private fun getSelected(config: ConfigurationSection = module.config, path: String = "Component.${name.snakeToPascal()}"): ComponentType<out T> =
         getSelectedOrNull(config, path) ?: default
 
     private val values = mutableSetOf(default)

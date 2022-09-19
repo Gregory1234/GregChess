@@ -1,10 +1,14 @@
-package gregc.gregchess.fabric.coroutines
+package gregc.gregchess.fabric.match
 
+import gregc.gregchess.component.Component
+import gregc.gregchess.component.ComponentIdentifier
+import gregc.gregchess.fabric.component.FabricComponentType
+import gregc.gregchess.fabric.coroutines.FabricDispatcher
+import gregc.gregchess.fabric.registry.FabricRegistry
 import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.match.ChessMatch
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import java.time.Clock
 import java.util.*
 
@@ -17,6 +21,9 @@ class FabricChessEnvironment(@Contextual val uuid: UUID = UUID.randomUUID()) : C
     override val clock: Clock get() = Clock.systemDefaultZone()
     override fun matchCoroutineName(): String = uuid.toString()
     override fun matchToString(): String = "uuid=$uuid"
+    @Transient
+    override val impliedComponents: Set<Component> = FabricRegistry.IMPLIED_COMPONENTS.values.map { it() }.toSet()
+    override val requiredComponents: Set<ComponentIdentifier<*>> get() = setOf(FabricComponentType.RENDERER)
 }
 
 val ChessMatch.fabricEnvironment get() = environment as FabricChessEnvironment

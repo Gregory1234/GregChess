@@ -5,8 +5,6 @@ import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.component.Component
 import gregc.gregchess.fabric.GregChess
-import gregc.gregchess.fabric.component.MatchController
-import gregc.gregchess.fabric.coroutines.uuid
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
 import gregc.gregchess.fabric.nbt.*
@@ -68,7 +66,6 @@ object ChessMatchManager {
     fun settings(v: ChessVariant, variantOptions: Long, boardState: Map<Pos, Piece>, r: FabricRenderer, s: ChessSideManager): Collection<Component> = buildList {
         this += s
         this += Chessboard(v, variantOptions, FEN.fromPieces(boardState))
-        this += MatchController
         this += r
     }
 

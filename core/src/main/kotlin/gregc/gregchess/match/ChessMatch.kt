@@ -47,12 +47,17 @@ class ChessMatch private constructor(
         require((state >= State.RUNNING) == (startTime != null)) { "Start time bad" }
         require((state >= State.STOPPED) == (endTime != null)) { "End time bad" }
         require((state >= State.STOPPED) == (results != null)) { "Results bad" }
+        for (c in environment.impliedComponents) {
+            require(c !in components)
+        }
         try {
             components.require(ComponentType.CHESSBOARD)
-            for (t in variant.requiredComponents) {
-                components.firstOrNull { it.type == t } ?: throw ComponentNotFoundException(t)
+            for (t in variant.requiredComponents + environment.requiredComponents) {
+                components.require(t)
             }
-            components.forEach { it.init(this, eventManager.registry(ChessEventComponentOwner(it.type))) }
+            for (c in components + environment.impliedComponents) {
+                c.init(this, eventManager.registry(ChessEventComponentOwner(c.type)))
+            }
         } catch (e: Exception) {
             panic(e)
         }

@@ -1,6 +1,7 @@
 package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.ByColor
+import gregc.gregchess.bukkit.component.SelectableComponentIdentifier
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkit.player.BukkitPlayer
@@ -8,12 +9,11 @@ import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.component.ComponentList
+import gregc.gregchess.component.ComponentType
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.registry.Registry
-import gregc.gregchess.registry.name
-import gregc.gregchess.snakeToPascal
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
@@ -52,11 +52,23 @@ object SettingsManager {
         val variantOptions = section.variantOptionsParser()
 
         val context = SettingsParserContext(variant, variantOptions, section)
-        val requestedComponents = variant.requiredComponents + variant.optionalComponents +
-                BukkitRegistry.HOOKED_COMPONENTS.elements + BukkitRegistry.COMPONENT_ALTERNATIVE.values.map { it.getSelectedOrNull(section, it.name.snakeToPascal()) ?: it.getSelected() }
+        val requestedComponents = variant.requiredComponents + BukkitRegistry.OPTIONAL_COMPONENTS.elements +
+                BukkitRegistry.REQUIRED_COMPONENTS.elements + BukkitRegistry.REQUIRED_COMPONENT_ALTERNATIVES.elements
         val components = requestedComponents.mapNotNull { req ->
-            val f = BukkitRegistry.SETTINGS_PARSER[req]
-            context.f()
+            when (req) {
+                is ComponentType<*> -> {
+                    val f = BukkitRegistry.SETTINGS_PARSER[req]
+                    context.f()
+                }
+                is SelectableComponentIdentifier<*> -> {
+                    val t = req.getLocalSelected(section)
+                    val f = BukkitRegistry.SETTINGS_PARSER[t]
+                    context.f()
+                }
+                else -> {
+                    throw IllegalArgumentException("$req (${req::class}) is not SelectableComponentIdentifier")
+                }
+            }
         }
 
         val environment = BukkitChessEnvironment(name, round)

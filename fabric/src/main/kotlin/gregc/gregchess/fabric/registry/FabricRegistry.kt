@@ -2,6 +2,7 @@ package gregc.gregchess.fabric.registry
 
 import gregc.gregchess.ByColor
 import gregc.gregchess.Color
+import gregc.gregchess.component.Component
 import gregc.gregchess.fabric.FabricChessModule
 import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.piece.PieceBlock
@@ -14,6 +15,8 @@ object FabricRegistry {
     val PIECE_BLOCK = ConnectedBiRegistry<_, PieceBlock>("piece_block", PieceRegistryView)
     @JvmField
     val FLOOR_RENDERER = ConnectedRegistry<_, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
+    @JvmField
+    val IMPLIED_COMPONENTS = PartialConnectedRegistry<_, () -> Component>("implied_components", Registry.COMPONENT_TYPE)
 }
 
 operator fun <T> ConnectedBiRegistry<Piece, T>.set(key: PieceType, v: ByColor<T>) {

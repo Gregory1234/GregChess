@@ -3,11 +3,11 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.GregChessCore
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
-import gregc.gregchess.bukkit.component.BukkitComponentType
-import gregc.gregchess.bukkit.component.ComponentAlternative
+import gregc.gregchess.bukkit.component.*
 import gregc.gregchess.bukkit.match.ChessMatchManager
 import gregc.gregchess.bukkit.match.SettingsManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
+import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
 import gregc.gregchess.bukkit.properties.SimpleScoreboardLayout
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.renderer.BukkitRenderer
@@ -61,11 +61,24 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         BukkitRegistry.SETTINGS_PARSER[ThreeChecks.CHECK_COUNTER] = { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3)) }
     }
 
-    private fun hookComponents() {
-        for (c in listOf(ComponentType.CHESSBOARD, ComponentType.CLOCK, BukkitComponentType.MATCH_CONTROLLER,
-            BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.ADAPTER)) {
-            BukkitRegistry.HOOKED_COMPONENTS += c
+    private fun registerOptionalComponents() {
+        for (c in listOf(ComponentType.CLOCK)) {
+            BukkitRegistry.OPTIONAL_COMPONENTS += c
         }
+    }
+
+    private fun registerRequiredComponents() {
+        for (c in listOf(ComponentType.CHESSBOARD, BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER)) {
+            BukkitRegistry.REQUIRED_COMPONENTS += c
+        }
+        for (a in listOf(ComponentAlternative.RENDERER)) {
+            BukkitRegistry.REQUIRED_COMPONENT_ALTERNATIVES += a
+        }
+    }
+
+    private fun registerImpliedComponents() {
+        BukkitRegistry.IMPLIED_COMPONENTS[BukkitComponentType.MATCH_CONTROLLER] = { MatchController }
+        BukkitRegistry.IMPLIED_COMPONENTS[BukkitComponentType.ADAPTER] = { BukkitGregChessAdapter }
     }
 
     override fun load() {
@@ -76,7 +89,9 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             registerAll<BukkitChessSideType>()
             registerAll<ComponentAlternative<*>>()
         }
-        hookComponents()
+        registerOptionalComponents()
+        registerRequiredComponents()
+        registerImpliedComponents()
         registerSettings()
         BukkitRegistry.FLOOR_RENDERER[KingOfTheHill] = simpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
         BukkitRegistry.CHESS_STATS_PROVIDER["yaml"] = ::YamlChessStats

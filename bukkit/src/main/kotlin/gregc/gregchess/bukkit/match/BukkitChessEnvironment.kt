@@ -2,13 +2,15 @@ package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.config
+import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
+import gregc.gregchess.component.Component
+import gregc.gregchess.component.ComponentIdentifier
 import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.match.ChessMatch
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import java.time.Clock
 import java.time.ZoneId
 import java.util.*
@@ -28,6 +30,11 @@ class BukkitChessEnvironment(
     override val clock: Clock get() = config.getString("TimeZone")?.let { Clock.system(ZoneId.of(it)) } ?: Clock.systemDefaultZone()
     override fun matchCoroutineName(): String = uuid.toString()
     override fun matchToString(): String = "uuid=$uuid"
+
+    override val requiredComponents: Set<ComponentIdentifier<*>>
+        get() = BukkitRegistry.REQUIRED_COMPONENTS.elements + BukkitRegistry.REQUIRED_COMPONENT_ALTERNATIVES.elements
+    @Transient
+    override val impliedComponents: Set<Component> = BukkitRegistry.IMPLIED_COMPONENTS.values.map { it() }.toSet()
 }
 
 val ChessMatch.bukkitEnvironment get() = environment as BukkitChessEnvironment

@@ -18,6 +18,7 @@ class ComponentNotFoundException(type: ComponentIdentifier<*>) : NoSuchElementEx
 interface ComponentCollection : Collection<Component> {
     operator fun <T : Component> get(type: ComponentIdentifier<T>): T?
     fun <T : Component> require(type: ComponentIdentifier<T>): T = get(type) ?: throw ComponentNotFoundException(type)
+    operator fun contains(type: ComponentIdentifier<*>) = get(type) != null
 }
 
 @Serializable(ComponentList.Serializer::class)

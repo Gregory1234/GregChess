@@ -31,7 +31,7 @@ object BukkitRegistry {
     @JvmField
     val QUICK_END_REASONS = ConnectedSetRegistry("quick_end_reasons", Registry.END_REASON)
     @JvmField
-    val HOOKED_COMPONENTS = ConnectedSetRegistry("hooked_components", Registry.COMPONENT_TYPE)
+    val OPTIONAL_COMPONENTS = ConnectedSetRegistry("optional_components", Registry.COMPONENT_TYPE)
     @JvmField
     val BUKKIT_PLUGIN = ConstantRegistry<Plugin>("bukkit_plugin")
     @JvmField
@@ -42,6 +42,12 @@ object BukkitRegistry {
     val VARIANT_OPTIONS_PARSER = ConnectedRegistry<_, VariantOptionsParser>("variant_oprions_parser", Registry.VARIANT)
     @JvmField
     val COMPONENT_ALTERNATIVE = NameRegistry<ComponentAlternative<*>>("component_alternative")
+    @JvmField
+    val REQUIRED_COMPONENTS = ConnectedSetRegistry("required_components", Registry.COMPONENT_TYPE)
+    @JvmField
+    val REQUIRED_COMPONENT_ALTERNATIVES = ConnectedSetRegistry("hooked_component_alternatives", COMPONENT_ALTERNATIVE)
+    @JvmField
+    val IMPLIED_COMPONENTS = PartialConnectedRegistry<_, () -> Component>("implied_components", Registry.COMPONENT_TYPE)
 }
 
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e ->
