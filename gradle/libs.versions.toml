@@ -6,16 +6,16 @@ slf4j = "1.8.0-beta4"
 
 junit = "5.9.0"
 assertk = "0.25"
-mockk = "1.12.7"
+mockk = "1.12.8"
 
 spigot-api = "1.19.2-R0.1-SNAPSHOT"
 
 fabric-minecraft = "1.19.2"
-fabric-yarn = "1.19.2+build.8"
+fabric-yarn = "1.19.2+build.13"
 fabric-loader = "0.14.9"
-fabric-api = "0.60.0+1.19.2"
+fabric-api = "0.61.0+1.19.2"
 fabric-kotlin = "1.8.3+kotlin.1.7.10"
-fabric-libgui = "6.0.1+1.19"
+fabric-libgui = "6.3.0+1.19"
 
 [libraries]
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm", version.ref = "kotlinx-serialization" }
