@@ -1,5 +1,8 @@
 package gregc.gregchess.bukkit
 
+import gregc.gregchess.*
+import gregc.gregchess.Color
+import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.serialization.BukkitConfigLowercase
 import kotlinx.serialization.Serializable
 import org.bukkit.*
@@ -22,3 +25,8 @@ internal fun String.pascalToSnake(): String {
     val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
     return camelRegex.replace(this) { "_${it.value}" }.lowercase()
 }
+
+val ChessModule.plugin get() = BukkitRegistry.BUKKIT_PLUGIN[this].get()
+val ChessModule.config get() = plugin.config
+
+val Color.configName get() = name.snakeToPascal()

@@ -1,5 +1,7 @@
 package gregc.gregchess.fabric
 
+import gregc.gregchess.Pos
+import gregc.gregchess.registry.*
 import net.minecraft.block.*
 import net.minecraft.item.ItemStack
 import net.minecraft.server.world.ChunkHolder.*
@@ -55,3 +57,9 @@ fun World.moveBlock(poses: Collection<BlockPos>, drop: Boolean): Boolean {
 
     return rets.all { it.first }
 }
+
+val NameRegistered.id get() = Identifier(module.namespace, name)
+
+fun Pos.toLong() = (file.toLong() shl 32) or rank.toLong()
+
+fun Pos.Companion.fromLong(v: Long) = Pos((v shr 32).toInt(), v.toInt())
