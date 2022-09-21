@@ -15,10 +15,12 @@ class HumanRequestEvent(val request: HumanRequest, val color: Color, val value: 
     override val type get() = ChessEventType.HUMAN_REQUEST
 }
 
+// TODO: add a way of checking for the same person
 interface HumanChessSide : ChessSide {
     fun isRequesting(request: HumanRequest): Boolean
     fun toggleRequest(match: ChessMatch, request: HumanRequest)
     fun clearRequest(request: HumanRequest)
+    // TODO: add a PlayerStatsSink
 }
 
 abstract class HumanChessSideFacade<T : HumanChessSide>(match: ChessMatch, side: T) : ChessSideFacade<T>(match, side) {

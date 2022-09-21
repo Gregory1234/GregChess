@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 
+// TODO: add a more convenient function for construction
 @Serializable(with = ComponentType.Serializer::class)
 class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerializer<T>) : NameRegistered, ComponentIdentifier<T> {
     object Serializer : NameRegisteredSerializer<ComponentType<*>>("ComponentType", Registry.COMPONENT_TYPE)

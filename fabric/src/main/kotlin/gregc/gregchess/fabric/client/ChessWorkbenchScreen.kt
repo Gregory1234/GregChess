@@ -90,7 +90,7 @@ class ChessWorkbenchGuiDescription(
     null, getBlockPropertyDelegate(context, 0)
 ) {
     private val bases = TagKey.of(Registry.ITEM_KEY, ident("piece_base"))
-    private val whiteDyes = TagKey.of(Registry.ITEM_KEY, Identifier("c", "dye_white"))
+    private val whiteDyes = TagKey.of(Registry.ITEM_KEY, Identifier("c", "dye_white")) // TODO: switch to gregchess tags
     private val blackDyes = TagKey.of(Registry.ITEM_KEY, Identifier("c", "dye_black"))
 
     private val input = DefaultedListInventory(2, ::onInputChanged)

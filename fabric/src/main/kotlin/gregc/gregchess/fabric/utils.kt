@@ -33,6 +33,8 @@ private fun World.notifyAllAfterMoved(pos: BlockPos, state: BlockState) {
     state.prepare(this, pos, i, 512 - 1)
 }
 
+// TODO: make things internal or move to a separate gradle module
+
 fun World.moveBlock(poses: Collection<BlockPos>, drop: Boolean): Boolean {
     val rets = poses.map { pos ->
         val blockState = getBlockState(pos)

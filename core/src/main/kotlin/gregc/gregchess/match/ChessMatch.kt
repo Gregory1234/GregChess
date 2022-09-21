@@ -84,6 +84,7 @@ class ChessMatch private constructor(
 
     private fun Instant.zoned() = atZone(environment.clock.zone)
 
+    // TODO: move time to a Component
     var startTime: Instant?
         get() = startTime_
         private set(v) {

@@ -4,6 +4,8 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSuperclassOf
 
+// TODO: move to a different package
+
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Register(val name: String = "", val data: Array<String> = [])
@@ -13,6 +15,8 @@ annotation class RegisterAll(vararg val classes: KClass<*>)
 
 class AutoRegisterType<T : Any>(val cl: KClass<T>, val register: T.(ChessModule, String, Collection<String>) -> Unit)
 
+// TODO: make it possible to auto register to non-name registries
+// TODO: make it possible to auto register functions
 class AutoRegister(private val module: ChessModule, private val types: Collection<AutoRegisterType<*>>) {
 
     @Suppress("UNCHECKED_CAST")

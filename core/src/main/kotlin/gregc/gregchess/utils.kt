@@ -4,6 +4,8 @@ import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.toKotlinDuration
 
+// TODO: move to a separate gradle module
+
 // TODO: check this statically
 @Target(AnnotationTarget.TYPE)
 @Retention(AnnotationRetention.SOURCE)

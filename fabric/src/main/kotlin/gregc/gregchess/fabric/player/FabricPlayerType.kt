@@ -1,9 +1,9 @@
 package gregc.gregchess.fabric.player
 
 import gregc.gregchess.RegisterAll
-import gregc.gregchess.fabric.GameProfileSerializer
 import gregc.gregchess.player.ChessSideType
 
+// TODO: rename this
 @RegisterAll(ChessSideType::class)
 object FabricPlayerType {
     @JvmField

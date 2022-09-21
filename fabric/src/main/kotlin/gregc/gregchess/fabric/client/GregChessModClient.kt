@@ -4,6 +4,7 @@ import gregc.gregchess.fabric.GregChessMod
 import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.gui.screen.ingame.HandledScreens
 
+// TODO: add @Environment(EnvType.CLIENT) where possible
 
 object GregChessModClient : ClientModInitializer {
     override fun onInitializeClient() {

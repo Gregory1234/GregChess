@@ -7,7 +7,7 @@ import java.time.Clock
 
 // TODO: choose a new better name?
 interface ChessEnvironment {
-    val pgnSite: String
+    val pgnSite: String // TODO: replace with a method
     val pgnEventName: String
     val pgnRound: Int
 

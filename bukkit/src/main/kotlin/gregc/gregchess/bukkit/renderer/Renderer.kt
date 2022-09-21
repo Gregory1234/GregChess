@@ -7,6 +7,7 @@ import gregc.gregchess.component.ComponentType
 import gregc.gregchess.match.ChessMatch
 import org.bukkit.Location
 
+// TODO: remove this?
 interface Renderer : Component {
     override val type: ComponentType<out Renderer>
 

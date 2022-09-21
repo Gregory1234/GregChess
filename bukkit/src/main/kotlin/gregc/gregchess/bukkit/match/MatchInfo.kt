@@ -8,6 +8,8 @@ import gregc.gregchess.event.ChessEvent
 import gregc.gregchess.match.ChessMatch
 import net.md_5.bungee.api.chat.TextComponent
 
+// TODO: add a way to order the info better
+// TODO: make sure the info is in the correct format
 class MatchInfoEvent(private val textComponent: TextComponentBuilder) : ChessEvent {
     override val type get() = BukkitChessEventType.MATCH_INFO
 

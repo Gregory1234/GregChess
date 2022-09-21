@@ -7,6 +7,7 @@ import gregc.gregchess.event.*
 import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.Serializable
 
+// TODO: try to serialize without redundant "side" in each chess side
 @Serializable
 class ChessSideManager(val white: ChessSide, val black: ChessSide) : Component {
     constructor(white: ChessPlayer<*>, black: ChessPlayer<*>) : this(white.createChessSide(Color.WHITE), black.createChessSide(Color.BLACK))

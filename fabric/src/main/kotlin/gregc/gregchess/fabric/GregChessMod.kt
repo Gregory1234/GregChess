@@ -68,6 +68,8 @@ object GregChessMod : ModInitializer {
 
         // TODO: add crafting recipes for all of the blocks
         // TODO: add a chess clock
+        // TODO: draw currently held item to the screen
+        // TODO: draw current opponent to the screen
         Registry.register(Registry.BLOCK, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK)
         Registry.register(Registry.ITEM, ident("chessboard_floor"), CHESSBOARD_FLOOR_BLOCK_ITEM)
         Registry.register(Registry.BLOCK_ENTITY_TYPE, ident("chessboard_floor"), CHESSBOARD_FLOOR_ENTITY_TYPE)

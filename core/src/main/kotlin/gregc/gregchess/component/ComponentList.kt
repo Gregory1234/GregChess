@@ -7,6 +7,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 
+// TODO: remove this?
 interface ComponentIdentifier<T : Component> {
     val matchedTypes: Set<ComponentType<out T>>? get() = null
     @Suppress("UNCHECKED_CAST")
@@ -76,6 +77,7 @@ class ComponentList private constructor(private val componentMap: Map<ComponentT
     override fun contains(element: Component): Boolean = componentMap.containsValue(element)
 }
 
+// TODO: implied components should be accessible?
 class ComponentListFacade(override val match: ChessMatch, val components: ComponentList) : AnyFacade, ComponentCollection by components {
     private val facadeCache = mutableMapOf<Component, ComponentFacade<*>>()
     @Suppress("UNCHECKED_CAST")

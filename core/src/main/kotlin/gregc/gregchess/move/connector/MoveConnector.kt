@@ -11,7 +11,7 @@ interface MoveConnector {
     val holders: Map<PlacedPieceType<*>, PieceHolder<*>>
 }
 
-class MoveConnectorType<T : MoveConnector>(val cl: KClass<T>) {
+class MoveConnectorType<T : MoveConnector>(val cl: KClass<T>) { // TODO: remove or use the class reference
 
     @RegisterAll(MoveConnectorType::class)
     companion object {

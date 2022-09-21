@@ -18,7 +18,7 @@ import org.bukkit.plugin.Plugin
 import org.bukkit.scoreboard.Scoreboard
 import java.util.*
 
-
+// TODO: add a way to register variants with extra functions directly with annotations
 object BukkitRegistry {
     @JvmField
     val PROPERTY_TYPE = NameRegistry<PropertyType>("property_type")

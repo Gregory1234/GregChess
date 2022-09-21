@@ -18,6 +18,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.Bukkit
 
+// TODO: make it removable
 @Serializable
 class ScoreboardManager : Component {
 

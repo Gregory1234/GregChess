@@ -11,6 +11,7 @@ interface ChessEvent {
     val type: ChessEventType<out @SelfType ChessEvent>
 }
 
+// TODO: attempt to remove this
 class ChessEventType<T> {
     companion object {
         @JvmField

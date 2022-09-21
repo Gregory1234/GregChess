@@ -11,6 +11,8 @@ import gregc.gregchess.results.EndReason
 import gregc.gregchess.stats.ChessStat
 import gregc.gregchess.variant.ChessVariant
 
+// TODO: put registries in a separate gradle module
+
 private class RegistryValidationException(
     val module: ChessModule, val type: Registry<*, *, *>, val text: String
 ): IllegalStateException("$module:${type.name}: $text")

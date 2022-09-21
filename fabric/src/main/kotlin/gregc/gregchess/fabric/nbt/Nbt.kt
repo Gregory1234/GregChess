@@ -5,6 +5,8 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import net.minecraft.nbt.NbtElement
 
+// TODO: move this to a separate gradle module
+
 sealed interface NbtFormat : SerialFormat {
     fun <T> encodeToNbtElement(serializer: SerializationStrategy<T>, value: T): NbtElement?
     fun <T> decodeFromNbtElement(deserializer: DeserializationStrategy<T>, nbt: NbtElement?): T

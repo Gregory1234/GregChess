@@ -12,6 +12,7 @@ import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.EndReason
 import org.bukkit.plugin.Plugin
 
+// TODO: rename this
 object BukkitGregChessCore {
     val AUTO_REGISTER = listOf(
         EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER, ComponentAlternative.AUTO_REGISTER

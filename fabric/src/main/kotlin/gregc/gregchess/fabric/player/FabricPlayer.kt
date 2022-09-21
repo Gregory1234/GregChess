@@ -16,6 +16,7 @@ import net.minecraft.text.Text
 import java.util.*
 import kotlin.coroutines.*
 
+// TODO: store current games
 @Serializable
 class FabricPlayer(
     @Contextual val server: MinecraftServer,

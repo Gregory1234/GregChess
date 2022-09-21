@@ -23,6 +23,7 @@ import kotlin.time.Duration
 
 internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
 
+    // TODO: remove this
     private val clockSettings: Map<String, ChessClock>
         get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
             val section = config.getConfigurationSection("Settings.Clock.$it")!!

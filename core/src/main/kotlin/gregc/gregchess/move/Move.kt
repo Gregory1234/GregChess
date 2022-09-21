@@ -9,6 +9,7 @@ import gregc.gregchess.piece.boardPiece
 import gregc.gregchess.registry.Registry
 import kotlinx.serialization.Serializable
 
+// TODO: add move type in order to make the serialization more concise
 @Serializable
 data class Move(
     val pieceTracker: PieceTracker, val display: Pos,

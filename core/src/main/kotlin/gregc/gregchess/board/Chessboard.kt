@@ -89,8 +89,8 @@ private class SquareChessboard(private val squares: Map<Pos, Square>, private va
 
 @Serializable
 class Chessboard private constructor (
-    val initialFEN: FEN,
-    private val squares: Map<Pos, Square>,
+    val initialFEN: FEN, // TODO: don't rely on FEN
+    private val squares: Map<Pos, Square>, // TODO: add other board shapes and sizes
     private val counters: BoardCounters = BoardCounters(initialFEN.halfmoveClock, initialFEN.fullmoveCounter, initialFEN.currentColor),
     private val boardHashes: MutableMap<Int, Int> = mutableMapOf(initialFEN.hashed() to 1),
     private val capturedPieces: MutableList<CapturedPiece> = mutableListOf(),

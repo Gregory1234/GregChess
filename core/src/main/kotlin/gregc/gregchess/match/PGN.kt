@@ -7,6 +7,7 @@ import gregc.gregchess.event.ChessEventType
 import java.time.format.DateTimeFormatter
 
 class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {
+    // TODO: add a way to order the tags better
     class GenerateEvent internal constructor(private val tags: MutableList<TagPair>) : ChessEvent {
         operator fun set(name: String, value: String) {
             require(tags.none { it.name == name }) { "Tag already used: $name" }
@@ -53,6 +54,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
     companion object {
         fun generate(match: ChessMatch): PGN {
             val tags = mutableListOf<TagPair>()
+            // TODO: move most tag generation to Components
             tags += TagPair("Event", match.environment.pgnEventName)
             tags += TagPair("Site", match.environment.pgnSite)
             val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(match.zonedStartTime)

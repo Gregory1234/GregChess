@@ -6,6 +6,7 @@ interface ChessEventOwner {
     fun isOf(parent: ChessEventOwner): Boolean = this == parent
 }
 
+// TODO: simplify this
 class ChessEventSubOwner(val owner: ChessEventOwner, val subOwner: Any) : ChessEventOwner {
     override fun toString(): String = "$owner -> $subOwner"
     override fun equals(other: Any?): Boolean = other is ChessEventSubOwner && other.owner == owner && other.subOwner == subOwner
