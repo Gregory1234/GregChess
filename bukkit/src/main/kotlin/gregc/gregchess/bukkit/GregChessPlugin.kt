@@ -128,12 +128,14 @@ object GregChessPlugin : Listener {
                         if (settings != null) {
                             val res = duelRequest.call(RequestData(sender, opponent, settings.name))
                             if (res == RequestResponse.ACCEPT) {
-                                if (sender.isInMatch || sender.isSpectatingMatch) {
+                                if (sender.isInMatch) {
                                     sender.sendMessage(YOU_IN_MATCH)
-                                } else if (opponent.isInMatch || opponent.isSpectatingMatch) {
+                                } else if (opponent.isInMatch) {
                                     sender.sendMessage(OPPONENT_IN_MATCH)
                                 } else {
                                     settings.components.require(ComponentAlternative.RENDERER).validate()
+                                    if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
+                                    if (opponent.isSpectatingMatch) opponent.leaveSpectatedMatch()
                                     settings.createMatch(byColor(sender, opponent)).start()
                                 }
                             }
@@ -147,10 +149,11 @@ object GregChessPlugin : Listener {
                     cRequire(Stockfish.Config.hasStockfish, STOCKFISH_NOT_FOUND)
                     val settings = sender.openSettingsMenu()
                     if (settings != null) {
-                        if (sender.isInMatch || sender.isSpectatingMatch) {
+                        if (sender.isInMatch) {
                             sender.sendMessage(YOU_IN_MATCH)
                         } else {
                             settings.components.require(ComponentAlternative.RENDERER).validate()
+                            if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                             settings.createMatch(byColor(sender, Stockfish())).start()
                         }
                     }
@@ -313,10 +316,11 @@ object GregChessPlugin : Listener {
                 }
             }
             playerSubcommand("spectate") {
-                requireNoMatch() // TODO: allow for switching spectated players
+                requireNoMatch()
                 argument(playerArgument("spectated")) { spectated ->
                     validate(PLAYER_NOT_IN_MATCH) { spectated().isInMatch }
                     execute {
+                        if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                         sender.spectateMatch(spectated().currentMatch.cNotNull(PLAYER_NOT_IN_MATCH))
                     }
                 }
@@ -357,6 +361,7 @@ object GregChessPlugin : Listener {
                     argument(stringArgument("name")) { name ->
                         execute {
                             val f = plugin.dataFolder.resolve("snapshots/${name()}.json")
+                            if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                             json.decodeFromString<ChessMatch>(f.readText()).sync()
                         }
                     }
@@ -455,6 +460,7 @@ object GregChessPlugin : Listener {
                 requireNoMatch()
                 validate(NO_MATCH_TO_REJOIN) { sender.activeMatches.isNotEmpty() }
                 execute {
+                    if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                     sender.joinMatch()
                 }
             }
@@ -487,12 +493,14 @@ object GregChessPlugin : Listener {
                     if (settings != null) {
                         val res = rematchRequest.call(RequestData(sender, opponent, settings.name))
                         if (res == RequestResponse.ACCEPT) {
-                            if (sender.isInMatch || sender.isSpectatingMatch) {
+                            if (sender.isInMatch) {
                                 sender.sendMessage(YOU_IN_MATCH)
-                            } else if (opponent.isInMatch || opponent.isSpectatingMatch) {
+                            } else if (opponent.isInMatch) {
                                 sender.sendMessage(OPPONENT_IN_MATCH)
                             } else {
                                 settings.components.require(ComponentAlternative.RENDERER).validate()
+                                if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
+                                if (opponent.isSpectatingMatch) sender.leaveSpectatedMatch()
                                 settings.createMatch(if (rematchInfo.lastColor == Color.BLACK) byColor(sender, opponent) else byColor(opponent, sender)).start()
                             }
                         }
