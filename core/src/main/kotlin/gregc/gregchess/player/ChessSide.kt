@@ -2,7 +2,7 @@ package gregc.gregchess.player
 
 import gregc.gregchess.*
 import gregc.gregchess.event.ChessEvent
-import gregc.gregchess.event.ChessEventRegistry
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.AnyFacade
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.registry.*
@@ -34,7 +34,7 @@ interface ChessSide {
 
     val type: ChessSideType<out @SelfType ChessSide>
 
-    fun init(match: ChessMatch, events: ChessEventRegistry) {}
+    fun init(match: ChessMatch, events: EventListenerRegistry) {}
 
     fun createFacade(match: ChessMatch): ChessSideFacade<*>
 }

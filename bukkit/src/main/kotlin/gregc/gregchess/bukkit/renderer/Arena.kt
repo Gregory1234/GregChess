@@ -111,7 +111,7 @@ class Arena internal constructor(
 
     fun equivalent(other: Arena) = world == other.world && tileSize == other.tileSize && offset == other.offset
 
-    fun registerEvents(events: ChessEventRegistry) {
+    fun registerEvents(events: EventListenerRegistry) {
         events.register(ChessEventType.BASE) {
             if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC) ArenaManager.freeArena(this)
         }

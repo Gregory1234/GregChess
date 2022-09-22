@@ -1,7 +1,6 @@
 package gregc.gregchess.fabric.player
 
-import gregc.gregchess.Color
-import gregc.gregchess.Pos
+import gregc.gregchess.*
 import gregc.gregchess.event.*
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.client.PromotionMenuFactory
@@ -74,23 +73,23 @@ class FabricChessSide(val player: FabricPlayer, override val color: Color) : Che
         player.showMatchResults(color, match.results!!)
     }
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         require(match.server == player.server)
         events.registerE(TurnEvent.START) {
             startTurn(match)
         }
-        events.register(ChessEventType.BASE, ChessEventOrderConstraint(
+        events.register(ChessEventType.BASE, OrderConstraint(
             runBeforeAll = true,
-            runAfter = setOf(ChessEventComponentOwner(FabricComponentType.MATCH_CONTROLLER))
+            runAfter = setOf(FabricComponentType.MATCH_CONTROLLER)
         )) {
             when(it) {
                 ChessBaseEvent.START -> onStart(match)
                 else -> {}
             }
         }
-        events.register(ChessEventType.BASE, ChessEventOrderConstraint(
+        events.register(ChessEventType.BASE, OrderConstraint(
             runAfterAll = true,
-            runBefore = setOf(ChessEventComponentOwner(FabricComponentType.MATCH_CONTROLLER))
+            runBefore = setOf(FabricComponentType.MATCH_CONTROLLER)
         )) {
             when(it) {
                 ChessBaseEvent.STOP -> onStop(match)

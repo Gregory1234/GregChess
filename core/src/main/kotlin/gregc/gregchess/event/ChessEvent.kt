@@ -1,5 +1,6 @@
 package gregc.gregchess.event
 
+import gregc.gregchess.OrderConstraint
 import gregc.gregchess.SelfType
 import gregc.gregchess.board.SetFenEvent
 import gregc.gregchess.match.PGN
@@ -35,16 +36,9 @@ class ChessEventType<T> {
     }
 }
 
-data class ChessEventOrderConstraint(
-    val runBeforeAll: Boolean = false,
-    val runAfterAll: Boolean = false,
-    val runBefore: Set<ChessEventOwner> = emptySet(),
-    val runAfter: Set<ChessEventOwner> = emptySet()
-)
-
 class ChessEventHandler<in T : ChessEvent>(
-    val owner: ChessEventOwner,
-    val constraints: ChessEventOrderConstraint,
+    val listener: EventListener,
+    val constraints: OrderConstraint<EventListener>,
     val callback: (T) -> Unit
 )
 

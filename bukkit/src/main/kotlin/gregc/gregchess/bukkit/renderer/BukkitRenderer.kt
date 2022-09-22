@@ -29,7 +29,7 @@ data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.P
         ArenaManager.validateFreeArenas()
     }
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         this.arena = ArenaManager.reserveArena(match)
         arena.registerEvents(events.subRegistry("arena"))
         events.registerR(AtomicChess.EXPLOSION_EVENT) {

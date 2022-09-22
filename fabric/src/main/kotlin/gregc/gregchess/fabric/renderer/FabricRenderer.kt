@@ -57,7 +57,7 @@ data class FabricRenderer(
         }
     }
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         events.register(ChessEventType.BASE, ::handleBaseEvent)
         events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }
         events.register(FabricChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match, it) }

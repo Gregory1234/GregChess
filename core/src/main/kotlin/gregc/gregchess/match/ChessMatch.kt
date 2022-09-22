@@ -56,7 +56,7 @@ class ChessMatch private constructor(
                 components.require(t)
             }
             for (c in components + environment.impliedComponents) {
-                c.init(this, eventManager.registry(ChessEventComponentOwner(c.type)))
+                c.init(this, eventManager.registry(c.type))
             }
         } catch (e: Exception) {
             panic(e)

@@ -56,7 +56,7 @@ class ChessClock private constructor(
 
     override val type get() = ComponentType.CLOCK
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         lastTime = Instant.now(match.environment.clock)
         events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
         events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }

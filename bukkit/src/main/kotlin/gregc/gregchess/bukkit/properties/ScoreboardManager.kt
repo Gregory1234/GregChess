@@ -39,7 +39,7 @@ class ScoreboardManager : Component {
     @Transient
     private val layout: ScoreboardLayout = config.getFromRegistry(BukkitRegistry.SCOREBOARD_LAYOUT_PROVIDER, "Scoreboard.Layout")!!(scoreboard)
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         events.register(ChessEventType.BASE) {
             when (it) {
                 ChessBaseEvent.UPDATE -> update()

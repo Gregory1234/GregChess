@@ -2,7 +2,7 @@ package gregc.gregchess.component
 
 import gregc.gregchess.SelfType
 import gregc.gregchess.event.ChessEvent
-import gregc.gregchess.event.ChessEventRegistry
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.AnyFacade
 import gregc.gregchess.match.ChessMatch
 
@@ -10,7 +10,7 @@ interface Component {
 
     val type: ComponentType<out @SelfType Component>
 
-    fun init(match: ChessMatch, events: ChessEventRegistry) {}
+    fun init(match: ChessMatch, events: EventListenerRegistry) {}
 
 }
 

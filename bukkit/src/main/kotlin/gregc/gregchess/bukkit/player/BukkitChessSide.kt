@@ -136,10 +136,10 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
             player.unregisterMatch(match)
     }
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
-        events.register(ChessEventType.BASE, ChessEventOrderConstraint(
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
+        events.register(ChessEventType.BASE, OrderConstraint(
             runBeforeAll = true,
-            runAfter = setOf(ChessEventComponentOwner(BukkitComponentType.MATCH_CONTROLLER))
+            runAfter = setOf(BukkitComponentType.MATCH_CONTROLLER)
         )) {
             when(it) {
                 ChessBaseEvent.START -> onStart(match)
@@ -147,9 +147,9 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
                 else -> {}
             }
         }
-        events.register(ChessEventType.BASE, ChessEventOrderConstraint(
+        events.register(ChessEventType.BASE, OrderConstraint(
             runAfterAll = true,
-            runBefore = setOf(ChessEventComponentOwner(BukkitComponentType.MATCH_CONTROLLER))
+            runBefore = setOf(BukkitComponentType.MATCH_CONTROLLER)
         )) {
             when(it) {
                 ChessBaseEvent.STOP -> onStop(match)

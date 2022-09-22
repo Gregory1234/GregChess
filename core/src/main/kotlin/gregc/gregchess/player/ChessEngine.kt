@@ -32,7 +32,7 @@ class EngineChessSide<T : ChessEngine>(val engine: T, override val color: Color)
     @Suppress("UNCHECKED_CAST")
     override val type: ChessSideType<EngineChessSide<T>> get() = engine.type as ChessSideType<EngineChessSide<T>>
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         events.register(ChessEventType.BASE) {
             if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC)
                 engine.stop()

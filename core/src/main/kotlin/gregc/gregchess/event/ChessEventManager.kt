@@ -11,9 +11,9 @@ class ChessEventManager : ChessEventCaller {
 
         repeat(256) {
             handlersToOrder.removeIf { h ->
-                if (handlersToOrder.any { o -> h.constraints.runBefore.any { o.owner.isOf(it) } })
+                if (handlersToOrder.any { o -> h.constraints.runBefore.any { o.listener.isOf(it) } })
                     false
-                else if (handlersToOrder.any { o -> o.constraints.runAfter.any { h.owner.isOf(it) } })
+                else if (handlersToOrder.any { o -> o.constraints.runAfter.any { h.listener.isOf(it) } })
                     false
                 else if (!h.constraints.runBeforeAll && handlersToOrder.any { it.constraints.runBeforeAll })
                     false
@@ -41,5 +41,5 @@ class ChessEventManager : ChessEventCaller {
         handlers.getOrPut(eventType, ::mutableListOf) += handler as ChessEventHandler<ChessEvent>
     }
 
-    fun registry(owner: ChessEventOwner) = ChessEventRegistry(owner, this)
+    fun registry(listener: EventListener) = EventListenerRegistry(listener, this)
 }

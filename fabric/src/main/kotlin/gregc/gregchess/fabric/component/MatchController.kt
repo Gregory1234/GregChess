@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric.component
 
+import gregc.gregchess.OrderConstraint
 import gregc.gregchess.component.Component
 import gregc.gregchess.event.*
 import gregc.gregchess.fabric.match.ChessMatchManager
@@ -19,14 +20,14 @@ object MatchController : Component {
         ChessMatchManager -= match
     }
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
-        events.register(ChessEventType.BASE, ChessEventOrderConstraint(runBeforeAll = true)) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
+        events.register(ChessEventType.BASE, OrderConstraint(runBeforeAll = true)) {
             when (it) {
                 ChessBaseEvent.START -> onStart(match)
                 else -> {}
             }
         }
-        events.register(ChessEventType.BASE, ChessEventOrderConstraint(runAfterAll = true)) {
+        events.register(ChessEventType.BASE, OrderConstraint(runAfterAll = true)) {
             when (it) {
                 ChessBaseEvent.CLEAR, ChessBaseEvent.PANIC -> onClear(match)
                 else -> {}

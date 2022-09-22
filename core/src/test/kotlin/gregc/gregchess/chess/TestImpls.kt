@@ -4,7 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentType
 import gregc.gregchess.event.ChessEvent
-import gregc.gregchess.event.ChessEventRegistry
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.*
@@ -32,7 +32,7 @@ class TestChessPlayer(private val spy: Boolean) : ChessPlayer<TestChessSide> {
 class TestChessSide(override val name: String, override val color: Color) : ChessSide {
     override val type get() = GregChess.TEST_SIDE
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         events.registerAny(::handleEvent)
     }
 
@@ -49,7 +49,7 @@ object TestComponent : Component {
 
     override val type get() = GregChess.TEST_COMPONENT
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         events.registerAny(::handleEvent)
     }
 

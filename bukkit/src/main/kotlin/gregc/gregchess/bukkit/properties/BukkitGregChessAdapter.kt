@@ -11,7 +11,7 @@ import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.clock.TimeControl
 import gregc.gregchess.clock.clock
 import gregc.gregchess.component.Component
-import gregc.gregchess.event.ChessEventRegistry
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.variant.ThreeChecks
 import kotlinx.serialization.Serializable
@@ -35,7 +35,7 @@ object BukkitGregChessAdapter : Component, BukkitRegistering {
 
     private val timeFormat: String get() = config.getPathString("TimeFormat")
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         events.registerR(BukkitChessEventType.ADD_PROPERTIES) {
             match.clock?.apply {
                 if (timeControl.type == TimeControl.Type.FIXED) {

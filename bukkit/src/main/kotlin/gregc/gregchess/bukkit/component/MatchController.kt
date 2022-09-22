@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit.component
 
+import gregc.gregchess.OrderConstraint
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.match.ChessMatchManager
 import gregc.gregchess.bukkit.match.presetName
@@ -51,8 +52,8 @@ object MatchController : Component {
         ChessMatchManager -= match
     }
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
-        events.register(ChessEventType.BASE, ChessEventOrderConstraint(runBeforeAll = true)) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
+        events.register(ChessEventType.BASE, OrderConstraint(runBeforeAll = true)) {
             when (it) {
                 ChessBaseEvent.START -> onStart(match)
                 ChessBaseEvent.RUNNING -> onRunning(match)
@@ -63,7 +64,7 @@ object MatchController : Component {
                 else -> {}
             }
         }
-        events.register(ChessEventType.BASE, ChessEventOrderConstraint(runAfterAll = true)) {
+        events.register(ChessEventType.BASE, OrderConstraint(runAfterAll = true)) {
             when (it) {
                 ChessBaseEvent.STOP -> onStop(match)
                 ChessBaseEvent.CLEAR, ChessBaseEvent.PANIC -> onClear(match)

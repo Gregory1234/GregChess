@@ -33,7 +33,7 @@ class SpectatorManager : Component {
         spectatorList -= p
     }
 
-    override fun init(match: ChessMatch, events: ChessEventRegistry) {
+    override fun init(match: ChessMatch, events: EventListenerRegistry) {
         events.register(ChessEventType.BASE) {
             if (it == ChessBaseEvent.STOP) stop(match)
             else if (it == ChessBaseEvent.CLEAR) clear(match)

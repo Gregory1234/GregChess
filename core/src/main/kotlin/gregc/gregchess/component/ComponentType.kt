@@ -3,6 +3,8 @@ package gregc.gregchess.component
 import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.clock.ChessClock
+import gregc.gregchess.event.ComplexEventListener
+import gregc.gregchess.event.EventListener
 import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.registry.*
 import kotlinx.serialization.KSerializer
@@ -12,7 +14,7 @@ import kotlin.reflect.full.companionObjectInstance
 
 // TODO: add a more convenient function for construction
 @Serializable(with = ComponentType.Serializer::class)
-class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerializer<T>) : NameRegistered, ComponentIdentifier<T> {
+class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerializer<T>) : NameRegistered, ComponentIdentifier<T>, EventListener {
     object Serializer : NameRegisteredSerializer<ComponentType<*>>("ComponentType", Registry.COMPONENT_TYPE)
 
     override val key get() = Registry.COMPONENT_TYPE[this]
@@ -22,6 +24,10 @@ class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerialize
     override val matchedTypes: Set<ComponentType<out T>> get() = setOf(this)
     @Suppress("UNCHECKED_CAST")
     override fun matchesOrNull(c: Component): T? = if (c.type == this) c as T else null
+
+    override fun isOf(parent: EventListener): Boolean = parent == this
+
+    override fun div(subOwner: Any): EventListener = ComplexEventListener(this, subOwner)
 
     @RegisterAll(ComponentType::class)
     companion object {

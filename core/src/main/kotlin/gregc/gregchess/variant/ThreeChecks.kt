@@ -3,8 +3,8 @@ package gregc.gregchess.variant
 import gregc.gregchess.*
 import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentType
-import gregc.gregchess.event.ChessEventRegistry
 import gregc.gregchess.event.ChessEventType
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
@@ -36,7 +36,7 @@ object ThreeChecks : ChessVariant(), Registering {
     ) : Component, CheckCounterConnector {
         constructor(limit: Int) : this(limit, mutableByColor(0))
 
-        override fun init(match: ChessMatch, events: ChessEventRegistry) {
+        override fun init(match: ChessMatch, events: EventListenerRegistry) {
             events.register(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
                 e[CHECK_COUNTER_CONNECTOR] = this
             }

@@ -49,3 +49,10 @@ class MultiExceptionContext {
         }
     }
 }
+
+data class OrderConstraint<T>(
+    val runBeforeAll: Boolean = false,
+    val runAfterAll: Boolean = false,
+    val runBefore: Set<T> = emptySet(),
+    val runAfter: Set<T> = emptySet()
+)
