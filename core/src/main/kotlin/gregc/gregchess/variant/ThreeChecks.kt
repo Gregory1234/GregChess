@@ -109,7 +109,7 @@ object ThreeChecks : ChessVariant(), Registering {
     val CHECK_COUNTER_TRAIT = MoveTraitType(CheckCounterTrait.serializer())
 
     @JvmField
-    val CHECK_COUNTER_CONNECTOR = MoveConnectorType(CheckCounterConnector::class)
+    val CHECK_COUNTER_CONNECTOR = MoveConnectorType<CheckCounterConnector>()
 
     @JvmField
     @Register

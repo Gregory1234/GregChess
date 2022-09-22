@@ -3,9 +3,8 @@ package gregc.gregchess.fabric.player
 import gregc.gregchess.RegisterAll
 import gregc.gregchess.player.ChessSideType
 
-// TODO: rename this
 @RegisterAll(ChessSideType::class)
-object FabricPlayerType {
+object FabricChessSideType {
     @JvmField
-    val FABRIC = ChessSideType(FabricChessSide.serializer())
+    val FABRIC = ChessSideType<FabricChessSide>()
 }

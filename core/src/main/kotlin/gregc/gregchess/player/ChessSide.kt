@@ -6,8 +6,7 @@ import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.AnyFacade
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.registry.*
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import kotlinx.serialization.modules.SerializersModule
 
 fun interface ChessPlayer<out S : ChessSide> {
@@ -15,7 +14,7 @@ fun interface ChessPlayer<out S : ChessSide> {
 }
 
 @Serializable(with = ChessSideType.Serializer::class)
-class ChessSideType<T: ChessSide>(val serializer: KSerializer<T>) : NameRegistered {
+class ChessSideType<T: ChessSide> @PublishedApi internal constructor(val serializer: KSerializer<T>) : NameRegistered {
     object Serializer : NameRegisteredSerializer<ChessSideType<*>>("ChessSideType", Registry.SIDE_TYPE)
 
     override val key get() = Registry.SIDE_TYPE[this]
@@ -23,6 +22,9 @@ class ChessSideType<T: ChessSide>(val serializer: KSerializer<T>) : NameRegister
     override fun toString(): String = Registry.SIDE_TYPE.simpleElementToString(this)
 
     companion object {
+
+        inline operator fun <reified T : ChessSide> invoke() = ChessSideType(serializer<T>())
+
         internal val AUTO_REGISTER = AutoRegisterType(ChessSideType::class) { m, n, _ -> Registry.SIDE_TYPE[m, n] = this }
     }
 }

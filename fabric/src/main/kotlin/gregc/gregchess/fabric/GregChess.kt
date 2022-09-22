@@ -6,7 +6,7 @@ import gregc.gregchess.fabric.component.FabricComponentType
 import gregc.gregchess.fabric.component.MatchController
 import gregc.gregchess.fabric.piece.shortPieceBlocks
 import gregc.gregchess.fabric.piece.tallPieceBlocks
-import gregc.gregchess.fabric.player.FabricPlayerType
+import gregc.gregchess.fabric.player.FabricChessSideType
 import gregc.gregchess.fabric.registry.FabricRegistry
 import gregc.gregchess.fabric.registry.set
 import gregc.gregchess.fabric.renderer.simpleFloorRenderer
@@ -38,7 +38,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
         GregChessCore.autoRegister(this).apply {
             registerAll<FabricComponentType>()
             registerAll<GregChess>()
-            registerAll<FabricPlayerType>()
+            registerAll<FabricChessSideType>()
         }
         registerPieceBlocks()
         FabricRegistry.FLOOR_RENDERER[KingOfTheHill] = simpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)

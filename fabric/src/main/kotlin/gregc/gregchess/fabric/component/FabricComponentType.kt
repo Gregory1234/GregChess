@@ -7,7 +7,7 @@ import gregc.gregchess.fabric.renderer.FabricRenderer
 @RegisterAll(ComponentType::class)
 object FabricComponentType {
     @JvmField
-    val RENDERER = ComponentType(FabricRenderer::class, FabricRenderer.serializer())
+    val RENDERER = ComponentType<FabricRenderer>()
     @JvmField
-    val MATCH_CONTROLLER = ComponentType(MatchController::class, MatchController.serializer())
+    val MATCH_CONTROLLER = ComponentType<MatchController>()
 }

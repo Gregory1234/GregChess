@@ -7,14 +7,13 @@ import gregc.gregchess.event.ComplexEventListener
 import gregc.gregchess.event.EventListener
 import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.registry.*
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 
-// TODO: add a more convenient function for construction
 @Serializable(with = ComponentType.Serializer::class)
-class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerializer<T>) : NameRegistered, ComponentIdentifier<T>, EventListener {
+class ComponentType<T : Component> @PublishedApi internal constructor(val cl: KClass<T>, val serializer: KSerializer<T>)
+    : NameRegistered, ComponentIdentifier<T>, EventListener {
     object Serializer : NameRegisteredSerializer<ComponentType<*>>("ComponentType", Registry.COMPONENT_TYPE)
 
     override val key get() = Registry.COMPONENT_TYPE[this]
@@ -32,6 +31,8 @@ class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerialize
     @RegisterAll(ComponentType::class)
     companion object {
 
+        inline operator fun <reified T : Component> invoke() = ComponentType(T::class, serializer())
+
         internal val AUTO_REGISTER = AutoRegisterType(ComponentType::class) { m, n, _ ->
             Registry.COMPONENT_TYPE[m, n] = this
             (cl.objectInstance as? Registering)?.registerAll(m)
@@ -39,11 +40,11 @@ class ComponentType<T : Component>(val cl: KClass<T>, val serializer: KSerialize
         }
 
         @JvmField
-        val CHESSBOARD = ComponentType(Chessboard::class, Chessboard.serializer())
+        val CHESSBOARD = ComponentType<Chessboard>()
         @JvmField
-        val CLOCK = ComponentType(ChessClock::class, ChessClock.serializer())
+        val CLOCK = ComponentType<ChessClock>()
         @JvmField
-        val SIDES = ComponentType(ChessSideManager::class, ChessSideManager.serializer())
+        val SIDES = ComponentType<ChessSideManager>()
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<ComponentType<*>>()
     }

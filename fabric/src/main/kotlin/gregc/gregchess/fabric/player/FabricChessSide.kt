@@ -33,7 +33,7 @@ class FabricChessSide(val player: FabricPlayer, override val color: Color) : Che
     override val name: String get() = player.name
     val entity get() = player.entity
 
-    override val type get() = FabricPlayerType.FABRIC
+    override val type get() = FabricChessSideType.FABRIC
 
     private var _held: BoardPiece? = null
 

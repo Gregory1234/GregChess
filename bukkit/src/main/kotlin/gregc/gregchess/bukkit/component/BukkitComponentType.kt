@@ -9,13 +9,13 @@ import gregc.gregchess.component.ComponentType
 @RegisterAll(ComponentType::class)
 object BukkitComponentType {
     @JvmField
-    val ADAPTER = ComponentType(BukkitGregChessAdapter::class, BukkitGregChessAdapter.serializer())
+    val ADAPTER = ComponentType<BukkitGregChessAdapter>()
     @JvmField
-    val RENDERER = ComponentType(BukkitRenderer::class, BukkitRenderer.serializer())
+    val RENDERER = ComponentType<BukkitRenderer>()
     @JvmField
-    val MATCH_CONTROLLER = ComponentType(MatchController::class, MatchController.serializer())
+    val MATCH_CONTROLLER = ComponentType<MatchController>()
     @JvmField
-    val SCOREBOARD_MANAGER = ComponentType(ScoreboardManager::class, ScoreboardManager.serializer())
+    val SCOREBOARD_MANAGER = ComponentType<ScoreboardManager>()
     @JvmField
-    val SPECTATOR_MANAGER = ComponentType(SpectatorManager::class, SpectatorManager.serializer())
+    val SPECTATOR_MANAGER = ComponentType<SpectatorManager>()
 }
