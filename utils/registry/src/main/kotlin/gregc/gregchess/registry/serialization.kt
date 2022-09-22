@@ -1,5 +1,6 @@
 package gregc.gregchess.registry
 
+import gregc.gregchess.registry.view.RegistryView
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*

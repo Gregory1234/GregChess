@@ -7,7 +7,9 @@ import gregc.gregchess.bukkit.match.defaultVariantOptionsParser
 import gregc.gregchess.bukkit.move.defaultLocalMoveFormatter
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.renderer.simpleFloorRenderer
-import gregc.gregchess.registry.*
+import gregc.gregchess.registry.AutoRegister
+import gregc.gregchess.registry.ChessModule
+import gregc.gregchess.registry.registry.Registry
 import gregc.gregchess.results.EndReason
 import org.bukkit.plugin.Plugin
 

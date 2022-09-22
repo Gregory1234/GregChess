@@ -7,7 +7,7 @@ import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.player.BukkitCommandSender
 import gregc.gregchess.player.HumanChessSideFacade
-import gregc.gregchess.registry.FiniteRegistryView
+import gregc.gregchess.registry.view.FiniteRegistryView
 
 internal fun playerArgument(name: String) = playerArgument(name, PLAYER_NOT_FOUND, BukkitPlayerProvider)
 

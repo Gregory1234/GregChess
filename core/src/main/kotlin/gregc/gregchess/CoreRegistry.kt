@@ -5,7 +5,7 @@ import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.PlacedPieceType
 import gregc.gregchess.player.ChessSideType
-import gregc.gregchess.registry.NameRegistry
+import gregc.gregchess.registry.registry.NameRegistry
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.stats.ChessStat
 import gregc.gregchess.variant.ChessVariant

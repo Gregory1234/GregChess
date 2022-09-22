@@ -1,4 +1,7 @@
-package gregc.gregchess.registry
+package gregc.gregchess.registry.view
+
+import gregc.gregchess.registry.ChessModule
+import gregc.gregchess.registry.RegistryKey
 
 class RegistryKeyNotFoundException(key: Any?) : IllegalArgumentException(key.toString())
 
@@ -36,30 +39,4 @@ interface BiRegistryView<K, T> : RegistryView<K, T> {
 interface FiniteBiRegistryView<K, T> : FiniteRegistryView<K, T>, BiRegistryView<K, T> {
     override val values: Set<T>
     override fun valuesOf(module: ChessModule): Set<T>
-}
-
-interface RegistryBlockView<K, T> {
-    fun getValueOrNull(key: K): T?
-    fun getOrNull(key: K): T? = getValueOrNull(key)
-    fun getValue(key: K): T = getValueOrNull(key) ?: throw RegistryKeyNotFoundException(key)
-    operator fun get(key: K): T = getOrNull(key) ?: throw RegistryKeyNotFoundException(key)
-}
-
-interface FiniteRegistryBlockView<K, T> : RegistryBlockView<K, T> {
-    val keys: Set<K>
-    val values: Collection<T>
-}
-
-interface BiRegistryBlockView<K, T> : RegistryBlockView<K, T> {
-    fun getKeyOrNull(value: T): K?
-    fun getKey(value: T): K = getKeyOrNull(value) ?: throw RegistryKeyNotFoundException(value)
-}
-
-interface FiniteBiRegistryBlockView<K, T> : BiRegistryBlockView<K, T>, FiniteRegistryBlockView<K, T> {
-    override val values: Set<T>
-}
-
-class ChainRegistryView<K, M, T>(val base: RegistryView<K, M>, val extension: RegistryView<M, T>) : RegistryView<K, T> {
-    override fun getOrNull(module: ChessModule, key: K): T? =
-        base.getOrNull(module, key)?.let { extension.getOrNull(module, it) }
 }

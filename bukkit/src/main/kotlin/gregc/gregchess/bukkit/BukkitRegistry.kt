@@ -10,6 +10,7 @@ import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.component.Component
 import gregc.gregchess.move.MoveFormatter
 import gregc.gregchess.registry.*
+import gregc.gregchess.registry.registry.*
 import gregc.gregchess.results.EndReason
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.Plugin

@@ -5,7 +5,8 @@ import gregc.gregchess.component.Component
 import gregc.gregchess.fabric.piece.PieceBlock
 import gregc.gregchess.fabric.renderer.ChessFloorRenderer
 import gregc.gregchess.piece.*
-import gregc.gregchess.registry.*
+import gregc.gregchess.registry.RegistryKey
+import gregc.gregchess.registry.registry.*
 
 object FabricRegistry {
     @JvmField

@@ -3,6 +3,7 @@ package gregc.gregchess.piece
 import gregc.gregchess.Color
 import gregc.gregchess.CoreRegistry
 import gregc.gregchess.registry.*
+import gregc.gregchess.registry.view.FiniteBiRegistryView
 import kotlinx.serialization.Serializable
 
 object PieceRegistryView : FiniteBiRegistryView<String, Piece> {

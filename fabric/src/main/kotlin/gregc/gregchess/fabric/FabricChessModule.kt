@@ -2,7 +2,7 @@ package gregc.gregchess.fabric
 
 import gregc.gregchess.fabric.renderer.simpleFloorRenderer
 import gregc.gregchess.registry.ChessModule
-import gregc.gregchess.registry.Registry
+import gregc.gregchess.registry.registry.Registry
 
 abstract class FabricChessModule(name: String, namespace: String) : ChessModule(name, namespace) {
     companion object {

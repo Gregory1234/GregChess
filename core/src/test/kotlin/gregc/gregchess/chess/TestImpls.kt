@@ -9,7 +9,9 @@ import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.*
-import gregc.gregchess.registry.*
+import gregc.gregchess.registry.ChessModule
+import gregc.gregchess.registry.Register
+import gregc.gregchess.registry.registry.Registry
 import gregc.gregchess.results.DetEndReason
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.variant.ChessVariant
