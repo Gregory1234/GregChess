@@ -15,17 +15,17 @@ fun interface ChessPlayer<out S : ChessSide> {
 
 @Serializable(with = ChessSideType.Serializer::class)
 class ChessSideType<T: ChessSide> @PublishedApi internal constructor(val serializer: KSerializer<T>) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessSideType<*>>("ChessSideType", Registry.SIDE_TYPE)
+    object Serializer : NameRegisteredSerializer<ChessSideType<*>>("ChessSideType", CoreRegistry.SIDE_TYPE)
 
-    override val key get() = Registry.SIDE_TYPE[this]
+    override val key get() = CoreRegistry.SIDE_TYPE[this]
 
-    override fun toString(): String = Registry.SIDE_TYPE.simpleElementToString(this)
+    override fun toString(): String = CoreRegistry.SIDE_TYPE.simpleElementToString(this)
 
     companion object {
 
         inline operator fun <reified T : ChessSide> invoke() = ChessSideType(serializer<T>())
 
-        internal val AUTO_REGISTER = AutoRegisterType(ChessSideType::class) { m, n, _ -> Registry.SIDE_TYPE[m, n] = this }
+        internal val AUTO_REGISTER = AutoRegisterType(ChessSideType::class) { m, n, _ -> CoreRegistry.SIDE_TYPE[m, n] = this }
     }
 }
 

@@ -1,6 +1,5 @@
-package gregc.gregchess
+package gregc.gregchess.registry
 
-import gregc.gregchess.registry.Registry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

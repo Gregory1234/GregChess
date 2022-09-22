@@ -1,6 +1,5 @@
 package gregc.gregchess.bukkit.properties
 
-import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.config
@@ -12,6 +11,7 @@ import gregc.gregchess.clock.clock
 import gregc.gregchess.component.Component
 import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.registry.Register
 import gregc.gregchess.variant.ThreeChecks
 import kotlinx.serialization.Serializable
 

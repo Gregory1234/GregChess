@@ -1,12 +1,12 @@
 package gregc.gregchess.bukkit.match
 
-import gregc.gregchess.Register
 import gregc.gregchess.bukkit.GregChessPlugin
 import gregc.gregchess.bukkit.player.gregchessPlayer
 import gregc.gregchess.bukkit.registerEvents
 import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.bukkit.renderer.renderer
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.registry.Register
 import gregc.gregchess.results.*
 import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace

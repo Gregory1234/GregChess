@@ -43,6 +43,7 @@ dependencies {
     spigotLib(libs.slf4j.jdk14)
     api(projects.gregchessCore)
     shaded(projects.gregchessCore)
+    shaded(projects.gregchessRegistry)
     shaded(projects.gregchessBukkitUtils)
 }
 

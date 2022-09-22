@@ -10,20 +10,20 @@ typealias DrawEndReason = EndReason<MatchScore.Draw>
 @Serializable(with = EndReason.Serializer::class)
 class EndReason<@Suppress("UNUSED") R : MatchScore>(val type: Type) : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", Registry.END_REASON)
+    object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", CoreRegistry.END_REASON)
 
     enum class Type(val pgn: String) {
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")
     }
 
-    override val key get() = Registry.END_REASON[this]
+    override val key get() = CoreRegistry.END_REASON[this]
 
-    override fun toString(): String = Registry.END_REASON.simpleElementToString(this)
+    override fun toString(): String = CoreRegistry.END_REASON.simpleElementToString(this)
 
     @RegisterAll(EndReason::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, _ -> Registry.END_REASON[m, n] = this }
+        internal val AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, _ -> CoreRegistry.END_REASON[m, n] = this }
 
         @JvmField
         val CHECKMATE = DetEndReason(Type.NORMAL)

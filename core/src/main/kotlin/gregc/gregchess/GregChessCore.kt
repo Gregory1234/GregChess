@@ -5,9 +5,17 @@ import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.piece.PlacedPieceType
 import gregc.gregchess.player.ChessSideType
+import gregc.gregchess.registry.AutoRegister
+import gregc.gregchess.registry.ChessModule
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.stats.ChessStat
 import gregc.gregchess.variant.ChessVariants
+
+interface Registering {
+    fun registerAll(module: ChessModule) {
+        GregChessCore.autoRegister(module).registerAll(this::class)
+    }
+}
 
 object GregChessCore {
     fun registerAll(module: ChessModule) {

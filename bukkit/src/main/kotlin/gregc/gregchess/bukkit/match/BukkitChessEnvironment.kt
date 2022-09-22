@@ -1,8 +1,7 @@
 package gregc.gregchess.bukkit.match
 
-import gregc.gregchess.bukkit.GregChessPlugin
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import gregc.gregchess.component.Component

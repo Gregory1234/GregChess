@@ -17,11 +17,11 @@ import kotlinx.serialization.Serializable
 @Serializable(with = ChessVariant.Serializer::class)
 open class ChessVariant : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<ChessVariant>("ChessVariant", Registry.VARIANT)
+    object Serializer : NameRegisteredSerializer<ChessVariant>("ChessVariant", CoreRegistry.VARIANT)
 
-    final override val key get() = Registry.VARIANT[this]
+    final override val key get() = CoreRegistry.VARIANT[this]
 
-    final override fun toString(): String = Registry.VARIANT.simpleElementToString(this)
+    final override fun toString(): String = CoreRegistry.VARIANT.simpleElementToString(this)
 
     enum class MoveLegality(val prettyName: String) {
         ERROR("Invalid chessboard state"),

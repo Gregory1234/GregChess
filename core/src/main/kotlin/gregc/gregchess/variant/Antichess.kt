@@ -1,6 +1,7 @@
 package gregc.gregchess.variant
 
-import gregc.gregchess.*
+import gregc.gregchess.Color
+import gregc.gregchess.Registering
 import gregc.gregchess.board.FEN
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
@@ -9,6 +10,7 @@ import gregc.gregchess.move.trait.captureTrait
 import gregc.gregchess.move.trait.castlesTrait
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceType
+import gregc.gregchess.registry.Register
 import gregc.gregchess.results.*
 
 object Antichess : ChessVariant(), Registering {

@@ -1,8 +1,8 @@
 package gregc.gregchess.bukkit.player
 
-import gregc.gregchess.RegisterAll
 import gregc.gregchess.player.ChessSideType
 import gregc.gregchess.player.EngineChessSide
+import gregc.gregchess.registry.RegisterAll
 
 @RegisterAll(ChessSideType::class)
 object BukkitChessSideType {

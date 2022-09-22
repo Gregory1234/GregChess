@@ -57,16 +57,16 @@ object VoidPlayerStatsSink : PlayerStatsSink {
 
 @Serializable(with = ChessStat.Serializer::class)
 class ChessStat<T : Any>(val serializer: KSerializer<T>, @JvmField val aggregate: (Collection<T>) -> T) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessStat<*>>("ChessStat", Registry.STAT)
+    object Serializer : NameRegisteredSerializer<ChessStat<*>>("ChessStat", CoreRegistry.STAT)
 
-    override val key get() = Registry.STAT[this]
+    override val key get() = CoreRegistry.STAT[this]
 
-    override fun toString(): String = Registry.STAT.simpleElementToString(this)
+    override fun toString(): String = CoreRegistry.STAT.simpleElementToString(this)
 
     @RegisterAll(ChessStat::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(ChessStat::class) { m, n, _ -> Registry.STAT[m, n] = this }
+        internal val AUTO_REGISTER = AutoRegisterType(ChessStat::class) { m, n, _ -> CoreRegistry.STAT[m, n] = this }
 
         fun intStat() = ChessStat(Int.serializer(), Collection<Int>::sum)
         fun durationStat() = ChessStat(DurationSerializer) { it.reduceOrNull(Duration::plus) ?: Duration.ZERO }

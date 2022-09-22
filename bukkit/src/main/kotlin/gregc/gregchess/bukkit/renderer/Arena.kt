@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit.renderer
 
-import gregc.gregchess.*
+import gregc.gregchess.ByColor
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.MatchInfoEvent
 import gregc.gregchess.bukkit.piece.item
@@ -8,8 +8,10 @@ import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkitutils.CommandException
 import gregc.gregchess.bukkitutils.serialization.BukkitConfig
 import gregc.gregchess.bukkitutils.serialization.decodeFromPath
+import gregc.gregchess.byColor
 import gregc.gregchess.event.*
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.registry.Register
 import gregc.gregchess.results.*
 import kotlinx.serialization.*
 import org.bukkit.*

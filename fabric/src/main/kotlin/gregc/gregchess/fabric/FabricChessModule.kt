@@ -1,8 +1,7 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.ChessModule
-import gregc.gregchess.fabric.registry.FabricRegistry
 import gregc.gregchess.fabric.renderer.simpleFloorRenderer
+import gregc.gregchess.registry.ChessModule
 import gregc.gregchess.registry.Registry
 
 abstract class FabricChessModule(name: String, namespace: String) : ChessModule(name, namespace) {

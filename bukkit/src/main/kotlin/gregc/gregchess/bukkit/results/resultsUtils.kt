@@ -2,7 +2,6 @@ package gregc.gregchess.bukkit.results
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.bukkitutils.player.BukkitHuman
 import gregc.gregchess.registry.module

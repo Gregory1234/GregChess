@@ -1,10 +1,8 @@
-package gregc.gregchess
+package gregc.gregchess.registry
 
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSuperclassOf
-
-// TODO: move to a different package
 
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
@@ -33,10 +31,4 @@ class AutoRegister(private val module: ChessModule, private val types: Collectio
     }
 
     inline fun <reified T : Any> registerAll() = registerAll(T::class)
-}
-
-interface Registering {
-    fun registerAll(module: ChessModule) {
-        GregChessCore.autoRegister(module).registerAll(this::class)
-    }
 }

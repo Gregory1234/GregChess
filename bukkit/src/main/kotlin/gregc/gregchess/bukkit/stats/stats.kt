@@ -4,10 +4,10 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.match.SettingsManager
 import gregc.gregchess.bukkit.player.BukkitPlayer
-import gregc.gregchess.bukkit.registry.*
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.bukkitutils.serialization.BukkitConfig
-import gregc.gregchess.registry.*
+import gregc.gregchess.registry.module
+import gregc.gregchess.registry.name
 import gregc.gregchess.stats.*
 import kotlinx.serialization.builtins.nullable
 import org.bukkit.Material
@@ -55,7 +55,7 @@ class YamlChessStats(override val uuid: UUID) : BukkitPlayerStats {
             get() = config.getKeys(false).flatMap { module ->
                 val trueModule = module.pascalToSnake()
                 config.getOrCreateSection(module).getKeys(false).map {
-                    Registry.STAT["$trueModule:${it.pascalToSnake()}".toKey()]
+                    CoreRegistry.STAT["$trueModule:${it.pascalToSnake()}".toKey()]
                 }
             }.toSet()
 

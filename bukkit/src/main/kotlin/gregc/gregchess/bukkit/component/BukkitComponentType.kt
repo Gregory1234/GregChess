@@ -1,10 +1,10 @@
 package gregc.gregchess.bukkit.component
 
-import gregc.gregchess.RegisterAll
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
 import gregc.gregchess.bukkit.properties.ScoreboardManager
 import gregc.gregchess.bukkit.renderer.BukkitRenderer
 import gregc.gregchess.component.ComponentType
+import gregc.gregchess.registry.RegisterAll
 
 @RegisterAll(ComponentType::class)
 object BukkitComponentType {

@@ -1,16 +1,14 @@
 package gregc.gregchess.fabric
 
 import gregc.gregchess.GregChessCore
-import gregc.gregchess.Register
 import gregc.gregchess.fabric.component.FabricComponentType
 import gregc.gregchess.fabric.component.MatchController
 import gregc.gregchess.fabric.piece.shortPieceBlocks
 import gregc.gregchess.fabric.piece.tallPieceBlocks
 import gregc.gregchess.fabric.player.FabricChessSideType
-import gregc.gregchess.fabric.registry.FabricRegistry
-import gregc.gregchess.fabric.registry.set
 import gregc.gregchess.fabric.renderer.simpleFloorRenderer
 import gregc.gregchess.piece.PieceType
+import gregc.gregchess.registry.Register
 import gregc.gregchess.results.DrawEndReason
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.variant.KingOfTheHill

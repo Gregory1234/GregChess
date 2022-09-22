@@ -1,6 +1,7 @@
 package gregc.gregchess.chess
 
-import gregc.gregchess.*
+import gregc.gregchess.Color
+import gregc.gregchess.GregChessCore
 import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentType
 import gregc.gregchess.event.ChessEvent
@@ -8,7 +9,7 @@ import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.*
-import gregc.gregchess.registry.Registry
+import gregc.gregchess.registry.*
 import gregc.gregchess.results.DetEndReason
 import gregc.gregchess.results.EndReason
 import gregc.gregchess.variant.ChessVariant

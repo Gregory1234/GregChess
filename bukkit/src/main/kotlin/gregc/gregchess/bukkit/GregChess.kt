@@ -9,7 +9,6 @@ import gregc.gregchess.bukkit.match.SettingsManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
 import gregc.gregchess.bukkit.properties.SimpleScoreboardLayout
-import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.renderer.BukkitRenderer
 import gregc.gregchess.bukkit.renderer.simpleFloorRenderer
 import gregc.gregchess.bukkit.stats.YamlChessStats

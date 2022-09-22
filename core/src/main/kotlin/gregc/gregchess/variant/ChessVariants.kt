@@ -1,11 +1,12 @@
 package gregc.gregchess.variant
 
-import gregc.gregchess.*
-import gregc.gregchess.registry.Registry
+import gregc.gregchess.CoreRegistry
+import gregc.gregchess.Registering
+import gregc.gregchess.registry.*
 
 object ChessVariants {
     internal val AUTO_REGISTER = AutoRegisterType(ChessVariant::class) { m, n, _ ->
-        Registry.VARIANT[m, n] = this
+        CoreRegistry.VARIANT[m, n] = this
         (this as? Registering)?.registerAll(m)
     }
 

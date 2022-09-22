@@ -55,6 +55,7 @@ dependencies {
     include(libs.fabric.libgui)
     api(projects.gregchessCore)
     shaded(projects.gregchessCore)
+    shaded(projects.gregchessRegistry)
 }
 
 tasks {

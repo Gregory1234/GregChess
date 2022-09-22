@@ -1,6 +1,5 @@
 package gregc.gregchess.registry
 
-import gregc.gregchess.ChessModule
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder

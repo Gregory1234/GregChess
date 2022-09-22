@@ -21,16 +21,16 @@ interface MoveTrait {
 
 @Serializable(with = MoveTraitType.Serializer::class)
 class MoveTraitType<T : MoveTrait>(val serializer: KSerializer<T>): NameRegistered {
-    object Serializer : NameRegisteredSerializer<MoveTraitType<*>>("MoveTraitType", Registry.MOVE_TRAIT_TYPE)
+    object Serializer : NameRegisteredSerializer<MoveTraitType<*>>("MoveTraitType", CoreRegistry.MOVE_TRAIT_TYPE)
 
-    override val key get() = Registry.MOVE_TRAIT_TYPE[this]
+    override val key get() = CoreRegistry.MOVE_TRAIT_TYPE[this]
 
-    override fun toString(): String = Registry.MOVE_TRAIT_TYPE.simpleElementToString(this)
+    override fun toString(): String = CoreRegistry.MOVE_TRAIT_TYPE.simpleElementToString(this)
 
     @RegisterAll(MoveTraitType::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(MoveTraitType::class) { m, n, _ -> Registry.MOVE_TRAIT_TYPE[m, n] = this }
+        internal val AUTO_REGISTER = AutoRegisterType(MoveTraitType::class) { m, n, _ -> CoreRegistry.MOVE_TRAIT_TYPE[m, n] = this }
 
         @JvmField
         val HALFMOVE_CLOCK = MoveTraitType(DefaultHalfmoveClockTrait.serializer())

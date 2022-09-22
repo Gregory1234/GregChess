@@ -1,9 +1,9 @@
 package gregc.gregchess.fabric.renderer
 
 import gregc.gregchess.Pos
+import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.block.Floor
 import gregc.gregchess.fabric.player.FabricChessSideFacade
-import gregc.gregchess.fabric.registry.FabricRegistry
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*

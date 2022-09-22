@@ -8,6 +8,7 @@ import gregc.gregchess.move.connector.ChessboardView
 import gregc.gregchess.move.connector.board
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
+import gregc.gregchess.registry.Register
 import gregc.gregchess.results.*
 import kotlinx.serialization.Serializable
 

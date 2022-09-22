@@ -1,18 +1,16 @@
 package gregc.gregchess.bukkit.properties
 
-import gregc.gregchess.Register
-import gregc.gregchess.bukkit.BukkitRegistering
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.registry.BukkitRegistry
-import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.component.Component
 import gregc.gregchess.event.ChessBaseEvent
 import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.registry.Register
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.bukkit.Bukkit

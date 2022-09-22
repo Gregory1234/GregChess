@@ -7,16 +7,16 @@ import kotlinx.serialization.Serializable
 @Serializable(with = PieceType.Serializer::class)
 class PieceType(val char: Char) : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<PieceType>("PieceType", Registry.PIECE_TYPE)
+    object Serializer : NameRegisteredSerializer<PieceType>("PieceType", CoreRegistry.PIECE_TYPE)
 
-    override val key get() = Registry.PIECE_TYPE[this]
+    override val key get() = CoreRegistry.PIECE_TYPE[this]
 
-    override fun toString(): String = Registry.PIECE_TYPE.simpleElementToString(this)
+    override fun toString(): String = CoreRegistry.PIECE_TYPE.simpleElementToString(this)
 
     @RegisterAll(PieceType::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(PieceType::class) { m, n, _ -> Registry.PIECE_TYPE[m, n] = this }
+        internal val AUTO_REGISTER = AutoRegisterType(PieceType::class) { m, n, _ -> CoreRegistry.PIECE_TYPE[m, n] = this }
 
         @JvmField
         val KING = PieceType('k')

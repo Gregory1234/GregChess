@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.Color
+import gregc.gregchess.*
 import gregc.gregchess.bukkit.command.*
 import gregc.gregchess.bukkit.component.ComponentAlternative
 import gregc.gregchess.bukkit.match.*
@@ -15,14 +15,12 @@ import gregc.gregchess.bukkitutils.command.*
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitScope
 import gregc.gregchess.bukkitutils.requests.*
-import gregc.gregchess.byColor
 import gregc.gregchess.clock.clock
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.*
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PieceRegistryView
 import gregc.gregchess.player.*
-import gregc.gregchess.registry.Registry
 import gregc.gregchess.results.*
 import gregc.gregchess.stats.ChessStat
 import kotlinx.coroutines.*
@@ -423,7 +421,7 @@ object GregChessPlugin : Listener {
                     argument(offlinePlayerArgument("player")) { player ->
                         argument(enumArgument<Color>("color")) { color ->
                             argument(stringArgument("setting")) { setting ->
-                                argument(registryArgument("stat", Registry.STAT) { it.serializer == Int.serializer() }) { stat ->
+                                argument(registryArgument("stat", CoreRegistry.STAT) { it.serializer == Int.serializer() }) { stat ->
                                     argument(intArgument("value")) { v ->
                                         execute {
                                             val stats = BukkitPlayerStats.of(player().uuid)

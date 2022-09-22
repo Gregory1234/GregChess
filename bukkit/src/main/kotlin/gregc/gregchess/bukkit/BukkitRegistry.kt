@@ -1,8 +1,6 @@
-package gregc.gregchess.bukkit.registry
+package gregc.gregchess.bukkit
 
-import gregc.gregchess.AutoRegisterType
-import gregc.gregchess.bukkit.BukkitChessModule
-import gregc.gregchess.bukkit.GregChess
+import gregc.gregchess.CoreRegistry
 import gregc.gregchess.bukkit.component.ComponentAlternative
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.properties.PropertyType
@@ -23,15 +21,15 @@ object BukkitRegistry {
     @JvmField
     val PROPERTY_TYPE = NameRegistry<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER = ConnectedRegistry<_, SettingsParser<out Component>>("settings_parser", Registry.COMPONENT_TYPE)
+    val SETTINGS_PARSER = ConnectedRegistry<_, SettingsParser<out Component>>("settings_parser", CoreRegistry.COMPONENT_TYPE)
     @JvmField
-    val LOCAL_MOVE_FORMATTER = ConnectedRegistry<_, MoveFormatter>("local_move_formatter", Registry.VARIANT)
+    val LOCAL_MOVE_FORMATTER = ConnectedRegistry<_, MoveFormatter>("local_move_formatter", CoreRegistry.VARIANT)
     @JvmField
-    val FLOOR_RENDERER = ConnectedRegistry<_, ChessFloorRenderer>("floor_renderer", Registry.VARIANT)
+    val FLOOR_RENDERER = ConnectedRegistry<_, ChessFloorRenderer>("floor_renderer", CoreRegistry.VARIANT)
     @JvmField
-    val QUICK_END_REASONS = ConnectedSetRegistry("quick_end_reasons", Registry.END_REASON)
+    val QUICK_END_REASONS = ConnectedSetRegistry("quick_end_reasons", CoreRegistry.END_REASON)
     @JvmField
-    val OPTIONAL_COMPONENTS = ConnectedSetRegistry("optional_components", Registry.COMPONENT_TYPE)
+    val OPTIONAL_COMPONENTS = ConnectedSetRegistry("optional_components", CoreRegistry.COMPONENT_TYPE)
     @JvmField
     val BUKKIT_PLUGIN = ConstantRegistry<Plugin>("bukkit_plugin")
     @JvmField
@@ -39,19 +37,19 @@ object BukkitRegistry {
     @JvmField
     val SCOREBOARD_LAYOUT_PROVIDER = NameRegistry<(Scoreboard) -> ScoreboardLayout>("scoreboard_layout_provider")
     @JvmField
-    val VARIANT_OPTIONS_PARSER = ConnectedRegistry<_, VariantOptionsParser>("variant_oprions_parser", Registry.VARIANT)
+    val VARIANT_OPTIONS_PARSER = ConnectedRegistry<_, VariantOptionsParser>("variant_oprions_parser", CoreRegistry.VARIANT)
     @JvmField
     val COMPONENT_ALTERNATIVE = NameRegistry<ComponentAlternative<*>>("component_alternative")
     @JvmField
-    val REQUIRED_COMPONENTS = ConnectedSetRegistry("required_components", Registry.COMPONENT_TYPE)
+    val REQUIRED_COMPONENTS = ConnectedSetRegistry("required_components", CoreRegistry.COMPONENT_TYPE)
     @JvmField
     val REQUIRED_COMPONENT_ALTERNATIVES = ConnectedSetRegistry("hooked_component_alternatives", COMPONENT_ALTERNATIVE)
     @JvmField
-    val IMPLIED_COMPONENTS = PartialConnectedRegistry<_, () -> Component>("implied_components", Registry.COMPONENT_TYPE)
+    val IMPLIED_COMPONENTS = PartialConnectedRegistry<_, () -> Component>("implied_components", CoreRegistry.COMPONENT_TYPE)
 }
 
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e ->
-    Registry.END_REASON[m, n] = this
+    CoreRegistry.END_REASON[m, n] = this
     if ("quick" in e)
         BukkitRegistry.QUICK_END_REASONS += this
 }

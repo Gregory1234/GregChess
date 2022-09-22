@@ -1,12 +1,12 @@
 package gregc.gregchess.move
 
+import gregc.gregchess.CoreRegistry
 import gregc.gregchess.Pos
 import gregc.gregchess.move.connector.board
 import gregc.gregchess.move.trait.MoveTrait
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.PlacedPiece
 import gregc.gregchess.piece.boardPiece
-import gregc.gregchess.registry.Registry
 import kotlinx.serialization.Serializable
 
 // TODO: add move type in order to make the serialization more concise
@@ -19,7 +19,7 @@ data class Move(
 ) {
 
     class TraitsCouldNotExecuteException(traits: Collection<MoveTrait>, cause: Throwable? = null) :
-        Exception(traits.toList().map { Registry.MOVE_TRAIT_TYPE[it.type] }.toString(), cause)
+        Exception(traits.toList().map { CoreRegistry.MOVE_TRAIT_TYPE[it.type] }.toString(), cause)
 
     val origin: Pos get() = pieceTracker.getOriginal("main").boardPiece().pos
     val main: PlacedPiece get() = pieceTracker["main"]

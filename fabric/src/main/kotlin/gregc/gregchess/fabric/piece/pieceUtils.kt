@@ -2,9 +2,7 @@ package gregc.gregchess.fabric.piece
 
 import gregc.gregchess.ByColor
 import gregc.gregchess.byColor
-import gregc.gregchess.fabric.GregChessMod
-import gregc.gregchess.fabric.id
-import gregc.gregchess.fabric.registry.FabricRegistry
+import gregc.gregchess.fabric.*
 import gregc.gregchess.piece.*
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock

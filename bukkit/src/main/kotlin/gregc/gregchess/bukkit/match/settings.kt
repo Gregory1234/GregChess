@@ -1,19 +1,16 @@
 package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.ByColor
+import gregc.gregchess.CoreRegistry
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.component.SelectableComponentIdentifier
-import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkit.player.BukkitPlayer
-import gregc.gregchess.bukkit.registry.BukkitRegistry
-import gregc.gregchess.bukkit.registry.getFromRegistry
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.component.ComponentList
 import gregc.gregchess.component.ComponentType
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.player.ChessSideManager
-import gregc.gregchess.registry.Registry
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
@@ -46,7 +43,7 @@ object SettingsManager {
 
     fun getSettings(name: String, round: Int = 1): MatchSettings? {
         val section = config.getConfigurationSection("Settings.Presets.$name") ?: return null
-        val variant = section.getFromRegistry(Registry.VARIANT, "Variant") ?: ChessVariant.Normal
+        val variant = section.getFromRegistry(CoreRegistry.VARIANT, "Variant") ?: ChessVariant.Normal
 
         val variantOptionsParser = BukkitRegistry.VARIANT_OPTIONS_PARSER[variant]
         val variantOptions = section.variantOptionsParser()

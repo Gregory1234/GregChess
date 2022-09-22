@@ -6,16 +6,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable(with = ChessFlag.Serializer::class)
 class ChessFlag(@JvmField val isActive: (Int) -> Boolean) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessFlag>("ChessFlag", Registry.FLAG)
+    object Serializer : NameRegisteredSerializer<ChessFlag>("ChessFlag", CoreRegistry.FLAG)
 
-    override val key get() = Registry.FLAG[this]
+    override val key get() = CoreRegistry.FLAG[this]
 
-    override fun toString(): String = Registry.FLAG.simpleElementToString(this)
+    override fun toString(): String = CoreRegistry.FLAG.simpleElementToString(this)
 
     @RegisterAll(ChessFlag::class)
     companion object {
 
-        internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { m, n, _ -> Registry.FLAG[m, n] = this }
+        internal val AUTO_REGISTER = AutoRegisterType(ChessFlag::class) { m, n, _ -> CoreRegistry.FLAG[m, n] = this }
 
         @JvmField
         val EN_PASSANT = ChessFlag { it == 1 }

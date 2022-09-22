@@ -1,9 +1,7 @@
 package gregc.gregchess.bukkit.component
 
 import gregc.gregchess.*
-import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.registry.BukkitRegistry
-import gregc.gregchess.bukkit.registry.getFromRegistry
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.renderer.Renderer
 import gregc.gregchess.component.*
 import gregc.gregchess.registry.*
@@ -24,7 +22,7 @@ class ComponentAlternative<T : Component>(private val default: ComponentType<out
 
     private fun getSelectedOrNull(config: ConfigurationSection = module.config, path: String = "Component.${name.snakeToPascal()}"): ComponentType<out T>? {
         @Suppress("UNCHECKED_CAST")
-        val ret = config.getFromRegistry(Registry.COMPONENT_TYPE, path) as ComponentType<out T>?
+        val ret = config.getFromRegistry(CoreRegistry.COMPONENT_TYPE, path) as ComponentType<out T>?
         return when (ret) {
             null -> null
             !in this -> {

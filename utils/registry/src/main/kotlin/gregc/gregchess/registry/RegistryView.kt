@@ -1,7 +1,5 @@
 package gregc.gregchess.registry
 
-import gregc.gregchess.ChessModule
-
 class RegistryKeyNotFoundException(key: Any?) : IllegalArgumentException(key.toString())
 
 interface RegistryView<K, T> {

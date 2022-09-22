@@ -12,6 +12,7 @@ import gregc.gregchess.move.trait.MoveTrait
 import gregc.gregchess.move.trait.MoveTraitType
 import gregc.gregchess.piece.BoardPiece
 import gregc.gregchess.piece.PlacedPieceType
+import gregc.gregchess.registry.Register
 import gregc.gregchess.results.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

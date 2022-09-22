@@ -1,9 +1,9 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.*
 import gregc.gregchess.Color
-import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.serialization.BukkitConfigLowercase
+import gregc.gregchess.registry.ChessModule
+import gregc.gregchess.snakeToPascal
 import kotlinx.serialization.Serializable
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection

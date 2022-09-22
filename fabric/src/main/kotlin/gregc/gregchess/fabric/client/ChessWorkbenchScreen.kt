@@ -1,5 +1,6 @@
 package gregc.gregchess.fabric.client
 
+import gregc.gregchess.CoreRegistry
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.piece.item
 import gregc.gregchess.piece.*
@@ -24,7 +25,6 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
 import java.util.function.Predicate
 import kotlin.math.min
-import gregc.gregchess.registry.Registry as GregChessRegistry
 
 class WChessWorkbenchResultSlot(
     inventory: Inventory, val input: Inventory, val player: PlayerEntity?, index: Int, val justCrafted: (Boolean) -> Unit
@@ -177,10 +177,10 @@ class ChessWorkbenchGuiDescription(
         recipeList.clear()
 
         if (input.getStack(0).isIn(bases) && input.getStack(1).isIn(whiteDyes)) {
-            recipeList.addAll(GregChessRegistry.PIECE_TYPE.values.map(::white))
+            recipeList.addAll(CoreRegistry.PIECE_TYPE.values.map(::white))
         }
         if (input.getStack(0).isIn(bases) && input.getStack(1).isIn(blackDyes)) {
-            recipeList.addAll(GregChessRegistry.PIECE_TYPE.values.map(::black))
+            recipeList.addAll(CoreRegistry.PIECE_TYPE.values.map(::black))
         }
 
         readdRecipes()

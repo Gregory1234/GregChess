@@ -10,15 +10,15 @@ import kotlinx.serialization.modules.SerializersModule
 // TODO: remove this
 @Serializable(with = PlacedPieceType.Serializer::class)
 class PlacedPieceType<P : PlacedPiece>(val serializer: KSerializer<P>) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<PlacedPieceType<*>>("PlacedPieceType", Registry.PLACED_PIECE_TYPE)
+    object Serializer : NameRegisteredSerializer<PlacedPieceType<*>>("PlacedPieceType", CoreRegistry.PLACED_PIECE_TYPE)
 
-    override val key get() = Registry.PLACED_PIECE_TYPE[this]
+    override val key get() = CoreRegistry.PLACED_PIECE_TYPE[this]
 
-    override fun toString(): String = Registry.PLACED_PIECE_TYPE.simpleElementToString(this)
+    override fun toString(): String = CoreRegistry.PLACED_PIECE_TYPE.simpleElementToString(this)
 
     @RegisterAll(PlacedPieceType::class)
     companion object {
-        internal val AUTO_REGISTER = AutoRegisterType(PlacedPieceType::class) { m, n, _ -> Registry.PLACED_PIECE_TYPE[m, n] = this }
+        internal val AUTO_REGISTER = AutoRegisterType(PlacedPieceType::class) { m, n, _ -> CoreRegistry.PLACED_PIECE_TYPE[m, n] = this }
 
         @JvmField
         val BOARD = PlacedPieceType(BoardPiece.serializer())

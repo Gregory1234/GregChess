@@ -1,9 +1,7 @@
 package gregc.gregchess.fabric.client
 
-import gregc.gregchess.fabric.GregChessMod
-import gregc.gregchess.fabric.ident
+import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.piece.item
-import gregc.gregchess.fabric.registry.toKey
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.piece.PieceRegistryView
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
