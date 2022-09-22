@@ -2,7 +2,6 @@ package gregc.gregchess.bukkit.properties
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.event.ChessEvent
@@ -23,8 +22,6 @@ class AddPropertiesEvent(
             override fun invoke() = f()
         }
     }
-
-    override val type get() = BukkitChessEventType.ADD_PROPERTIES
 }
 
 class PropertyException(property: PropertyType, color: Color? = null, override val cause: Throwable? = null)

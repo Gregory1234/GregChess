@@ -3,8 +3,6 @@ package gregc.gregchess.bukkit.player
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.component.BukkitComponentType
-import gregc.gregchess.bukkit.event.BukkitChessEventType
-import gregc.gregchess.bukkit.event.PlayerDirection
 import gregc.gregchess.bukkit.match.copyMessage
 import gregc.gregchess.bukkit.move.formatLastMoves
 import gregc.gregchess.bukkit.move.localMoveFormatter
@@ -31,7 +29,6 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEve
     enum class Type {
         PICK_UP, PLACE_DOWN
     }
-    override val type get() = BukkitChessEventType.PIECE_PLAYER_ACTION
 }
 
 inline fun ChessSideManagerFacade.forEachReal(block: (BukkitPlayer) -> Unit) {
@@ -137,7 +134,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
     }
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        events.register(ChessEventType.BASE, OrderConstraint(
+        events.register<ChessBaseEvent>(OrderConstraint(
             runBeforeAll = true,
             runAfter = setOf(BukkitComponentType.MATCH_CONTROLLER)
         )) {
@@ -147,7 +144,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
                 else -> {}
             }
         }
-        events.register(ChessEventType.BASE, OrderConstraint(
+        events.register<ChessBaseEvent>(OrderConstraint(
             runAfterAll = true,
             runBefore = setOf(BukkitComponentType.MATCH_CONTROLLER)
         )) {
@@ -158,14 +155,14 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
                 else -> {}
             }
         }
-        events.register(ChessEventType.TURN) {
+        events.register<TurnEvent> {
             when(it) {
                 TurnEvent.START -> startTurn(match)
                 TurnEvent.END -> endTurn(match)
                 else -> {}
             }
         }
-        events.register(BukkitChessEventType.PLAYER) {
+        events.register<PlayerEvent> {
             if (it.player == player) {
                 when (it.dir) {
                     PlayerDirection.JOIN -> {
@@ -179,7 +176,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
                 }
             }
         }
-        events.register(ChessEventType.HUMAN_REQUEST) {
+        events.register<HumanRequestEvent> {
             onHumanRequest(match, it.request, it.color, it.value)
         }
     }

@@ -3,7 +3,6 @@ package gregc.gregchess.bukkit.renderer
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.component.BukkitComponentType
-import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkit.piece.getSound
 import gregc.gregchess.bukkit.piece.structure
 import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
@@ -32,13 +31,13 @@ data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.P
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
         this.arena = ArenaManager.reserveArena(match)
         arena.registerEvents(events.subRegistry("arena"))
-        events.registerR(AtomicChess.EXPLOSION_EVENT) {
+        events.registerR<AtomicChess.ExplosionEvent> {
             world.createExplosion(pos.location, 4.0f, false, false)
         }
-        events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
-        events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }
-        events.registerR(BukkitChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match) }
-        events.register(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
+        events.register<ChessBaseEvent> { handleBaseEvent(match, it) }
+        events.register<TurnEvent> { handleTurnEvent(match, it) }
+        events.registerR<PiecePlayerActionEvent> { handlePiecePlayerActionEvent(match) }
+        events.register(::handlePieceMoveEvent)
     }
 
     @Transient private val capturedPieces = mutableMapOf<CapturedPos, CapturedPiece>()

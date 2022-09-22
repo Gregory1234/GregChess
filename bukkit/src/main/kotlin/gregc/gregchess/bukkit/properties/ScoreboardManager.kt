@@ -4,15 +4,14 @@ import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.event.BukkitChessEventType
-import gregc.gregchess.bukkit.event.PlayerDirection
-import gregc.gregchess.bukkit.player.BukkitPlayer
-import gregc.gregchess.bukkit.player.forEachReal
+import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.registry.BukkitRegistry
 import gregc.gregchess.bukkit.registry.getFromRegistry
+import gregc.gregchess.bukkit.renderer.ResetPlayerEvent
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.component.Component
-import gregc.gregchess.event.*
+import gregc.gregchess.event.ChessBaseEvent
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -40,7 +39,7 @@ class ScoreboardManager : Component {
     private val layout: ScoreboardLayout = config.getFromRegistry(BukkitRegistry.SCOREBOARD_LAYOUT_PROVIDER, "Scoreboard.Layout")!!(scoreboard)
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        events.register(ChessEventType.BASE) {
+        events.register<ChessBaseEvent> {
             when (it) {
                 ChessBaseEvent.UPDATE -> update()
                 ChessBaseEvent.START, ChessBaseEvent.SYNC -> start(match)
@@ -49,14 +48,14 @@ class ScoreboardManager : Component {
                 else -> {}
             }
         }
-        events.registerR(BukkitChessEventType.RESET_PLAYER) { giveScoreboard(player) }
-        events.registerR(BukkitChessEventType.PLAYER) {
+        events.registerR<ResetPlayerEvent> { giveScoreboard(player) }
+        events.registerR<PlayerEvent> {
             when(dir) {
                 PlayerDirection.JOIN -> giveScoreboard(player)
                 PlayerDirection.LEAVE -> player.entity?.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard
             }
         }
-        events.registerR(BukkitChessEventType.SPECTATOR) {
+        events.registerR<SpectatorEvent> {
             when(dir) {
                 PlayerDirection.JOIN -> giveScoreboard(player)
                 PlayerDirection.LEAVE -> player.entity?.scoreboard = Bukkit.getScoreboardManager()!!.mainScoreboard

@@ -2,7 +2,6 @@ package gregc.gregchess.player
 
 import gregc.gregchess.*
 import gregc.gregchess.component.*
-import gregc.gregchess.event.ChessEventType
 import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.Serializable
@@ -29,7 +28,7 @@ class ChessSideManager(val white: ChessSide, val black: ChessSide) : Component {
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
         white.init(match, events.subRegistry(Color.WHITE))
         black.init(match, events.subRegistry(Color.BLACK))
-        events.registerR(ChessEventType.HUMAN_REQUEST, OrderConstraint(runAfterAll = true)) {
+        events.registerR<HumanRequestEvent>(OrderConstraint(runAfterAll = true)) {
             check(white is HumanChessSide)
             check(black is HumanChessSide)
             if (white.isRequesting(request) && black.isRequesting(request)) {

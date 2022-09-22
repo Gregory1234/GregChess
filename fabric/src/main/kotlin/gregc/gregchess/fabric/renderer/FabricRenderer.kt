@@ -6,7 +6,6 @@ import gregc.gregchess.event.*
 import gregc.gregchess.fabric.block.ChessControllerBlockEntity
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.component.FabricComponentType
-import gregc.gregchess.fabric.event.FabricChessEventType
 import gregc.gregchess.fabric.moveBlock
 import gregc.gregchess.fabric.piece.*
 import gregc.gregchess.fabric.player.PiecePlayerActionEvent
@@ -58,10 +57,10 @@ data class FabricRenderer(
     }
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        events.register(ChessEventType.BASE, ::handleBaseEvent)
-        events.register(ChessEventType.TURN) { handleTurnEvent(match, it) }
-        events.register(FabricChessEventType.PIECE_PLAYER_ACTION) { handlePiecePlayerActionEvent(match, it) }
-        events.register(ChessEventType.PIECE_MOVE, ::handlePieceMoveEvent)
+        events.register(::handleBaseEvent)
+        events.register<TurnEvent> { handleTurnEvent(match, it) }
+        events.register<PiecePlayerActionEvent> { handlePiecePlayerActionEvent(match, it) }
+        events.register(::handlePieceMoveEvent)
     }
 
     private fun handleBaseEvent(e: ChessBaseEvent) {

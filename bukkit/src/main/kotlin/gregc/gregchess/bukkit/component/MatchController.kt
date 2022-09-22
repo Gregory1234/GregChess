@@ -9,7 +9,8 @@ import gregc.gregchess.bukkit.player.isSamePlayer
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.byColor
 import gregc.gregchess.component.Component
-import gregc.gregchess.event.*
+import gregc.gregchess.event.ChessBaseEvent
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.stats.VoidPlayerStatsSink
 import gregc.gregchess.stats.addStats
@@ -53,7 +54,7 @@ object MatchController : Component {
     }
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        events.register(ChessEventType.BASE, OrderConstraint(runBeforeAll = true)) {
+        events.register<ChessBaseEvent>(OrderConstraint(runBeforeAll = true)) {
             when (it) {
                 ChessBaseEvent.START -> onStart(match)
                 ChessBaseEvent.RUNNING -> onRunning(match)
@@ -64,7 +65,7 @@ object MatchController : Component {
                 else -> {}
             }
         }
-        events.register(ChessEventType.BASE, OrderConstraint(runAfterAll = true)) {
+        events.register<ChessBaseEvent>(OrderConstraint(runAfterAll = true)) {
             when (it) {
                 ChessBaseEvent.STOP -> onStop(match)
                 ChessBaseEvent.CLEAR, ChessBaseEvent.PANIC -> onClear(match)

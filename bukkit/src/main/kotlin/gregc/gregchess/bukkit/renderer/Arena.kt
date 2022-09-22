@@ -2,10 +2,9 @@ package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.event.BukkitChessEventType
-import gregc.gregchess.bukkit.event.PlayerDirection
+import gregc.gregchess.bukkit.match.MatchInfoEvent
 import gregc.gregchess.bukkit.piece.item
-import gregc.gregchess.bukkit.player.BukkitPlayer
+import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkitutils.CommandException
 import gregc.gregchess.bukkitutils.serialization.BukkitConfig
 import gregc.gregchess.bukkitutils.serialization.decodeFromPath
@@ -85,9 +84,7 @@ object ArenaManager : BukkitRegistering {
     internal fun currentArenaName(arena: Arena) = requireNotNull(arenas[arena]).name
 }
 
-class ResetPlayerEvent(val player: BukkitPlayer) : ChessEvent {
-    override val type get() = BukkitChessEventType.RESET_PLAYER
-}
+class ResetPlayerEvent(val player: BukkitPlayer) : ChessEvent
 
 @Serializable
 class Arena internal constructor(
@@ -112,23 +109,23 @@ class Arena internal constructor(
     fun equivalent(other: Arena) = world == other.world && tileSize == other.tileSize && offset == other.offset
 
     fun registerEvents(events: EventListenerRegistry) {
-        events.register(ChessEventType.BASE) {
+        events.register<ChessBaseEvent> {
             if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC) ArenaManager.freeArena(this)
         }
-        events.registerR(BukkitChessEventType.SPECTATOR) {
+        events.registerR<SpectatorEvent> {
             when (dir) {
                 PlayerDirection.JOIN -> player.resetSpectator()
                 PlayerDirection.LEAVE -> player.leave()
             }
         }
-        events.registerR(BukkitChessEventType.PLAYER) {
+        events.registerR<PlayerEvent> {
             when (dir) {
                 PlayerDirection.JOIN -> player.reset()
                 PlayerDirection.LEAVE -> player.leave()
             }
         }
-        events.registerR(BukkitChessEventType.RESET_PLAYER) { player.reset() }
-        events.registerR(BukkitChessEventType.MATCH_INFO) {
+        events.registerR<ResetPlayerEvent> { player.reset() }
+        events.registerR<MatchInfoEvent> {
             text("Arena: $name\n")
         }
     }

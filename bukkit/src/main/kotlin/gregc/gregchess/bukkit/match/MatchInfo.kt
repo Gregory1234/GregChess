@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.configName
-import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkitutils.TextComponentBuilder
 import gregc.gregchess.bukkitutils.textComponent
 import gregc.gregchess.event.ChessEvent
@@ -11,8 +10,6 @@ import net.md_5.bungee.api.chat.TextComponent
 // TODO: add a way to order the info better
 // TODO: make sure the info is in the correct format
 class MatchInfoEvent(private val textComponent: TextComponentBuilder) : ChessEvent {
-    override val type get() = BukkitChessEventType.MATCH_INFO
-
     fun text(text: String) = textComponent.text(text)
 
     fun text(text: TextComponent) = textComponent.text(text)

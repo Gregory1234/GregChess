@@ -14,9 +14,7 @@ import kotlinx.serialization.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-class SetFenEvent(val FEN: FEN) : ChessEvent {
-    override val type get() = ChessEventType.SET_FEN
-}
+class SetFenEvent(val FEN: FEN) : ChessEvent
 
 @Serializable
 private class Square(
@@ -130,12 +128,12 @@ class Chessboard private constructor (
         }
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        events.register(ChessEventType.TURN, OrderConstraint(runBeforeAll = true)) { handleTurnEvent(match, it) }
-        events.register(ChessEventType.BASE) { handleBaseEvent(match, it) }
-        events.register(ChessEventType.ADD_MOVE_CONNECTORS) { e ->
+        events.register<TurnEvent>(OrderConstraint(runBeforeAll = true)) { handleTurnEvent(match, it) }
+        events.register<ChessBaseEvent> { handleBaseEvent(match, it) }
+        events.register<AddMoveConnectorsEvent> { e ->
             e[MoveConnectorType.CHESSBOARD] = getFacade(match)
         }
-        events.register(ChessEventType.ADD_FAKE_MOVE_CONNECTORS) { e ->
+        events.register<AddFakeMoveConnectorsEvent> { e ->
             e[MoveConnectorType.CHESSBOARD] = FakeChessboardConnector(
                 squares.mapValues { it.value.copy() }, capturedPieces.toMutableList(),
                 BoardCounters(halfmoveClock, fullmoveCounter, currentColor),

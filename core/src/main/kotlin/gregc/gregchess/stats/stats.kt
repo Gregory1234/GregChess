@@ -2,7 +2,6 @@ package gregc.gregchess.stats
 
 import gregc.gregchess.*
 import gregc.gregchess.event.ChessEvent
-import gregc.gregchess.event.ChessEventType
 import gregc.gregchess.match.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.MatchScore
@@ -11,9 +10,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlin.time.Duration
 
-class AddStatsEvent(val stats: ByColor<PlayerStatsSink>) : ChessEvent {
-    override val type get() = ChessEventType.ADD_STATS
-}
+class AddStatsEvent(val stats: ByColor<PlayerStatsSink>) : ChessEvent
 
 fun ChessMatch.addStats(stats: ByColor<PlayerStatsSink>) {
     when(results?.score) {

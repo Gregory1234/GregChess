@@ -5,7 +5,6 @@ import gregc.gregchess.event.*
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.client.PromotionMenuFactory
 import gregc.gregchess.fabric.component.FabricComponentType
-import gregc.gregchess.fabric.event.FabricChessEventType
 import gregc.gregchess.fabric.piece.block
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.fabric.renderer.server
@@ -22,7 +21,6 @@ class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEve
     enum class Type {
         PICK_UP, PLACE_DOWN
     }
-    override val type get() = FabricChessEventType.PIECE_PLAYER_ACTION
 }
 
 @Serializable
@@ -78,7 +76,7 @@ class FabricChessSide(val player: FabricPlayer, override val color: Color) : Che
         events.registerE(TurnEvent.START) {
             startTurn(match)
         }
-        events.register(ChessEventType.BASE, OrderConstraint(
+        events.register<ChessBaseEvent>(OrderConstraint(
             runBeforeAll = true,
             runAfter = setOf(FabricComponentType.MATCH_CONTROLLER)
         )) {
@@ -87,7 +85,7 @@ class FabricChessSide(val player: FabricPlayer, override val color: Color) : Che
                 else -> {}
             }
         }
-        events.register(ChessEventType.BASE, OrderConstraint(
+        events.register<ChessBaseEvent>(OrderConstraint(
             runAfterAll = true,
             runBefore = setOf(FabricComponentType.MATCH_CONTROLLER)
         )) {

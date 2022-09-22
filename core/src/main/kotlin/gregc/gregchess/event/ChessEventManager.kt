@@ -1,13 +1,14 @@
 package gregc.gregchess.event
 
 import gregc.gregchess.MultiExceptionContext
+import kotlin.reflect.KClass
 
 class ChessEventManager : ChessEventCaller {
     private val anyHandlers = mutableListOf<ChessEventHandler<ChessEvent>>()
-    private val handlers = mutableMapOf<ChessEventType<*>, MutableList<ChessEventHandler<ChessEvent>>>()
+    private val handlers = mutableMapOf<KClass<out ChessEvent>, MutableList<ChessEventHandler<ChessEvent>>>()
 
     override fun callEvent(event: ChessEvent) = with(MultiExceptionContext()) {
-        val handlersToOrder = (handlers[event.type].orEmpty() + anyHandlers).toMutableList()
+        val handlersToOrder = (handlers[event::class].orEmpty() + anyHandlers).toMutableList()
 
         repeat(256) {
             handlersToOrder.removeIf { h ->
@@ -37,7 +38,7 @@ class ChessEventManager : ChessEventCaller {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T: ChessEvent> registerEvent(eventType: ChessEventType<T>, handler: ChessEventHandler<T>) {
+    fun <T: ChessEvent> registerEvent(eventType: KClass<T>, handler: ChessEventHandler<T>) {
         handlers.getOrPut(eventType, ::mutableListOf) += handler as ChessEventHandler<ChessEvent>
     }
 

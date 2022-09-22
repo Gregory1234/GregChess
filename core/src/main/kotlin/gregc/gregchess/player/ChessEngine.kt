@@ -33,7 +33,7 @@ class EngineChessSide<T : ChessEngine>(val engine: T, override val color: Color)
     override val type: ChessSideType<EngineChessSide<T>> get() = engine.type as ChessSideType<EngineChessSide<T>>
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        events.register(ChessEventType.BASE) {
+        events.register<ChessBaseEvent> {
             if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC)
                 engine.stop()
         }

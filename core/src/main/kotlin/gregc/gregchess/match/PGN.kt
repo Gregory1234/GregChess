@@ -3,7 +3,6 @@ package gregc.gregchess.match
 import gregc.gregchess.Color
 import gregc.gregchess.clock.clock
 import gregc.gregchess.event.ChessEvent
-import gregc.gregchess.event.ChessEventType
 import java.time.format.DateTimeFormatter
 
 class PGN private constructor(private val tags: List<TagPair>, private val moves: MoveTree) {
@@ -13,8 +12,6 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             require(tags.none { it.name == name }) { "Tag already used: $name" }
             tags += TagPair(name, value)
         }
-
-        override val type get() = ChessEventType.GENERATE_PGN
     }
 
     internal class TagPair(val name: String, val value: String) {

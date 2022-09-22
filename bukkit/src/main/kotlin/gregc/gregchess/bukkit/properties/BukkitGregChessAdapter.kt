@@ -4,7 +4,6 @@ import gregc.gregchess.Register
 import gregc.gregchess.bukkit.BukkitRegistering
 import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.event.BukkitChessEventType
 import gregc.gregchess.bukkit.match.presetName
 import gregc.gregchess.bukkitutils.format
 import gregc.gregchess.bukkitutils.getPathString
@@ -36,7 +35,7 @@ object BukkitGregChessAdapter : Component, BukkitRegistering {
     private val timeFormat: String get() = config.getPathString("TimeFormat")
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        events.registerR(BukkitChessEventType.ADD_PROPERTIES) {
+        events.registerR<AddPropertiesEvent> {
             match.clock?.apply {
                 if (timeControl.type == TimeControl.Type.FIXED) {
                     match(TIME_REMAINING_SIMPLE) { timeRemaining[match.currentColor].format(timeFormat) }

@@ -21,8 +21,6 @@ interface PieceHolder<P : PlacedPiece> : PieceHolderView<P> {
 
 class PieceMoveEvent(val moves: List<Pair<PlacedPiece?, PlacedPiece?>>) : ChessEvent {
     constructor(vararg moves: Pair<PlacedPiece?, PlacedPiece?>?) : this(moves.filterNotNull())
-
-    override val type get() = ChessEventType.PIECE_MOVE
 }
 
 class PieceDoesNotExistException(val piece: PlacedPiece) : IllegalStateException(piece.toString())

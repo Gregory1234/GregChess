@@ -1,11 +1,11 @@
 package gregc.gregchess.bukkit.component
 
-import gregc.gregchess.bukkit.event.BukkitChessEventType
-import gregc.gregchess.bukkit.event.PlayerDirection
-import gregc.gregchess.bukkit.player.BukkitPlayer
+import gregc.gregchess.bukkit.match.MatchInfoEvent
+import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.component.Component
-import gregc.gregchess.event.*
+import gregc.gregchess.event.ChessBaseEvent
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -34,17 +34,17 @@ class SpectatorManager : Component {
     }
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        events.register(ChessEventType.BASE) {
+        events.register<ChessBaseEvent> {
             if (it == ChessBaseEvent.STOP) stop(match)
             else if (it == ChessBaseEvent.CLEAR) clear(match)
         }
-        events.register(BukkitChessEventType.SPECTATOR) {
+        events.register<SpectatorEvent> {
             when (it.dir) {
                 PlayerDirection.JOIN -> addSpectator(match, it.player)
                 PlayerDirection.LEAVE -> removeSpectator(it.player)
             }
         }
-        events.registerR(BukkitChessEventType.MATCH_INFO) {
+        events.registerR<MatchInfoEvent> {
             text("Spectators: ${spectators.joinToString { it.name }}\n")
         }
     }

@@ -2,7 +2,6 @@ package gregc.gregchess.bukkit.player
 
 import gregc.gregchess.Color
 import gregc.gregchess.bukkit.config
-import gregc.gregchess.bukkit.event.*
 import gregc.gregchess.bukkit.match.presetName
 import gregc.gregchess.bukkit.message
 import gregc.gregchess.bukkitutils.*
