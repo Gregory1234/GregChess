@@ -11,7 +11,8 @@ typealias Dir = Pair<Int, Int>
 
 @Serializable(with = Pos.Serializer::class)
 data class Pos(val file: Int, val rank: Int) {
-    object Serializer : KSerializer<Pos> {
+    @PublishedApi
+    internal object Serializer : KSerializer<Pos> {
         override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Pos", PrimitiveKind.STRING)
 
         override fun serialize(encoder: Encoder, value: Pos) {
@@ -117,7 +118,8 @@ class PosSteps(val start: Pos, private val jump: Dir, override val size: Int) : 
 data class UniquenessCoordinate(val file: Int? = null, val rank: Int? = null) {
     constructor(pos: Pos) : this(pos.file, pos.rank)
 
-    object Serializer : KSerializer<UniquenessCoordinate> {
+    @PublishedApi
+    internal object Serializer : KSerializer<UniquenessCoordinate> {
         override val descriptor: SerialDescriptor
             get() = PrimitiveSerialDescriptor("UniquenessCoordinate", PrimitiveKind.STRING)
 

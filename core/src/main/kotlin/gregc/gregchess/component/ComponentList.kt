@@ -45,7 +45,8 @@ class ComponentList private constructor(private val componentMap: Map<ComponentT
         }
     }
 
-    object Serializer : ClassMapSerializer<ComponentList, ComponentType<*>, Component>("ComponentList", ComponentType.Serializer) {
+    @PublishedApi
+    internal object Serializer : ClassMapSerializer<ComponentList, ComponentType<*>, Component>("ComponentList", ComponentType.Serializer) {
         override fun ComponentList.asMap(): Map<ComponentType<*>, Component> = componentMap
         override fun fromMap(m: Map<ComponentType<*>, Component>): ComponentList {
             validateComponentMap(m)

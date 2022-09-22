@@ -1,13 +1,14 @@
 package gregc.gregchess.piece
 
-import gregc.gregchess.*
+import gregc.gregchess.CoreRegistry
 import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
 
 @Serializable(with = PieceType.Serializer::class)
 class PieceType(val char: Char) : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<PieceType>("PieceType", CoreRegistry.PIECE_TYPE)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<PieceType>("PieceType", CoreRegistry.PIECE_TYPE)
 
     override val key get() = CoreRegistry.PIECE_TYPE[this]
 

@@ -1,6 +1,7 @@
 package gregc.gregchess.move.trait
 
-import gregc.gregchess.*
+import gregc.gregchess.CoreRegistry
+import gregc.gregchess.SelfType
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.MoveEnvironment
 import gregc.gregchess.registry.*
@@ -21,7 +22,8 @@ interface MoveTrait {
 
 @Serializable(with = MoveTraitType.Serializer::class)
 class MoveTraitType<T : MoveTrait>(val serializer: KSerializer<T>): NameRegistered {
-    object Serializer : NameRegisteredSerializer<MoveTraitType<*>>("MoveTraitType", CoreRegistry.MOVE_TRAIT_TYPE)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<MoveTraitType<*>>("MoveTraitType", CoreRegistry.MOVE_TRAIT_TYPE)
 
     override val key get() = CoreRegistry.MOVE_TRAIT_TYPE[this]
 
@@ -57,7 +59,8 @@ class MoveTraitType<T : MoveTrait>(val serializer: KSerializer<T>): NameRegister
     }
 }
 
-object MoveTraitSerializer : KeyRegisteredSerializer<MoveTraitType<*>, MoveTrait>("MoveTrait", MoveTraitType.Serializer) {
+@PublishedApi
+internal object MoveTraitSerializer : KeyRegisteredSerializer<MoveTraitType<*>, MoveTrait>("MoveTrait", MoveTraitType.Serializer) {
 
     @Suppress("UNCHECKED_CAST")
     override fun MoveTraitType<*>.valueSerializer(module: SerializersModule): KSerializer<MoveTrait> =

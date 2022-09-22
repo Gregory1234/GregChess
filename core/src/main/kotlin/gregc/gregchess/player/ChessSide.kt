@@ -15,7 +15,8 @@ fun interface ChessPlayer<out S : ChessSide> {
 
 @Serializable(with = ChessSideType.Serializer::class)
 class ChessSideType<T: ChessSide> @PublishedApi internal constructor(val serializer: KSerializer<T>) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessSideType<*>>("ChessSideType", CoreRegistry.SIDE_TYPE)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<ChessSideType<*>>("ChessSideType", CoreRegistry.SIDE_TYPE)
 
     override val key get() = CoreRegistry.SIDE_TYPE[this]
 
@@ -41,7 +42,8 @@ interface ChessSide {
     fun createFacade(match: ChessMatch): ChessSideFacade<*>
 }
 
-object ChessSideSerializer : KeyRegisteredSerializer<ChessSideType<*>, ChessSide>("ChessSide", ChessSideType.Serializer) {
+@PublishedApi
+internal object ChessSideSerializer : KeyRegisteredSerializer<ChessSideType<*>, ChessSide>("ChessSide", ChessSideType.Serializer) {
 
     @Suppress("UNCHECKED_CAST")
     override fun ChessSideType<*>.valueSerializer(module: SerializersModule): KSerializer<ChessSide> = serializer as KSerializer<ChessSide>

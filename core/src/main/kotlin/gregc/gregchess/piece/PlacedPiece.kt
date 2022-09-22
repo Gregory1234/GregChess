@@ -10,7 +10,8 @@ import kotlinx.serialization.modules.SerializersModule
 // TODO: remove this
 @Serializable(with = PlacedPieceType.Serializer::class)
 class PlacedPieceType<P : PlacedPiece>(val serializer: KSerializer<P>) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<PlacedPieceType<*>>("PlacedPieceType", CoreRegistry.PLACED_PIECE_TYPE)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<PlacedPieceType<*>>("PlacedPieceType", CoreRegistry.PLACED_PIECE_TYPE)
 
     override val key get() = CoreRegistry.PLACED_PIECE_TYPE[this]
 
@@ -42,7 +43,8 @@ interface PlacedPiece {
 internal fun PlacedPiece?.boardPiece() = this as BoardPiece
 internal fun PlacedPiece?.capturedPiece() = this as CapturedPiece
 
-object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, PlacedPiece>("PlacedPiece",
+@PublishedApi
+internal object PlacedPieceSerializer : KeyRegisteredSerializer<PlacedPieceType<*>, PlacedPiece>("PlacedPiece",
     PlacedPieceType.Serializer
 ) {
 

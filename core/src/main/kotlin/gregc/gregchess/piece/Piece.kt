@@ -36,7 +36,8 @@ object PieceRegistryView : FiniteBiRegistryView<String, Piece> {
 data class Piece(val type: PieceType, val color: Color) : NameRegistered {
     override val key: RegistryKey<String> get() = PieceRegistryView[this]
 
-    object Serializer : NameRegisteredSerializer<Piece>("Piece", PieceRegistryView)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<Piece>("Piece", PieceRegistryView)
 
     val char : Char
         get() = when (color) {

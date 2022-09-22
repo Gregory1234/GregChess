@@ -1,6 +1,6 @@
 package gregc.gregchess.results
 
-import gregc.gregchess.*
+import gregc.gregchess.CoreRegistry
 import gregc.gregchess.registry.*
 import kotlinx.serialization.Serializable
 
@@ -10,7 +10,8 @@ typealias DrawEndReason = EndReason<MatchScore.Draw>
 @Serializable(with = EndReason.Serializer::class)
 class EndReason<@Suppress("UNUSED") R : MatchScore>(val type: Type) : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", CoreRegistry.END_REASON)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<EndReason<*>>("EndReason", CoreRegistry.END_REASON)
 
     enum class Type(val pgn: String) {
         NORMAL("normal"), ABANDONED("abandoned"), TIME_FORFEIT("time forfeit"), EMERGENCY("emergency")

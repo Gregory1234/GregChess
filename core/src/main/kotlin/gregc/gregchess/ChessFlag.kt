@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable(with = ChessFlag.Serializer::class)
 class ChessFlag(@JvmField val isActive: (Int) -> Boolean) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessFlag>("ChessFlag", CoreRegistry.FLAG)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<ChessFlag>("ChessFlag", CoreRegistry.FLAG)
 
     override val key get() = CoreRegistry.FLAG[this]
 

@@ -26,7 +26,8 @@ data class MatchResultsWith<out R : MatchScore> internal constructor(
     val args: List<String>
 )
 
-object MatchResultsSerializer : KSerializer<MatchResults> {
+@PublishedApi
+internal object MatchResultsSerializer : KSerializer<MatchResults> {
     override val descriptor = buildClassSerialDescriptor("MatchResults") {
         element("endReason", EndReason.Serializer.descriptor)
         element("score", MatchScore.Serializer.descriptor)

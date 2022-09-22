@@ -57,7 +57,8 @@ object VoidPlayerStatsSink : PlayerStatsSink {
 
 @Serializable(with = ChessStat.Serializer::class)
 class ChessStat<T : Any>(val serializer: KSerializer<T>, @JvmField val aggregate: (Collection<T>) -> T) : NameRegistered {
-    object Serializer : NameRegisteredSerializer<ChessStat<*>>("ChessStat", CoreRegistry.STAT)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<ChessStat<*>>("ChessStat", CoreRegistry.STAT)
 
     override val key get() = CoreRegistry.STAT[this]
 

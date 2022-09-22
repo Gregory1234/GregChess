@@ -1,6 +1,7 @@
 package gregc.gregchess.component
 
-import gregc.gregchess.*
+import gregc.gregchess.CoreRegistry
+import gregc.gregchess.Registering
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.event.ComplexEventListener
@@ -14,7 +15,8 @@ import kotlin.reflect.full.companionObjectInstance
 @Serializable(with = ComponentType.Serializer::class)
 class ComponentType<T : Component> @PublishedApi internal constructor(val cl: KClass<T>, val serializer: KSerializer<T>)
     : NameRegistered, ComponentIdentifier<T>, EventListener {
-    object Serializer : NameRegisteredSerializer<ComponentType<*>>("ComponentType", CoreRegistry.COMPONENT_TYPE)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<ComponentType<*>>("ComponentType", CoreRegistry.COMPONENT_TYPE)
 
     override val key get() = CoreRegistry.COMPONENT_TYPE[this]
 

@@ -35,7 +35,8 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         private val REMATCH_REMINDER = message("RematchReminder")
     }
     @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-    object Serializer : KSerializer<BukkitPlayer> {
+    @PublishedApi
+    internal object Serializer : KSerializer<BukkitPlayer> {
         override val descriptor: SerialDescriptor
             get() = buildSerialDescriptor("BukkitPlayer", SerialKind.CONTEXTUAL)
 

@@ -18,7 +18,8 @@ sealed class MatchScore(val pgn: String) {
 
     override fun toString(): String = pgn
 
-    object Serializer : KSerializer<MatchScore> {
+    @PublishedApi
+    internal object Serializer : KSerializer<MatchScore> {
         override val descriptor: SerialDescriptor
             get() = PrimitiveSerialDescriptor("MatchScore", PrimitiveKind.STRING)
 

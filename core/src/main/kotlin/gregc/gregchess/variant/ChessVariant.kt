@@ -17,7 +17,8 @@ import kotlinx.serialization.Serializable
 @Serializable(with = ChessVariant.Serializer::class)
 open class ChessVariant : NameRegistered {
 
-    object Serializer : NameRegisteredSerializer<ChessVariant>("ChessVariant", CoreRegistry.VARIANT)
+    @PublishedApi
+    internal object Serializer : NameRegisteredSerializer<ChessVariant>("ChessVariant", CoreRegistry.VARIANT)
 
     final override val key get() = CoreRegistry.VARIANT[this]
 
