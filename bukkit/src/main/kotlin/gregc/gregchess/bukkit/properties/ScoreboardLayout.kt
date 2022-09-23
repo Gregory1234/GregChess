@@ -4,6 +4,7 @@ import gregc.gregchess.*
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.configName
 import gregc.gregchess.bukkitutils.*
+import gregc.gregchess.utils.MultiExceptionContext
 import org.bukkit.scoreboard.*
 
 interface ScoreboardLayout {

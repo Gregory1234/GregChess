@@ -56,6 +56,7 @@ dependencies {
     api(projects.gregchessCore)
     shaded(projects.gregchessCore)
     shaded(projects.gregchessRegistry)
+    shaded(projects.gregchessCoreUtils)
 }
 
 tasks {

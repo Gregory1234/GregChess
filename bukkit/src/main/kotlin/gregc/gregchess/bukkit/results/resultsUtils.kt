@@ -1,12 +1,14 @@
 package gregc.gregchess.bukkit.results
 
-import gregc.gregchess.*
+import gregc.gregchess.Color
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.bukkitutils.player.BukkitHuman
+import gregc.gregchess.byColor
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
 import gregc.gregchess.results.*
+import gregc.gregchess.utils.snakeToPascal
 
 val EndReason<*>.quick
     get() = this in BukkitRegistry.QUICK_END_REASONS

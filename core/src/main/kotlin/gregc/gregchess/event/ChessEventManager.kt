@@ -1,6 +1,6 @@
 package gregc.gregchess.event
 
-import gregc.gregchess.MultiExceptionContext
+import gregc.gregchess.utils.MultiExceptionContext
 import kotlin.reflect.KClass
 
 class ChessEventManager : ChessEventCaller {

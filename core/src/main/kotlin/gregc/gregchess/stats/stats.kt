@@ -5,6 +5,7 @@ import gregc.gregchess.event.ChessEvent
 import gregc.gregchess.match.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.MatchScore
+import gregc.gregchess.utils.DurationSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer

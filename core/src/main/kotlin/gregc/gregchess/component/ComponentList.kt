@@ -1,6 +1,6 @@
 package gregc.gregchess.component
 
-import gregc.gregchess.ClassMapSerializer
+import gregc.gregchess.utils.ClassMapSerializer
 import gregc.gregchess.match.AnyFacade
 import gregc.gregchess.match.ChessMatch
 import kotlinx.serialization.KSerializer

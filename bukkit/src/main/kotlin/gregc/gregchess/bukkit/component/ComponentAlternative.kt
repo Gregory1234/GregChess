@@ -1,10 +1,11 @@
 package gregc.gregchess.bukkit.component
 
-import gregc.gregchess.*
+import gregc.gregchess.CoreRegistry
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.renderer.Renderer
 import gregc.gregchess.component.*
 import gregc.gregchess.registry.*
+import gregc.gregchess.utils.snakeToPascal
 import org.bukkit.configuration.ConfigurationSection
 
 interface SelectableComponentIdentifier<T : Component> : ComponentIdentifier<T> {

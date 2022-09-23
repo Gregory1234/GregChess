@@ -9,6 +9,7 @@ import gregc.gregchess.bukkitutils.serialization.BukkitConfig
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
 import gregc.gregchess.stats.*
+import gregc.gregchess.utils.snakeToPascal
 import kotlinx.serialization.builtins.nullable
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection

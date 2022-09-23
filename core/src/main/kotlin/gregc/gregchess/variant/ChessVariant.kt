@@ -12,6 +12,8 @@ import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.*
+import gregc.gregchess.utils.rotationsOf
+import gregc.gregchess.utils.snakeToPascal
 import kotlinx.serialization.Serializable
 
 @Serializable(with = ChessVariant.Serializer::class)

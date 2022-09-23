@@ -1,11 +1,12 @@
 package gregc.gregchess.bukkit.properties
 
-import gregc.gregchess.*
+import gregc.gregchess.Color
 import gregc.gregchess.bukkit.BukkitRegistry
 import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.getPathString
 import gregc.gregchess.event.ChessEvent
 import gregc.gregchess.registry.*
+import gregc.gregchess.utils.snakeToPascal
 
 class AddPropertiesEvent(
     private val playerProperties: MutableMap<PropertyType, PlayerProperty>,

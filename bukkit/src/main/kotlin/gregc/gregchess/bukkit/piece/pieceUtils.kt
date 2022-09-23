@@ -9,7 +9,7 @@ import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.*
 import gregc.gregchess.registry.module
 import gregc.gregchess.registry.name
-import gregc.gregchess.snakeToPascal
+import gregc.gregchess.utils.snakeToPascal
 import gregc.gregchess.variant.ChessVariant
 import org.bukkit.Material
 import org.bukkit.Sound

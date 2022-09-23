@@ -1,4 +1,4 @@
-package gregc.gregchess
+package gregc.gregchess.utils
 
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*

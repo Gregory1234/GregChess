@@ -3,7 +3,7 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.Color
 import gregc.gregchess.bukkitutils.serialization.BukkitConfigLowercase
 import gregc.gregchess.registry.ChessModule
-import gregc.gregchess.snakeToPascal
+import gregc.gregchess.utils.snakeToPascal
 import kotlinx.serialization.Serializable
 import org.bukkit.*
 import org.bukkit.configuration.ConfigurationSection
