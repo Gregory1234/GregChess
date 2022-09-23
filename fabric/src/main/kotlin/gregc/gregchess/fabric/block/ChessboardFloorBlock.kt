@@ -4,6 +4,7 @@ import gregc.gregchess.Pos
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.piece.PieceBlock
 import gregc.gregchess.fabric.player.FabricChessSideFacade
+import gregc.gregchess.fabricutils.block.*
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity

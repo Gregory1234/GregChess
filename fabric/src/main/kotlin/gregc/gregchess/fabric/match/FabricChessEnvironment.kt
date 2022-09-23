@@ -4,7 +4,7 @@ import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentIdentifier
 import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.component.FabricComponentType
-import gregc.gregchess.fabric.coroutines.FabricDispatcher
+import gregc.gregchess.fabricutils.coroutines.FabricDispatcher
 import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.match.ChessMatch
 import kotlinx.coroutines.CoroutineDispatcher

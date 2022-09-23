@@ -1,4 +1,4 @@
-package gregc.gregchess.fabric.coroutines
+package gregc.gregchess.fabricutils.coroutines
 
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext

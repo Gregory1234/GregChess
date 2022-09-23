@@ -1,11 +1,9 @@
-package gregc.gregchess.fabric.nbt
+package gregc.gregchess.fabricutils.nbt
 
 import kotlinx.serialization.*
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import net.minecraft.nbt.NbtElement
-
-// TODO: move this to a separate gradle module
 
 sealed interface NbtFormat : SerialFormat {
     fun <T> encodeToNbtElement(serializer: SerializationStrategy<T>, value: T): NbtElement?

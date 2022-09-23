@@ -1,4 +1,4 @@
-package gregc.gregchess.fabric.block
+package gregc.gregchess.fabricutils.block
 
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity

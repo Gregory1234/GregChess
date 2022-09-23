@@ -1,4 +1,4 @@
-package gregc.gregchess.fabric
+package gregc.gregchess.fabricutils
 
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.inventory.Inventories

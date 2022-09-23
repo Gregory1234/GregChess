@@ -57,6 +57,7 @@ dependencies {
     shaded(projects.gregchessCore)
     shaded(projects.gregchessRegistry)
     shaded(projects.gregchessCoreUtils)
+    shaded(projects.gregchessFabricUtils.copy().apply { targetConfiguration = "namedElements" })
 }
 
 tasks {

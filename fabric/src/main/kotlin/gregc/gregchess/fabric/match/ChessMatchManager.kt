@@ -7,9 +7,9 @@ import gregc.gregchess.component.Component
 import gregc.gregchess.fabric.GregChess
 import gregc.gregchess.fabric.defaultModule
 import gregc.gregchess.fabric.mixin.WorldSavePathCreator
-import gregc.gregchess.fabric.nbt.*
 import gregc.gregchess.fabric.renderer.FabricRenderer
 import gregc.gregchess.fabric.renderer.renderer
+import gregc.gregchess.fabricutils.nbt.*
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.ChessSideManager

@@ -8,6 +8,7 @@ import gregc.gregchess.fabric.match.*
 import gregc.gregchess.fabric.piece.PieceBlock
 import gregc.gregchess.fabric.piece.item
 import gregc.gregchess.fabric.renderer.FabricRenderer
+import gregc.gregchess.fabricutils.block.*
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.ChessPlayer

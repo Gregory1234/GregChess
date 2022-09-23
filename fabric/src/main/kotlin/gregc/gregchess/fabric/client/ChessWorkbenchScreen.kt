@@ -3,6 +3,7 @@ package gregc.gregchess.fabric.client
 import gregc.gregchess.CoreRegistry
 import gregc.gregchess.fabric.*
 import gregc.gregchess.fabric.piece.item
+import gregc.gregchess.fabricutils.DefaultedListInventory
 import gregc.gregchess.piece.*
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription
 import io.github.cottonmc.cotton.gui.ValidatedSlot

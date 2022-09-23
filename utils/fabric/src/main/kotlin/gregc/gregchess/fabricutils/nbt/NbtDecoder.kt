@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalSerializationApi::class)
 
-package gregc.gregchess.fabric.nbt
+package gregc.gregchess.fabricutils.nbt
 
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -167,6 +167,7 @@ abstract class AbstractNbtCompositeDecoder : NbtCompositeDecoder {
     abstract override fun decodeCollectionSize(descriptor: SerialDescriptor): Int
 }
 
+// TODO: fix nulls getting completely skipped in a wrong way
 class NbtCompoundDecoder(override val serializersModule: SerializersModule, private val nbtElement: NbtCompound) :
     AbstractNbtCompositeDecoder() {
     private var index = 0

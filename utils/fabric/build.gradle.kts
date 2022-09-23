@@ -1,25 +1,22 @@
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization")
+    id("fabric-loom")
     id("org.jetbrains.dokka")
     `maven-publish`
 }
 
-repositories {
-    mavenCentral()
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") { name = "Spigot" }
-}
+val shaded: Configuration by configurations.creating
+
+configurations.implementation.get().extendsFrom(shaded)
 
 dependencies {
-    api(libs.spigot.api)
+    minecraft(libs.fabric.minecraft)
+    mappings(variantOf(libs.fabric.yarn) { classifier("v2") })
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.serialization.core)
 }
 
-val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())
-
 tasks {
-
     compileJava {
         val jvmVersion: String by project
         sourceCompatibility = jvmVersion
@@ -32,31 +29,33 @@ tasks {
             freeCompilerArgs = defaultKotlinArgs
         }
     }
+    jar {
+        exclude { it.file.extension == "kotlin_metadata" }
+        duplicatesStrategy = DuplicatesStrategy.WARN
+    }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {
             configureEach {
                 gregchessSourceLink(project)
-                externalDocumentationLinkElementList("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/${libs.versions.spigot.api.get()}/spigot-api-$trueSpigotVersion-javadoc.jar/!/")
+                externalDocumentationLinkElementList("https://maven.fabricmc.net/docs/yarn-${libs.versions.fabric.yarn.get()}/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
                 externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/")
             }
         }
     }
-    register<Jar>("sourcesJar") {
-        group = "build"
-        archiveClassifier.set("sources")
-        from(sourceSets.main.get().allSource)
-    }
+}
+
+java {
+    withSourcesJar()
 }
 
 publishing {
     publications {
-        create<MavenPublication>("bukkitUtils") {
+        create<MavenPublication>("fabricUtils") {
             groupId = project.group as String
             artifactId = project.name
             version = project.version as String
-            from(components["kotlin"])
-            artifact(tasks.sourcesJar)
+            from(components["java"])
         }
     }
 }

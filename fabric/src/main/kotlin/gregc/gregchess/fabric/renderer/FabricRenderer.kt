@@ -6,9 +6,9 @@ import gregc.gregchess.event.*
 import gregc.gregchess.fabric.block.ChessControllerBlockEntity
 import gregc.gregchess.fabric.block.ChessboardFloorBlockEntity
 import gregc.gregchess.fabric.component.FabricComponentType
-import gregc.gregchess.fabric.moveBlock
 import gregc.gregchess.fabric.piece.*
 import gregc.gregchess.fabric.player.PiecePlayerActionEvent
+import gregc.gregchess.fabricutils.moveBlock
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.piece.BoardPiece

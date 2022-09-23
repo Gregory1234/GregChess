@@ -1,9 +1,7 @@
-package gregc.gregchess.fabric.block
+package gregc.gregchess.fabricutils.block
 
 import net.minecraft.nbt.NbtCompound
 import java.util.*
-
-// TODO: make things internal or move to a separate gradle module
 
 fun NbtCompound.ensureNotEmpty() = apply {
     if (isEmpty)
