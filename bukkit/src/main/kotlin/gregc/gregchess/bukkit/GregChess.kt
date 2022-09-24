@@ -5,7 +5,6 @@ import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.component.*
 import gregc.gregchess.bukkit.match.ChessMatchManager
-import gregc.gregchess.bukkit.match.SettingsManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
 import gregc.gregchess.bukkit.properties.SimpleScoreboardLayout
@@ -21,16 +20,6 @@ import gregc.gregchess.variant.ThreeChecks
 import kotlin.time.Duration
 
 internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
-
-    // TODO: remove this
-    private val clockSettings: Map<String, ChessClock>
-        get() = config.getConfigurationSection("Settings.Clock")?.getKeys(false).orEmpty().associateWith {
-            val section = config.getConfigurationSection("Settings.Clock.$it")!!
-            val t = TimeControl.Type.valueOf(section.getString("Type", TimeControl.Type.INCREMENT.toString())!!)
-            val initial = section.getString("Initial")!!.toDuration()
-            val increment = if (t.usesIncrement) section.getString("Increment")!!.toDuration() else Duration.ZERO
-            ChessClock(TimeControl(t, initial, increment))
-        }
 
     private fun registerSettings() {
         BukkitRegistry.SETTINGS_PARSER[ComponentType.CHESSBOARD] = {
@@ -49,12 +38,14 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
                 }
             }
         }
-        BukkitRegistry.SETTINGS_PARSER[ComponentType.CLOCK] =  {
-            SettingsManager.chooseOrParse(clockSettings, section.getString("Clock")) {
-                TimeControl.parseOrNull(it)?.let { t -> ChessClock(t) } ?: run {
-                    logger.warn("Bad time control \"$it\", defaulted to none")
-                    null
-                }
+        BukkitRegistry.SETTINGS_PARSER[ComponentType.CLOCK] = {
+            section.getString("Clock")?.let { clock ->
+                TimeControl.parseOrNull(clock)?.let { t -> ChessClock(t) }
+            } ?: section.getConfigurationSection("Clock")?.let { s ->
+                val t = TimeControl.Type.valueOf(s.getString("Type", TimeControl.Type.INCREMENT.toString())!!)
+                val initial = s.getString("Initial")!!.toDuration()
+                val increment = if (t.usesIncrement) s.getString("Increment")!!.toDuration() else Duration.ZERO
+                ChessClock(TimeControl(t, initial, increment))
             }
         }
         BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.RENDERER] = { BukkitRenderer() }

@@ -26,7 +26,7 @@ data class TimeControl(
     }
 
     fun getPGN() = buildString {
-        if (type == Type.SIMPLE) {
+        if (type == Type.FIXED) {
             append("1/", initialTime.inWholeSeconds)
         } else {
             append(initialTime.inWholeSeconds)

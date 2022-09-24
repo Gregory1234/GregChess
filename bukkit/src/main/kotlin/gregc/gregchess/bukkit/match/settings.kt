@@ -39,8 +39,6 @@ class MatchSettings(
 
 object SettingsManager {
 
-    inline fun <T, R> chooseOrParse(opts: Map<T, R>, v: T?, parse: (T) -> R?): R? = opts[v] ?: v?.let(parse)
-
     fun getSettings(name: String, round: Int = 1): MatchSettings? {
         val section = config.getConfigurationSection("Settings.Presets.$name") ?: return null
         val variant = section.getFromRegistry(CoreRegistry.VARIANT, "Variant") ?: ChessVariant.Normal
