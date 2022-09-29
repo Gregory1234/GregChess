@@ -1,7 +1,8 @@
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
-    id("org.jetbrains.dokka")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.dokka)
     `maven-publish`
 }
 

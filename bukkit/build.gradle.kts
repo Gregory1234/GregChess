@@ -1,10 +1,11 @@
 import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask
 
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
-    id("org.jetbrains.dokka")
-    id("dev.s7a.gradle.minecraft.server")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.minecraftserver)
     `maven-publish`
 }
 
@@ -36,8 +37,8 @@ configurations.implementation.get().extendsFrom(shaded, spigotLib)
 dependencies {
     api(libs.spigot.api)
     api(libs.kotlinx.serialization.json)
-    spigotLib(kotlin("stdlib"))
-    spigotLib(kotlin("reflect"))
+    spigotLib(libs.kotlin.stdlib)
+    spigotLib(libs.kotlin.reflect)
     spigotLib(libs.kotlinx.serialization.json)
     spigotLib(libs.kotlinx.coroutines.core)
     spigotLib(libs.slf4j.jdk14)

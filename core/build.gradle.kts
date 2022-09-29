@@ -1,7 +1,8 @@
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
-    id("org.jetbrains.dokka")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.dokka)
     `maven-publish`
 }
 
@@ -10,13 +11,13 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("reflect"))
+    implementation(libs.kotlin.reflect)
     api(libs.kotlinx.serialization.core)
     api(libs.kotlinx.coroutines.core)
     api(projects.gregchessRegistry)
     implementation(projects.gregchessCoreUtils)
     testImplementation(libs.slf4j.jdk14)
-    testImplementation(kotlin("test"))
+    testImplementation(libs.kotlin.test)
     testImplementation(libs.junit)
     testImplementation(libs.assertk)
     testImplementation(libs.mockk)

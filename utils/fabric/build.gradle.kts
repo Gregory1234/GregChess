@@ -1,7 +1,8 @@
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    kotlin("jvm")
-    id("fabric-loom")
-    id("org.jetbrains.dokka")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.dokka)
     `maven-publish`
 }
 

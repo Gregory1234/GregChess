@@ -1,4 +1,6 @@
 [versions]
+kotlin = "1.7.20"
+
 kotlinx-serialization = "1.4.0"
 kotlinx-coroutines = "1.6.4"
 
@@ -8,7 +10,10 @@ junit = "5.9.0"
 assertk = "0.25"
 mockk = "1.12.8"
 
+dokka = "1.7.10"
+
 spigot-api = "1.19.2-R0.1-SNAPSHOT"
+minecraftserver = "1.2.0"
 
 fabric-minecraft = "1.19.2"
 fabric-yarn = "1.19.2+build.13"
@@ -16,8 +21,14 @@ fabric-loader = "0.14.9"
 fabric-api = "0.61.0+1.19.2"
 fabric-kotlin = "1.8.4+kotlin.1.7.20"
 fabric-libgui = "6.3.0+1.19"
+fabric-loom = "1.0-SNAPSHOT"
 
 [libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "kotlinx-coroutines" }
@@ -30,6 +41,8 @@ junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 assertk = { module = "com.willowtreeapps.assertk:assertk-jvm", version.ref = "assertk" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
+dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+
 spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "spigot-api" }
 
 fabric-minecraft = { module = "com.mojang:minecraft", version.ref = "fabric-minecraft" }
@@ -38,3 +51,13 @@ fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-l
 fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
 fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-kotlin" }
 fabric-libgui = { module = "io.github.cottonmc:LibGui", version.ref = "fabric-libgui" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+
+minecraftserver = { id = "dev.s7a.gradle.minecraft.server", version.ref = "minecraftserver" }
+
+fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }

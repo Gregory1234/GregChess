@@ -1,10 +1,11 @@
 import net.fabricmc.loom.task.RemapJarTask
 
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
-    id("fabric-loom")
-    id("org.jetbrains.dokka")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.dokka)
     `maven-publish`
 }
 
