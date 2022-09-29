@@ -1,4 +1,4 @@
-@file:UseSerializers(InstantSerializer::class, DurationSerializer::class)
+@file:UseSerializers(InstantSerializer::class)
 
 package gregc.gregchess.match
 

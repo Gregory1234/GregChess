@@ -5,7 +5,6 @@ import gregc.gregchess.event.ChessEvent
 import gregc.gregchess.match.*
 import gregc.gregchess.registry.*
 import gregc.gregchess.results.MatchScore
-import gregc.gregchess.utils.DurationSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -71,7 +70,7 @@ class ChessStat<T : Any>(val serializer: KSerializer<T>, @JvmField val aggregate
         internal val AUTO_REGISTER = AutoRegisterType(ChessStat::class) { m, n, _ -> CoreRegistry.STAT[m, n] = this }
 
         fun intStat() = ChessStat(Int.serializer(), Collection<Int>::sum)
-        fun durationStat() = ChessStat(DurationSerializer) { it.reduceOrNull(Duration::plus) ?: Duration.ZERO }
+        fun durationStat() = ChessStat(Duration.serializer()) { it.reduceOrNull(Duration::plus) ?: Duration.ZERO }
 
         @JvmField
         val WINS = intStat()
