@@ -1,7 +1,6 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.CoreRegistry
-import gregc.gregchess.bukkit.component.ComponentAlternative
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.properties.ScoreboardLayout
@@ -40,11 +39,7 @@ object BukkitRegistry {
     @JvmField
     val VARIANT_OPTIONS_PARSER = ConnectedRegistry<_, VariantOptionsParser>("variant_oprions_parser", CoreRegistry.VARIANT)
     @JvmField
-    val COMPONENT_ALTERNATIVE = NameRegistry<ComponentAlternative<*>>("component_alternative")
-    @JvmField
     val REQUIRED_COMPONENTS = ConnectedSetRegistry("required_components", CoreRegistry.COMPONENT_TYPE)
-    @JvmField
-    val REQUIRED_COMPONENT_ALTERNATIVES = ConnectedSetRegistry("hooked_component_alternatives", COMPONENT_ALTERNATIVE)
     @JvmField
     val IMPLIED_COMPONENTS = PartialConnectedRegistry<_, () -> Component>("implied_components", CoreRegistry.COMPONENT_TYPE)
 }

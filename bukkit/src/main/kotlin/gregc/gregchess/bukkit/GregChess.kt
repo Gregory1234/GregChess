@@ -3,7 +3,8 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.GregChessCore
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
-import gregc.gregchess.bukkit.component.*
+import gregc.gregchess.bukkit.component.BukkitComponentType
+import gregc.gregchess.bukkit.component.MatchController
 import gregc.gregchess.bukkit.match.ChessMatchManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
@@ -59,11 +60,9 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     }
 
     private fun registerRequiredComponents() {
-        for (c in listOf(ComponentType.CHESSBOARD, BukkitComponentType.SPECTATOR_MANAGER, BukkitComponentType.SCOREBOARD_MANAGER)) {
+        for (c in listOf(ComponentType.CHESSBOARD, BukkitComponentType.SPECTATOR_MANAGER,
+            BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.RENDERER)) {
             BukkitRegistry.REQUIRED_COMPONENTS += c
-        }
-        for (a in listOf(ComponentAlternative.RENDERER)) {
-            BukkitRegistry.REQUIRED_COMPONENT_ALTERNATIVES += a
         }
     }
 
@@ -78,7 +77,6 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             registerAll<ChessMatchManager>()
             registerAll<BukkitComponentType>()
             registerAll<BukkitChessSideType>()
-            registerAll<ComponentAlternative<*>>()
         }
         registerOptionalComponents()
         registerRequiredComponents()

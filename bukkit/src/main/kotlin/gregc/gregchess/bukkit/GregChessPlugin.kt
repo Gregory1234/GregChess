@@ -2,7 +2,7 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.command.*
-import gregc.gregchess.bukkit.component.ComponentAlternative
+import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.piece.getInfo
 import gregc.gregchess.bukkit.player.*
@@ -131,7 +131,7 @@ object GregChessPlugin : Listener {
                                 } else if (opponent.isInMatch) {
                                     sender.sendMessage(OPPONENT_IN_MATCH)
                                 } else {
-                                    settings.components.require(ComponentAlternative.RENDERER).validate()
+                                    settings.components.require(BukkitComponentType.RENDERER).validate()
                                     if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                                     if (opponent.isSpectatingMatch) opponent.leaveSpectatedMatch()
                                     settings.createMatch(byColor(sender, opponent)).start()
@@ -150,7 +150,7 @@ object GregChessPlugin : Listener {
                         if (sender.isInMatch) {
                             sender.sendMessage(YOU_IN_MATCH)
                         } else {
-                            settings.components.require(ComponentAlternative.RENDERER).validate()
+                            settings.components.require(BukkitComponentType.RENDERER).validate()
                             if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                             settings.createMatch(byColor(sender, Stockfish())).start()
                         }
@@ -496,7 +496,7 @@ object GregChessPlugin : Listener {
                             } else if (opponent.isInMatch) {
                                 sender.sendMessage(OPPONENT_IN_MATCH)
                             } else {
-                                settings.components.require(ComponentAlternative.RENDERER).validate()
+                                settings.components.require(BukkitComponentType.RENDERER).validate()
                                 if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                                 if (opponent.isSpectatingMatch) sender.leaveSpectatedMatch()
                                 settings.createMatch(if (rematchInfo.lastColor == Color.BLACK) byColor(sender, opponent) else byColor(opponent, sender)).start()

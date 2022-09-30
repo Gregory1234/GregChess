@@ -1,11 +1,10 @@
 package gregc.gregchess.bukkit.match
 
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkitutils.coroutines.BukkitContext
 import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import gregc.gregchess.component.Component
-import gregc.gregchess.component.ComponentIdentifier
+import gregc.gregchess.component.ComponentType
 import gregc.gregchess.match.ChessEnvironment
 import gregc.gregchess.match.ChessMatch
 import kotlinx.coroutines.CoroutineDispatcher
@@ -30,8 +29,7 @@ class BukkitChessEnvironment(
     override fun matchCoroutineName(): String = uuid.toString()
     override fun matchToString(): String = "uuid=$uuid"
 
-    override val requiredComponents: Set<ComponentIdentifier<*>>
-        get() = BukkitRegistry.REQUIRED_COMPONENTS.elements + BukkitRegistry.REQUIRED_COMPONENT_ALTERNATIVES.elements
+    override val requiredComponents: Set<ComponentType<*>> get() = BukkitRegistry.REQUIRED_COMPONENTS.elements
     @Transient
     override val impliedComponents: Set<Component> = BukkitRegistry.IMPLIED_COMPONENTS.values.map { it() }.toSet()
 }

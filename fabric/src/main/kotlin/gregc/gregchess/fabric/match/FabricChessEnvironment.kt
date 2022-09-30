@@ -1,7 +1,7 @@
 package gregc.gregchess.fabric.match
 
 import gregc.gregchess.component.Component
-import gregc.gregchess.component.ComponentIdentifier
+import gregc.gregchess.component.ComponentType
 import gregc.gregchess.fabric.FabricRegistry
 import gregc.gregchess.fabric.component.FabricComponentType
 import gregc.gregchess.fabricutils.coroutines.FabricDispatcher
@@ -23,7 +23,7 @@ class FabricChessEnvironment(@Contextual val uuid: UUID = UUID.randomUUID()) : C
     override fun matchToString(): String = "uuid=$uuid"
     @Transient
     override val impliedComponents: Set<Component> = FabricRegistry.IMPLIED_COMPONENTS.values.map { it() }.toSet()
-    override val requiredComponents: Set<ComponentIdentifier<*>> get() = setOf(FabricComponentType.RENDERER)
+    override val requiredComponents: Set<ComponentType<*>> get() = setOf(FabricComponentType.RENDERER)
 }
 
 val ChessMatch.fabricEnvironment get() = environment as FabricChessEnvironment

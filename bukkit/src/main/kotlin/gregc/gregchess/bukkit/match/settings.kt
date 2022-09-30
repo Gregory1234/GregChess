@@ -3,7 +3,6 @@ package gregc.gregchess.bukkit.match
 import gregc.gregchess.ByColor
 import gregc.gregchess.CoreRegistry
 import gregc.gregchess.bukkit.*
-import gregc.gregchess.bukkit.component.SelectableComponentIdentifier
 import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.component.ComponentList
@@ -48,22 +47,10 @@ object SettingsManager {
 
         val context = SettingsParserContext(variant, variantOptions, section)
         val requestedComponents = variant.requiredComponents + BukkitRegistry.OPTIONAL_COMPONENTS.elements +
-                BukkitRegistry.REQUIRED_COMPONENTS.elements + BukkitRegistry.REQUIRED_COMPONENT_ALTERNATIVES.elements
+                BukkitRegistry.REQUIRED_COMPONENTS.elements
         val components = requestedComponents.mapNotNull { req ->
-            when (req) {
-                is ComponentType<*> -> {
-                    val f = BukkitRegistry.SETTINGS_PARSER[req]
-                    context.f()
-                }
-                is SelectableComponentIdentifier<*> -> {
-                    val t = req.getLocalSelected(section)
-                    val f = BukkitRegistry.SETTINGS_PARSER[t]
-                    context.f()
-                }
-                else -> {
-                    throw IllegalArgumentException("$req (${req::class}) is not SelectableComponentIdentifier")
-                }
-            }
+            val f = BukkitRegistry.SETTINGS_PARSER[req]
+            context.f()
         }
 
         val environment = BukkitChessEnvironment(name, round)

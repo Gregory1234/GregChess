@@ -3,7 +3,7 @@ package gregc.gregchess.variant
 import gregc.gregchess.*
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
-import gregc.gregchess.component.ComponentIdentifier
+import gregc.gregchess.component.ComponentType
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.match.PGN
 import gregc.gregchess.move.*
@@ -155,7 +155,7 @@ open class ChessVariant : NameRegistered {
     open val pieceTypes: Collection<PieceType>
         get() = PieceType.run { listOf(KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN) }
 
-    open val requiredComponents: Set<ComponentIdentifier<*>> get() = emptySet()
+    open val requiredComponents: Set<ComponentType<*>> get() = emptySet()
 
     open val pgnMoveFormatter: MoveFormatter = simpleMoveFormatter { move ->
         val main = move.pieceTracker.getOriginalOrNull("main")

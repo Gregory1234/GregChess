@@ -6,6 +6,7 @@ import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.piece.getSound
 import gregc.gregchess.bukkit.piece.structure
 import gregc.gregchess.bukkit.player.PiecePlayerActionEvent
+import gregc.gregchess.component.Component
 import gregc.gregchess.event.*
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.connector.PieceMoveEvent
@@ -17,14 +18,15 @@ import org.bukkit.Location
 import org.bukkit.Material
 import kotlin.math.floor
 
+// TODO: add a way to customize arenas and rendering style
 @Serializable
-data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)) : Renderer {
+data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)) : Component {
     override val type get() = BukkitComponentType.RENDERER
 
     @Transient
     private lateinit var arena: Arena
 
-    override fun validate() {
+    fun validate() {
         ArenaManager.validateFreeArenas()
     }
 
@@ -52,7 +54,7 @@ data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.P
     private val boardStart get() = arena.boardStart.toLoc()
     private val capturedStart get() = byColor { arena.capturedStart[it].toLoc() }
 
-    override fun getPos(location: Location) = getPos(location.toLoc())
+    fun getPos(location: Location) = getPos(location.toLoc())
 
     private fun getPos(loc: Loc) =
         Pos(file = 7 - (loc.x - boardStart.x).floorDiv(tileSize), rank = (loc.z - boardStart.z).floorDiv(tileSize))
@@ -196,3 +198,5 @@ data class BukkitRenderer(val pieceRows: Map<PieceType, Int> = mapOf(PieceType.P
             }
     }
 }
+
+val ChessMatch.renderer get() = components.require(BukkitComponentType.RENDERER)

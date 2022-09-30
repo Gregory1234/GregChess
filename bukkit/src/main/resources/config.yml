@@ -287,5 +287,3 @@ Rejoin:
 
 TimeFormat: "mm:ss.S"
 StatsProvider: yaml
-Component:
-  Renderer: renderer

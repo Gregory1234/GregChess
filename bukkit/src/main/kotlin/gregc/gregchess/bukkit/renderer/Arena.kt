@@ -22,13 +22,12 @@ class NoFreeArenasException : NoSuchElementException("No free arenas")
 
 class ArenaMetadata(val name: String, var match: ChessMatch? = null)
 
-// TODO: make arena manager replaceable again
 object ArenaManager : BukkitRegistering {
 
     private val NO_ARENAS = err("NoArenas")
 
     fun validateFreeArenas() {
-        if (!ArenaManager.hasFreeArenas())
+        if (!hasFreeArenas())
             throw CommandException(NO_ARENAS)
     }
 

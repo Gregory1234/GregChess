@@ -14,17 +14,13 @@ import kotlin.reflect.full.companionObjectInstance
 
 @Serializable(with = ComponentType.Serializer::class)
 class ComponentType<T : Component> @PublishedApi internal constructor(val cl: KClass<T>, val serializer: KSerializer<T>)
-    : NameRegistered, ComponentIdentifier<T>, EventListener {
+    : NameRegistered, EventListener {
     @PublishedApi
     internal object Serializer : NameRegisteredSerializer<ComponentType<*>>("ComponentType", CoreRegistry.COMPONENT_TYPE)
 
     override val key get() = CoreRegistry.COMPONENT_TYPE[this]
 
     override fun toString(): String = CoreRegistry.COMPONENT_TYPE.simpleElementToString(this)
-
-    override val matchedTypes: Set<ComponentType<out T>> get() = setOf(this)
-    @Suppress("UNCHECKED_CAST")
-    override fun matchesOrNull(c: Component): T? = if (c.type == this) c as T else null
 
     override fun isOf(parent: EventListener): Boolean = parent == this
 

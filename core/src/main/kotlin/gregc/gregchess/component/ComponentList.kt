@@ -1,25 +1,18 @@
 package gregc.gregchess.component
 
-import gregc.gregchess.utils.ClassMapSerializer
 import gregc.gregchess.match.AnyFacade
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.utils.ClassMapSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 
-// TODO: remove this?
-interface ComponentIdentifier<T : Component> {
-    val matchedTypes: Set<ComponentType<out T>>? get() = null
-    @Suppress("UNCHECKED_CAST")
-    fun matchesOrNull(c: Component): T? = matchedTypes?.let { if (c.type in it) c as T else null }
-}
-
-class ComponentNotFoundException(type: ComponentIdentifier<*>) : NoSuchElementException(type.toString())
+class ComponentNotFoundException(type: ComponentType<*>) : NoSuchElementException(type.toString())
 
 interface ComponentCollection : Collection<Component> {
-    operator fun <T : Component> get(type: ComponentIdentifier<T>): T?
-    fun <T : Component> require(type: ComponentIdentifier<T>): T = get(type) ?: throw ComponentNotFoundException(type)
-    operator fun contains(type: ComponentIdentifier<*>) = get(type) != null
+    operator fun <T : Component> get(type: ComponentType<T>): T?
+    fun <T : Component> require(type: ComponentType<T>): T = get(type) ?: throw ComponentNotFoundException(type)
+    operator fun contains(type: ComponentType<*>) = get(type) != null
 }
 
 @Serializable(ComponentList.Serializer::class)
@@ -58,18 +51,8 @@ class ComponentList private constructor(private val componentMap: Map<ComponentT
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T : Component> getFromType(type: ComponentType<T>): T? =
+    override fun <T : Component> get(type: ComponentType<T>): T? =
         componentMap[type] as T?
-
-    override operator fun <T : Component> get(type: ComponentIdentifier<T>): T? {
-        if (type is ComponentType<T>)
-            return getFromType(type)
-        val matches = type.matchedTypes
-        return if (matches != null && matches.size < size)
-            matches.firstOrNull { it in componentMap }?.let { getFromType(it) }
-        else
-            componentMap.values.firstNotNullOfOrNull { type.matchesOrNull(it) }
-    }
 
     override val size: Int get() = componentMap.size
     override fun isEmpty(): Boolean = componentMap.isEmpty()
