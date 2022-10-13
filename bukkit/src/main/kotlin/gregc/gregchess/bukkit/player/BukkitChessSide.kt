@@ -25,7 +25,7 @@ import kotlinx.serialization.Transient
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
-class PiecePlayerActionEvent(val piece: BoardPiece, val action: Type) : ChessEvent {
+class PiecePlayerActionEvent(val piece: BoardPiece, val player: BukkitPlayer, val action: Type) : ChessEvent {
     enum class Type {
         PICK_UP, PLACE_DOWN
     }
@@ -73,11 +73,11 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
         _held = newHeld
         oldHeld?.let {
             match.board.checkExists(it)
-            match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PLACE_DOWN))
+            match.callEvent(PiecePlayerActionEvent(it, player, PiecePlayerActionEvent.Type.PLACE_DOWN))
         }
         newHeld?.let {
             match.board.checkExists(it)
-            match.callEvent(PiecePlayerActionEvent(it, PiecePlayerActionEvent.Type.PICK_UP))
+            match.callEvent(PiecePlayerActionEvent(it, player, PiecePlayerActionEvent.Type.PICK_UP))
         }
     }
 
@@ -230,7 +230,6 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
         val piece = match.board[pos] ?: return
         if (piece.color != color) return
         setHeld(match, piece)
-        player.entity?.inventory?.setItem(0, piece.piece.item)
     }
 
     fun makeMove(match: ChessMatch, pos: Pos) {
@@ -240,7 +239,6 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
         val moves = piece.getLegalMoves(match.board)
         if (pos != piece.pos && pos !in moves.map { it.display }) return
         setHeld(match, null)
-        player.entity?.inventory?.setItem(0, null)
         if (pos == piece.pos) return
         val chosenMoves = moves.filter { it.display == pos }
         val move = chosenMoves.first()

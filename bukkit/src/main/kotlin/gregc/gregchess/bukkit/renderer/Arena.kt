@@ -11,6 +11,7 @@ import gregc.gregchess.bukkitutils.serialization.decodeFromPath
 import gregc.gregchess.byColor
 import gregc.gregchess.event.*
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.piece.Piece
 import gregc.gregchess.registry.Register
 import gregc.gregchess.results.*
 import kotlinx.serialization.*
@@ -129,6 +130,9 @@ class Arena internal constructor(
         events.registerR<MatchInfoEvent> {
             text("Arena: $name\n")
         }
+        events.registerR<PiecePlayerActionEvent> {
+            player.onPiecePlayerAction(action, piece.piece)
+        }
     }
 
     private fun BukkitPlayer.leave() {
@@ -167,6 +171,11 @@ class Arena internal constructor(
             allowFlight = true
             isFlying = true
         }
+    }
+
+    private fun BukkitPlayer.onPiecePlayerAction(action: PiecePlayerActionEvent.Type, piece: Piece) = when(action) {
+        PiecePlayerActionEvent.Type.PICK_UP -> entity?.inventory?.setItem(0, piece.item)
+        PiecePlayerActionEvent.Type.PLACE_DOWN -> entity?.inventory?.setItem(0, null)
     }
 
 }
