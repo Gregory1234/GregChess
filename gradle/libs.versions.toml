@@ -6,19 +6,19 @@ kotlinx-coroutines = "1.6.4"
 
 slf4j = "1.8.0-beta4"
 
-junit = "5.9.0"
+junit = "5.9.1"
 assertk = "0.25"
-mockk = "1.12.8"
+mockk = "1.13.2"
 
-dokka = "1.7.10"
+dokka = "1.7.20"
 
 spigot-api = "1.19.2-R0.1-SNAPSHOT"
 minecraftserver = "1.2.0"
 
 fabric-minecraft = "1.19.2"
-fabric-yarn = "1.19.2+build.13"
+fabric-yarn = "1.19.2+build.21"
 fabric-loader = "0.14.9"
-fabric-api = "0.61.0+1.19.2"
+fabric-api = "0.62.0+1.19.2"
 fabric-kotlin = "1.8.4+kotlin.1.7.20"
 fabric-libgui = "6.3.0+1.19"
 fabric-loom = "1.0-SNAPSHOT"
@@ -39,7 +39,7 @@ slf4j-jdk14 = { module = "org.slf4j:slf4j-jdk14", version.ref = "slf4j" }
 
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 assertk = { module = "com.willowtreeapps.assertk:assertk-jvm", version.ref = "assertk" }
-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk = { module = "io.mockk:mockk-jvm", version.ref = "mockk" }
 
 dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 
