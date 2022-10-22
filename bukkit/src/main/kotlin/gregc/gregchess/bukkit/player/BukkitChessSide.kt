@@ -6,7 +6,6 @@ import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.match.copyMessage
 import gregc.gregchess.bukkit.move.formatLastMoves
 import gregc.gregchess.bukkit.move.localMoveFormatter
-import gregc.gregchess.bukkit.piece.item
 import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.bukkitutils.*
@@ -219,7 +218,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
 
     private suspend fun openPawnPromotionMenu(promotions: Collection<Piece>) =
         player.openMenu(PAWN_PROMOTION, promotions.mapIndexed { i, p ->
-            ScreenOption(p.item, p, i.toInvPos())
+            ScreenOption(TODO(), p, i.toInvPos())
         }) ?: promotions.first()
 
     override fun toString() = "BukkitChessSide(uuid=$uuid, name=$name, color=$color)"

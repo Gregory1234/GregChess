@@ -2,12 +2,9 @@ package gregc.gregchess.bukkit
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.command.*
-import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.piece.getInfo
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.renderer.ArenaManager
-import gregc.gregchess.bukkit.renderer.renderer
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.bukkit.stats.openStatsMenu
 import gregc.gregchess.bukkitutils.*
@@ -90,7 +87,6 @@ object GregChessPlugin : Listener {
             if (p is BukkitChessPlugin)
                 p.onInitialize()
         ChessMatchManager.start()
-        ArenaManager.reloadArenas()
         requestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
@@ -131,7 +127,6 @@ object GregChessPlugin : Listener {
                                 } else if (opponent.isInMatch) {
                                     sender.sendMessage(OPPONENT_IN_MATCH)
                                 } else {
-                                    settings.components.require(BukkitComponentType.RENDERER).validate()
                                     if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                                     if (opponent.isSpectatingMatch) opponent.leaveSpectatedMatch()
                                     settings.createMatch(byColor(sender, opponent)).start()
@@ -150,7 +145,6 @@ object GregChessPlugin : Listener {
                         if (sender.isInMatch) {
                             sender.sendMessage(YOU_IN_MATCH)
                         } else {
-                            settings.components.require(BukkitComponentType.RENDERER).validate()
                             if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                             settings.createMatch(byColor(sender, Stockfish())).start()
                         }
@@ -188,7 +182,7 @@ object GregChessPlugin : Listener {
                 val pl = requireMatch()
                 execute {
                     val g = pl().match
-                    val piece = g.board[g.renderer.getPos(sender.entity!!.location)]
+                    val piece = g.board[TODO()]
                     if (piece != null) {
                         g.finishMove(phantomCapture(piece, pl().color))
                         sender.sendMessage(BOARD_OP_DONE)
@@ -214,7 +208,7 @@ object GregChessPlugin : Listener {
                 argument(registryArgument("piece", PieceRegistryView)) { piece ->
                     execute {
                         val g = pl().match
-                        g.finishMove(phantomSpawn(BoardPiece(g.renderer.getPos(sender.entity!!.location), piece(), false)))
+                        g.finishMove(phantomSpawn(BoardPiece(TODO(), piece(), false)))
                         sender.sendMessage(BOARD_OP_DONE)
                     }
                     argument(posArgument("pos")) { pos ->
@@ -326,7 +320,6 @@ object GregChessPlugin : Listener {
             subcommand("reload") {
                 execute {
                     plugin.reloadConfig()
-                    ArenaManager.reloadArenas()
                     sender.sendMessage(CONFIG_RELOADED)
                 }
             }
@@ -393,7 +386,7 @@ object GregChessPlugin : Listener {
                     val pl = requireMatch()
                     execute {
                         sender.sendMessage(
-                            pl().match.board[pl().match.renderer.getPos(sender.entity!!.location)]
+                            pl().match.board[TODO()]
                                 .cNotNull(PIECE_NOT_FOUND).getInfo(pl().match)
                         )
                     }
@@ -496,7 +489,6 @@ object GregChessPlugin : Listener {
                             } else if (opponent.isInMatch) {
                                 sender.sendMessage(OPPONENT_IN_MATCH)
                             } else {
-                                settings.components.require(BukkitComponentType.RENDERER).validate()
                                 if (sender.isSpectatingMatch) sender.leaveSpectatedMatch()
                                 if (opponent.isSpectatingMatch) sender.leaveSpectatedMatch()
                                 settings.createMatch(if (rematchInfo.lastColor == Color.BLACK) byColor(sender, opponent) else byColor(opponent, sender)).start()

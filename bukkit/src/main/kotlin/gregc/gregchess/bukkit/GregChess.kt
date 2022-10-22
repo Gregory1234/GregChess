@@ -8,8 +8,6 @@ import gregc.gregchess.bukkit.component.MatchController
 import gregc.gregchess.bukkit.match.ChessMatchManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
-import gregc.gregchess.bukkit.properties.SimpleScoreboardLayout
-import gregc.gregchess.bukkit.renderer.BukkitRenderer
 import gregc.gregchess.bukkit.renderer.simpleFloorRenderer
 import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkitutils.toDuration
@@ -49,7 +47,6 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
                 ChessClock(TimeControl(t, initial, increment))
             }
         }
-        BukkitRegistry.SETTINGS_PARSER[BukkitComponentType.RENDERER] = { BukkitRenderer() }
         BukkitRegistry.SETTINGS_PARSER[ThreeChecks.CHECK_COUNTER] = { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3)) }
     }
 
@@ -60,8 +57,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     }
 
     private fun registerRequiredComponents() {
-        for (c in listOf(ComponentType.CHESSBOARD, BukkitComponentType.SPECTATOR_MANAGER,
-            BukkitComponentType.SCOREBOARD_MANAGER, BukkitComponentType.RENDERER)) {
+        for (c in listOf(ComponentType.CHESSBOARD, BukkitComponentType.SPECTATOR_MANAGER)) {
             BukkitRegistry.REQUIRED_COMPONENTS += c
         }
     }
@@ -84,6 +80,5 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         registerSettings()
         BukkitRegistry.FLOOR_RENDERER[KingOfTheHill] = simpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
         BukkitRegistry.CHESS_STATS_PROVIDER["yaml"] = ::YamlChessStats
-        BukkitRegistry.SCOREBOARD_LAYOUT_PROVIDER["simple"] = ::SimpleScoreboardLayout
     }
 }
