@@ -6,6 +6,8 @@ import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.match.copyMessage
 import gregc.gregchess.bukkit.move.formatLastMoves
 import gregc.gregchess.bukkit.move.localMoveFormatter
+import gregc.gregchess.bukkit.renderer.RendererStyle
+import gregc.gregchess.bukkit.renderer.renderer
 import gregc.gregchess.bukkit.results.quick
 import gregc.gregchess.bukkit.results.sendMatchResults
 import gregc.gregchess.bukkitutils.*
@@ -216,9 +218,9 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
         }
     }
 
-    private suspend fun openPawnPromotionMenu(promotions: Collection<Piece>) =
+    private suspend fun openPawnPromotionMenu(style: RendererStyle, promotions: Collection<Piece>) =
         player.openMenu(PAWN_PROMOTION, promotions.mapIndexed { i, p ->
-            ScreenOption(TODO(), p, i.toInvPos())
+            ScreenOption(style.pieceItem(p), p, i.toInvPos())
         }) ?: promotions.first()
 
     override fun toString() = "BukkitChessSide(uuid=$uuid, name=$name, color=$color)"
@@ -243,7 +245,7 @@ class BukkitChessSide(val player: BukkitPlayer, override val color: Color) : Hum
         val move = chosenMoves.first()
         match.coroutineScope.launch {
             move.promotionTrait?.apply {
-                promotion = openPawnPromotionMenu(promotions)
+                promotion = openPawnPromotionMenu(match.renderer.style, promotions)
             }
             match.finishMove(move)
         }

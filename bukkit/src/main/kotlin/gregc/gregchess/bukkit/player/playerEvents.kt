@@ -9,3 +9,5 @@ enum class PlayerDirection {
 class PlayerEvent(val player: BukkitPlayer, val dir: PlayerDirection) : ChessEvent
 
 data class SpectatorEvent(val player: BukkitPlayer, val dir: PlayerDirection) : ChessEvent
+
+class ResetPlayerEvent(val player: BukkitPlayer) : ChessEvent

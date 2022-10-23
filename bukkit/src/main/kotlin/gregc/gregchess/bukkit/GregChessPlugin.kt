@@ -5,7 +5,7 @@ import gregc.gregchess.bukkit.command.*
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.piece.getInfo
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.renderer.SimpleArenaManager
+import gregc.gregchess.bukkit.renderer.*
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.bukkit.stats.openStatsMenu
 import gregc.gregchess.bukkitutils.*
@@ -89,6 +89,7 @@ object GregChessPlugin : Listener {
                 p.onInitialize()
         ChessMatchManager.start()
         SimpleArenaManager.reloadArenas()
+        SimpleRendererListener.start()
         requestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
@@ -184,7 +185,7 @@ object GregChessPlugin : Listener {
                 val pl = requireMatch()
                 execute {
                     val g = pl().match
-                    val piece = g.board[TODO()]
+                    val piece = g.board[g.renderer.arena.getPos(sender.entity!!.location)!!]
                     if (piece != null) {
                         g.finishMove(phantomCapture(piece, pl().color))
                         sender.sendMessage(BOARD_OP_DONE)
@@ -210,7 +211,7 @@ object GregChessPlugin : Listener {
                 argument(registryArgument("piece", PieceRegistryView)) { piece ->
                     execute {
                         val g = pl().match
-                        g.finishMove(phantomSpawn(BoardPiece(TODO(), piece(), false)))
+                        g.finishMove(phantomSpawn(BoardPiece(g.renderer.arena.getPos(sender.entity!!.location)!!, piece(), false)))
                         sender.sendMessage(BOARD_OP_DONE)
                     }
                     argument(posArgument("pos")) { pos ->
@@ -389,7 +390,7 @@ object GregChessPlugin : Listener {
                     val pl = requireMatch()
                     execute {
                         sender.sendMessage(
-                            pl().match.board[TODO()]
+                            pl().match.board[pl().match.renderer.arena.getPos(sender.entity!!.location)!!]
                                 .cNotNull(PIECE_NOT_FOUND).getInfo(pl().match)
                         )
                     }
