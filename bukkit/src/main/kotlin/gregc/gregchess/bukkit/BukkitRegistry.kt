@@ -4,6 +4,7 @@ import gregc.gregchess.CoreRegistry
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.properties.PropertyType
 import gregc.gregchess.bukkit.renderer.ChessFloorRenderer
+import gregc.gregchess.bukkit.renderer.RendererStyle
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.component.Component
 import gregc.gregchess.move.MoveFormatter
@@ -38,6 +39,8 @@ object BukkitRegistry {
     val REQUIRED_COMPONENTS = ConnectedSetRegistry("required_components", CoreRegistry.COMPONENT_TYPE)
     @JvmField
     val IMPLIED_COMPONENTS = NameRegistry<() -> Component>("implied_components")
+    @JvmField
+    val RENDERER_STYLE = NameRegistry<RendererStyle>("renderer_style")
 }
 
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e ->

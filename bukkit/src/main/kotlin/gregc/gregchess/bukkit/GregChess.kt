@@ -9,6 +9,7 @@ import gregc.gregchess.bukkit.component.MatchController
 import gregc.gregchess.bukkit.match.ChessMatchManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
+import gregc.gregchess.bukkit.renderer.DefaultSimpleRendererStyle
 import gregc.gregchess.bukkit.renderer.simpleFloorRenderer
 import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkitutils.toDuration
@@ -85,5 +86,6 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         registerSettings()
         BukkitRegistry.FLOOR_RENDERER[KingOfTheHill] = simpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
         BukkitRegistry.CHESS_STATS_PROVIDER["yaml"] = ::YamlChessStats
+        BukkitRegistry.RENDERER_STYLE["default"] = DefaultSimpleRendererStyle
     }
 }

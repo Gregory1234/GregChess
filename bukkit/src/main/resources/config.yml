@@ -282,6 +282,7 @@ Scoreboard:
 
 Renderer:
   Type: simple_renderer
+  Style: default
 
 Rejoin:
   AllowRejoining: true

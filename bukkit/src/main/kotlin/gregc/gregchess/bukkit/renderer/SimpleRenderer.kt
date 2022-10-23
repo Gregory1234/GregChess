@@ -1,10 +1,9 @@
 package gregc.gregchess.bukkit.renderer
 
-import gregc.gregchess.bukkit.NO_ARENAS
+import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.component.BukkitComponentType
 import gregc.gregchess.bukkit.match.MatchInfoEvent
 import gregc.gregchess.bukkit.player.*
-import gregc.gregchess.bukkit.registerEvents
 import gregc.gregchess.bukkitutils.CommandException
 import gregc.gregchess.event.ChessBaseEvent
 import gregc.gregchess.event.EventListenerRegistry
@@ -31,7 +30,7 @@ class SimpleRenderer : Renderer {
     override lateinit var arena: SimpleArena
         private set
 
-    override val style: SimpleRendererStyle get() = DefaultSimpleRendererStyle
+    override val style: SimpleRendererStyle get() = config.getFromRegistry(BukkitRegistry.RENDERER_STYLE, "Renderer.Style") as SimpleRendererStyle
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
         arena = SimpleArenaManager.reserveArenaOrNull(match) ?: throw CommandException(NO_ARENAS)
