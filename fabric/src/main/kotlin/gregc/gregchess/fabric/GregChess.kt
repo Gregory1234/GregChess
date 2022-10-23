@@ -40,7 +40,7 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
         }
         registerPieceBlocks()
         FabricRegistry.FLOOR_RENDERER[KingOfTheHill] = simpleFloorRenderer(KingOfTheHill.SPECIAL_SQUARES)
-        FabricRegistry.IMPLIED_COMPONENTS[FabricComponentType.MATCH_CONTROLLER] = { MatchController }
+        FabricRegistry.IMPLIED_COMPONENTS["match_controller"] = { MatchController }
     }
 
 }

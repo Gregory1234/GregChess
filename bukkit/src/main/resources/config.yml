@@ -280,6 +280,9 @@ Scoreboard:
   TimeRemaining: "time"
   TimeRemainingSimple: "Time remaining"
 
+Renderer:
+  Type: simple_renderer
+
 Rejoin:
   AllowRejoining: true
   SendReminder: true

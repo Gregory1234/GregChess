@@ -37,7 +37,7 @@ object BukkitRegistry {
     @JvmField
     val REQUIRED_COMPONENTS = ConnectedSetRegistry("required_components", CoreRegistry.COMPONENT_TYPE)
     @JvmField
-    val IMPLIED_COMPONENTS = PartialConnectedRegistry<_, () -> Component>("implied_components", CoreRegistry.COMPONENT_TYPE)
+    val IMPLIED_COMPONENTS = NameRegistry<() -> Component>("implied_components")
 }
 
 private val BUKKIT_END_REASON_AUTO_REGISTER = AutoRegisterType(EndReason::class) { m, n, e ->

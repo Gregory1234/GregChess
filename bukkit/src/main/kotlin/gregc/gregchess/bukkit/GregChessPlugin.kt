@@ -5,6 +5,7 @@ import gregc.gregchess.bukkit.command.*
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.piece.getInfo
 import gregc.gregchess.bukkit.player.*
+import gregc.gregchess.bukkit.renderer.SimpleArenaManager
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
 import gregc.gregchess.bukkit.stats.openStatsMenu
 import gregc.gregchess.bukkitutils.*
@@ -87,6 +88,7 @@ object GregChessPlugin : Listener {
             if (p is BukkitChessPlugin)
                 p.onInitialize()
         ChessMatchManager.start()
+        SimpleArenaManager.reloadArenas()
         requestManager.start()
 
         val json = Json { serializersModule = defaultModule() }
@@ -320,6 +322,7 @@ object GregChessPlugin : Listener {
             subcommand("reload") {
                 execute {
                     plugin.reloadConfig()
+                    SimpleArenaManager.reloadArenas()
                     sender.sendMessage(CONFIG_RELOADED)
                 }
             }

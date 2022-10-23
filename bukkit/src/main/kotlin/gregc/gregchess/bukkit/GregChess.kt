@@ -1,5 +1,6 @@
 package gregc.gregchess.bukkit
 
+import gregc.gregchess.CoreRegistry
 import gregc.gregchess.GregChessCore
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
@@ -63,8 +64,12 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     }
 
     private fun registerImpliedComponents() {
-        BukkitRegistry.IMPLIED_COMPONENTS[BukkitComponentType.MATCH_CONTROLLER] = { MatchController }
-        BukkitRegistry.IMPLIED_COMPONENTS[BukkitComponentType.ADAPTER] = { BukkitGregChessAdapter }
+        BukkitRegistry.IMPLIED_COMPONENTS["match_controller"] = { MatchController }
+        BukkitRegistry.IMPLIED_COMPONENTS["adapter"] = { BukkitGregChessAdapter }
+        BukkitRegistry.IMPLIED_COMPONENTS["renderer"] = {
+            val ct = config.getFromRegistry(CoreRegistry.COMPONENT_TYPE, "Renderer.Type")!!
+            ct.cl.constructors.first { it.parameters.isEmpty() }.call()
+        }
     }
 
     override fun load() {

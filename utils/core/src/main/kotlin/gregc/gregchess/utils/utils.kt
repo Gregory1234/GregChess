@@ -33,11 +33,13 @@ class MultiExceptionContext {
         exceptions += mapping(e)
     }
 
-    fun rethrow(base: (Exception) -> Exception = { it }) {
+    fun catch(base: (Exception) -> Exception = { it }, block: (Exception) -> Unit) {
         if (exceptions.isNotEmpty()) {
-            throw base(exceptions.last()).apply {
+            block(base(exceptions.last()).apply {
                 for (e in exceptions.dropLast(1)) addSuppressed(e)
-            }
+            })
         }
     }
+
+    fun rethrow(base: (Exception) -> Exception = { it }) = catch(base) { throw it }
 }

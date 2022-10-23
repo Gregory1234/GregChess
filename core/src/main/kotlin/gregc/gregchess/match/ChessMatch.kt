@@ -51,16 +51,20 @@ class ChessMatch private constructor(
         for (c in environment.impliedComponents) {
             require(c !in components)
         }
-        try {
-            components.require(ComponentType.CHESSBOARD)
-            for (t in variant.requiredComponents + environment.requiredComponents) {
-                components.require(t)
-            }
+        components.require(ComponentType.CHESSBOARD)
+        components.require(ComponentType.SIDES)
+        for (t in variant.requiredComponents + environment.requiredComponents) {
+            components.require(t)
+        }
+        with(MultiExceptionContext()) {
             for (c in components + environment.impliedComponents) {
-                c.init(this, eventManager.registry(c.type))
+                exec {
+                    c.init(this@ChessMatch, eventManager.registry(c.type))
+                }
             }
-        } catch (e: Exception) {
-            panic(e)
+            catch {
+                panic(it)
+            }
         }
     }
 

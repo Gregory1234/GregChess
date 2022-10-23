@@ -33,6 +33,8 @@ internal val YOU_NOT_IN_MATCH = err("NotInMatch.You")
 internal val PLAYER_NOT_IN_MATCH = err("NotInMatch.Player")
 @JvmField
 internal val OPPONENT_NOT_HUMAN = err("NotHuman.Opponent")
+@JvmField
+internal val NO_ARENAS = err("NoArenas")
 
 @OptIn(ExperimentalContracts::class)
 internal fun cRequire(e: Boolean, msg: Message) {

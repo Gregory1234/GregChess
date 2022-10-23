@@ -33,5 +33,6 @@ fun ChessMatch.getInfo() = textComponent {
     callEvent(MatchInfoEvent(this))
     text("Preset: $presetName\n")
     text("Variant: ${variant.key}\n")
-    text("Components: ${components.joinToString { it.type.key.toString() }}")
+    text("Components: ${components.joinToString { it.type.key.toString() }}\n")
+    text("Implied Components: ${environment.impliedComponents.joinToString { it.type.key.toString() }}")
 }

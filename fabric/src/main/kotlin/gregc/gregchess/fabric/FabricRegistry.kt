@@ -14,7 +14,7 @@ object FabricRegistry {
     @JvmField
     val FLOOR_RENDERER = ConnectedRegistry<_, ChessFloorRenderer>("floor_renderer", CoreRegistry.VARIANT)
     @JvmField
-    val IMPLIED_COMPONENTS = PartialConnectedRegistry<_, () -> Component>("implied_components", CoreRegistry.COMPONENT_TYPE)
+    val IMPLIED_COMPONENTS = NameRegistry<() -> Component>("implied_components")
 }
 
 operator fun <T> ConnectedBiRegistry<Piece, T>.set(key: PieceType, v: ByColor<T>) {
