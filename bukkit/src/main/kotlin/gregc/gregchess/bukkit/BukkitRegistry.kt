@@ -3,9 +3,9 @@ package gregc.gregchess.bukkit
 import gregc.gregchess.CoreRegistry
 import gregc.gregchess.bukkit.match.*
 import gregc.gregchess.bukkit.properties.PropertyType
-import gregc.gregchess.bukkit.renderer.ChessFloorRenderer
 import gregc.gregchess.bukkit.renderer.RendererStyle
 import gregc.gregchess.bukkit.stats.BukkitPlayerStats
+import gregc.gregchess.bukkit.variant.ChessFloorRenderer
 import gregc.gregchess.component.Component
 import gregc.gregchess.move.MoveFormatter
 import gregc.gregchess.registry.*

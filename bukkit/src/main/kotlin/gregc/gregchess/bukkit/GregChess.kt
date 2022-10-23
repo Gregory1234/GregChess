@@ -10,8 +10,8 @@ import gregc.gregchess.bukkit.match.ChessMatchManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
 import gregc.gregchess.bukkit.renderer.DefaultSimpleRendererStyle
-import gregc.gregchess.bukkit.renderer.simpleFloorRenderer
 import gregc.gregchess.bukkit.stats.YamlChessStats
+import gregc.gregchess.bukkit.variant.simpleFloorRenderer
 import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.clock.TimeControl

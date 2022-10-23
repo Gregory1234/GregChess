@@ -5,6 +5,7 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkitutils.serialization.BukkitConfig
 import gregc.gregchess.bukkitutils.serialization.decodeFromPath
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.piece.PieceType
 import gregc.gregchess.registry.Register
 import gregc.gregchess.results.*
 import kotlinx.serialization.Contextual
@@ -64,7 +65,8 @@ object SimpleArenaManager : BukkitRegistering {
 internal data class SimpleArenaData internal constructor(
     @Contextual internal val world: World = Bukkit.getWorlds().first(),
     val tileSize: Int = 3,
-    internal val offset: Loc = Loc(0, 101, 0)
+    internal val offset: Loc = Loc(0, 101, 0),
+    val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
 )
 
 class SimpleArena internal constructor(
@@ -78,12 +80,14 @@ class SimpleArena internal constructor(
 
     private val world: World = arenaData.world
     val tileSize: Int = arenaData.tileSize
+    val boardSize get() = 8 * tileSize
     private val offset: Loc = arenaData.offset
+    val pieceRows = arenaData.pieceRows
 
     private val boardStartLoc: Loc = offset + Loc(8, 0, 8)
     val boardStart: Location get() = boardStartLoc.toLocation(world)
 
-    private val capturedStartLoc = byColor(
+    internal val capturedStartLoc = byColor(
         boardStartLoc + Loc(8 * tileSize - 1, 0, -3),
         boardStartLoc + Loc(0, 0, 8 * tileSize + 2)
     )
@@ -127,6 +131,8 @@ class SimpleArena internal constructor(
         file = 7 - (loc.x - boardStartLoc.x).floorDiv(tileSize),
         rank = (loc.z - boardStartLoc.z).floorDiv(tileSize)
     ).takeIf { it.file in 0..7 && it.rank in 0..7 }
+
+    internal fun getLoc(pos: Pos) = Loc(boardSize - 2 - pos.file * tileSize, 1, 1 + pos.rank * tileSize) + boardStartLoc
 
     override fun getPos(location: Location) = getPos(location.toLoc())
 

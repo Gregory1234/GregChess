@@ -1,14 +1,12 @@
-package gregc.gregchess.bukkit.renderer
+package gregc.gregchess.bukkit.variant
 
 import gregc.gregchess.Pos
 import gregc.gregchess.bukkit.BukkitRegistry
-import gregc.gregchess.bukkit.config
 import gregc.gregchess.bukkit.player.BukkitChessSideFacade
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.variant.ChessVariant
-import org.bukkit.Material
 
 class Floor(val name: String) {
     companion object {
@@ -31,8 +29,6 @@ class Floor(val name: String) {
         @JvmField
         val LAST_END = Floor("LastEnd")
     }
-
-    val material: Material get() = Material.valueOf(config.getString("Chess.Floor.$name")!!)
 }
 
 fun interface ChessFloorRenderer {

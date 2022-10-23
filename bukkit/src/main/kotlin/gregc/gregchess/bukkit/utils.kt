@@ -14,6 +14,13 @@ internal data class Loc(@BukkitConfigLowercase val x: Int, @BukkitConfigLowercas
     operator fun plus(offset: Loc) = Loc(x + offset.x, y + offset.y, z + offset.z)
 }
 
+internal fun World.fill(mat: Material, start: Loc, stop: Loc = start) {
+    for (i in start.x..stop.x)
+        for (j in (start.y..stop.y).reversed())
+            for (k in start.z..stop.z)
+                getBlockAt(i, j, k).type = mat
+}
+
 internal fun Loc.toLocation(w: World) = Location(w, x.toDouble(), y.toDouble(), z.toDouble())
 internal fun Location.toLoc() = Loc(blockX, blockY, blockZ)
 
