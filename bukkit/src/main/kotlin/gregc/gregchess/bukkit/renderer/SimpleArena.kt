@@ -15,64 +15,64 @@ import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
-object SimpleArenaManager : BukkitRegistering {
+class SimpleArena private constructor(
+    val name: String,
+    private val arenaData: Data
+) : Arena {
+    companion object : BukkitRegistering {
+        @JvmField
+        @Register(data = ["quick"])
+        val ARENA_REMOVED = DrawEndReason(EndReason.Type.EMERGENCY)
 
-    @JvmField
-    @Register(data = ["quick"])
-    val ARENA_REMOVED = DrawEndReason(EndReason.Type.EMERGENCY)
+        private val arenas = mutableListOf<SimpleArena>()
 
-    private val arenas = mutableListOf<SimpleArena>()
-
-    fun reloadArenas() {
-        val configFormat = BukkitConfig(config, defaultModule())
-        val newArenas = config.getConfigurationSection("ChessArenas")
-            ?.getKeys(false)
-            ?.mapNotNull { name ->
-                try {
-                    val newArenaData = configFormat.decodeFromPath<SimpleArenaData>("ChessArenas.$name")
-                    val equivalent = arenas.toList().firstOrNull { it.name == name && it.arenaData == newArenaData }
-                    if (equivalent != null) {
-                        GregChess.logger.info("Arena $name did not change")
-                    } else {
-                        GregChess.logger.info("Loaded arena $name")
+        fun reloadArenas() {
+            val configFormat = BukkitConfig(config, defaultModule())
+            val newArenas = config.getConfigurationSection("ChessArenas")
+                ?.getKeys(false)
+                ?.mapNotNull { name ->
+                    try {
+                        val newArenaData = configFormat.decodeFromPath<Data>("ChessArenas.$name")
+                        val equivalent = arenas.toList().firstOrNull { it.name == name && it.arenaData == newArenaData }
+                        if (equivalent != null) {
+                            GregChess.logger.info("Arena $name did not change")
+                        } else {
+                            GregChess.logger.info("Loaded arena $name")
+                        }
+                        equivalent ?: SimpleArena(name, newArenaData)
+                    } catch (e: IllegalArgumentException) {
+                        GregChess.logger.warn("Arena $name has a wrong format")
+                        null
                     }
-                    equivalent ?: SimpleArena(name, newArenaData)
-                } catch (e: IllegalArgumentException) {
-                    GregChess.logger.warn("Arena $name has a wrong format")
-                    null
+                }.orEmpty()
+            arenas.forEach {
+                if (it !in newArenas) {
+                    it.currentMatch?.stop(drawBy(ARENA_REMOVED))
                 }
-            }.orEmpty()
-        arenas.forEach {
-            if (it !in newArenas) {
-                it.currentMatch?.stop(drawBy(ARENA_REMOVED))
             }
+            arenas.clear()
+            arenas += newArenas
         }
-        arenas.clear()
-        arenas += newArenas
+
+        fun reserveOrNull(match: ChessMatch): SimpleArena? = arenas
+            .firstOrNull { it.currentMatch == null }
+            ?.also { it.currentMatch = match }
+
+        private val returnWorld: World
+            get() = config.getString("ReturnWorld")
+                ?.let { requireNotNull(Bukkit.getWorld(it)) { "Return world not found: $it" } }
+                ?: Bukkit.getWorlds().first()
     }
 
-    fun reserveArenaOrNull(match: ChessMatch): SimpleArena? = arenas
-        .firstOrNull { it.currentMatch == null }
-        ?.also { it.currentMatch = match }
 
-    internal val returnWorld: World
-        get() = config.getString("ReturnWorld")
-            ?.let { requireNotNull(Bukkit.getWorld(it)) { "Return world not found: $it" } }
-            ?: Bukkit.getWorlds().first()
-}
+    @Serializable
+    private data class Data(
+        @Contextual val world: World = Bukkit.getWorlds().first(),
+        val tileSize: Int = 3,
+        val offset: Loc = Loc(0, 101, 0),
+        val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
+    )
 
-@Serializable
-internal data class SimpleArenaData internal constructor(
-    @Contextual internal val world: World = Bukkit.getWorlds().first(),
-    val tileSize: Int = 3,
-    internal val offset: Loc = Loc(0, 101, 0),
-    val pieceRows: Map<PieceType, Int> = mapOf(PieceType.PAWN to 1)
-)
-
-class SimpleArena internal constructor(
-    val name: String,
-    internal val arenaData: SimpleArenaData
-) : Arena {
     var currentMatch: ChessMatch? = null
         internal set
 
@@ -99,7 +99,7 @@ class SimpleArena internal constructor(
     internal fun leave(player: Player) = with(player) {
         for (e in activePotionEffects)
             removePotionEffect(e.type)
-        teleport(SimpleArenaManager.returnWorld.spawnLocation)
+        teleport(returnWorld.spawnLocation)
         inventory.clear()
         gameMode = GameMode.SURVIVAL
         allowFlight = false

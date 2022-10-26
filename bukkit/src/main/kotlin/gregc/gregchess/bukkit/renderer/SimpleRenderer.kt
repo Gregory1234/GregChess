@@ -43,7 +43,7 @@ class SimpleRenderer : Renderer {
     @Transient private val rowSize = byColor { mutableListOf<Int>() }
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        arena = SimpleArenaManager.reserveArenaOrNull(match) ?: throw CommandException(NO_ARENAS)
+        arena = SimpleArena.reserveOrNull(match) ?: throw CommandException(NO_ARENAS)
         events.register<ChessBaseEvent> {
             if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC) arena.currentMatch = null
         }

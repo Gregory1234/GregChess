@@ -9,7 +9,7 @@ import gregc.gregchess.bukkit.component.MatchController
 import gregc.gregchess.bukkit.match.ChessMatchManager
 import gregc.gregchess.bukkit.player.BukkitChessSideType
 import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
-import gregc.gregchess.bukkit.renderer.DefaultSimpleRendererStyle
+import gregc.gregchess.bukkit.renderer.*
 import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkit.variant.simpleFloorRenderer
 import gregc.gregchess.bukkitutils.toDuration
@@ -69,7 +69,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         BukkitRegistry.IMPLIED_COMPONENTS["adapter"] = { BukkitGregChessAdapter }
         BukkitRegistry.IMPLIED_COMPONENTS["renderer"] = {
             val ct = config.getFromRegistry(CoreRegistry.COMPONENT_TYPE, "Renderer.Type")!!
-            ct.cl.constructors.first { it.parameters.isEmpty() }.call()
+            ct.cl.constructors.first { it.parameters.isEmpty() }.call() as Renderer
         }
     }
 
@@ -79,6 +79,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             registerAll<ChessMatchManager>()
             registerAll<BukkitComponentType>()
             registerAll<BukkitChessSideType>()
+            registerAll<SimpleArena>()
         }
         registerOptionalComponents()
         registerRequiredComponents()

@@ -88,7 +88,7 @@ object GregChessPlugin : Listener {
             if (p is BukkitChessPlugin)
                 p.onInitialize()
         ChessMatchManager.start()
-        SimpleArenaManager.reloadArenas()
+        SimpleArena.reloadArenas()
         SimpleRendererListener.start()
         requestManager.start()
 
@@ -323,7 +323,7 @@ object GregChessPlugin : Listener {
             subcommand("reload") {
                 execute {
                     plugin.reloadConfig()
-                    SimpleArenaManager.reloadArenas()
+                    SimpleArena.reloadArenas()
                     sender.sendMessage(CONFIG_RELOADED)
                 }
             }
