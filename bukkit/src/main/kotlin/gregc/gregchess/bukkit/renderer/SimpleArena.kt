@@ -2,8 +2,12 @@ package gregc.gregchess.bukkit.renderer
 
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
+import gregc.gregchess.bukkit.match.MatchInfoEvent
+import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkitutils.serialization.BukkitConfig
 import gregc.gregchess.bukkitutils.serialization.decodeFromPath
+import gregc.gregchess.event.ChessBaseEvent
+import gregc.gregchess.event.EventListenerRegistry
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.piece.PieceType
 import gregc.gregchess.registry.Register
@@ -74,7 +78,7 @@ class SimpleArena private constructor(
     )
 
     var currentMatch: ChessMatch? = null
-        internal set
+        private set
 
     override fun toString(): String = "SimpleArena(name=$name)"
 
@@ -96,7 +100,31 @@ class SimpleArena private constructor(
     private val spawn: Loc = offset + Loc(4, 0, 4)
     val spawnLocation: Location get() = spawn.toLocation(world)
 
-    internal fun leave(player: Player) = with(player) {
+    fun registerEventListeners(events: EventListenerRegistry) {
+        events.register<ChessBaseEvent> {
+            if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC) currentMatch = null
+        }
+        events.registerR<MatchInfoEvent> {
+            text("Arena: $name\n")
+        }
+        events.registerR<SpectatorEvent> {
+            when (dir) {
+                PlayerDirection.JOIN -> player.entity?.let(::resetSpectator)
+                PlayerDirection.LEAVE -> player.entity?.let(::leave)
+            }
+        }
+        events.registerR<PlayerEvent> {
+            when (dir) {
+                PlayerDirection.JOIN -> player.entity?.let(::reset)
+                PlayerDirection.LEAVE -> player.entity?.let(::leave)
+            }
+        }
+        events.registerR<ResetPlayerEvent> {
+            player.entity?.let(::reset)
+        }
+    }
+
+    private fun leave(player: Player) = with(player) {
         for (e in activePotionEffects)
             removePotionEffect(e.type)
         teleport(returnWorld.spawnLocation)
@@ -106,7 +134,7 @@ class SimpleArena private constructor(
         isFlying = false
     }
 
-    internal fun resetSpectator(player: Player) = with(player) {
+    private fun resetSpectator(player: Player) = with(player) {
         teleport(spawnLocation)
         inventory.clear()
         gameMode = GameMode.SPECTATOR
@@ -114,7 +142,7 @@ class SimpleArena private constructor(
         isFlying = true
     }
 
-    internal fun reset(player: Player) = with(player) {
+    private fun reset(player: Player) = with(player) {
         health = 20.0
         foodLevel = 20
         for (e in activePotionEffects)

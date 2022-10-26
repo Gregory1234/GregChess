@@ -3,7 +3,6 @@ package gregc.gregchess.bukkit.renderer
 import gregc.gregchess.*
 import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.component.BukkitComponentType
-import gregc.gregchess.bukkit.match.MatchInfoEvent
 import gregc.gregchess.bukkit.player.*
 import gregc.gregchess.bukkit.variant.floorRenderer
 import gregc.gregchess.bukkitutils.CommandException
@@ -44,29 +43,9 @@ class SimpleRenderer : Renderer {
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
         arena = SimpleArena.reserveOrNull(match) ?: throw CommandException(NO_ARENAS)
-        events.register<ChessBaseEvent> {
-            if (it == ChessBaseEvent.CLEAR || it == ChessBaseEvent.PANIC) arena.currentMatch = null
-        }
-        events.registerR<MatchInfoEvent> {
-            text("Arena: ${arena.name}\n")
-        }
-        events.registerR<SpectatorEvent> {
-            when (dir) {
-                PlayerDirection.JOIN -> player.entity?.let(arena::resetSpectator)
-                PlayerDirection.LEAVE -> player.entity?.let(arena::leave)
-            }
-        }
-        events.registerR<PlayerEvent> {
-            when (dir) {
-                PlayerDirection.JOIN -> player.entity?.let(arena::reset)
-                PlayerDirection.LEAVE -> player.entity?.let(arena::leave)
-            }
-        }
+        arena.registerEventListeners(events.subRegistry("arena"))
         events.registerR<ResetPlayerEvent> {
-            player.entity?.let {
-                arena.reset(it)
-                it.inventory.setItem(0, player.currentSide?.held?.piece?.let(style::pieceItem))
-            }
+            player.entity?.inventory?.setItem(0, player.currentSide?.held?.piece?.let(style::pieceItem))
         }
         events.registerR<PiecePlayerActionEvent> { handlePiecePlayerActionEvent(match) }
         events.registerR<AtomicChess.ExplosionEvent> {
