@@ -19,11 +19,11 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.RecipeUnlocker
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.tag.TagKey
 import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.tag.TagKey
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 import java.util.function.Predicate
 import kotlin.math.min
 
@@ -90,9 +90,9 @@ class ChessWorkbenchGuiDescription(
     GregChessMod.CHESS_WORKBENCH_SCREEN_HANDLER_TYPE, syncId, playerInventory,
     null, getBlockPropertyDelegate(context, 0)
 ) {
-    private val bases = TagKey.of(Registry.ITEM_KEY, ident("piece_base"))
-    private val whiteDyes = TagKey.of(Registry.ITEM_KEY, Identifier("c", "dye_white")) // TODO: switch to gregchess tags
-    private val blackDyes = TagKey.of(Registry.ITEM_KEY, Identifier("c", "dye_black"))
+    private val bases = TagKey.of(RegistryKeys.ITEM, ident("piece_base"))
+    private val whiteDyes = TagKey.of(RegistryKeys.ITEM, Identifier("c", "dye_white")) // TODO: switch to gregchess tags
+    private val blackDyes = TagKey.of(RegistryKeys.ITEM, Identifier("c", "dye_black"))
 
     private val input = DefaultedListInventory(2, ::onInputChanged)
     private val output = DefaultedListInventory(1)
@@ -196,7 +196,7 @@ class ChessWorkbenchGuiDescription(
 
     override fun canUse(entity: PlayerEntity?): Boolean = canUse(context, entity, GregChessMod.CHESS_WORKBENCH_BLOCK)
 
-    override fun transferSlot(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var ret = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {

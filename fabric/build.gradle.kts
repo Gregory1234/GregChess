@@ -26,7 +26,7 @@ val shaded: Configuration by configurations.creating
 configurations.implementation.get().extendsFrom(shaded)
 
 val fabricModules = setOf(
-    "fabric-item-groups-v0",
+    "fabric-item-group-api-v1",
     "fabric-lifecycle-events-v1",
     "fabric-item-api-v1",
     "fabric-transitive-access-wideners-v1",

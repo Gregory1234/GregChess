@@ -12,15 +12,15 @@ mockk = "1.13.2"
 
 dokka = "1.7.20"
 
-spigot-api = "1.19.2-R0.1-SNAPSHOT"
+spigot-api = "1.19.3-R0.1-SNAPSHOT"
 minecraftserver = "2.0.0"
 
-fabric-minecraft = "1.19.2"
-fabric-yarn = "1.19.2+build.28"
-fabric-loader = "0.14.10"
-fabric-api = "0.64.0+1.19.2"
+fabric-minecraft = "1.19.3"
+fabric-yarn = "1.19.3+build.5"
+fabric-loader = "0.14.12"
+fabric-api = "0.70.0+1.19.3"
 fabric-kotlin = "1.8.5+kotlin.1.7.20"
-fabric-libgui = "6.3.0+1.19"
+fabric-libgui = "6.5.0+1.19.3"
 fabric-loom = "1.0-SNAPSHOT"
 
 [libraries]
