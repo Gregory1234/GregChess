@@ -22,6 +22,7 @@ import kotlin.time.Duration
 @Serializable
 class ChessMatch private constructor(
     @Contextual val environment: ChessEnvironment,
+    @Contextual val info: MatchInfo,
     val variant: ChessVariant,
     val components: ComponentList,
     @SerialName("state") private var state_: State,
@@ -31,10 +32,10 @@ class ChessMatch private constructor(
     @SerialName("results") private var results_: MatchResults?,
     val variantOptions: Long
 ) : ChessEventCaller {
-    constructor(environment: ChessEnvironment, variant: ChessVariant, components: Collection<Component>, variantOptions: Long)
-            : this(environment, variant, ComponentList(components), State.INITIAL, null, null, Duration.ZERO, null, variantOptions)
+    constructor(environment: ChessEnvironment, info: MatchInfo, variant: ChessVariant, components: Collection<Component>, variantOptions: Long)
+            : this(environment, info, variant, ComponentList(components), State.INITIAL, null, null, Duration.ZERO, null, variantOptions)
 
-    override fun toString() = "ChessMatch(${environment.matchToString()})"
+    override fun toString() = "ChessMatch(${info.matchToString()})"
 
     @Transient
     private val eventManager = ChessEventManager()
@@ -72,7 +73,7 @@ class ChessMatch private constructor(
         CoroutineScope(
             environment.coroutineDispatcher +
             SupervisorJob() +
-            CoroutineName("Match ${environment.matchCoroutineName()}") +
+            CoroutineName("Match ${info.matchCoroutineName()}") +
             CoroutineExceptionHandler { _, e ->
                 e.printStackTrace()
             }

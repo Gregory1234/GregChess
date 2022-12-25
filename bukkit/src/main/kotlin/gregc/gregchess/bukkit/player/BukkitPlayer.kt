@@ -95,7 +95,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         require(currentMatch == match)
         if (canRequestRematch) {
             (currentSide!!.opponent as? BukkitChessSideFacade)?.let {
-                rematchInfo = RematchInfo(it.player, match.environment.pgnRound, match.presetName, !it.color)
+                rematchInfo = RematchInfo(it.player, match.info.pgnRound, match.presetName, !it.color)
                 if (config.getBoolean("Request.Rematch.SendReminder") && !match.sides.isSamePlayer()) {
                     sendMessage(textComponent(REMATCH_REMINDER.get()) {
                         onClickCommand("/chess rematch")

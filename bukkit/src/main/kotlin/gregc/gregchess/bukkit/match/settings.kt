@@ -6,7 +6,6 @@ import gregc.gregchess.bukkit.*
 import gregc.gregchess.bukkit.player.BukkitPlayer
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.component.ComponentList
-import gregc.gregchess.component.ComponentType
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.player.ChessPlayer
 import gregc.gregchess.player.ChessSideManager
@@ -27,13 +26,13 @@ val defaultVariantOptionsParser: VariantOptionsParser = {
 }
 
 class MatchSettings(
-    val environment: BukkitChessEnvironment,
+    val info: BukkitMatchInfo,
     val name: String,
     val variant: ChessVariant,
     val variantOptions: Long,
     val components: ComponentList
 ) {
-    fun createMatch(players: ByColor<ChessPlayer<*>>) = ChessMatch(environment, variant, listOf(ChessSideManager(players.white, players.black)) + components, variantOptions)
+    fun createMatch(players: ByColor<ChessPlayer<*>>) = ChessMatch(BukkitChessEnvironment, info, variant, listOf(ChessSideManager(players.white, players.black)) + components, variantOptions)
 }
 
 object SettingsManager {
@@ -53,9 +52,9 @@ object SettingsManager {
             context.f()
         }
 
-        val environment = BukkitChessEnvironment(name, round)
+        val info = BukkitMatchInfo(name, round)
 
-        return MatchSettings(environment, name, variant, variantOptions, ComponentList(components))
+        return MatchSettings(info, name, variant, variantOptions, ComponentList(components))
     }
 
     fun getSettings(round: Int = 1): List<MatchSettings> =

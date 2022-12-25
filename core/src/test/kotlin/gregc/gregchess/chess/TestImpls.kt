@@ -6,8 +6,7 @@ import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentType
 import gregc.gregchess.event.ChessEvent
 import gregc.gregchess.event.EventListenerRegistry
-import gregc.gregchess.match.ChessEnvironment
-import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.*
 import gregc.gregchess.player.*
 import gregc.gregchess.registry.ChessModule
 import gregc.gregchess.registry.Register
@@ -63,13 +62,16 @@ object TestComponent : Component {
 
 object TestVariant : ChessVariant()
 
-class TestChessEnvironment(val uuid: UUID = UUID.randomUUID()) : ChessEnvironment {
-    override val pgnSite: String get() = "GregChess test"
-    override val pgnEventName: String get() = "Casual game"
-    override val pgnRound: Int get() = 1
+object TestChessEnvironment : ChessEnvironment {
     @OptIn(ExperimentalCoroutinesApi::class)
     override val coroutineDispatcher: CoroutineDispatcher get() = UnconfinedTestDispatcher()
     override val clock: Clock get() = Clock.fixed(Instant.EPOCH, ZoneId.systemDefault())
+}
+
+class TestMatchInfo(val uuid: UUID = UUID.randomUUID()) : MatchInfo {
+    override val pgnSite: String get() = "GregChess test"
+    override val pgnEventName: String get() = "Casual game"
+    override val pgnRound: Int get() = 1
     override fun matchCoroutineName(): String = uuid.toString()
     override fun matchToString(): String = "uuid=$uuid"
 }

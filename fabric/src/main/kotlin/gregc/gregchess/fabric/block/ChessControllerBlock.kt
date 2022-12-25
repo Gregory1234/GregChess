@@ -144,7 +144,7 @@ class ChessControllerBlockEntity(pos: BlockPos?, state: BlockState?) :
     fun startMatch(whitePlayer: ChessPlayer<*>, blackPlayer: ChessPlayer<*>) {
         if (currentMatch != null) return
         currentMatchUUID = ChessMatch(
-            FabricChessEnvironment(), ChessVariant.Normal,
+            FabricChessEnvironment, FabricMatchInfo(), ChessVariant.Normal,
             ChessMatchManager.settings(ChessVariant.Normal, 0, getBoardState(), FabricRenderer(this), ChessSideManager(whitePlayer, blackPlayer)), 0
         ).start().uuid
     }

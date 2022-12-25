@@ -2,8 +2,10 @@ package gregc.gregchess.fabric
 
 import com.mojang.authlib.GameProfile
 import gregc.gregchess.fabric.match.FabricChessEnvironment
+import gregc.gregchess.fabric.match.FabricMatchInfo
 import gregc.gregchess.fabricutils.addFabricSerializers
 import gregc.gregchess.match.ChessEnvironment
+import gregc.gregchess.match.MatchInfo
 import gregc.gregchess.registry.RegistryKey
 import gregc.gregchess.registry.StringKeySerializer
 import kotlinx.serialization.*
@@ -53,6 +55,7 @@ internal object GameProfileSerializer : KSerializer<GameProfile> {
 internal fun defaultModule(server: MinecraftServer): SerializersModule = SerializersModule {
     addFabricSerializers(server)
     contextual(ChessEnvironment::class, FabricChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
+    contextual(MatchInfo::class, FabricMatchInfo.serializer() as KSerializer<MatchInfo>)
     contextual(RegistryKey::class) { ser ->
         when(ser) {
             listOf(String.serializer()) -> StringKeySerializer(FabricChessModule.modules)

@@ -5,8 +5,7 @@ import assertk.all
 import assertk.assertions.*
 import gregc.gregchess.*
 import gregc.gregchess.board.*
-import gregc.gregchess.chess.TestChessEnvironment
-import gregc.gregchess.chess.TestChessPlayer
+import gregc.gregchess.chess.*
 import gregc.gregchess.component.Component
 import gregc.gregchess.match.ChessMatch
 import gregc.gregchess.move.Move
@@ -18,7 +17,7 @@ import gregc.gregchess.variant.ChessVariant
 open class VariantTests(val variant: ChessVariant, val variantOptions: Long, val extraComponents: Collection<Component> = emptyList()) {
 
     protected fun mkMatch(fen: FEN) =
-        ChessMatch(TestChessEnvironment(), variant, listOf(ChessSideManager(TestChessPlayer(false), TestChessPlayer(false)), Chessboard(variant, variantOptions, fen)) + extraComponents, 0).start()
+        ChessMatch(TestChessEnvironment, TestMatchInfo(), variant, listOf(ChessSideManager(TestChessPlayer(false), TestChessPlayer(false)), Chessboard(variant, variantOptions, fen)) + extraComponents, 0).start()
 
     protected fun Chessboard.getMove(from: Pos, to: Pos) = get(from)?.getLegalMoves(this)?.singleOrNull { it.display == to }
 

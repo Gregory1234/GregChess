@@ -1,8 +1,9 @@
 package gregc.gregchess.bukkit
 
 import gregc.gregchess.bukkit.match.BukkitChessEnvironment
+import gregc.gregchess.bukkit.match.BukkitMatchInfo
 import gregc.gregchess.bukkitutils.serialization.addBukkitSerializers
-import gregc.gregchess.match.ChessEnvironment
+import gregc.gregchess.match.*
 import gregc.gregchess.registry.RegistryKey
 import gregc.gregchess.registry.StringKeySerializer
 import kotlinx.serialization.KSerializer
@@ -28,6 +29,7 @@ internal object UUIDAsStringSerializer : KSerializer<UUID> {
 internal fun defaultModule() = SerializersModule {
     contextual(UUID::class, UUIDAsStringSerializer)
     contextual(ChessEnvironment::class, BukkitChessEnvironment.serializer() as KSerializer<ChessEnvironment>)
+    contextual(MatchInfo::class, BukkitMatchInfo.serializer() as KSerializer<MatchInfo>)
     contextual(RegistryKey::class) { ser ->
         when(ser) {
             listOf(String.serializer()) -> StringKeySerializer(BukkitChessModule.modules)
