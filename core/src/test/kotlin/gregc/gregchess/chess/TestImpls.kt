@@ -1,7 +1,7 @@
 package gregc.gregchess.chess
 
 import gregc.gregchess.Color
-import gregc.gregchess.GregChessCore
+import gregc.gregchess.CoreAutoRegister
 import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentType
 import gregc.gregchess.event.ChessEvent
@@ -118,9 +118,9 @@ object GregChess : ChessModule("GregChess", "gregchess") {
     }
 
     override fun load() {
-        GregChessCore.registerAll(this)
+        CoreAutoRegister.registerAll(this)
 
-        GregChessCore.autoRegister(this).registerAll<GregChess>()
+        CoreAutoRegister(this).registerAll<GregChess>()
         finished = true
     }
 }

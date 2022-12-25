@@ -1,7 +1,7 @@
 package gregc.gregchess.bukkit
 
+import gregc.gregchess.CoreAutoRegister
 import gregc.gregchess.CoreRegistry
-import gregc.gregchess.GregChessCore
 import gregc.gregchess.board.Chessboard
 import gregc.gregchess.board.FEN
 import gregc.gregchess.bukkit.component.BukkitComponentType
@@ -76,8 +76,8 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     }
 
     override fun load() {
-        GregChessCore.registerAll(this)
-        BukkitGregChessCore.autoRegister(this).apply {
+        CoreAutoRegister.registerAll(this)
+        BukkitAutoRegister(this).apply {
             registerAll<ChessMatchManager>()
             registerAll<BukkitComponentType>()
             registerAll<BukkitChessSideType>()

@@ -1,6 +1,6 @@
 package gregc.gregchess.fabric
 
-import gregc.gregchess.GregChessCore
+import gregc.gregchess.CoreAutoRegister
 import gregc.gregchess.fabric.component.FabricComponentType
 import gregc.gregchess.fabric.component.MatchController
 import gregc.gregchess.fabric.piece.shortPieceBlocks
@@ -32,8 +32,8 @@ internal object GregChess : FabricChessModule("GregChess", "gregchess") {
     }
 
     override fun load() {
-        GregChessCore.registerAll(this)
-        GregChessCore.autoRegister(this).apply {
+        CoreAutoRegister.registerAll(this)
+        CoreAutoRegister(this).apply {
             registerAll<FabricComponentType>()
             registerAll<GregChess>()
             registerAll<FabricChessSideType>()

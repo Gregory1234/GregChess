@@ -1,6 +1,6 @@
 package gregc.gregchess.bukkit
 
-import gregc.gregchess.GregChessCore
+import gregc.gregchess.CoreAutoRegister
 import gregc.gregchess.Registering
 import gregc.gregchess.bukkit.match.defaultVariantOptionsParser
 import gregc.gregchess.bukkit.move.defaultLocalMoveFormatter
@@ -12,13 +12,12 @@ import gregc.gregchess.registry.registry.Registry
 import gregc.gregchess.results.EndReason
 import org.bukkit.plugin.Plugin
 
-// TODO: rename this
-object BukkitGregChessCore {
-    val AUTO_REGISTER = listOf(
+object BukkitAutoRegister {
+    val TYPES = listOf(
         EndReason.BUKKIT_AUTO_REGISTER, PropertyType.AUTO_REGISTER
-    ) + GregChessCore.AUTO_REGISTER
+    ) + CoreAutoRegister.TYPES
 
-    fun autoRegister(module: ChessModule) = AutoRegister(module, AUTO_REGISTER)
+    operator fun invoke(module: ChessModule) = AutoRegister(module, TYPES)
 }
 
 interface BukkitChessPlugin {
@@ -27,7 +26,7 @@ interface BukkitChessPlugin {
 
 interface BukkitRegistering : Registering {
     override fun registerAll(module: ChessModule) {
-        BukkitGregChessCore.autoRegister(module).registerAll(this::class)
+        BukkitAutoRegister(module).registerAll(this::class)
     }
 }
 

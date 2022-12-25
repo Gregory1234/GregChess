@@ -13,11 +13,11 @@ import gregc.gregchess.variant.ChessVariants
 
 interface Registering {
     fun registerAll(module: ChessModule) {
-        GregChessCore.autoRegister(module).registerAll(this::class)
+        CoreAutoRegister(module).registerAll(this::class)
     }
 }
 
-object GregChessCore {
+object CoreAutoRegister {
     fun registerAll(module: ChessModule) {
         PieceType.registerCore(module)
         EndReason.registerCore(module)
@@ -30,11 +30,11 @@ object GregChessCore {
     }
 
     @JvmField
-    val AUTO_REGISTER = listOf(
+    val TYPES = listOf(
         PieceType.AUTO_REGISTER, EndReason.AUTO_REGISTER, ChessFlag.AUTO_REGISTER, ComponentType.AUTO_REGISTER,
         ChessVariants.AUTO_REGISTER, MoveTraitType.AUTO_REGISTER, ChessStat.AUTO_REGISTER,
         ChessSideType.AUTO_REGISTER, PlacedPieceType.AUTO_REGISTER,
     )
 
-    fun autoRegister(module: ChessModule) = AutoRegister(module, AUTO_REGISTER)
+    operator fun invoke(module: ChessModule) = AutoRegister(module, TYPES)
 }
