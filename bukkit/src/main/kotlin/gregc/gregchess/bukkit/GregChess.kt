@@ -16,6 +16,7 @@ import gregc.gregchess.bukkitutils.toDuration
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.clock.TimeControl
 import gregc.gregchess.component.ComponentType
+import gregc.gregchess.match.ChessTimeManager
 import gregc.gregchess.variant.KingOfTheHill
 import gregc.gregchess.variant.ThreeChecks
 import kotlin.time.Duration
@@ -50,6 +51,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             }
         }
         BukkitRegistry.SETTINGS_PARSER[ThreeChecks.CHECK_COUNTER] = { ThreeChecks.CheckCounter(section.getInt("CheckLimit", 3)) }
+        BukkitRegistry.SETTINGS_PARSER[ComponentType.TIME] = { ChessTimeManager() }
     }
 
     private fun registerOptionalComponents() {
@@ -59,7 +61,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
     }
 
     private fun registerRequiredComponents() {
-        for (c in listOf(ComponentType.CHESSBOARD, BukkitComponentType.SPECTATOR_MANAGER)) {
+        for (c in listOf(ComponentType.CHESSBOARD, ComponentType.TIME, BukkitComponentType.SPECTATOR_MANAGER)) {
             BukkitRegistry.REQUIRED_COMPONENTS += c
         }
     }

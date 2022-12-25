@@ -8,6 +8,7 @@ import gregc.gregchess.board.*
 import gregc.gregchess.chess.*
 import gregc.gregchess.component.Component
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.ChessTimeManager
 import gregc.gregchess.move.Move
 import gregc.gregchess.move.trait.*
 import gregc.gregchess.piece.*
@@ -17,7 +18,7 @@ import gregc.gregchess.variant.ChessVariant
 open class VariantTests(val variant: ChessVariant, val variantOptions: Long, val extraComponents: Collection<Component> = emptyList()) {
 
     protected fun mkMatch(fen: FEN) =
-        ChessMatch(TestChessEnvironment, TestMatchInfo(), variant, listOf(ChessSideManager(TestChessPlayer(false), TestChessPlayer(false)), Chessboard(variant, variantOptions, fen)) + extraComponents, 0).start()
+        ChessMatch(TestChessEnvironment, TestMatchInfo(), variant, listOf(ChessSideManager(TestChessPlayer(false), TestChessPlayer(false)), Chessboard(variant, variantOptions, fen), ChessTimeManager()) + extraComponents, 0).start()
 
     protected fun Chessboard.getMove(from: Pos, to: Pos) = get(from)?.getLegalMoves(this)?.singleOrNull { it.display == to }
 

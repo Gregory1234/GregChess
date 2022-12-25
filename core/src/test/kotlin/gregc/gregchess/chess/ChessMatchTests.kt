@@ -7,6 +7,7 @@ import gregc.gregchess.component.Component
 import gregc.gregchess.event.ChessBaseEvent
 import gregc.gregchess.event.TurnEvent
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.ChessTimeManager
 import gregc.gregchess.move.connector.AddMoveConnectorsEvent
 import gregc.gregchess.move.connector.PieceMoveEvent
 import gregc.gregchess.player.ChessSideManager
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.*
 class ChessMatchTests {
 
     private fun mkMatch(variant: ChessVariant = ChessVariant.Normal, variantOptions: Long = 0, extra: Collection<Component> = emptyList(), playerManager: ChessSideManager = ChessSideManager(TestChessPlayer(false), TestChessPlayer(false))) =
-        ChessMatch(TestChessEnvironment, TestMatchInfo(), variant, listOf(playerManager, Chessboard(variant, variantOptions)) + extra, variantOptions)
+        ChessMatch(TestChessEnvironment, TestMatchInfo(), variant, listOf(playerManager, Chessboard(variant, variantOptions), ChessTimeManager()) + extra, variantOptions)
 
     @BeforeAll
     fun setup() {

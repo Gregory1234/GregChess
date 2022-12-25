@@ -1,5 +1,3 @@
-@file:UseSerializers(InstantSerializer::class)
-
 package gregc.gregchess.match
 
 import gregc.gregchess.Color
@@ -14,10 +12,6 @@ import gregc.gregchess.utils.*
 import gregc.gregchess.variant.ChessVariant
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
-import java.time.Instant
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import kotlin.time.Duration
 
 @Serializable
 class ChessMatch private constructor(
@@ -26,14 +20,11 @@ class ChessMatch private constructor(
     val variant: ChessVariant,
     val components: ComponentList,
     @SerialName("state") private var state_: State,
-    @SerialName("startTime") private var startTime_: Instant?,
-    @SerialName("endTime") private var endTime_: Instant?,
-    @SerialName("duration") private var durationCounted: Duration,
     @SerialName("results") private var results_: MatchResults?,
     val variantOptions: Long
 ) : ChessEventCaller {
     constructor(environment: ChessEnvironment, info: MatchInfo, variant: ChessVariant, components: Collection<Component>, variantOptions: Long)
-            : this(environment, info, variant, ComponentList(components), State.INITIAL, null, null, Duration.ZERO, null, variantOptions)
+            : this(environment, info, variant, ComponentList(components), State.INITIAL, null, variantOptions)
 
     override fun toString() = "ChessMatch(${info.matchToString()})"
 
@@ -46,14 +37,13 @@ class ChessMatch private constructor(
     override fun callEvent(event: ChessEvent) = eventManager.callEvent(event)
 
     init {
-        require((state >= State.RUNNING) == (startTime != null)) { "Start time bad" }
-        require((state >= State.STOPPED) == (endTime != null)) { "End time bad" }
         require((state >= State.STOPPED) == (results != null)) { "Results bad" }
         for (c in environment.impliedComponents) {
             require(c !in components)
         }
         components.require(ComponentType.CHESSBOARD)
         components.require(ComponentType.SIDES)
+        components.require(ComponentType.TIME)
         for (t in variant.requiredComponents + environment.requiredComponents) {
             components.require(t)
         }
@@ -84,49 +74,11 @@ class ChessMatch private constructor(
 
     val sides get() = components.require(ComponentType.SIDES).getFacade(this)
 
+    val time get() = components.require(ComponentType.TIME).getFacade(this)
+
     private fun requireState(s: State) = check(state == s) { "Expected state $s, got state $state!" }
 
     val currentColor: Color get() = board.currentColor
-
-    private fun Instant.zoned() = atZone(environment.clock.zone)
-
-    // TODO: move time to a Component
-    var startTime: Instant?
-        get() = startTime_
-        private set(v) {
-            check(state == State.RUNNING) { "Start time set when not running: $state" }
-            check(startTime_ == null) {
-                val formatter = DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss z")
-                "Start time already set: ${formatter.format(startTime_?.zoned())}, ${formatter.format(v?.zoned())}"
-            }
-            startTime_ = v
-        }
-
-    val zonedStartTime: ZonedDateTime? get() = startTime?.zoned()
-
-    var endTime: Instant?
-        get() = endTime_
-        private set(v) {
-            check(state == State.STOPPED) { "End time set when not stopped: $state" }
-            check(endTime_ == null) {
-                val formatter = DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss z")
-                "End time already set: ${formatter.format(endTime_?.zoned())}, ${formatter.format(v?.zoned())}"
-            }
-            endTime_ = v
-        }
-
-    @Transient
-    private var durationTimeStart: Instant = environment.clock.instant()
-
-    val duration: Duration get() = durationCounted + Duration.between(durationTimeStart, environment.clock.instant())
-
-    private fun updateDuration() {
-        val now = environment.clock.instant()
-        durationCounted += Duration.between(durationTimeStart, now)
-        durationTimeStart = now
-    }
-
-    val zonedEndTime: ZonedDateTime? get() = endTime?.zoned()
 
     enum class State {
         INITIAL, RUNNING, STOPPED, ERROR
@@ -166,17 +118,14 @@ class ChessMatch private constructor(
     fun start() = apply {
         requireState(State.INITIAL)
         callEvent(ChessBaseEvent.START)
-        durationTimeStart = environment.clock.instant()
         callEvent(AddMoveConnectorsEvent(connectors))
         state = State.RUNNING
-        startTime = Instant.now(environment.clock)
         callEvent(ChessBaseEvent.RUNNING)
         startTurn()
     }
 
     fun update() = try {
         requireState(State.RUNNING)
-        updateDuration()
         callEvent(ChessBaseEvent.UPDATE)
     } catch (e: Exception) {
         panic(e)
@@ -214,7 +163,6 @@ class ChessMatch private constructor(
         requireState(State.RUNNING)
         state = State.STOPPED
         this.results = results
-        endTime = Instant.now(environment.clock)
         callEvent(ChessBaseEvent.STOP)
         joinAllAndThen {
             coroutineScope.cancel()

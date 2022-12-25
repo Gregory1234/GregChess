@@ -6,6 +6,7 @@ import gregc.gregchess.board.Chessboard
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.event.ComplexEventListener
 import gregc.gregchess.event.EventListener
+import gregc.gregchess.match.ChessTimeManager
 import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.registry.*
 import kotlinx.serialization.*
@@ -43,6 +44,8 @@ class ComponentType<T : Component> @PublishedApi internal constructor(val cl: KC
         val CLOCK = ComponentType<ChessClock>()
         @JvmField
         val SIDES = ComponentType<ChessSideManager>()
+        @JvmField
+        val TIME = ComponentType<ChessTimeManager>()
 
         fun registerCore(module: ChessModule) = AutoRegister(module, listOf(AUTO_REGISTER)).registerAll<ComponentType<*>>()
     }

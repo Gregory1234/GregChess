@@ -11,6 +11,7 @@ import gregc.gregchess.fabric.renderer.FabricRenderer
 import gregc.gregchess.fabric.renderer.renderer
 import gregc.gregchess.fabricutils.nbt.*
 import gregc.gregchess.match.ChessMatch
+import gregc.gregchess.match.ChessTimeManager
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.player.ChessSideManager
 import gregc.gregchess.variant.ChessVariant
@@ -67,6 +68,7 @@ object ChessMatchManager {
         this += s
         this += Chessboard(v, variantOptions, FEN.fromPieces(boardState))
         this += r
+        this += ChessTimeManager()
     }
 
 

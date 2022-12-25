@@ -54,7 +54,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             // TODO: move most tag generation to Components
             tags += TagPair("Event", match.info.pgnEventName)
             tags += TagPair("Site", match.info.pgnSite)
-            val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(match.zonedStartTime)
+            val date = DateTimeFormatter.ofPattern("uuuu.MM.dd").format(match.time.zonedStartTime)
             tags += TagPair("Date", date)
             tags += TagPair("Round", match.info.pgnRound.toString())
             tags += TagPair("White", match.sides.white.name)
@@ -66,7 +66,7 @@ class PGN private constructor(private val tags: List<TagPair>, private val moves
             tags += TagPair("PlyCount", match.board.moveHistory.count { !it.isPhantomMove }.toString())
             val timeControl = match.clock?.timeControl?.getPGN() ?: "-"
             tags += TagPair("TimeControl", timeControl)
-            val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(match.zonedStartTime)
+            val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(match.time.zonedStartTime)
             tags += TagPair("Time", time)
             tags += TagPair("Termination", match.results?.endReason?.pgn ?: "unterminated")
             tags += TagPair("Mode", "ICS")
