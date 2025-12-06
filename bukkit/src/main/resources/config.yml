@@ -163,9 +163,9 @@ Chess:
         Black:
           - BLACK_CONCRETE
       Sound:
-        PickUp: BLOCK_METAL_HIT
-        Move: BLOCK_METAL_STEP
-        Capture: ENTITY_ENDER_DRAGON_DEATH
+        PickUp: block.metal.hit
+        Move: block.metal.step
+        Capture: entity.ender_dragon.death
     Queen:
       Name: "Queen"
       Char: 'q'
@@ -178,9 +178,9 @@ Chess:
         Black:
           - NETHERITE_BLOCK
       Sound:
-        PickUp: ENTITY_WITCH_CELEBRATE
-        Move: BLOCK_GLASS_STEP
-        Capture: ENTITY_WITCH_DEATH
+        PickUp: entity.witch.celebrate
+        Move: block.glass.step
+        Capture: entity.witch.death
     Rook:
       Name: "Rook"
       Char: 'r'
@@ -193,9 +193,9 @@ Chess:
         Black:
           - GOLD_BLOCK
       Sound:
-        PickUp: ENTITY_IRON_GOLEM_STEP
-        Move: ENTITY_IRON_GOLEM_STEP
-        Capture: ENTITY_IRON_GOLEM_DEATH
+        PickUp: entity.iron_golem.step
+        Move: entity.iron_golem.step
+        Capture: entity.iron_golem.death
     Bishop:
       Name: "Bishop"
       Char: 'b'
@@ -208,9 +208,9 @@ Chess:
         Black:
           - POLISHED_BLACKSTONE
       Sound:
-        PickUp: ENTITY_SPIDER_AMBIENT
-        Move: ENTITY_SPIDER_STEP
-        Capture: ENTITY_SPIDER_DEATH
+        PickUp: entity.spider.ambient
+        Move: entity.spider.step
+        Capture: entity.spider.death
     Knight:
       Name: "Knight"
       Char: 'n'
@@ -223,9 +223,9 @@ Chess:
         Black:
           - BLACKSTONE
       Sound:
-        PickUp: ENTITY_HORSE_JUMP
-        Move: ENTITY_HORSE_STEP
-        Capture: ENTITY_HORSE_DEATH
+        PickUp: entity.horse.jump
+        Move: entity.horse.step
+        Capture: entity.horse.death
     Pawn:
       Name: "Pawn"
       Char: 'p'
@@ -238,9 +238,9 @@ Chess:
         Black:
           - BLACK_CARPET
       Sound:
-        PickUp: BLOCK_STONE_HIT
-        Move: BLOCK_STONE_STEP
-        Capture: BLOCK_STONE_BREAK
+        PickUp: block.stone.hit
+        Move: block.stone.step
+        Capture: block.stone.break
   HasStockfish: false
   Stockfish:
     Path: stockfish

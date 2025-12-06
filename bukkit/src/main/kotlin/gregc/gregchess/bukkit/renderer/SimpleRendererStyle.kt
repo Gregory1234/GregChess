@@ -8,8 +8,7 @@ import gregc.gregchess.bukkit.variant.Floor
 import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.piece.Piece
 import gregc.gregchess.piece.PieceType
-import org.bukkit.Material
-import org.bukkit.Sound
+import org.bukkit.*
 import org.bukkit.inventory.ItemStack
 
 interface SimpleRendererStyle : RendererStyle {
@@ -28,7 +27,7 @@ object DefaultSimpleRendererStyle : SimpleRendererStyle {
         }
 
     override fun pieceSound(piece: PieceType, sound: String): Sound =
-        Sound.valueOf(piece.section.getString("Sound.$sound")!!)
+        Registry.SOUNDS.getOrThrow(NamespacedKey.fromString(piece.section.getString("Sound.$sound")!!)!!)
 
     override fun floorMaterial(floor: Floor): Material =
         Material.valueOf(config.getString("Chess.Floor.${floor.name}")!!)

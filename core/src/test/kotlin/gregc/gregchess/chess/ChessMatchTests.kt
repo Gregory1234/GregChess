@@ -224,7 +224,7 @@ class ChessMatchTests {
 
             match.stop(results)
 
-            assertThat(match::results).isNotNull().isSameAs(results)
+            assertThat(match::results).isNotNull().isSameInstanceAs(results)
         }
 
         @Test

@@ -1,27 +1,19 @@
 [versions]
-kotlin = "1.7.20"
+kotlin = "2.2.21"
 
-kotlinx-serialization = "1.4.1"
-kotlinx-coroutines = "1.6.4"
+kotlinx-serialization = "1.9.0"
+kotlinx-coroutines = "1.10.2"
 
 slf4j = "1.8.0-beta4"
 
-junit = "5.9.1"
-assertk = "0.25"
-mockk = "1.13.2"
+junit = "6.1.0-M1"
+assertk = "0.28.1"
+mockk = "1.14.7"
 
-dokka = "1.7.20"
+dokka = "2.1.0"
 
-spigot-api = "1.19.3-R0.1-SNAPSHOT"
-minecraftserver = "2.0.0"
-
-fabric-minecraft = "1.19.3"
-fabric-yarn = "1.19.3+build.5"
-fabric-loader = "0.14.12"
-fabric-api = "0.70.0+1.19.3"
-fabric-kotlin = "1.8.5+kotlin.1.7.20"
-fabric-libgui = "6.5.0+1.19.3"
-fabric-loom = "1.0-SNAPSHOT"
+spigot-api = "1.21.10-R0.1-SNAPSHOT"
+minecraftserver = "4.0.1"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -45,13 +37,6 @@ dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref
 
 spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "spigot-api" }
 
-fabric-minecraft = { module = "com.mojang:minecraft", version.ref = "fabric-minecraft" }
-fabric-yarn = { module = "net.fabricmc:yarn", version.ref = "fabric-yarn" }
-fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
-fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
-fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-kotlin" }
-fabric-libgui = { module = "io.github.cottonmc:LibGui", version.ref = "fabric-libgui" }
-
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -59,5 +44,3 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 
 minecraftserver = { id = "dev.s7a.gradle.minecraft.server", version.ref = "minecraftserver" }
-
-fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }

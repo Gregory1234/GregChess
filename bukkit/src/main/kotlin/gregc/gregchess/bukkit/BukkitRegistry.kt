@@ -20,7 +20,7 @@ object BukkitRegistry {
     @JvmField
     val PROPERTY_TYPE = NameRegistry<PropertyType>("property_type")
     @JvmField
-    val SETTINGS_PARSER = ConnectedRegistry<_, SettingsParser<out Component>>("settings_parser", CoreRegistry.COMPONENT_TYPE)
+    val SETTINGS_PARSER = ConnectedRegistry<_, SettingsParser<Component>>("settings_parser", CoreRegistry.COMPONENT_TYPE)
     @JvmField
     val LOCAL_MOVE_FORMATTER = ConnectedRegistry<_, MoveFormatter>("local_move_formatter", CoreRegistry.VARIANT)
     @JvmField

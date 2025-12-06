@@ -12,8 +12,8 @@ fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("to
 
 val defaultKotlinArgs = listOf(
     "-Xjvm-default=all",
-    "-Xlambdas=indy",
-    "-progressive"
+    "-progressive",
+    "-Xconsistent-data-class-copy-visibility"
 )
 
 fun lazyTrueSpigotVersion(spigotVersion: String) = lazy {

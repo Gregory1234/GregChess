@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -19,19 +21,20 @@ dependencies {
 
 val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())
 
+kotlin {
+    compilerOptions {
+        val jvmVersion: String by project
+        jvmTarget = JvmTarget.fromTarget(jvmVersion)
+        freeCompilerArgs = defaultKotlinArgs
+    }
+}
+
 tasks {
 
     compileJava {
         val jvmVersion: String by project
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
-    }
-    compileKotlin {
-        kotlinOptions {
-            val jvmVersion: String by project
-            jvmTarget = jvmVersion
-            freeCompilerArgs = defaultKotlinArgs
-        }
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {

@@ -1,6 +1,0 @@
-{
-    "parent": "gregchess:piece/small_rook",
-	"textures": {
-		"main": "minecraft:block/black_concrete"
-	}
-}

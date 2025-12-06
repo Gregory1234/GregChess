@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -24,6 +26,14 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
+kotlin {
+    compilerOptions {
+        val jvmVersion: String by project
+        jvmTarget = JvmTarget.fromTarget(jvmVersion)
+        freeCompilerArgs = defaultKotlinArgs
+    }
+}
+
 tasks {
     test {
         useJUnitPlatform()
@@ -35,20 +45,6 @@ tasks {
         val jvmVersion: String by project
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
-    }
-    compileKotlin {
-        kotlinOptions {
-            val jvmVersion: String by project
-            jvmTarget = jvmVersion
-            freeCompilerArgs = defaultKotlinArgs
-        }
-    }
-    compileTestKotlin {
-        kotlinOptions {
-            val jvmVersion: String by project
-            jvmTarget = jvmVersion
-            freeCompilerArgs = defaultKotlinArgs
-        }
     }
     withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
         dokkaSourceSets {

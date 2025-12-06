@@ -1,4 +1,5 @@
 import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
@@ -36,6 +37,14 @@ dependencies {
 
 val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())
 
+kotlin {
+    compilerOptions {
+        val jvmVersion: String by project
+        jvmTarget = JvmTarget.fromTarget(jvmVersion)
+        freeCompilerArgs = defaultKotlinArgs
+    }
+}
+
 tasks {
 
     processResources {
@@ -55,13 +64,6 @@ tasks {
         val jvmVersion: String by project
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
-    }
-    compileKotlin {
-        kotlinOptions {
-            val jvmVersion: String by project
-            jvmTarget = jvmVersion
-            freeCompilerArgs = defaultKotlinArgs
-        }
     }
     jar {
         exclude { it.file.extension == "kotlin_metadata" }
@@ -93,7 +95,7 @@ tasks {
         dependsOn(shadedJar)
         group = "paper"
         jarUrl.set(LaunchMinecraftServerTask.JarUrl.Paper(libs.versions.spigot.api.get().substringBefore("-")))
-        serverDirectory.set(projectDir.resolve("run"))
+        serverDirectory.set(projectDir.resolve("run").path)
         jvmArgument.set(listOf(
             "-Xms2G", "-Xmx2G", "-XX:+UseG1GC", "-XX:+ParallelRefProcEnabled", "-XX:MaxGCPauseMillis=200",
             "-XX:+UnlockExperimentalVMOptions", "-XX:+DisableExplicitGC", "-XX:+AlwaysPreTouch",

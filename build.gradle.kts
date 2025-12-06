@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.dokka)
     alias(libs.plugins.minecraftserver) apply false
-    alias(libs.plugins.fabric.loom) apply false
 }
 
 allprojects {
