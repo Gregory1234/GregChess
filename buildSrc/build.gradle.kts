@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     `kotlin-dsl`
 }
@@ -8,8 +10,12 @@ repositories {
 
 dependencies {
     compileOnly(libs.kotlin.plugin)
-    compileOnly(libs.dokka.plugin) {
-        exclude("org.jetbrains.kotlin","kotlin-stdlib-jdk8") // https://github.com/Kotlin/dokka/issues/2546
+    compileOnly(libs.dokka.plugin)
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
     }
 }
 

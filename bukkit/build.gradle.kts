@@ -1,7 +1,6 @@
 import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
@@ -35,13 +34,22 @@ dependencies {
     shaded(projects.gregchessBukkitUtils)
 }
 
-val trueSpigotVersion by lazyTrueSpigotVersion(libs.versions.spigot.api.get())
-
 kotlin {
     compilerOptions {
         val jvmVersion: String by project
         jvmTarget = JvmTarget.fromTarget(jvmVersion)
         freeCompilerArgs = defaultKotlinArgs
+    }
+}
+
+dokka {
+    dokkaSourceSets {
+        configureEach {
+            gregchessSourceLink(project)
+            externalDocumentationLinkElementList("spigot-api", "https://hub.spigotmc.org/javadocs/spigot/")
+            externalDocumentationLink("kotlinx.serialization", "https://kotlin.github.io/kotlinx.serialization/")
+            externalDocumentationLink("kotlinx.coroutines", "https://kotlin.github.io/kotlinx.coroutines/")
+        }
     }
 }
 
@@ -76,22 +84,12 @@ tasks {
         from({ shaded.resolvedConfiguration.firstLevelModuleDependencies.flatMap { dep -> dep.moduleArtifacts.map { zipTree(it.file) }}})
         archiveClassifier.set("shaded")
     }
-    withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
-        dokkaSourceSets {
-            configureEach {
-                gregchessSourceLink(project)
-                externalDocumentationLinkElementList("https://hub.spigotmc.org/nexus/service/local/repositories/snapshots/archive/org/spigotmc/spigot-api/${libs.versions.spigot.api.get()}/spigot-api-$trueSpigotVersion-javadoc.jar/!/")
-                externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/")
-                externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
-            }
-        }
-    }
     register<Jar>("sourcesJar") {
         group = "build"
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
     }
-    task<LaunchMinecraftServerTask>("runServer") {
+    register<LaunchMinecraftServerTask>("runServer") {
         dependsOn(shadedJar)
         group = "paper"
         jarUrl.set(LaunchMinecraftServerTask.JarUrl.Paper(libs.versions.spigot.api.get().substringBefore("-")))
@@ -114,7 +112,7 @@ tasks {
     register<Copy>("finalJar") {
         group = "gregchess"
         from(shadedJar)
-        into(File(rootProject.buildDir, "libs"))
+        into(File(rootProject.layout.buildDirectory.asFile.get(), "libs"))
         rename { "${rootProject.name}-$version-bukkit.jar" }
     }
 }

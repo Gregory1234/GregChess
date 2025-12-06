@@ -1,5 +1,4 @@
 
-import groovy.namespace.QName
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.api.file.CopySpec
 import org.gradle.api.tasks.TaskContainer
@@ -15,14 +14,6 @@ val defaultKotlinArgs = listOf(
     "-progressive",
     "-Xconsistent-data-class-copy-visibility"
 )
-
-fun lazyTrueSpigotVersion(spigotVersion: String) = lazy {
-    val snapshot = groovy.xml.XmlParser()
-        .parse("https://hub.spigotmc.org/nexus/content/repositories/snapshots/org/spigotmc/spigot-api/$spigotVersion/maven-metadata.xml")
-        .getAt(QName.valueOf("versioning")).getAt("snapshot")
-    println("Calculating spigot version")
-    spigotVersion.replace("SNAPSHOT", snapshot.getAt("timestamp").text() + "-" + snapshot.getAt("buildNumber").text())
-}
 
 val TaskContainer.sourcesJar: TaskProvider<Jar>
     get() = named<Jar>("sourcesJar")

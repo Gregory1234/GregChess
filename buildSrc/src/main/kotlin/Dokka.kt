@@ -1,17 +1,20 @@
 @file:Suppress("NOTHING_TO_INLINE")
 
 import org.gradle.api.Project
-import org.jetbrains.dokka.gradle.GradleDokkaSourceSetBuilder
-import java.net.URL
+import org.jetbrains.dokka.gradle.engine.parameters.DokkaSourceSetSpec
 
-inline fun GradleDokkaSourceSetBuilder.gregchessSourceLink(project: Project) = sourceLink {
+inline fun DokkaSourceSetSpec.gregchessSourceLink(project: Project) = sourceLink {
     val relPath = project.rootProject.projectDir.toPath().relativize(project.projectDir.toPath())
     localDirectory.set(project.projectDir.resolve("src"))
-    remoteUrl.set(URL("https://github.com/Gregory1234/GregChess/tree/master/$relPath/src"))
+    remoteUrl("https://github.com/Gregory1234/GregChess/tree/master/$relPath/src")
     remoteLineSuffix.set("#L")
 }
 
-inline fun GradleDokkaSourceSetBuilder.externalDocumentationLinkElementList(url: String) = externalDocumentationLink {
-    this.url.set(URL(url))
-    this.packageListUrl.set(URL(url + "element-list"))
+inline fun DokkaSourceSetSpec.externalDocumentationLink(name: String, url: String) = externalDocumentationLinks.register(name) {
+    url(url)
+}
+
+inline fun DokkaSourceSetSpec.externalDocumentationLinkElementList(name: String, url: String) = externalDocumentationLinks.register(name) {
+    url(url)
+    packageListUrl(url + "element-list")
 }

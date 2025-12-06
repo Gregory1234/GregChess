@@ -1,4 +1,3 @@
-@Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
@@ -9,6 +8,14 @@ plugins {
 allprojects {
     group = "gregc.gregchess"
     version = "1.2"
+}
+
+dependencies {
+    dokka(projects.gregchessRegistry)
+    dokka(projects.gregchessCoreUtils)
+    dokka(projects.gregchessCore)
+    dokka(projects.gregchessBukkitUtils)
+    dokka(projects.gregchessBukkit)
 }
 
 repositories {

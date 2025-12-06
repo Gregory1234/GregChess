@@ -1,6 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
@@ -34,6 +33,16 @@ kotlin {
     }
 }
 
+dokka {
+    dokkaSourceSets {
+        configureEach {
+            gregchessSourceLink(project)
+            externalDocumentationLink("kotlinx.serialization", "https://kotlin.github.io/kotlinx.serialization/")
+            externalDocumentationLink("kotlinx.coroutines", "https://kotlin.github.io/kotlinx.coroutines/")
+        }
+    }
+}
+
 tasks {
     test {
         useJUnitPlatform()
@@ -45,15 +54,6 @@ tasks {
         val jvmVersion: String by project
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
-    }
-    withType<org.jetbrains.dokka.gradle.AbstractDokkaLeafTask> {
-        dokkaSourceSets {
-            configureEach {
-                gregchessSourceLink(project)
-                externalDocumentationLink("https://kotlin.github.io/kotlinx.serialization/")
-                externalDocumentationLink("https://kotlin.github.io/kotlinx.coroutines/")
-            }
-        }
     }
     register<Jar>("sourcesJar") {
         group = "build"

@@ -13,4 +13,4 @@ Works in Minecraft `1.21.10`.
 - Paper server with the plugin: `:gregchess-bukkit:runServer`
 
 ### Documentation
-- Dokka html: `:dokkaHtmlMultiModule`
+- Dokka html: `:dokkaGenerateHtml`
