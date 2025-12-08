@@ -19,8 +19,8 @@ import kotlinx.serialization.encoding.Encoder
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
-import java.time.Instant
 import java.util.*
+import kotlin.time.Instant
 
 @Serializable(BukkitPlayer.Serializer::class)
 class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman, ChessPlayer<BukkitChessSide> {
@@ -111,7 +111,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         val match = checkNotNull(currentMatch)
         if (allowRejoining) {
             val info = checkNotNull(activeMatchInfo[match])
-            info.leaveTime = match.environment.clock.instant()
+            info.leaveTime = match.environment.clock.now()
             rejoinDuration?.let { duration ->
                 info.resignJob = match.coroutineScope.launch {
                     delay(duration)
@@ -133,7 +133,7 @@ class BukkitPlayer private constructor(val bukkit: OfflinePlayer) : BukkitHuman,
         }
     }
 
-    private val matchToRejoin get() = activeMatchInfo.toList().maxByOrNull { it.second.leaveTime ?: Instant.MIN }?.first
+    private val matchToRejoin get() = activeMatchInfo.toList().maxByOrNull { it.second.leaveTime ?: Instant.DISTANT_PAST }?.first
 
     fun joinMatch(match: ChessMatch = checkNotNull(matchToRejoin)) {
         val info = checkNotNull(activeMatchInfo[match])

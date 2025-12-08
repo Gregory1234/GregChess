@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.kotlin.reflect)
     api(libs.kotlinx.serialization.core)
     api(libs.kotlinx.coroutines.core)
+    api(libs.kotlinx.datetime)
     api(projects.gregchessRegistry)
     implementation(projects.gregchessCoreUtils)
     testImplementation(libs.slf4j.jdk14)
@@ -36,9 +37,7 @@ kotlin {
 dokka {
     dokkaSourceSets {
         configureEach {
-            gregchessSourceLink(project)
-            externalDocumentationLink("kotlinx.serialization", "https://kotlin.github.io/kotlinx.serialization/")
-            externalDocumentationLink("kotlinx.coroutines", "https://kotlin.github.io/kotlinx.coroutines/")
+            addLinks(project)
         }
     }
 }

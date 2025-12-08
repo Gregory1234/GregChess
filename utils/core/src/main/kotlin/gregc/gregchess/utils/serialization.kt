@@ -4,16 +4,6 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlinx.serialization.modules.SerializersModule
-import java.time.Instant
-import kotlin.time.Duration
-
-object InstantSerializer : KSerializer<Instant> {
-    override val descriptor: SerialDescriptor get() = PrimitiveSerialDescriptor("Instant", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: Instant) = encoder.encodeString(value.toString())
-
-    override fun deserialize(decoder: Decoder): Instant = Instant.parse(decoder.decodeString())
-}
 
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 abstract class ClassMapSerializer<T, K, V>(val name: String, private val keySerializer: KSerializer<K>) :

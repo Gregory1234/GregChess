@@ -12,7 +12,8 @@ fun CopySpec.replace(vararg args: Pair<String, Any>) = filter<ReplaceTokens>("to
 val defaultKotlinArgs = listOf(
     "-Xjvm-default=all",
     "-progressive",
-    "-Xconsistent-data-class-copy-visibility"
+    "-Xconsistent-data-class-copy-visibility",
+    "-opt-in=kotlin.time.ExperimentalTime"
 )
 
 val TaskContainer.sourcesJar: TaskProvider<Jar>

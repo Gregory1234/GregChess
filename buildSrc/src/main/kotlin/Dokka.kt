@@ -18,3 +18,16 @@ inline fun DokkaSourceSetSpec.externalDocumentationLinkElementList(name: String,
     url(url)
     packageListUrl(url + "element-list")
 }
+
+
+inline fun DokkaSourceSetSpec.addLinks(project: Project) {
+    gregchessSourceLink(project)
+    externalDocumentationLinkElementList("spigot-api", "https://hub.spigotmc.org/javadocs/spigot/")
+    externalDocumentationLink("kotlinx.coroutines", "https://kotlinlang.org/api/kotlinx.coroutines/")
+    externalDocumentationLink("kotlinx.serialization", "https://kotlinlang.org/api/kotlinx.serialization/")
+    externalDocumentationLinks.register("kotlinx-datetime") { // https://youtrack.jetbrains.com/issue/KT-63926
+        url("https://kotlinlang.org/api/kotlinx-datetime/")
+        packageListUrl("https://kotlinlang.org/api/kotlinx-datetime/kotlinx-datetime/package-list")
+    }
+    externalDocumentationLinkElementList("slf4j", "https://www.slf4j.org/apidocs/")
+}

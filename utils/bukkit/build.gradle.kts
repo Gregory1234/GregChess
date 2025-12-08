@@ -29,10 +29,7 @@ kotlin {
 dokka {
     dokkaSourceSets {
         configureEach {
-            gregchessSourceLink(project)
-            externalDocumentationLinkElementList("spigot-api", "https://hub.spigotmc.org/javadocs/spigot/")
-            externalDocumentationLink("kotlinx.coroutines", "https://kotlin.github.io/kotlinx.coroutines/")
-            externalDocumentationLink("kotlinx.serialization", "https://kotlin.github.io/kotlinx.serialization/")
+            addLinks(project)
         }
     }
 }

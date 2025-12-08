@@ -25,8 +25,7 @@ kotlin {
 dokka {
     dokkaSourceSets {
         configureEach {
-            gregchessSourceLink(project)
-            externalDocumentationLink("kotlinx.serialization", "https://kotlin.github.io/kotlinx.serialization/")
+            addLinks(project)
         }
     }
 }

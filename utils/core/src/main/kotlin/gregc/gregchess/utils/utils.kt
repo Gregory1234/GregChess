@@ -1,9 +1,5 @@
 package gregc.gregchess.utils
 
-import java.time.Instant
-import kotlin.time.Duration
-import kotlin.time.toKotlinDuration
-
 fun rotationsOf(x: Int, y: Int): List<Pair<Int, Int>> =
     listOf(x to y, x to -y, -x to y, -x to -y, y to x, -y to x, y to -x, -y to -x).distinct()
 
@@ -13,9 +9,6 @@ fun String.snakeToPascal(): String {
     val snakeRegex = "_[a-zA-Z]".toRegex()
     return snakeRegex.replace(lowercase()) { it.value.replace("_", "").uppercase() }.upperFirst()
 }
-
-fun Duration.Companion.between(startInclusive: Instant, endExclusive: Instant) =
-    java.time.Duration.between(startInclusive, endExclusive).toKotlinDuration()
 
 class MultiExceptionContext {
     private val exceptions = mutableListOf<Exception>()

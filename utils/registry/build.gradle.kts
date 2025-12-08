@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("reflect"))
+    implementation(libs.kotlin.reflect)
     api(libs.kotlinx.serialization.core)
     api(libs.slf4j.api)
 }
@@ -27,9 +27,7 @@ kotlin {
 dokka {
     dokkaSourceSets {
         configureEach {
-            gregchessSourceLink(project)
-            externalDocumentationLink("kotlinx.serialization", "https://kotlin.github.io/kotlinx.serialization/")
-            externalDocumentationLinkElementList("slf4j", "https://www.slf4j.org/apidocs/")
+            addLinks(project)
         }
     }
 }

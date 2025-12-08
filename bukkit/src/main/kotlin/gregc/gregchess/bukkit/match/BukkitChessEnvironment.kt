@@ -6,15 +6,16 @@ import gregc.gregchess.bukkitutils.coroutines.BukkitDispatcher
 import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentType
 import gregc.gregchess.match.ChessEnvironment
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import java.time.Clock
-import java.time.ZoneId
+import kotlin.time.Clock
 
 @Serializable
 object BukkitChessEnvironment : ChessEnvironment {
     override val coroutineDispatcher = BukkitDispatcher(GregChessPlugin.plugin, BukkitContext.SYNC)
-    override val clock: Clock get() = config.getString("TimeZone")?.let { Clock.system(ZoneId.of(it)) } ?: Clock.systemDefaultZone()
+    override val clock: Clock get() = Clock.System
+    override val zone: TimeZone get() = config.getString("TimeZone")?.let { TimeZone.of(it) } ?: TimeZone.currentSystemDefault()
 
     override val requiredComponents: Set<ComponentType<*>> get() = BukkitRegistry.REQUIRED_COMPONENTS.elements
     @Transient

@@ -19,11 +19,13 @@ import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
-import java.time.*
 import java.util.*
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class TestChessPlayer(private val spy: Boolean) : ChessPlayer<TestChessSide> {
     override fun createChessSide(color: Color): TestChessSide =
@@ -65,7 +67,10 @@ object TestVariant : ChessVariant()
 object TestChessEnvironment : ChessEnvironment {
     @OptIn(ExperimentalCoroutinesApi::class)
     override val coroutineDispatcher: CoroutineDispatcher get() = UnconfinedTestDispatcher()
-    override val clock: Clock get() = Clock.fixed(Instant.EPOCH, ZoneId.systemDefault())
+    override val clock: Clock = object : Clock {
+        override fun now(): Instant = Instant.DISTANT_PAST
+    }
+    override val zone: TimeZone get() = TimeZone.currentSystemDefault()
 }
 
 class TestMatchInfo(val uuid: UUID = UUID.randomUUID()) : MatchInfo {

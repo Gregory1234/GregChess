@@ -5,12 +5,11 @@ import gregc.gregchess.component.Component
 import gregc.gregchess.component.ComponentType
 import gregc.gregchess.event.*
 import gregc.gregchess.match.ChessMatch
-import gregc.gregchess.utils.between
 import kotlinx.serialization.*
-import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 @Serializable
 data class TimeControl(
@@ -56,7 +55,7 @@ class ChessClock private constructor(
     override val type get() = ComponentType.CLOCK
 
     override fun init(match: ChessMatch, events: EventListenerRegistry) {
-        lastTime = Instant.now(match.environment.clock)
+        lastTime = match.environment.clock.now()
         events.register<ChessBaseEvent> { handleBaseEvent(match, it) }
         events.register<TurnEvent> { handleTurnEvent(match, it) }
     }
@@ -102,8 +101,8 @@ class ChessClock private constructor(
             return
         if (stopped)
             return
-        val now = Instant.now(match.environment.clock)
-        val dt = Duration.between(lastTime, now)
+        val now = match.environment.clock.now()
+        val dt = lastTime - now
         lastTime = now
         currentTurnLength_ += dt
         if (timeControl.type != TimeControl.Type.SIMPLE) {

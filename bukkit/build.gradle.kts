@@ -26,6 +26,7 @@ dependencies {
     spigotLib(libs.kotlin.reflect)
     spigotLib(libs.kotlinx.serialization.json)
     spigotLib(libs.kotlinx.coroutines.core)
+    spigotLib(libs.kotlinx.datetime)
     spigotLib(libs.slf4j.jdk14)
     api(projects.gregchessCore)
     shaded(projects.gregchessCore)
@@ -45,10 +46,7 @@ kotlin {
 dokka {
     dokkaSourceSets {
         configureEach {
-            gregchessSourceLink(project)
-            externalDocumentationLinkElementList("spigot-api", "https://hub.spigotmc.org/javadocs/spigot/")
-            externalDocumentationLink("kotlinx.serialization", "https://kotlin.github.io/kotlinx.serialization/")
-            externalDocumentationLink("kotlinx.coroutines", "https://kotlin.github.io/kotlinx.coroutines/")
+            addLinks(project)
         }
     }
 }
