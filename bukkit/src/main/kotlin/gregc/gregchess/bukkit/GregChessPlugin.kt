@@ -23,8 +23,6 @@ import gregc.gregchess.results.*
 import gregc.gregchess.stats.ChessStat
 import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -185,7 +183,12 @@ object GregChessPlugin : Listener {
                 val pl = requireMatch()
                 execute {
                     val g = pl().match
-                    val piece = g.board[g.renderer.arena.getPos(sender.entity!!.location)!!]
+                    val pos = g.renderer.arena.getPos(sender.entity!!.location)
+                    if (pos == null) {
+                        sender.sendMessage(PIECE_NOT_FOUND)
+                        return@execute
+                    }
+                    val piece = g.board[pos]
                     if (piece != null) {
                         g.finishMove(phantomCapture(piece, pl().color))
                         sender.sendMessage(BOARD_OP_DONE)
@@ -287,13 +290,13 @@ object GregChessPlugin : Listener {
             playerSubcommand("uci") {
                 val pl = requireMatch()
                 validate(ENGINE_NOT_FOUND) {
-                    sender.currentMatch?.sides?.toList()?.filterIsInstance<EngineChessSide<*>>()?.firstOrNull() != null
+                    sender.currentMatch?.sides?.toList()?.filterIsInstance<EngineChessSideFacade<*>>()?.firstOrNull() != null
                 }
                 literal("set") {
                     argument(stringArgument("option")) { option ->
                         argument(GreedyStringArgument("value")) { value ->
                             executeSuspend {
-                                pl().match.sides.toList().filterIsInstance<EngineChessSide<*>>()
+                                pl().match.sides.toList().filterIsInstance<EngineChessSideFacade<*>>()
                                     .first().engine.setOption(option(), value())
                                 sender.sendMessage(ENGINE_COMMAND_SENT)
                             }
@@ -303,7 +306,7 @@ object GregChessPlugin : Listener {
                 literal("send") {
                     argument(GreedyStringArgument("command")) { command ->
                         executeSuspend {
-                            pl().match.sides.toList().filterIsInstance<EngineChessSide<*>>()
+                            pl().match.sides.toList().filterIsInstance<EngineChessSideFacade<*>>()
                                 .first().engine.sendCommand(command())
                             sender.sendMessage(ENGINE_COMMAND_SENT)
                         }

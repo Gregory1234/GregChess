@@ -22,13 +22,13 @@ object DefaultSimpleRendererStyle : SimpleRendererStyle {
         piece.type.section.getStringList("Structure.${piece.color.configName}").map { m -> Material.valueOf(m) }
 
     override fun pieceItem(piece: Piece): ItemStack =
-        itemStack(Material.valueOf(piece.type.section.getString("Item.${piece.color.configName}")!!)) {
+        itemStack(Material.valueOf(piece.type.section.getStringOrThrow("Item.${piece.color.configName}"))) {
             meta { name = piece.localName }
         }
 
     override fun pieceSound(piece: PieceType, sound: String): Sound =
-        Registry.SOUNDS.getOrThrow(NamespacedKey.fromString(piece.section.getString("Sound.$sound")!!)!!)
+        Registry.SOUNDS.getOrThrow(piece.section.getNamespacedKeyOrThrow("Sound.$sound"))
 
     override fun floorMaterial(floor: Floor): Material =
-        Material.valueOf(config.getString("Chess.Floor.${floor.name}")!!)
+        Material.valueOf(config.getStringOrThrow("Chess.Floor.${floor.name}"))
 }

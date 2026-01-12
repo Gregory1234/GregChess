@@ -12,7 +12,7 @@ import gregc.gregchess.bukkit.properties.BukkitGregChessAdapter
 import gregc.gregchess.bukkit.renderer.*
 import gregc.gregchess.bukkit.stats.YamlChessStats
 import gregc.gregchess.bukkit.variant.simpleFloorRenderer
-import gregc.gregchess.bukkitutils.toDuration
+import gregc.gregchess.bukkitutils.*
 import gregc.gregchess.clock.ChessClock
 import gregc.gregchess.clock.TimeControl
 import gregc.gregchess.component.ComponentType
@@ -44,9 +44,9 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
             section.getString("Clock")?.let { clock ->
                 TimeControl.parseOrNull(clock)?.let { t -> ChessClock(t) }
             } ?: section.getConfigurationSection("Clock")?.let { s ->
-                val t = TimeControl.Type.valueOf(s.getString("Type", TimeControl.Type.INCREMENT.toString())!!)
-                val initial = s.getString("Initial")!!.toDuration()
-                val increment = if (t.usesIncrement) s.getString("Increment")!!.toDuration() else Duration.ZERO
+                val t = TimeControl.Type.valueOf(s.getStringDef("Type", TimeControl.Type.INCREMENT.toString()))
+                val initial = s.getStringOrThrow("Initial").toDuration()
+                val increment = if (t.usesIncrement) s.getStringOrThrow("Increment").toDuration() else Duration.ZERO
                 ChessClock(TimeControl(t, initial, increment))
             }
         }
@@ -70,7 +70,7 @@ internal object GregChess : BukkitChessModule(GregChessPlugin.plugin) {
         BukkitRegistry.IMPLIED_COMPONENTS["match_controller"] = { MatchController }
         BukkitRegistry.IMPLIED_COMPONENTS["adapter"] = { BukkitGregChessAdapter }
         BukkitRegistry.IMPLIED_COMPONENTS["renderer"] = {
-            val ct = config.getFromRegistry(CoreRegistry.COMPONENT_TYPE, "Renderer.Type")!!
+            val ct = config.getFromRegistryOrThrow(CoreRegistry.COMPONENT_TYPE, "Renderer.Type")
             ct.cl.constructors.first { it.parameters.isEmpty() }.call() as Renderer
         }
     }

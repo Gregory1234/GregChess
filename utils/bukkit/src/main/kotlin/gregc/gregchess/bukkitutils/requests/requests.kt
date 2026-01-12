@@ -43,7 +43,7 @@ class RequestType internal constructor(
     private val cancelCommand: String
 ) {
     private val requests = mutableMapOf<UUID, Request>()
-    private val section get() = config.getConfigurationSection("Request.$name")!!
+    private val section get() = config.getConfigurationSectionOrThrow("Request.$name")
 
     private fun BukkitHuman.sendCommandMessage(msg: String, action: String, command: String) {
         sendMessage(textComponent {

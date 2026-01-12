@@ -27,7 +27,7 @@ interface BukkitPlayerStats {
     operator fun get(color: Color): PlayerStatsView
     operator fun get(name: String): PlayerStatsView
     companion object {
-        fun of(uuid: UUID) = config.getFromRegistry(BukkitRegistry.CHESS_STATS_PROVIDER, "StatsProvider")!!(uuid)
+        fun of(uuid: UUID) = config.getFromRegistryOrThrow(BukkitRegistry.CHESS_STATS_PROVIDER, "StatsProvider")(uuid)
     }
 }
 
